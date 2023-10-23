@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 250, 250, 250;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* styles.css or your Tailwind CSS file */
+.toast-container {
+  @apply bg-green-500 text-white p-4 rounded-lg shadow-lg;
+}
+
+/* Customize the appearance of the toast body */
+.toast-body {
+  @apply text-base;
+}
+
+.Toastify__toast-container {
+  margin-top: 65px!important;
+}
+
+.Toastify__toast {
+  --toastify-toast-min-height: 20px;
+}
+
+.ad-100 {
+  animation-delay: 100ms
+}
+.ad-300 {
+  animation-delay: 300ms
+}
+.ad-500 {
+  animation-delay: 500ms
+}
+#messages-section {
+  max-height: calc(100vh - 280px);
+}

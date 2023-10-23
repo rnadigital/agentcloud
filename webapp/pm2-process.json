@@ -1,0 +1,8 @@
+{
+  "script": "npm run dev",
+  "watch": true,
+  "ignore_watch" : ["node_modules", "pages/**/*", "components/**/*", ".next/**/*"],
+  "watch_options": {
+    "followSymlinks": false
+  }
+}

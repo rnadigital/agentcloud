@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  webapp_next:
+    restart: always
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=development
+    command: npm run start-dev
+  webapp_mongo:
+    restart: always
+    image: mongo:latest
+    ports:
+      - "127.0.0.1:27017:27017"
+networks:
+  default:
+    name: webapp_next
+volumes:
+  mongodb_data_container:
