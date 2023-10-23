@@ -3,26 +3,12 @@ import traceback
 import json
 
 from redisClient.redis_connection import RedisConnection
-from utils.log_exception_context_manager import log_exception
 
 
 class RedisClass(RedisConnection):
     def __init__(self):
         super().__init__()
         self.redis_client = self.connect()
-
-    def insert_oauth_state(self, state: dict) -> bool:
-        with log_exception():
-            self.redis_client.set(state.get("customer_id"), json.dumps(state))
-            return True
-
-    def get_oauth_state(self, state):
-        try:
-            self.redis_client.get(state.get("customer_id"))
-            return True
-        except Exception as e:
-            logging.exception(e)
-            return False
 
     def check_hash_exists(self, hash_key: str) -> bool:
         """
@@ -61,7 +47,6 @@ class RedisClass(RedisConnection):
 
         """
         try:
-            print(f"Updating Redis DataLayer Rules for Container: '{hash_key}'")
             self.redis_client.hset(
                 hash_key,
                 key, json.dumps(data))
