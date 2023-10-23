@@ -8,7 +8,7 @@ COPY package-lock.json /app/package-lock.json
 
 RUN npm install
 
-COPY .env /app/.env
+COPY .env.example /app/.env
 COPY . /app
 
 ARG GOOGLE_KEYPATH
