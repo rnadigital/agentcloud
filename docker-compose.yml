@@ -11,6 +11,8 @@ services:
     image: redis:latest
     ports:
       - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
 
   webapp_next:
     restart: always
@@ -32,8 +34,14 @@ services:
       - COOKIE_SECRET=changeme
       - PROJECT_ID=tag-monitoring-dev
       - URL_APP=http://localhost:3000
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3000"]
+      start_period: 5s
+      timeout: 5s
+      retries: 10
 
   agent_backend:
+    restart: always
     build:
       context: agent-backend/
       args:
@@ -42,9 +50,8 @@ services:
       - '127.0.0.1:8080:8080'
     image: agent_backend
     depends_on:
-      - webapp_next
-      - docker_mongo
-      - docker_redis
+      webapp_next: 
+        condition: service_healthy
     environment:
       - LOCAL=True
       - MAX_THREADS=50
@@ -56,3 +63,5 @@ services:
 
 volumes:
   mongodb_data_container:
+  redis_data:
+    external: false
