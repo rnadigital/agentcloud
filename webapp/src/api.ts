@@ -82,6 +82,8 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 	// Build request options for fetch
 	const requestOptions = buildOptions(route, method, body);
 
+	console.debug(route, requestOptions);
+
 	// Make request, catch errors, and finally{} to always end progress bar
 	let response;
 	try {

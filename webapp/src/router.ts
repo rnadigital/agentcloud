@@ -25,6 +25,7 @@ export default function router(server, app) {
 	 *
 	 */
 	const unauthedMiddlewareChain  = [useSession, useJWT, fetchSession];
+	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => { res.redirect('/register'); });
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
@@ -43,7 +44,6 @@ export default function router(server, app) {
 	 *
 	 */
 	const authedMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession, csrfMiddleware];
-	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => { res.redirect('/account'); });
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
 	server.get('/socket', authedMiddlewareChain, accountController.socketTestPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);

@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as API from '../api';
+import { useRouter } from 'next/router';
 
 const AccountContext = createContext({});
 
 export function AccountWrapper({ children, pageProps }) {
 
+	const router = useRouter();
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		//TODO: this jank on the server side instead
@@ -16,9 +18,10 @@ export function AccountWrapper({ children, pageProps }) {
 		if (!sharedState || !sharedState.account) {
 			API.getAccount(setSharedState, null, null);
 		}
-	}, []);
+	}, [router.asPath]);
 
 	console.log('AppWrapper sharedState', sharedState);
+
 	return (
 		<AccountContext.Provider value={sharedState}>
 			{children}
