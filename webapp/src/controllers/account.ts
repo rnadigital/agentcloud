@@ -9,6 +9,8 @@ import { VerificationTypes, addVerification, getAndDeleteVerification } from '..
 import { dynamicResponse } from '../util';
 import jwt from 'jsonwebtoken';
 import * as ses from '../lib/email/ses';
+import SecretKeys from '../lib/secret/secretkeys';
+import { getSecret } from '../lib/secret/secretmanager';
 
 export async function accountData(req, res, _next) {
 	//const data = await calling an api
@@ -96,6 +98,9 @@ export async function register(req, res) {
 
 	const passwordHash = await bcrypt.hash(req.body.password, 12);
 
+	const amazonKey = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
+	const emailVerified = amazonKey == null;
+
 	const newAccountId = new ObjectId();
 	const addedOrg = await addOrg({
 		name: 'My Org',
@@ -125,7 +130,7 @@ export async function register(req, res) {
 			}],
 			currentOrg: orgId,
 			currentTeam: teamId,
-			emailVerified: false,
+			emailVerified,
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
@@ -133,15 +138,17 @@ export async function register(req, res) {
 	console.log('verificationToken', verificationToken);
 
 	//TODO: format the verificationToken
-	await ses.sendEmail({
-		from: 'noreply@getmonita.io',
-		bcc: null,
-		cc: null,
-		replyTo: null,
-		to: [email],
-		subject: 'Verify your email',
-		body: `Verify your email: ${process.env.URL_APP}/verify?token=${verificationToken}`,
-	});
+	if (!emailVerified) {
+		await ses.sendEmail({
+			from: 'noreply@getmonita.io',
+			bcc: null,
+			cc: null,
+			replyTo: null,
+			to: [email],
+			subject: 'Verify your email',
+			body: `Verify your email: ${process.env.URL_APP}/verify?token=${verificationToken}`,
+		});
+	}
 
 	return dynamicResponse(req, res, 302, { redirect: '/verify' });
 

@@ -1,23 +1,34 @@
 'use strict';
 
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import dotenv from 'dotenv';
 
-const secretClientOptions = { projectId: process.env.PROJECT_ID };
-if (process.env.SECRET_KEYFILE) {
-	secretClientOptions['keyFilename'] = process.env.SECRET_KEYFILE;
+dotenv.config({ path: '.env' });
+
+let secretClient;
+if (process.env.PROJECT_ID) {
+	const secretClientOptions = { projectId: process.env.PROJECT_ID };
+	const secretClient = new SecretManagerServiceClient(secretClientOptions);
 }
-const secretClient = new SecretManagerServiceClient(secretClientOptions);
 const cache = {};
 
 export async function getSecret(key, bypassCache = false) {
 	if (cache[key] && !bypassCache) {
 		return cache[key];
 	}
-	const [secretVal] = await secretClient.accessSecretVersion({
-		name: `projects/${process.env.PROJECT_ID}/secrets/${key}/versions/latest`,
-	});
-	const secretValue = Buffer.from(new TextDecoder().decode(<Uint8Array>(secretVal.payload.data)), 'utf-8').toString();
-	return cache[key] = secretValue; //set in cache and return
+	if (process.env[key]
+		&& typeof process.env[key] === 'string'
+		&& process.env[key].length > 0) {
+		return cache[key] = process.env[key];
+	}
+	if (secretClient) {
+		const [secretVal] = await secretClient.accessSecretVersion({
+			name: `projects/${process.env.PROJECT_ID}/secrets/${key}/versions/latest`,
+		});
+		const secretValue = Buffer.from(new TextDecoder().decode(<Uint8Array>(secretVal.payload.data)), 'utf-8').toString();
+		return cache[key] = secretValue; //set in cache and return
+	}
+	return null;
 }
 
 // I don't think we need these
