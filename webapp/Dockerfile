@@ -8,8 +8,8 @@ COPY package-lock.json /app/package-lock.json
 
 RUN npm install
 
-COPY .env.example /app/.env
 COPY . /app
+RUN touch /app/.env
 
 ARG GOOGLE_KEYPATH
 COPY $GOOGLE_KEYPATH /app/keyfile.json
