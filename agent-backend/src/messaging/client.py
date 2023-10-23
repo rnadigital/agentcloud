@@ -62,7 +62,7 @@ def connect_error():
 def init_socket():
     try:
         print(f"{SOCKET_URL}")
-        sio.connect(f"{SOCKET_URL}")
+        sio.connect(SOCKET_URL)
         join_room("task_queue")
         sio.wait()
     except ConnectionError as ce:

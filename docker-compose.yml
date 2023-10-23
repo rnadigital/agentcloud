@@ -14,7 +14,10 @@ services:
 
   webapp_next:
     restart: always
-    build: webapp/
+    build:
+      context: webapp/
+      args:
+        - GOOGLE_KEYPATH=keyfile.json
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -28,26 +31,28 @@ services:
       - JWT_SECRET=changeme
       - COOKIE_SECRET=changeme
       - PROJECT_ID=tag-monitoring-dev
-      - GOOGLE_APPLICATION_CREDENTIALS=/home/tom/Documents/tag-monitoring-dev.json
       - URL_APP=http://localhost:3000
 
   agent_backend:
-    build: agent-backend/
+    build:
+      context: agent-backend/
+      args:
+        - GOOGLE_KEYPATH=keyfile.json
     ports:
       - '127.0.0.1:8080:8080'
     image: agent_backend
     depends_on:
+      - webapp_next
       - docker_mongo
       - docker_redis
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/home/tom/Documents/tag-monitoring-dev.json
       - LOCAL=True
       - MAX_THREADS=50
-      - OAI_CONFIG_LIST="./config/OAI_CONFIG_LIST.json"
-      - BASE_PATH="./src"
-      - SOCKET_URL="http://127.0.0.1:3000/"
-      - MONGO_DB_NAME="test"
-      - OPENAI_API_KEY="ENTER_OPENAI_TOKEN_HERE"
+      - OAI_CONFIG_LIST=/app/config/OAI_CONFIG_LIST.json
+      - BASE_PATH=/app
+      - SOCKET_URL=http://webapp_next:3000/
+      - MONGO_DB_NAME=test
+      - OPENAI_API_KEY=ENTER_OPENAI_TOKEN_HERE
 
 volumes:
   mongodb_data_container:

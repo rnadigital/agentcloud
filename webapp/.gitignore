@@ -4,3 +4,4 @@ out/
 dist/
 .env
 .env.local
+keyfile.json

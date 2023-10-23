@@ -11,6 +11,10 @@ RUN npm install
 COPY .env /app/.env
 COPY . /app
 
+ARG GOOGLE_KEYPATH
+COPY $GOOGLE_KEYPATH /app/keyfile.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+
 RUN npx next telemetry disable
 RUN npm run build
 
