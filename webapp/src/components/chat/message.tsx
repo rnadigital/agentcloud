@@ -24,7 +24,7 @@ export function OutgoingMessage({ message, messageType, messageLanguage, date, a
 						? (<SyntaxHighlighter language={messageLanguage} style={style}>
 							{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
 						</SyntaxHighlighter>)
-						: message}
+						: <pre style={{ whiteSpace: 'pre-wrap' }}>{message}</pre>}
 				</p>
 			</div>
 		</div>
@@ -53,7 +53,7 @@ export function IncomingMessage({ message, messageType, messageLanguage, date, a
 						? (<SyntaxHighlighter language={messageLanguage} style={style}>
 							{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
 						</SyntaxHighlighter>)
-						: message}
+						: <pre style={{ whiteSpace: 'pre-wrap' }}>{message}</pre>}
 				</p>
 			</div>
 			<div className='w-9 h-9 rounded-full flex items-center justify-center ml-2 select-none'>
