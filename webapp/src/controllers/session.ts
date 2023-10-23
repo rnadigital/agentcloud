@@ -106,7 +106,6 @@ export async function addSessionApi(req, res, next) {
 
 }
 
-
 /**
  * @api {delete} /forms/session/[sessionId]
  * @apiName delete

@@ -150,7 +150,7 @@ export function initSocket(rawHttpServer) {
 					type: session.type as SessionType,
 					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
 					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'Monita',  //TODO: fix for socket user name
-				})
+				});
 			}
 
 			io.to(data.room).emit(data.event, finalMessage);

@@ -37,7 +37,6 @@ export default function router(server, app) {
 	accountFormRouter.post('/logout', checkSession, csrfMiddleware, accountController.logout);
 	server.use('/forms/account', unauthedMiddlewareChain, accountFormRouter);
 
-
 	/*
 	 *
 	 * Authed routes (with checkSession)

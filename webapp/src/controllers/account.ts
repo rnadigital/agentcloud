@@ -130,7 +130,7 @@ export async function register(req, res) {
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
 
-	console.log('verificationToken', verificationToken)
+	console.log('verificationToken', verificationToken);
 
 	//TODO: format the verificationToken
 	await ses.sendEmail({

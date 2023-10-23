@@ -2,7 +2,7 @@ import NProgress from 'nprogress';
 
 // Account
 export function getAccount(dispatch, errorCallback, router) {
-	return ApiCall(`/account.json`, 'GET', null, dispatch, errorCallback, router);
+	return ApiCall('/account.json', 'GET', null, dispatch, errorCallback, router);
 }
 export function login(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/login', 'POST', body, dispatch, errorCallback, router);

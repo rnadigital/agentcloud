@@ -1,0 +1,46 @@
+version: '3.7'
+services:
+  docker_mongo:
+    restart: always
+    image: mongo:latest
+    ports:
+      - "127.0.0.1:27017:27017"
+
+  docker_redis:
+    restart: always
+    image: redis:latest
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  webapp_next:
+    restart: always
+    build: webapp/
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - docker_mongo
+      - docker_redis
+    environment:
+      - NODE_ENV=development
+      - DB_URL=mongodb://docker_mongo:27017/test
+      - REDIS_HOST=docker_redis
+      - REDIS_PASS=
+      - JWT_SECRET=changeme
+      - COOKIE_SECRET=changeme
+      - PROJECT_ID=tag-monitoring-dev
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/tom/Documents/tag-monitoring-dev.json
+      - URL_APP=http://localhost:3000
+
+  agent_backend:
+    build: agent-backend/
+    ports:
+      - '127.0.0.1:8080:8080'
+    image: agent_backend
+    depends_on:
+      - docker_mongo
+      - docker_redis
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/tom/Documents/tag-monitoring-dev.json
+
+volumes:
+  mongodb_data_container:
