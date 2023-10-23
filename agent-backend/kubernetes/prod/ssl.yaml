@@ -5,4 +5,4 @@ metadata:
   namespace: agent-cloud
 spec:
   domains:
-    - app.agentcloud.dev
+    - YOUR_DOMAIN

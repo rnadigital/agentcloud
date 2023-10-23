@@ -4,9 +4,9 @@ metadata:
   name: agent-cloud-map
   namespace: agent-cloud
 data:
-  project_id: "tag-monitoring-282106"
+  project_id: "YOUR_PROJECT"
   local: "false"
-  webapp_url: "https://app.angentcloud.dev"
+  webapp_url: "YOUR_DOMAIN"
 
 ---
 apiVersion: apps/v1
@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: agent-cloud
-          image: gcr.io/tag-monitoring-282106/agent-cloud
+          image: gcr.io/YOUR_PROJECT/agent-cloud
           envFrom:
             - configMapRef:
                 name: agent-cloud-map
