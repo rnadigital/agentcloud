@@ -6,14 +6,15 @@ from gcp.cloud_secrets import access_secret
 
 load_dotenv()
 
-google_cloud_credentials_present = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+google_cloud_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 LOCAL = os.getenv("LOCAL", "True") == 'True'
-if google_cloud_credentials_present and len(google_cloud_credentials_present) > 0:
-    LOCAL = False
-    credentials, PROJECT_ID = google.auth.default(
-        scopes=["https://www.googleapis.com/auth/cloud-platform"]
-    )
+if google_cloud_credentials_path and len(google_cloud_credentials_path) > 0:
+    if os.path.getsize(google_cloud_credentials_path) > 0:
+        LOCAL = False
+        credentials, PROJECT_ID = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
 
 # Get project ID and Local var from .env file
 BASE_PATH = os.getenv("BASE_PATH", "./src") if LOCAL else "."
