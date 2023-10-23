@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-cloud-map
+  namespace: agent-cloud
+data:
+  project_id: "tag-monitoring-282106"
+  local: "false"
+  webapp_url: "https://app.angentcloud.dev"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-cloud
+  namespace: agent-cloud
+  labels:
+    app: agent-cloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-cloud
+  template:
+    metadata:
+      labels:
+        app: agent-cloud
+    spec:
+      containers:
+        - name: agent-cloud
+          image: gcr.io/tag-monitoring-282106/agent-cloud
+          envFrom:
+            - configMapRef:
+                name: agent-cloud-map
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+            limits:
+              memory: "1000Mi"
+              cpu: "1000m"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-cloud-hpa
+  namespace: agent-cloud
+  labels:
+    app: agent-cloud
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: agent-cloud
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-cloud
+  namespace: agent-cloud
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  selector:
+    app: agent-cloud
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: NodePort
+  externalTrafficPolicy: Local

@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  namespace: webapp-dev
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: webapp-ingress
+    networking.gke.io/managed-certificates: webapp-cert-dev
+    nginx.ingress.kubernetes.io/websocket-services: gateway
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '3600'
+spec:
+  rules:
+    - host: api.rapdev-app.getmonita.io
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: webapp-api-service
+                port:
+                  number: 80
+    - host: rapdev-app.getmonita.io
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: webapp-app-service
+                port:
+                  number: 80
+    - host: qdrant.rapdev-app.getmonita.io
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: vector-db
+                port:
+                  number: 80

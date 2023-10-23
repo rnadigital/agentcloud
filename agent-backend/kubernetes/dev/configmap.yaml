@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-map
+  namespace: agent
+data:
+  project_id: "tag-monitoring-dev"
+  local: "false"
+  webapp_url: "https://app.angentcloud.dev"

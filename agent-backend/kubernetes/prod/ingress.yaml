@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agent-cloud-ingress
+  namespace: agent-cloud
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: agent-cloud-ip
+    networking.gke.io/managed-certificates: agent-cloud-ssl
+    nginx.ingress.kubernetes.io/websocket-services: gateway
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: '3600'
+spec:
+  rules:
+    - host: app.agentcloud.dev
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: agent-cloud-app
+                port:
+                  number: 80

@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "marketing-agent"
+version = "0.1.0"
+description = ""
+authors = ["ragy abraham <ragy@rna.digital>"]
+readme = "README.md"
+packages = [{include = "marketing_agent"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+
+autogen = { git = "https://github.com/rnadigital/autogen.git", branch = "main" }
+fastapi = "^0.103.2"
+uvicorn = "^0.23.2"
+openai = "^0.28.1"
+pyyaml = "*"
+python-dotenv = "^1.0.0"
+google-cloud-secret-manager = "^2.16.4"
+pymongo = "^4.5.0"
+google-ads = "^22.0.0"
+redis = "^5.0.1"
+termcolor = "^2.3.0"
+python-socketio = { git = "https://github.com/miguelgrinberg/python-socketio.git", branch = "main" }
+numpy = "1.25.0"
+jinja2 = "*"
+websocket-client = "^1.6.4"
+docker-py = "^1.10.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
