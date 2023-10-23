@@ -26,4 +26,4 @@ COPY ./src/ /app/
 EXPOSE 8080
 
 # Command to run the FastAPI application
-CMD ["uvicorn", "routes.api_routes:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main", "--host", "0.0.0.0", "--port", "8080"]
