@@ -1,2 +1,2 @@
-# marketing-agent
-An agent that is responsible for optimising marketing mix allocation
+# agent-backend
+App that is repsonsible to serve agents
