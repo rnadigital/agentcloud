@@ -140,7 +140,7 @@ export async function register(req, res) {
 	//TODO: format the verificationToken
 	if (!emailVerified) {
 		await ses.sendEmail({
-			from: 'noreply@getmonita.io',
+			from: 'noreply@agentcloud.dev',
 			bcc: null,
 			cc: null,
 			replyTo: null,
