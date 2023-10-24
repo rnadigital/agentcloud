@@ -35,12 +35,19 @@ def task_execution(task: str, session_id: str):
             if org_saved:
                 module_name = f"orgs.{session_id}"
                 loaded_module = importlib.import_module(module_name)
-                loaded_module.user_proxy.reset()
+                manager = loaded_module.manager
+                _groupchat = loaded_module.groupchat
+                # Ensuring the planner is aware of its own team members
+                if bool({"Planner", "planner"} & set(_groupchat.agent_names)):
+                    _name = list({"Planner", "planner"} & set(_groupchat.agent_names))[0]
+                    _index = _groupchat.agent_names.index(_name)
+                    team_members = [x for x in _groupchat.agent_names if x != _name]
+                    new_message = f"{_groupchat.agents[_index].system_message}. Your team is made up of the following members: {', '.join(team_members)}"
+                    _groupchat.agents[_index].update_system_message(new_message)
                 loaded_module.user_proxy.initiate_chat(
-                    recipient=loaded_module.manager,
+                    recipient=manager,
                     clear_history=True,
                     message=task,
-                    silent=False,
                 )
         except ModuleNotFoundError as mnf:
             logging.warning(f"Could not find module: {module_name} in path!")
@@ -56,7 +63,8 @@ def init_socket_generate_team(task: str, session_id: str):
 
 "{task}"
 
-Return the team in the below JSON structure:""", json.dumps(file, indent=2), "There are no hard limits on the number or the combination of team members."]
+Return the team in the below JSON structure:""", json.dumps(file, indent=2),
+                     "There are no hard limits on the number or the combination of team members. Omit any variables that has an empty value."]
 
         socket.emit("message", {
             "room": session_id,

@@ -28,6 +28,12 @@
       "system_message": "Planner. Suggest a plan. Revise the plan based on feedback from admin and critic, until admin approval. Explain the plan first. Be clear which step is performed by an whom"
     },
     {
+      "name": "Critic",
+      "type": "AssistantAgent",
+      "llm_config": "gpt4_config",
+      "system_message": "Critic. Double check plan, claims, code from other agents and provide feedback. If you find issues respond with method to either fix the issue or to improve the plan"
+    },
+    {
       "name": "Executor",
       "type": "UserProxyAgent",
       "system_message": "Executor. Execute the code written by the engineer and report the result. Do NOT use Docker to run you code",
