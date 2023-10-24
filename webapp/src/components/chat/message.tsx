@@ -4,9 +4,17 @@ import React, { useState, useEffect } from 'react';
 function getMessageSection(message, messageType, messageLanguage, style) {
 	switch(messageType) {
 		case 'code':
-			return <SyntaxHighlighter language={messageLanguage} style={style}>
-				{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
-			</SyntaxHighlighter>;
+			return <>
+				<span className='h-6 bg-gray-700 p-1 text-white font-semibold w-full block text-xs ps-2'>{messageLanguage}</span>
+				<SyntaxHighlighter
+					language={messageLanguage}
+					style={style}
+					showLineNumbers={true}
+					customStyle={{ margin: 0 }}
+				>
+					{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
+				</SyntaxHighlighter>
+			</>;
 		case 'text':
 		default:
 			return <pre style={{ whiteSpace: 'pre-wrap' }}>
@@ -45,7 +53,7 @@ export function Message({ message, messageType, messageLanguage, isFeedback, dat
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pb-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && authorSection}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg p-3 gap-3 overflow-x-auto`}>
+				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : ''} overflow-x-auto`}>
 					<p className={incoming ? 'text-white' : ''}>
 						{getMessageSection(message, messageType, messageLanguage, style)}
 					</p>

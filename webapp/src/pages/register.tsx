@@ -120,7 +120,7 @@ export default function Register() {
 										className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600'
 									/>
 									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900'>
-                   						I agree to the <Link href='/tos' target='_blank'>terms of service</Link>.
+                   						I agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
 									</label>
 								</div>
 

@@ -58,7 +58,6 @@ export default function Session(props) {
 	}, [messages]);
 	function handleJoinedRoom() {
 		if (messages.length === 0) {
-			console.log(session);
 			//if no messages found, session is new so submit the messages and one to task queue
 			socketContext.emit('message', {
 				room: sessionId,
@@ -97,28 +96,23 @@ export default function Session(props) {
 		// socketContext.connected && socketContext.disconnect();
 	}
 	useEffect(() => {
-		if (!session) {
-			//If no session, fetch it
-			API.getSession({
-				resourceSlug: account.currentTeam,
-				sessionId,
-			}, dispatch, setError, router);
-		} else {
+		if (session) {
 			setTerminated(session.status === 'terminated');
 			//todo: move enums out of db file (to exclude backend mongo import stuff), then use in frontend)
 		}
 	}, [session]);
 	useEffect(() => {
-		if (messages == null) {
-			//If no messages, fetch them (or empty array, is fine)
-			API.getMessages({
-				resourceSlug: account.currentTeam,
-				sessionId,
-			}, (_messages) => {
-				setMessages(_messages.map(m => m.message));
-			}, setError, router);
-		}
-	}, [messages]);
+		API.getSession({
+			resourceSlug: account.currentTeam,
+			sessionId,
+		}, dispatch, setError, router);
+		API.getMessages({
+			resourceSlug: account.currentTeam,
+			sessionId,
+		}, (_messages) => {
+			setMessages(_messages.map(m => m.message));
+		}, setError, router);
+	}, []);
 	useEffect(() => {
 		//once we have the session and messages (or empty message array is fine), start
 		if (session && messages != null) {
@@ -146,7 +140,7 @@ export default function Session(props) {
 		e.target.reset();
 	}
 
-	if (!session) {
+	if (!session || messages == null) {
 		return 'Loading...'; //TODO: loader
 	}
 
