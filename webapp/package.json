@@ -7,7 +7,7 @@
     "dev": "ts-node --project tsconfig.server.json src/server.ts",
     "build:next": "next build",
     "build:server": "tsc --project tsconfig.server.json",
-    "build:doc": "apidoc -i controllers -o doc",
+    "build:doc": "apidoc -i src/controllers -o doc",
     "build": "npm run build:next && npm run build:server",
     "start": "NODE_ENV=production node dist/server.js",
     "lint:nextjs": "next lint",

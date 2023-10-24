@@ -5,7 +5,7 @@ import * as API from '../../../../api';
 import { useAccountContext } from '../../../../context/account';
 import { useSocketContext } from '../../../../context/socket';
 import { useRouter } from 'next/router';
-import { IncomingMessage, OutgoingMessage } from '../../../../components/chat/message';
+import { Message } from '../../../../components/chat/message';
 import classNames from '../../../../components/ClassNames';
 // import { toast } from 'react-toastify';
 
@@ -165,13 +165,15 @@ export default function Session(props) {
 
             	<div className='overflow-y-auto' id='messages-section'>
 					{messages && messages.map((m, mi) => {
-						const MessageComponent = (m.incoming?IncomingMessage:OutgoingMessage);
-						return <MessageComponent
+						return <Message
 							key={`message_${mi}`}
 							message={m.message.text}
 							messageType={m.message?.type}
 							messageLanguage={m.message?.language}
 							authorName={m.authorName}
+							incoming={m.incoming}
+							date={m.date}
+							isFeedback={m.isFeedback}
 						/>;
 					})}
 					{sentLastMessage && !terminated && <div className='text-center border-t pb-6 pt-8'>

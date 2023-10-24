@@ -7,7 +7,7 @@ import { client } from './redis';
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
-import { addSession, unsafeGetSessionById, unsafeSetSessionStatus, SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
 
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
@@ -34,6 +34,7 @@ export function initSocket(rawHttpServer) {
 		fetchSession(socket.request, socket.request, next);
 	});
 
+	//NOTE: there is almost no security/validation here, yet
 	io.on('connection', async (socket) => {
 		console.log('Socket', socket.id, 'connected');
 
@@ -55,14 +56,16 @@ export function initSocket(rawHttpServer) {
 
 		socket.on('terminate', async (data) => {
 			//TODO: ensure only sent by python app
-			io.to(data.room).emit('terminate', true);
-			await unsafeSetSessionStatus(data.message.sessionId, SessionStatus.TERMINATED);
+			const session = await unsafeGetSessionById(data.message.sessionId);
+			if (session.agents && session.agents.length > 0) {
+				await unsafeSetSessionStatus(data.message.sessionId, SessionStatus.TERMINATED);
+				return io.to(data.room).emit('terminate', true);
+			}
 			const sessionTeamJsonMessage = await unsafeGetTeamJsonMessage(data.message.sessionId);
 			const generatedRoles = sessionTeamJsonMessage?.message?.message?.text?.roles;
 			if (!generatedRoles) {
 				return console.warn('No generated roles found for terminated session', data.message.sessionId);
 			}
-			const session = await unsafeGetSessionById(data.message.sessionId);
 			const mappedRolesToAgents = generatedRoles.map(role => ({ //TODO: type these
 				_id: new ObjectId(),
 				sessionId: session._id,
@@ -85,20 +88,11 @@ export function initSocket(rawHttpServer) {
 				agentId: agent._id,
 				reportTo: null, //unused atm
 			}));
-			await addSession({
-				orgId: session.orgId,
-				teamId: session.teamId,
-			    prompt: session.prompt,
-			 	type: 'execute_task' as SessionType,
-			    name: '', //todo? generate based on prompt like chatgpt 
-			    startDate: new Date(),
-		    	lastUpdatedDate: new Date(),
-			    tokensUsed: 0,
-		    	agents: sessionAgents,
-				status: SessionStatus.WAITING,
-				team: sessionTeamJsonMessage?.message?.message?.text,
+			await unsafeSetSessionAgents(session._id, sessionAgents);
+			io.to('task_queue').emit(SessionType.TASK, {
+				task: session.prompt,
+				sessionId: session._id.toString(),
 			});
-			//TODO: emit here and make ^ STARTED? or better like this??
 		});
 
 		socket.on('message', async (data) => {
@@ -135,6 +129,7 @@ export function initSocket(rawHttpServer) {
 					incoming: data.incoming != null ? data.incoming : false,
 					authorName: data.authorName || 'Monita',
 					message: finalMessage,
+					date: new Date(),
 				};
 			}
 
@@ -150,6 +145,7 @@ export function initSocket(rawHttpServer) {
 					type: session.type as SessionType,
 					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
 					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'Monita',  //TODO: fix for socket user name
+					date: new Date(),
 				});
 			}
 
