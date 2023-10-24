@@ -1,5 +1,7 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function getMessageSection(message, messageType, messageLanguage, style) {
 	switch(messageType) {
@@ -17,9 +19,15 @@ function getMessageSection(message, messageType, messageLanguage, style) {
 			</>;
 		case 'text':
 		default:
-			return <pre style={{ whiteSpace: 'pre-wrap' }}>
+			// return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'sans-serif' }}>
+			// 	{message}
+			// </pre>;
+			return <Markdown
+				className={'markdown-content'}
+				remarkPlugins={[remarkGfm]}
+			>
 				{message}
-			</pre>;
+			</Markdown>;
 	}
 }
 
@@ -54,7 +62,7 @@ export function Message({ message, messageType, messageLanguage, isFeedback, dat
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pb-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && authorSection}
 				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : ''} overflow-x-auto`}>
-					<p className={incoming ? 'text-white' : ''}>
+					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						{getMessageSection(message, messageType, messageLanguage, style)}
 					</p>
 				</div>
