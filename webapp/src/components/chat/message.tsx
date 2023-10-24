@@ -1,13 +1,38 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect } from 'react';
+import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from 'react-toastify';
+
+export function CopyToClipboardButton({ dataToCopy }) {
+
+	const handleCopyClick = async () => {
+	 	try {
+			await navigator.clipboard.writeText(dataToCopy);
+			toast.success('Copied to clipboard');
+		} catch { /* ignored for now */ }
+	};
+
+	return (
+		<button 
+			onClick={handleCopyClick} 
+			className='px-1 hover:bg-blue-600 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300'
+			aria-label='Copy to clipboard'
+		>
+			<ClipboardDocumentIcon className='h-4 w-4 text-white' />
+		</button>
+	);
+}
 
 function getMessageSection(message, messageType, messageLanguage, style) {
 	switch(messageType) {
 		case 'code':
 			return <>
-				<span className='h-6 bg-gray-700 p-1 text-white font-semibold w-full block text-xs ps-2'>{messageLanguage}</span>
+				<span className='h-6 bg-gray-700 p-1 text-white font-semibold w-full block text-xs ps-2 flex justify-between'>
+					{messageLanguage}
+					<CopyToClipboardButton dataToCopy={messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message.toString()} />
+				</span>
 				<SyntaxHighlighter
 					language={messageLanguage}
 					style={style}
@@ -19,9 +44,6 @@ function getMessageSection(message, messageType, messageLanguage, style) {
 			</>;
 		case 'text':
 		default:
-			// return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'sans-serif' }}>
-			// 	{message}
-			// </pre>;
 			return <Markdown
 				className={'markdown-content'}
 				remarkPlugins={[remarkGfm]}
