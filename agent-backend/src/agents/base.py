@@ -54,7 +54,7 @@ def init_socket_generate_team(task: str, session_id: str):
         socket.emit("join_room", f"_{session_id}")
         team_task = f"""{task}. 
                 Given the above task create the ideal team that will be best suited to complete this task. 
-                Return the team in the below structure {json.dumps(file)}. 
+                Return the team in the below structure {json.dumps(file, indent=2)}. 
                 There are no hard limits on the number or the combination of team members."""
         socket.emit(
             "message",
