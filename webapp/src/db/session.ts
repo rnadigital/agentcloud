@@ -84,13 +84,14 @@ export function unsafeSetSessionStatus(sessionId: db.IdOrStr, newStatus: Session
 	});
 }
 
-export function unsafeSetSessionAgents(sessionId: db.IdOrStr, agents: SessionAgent[]): Promise<any> {
+export function unsafeSetSessionAgents(sessionId: db.IdOrStr, agents: SessionAgent[], team: string): Promise<any> {
 	return SessionCollection().updateOne({
 		_id: toObjectId(sessionId),
 	}, {
 		$set: {
 			agents,
 			type: SessionType.TASK,
+			team,
 		}
 	});
 }

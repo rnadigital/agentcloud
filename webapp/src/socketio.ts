@@ -88,7 +88,7 @@ export function initSocket(rawHttpServer) {
 				agentId: agent._id,
 				reportTo: null, //unused atm
 			}));
-			await unsafeSetSessionAgents(session._id, sessionAgents);
+			await unsafeSetSessionAgents(session._id, sessionAgents, sessionTeamJsonMessage?.message?.message?.text);
 			io.to('task_queue').emit(SessionType.TASK, {
 				task: session.prompt,
 				sessionId: session._id.toString(),
