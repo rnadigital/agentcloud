@@ -64,7 +64,7 @@ There are no hard limits on the number or the combination of team members."""
 
         socket.emit("message", {
             "room": session_id,
-            "message": f"Received task "{task}". Formulating team that will undertake this task..."
+            "message": f'Received task "{task}". Formulating team that will undertake this task...'
         })
 
         config_list = autogen.config_list_from_json(
