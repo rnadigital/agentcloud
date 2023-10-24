@@ -1,13 +1,12 @@
 from pymongo import MongoClient
-from init.env_variables import LOCAL
-from gcp.cloud_secrets import access_secret
 import logging
 from typing import Optional
+from init.env_variables import DB_URL
 
 
 class MongoConnection:
     def __init__(self):
-        self.mongo_uri = 'mongodb://localhost:27017' if LOCAL else access_secret('RAPTOR_APP_MONGO_URL', 'latest')
+        self.mongo_uri = DB_URL
         print(self.mongo_uri)
 
     def connect(self) -> Optional[MongoClient]:
