@@ -13,7 +13,7 @@ import json
 mongo_client = start_mongo_session()
 
 with open(f"{BASE_PATH}/config/base.json", 'r') as f:
-    file = f.read()
+    file = json.loads(f.read())
 
 
 def task_execution(task: str, session_id: str):
