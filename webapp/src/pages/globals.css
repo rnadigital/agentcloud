@@ -116,10 +116,7 @@ body {
 
 /* Code */
 .markdown-content pre {
-  background-color: #f6f8fa;
-  padding: 8px;
   overflow-x: auto;
-  border: 1px solid lightgray;
   border-radius: 4px;
 }
 
@@ -175,8 +172,12 @@ body {
   background-color: #f6f8fa;
 }
 
-.markdown-content :not(:first-child) {
+.markdown-content :not(:first-child).markdown-content :not(:first-child) {
   margin-top: 0.5em;
+}
+
+.markdown-content pre * {
+  margin-top: unset!important;
 }
 
 .overlay-container {

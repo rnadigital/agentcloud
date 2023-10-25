@@ -29,46 +29,67 @@ export function CopyToClipboardButton({ dataToCopy }) {
 	);
 }
 
-function MessageBody({ message, messageType, messageLanguage, style }) {
-	const messageContent = messageLanguage === 'json'
-		? JSON.stringify(message, null, '\t')
-		: message.toString();
+function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 	const isLongMessage = messageContent
 		&& typeof messageContent.split === 'function'
 		&& messageContent.split(/\r?\n/).length > 10;
 	const [ collapsed, setCollapsed ] = useState(isLongMessage);
+	return <>
+		<span className='h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
+			{messageLanguage}
+			<CopyToClipboardButton dataToCopy={messageContent} />
+		</span>
+		<div className='overlay-container'>
+			<SyntaxHighlighter
+				wrapLongLines
+				className={collapsed ? 'overlay-gradient' : null}
+				language={messageLanguage}
+				style={style}
+				showLineNumbers={true}
+				customStyle={{ margin: 0, maxHeight: collapsed ? '10em' : 'unset' }}
+			>
+				{messageContent}
+			</SyntaxHighlighter>
+			<button
+				className='overlay-button btn bg-indigo-600 rounded-md text-white'
+				onClick={() => {
+					setCollapsed(oldCollapsed => !oldCollapsed);
+				}}
+			>
+				{collapsed ? 'Expand' : 'Collapse'}
+			</button>
+		</div>
+	</>;
+}
+
+function MessageBody({ message, messageType, messageLanguage, style }) {
+	const messageContent = messageLanguage === 'json'
+		? JSON.stringify(message, null, '\t')
+		: message.toString();
 	switch(messageType) {
 		case 'code':
-			return <>
-				<span className='h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
-					{messageLanguage}
-					<CopyToClipboardButton dataToCopy={messageContent} />
-				</span>
-				<div className='overlay-container'>
-					<SyntaxHighlighter
-						wrapLongLines
-						className={collapsed ? 'overlay-gradient' : null}
-						language={messageLanguage}
-						style={style}
-						showLineNumbers={true}
-						customStyle={{ margin: 0, maxHeight: collapsed ? '10em' : 'unset' }}
-					>
-						{messageContent}
-					</SyntaxHighlighter>
-					<button
-						className='overlay-button btn bg-indigo-600 rounded-md text-white'
-						onClick={() => {
-							setCollapsed(oldCollapsed => !oldCollapsed);
-						}}
-					>
-						{collapsed ? 'Expand' : 'Collapse'}
-					</button>
-				</div>
-			</>;
+			return <CollapsingCodeBody
+				messageContent={messageContent}
+				messageLanguage={messageLanguage}
+				style={style}
+			/>;
 		case 'text':
 		default:
 			return <Markdown
 				className={'markdown-content'}
+				components={{
+					code(props) {
+						const { children, className, node, ...rest } = props;
+						const match = /language-(\w+)/.exec(className || '');
+						return match ? (<CollapsingCodeBody
+							messageContent={String(children).replace(/\n$/, '')}
+							messageLanguage={match[1]}
+							style={style}
+						/>) : (<code {...rest} className={className}>
+							{children}
+						</code>);
+					}
+				}}
 			>
 				{message}
 			</Markdown>;
