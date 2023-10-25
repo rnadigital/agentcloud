@@ -206,7 +206,7 @@ termcolor = "*"
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
 reference = "main"
-resolved_reference = "49a1f2ed32d595b2c3275f3a2359ed0c2fd1091b"
+resolved_reference = "43bc35186f325bc5db264ea66a060711d9627528"
 
 [[package]]
 name = "bidict"
