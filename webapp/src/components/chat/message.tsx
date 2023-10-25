@@ -1,7 +1,12 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
-import Markdown from 'react-markdown';
+import dynamic from 'next/dynamic';
+// @ts-ignore
+const Markdown = dynamic(() => import('react-markdown'), {
+	loading: () => <p>Loading...</p>,
+	ssr: false,
+});
 import { toast } from 'react-toastify';
 
 export function CopyToClipboardButton({ dataToCopy }) {
@@ -51,7 +56,7 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 						{messageContent}
 					</SyntaxHighlighter>
 					<button
-						className='overlay-button'
+						className='overlay-button btn bg-indigo-600 rounded-md text-white'
 						onClick={() => {
 							setCollapsed(oldCollapsed => !oldCollapsed);
 						}}

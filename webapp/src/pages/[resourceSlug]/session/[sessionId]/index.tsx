@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // import { useParams } from 'next/navigation';
 import Head from 'next/head';
 import * as API from '../../../../api';
@@ -20,10 +20,32 @@ export default function Session(props) {
 	const { sessionId } = router.query;
 	const { session } = state;
 
+	const [isAtBottom, setIsAtBottom] = useState(true);
+	const scrollContainerRef = useRef(null);
+	useEffect(() => {
+		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
+		const handleScroll = () => {
+			const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+			// Check if scrolled to the bottom
+			const isCurrentlyAtBottom = scrollTop + clientHeight >= scrollHeight;
+			if (isCurrentlyAtBottom !== isAtBottom) {
+				setIsAtBottom(isCurrentlyAtBottom);
+			}
+		};
+		const container = scrollContainerRef.current;
+		container.addEventListener('scroll', handleScroll);
+		// Cleanup
+		return () => {
+			container.removeEventListener('scroll', handleScroll);
+		};
+	}, [isAtBottom]);
+
 	const socketContext = useSocketContext();
 	const [messages, setMessages] = useState(null);
 	const [terminated, setTerminated] = useState(null);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
+	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
+	const chatBusyState = sentLastMessage || !lastMessageFeedback;
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);
 	}
@@ -38,16 +60,19 @@ export default function Session(props) {
 		const newMessage = typeof message === 'string'
 			? { type: null, text: message }
 			: message;
-		setMessages(oldMessages => oldMessages.concat([newMessage]));
+		setMessages(oldMessages => {
+			return oldMessages
+				.concat([newMessage])
+				.sort((ma, mb) => mb.date - ma.date);
+		});
 	}
 	function scrollToBottom() {
-		//scroll to bottom when messages added
-		const messagesSection = document.getElementById('messages-section'); //TODO: should this be a ref?
-		if (messagesSection) {
+		//scroll to bottom when messages added (if currently at bottom)
+		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 			setTimeout(() => {
-				messagesSection.scrollTo({
+				scrollContainerRef.current.scrollTo({
 					left: 0,
-					top: messagesSection.scrollHeight,
+					top: scrollContainerRef.current.scrollHeight,
 					behavior: 'smooth',
 				});
 			}, 250);
@@ -157,7 +182,7 @@ export default function Session(props) {
 
 			<div className='flex flex-col -m-7 -my-10 flex flex-col flex-1'>
 
-            	<div className='overflow-y-auto' id='messages-section'>
+				<div className='overflow-y-auto' ref={scrollContainerRef}>
 					{messages && messages.map((m, mi) => {
 						return <Message
 							key={`message_${mi}`}
@@ -170,7 +195,7 @@ export default function Session(props) {
 							isFeedback={m.isFeedback}
 						/>;
 					})}
-					{sentLastMessage && !terminated && <div className='text-center border-t pb-6 pt-8'>
+					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>
 						<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
@@ -194,7 +219,7 @@ export default function Session(props) {
 									<input type='hidden' name='type' value='generate_team' />
 									<div className='overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 										<textarea
-											rows={3}
+											rows={1}
 											name='prompt'
 											id='prompt'
 											className='block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
@@ -225,10 +250,10 @@ export default function Session(props) {
 										</div>*/}
 										<div className='flex-shrink-0'>
 											<button
-												disabled={sentLastMessage}
+												disabled={chatBusyState}
 												type='submit'
 												className={classNames('inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
-													!sentLastMessage
+													!chatBusyState
 														? 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 														: 'bg-indigo-400 cursor-wait')}
 											>

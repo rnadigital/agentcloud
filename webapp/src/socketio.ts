@@ -99,6 +99,7 @@ export function initSocket(rawHttpServer) {
 		
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
+			const messageTimestamp = data?.message?.ts || Date.now();
 			if (typeof data.message !== 'object') {
 				data.message = {
 					type: 'text',
@@ -129,7 +130,7 @@ export function initSocket(rawHttpServer) {
 					incoming: data.incoming != null ? data.incoming : false,
 					authorName: data.authorName || 'AgentCloud',
 					message: finalMessage,
-					date: new Date(),
+					date: new Date(messageTimestamp),
 				};
 			}
 
@@ -145,7 +146,7 @@ export function initSocket(rawHttpServer) {
 					type: session.type as SessionType,
 					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
 					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
-					date: new Date(),
+					date: finalMessage.date || new Date(messageTimestamp),
 				});
 			}
 
