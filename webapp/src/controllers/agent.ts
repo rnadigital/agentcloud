@@ -101,6 +101,7 @@ export async function addAgentApi(req, res, next) {
 		},
 		isUserProxy: isUserProxy != null,
 		systemMessage,
+		humanInputMode: 'ALWAYS', //TODO: this needs to be a field on the frontend, but probably also depends on  other props similar to isUserProxy
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
@@ -139,6 +140,7 @@ export async function editAgentApi(req, res, next) {
 		},
 		isUserProxy: isUserProxy != null,
 		systemMessage,
+		humanInputMode: 'ALWAYS',
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit` });
