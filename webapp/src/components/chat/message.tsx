@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 const Markdown = dynamic(() => import('react-markdown'), {
   loading: () => <p>Loading...</p>
 });
-import remarkGfm from 'remark-gfm';
+const RemarkGfm = dynamic(() => import('remark-gfm'));
 import { toast } from 'react-toastify';
 
 export function CopyToClipboardButton({ dataToCopy }) {
