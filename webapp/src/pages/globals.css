@@ -172,7 +172,7 @@ body {
   background-color: #f6f8fa;
 }
 
-.markdown-content :not(:first-child).markdown-content :not(:first-child) {
+.markdown-content :not(:first-child) {
   margin-top: 0.5em;
 }
 
