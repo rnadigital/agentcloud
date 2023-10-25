@@ -63,7 +63,7 @@ export default function Session(props) {
 		setMessages(oldMessages => {
 			return oldMessages
 				.concat([newMessage])
-				.sort((ma, mb) => mb.ts - ma.ts);
+				.sort((ma, mb) => ma.ts - mb.ts);
 		});
 	}
 	function scrollToBottom() {
