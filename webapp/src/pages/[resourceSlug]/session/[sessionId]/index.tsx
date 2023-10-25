@@ -63,7 +63,7 @@ export default function Session(props) {
 		setMessages(oldMessages => {
 			return oldMessages
 				.concat([newMessage])
-				.sort((ma, mb) => mb.date - ma.date);
+				.sort((ma, mb) => mb.ts - ma.ts);
 		});
 	}
 	function scrollToBottom() {
@@ -191,7 +191,7 @@ export default function Session(props) {
 							messageLanguage={m.message?.language}
 							authorName={m.authorName}
 							incoming={m.incoming}
-							date={m.date}
+							ts={m.ts}
 							isFeedback={m.isFeedback}
 						/>;
 					})}

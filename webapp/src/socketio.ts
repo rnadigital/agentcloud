@@ -128,9 +128,9 @@ export function initSocket(rawHttpServer) {
 				finalMessage = {
 					...data,
 					incoming: data.incoming != null ? data.incoming : false,
-					authorName: data.authorName || 'AgentCloud',
+					authorName: data.authorName || 'System',
 					message: finalMessage,
-					date: new Date(messageTimestamp),
+					ts: messageTimestamp,
 				};
 			}
 
@@ -146,7 +146,7 @@ export function initSocket(rawHttpServer) {
 					type: session.type as SessionType,
 					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
 					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
-					date: finalMessage.date || new Date(messageTimestamp),
+					ts: finalMessage.ts || messageTimestamp,
 				});
 			}
 

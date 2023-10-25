@@ -11,7 +11,7 @@ export type ChatMessage = {
 	teamId: ObjectId;
 	sessionId: ObjectId;
 	message: any;
-	date: Date;
+	ts: number;
 	type: SessionType,
 	authorId: ObjectId;
 	authorName: string; //Downside, author names need to be updated in historical chats if we want

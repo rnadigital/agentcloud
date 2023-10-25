@@ -96,8 +96,8 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 	}
 }
 
-export function Message({ message, messageType, messageLanguage, isFeedback, date, authorName, authorImage, incoming }
-	: { message?: any, messageType?: string, messageLanguage?: string, isFeedback?: boolean, date?: Date, authorName?: string, authorImage?: string, incoming?: boolean }) {
+export function Message({ message, messageType, messageLanguage, isFeedback, ts, authorName, authorImage, incoming }
+	: { message?: any, messageType?: string, messageLanguage?: string, isFeedback?: boolean, ts?: number, authorName?: string, authorImage?: string, incoming?: boolean }) {
 
 	const [ style, setStyle ] = useState(null);
 	useEffect(() => {
@@ -117,8 +117,8 @@ export function Message({ message, messageType, messageLanguage, isFeedback, dat
 		<div className={`grid grid-cols-1 xl:grid-cols-5 border-t ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
-				<strong className='capitalize'>{authorName}</strong>
-				{date && ' - ' + new Date(date).toLocaleString()}
+				<strong className='capitalize pe-1'>{authorName}</strong>
+				{ts && ' - ' + new Date(ts).toLocaleString()}
 			</small>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
