@@ -3,9 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
 const Markdown = dynamic(() => import('react-markdown'), {
-  loading: () => <p>Loading...</p>
+	loading: () => <p>Loading...</p>
 });
-const RemarkGfm = dynamic(() => import('remark-gfm'));
 import { toast } from 'react-toastify';
 
 export function CopyToClipboardButton({ dataToCopy }) {
@@ -36,7 +35,7 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 					{messageLanguage}
 					<CopyToClipboardButton dataToCopy={messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message.toString()} />
 				</span>
-				<div className="overlay-container">
+				<div className='overlay-container'>
 					<SyntaxHighlighter
 						className='overlay-gradient'
 						language={messageLanguage}
@@ -46,14 +45,13 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 					>
 						{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
 					</SyntaxHighlighter>
-					<button className="overlay-button">Click Me</button>
+					<button className='overlay-button'>Click Me</button>
 				</div>
 			</>;
 		case 'text':
 		default:
 			return <Markdown
 				className={'markdown-content'}
-				remarkPlugins={[remarkGfm]}
 			>
 				{message}
 			</Markdown>;
