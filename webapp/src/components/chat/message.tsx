@@ -1,7 +1,10 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
-import Markdown from 'react-markdown';
+import dynamic from 'next/dynamic';
+const Markdown = dynamic(() => import('react-markdown'), {
+  loading: () => <p>Loading...</p>
+});
 import remarkGfm from 'remark-gfm';
 import { toast } from 'react-toastify';
 
@@ -25,22 +28,26 @@ export function CopyToClipboardButton({ dataToCopy }) {
 	);
 }
 
-function getMessageSection(message, messageType, messageLanguage, style) {
+function MessageBody({ message, messageType, messageLanguage, style }) {
 	switch(messageType) {
 		case 'code':
 			return <>
-				<span className='h-6 bg-gray-700 p-1 text-white font-semibold w-full block text-xs ps-2 flex justify-between'>
+				<span className='h-8 bg-gray-700 p-2 text-white font-semibold w-full block text-xs ps-2 flex justify-between'>
 					{messageLanguage}
 					<CopyToClipboardButton dataToCopy={messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message.toString()} />
 				</span>
-				<SyntaxHighlighter
-					language={messageLanguage}
-					style={style}
-					showLineNumbers={true}
-					customStyle={{ margin: 0 }}
-				>
-					{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
-				</SyntaxHighlighter>
+				<div className="overlay-container">
+					<SyntaxHighlighter
+						className='overlay-gradient'
+						language={messageLanguage}
+						style={style}
+						showLineNumbers={true}
+						customStyle={{ margin: 0 }}
+					>
+						{messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message}
+					</SyntaxHighlighter>
+					<button className="overlay-button">Click Me</button>
+				</div>
 			</>;
 		case 'text':
 		default:
@@ -57,6 +64,7 @@ export function Message({ message, messageType, messageLanguage, isFeedback, dat
 	: { message?: any, messageType?: string, messageLanguage?: string, isFeedback?: boolean, date?: Date, authorName?: string, authorImage?: string, incoming?: boolean }) {
 
 	const [ style, setStyle ] = useState(null);
+	const [ collapsed, setCollapsedCode ] = useState(null);
 	useEffect(() => {
 		if (!style) {
 			import('react-syntax-highlighter/dist/esm/styles/prism/material-dark')
@@ -85,7 +93,7 @@ export function Message({ message, messageType, messageLanguage, isFeedback, dat
 				{!incoming && authorSection}
 				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : ''} overflow-x-auto`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
-						{getMessageSection(message, messageType, messageLanguage, style)}
+						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
 					</p>
 				</div>
 				{incoming && authorSection}
