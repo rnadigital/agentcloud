@@ -115,7 +115,7 @@ body {
 }
 
 /* Code */
-.markdown-content pre {
+.markdown-content > pre {
   overflow-x: auto;
   border-radius: 4px;
 }
