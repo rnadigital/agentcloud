@@ -178,3 +178,31 @@ body {
 .markdown-content :not(:first-child) {
   margin-top: 0.5em;
 }
+
+.overlay-container {
+  position: relative;
+  display: inline-block;  /* This ensures the container fits its children's size. Adjust as needed. */
+}
+
+.overlay-button {
+  position: absolute;
+  bottom: 10px;  /* Adjust this value as per your requirement for distance from bottom */
+  left: 50%;
+  transform: translateX(-50%);  /* Center the button */
+  padding: 5px 10px;
+}
+
+.overlay-gradient {
+  position: relative;
+}
+
+.overlay-gradient::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+  pointer-events: none; /* Ensures the overlay doesn't interfere with clicks on the element */
+}
