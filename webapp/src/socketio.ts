@@ -99,7 +99,7 @@ export function initSocket(rawHttpServer) {
 		
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
-			const messageTimestamp = data?.message?.ts || Date.now();
+			const messageTimestamp = data?.message?.timestamp || Date.now();
 			if (typeof data.message !== 'object') {
 				data.message = {
 					type: 'text',
