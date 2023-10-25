@@ -61,6 +61,7 @@ services:
       - DB_URL=mongodb://docker_mongo:27017/test
       - MONGO_DB_NAME=test
       - OPENAI_API_KEY=changeme
+      - MAX_RETRIES=10
 
 volumes:
   mongodb_data_container:
