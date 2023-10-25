@@ -29,11 +29,11 @@ gpt4_config = {
 {% for role in roles %}
 {% if role.is_user_proxy %}
 user_proxy = UserProxyAgent(
-    name="user_proxy",
+    name="Admin",
     llm_config=gpt4_config,
     system_message="{{ role.system_message }}",
     human_input_mode="{{ role.human_input_mode }}",
-    code_execution_config={{ role.code_execution_config }},
+    code_execution_config={{ role.code_execution_config | default(False) }},
     use_sockets=True,
     socket_client=socket,
     sid=session_id

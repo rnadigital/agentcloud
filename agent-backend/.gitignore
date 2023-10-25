@@ -164,3 +164,4 @@ src/orgs/*.py
 !src/orgs/__init__.py
 .DS_Store
 keyfile.json
+.*.ipynb
