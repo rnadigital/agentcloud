@@ -1,0 +1,13 @@
+[
+  {
+    "model": "gpt-4",
+    "api_key": "YOUR_OPENAI_API_KEY"
+  },
+  {
+    "model": "gpt-4-32k",
+    "api_key": "AZURE_API_KEY",
+    "api_base": "AZURE_BASE_URL",
+    "api_type": "azure",
+    "api_version": "2023-07-01-preview"
+  }
+]

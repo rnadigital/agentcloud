@@ -3,6 +3,7 @@ from mongo.client import MongoConnection
 from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
+from random import randint
 
 
 class MongoClientConnection(MongoConnection):
@@ -26,18 +27,52 @@ class MongoClientConnection(MongoConnection):
     def _get_sessions_collection(self) -> collection.Collection:
         return self.db["sessions"]
 
+    @property
+    def _get_agents_collection(self) -> collection.Collection:
+        return self.db["agents"]
+
     def insert_chat_messages(self, message: str):
         with log_exception():
             self.db = self._get_db
             self.collection = self._get_chat_collection
             self.collection.insert_one({"_id": ObjectId(), "message": message})
 
-    def get_team(self, session_id: str):
+    def get_team(self, session_id: str) -> dict:
         with log_exception():
             self.db = self._get_db
             self.collection = self._get_sessions_collection
-            team = self.collection.find_one({"_id": ObjectId(session_id)}, {"team": 1})
-            if team:
-                return team.get("team")
-            else:
-                return None
+            team = {
+                "group_chat": True,
+                "gpt4_config": {
+                    "seed": randint(1, 1000),
+                    "temperature": 0,
+                    "request_timeout": 300,
+                    "retry_wait_time": 60
+                },
+                "roles": []
+            }
+            list_of_agents = list()
+            query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
+            agents = query_results.get("agents")
+            for agent in agents:
+                agent_id: ObjectId = agent.get("agentId")
+                agent_data: dict = self._get_team_member(agent_id)
+                list_of_agents.append(agent_data)
+            team["roles"] = list_of_agents
+            return team
+
+    def _get_team_member(self, agent_id: ObjectId) -> dict:
+        self.collection = self._get_agents_collection
+        agent_data = dict()
+        agent = self.collection.find({"_id": ObjectId(agent_id)})
+        if agent is not None:
+            agent_data["name"] = agent[0].get("name")
+            agent_data["type"] = agent[0].get("type", "AssistantAgent")
+            agent_data["llm_config"] = agent[0].get("llmConfig", "gpt4_config")
+            code_execution = agent[0].get("codeExecutionConfig", False)
+            agent_data["code_execution_config"] = code_execution if not code_execution else {
+                "last_n_messages": code_execution.get("lastNMessages"), "work_dir": code_execution.get("workDirectory"),
+                "use_docker": False}
+            agent_data["system_message"] = agent[0].get("systemMessage", "You are an AI assistant")
+            agent_data["is_user_proxy"] = agent[0].get("isUserProxy", False)
+        return agent_data
