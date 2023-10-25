@@ -6,6 +6,7 @@ import toObjectId from '../lib/misc/toobjectid';
 
 export type AgentType = 'UserProxyAgent' | 'AssistantAgent';
 export type LlmConfigType = 'gpt-4-32k' | 'gpt-4-32k-0314';
+expoty type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
 export type CodeExecutionConfigType = {
 	lastNMessages: number;
 	workDirectory: string;
@@ -21,6 +22,7 @@ export type Agent = {
 	codeExecutionConfig?: CodeExecutionConfigType;
 	isUserProxy?: boolean;
 	systemMessage: string;
+	humanInputMode: HumanInputModeType;
 };
 
 export function AgentCollection() {

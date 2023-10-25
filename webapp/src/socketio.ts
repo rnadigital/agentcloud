@@ -82,6 +82,7 @@ export function initSocket(rawHttpServer) {
 					: null,
 				isUserProxy: role.is_user_proxy || false,
 				systemMessage: role.system_message,
+				humanInputMode: role.human_input_mode,
 			}));
 			await addAgents(mappedRolesToAgents); //TODO: pass teamId
 			const sessionAgents = mappedRolesToAgents.map(agent => ({
