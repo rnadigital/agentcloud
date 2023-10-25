@@ -22,6 +22,7 @@ SOCKET_URL = os.getenv("SOCKET_URL", "http://webapp_next:3000/") if LOCAL else a
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test") if LOCAL else access_secret("MONGO_DB_NAME")
 DB_URL = os.getenv("DB_URL") if LOCAL else access_secret("DB_URL")
 MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def _set_max_threads() -> int:
