@@ -3,7 +3,7 @@
   "gpt4_config": {
     "seed": 123,
     "temperature": 0,
-    "request_timeout": 120,
+    "request_timeout": 300,
     "retry_wait_time": 60
   },
   "roles": [

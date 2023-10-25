@@ -159,7 +159,7 @@ cython_debug/
 .idea/
 src/keys
 /keys
-/src/config/OAI_CONFIG_LIST.json
+src/config/OAI_CONFIG_LIST.json
 src/orgs/*.py
 !src/orgs/__init__.py
 .DS_Store

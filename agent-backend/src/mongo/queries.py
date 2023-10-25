@@ -51,28 +51,29 @@ class MongoClientConnection(MongoConnection):
                 },
                 "roles": []
             }
-            list_of_agents = list()
-            query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
-            agents = query_results.get("agents")
-            for agent in agents:
-                agent_id: ObjectId = agent.get("agentId")
-                agent_data: dict = self._get_team_member(agent_id)
-                list_of_agents.append(agent_data)
-            team["roles"] = list_of_agents
-            return team
+        list_of_agents = list()
+        query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
+        agents = query_results.get("agents")
+        for agent in agents:
+            agent_id: ObjectId = agent.get("agentId")
+            agent_data: dict = self._get_team_member(agent_id)
+            list_of_agents.append(agent_data)
+        team["roles"] = list_of_agents
+        return team
 
     def _get_team_member(self, agent_id: ObjectId) -> dict:
         self.collection = self._get_agents_collection
         agent_data = dict()
-        agent = self.collection.find({"_id": ObjectId(agent_id)})
+        agent = self.collection.find_one({"_id": ObjectId(agent_id)})
         if agent is not None:
-            agent_data["name"] = agent[0].get("name")
-            agent_data["type"] = agent[0].get("type", "AssistantAgent")
-            agent_data["llm_config"] = agent[0].get("llmConfig", "gpt4_config")
-            code_execution = agent[0].get("codeExecutionConfig", False)
-            agent_data["code_execution_config"] = code_execution if not code_execution else {
-                "last_n_messages": code_execution.get("lastNMessages"), "work_dir": code_execution.get("workDirectory"),
+            agent_data["name"] = agent.get("name")
+            agent_data["type"] = agent.get("type", "AssistantAgent")
+            agent_data["llm_config"] = agent.get("llmConfig", "gpt4_config")
+            code_execution = agent.get("codeExecutionConfig")
+            agent_data["code_execution_config"] = False if code_execution is None else {
+                "last_n_messages": code_execution.get("lastNMessages", 3), "work_dir": code_execution.get("workDirectory", "output"),
                 "use_docker": False}
-            agent_data["system_message"] = agent[0].get("systemMessage", "You are an AI assistant")
-            agent_data["is_user_proxy"] = agent[0].get("isUserProxy", False)
+            agent_data["system_message"] = agent.get("systemMessage", "You are an AI assistant")
+            agent_data["human_input_mode"] = agent.get("humanInputMode", "NEVER")
+            agent_data["is_user_proxy"] = agent.get("isUserProxy", False)
         return agent_data
