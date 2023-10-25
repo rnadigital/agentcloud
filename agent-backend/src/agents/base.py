@@ -59,10 +59,11 @@ def init_socket_generate_team(task: str, session_id: str):
         socket = SimpleClient()
         socket.connect(url=SOCKET_URL)
         socket.emit("join_room", f"_{session_id}")
-        team_task = [f"""
-        Given the following task, create the ideal team that will be best suited to complete the task:
-        "{task}" Return the team in the below JSON structure:""", json.dumps(file, indent=2),
-                     "There are no hard limits on the number or the combination of team members."]
+        team_task = [f"""Given the following task, create the ideal team that will be best suited to complete the task:
+
+"{task}" 
+
+Return the team in the below JSON structure:""", json.dumps(file, indent=2), "There are no hard limits on the number or the combination of team members."]
 
         config_list = autogen.config_list_from_json(
             "./src/config/OAI_CONFIG_LIST.json",
