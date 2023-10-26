@@ -4,7 +4,7 @@ import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
-	loading: () => <p>Loading...</p>,
+	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false,
 });
 import { toast } from 'react-toastify';
