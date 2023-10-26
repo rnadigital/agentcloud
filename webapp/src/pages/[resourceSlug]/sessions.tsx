@@ -76,6 +76,7 @@ export default function Sessions(props) {
 			</button>
 		</div>}
 		{(newSessionOpen || sessions.length === 0) && <StartSessionChatbox />}
+		
 		<SessionCards sessions={sessions} fetchSessions={fetchSessions} />
 
 	</>);

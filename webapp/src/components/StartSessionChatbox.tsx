@@ -29,9 +29,6 @@ export default function StartSessionChatbox() {
 	return (<div className='flex flex-col my-24'>
 
 		<div className='text-center my-2'>
-			<span className='me-2 inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'>
-				New!
-			</span>
 			To start a new session, describe a task in natural language:
 		</div>
 
@@ -93,7 +90,7 @@ export default function StartSessionChatbox() {
 			</div>
 		</div>
 
-		<div className='flex flex-row justify-center mt-10 mb-2'>
+		{/*<div className='flex flex-row justify-center mt-10 mb-2'>
 			<div className='basis-1/2'>
 				<div className='relative'>
 			      <div className='absolute inset-0 flex items-center' aria-hidden='true'>
@@ -104,19 +101,7 @@ export default function StartSessionChatbox() {
 			      </div>
 			    </div>
 			</div>
-		</div>
-
-		<div className='flex flex-row justify-center'>
-			<Link href={`/${resourceSlug}/agent/add`}>
-				<button
-					type='button'
-					className='mt-6 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
-					<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />
-					Create Session Manually
-				</button>
-			</Link>
-		</div>
+		</div>*/}
 
 	</div>);
 }
