@@ -35,7 +35,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 		&& messageContent.split(/\r?\n/).length > 10;
 	const [ collapsed, setCollapsed ] = useState(isLongMessage);
 	return <>
-		<span className='h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
+		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
 			<CopyToClipboardButton dataToCopy={messageContent} />
 		</span>
@@ -96,8 +96,27 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 	}
 }
 
-export function Message({ message, messageType, messageLanguage, isFeedback, ts, authorName, authorImage, incoming }
-	: { message?: any, messageType?: string, messageLanguage?: string, isFeedback?: boolean, ts?: number, authorName?: string, authorImage?: string, incoming?: boolean }) {
+export function Message({
+	prevMessage,
+	message,
+	messageType,
+	messageLanguage,
+	isFeedback,
+	ts,
+	authorName,
+	authorImage,
+	incoming
+}: {
+		prevMessage?: any,
+		message?: any,
+		messageType?: string,
+		messageLanguage?: string,
+		isFeedback?: boolean,
+		ts?: number,
+		authorName?: string,
+		authorImage?: string,
+		incoming?: boolean
+	}) {
 
 	const [ style, setStyle ] = useState(null);
 	useEffect(() => {
@@ -109,29 +128,37 @@ export function Message({ message, messageType, messageLanguage, isFeedback, ts,
 	
 	if (!style) { return null; }
 
-	const authorSection = <div className={`w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
-		<span className='w-8 h-8 rounded-full text-center pt-1 font-bold ring-1 ring-gray-300'>{authorName.charAt(0).toUpperCase()}</span>		
+	const sameAuthorAsPrevious = prevMessage && prevMessage.authorName === authorName;
+
+	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
+		<span className={`w-8 h-8 rounded-full text-center pt-1 font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
+			{!sameAuthorAsPrevious && authorName.charAt(0).toUpperCase()}
+		</span>
+	</div>;
+
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${!sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+		<div className='invisible xl:visible col-span-1'></div>
+		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
+			<strong className='capitalize pe-1'>{authorName}</strong>
+		</small>
+		<div className='invisible xl:visible col-span-1'></div>
 	</div>;
 
 	return <>
-		<div className={`grid grid-cols-1 xl:grid-cols-5 border-t ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
-			<div className='invisible xl:visible col-span-1'></div>
-			<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
-				<strong className='capitalize pe-1'>{authorName}</strong>
-				{ts && ' - ' + new Date(ts).toLocaleString()}
-			</small>
-			<div className='invisible xl:visible col-span-1'></div>
-		</div>
+		{authorNameSection}
 		<div className={`grid grid-cols-1 xl:grid-cols-5 ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
 			<div className='invisible xl:visible col-span-1'></div>
-			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pb-4 pt-1 col-span-1 xl:col-span-3`}>
-				{!incoming && authorSection}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : ''} overflow-x-auto`}>
+			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
+				{!incoming && profilePicture}
+				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : 'p-2'} overflow-x-auto`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
+						<small className='flex justify-end text-gray-500 pt-1'>
+							<time dateTime={new Date(ts).toISOString()}>{new Date(ts).toLocaleString()}</time>
+						</small>
 					</p>
 				</div>
-				{incoming && authorSection}
+				{incoming && profilePicture}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>

@@ -183,6 +183,8 @@ body {
 .overlay-container {
   position: relative;
   display: inline-block;  /* This ensures the container fits its children's size. Adjust as needed. */
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
 }
 
 .overlay-button {

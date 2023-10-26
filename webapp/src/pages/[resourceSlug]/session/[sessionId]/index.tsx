@@ -183,9 +183,10 @@ export default function Session(props) {
 			<div className='flex flex-col -m-7 -my-10 flex flex-col flex-1'>
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
-					{messages && messages.map((m, mi) => {
+					{messages && messages.map((m, mi, marr) => {
 						return <Message
 							key={`message_${mi}`}
+							prevMessage={mi > 0 ? marr[mi-1] : null}
 							message={m.message.text}
 							messageType={m.message?.type}
 							messageLanguage={m.message?.language}
