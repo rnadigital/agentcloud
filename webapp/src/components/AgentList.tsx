@@ -4,7 +4,7 @@ import { useAccountContext } from '../context/account';
 
 export default function AgentList({ agents }) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
 
 	return (

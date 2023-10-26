@@ -12,7 +12,7 @@ import { XMarkIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Sessions(props) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
 
 	const router = useRouter();

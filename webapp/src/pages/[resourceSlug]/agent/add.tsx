@@ -9,7 +9,7 @@ import { PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 
 export default function Agents(props) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();

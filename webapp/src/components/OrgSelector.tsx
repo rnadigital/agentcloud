@@ -14,7 +14,7 @@ function classNames(...classes) {
 
 export default function OrgSelector({ orgs }) {
 
-	const [accountContext, refreshAccountContext] = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();
@@ -72,9 +72,10 @@ export default function OrgSelector({ orgs }) {
 								)}
 							</Menu.Item>
 							{org.teams.map((team, ti) => (
-								<Menu.Item onClick={() => switchTeam(org.id, team.id)} key={`org_${oi}_team_${ti}`}>
+								<Menu.Item key={`org_${oi}_team_${ti}`}>
 									{({ active }) => (
 										<a
+											onClick={() => switchTeam(org.id, team.id)}
 											href='#'
 											className={classNames(
 												active ? 'bg-gray-100' : 'text-gray-100',

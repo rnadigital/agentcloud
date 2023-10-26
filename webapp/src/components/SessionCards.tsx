@@ -23,7 +23,7 @@ const statuses = {
 
 export default function SessionCards({ sessions, fetchSessions }: { sessions: any[], fetchSessions?: any }) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const resourceSlug = account.currentTeam;
 	const router = useRouter();

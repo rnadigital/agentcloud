@@ -70,7 +70,7 @@ import * as API from '../api';
 
 export default withRouter(function Layout(props) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	console.log('accountContext in Layout:', accountContext);
 	
 	const { account, csrf } = accountContext as any;

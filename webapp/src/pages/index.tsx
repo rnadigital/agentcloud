@@ -6,7 +6,7 @@ import { useAccountContext } from '../context/account';
 
 export default function Index() {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
 
 	const router = useRouter();

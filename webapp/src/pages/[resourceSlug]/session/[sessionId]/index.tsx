@@ -11,7 +11,7 @@ import classNames from '../../../../components/ClassNames';
 
 export default function Session(props) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 
 	const router = useRouter();	

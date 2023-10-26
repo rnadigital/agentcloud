@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 
 export default function AgentForm({ agent = {}, editing }: { agent?: any, editing?: boolean }) { //TODO: fix any type
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();

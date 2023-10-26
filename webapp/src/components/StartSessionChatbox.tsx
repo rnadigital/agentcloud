@@ -10,7 +10,7 @@ import * as API from '../api';
 
 export default function StartSessionChatbox() {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const resourceSlug = account.currentTeam;
 

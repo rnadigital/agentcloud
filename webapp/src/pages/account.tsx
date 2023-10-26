@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 
 export default function Account(props) {
 
-	const [accountContext] = useAccountContext();
+	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();
