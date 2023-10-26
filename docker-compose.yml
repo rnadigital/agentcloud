@@ -33,6 +33,7 @@ services:
       - JWT_SECRET=changeme
       - COOKIE_SECRET=changeme
       - PROJECT_ID=tag-monitoring-dev
+      - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
       - URL_APP=http://localhost:3000
     healthcheck:
       test: ["CMD", "curl", "http://localhost:3000"]

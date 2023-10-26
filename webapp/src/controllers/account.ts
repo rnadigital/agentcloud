@@ -131,7 +131,7 @@ export async function register(req, res) {
 
 	if (!emailVerified) {
 		await ses.sendEmail({
-			from: 'noreply@agentcloud.dev',
+			from: process.env.FROM_EMAIL_ADDRESS,
 			bcc: null,
 			cc: null,
 			replyTo: null,
@@ -168,7 +168,7 @@ export async function requestChangePassword(req, res) {
 		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
 			.then(verificationToken => {
 				ses.sendEmail({
-					from: 'support@getmonita.io',
+					from: process.env.FROM_EMAIL_ADDRESS,
 					bcc: null,
 					cc: null,
 					replyTo: null,
