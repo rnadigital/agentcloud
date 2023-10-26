@@ -4,6 +4,7 @@ import Head from 'next/head';
 import * as API from '../../../../api';
 import { useAccountContext } from '../../../../context/account';
 import { useSocketContext } from '../../../../context/socket';
+import { useChatContext } from '../../../../context/chat';
 import { useRouter } from 'next/router';
 import { Message } from '../../../../components/chat/message';
 import classNames from '../../../../components/ClassNames';
@@ -19,6 +20,15 @@ export default function Session(props) {
 	const [error, setError] = useState();
 	const { sessionId } = router.query;
 	const { session } = state;
+
+	const [_chatContext, setChatContext]: any = useChatContext();
+	useEffect(() => {
+		console.log(session)
+		setChatContext(session ? {
+			prompt: session.prompt,
+			status: session.status,
+		} : null);
+	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	const scrollContainerRef = useRef(null);

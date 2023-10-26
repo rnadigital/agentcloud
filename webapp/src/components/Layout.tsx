@@ -61,6 +61,7 @@ const userNavigation = [
 ];
 
 import { useAccountContext } from '../context/account';
+import { useChatContext } from '../context/chat';
 import * as API from '../api';
 
 // const pages = [
@@ -70,9 +71,8 @@ import * as API from '../api';
 
 export default withRouter(function Layout(props) {
 
+	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	console.log('accountContext in Layout:', accountContext);
-	
 	const { account, csrf } = accountContext as any;
 	const { children, router } = props as any;
 	const showNavs = !noNavPages.includes(router.pathname);
@@ -423,8 +423,8 @@ export default withRouter(function Layout(props) {
 						/>
 
 						<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>
-							<form className='relative flex flex-1' action='#' method='GET'>
-								{/*<>
+							{/*<form className='relative flex flex-1' action='#' method='GET'>
+								<>
 									<label htmlFor='search-field' className='sr-only'>
 										Search
 									</label>
@@ -439,8 +439,13 @@ export default withRouter(function Layout(props) {
 										type='search'
 										name='search'
 									/>
-								</>*/}
-							</form>
+								</>
+							</form>*/}
+							<div className='flex flex-1 flex-col justify-center'>
+								<h5 className='text-xl'>
+									{chatContext.prompt && `"${chatContext.prompt}"`}
+								</h5>
+							</div>
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
 								{/*<button
 									type='button'

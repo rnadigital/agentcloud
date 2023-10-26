@@ -5,6 +5,7 @@ import Router from 'next/router';
 import './globals.css';
 import { AccountWrapper } from '../context/account';
 import { SocketWrapper } from '../context/socket';
+import { ChatWrapper } from '../context/chat';
 import React, { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,25 +22,27 @@ export default function App({ Component, pageProps }) {
 	const [pagePropsState] = useState(pageProps);
 	return (
 		<AccountWrapper pageProps={pagePropsState}>
-			<SocketWrapper>
-				<ToastContainer
-					progressClassName='toast-container'
-					bodyClassName='toast-body'
-					theme='colored' 
-					position='top-right'
-					autoClose={4000}
-					newestOnTop={true}
-					pauseOnFocusLoss={false}
-					pauseOnHover={false}
-					hideProgressBar={true}
-				/>
-				<Layout {...pagePropsState}>
-					<style>
-						{''}
-					</style>
-					<Component {...pagePropsState} />
-				</Layout>
-			</SocketWrapper>
+			<ChatWrapper>
+				<SocketWrapper>
+					<ToastContainer
+						progressClassName='toast-container'
+						bodyClassName='toast-body'
+						theme='colored' 
+						position='top-right'
+						autoClose={4000}
+						newestOnTop={true}
+						pauseOnFocusLoss={false}
+						pauseOnHover={false}
+						hideProgressBar={true}
+					/>
+					<Layout {...pagePropsState}>
+						<style>
+							{''}
+						</style>
+						<Component {...pagePropsState} />
+					</Layout>
+				</SocketWrapper>
+			</ChatWrapper>
 		</AccountWrapper>
 	);
 }
