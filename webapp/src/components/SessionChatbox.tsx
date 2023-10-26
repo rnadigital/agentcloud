@@ -23,10 +23,10 @@ export default function SessionChatbox({ chatBusyState, onSubmit }) {
 	return <form action='/forms/session/add' className='relative' onSubmit={onSubmit}>
 		<input type='hidden' name='_csrf' value={csrf} />
 		<input type='hidden' name='type' value='generate_team' />
-		<div className='overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
+		<div className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 			<textarea
 				onKeyDown={handleKeyDown}
-				rows={1}
+				rows={Math.min(5, promptValue.split(/\r?\n/).length)}
 				name='prompt'
 				id='prompt'
 				className='block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
@@ -45,7 +45,7 @@ export default function SessionChatbox({ chatBusyState, onSubmit }) {
 			</div>
 		</div>
 
-		<div className='absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
+		<div className='pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
 			{/*<div className='flex items-center space-x-5'>
 				<div className='flex items-center'>
 					<button
