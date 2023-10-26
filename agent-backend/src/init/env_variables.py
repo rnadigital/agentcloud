@@ -9,7 +9,7 @@ load_dotenv()
 google_cloud_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 LOCAL = os.getenv("LOCAL", "True") == 'True'
-if google_cloud_credentials_path and len(google_cloud_credentials_path) > 0:
+if not LOCAL and google_cloud_credentials_path and len(google_cloud_credentials_path) > 0:
     if os.path.getsize(google_cloud_credentials_path) > 0:
         LOCAL = False
         credentials, PROJECT_ID = google.auth.default(
