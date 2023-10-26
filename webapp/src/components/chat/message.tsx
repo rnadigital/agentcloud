@@ -136,7 +136,7 @@ export function Message({
 		</span>
 	</div>;
 
-	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${!sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t mt-4' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 			<strong className='capitalize pe-1'>{authorName}</strong>
@@ -150,10 +150,10 @@ export function Message({
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'p-3' : 'p-2'} overflow-x-auto`}>
+				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
-						<small className='flex justify-end text-gray-500 pt-1'>
+						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
 							<time dateTime={new Date(ts).toISOString()}>{new Date(ts).toLocaleString()}</time>
 						</small>
 					</p>
