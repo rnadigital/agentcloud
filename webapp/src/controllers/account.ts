@@ -150,7 +150,7 @@ export async function register(req, res) {
 		});
 	}
 
-	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true' : '/verify' });
+	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 
 }
 

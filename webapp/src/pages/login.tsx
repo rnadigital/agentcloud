@@ -11,13 +11,14 @@ if ('default' in ResolvedImage) {
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
 import SuccessAlert from '../components/SuccessAlert';
+import InfoAlert from '../components/InfoAlert';
 import { useState } from 'react';
 
 export default function Login() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
-	const { verifysuccess } = router.query;
+	const { verifysuccess, noverify } = router.query;
 
 	async function login(e) {
 		e.preventDefault();
@@ -52,6 +53,8 @@ export default function Login() {
 						<form className='space-y-6' onSubmit={login} action='/forms/login' method='POST'>
 
 							{verifysuccess && <SuccessAlert message='Email verified, you may now sign in.' />}
+							
+							{noverify && <InfoAlert message='Email verification skipped because you are missing secret manager credentials.' />}
 
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
