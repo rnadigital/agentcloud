@@ -38,6 +38,7 @@ export default function router(server, app) {
 	const accountFormRouter = Router({ caseSensitive: true });
 	accountFormRouter.post('/login', accountController.login);
 	accountFormRouter.post('/register', accountController.register);
+	accountFormRouter.post('/requestchangepassword', accountController.requestChangePassword);
 	accountFormRouter.post('/changepassword', accountController.changePassword);
 	accountFormRouter.post('/verify', accountController.verifyToken);
 	accountFormRouter.post('/logout', checkSession, csrfMiddleware, accountController.logout);

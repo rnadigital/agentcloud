@@ -64,6 +64,16 @@ export function verifyAccount(userId: db.IdOrStr): Promise<any> {
 	});
 }
 
+export function changeAccountPassword(userId: db.IdOrStr, passwordHash: string): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$set: {
+			passwordHash,
+		}
+	});
+}
+
 export function addAccount(account: Account): Promise<db.InsertResult> {
 	return AccountCollection().insertOne(account);
 }

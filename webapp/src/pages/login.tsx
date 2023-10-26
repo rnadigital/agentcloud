@@ -8,6 +8,10 @@ let ResolvedImage: any = Image;
 if ('default' in ResolvedImage) {
 	ResolvedImage = ResolvedImage.default;
 }
+import {
+	EyeIcon,
+	EyeSlashIcon,
+} from '@heroicons/react/24/outline';
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
 import SuccessAlert from '../components/SuccessAlert';
@@ -18,7 +22,8 @@ export default function Login() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
-	const { verifysuccess, noverify } = router.query;
+	const [showPassword, setShowPassword] = useState(false);
+	const { verifysuccess, noverify, changepassword } = router.query;
 
 	async function login(e) {
 		e.preventDefault();
@@ -49,16 +54,17 @@ export default function Login() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12'>
+					<div className='bg-white px-6 pb-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						<form className='space-y-6' onSubmit={login} action='/forms/login' method='POST'>
 
 							{verifysuccess && <SuccessAlert message='Email verified, you may now sign in.' />}
+							{changepassword && <SuccessAlert message='Password updated, you may now sign in.' />}
 							
 							{noverify && <InfoAlert message='Email verification skipped because you are missing secret manager credentials.' />}
 
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
-                  					Email address
+                  					Email Address
 								</label>
 								<div className='mt-2'>
 									<input
@@ -76,34 +82,25 @@ export default function Login() {
 								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900'>
                   					Password
 								</label>
-								<div className='mt-2'>
+								<div className='relative mt-2'>
 									<input
 										id='password'
 										name='password'
-										type='password'
-										autoComplete='current-password'
+										type={showPassword ? 'text' : 'password'}
 										required
 										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 									/>
+									<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3'>
+										{showPassword
+											? <EyeIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />
+											: <EyeSlashIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />}
+									</div>
 								</div>
 							</div>
 
-							<div className='flex items-center justify-between'>
-								<div className='flex items-center'>
-									<input
-										id='tos'
-										name='tos'
-										type='checkbox'
-										required
-										className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600'
-									/>
-									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900'>
-                   						I agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
-									</label>
-								</div>
-
-								<div className='text-sm leading-6'>
-									<Link href='/changepassword' className='font-semibold text-indigo-600 hover:text-indigo-500'>
+							<div className='flex items-center justify-end' style={{ marginTop: 10 }}>
+								<div className='leading-6 text-sm'>
+									<Link href='/requestchangepassword' className='font-semibold text-indigo-600 hover:text-indigo-500'>
                     					Forgot password?
 									</Link>
 								</div>
@@ -116,6 +113,14 @@ export default function Login() {
 								>
                   					Sign in
 								</button>
+							</div>
+
+							<div className='flex items-center justify-center'>
+								<div className='flex items-center'>
+									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900'>
+                   						By signing in, you agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
+									</label>
+								</div>
 							</div>
 
 							{error && <ErrorAlert error={error} />}
@@ -163,7 +168,7 @@ export default function Login() {
 					<p className='mt-10 text-center text-sm text-gray-500'>
             			Don&apos;t have an account?{' '}
 						<Link href='/register' className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'>
-              				Start a 14 day free trial
+              				Sign Up
 						</Link>
 					</p>
 				</div>

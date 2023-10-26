@@ -39,6 +39,7 @@ const noNavPages = [
 	'/login',
 	'/register',
 	'/changepassword',
+	'/requestchangepassword',
 	'/verify',
 ];
 

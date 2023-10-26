@@ -50,7 +50,7 @@ export default function Verify() {
 						width={128}
 					/>
 					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900'>
-            			Verify your Email
+            			Email Sent
 					</h2>
 				</div>
 
@@ -62,9 +62,9 @@ export default function Verify() {
 							</>
 							: <>
 								<div className='w-16 mx-auto'>
-									<EnvelopeIcon></EnvelopeIcon>
+									<EnvelopeIcon />
 								</div>
-								<p className='text-center'>Please verify your email address by clicking the link we just sent to your inbox.</p>
+								<p className='text-center'>Please check your email and click the link we just sent you.</p>
 							</>}
 					</div>
 

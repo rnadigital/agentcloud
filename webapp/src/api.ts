@@ -1,3 +1,4 @@
+
 import NProgress from 'nprogress';
 
 // Account
@@ -9,6 +10,9 @@ export function login(body, dispatch, errorCallback, router) {
 }
 export function register(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/register', 'POST', body, dispatch, errorCallback, router);
+}
+export function requestChangePassword(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/requestchangepassword', 'POST', body, dispatch, errorCallback, router);
 }
 export function changePassword(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/changepassword', 'POST', body, dispatch, errorCallback, router);

@@ -7,6 +7,7 @@ import { randomBytes } from 'crypto';
 
 export enum VerificationTypes {
 	VERIFY_EMAIL = 'email',
+	CHANGE_PASSWORD = 'change_password',
 }
 
 export type VerificationType = VerificationTypes; //TODO: add whatever types we need here

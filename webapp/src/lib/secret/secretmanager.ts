@@ -8,7 +8,10 @@ dotenv.config({ path: '.env' });
 let secretClient;
 if (process.env.PROJECT_ID) {
 	const secretClientOptions = { projectId: process.env.PROJECT_ID };
-	const secretClient = new SecretManagerServiceClient(secretClientOptions);
+	/*if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+		secretClientOptions['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+	}*/
+	secretClient = new SecretManagerServiceClient(secretClientOptions);
 }
 const cache = {};
 

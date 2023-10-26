@@ -8,34 +8,26 @@ let ResolvedImage: any = Image;
 if ('default' in ResolvedImage) {
 	ResolvedImage = ResolvedImage.default;
 }
-import {
-	EyeIcon,
-	EyeSlashIcon,
-} from '@heroicons/react/24/outline';
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
 import { useState } from 'react';
 
-export default function ChangePassword() {
+export default function RequestChangePassword() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
-	const [showPassword, setShowPassword] = useState(false);
 
-	const { token } = router.query;
-
-	async function changePassword(e) {
+	async function requestChangePassword(e) {
 		e.preventDefault();
-		await API.changePassword({
-			password: e.target.password.value,
-			token,
+		await API.requestChangePassword({
+			email: e.target.email.value,
 		}, null, setError, router);
 	}
 
 	return (
 		<>
 			<Head>
-				<title>Change Password</title>
+				<title>Request Password Reset</title>
 			</Head>
 
 			{error && <ErrorAlert error={error} />}
@@ -56,24 +48,20 @@ export default function ChangePassword() {
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
 					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12'>
-						<form className='space-y-6' onSubmit={changePassword} action='/forms/changepassword' method='POST'>
+						<form className='space-y-6' onSubmit={requestChangePassword} action='/forms/requestchangepassword' method='POST'>
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
-                  					New Password
+                  					Email Address
 								</label>
-								<div className='relative mt-2'>
+								<div className='mt-2'>
 									<input
-										id='password'
-										name='password'
-										type={showPassword ? 'text' : 'password'}
+										id='email'
+										name='email'
+										type='text'
+										autoComplete='email'
 										required
 										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 									/>
-									<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3'>
-										{showPassword
-											? <EyeIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />
-											: <EyeSlashIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />}
-									</div>
 								</div>
 							</div>
 
@@ -82,7 +70,7 @@ export default function ChangePassword() {
 									type='submit'
 									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
-                  					Reset Password
+                  					Request password reset
 								</button>
 							</div>
 

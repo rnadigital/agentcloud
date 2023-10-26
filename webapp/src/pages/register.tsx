@@ -8,6 +8,10 @@ let ResolvedImage: any = Image;
 if ('default' in ResolvedImage) {
 	ResolvedImage = ResolvedImage.default;
 }
+import {
+	EyeIcon,
+	EyeSlashIcon,
+} from '@heroicons/react/24/outline';
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
 import { useState } from 'react';
@@ -16,6 +20,7 @@ export default function Register() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
+	const [showPassword, setShowPassword] = useState(false);
 
 	async function register(e) {
 		e.preventDefault();
@@ -23,7 +28,6 @@ export default function Register() {
 			name: e.target.name.value,
 			email: e.target.email.value,
 			password: e.target.password.value,
-			repeat_password: e.target.repeat_password.value,
 		}, null, setError, router);
 	}
 
@@ -52,7 +56,7 @@ export default function Register() {
 						<form className='space-y-6' onSubmit={register} action='/forms/register' method='POST'>
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
-                  					Your Name
+                  					Name
 								</label>
 								<div className='mt-2'>
 									<input
@@ -67,7 +71,7 @@ export default function Register() {
 
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
-                  					Email address
+                  					Email Address
 								</label>
 								<div className='mt-2'>
 									<input
@@ -85,29 +89,19 @@ export default function Register() {
 								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900'>
                   					Password
 								</label>
-								<div className='mt-2'>
+								<div className='relative mt-2'>
 									<input
 										id='password'
 										name='password'
-										type='password'
+										type={showPassword ? 'text' : 'password'}
 										required
 										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 									/>
-								</div>
-							</div>
-
-							<div>
-								<label htmlFor='repeat_password' className='block text-sm font-medium leading-6 text-gray-900'>
-                  					Repeat password
-								</label>
-								<div className='mt-2'>
-									<input
-										id='repeat_password'
-										name='repeat_password'
-										type='password'
-										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-									/>
+									<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3'>
+										{showPassword
+											? <EyeIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />
+											: <EyeSlashIcon className='h-5 w-5 text-gray-400' aria-hidden='true' />}
+									</div>
 								</div>
 							</div>
 
@@ -124,11 +118,6 @@ export default function Register() {
 									</label>
 								</div>
 
-								<div className='text-sm leading-6'>
-									<Link href='/changepassword' className='font-semibold text-indigo-600 hover:text-indigo-500'>
-                    					Forgot password?
-									</Link>
-								</div>
 							</div>
 
 							<div>

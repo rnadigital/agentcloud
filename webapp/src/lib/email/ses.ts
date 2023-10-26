@@ -10,7 +10,7 @@ let ses;
 
 export async function init() {
 	amazonAccessID = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
-	amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);	
+	amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);
 	if (!amazonAccessID) { return; }
 	await aws.config.update({
 		region: 'us-east-1',

@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { getAccountByEmail, addAccount, Account, verifyAccount } from '../db/account';
+import { getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -78,17 +78,11 @@ export async function register(req, res) {
 	const email = req.body.email.toLowerCase();
 	const name = req.body.name;
 	const password = req.body.password;
-	const rPassword = req.body.repeat_password;
 
 	if (!email || typeof email !== 'string' || email.length === 0 || !/^\S+@\S+\.\S+$/.test(email)
 		|| !password || typeof password !== 'string' || password.length === 0
-		|| !name || typeof name !== 'string' || name.length === 0
-		|| !rPassword || typeof rPassword !== 'string' || rPassword.length === 0) {
+		|| !name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	if (password !== rPassword) {
-		return dynamicResponse(req, res, 400, { error: 'Passwords did not match' });
 	}
 
 	const existingAccount: Account = await getAccountByEmail(email);
@@ -135,9 +129,6 @@ export async function register(req, res) {
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
 
-	console.log('verificationToken', verificationToken);
-
-	//TODO: format the verificationToken
 	if (!emailVerified) {
 		await ses.sendEmail({
 			from: 'noreply@agentcloud.dev',
@@ -164,12 +155,55 @@ export function logout(req, res) {
 }
 
 /**
- * POST /forms/account/changepassword
- * logout
+ * POST /forms/account/requestchangepassword
+ * send email with link to change password
  */
-export function changePassword(req, res) {
-	//TODO: password email reset sending, creating reset token, etc
-	return dynamicResponse(req, res, 400, { error: 'Not implemented' });
+export async function requestChangePassword(req, res) {
+	const { email } = req.body;
+	if (!email || typeof email !== 'string' || email.length === 0 || !/^\S+@\S+\.\S+$/.test(email)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid email' });
+	}
+	const foundAccount = await getAccountByEmail(email);
+	if (foundAccount) {
+		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
+			.then(verificationToken => {
+				ses.sendEmail({
+					from: 'support@getmonita.io',
+					bcc: null,
+					cc: null,
+					replyTo: null,
+					to: [email],
+					subject: 'Password reset verification',
+					body: `Somebody entered your email a password reset for agentcloud.
+
+If this was you, click the link to reset your password: ${process.env.URL_APP}/changepassword?token=${verificationToken}
+
+If you didn't request a password reset, you can safely ignore this email.`,
+				});
+			});
+	}
+	return dynamicResponse(req, res, 302, { redirect: '/verify' });
+}
+
+/**
+ * POST /forms/account/changepassword
+ * change password with token from email
+ */
+export async function changePassword(req, res) {
+	if (!req.body || !req.body.token || typeof req.body.token !== 'string') {
+		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+	}
+	const password = req.body.password;
+	if (!password || typeof password !== 'string' || password.length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.CHANGE_PASSWORD);
+	if (!deletedVerification || !deletedVerification.token) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid password reset token' });
+	}
+	const newPasswordHash = await bcrypt.hash(req.body.password, 12);
+	await changeAccountPassword(deletedVerification.accountId, newPasswordHash);
+	return dynamicResponse(req, res, 302, { redirect: '/login?changepassword=true' });
 }
 
 /**
