@@ -10,7 +10,7 @@ const people = [];
 
 export default function Home(props) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 
 	const router = useRouter();

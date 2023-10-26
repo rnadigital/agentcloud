@@ -8,7 +8,7 @@ import { useSocketContext } from '../context/socket';
 
 export default function Socket(props) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();

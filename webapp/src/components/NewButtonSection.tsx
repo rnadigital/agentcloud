@@ -4,7 +4,7 @@ import { useAccountContext } from '../context/account';
 
 export default function NewButtonSection({ link, emptyMessage, icon, message, buttonIcon, buttonMessage }) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { account } = accountContext as any;
 	const resourceSlug = account.currentTeam;
 

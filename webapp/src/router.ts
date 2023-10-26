@@ -25,7 +25,12 @@ export default function router(server, app) {
 	 *
 	 */
 	const unauthedMiddlewareChain  = [useSession, useJWT, fetchSession];
-	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => { res.redirect('/register'); });
+	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
+		const homeRedirect = res.locals.account
+			? `/${res.locals.account.currentTeam}/sessions`
+			: '/register';
+		res.redirect(homeRedirect);
+	});
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));

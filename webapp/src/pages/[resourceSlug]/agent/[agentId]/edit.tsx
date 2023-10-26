@@ -9,7 +9,7 @@ import { PhotoIcon, UserCircleIcon, ChevronLeftIcon } from '@heroicons/react/24/
 
 export default function Agents(props) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 	const resourceSlug = account.currentTeam;
 

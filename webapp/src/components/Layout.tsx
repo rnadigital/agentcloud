@@ -32,7 +32,7 @@ import {
 	MagnifyingGlassIcon,
 } from '@heroicons/react/20/solid';
 
-import OrgSelector from './OrgSelector.js';
+import OrgSelector from './OrgSelector';
 
 const noNavPages = [
 	'/tos',
@@ -70,7 +70,7 @@ import * as API from '../api';
 
 export default withRouter(function Layout(props) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	console.log('accountContext in Layout:', accountContext);
 	
 	const { account, csrf } = accountContext as any;

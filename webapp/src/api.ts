@@ -118,7 +118,8 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 			localStorage.setItem('_jwt', response.token);
 		}
 		if (response.redirect) {
-			return router && router.push(response.redirect, null, { scroll: false });
+			return router && router.push(response.redirect, null, { scroll: false })
+				.catch(err => console.warn); //gracefully fail on navigation to same URL
 		} else if (response.error) {
 			errorCallback && errorCallback(response.error);
 			return;

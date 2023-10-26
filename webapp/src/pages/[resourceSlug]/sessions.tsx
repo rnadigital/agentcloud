@@ -12,7 +12,7 @@ import { XMarkIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Sessions(props) {
 
-	const accountContext: any = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { account, teamName } = accountContext as any;
 
 	const router = useRouter();
@@ -83,5 +83,5 @@ export default function Sessions(props) {
 };
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data }));
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || null }));
 };

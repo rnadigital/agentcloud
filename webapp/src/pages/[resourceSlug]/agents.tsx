@@ -10,7 +10,7 @@ import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Agents(props) {
 
-	const accountContext = useAccountContext();
+	const [accountContext] = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 	const resourceSlug = account?.currentTeam;
 

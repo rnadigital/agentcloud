@@ -6,12 +6,16 @@ import {
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
 import { useRouter } from 'next/router';
+import { useAccountContext } from '../context/account';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
 export default function OrgSelector({ orgs }) {
+
+	const [accountContext, refreshAccountContext] = useAccountContext();
+	const { account, csrf, teamName } = accountContext as any;
 
 	const router = useRouter();
 	const [_state, dispatch] = useState();
@@ -22,17 +26,19 @@ export default function OrgSelector({ orgs }) {
 		await API.switchTeam({
 			orgId,
 			teamId,
+			_csrf: csrf,
 		}, dispatch, setError, router);
+		refreshAccountContext();
 	}
 
 	//TODO: switch to usecontext so a global user and org/team context can be set, and switch route after page change
 
-	return (
-		<Menu as='div' className='relative inline-block text-left'>
+	return (<>
+		<Menu as='div' className='relative inline-block text-left w-full'>
 			<div>
-				<Menu.Button className='inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50'>
-          			Teams
-					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400' aria-hidden='true' />
+				<Menu.Button className='bg-black bg-opacity-20 text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
+          			<span>{teamName}</span>
+					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400 bs-auto' aria-hidden='true' />
 				</Menu.Button>
 			</div>
 
@@ -61,7 +67,7 @@ export default function OrgSelector({ orgs }) {
 											'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
 										)}
 									>
-										{org.name} ({org.id})
+										{org.name}
 									</a>
 								)}
 							</Menu.Item>
@@ -75,7 +81,7 @@ export default function OrgSelector({ orgs }) {
 												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700'
 											)}
 										>
-											{team.name} ({team.id})
+											{team.name}
 										</a>
 									)}
 								</Menu.Item>
@@ -85,5 +91,5 @@ export default function OrgSelector({ orgs }) {
 				</Menu.Items>
 			</Transition>
 		</Menu>
-	);
+	</>);
 }
