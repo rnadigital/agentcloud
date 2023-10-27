@@ -1,5 +1,5 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
 // @ts-ignore
@@ -8,6 +8,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 	ssr: false,
 });
 import { toast } from 'react-toastify';
+import Blockies from 'react-blockies';
 
 export function CopyToClipboardButton({ dataToCopy }) {
 
@@ -131,8 +132,8 @@ export function Message({
 	const sameAuthorAsPrevious = prevMessage && prevMessage.authorName === authorName;
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
-		<span className={`w-8 h-8 rounded-full text-center pt-1 font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
-			{!sameAuthorAsPrevious && authorName.charAt(0).toUpperCase()}
+		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
+			{!sameAuthorAsPrevious && <Blockies seed={authorName} />}
 		</span>
 	</div>;
 
