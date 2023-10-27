@@ -19,7 +19,7 @@ export default function Session(props) {
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { sessionId } = router.query;
+	const { sessionId } = props.query || router.query;
 	const { session } = state;
 
 	const [_chatContext, setChatContext]: any = useChatContext();

@@ -27,7 +27,10 @@ export async function sessionsJson(req, res, next) {
  */
 export async function sessionsPage(app, req, res, next) {
 	const data = await sessionsData(req, res, next);
-	res.locals.data = { ...data, account: res.locals.account };
+	res.locals.data = {
+		...data,
+		account: res.locals.account,
+	};
 	return app.render(req, res, '/[resourceSlug]/sessions');
 }
 
@@ -45,11 +48,15 @@ export async function sessionData(req, res, _next) {
  */
 export async function sessionPage(app, req, res, next) {
 	const data = await sessionData(req, res, next);
-	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/[resourceSlug]/session/[sessionId]', {
-		resourceSlug: req.params.resourceSlug,
-		sessionId: req.params.sessionId,
-	});
+	res.locals.data = {
+		...data,
+		account: res.locals.account,
+		query: {
+			resourceSlug: res.locals.account.currentTeam,
+			sessionId: req.params.sessionId,
+		}
+	};
+	return app.render(req, res, '/[resourceSlug]/session/[sessionId]');
 }
 
 /**
