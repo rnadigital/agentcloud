@@ -14,6 +14,13 @@ export function ChatWrapper({ children }) {
 		setSharedState(data);
 	}
 
+	useEffect(() => {
+		if (router?.asPath
+			&& !router.asPath.includes('/session/')) {
+			setSharedState({});
+		}
+	}, [router.asPath]);
+
 	console.log('ChatWrapper sharedState', sharedState);
 
 	return (

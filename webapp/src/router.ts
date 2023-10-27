@@ -62,9 +62,9 @@ export default function router(server, app) {
 	teamPagesRouter.get('/home.json', teamController.homeJson);
 
 	teamPagesRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
-	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
-	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
 	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
+	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
+	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
 	teamPagesRouter.get('/sessions.json', sessionController.sessionsJson);
 
 	teamPagesRouter.get('/agents', agentController.agentsPage.bind(null, app));

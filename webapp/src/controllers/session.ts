@@ -46,7 +46,10 @@ export async function sessionData(req, res, _next) {
 export async function sessionPage(app, req, res, next) {
 	const data = await sessionData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/[resourceSlug]/session/[sessionId]');
+	return app.render(req, res, '/[resourceSlug]/session/[sessionId]', {
+		resourceSlug: req.params.resourceSlug,
+		sessionId: req.params.sessionId,
+	});
 }
 
 /**
