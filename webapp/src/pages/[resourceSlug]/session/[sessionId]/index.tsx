@@ -76,6 +76,14 @@ export default function Session(props) {
 				.sort((ma, mb) => ma.ts - mb.ts);
 		});
 	}
+	function handleSocketStatus(status) {
+		console.log('chat status', status);
+		if (!status) {return;}
+		setChatContext({
+			prompt: session.prompt,
+			status,
+		});
+	}
 	function scrollToBottom() {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
@@ -120,6 +128,7 @@ export default function Session(props) {
 		socketContext.on('terminate', handleTerminateMessage);
 		// socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
+		socketContext.on('status', handleSocketStatus);
 		socketContext.on('joined', handleJoinedRoom);
 		socketContext.connected ? joinSessionRoom() : socketContext.connect();
 	}
@@ -129,6 +138,7 @@ export default function Session(props) {
 		socketContext.off('terminate', handleTerminateMessage);
 		socketContext.off('joined', handleJoinedRoom);
 		socketContext.off('message', handleSocketMessage);
+		socketContext.off('status', handleSocketStatus);
 		// socketContext.connected && socketContext.disconnect();
 	}
 	useEffect(() => {

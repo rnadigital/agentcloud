@@ -36,10 +36,6 @@ export default function Account(props) {
 
 			Welcome {state.account.email}
 
-			<pre>
-				{JSON.stringify(account, null, 4)}
-			</pre>
-
 		</>
 	);
 

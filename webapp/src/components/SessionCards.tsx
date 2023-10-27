@@ -12,7 +12,7 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-const statuses = {
+export const SessionStatus = {
 	started: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10',
 	running: 'text-green-700 bg-green-50 ring-green-600/20',
 	waiting: 'text-gray-600 bg-gray-50 ring-gray-500/10',
@@ -127,7 +127,7 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 							<dd className='flex items-start gap-x-2'>
 								<div
 									className={classNames(
-										statuses[session.status],
+										SessionStatus[session.status],
 										'capitalize rounded-md py-1 px-2 text-xs font-medium ring-1 ring-inset'
 									)}
 								>

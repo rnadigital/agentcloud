@@ -148,7 +148,11 @@ export function initSocket(rawHttpServer) {
 					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
 					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
 					ts: finalMessage.ts || messageTimestamp,
+					isFeedback: finalMessage?.isFeedback || false,
 				});
+				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
+				await unsafeSetSessionStatus(data.message.sessionId, newStatus);
+				io.to(data.room).emit('status', newStatus);
 			}
 
 			io.to(data.room).emit(data.event, finalMessage);

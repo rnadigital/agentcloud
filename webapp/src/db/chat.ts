@@ -14,6 +14,7 @@ export type ChatMessage = {
 	ts: number;
 	type: SessionType,
 	authorId: ObjectId;
+	isFeedback: boolean;
 	authorName: string; //Downside, author names need to be updated in historical chats if we want
 						//Upside, more efficient because we don't need to query all authors for a chat and store them in a map to display names on the frontend
 }
