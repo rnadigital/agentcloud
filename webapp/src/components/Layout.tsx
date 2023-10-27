@@ -444,7 +444,7 @@ export default withRouter(function Layout(props) {
 							</form>*/}
 							<div className='flex flex-1 flex-col justify-center'>
 								<h5 className='text-xl'>
-									{chatContext.prompt && `"${chatContext.prompt}"`}
+									{chatContext?.prompt && `"${chatContext.prompt}"`}
 								</h5>
 							</div>
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
