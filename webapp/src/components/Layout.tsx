@@ -423,6 +423,10 @@ export default withRouter(function Layout(props) {
 							aria-hidden='true'
 						/>
 
+						<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap'>
+							{chatContext?.prompt && `"${chatContext.prompt}"`}
+						</h5>
+
 						<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>
 							{/*<form className='relative flex flex-1' action='#' method='GET'>
 								<>
@@ -442,11 +446,7 @@ export default withRouter(function Layout(props) {
 									/>
 								</>
 							</form>*/}
-							<div className='flex flex-1 flex-col justify-center'>
-								<h5 className='text-xl'>
-									{chatContext?.prompt && `"${chatContext.prompt}"`}
-								</h5>
-							</div>
+							<div className='flex flex-1' />
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
 								{/*<button
 									type='button'
