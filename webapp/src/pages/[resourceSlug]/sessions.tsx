@@ -20,17 +20,17 @@ export default function Sessions(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { sessions } = state;
-	const resourceSlug = account.currentTeam;
+	const resourceSlug = account?.currentTeam;
 
 	function fetchSessions() {
-		API.getSessions({ resourceSlug: accountContext.account.currentTeam }, dispatch, setError, router);
+		API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
 		if (!sessions) {
 			fetchSessions();
 		}
-	}, []);
+	}, [account]);
 
 	if (!sessions) {
 		return 'Loading...'; //TODO: loader
