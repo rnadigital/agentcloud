@@ -11,7 +11,9 @@ Welcome to `agentcloud` repository! This project comprises two main components:
 
 To run this project up locally, you'll need docker-compose. Follow the steps below to get started:
 
-1. **Environment Variables**: Before starting the services, ensure you fill out any necessary environment variables in the `docker-compose.yml` file. Make sure to enter your Open AI API  Secret in the `OPENAI_API_KEY` field.
+1. **Environment Variables**: Before starting the services, ensure you fill out any necessary environment variables in the `docker-compose.yml` file.
+  - [webapp env vars](webapp/README.md)
+  - [agent backend env vars](agent-backend/README.md)
 2. **Start Services**: Simply run the following command:
 
 ```
