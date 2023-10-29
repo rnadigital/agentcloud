@@ -13,4 +13,4 @@ Mandatory:
 - `DB_URL` - mogodb connection uri e.g. `mongodb://docker_mongo:27017/test`
 - `MONGO_DB_NAME` - mongodb db name
 - `OPENAI_API_KEY` - open ai api key
-- `MAX_RETRIES` - number of retries when hitting openai api ratelimit
+- `MAX_RETRIES` - number of retries when connecting to webapp socketio
