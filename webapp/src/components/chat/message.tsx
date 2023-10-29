@@ -1,6 +1,7 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect, useMemo } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { relativeString } from '../../lib/time';
 import dynamic from 'next/dynamic';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -130,6 +131,10 @@ export function Message({
 	if (!style) { return null; }
 
 	const sameAuthorAsPrevious = prevMessage && prevMessage.authorName === authorName;
+	const messageDate = new Date(ts);
+	const today = Date.now() - ts < 86400000;
+	const dateString = messageDate.toLocaleString();
+	const relativeDateString = relativeString(new Date(), messageDate);
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
@@ -137,7 +142,7 @@ export function Message({
 		</span>
 	</div>;
 
-	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t mt-4' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 			<strong className='capitalize pe-1'>{authorName}</strong>
@@ -147,7 +152,7 @@ export function Message({
 
 	return <>
 		{authorNameSection}
-		<div className={`grid grid-cols-1 xl:grid-cols-5 ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
@@ -155,7 +160,7 @@ export function Message({
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
-							<time dateTime={new Date(ts).toISOString()}>{new Date(ts).toLocaleString()}</time>
+							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 						</small>
 					</p>
 				</div>
