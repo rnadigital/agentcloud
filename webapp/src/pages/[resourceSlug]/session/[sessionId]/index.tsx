@@ -107,10 +107,19 @@ export default function Session(props) {
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages]);
+	function sendFeedbackMessage(message: string) {
+		socketContext.emit('message', {
+			room: sessionId,
+			authorName: account.name,
+			incoming: true,
+			message: {
+				type: 'text',
+				text: message,
+			}
+		});
+	}
 	function handleJoinedRoom() {
 		if (messages.length === 0) {
-			//|| !messages.find(m => m.incoming === false)) {
-			//if no messagesfound, session is new so submit the messages and one to task queue
 			socketContext.emit('message', {
 				room: sessionId,
 				authorName: account.name,
@@ -226,6 +235,7 @@ export default function Session(props) {
 							ts={m.ts}
 							isFeedback={m.isFeedback}
 							isLastMessage={mi === marr.length-1}
+							sendMessage={sendFeedbackMessage}
 						/>;
 					})}
 					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>

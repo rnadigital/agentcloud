@@ -110,7 +110,8 @@ export function Message({
 	ts,
 	authorName,
 	authorImage,
-	incoming
+	incoming,
+	sendMessage,
 }: {
 		prevMessage?: any,
 		message?: any,
@@ -121,7 +122,8 @@ export function Message({
 		ts?: number,
 		authorName?: string,
 		authorImage?: string,
-		incoming?: boolean
+		incoming?: boolean,
+		sendMessage?: Function,
 	}) {
 
 	const [ style, setStyle ] = useState(null);
@@ -172,6 +174,24 @@ export function Message({
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
+
+		{isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} bg-yellow-50`}>
+			<div className='invisible xl:visible col-span-1'></div>
+			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
+				<div>
+					<button
+						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2'
+						onClick={(e) => {
+							e.preventDefault();
+							sendMessage('exit');
+						}}
+					>
+						Exit
+					</button>
+				</div>
+			</div>
+			<div className='invisible xl:visible col-span-1'></div>
+		</div>}
 	</>;
 
 }
