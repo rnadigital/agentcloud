@@ -207,3 +207,10 @@ body {
   background: linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(80,80,80,1) 100%);
   pointer-events: none; /* Ensures the overlay doesn't interfere with clicks on the element */
 }
+
+.noscrollbar::-webkit-scrollbar {
+  display: none;
+}
+.noscrollbar {
+  scrollbar-width: none;
+}

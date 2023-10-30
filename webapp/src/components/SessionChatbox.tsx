@@ -25,20 +25,21 @@ export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom
 		<input type='hidden' name='_csrf' value={csrf} />
 		<input type='hidden' name='type' value='generate_team' />
 		<div className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
-			<textarea
-				onKeyDown={handleKeyDown}
-				rows={Math.min(5, promptValue.split(/\r?\n/).length)}
-				name='prompt'
-				id='prompt'
-				className='block w-full resize-none border-0 bg-transparent py-1.5 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6'
-				placeholder={'Type a message...'}
-				defaultValue={''}
-				value={promptValue}
-				onChange={(e) => setPromptValue(e.target.value)}
-			/>
-
+			<div className='block w-full min-h-20'>
+				<textarea
+					onKeyDown={handleKeyDown}
+					rows={Math.min(5, promptValue.split(/\r?\n/).length)}
+					name='prompt'
+					id='prompt'
+					className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6'
+					placeholder={'Type a message...'}
+					defaultValue={''}
+					value={promptValue}
+					onChange={(e) => setPromptValue(e.target.value)}
+				/>
+			</div>
 			{/* Spacer element to match the height of the toolbar */}
-			<div className='py-2' aria-hidden='true'>
+			<div className='py-2 w-20' aria-hidden='true'>
 				{/* Matches height of button in toolbar (1px border + 36px content height) */}
 				<div className='py-px'>
 					<div className='h-9' />
