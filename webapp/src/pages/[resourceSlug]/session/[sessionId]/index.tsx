@@ -85,7 +85,7 @@ export default function Session(props) {
 			status,
 		});
 	}
-	function scrollToBottom(timeout: numbre=300, behavior: string='smooth') {
+	function scrollToBottom(timeout: number=300, behavior: string='smooth') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 			setTimeout(() => {
