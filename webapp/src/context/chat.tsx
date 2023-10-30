@@ -16,6 +16,13 @@ export function ChatWrapper({ children }) {
 		setSharedState(data);
 	}
 
+	function updateSharedState(update: any) {
+		setSharedState({
+			...sharedState,
+			...update,
+		});
+	}
+
 	useEffect(() => {
 		if (router?.asPath
 			&& !router.asPath.includes('/session/')) {
@@ -26,7 +33,7 @@ export function ChatWrapper({ children }) {
 	log('ChatWrapper sharedState %O', sharedState);
 
 	return (
-		<ChatContext.Provider value={[sharedState, setSharedState]}>
+		<ChatContext.Provider value={[sharedState, updateSharedState]}>
 			{children}
 		</ChatContext.Provider>
 	);

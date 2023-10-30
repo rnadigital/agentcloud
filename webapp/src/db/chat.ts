@@ -37,6 +37,13 @@ export function getChatMessagesBySession(teamId: db.IdOrStr, sessionId: db.IdOrS
 	}).toArray();
 }
 
+export function getAgentMessageForSession(sessionId: db.IdOrStr): Promise<ChatMessage> {
+	return ChatCollection().findOne({
+		sessionId: toObjectId(sessionId),
+		'message.incoming': false,
+	});
+}
+
 export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMessage|null> {
 	return ChatCollection().find({
 		sessionId: toObjectId(sessionId),

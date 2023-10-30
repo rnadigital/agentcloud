@@ -453,7 +453,7 @@ export default withRouter(function Layout(props) {
 									<svg className={`h-1.5 w-1.5 ${SessionStatus[chatContext.status]}`} viewBox='0 0 6 6' aria-hidden='true'>
 										<circle cx={3} cy={3} r={3} />
 									</svg>
-									{chatContext.status}
+									{chatContext.type.replace('_', ' ')}: {chatContext.status}
 								</span>}
 							</div>
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>

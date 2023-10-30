@@ -7,7 +7,7 @@ import debug from 'debug';
 const log = debug('webapp:socket');
 
 import { ObjectId } from 'mongodb';
-import { addChatMessage, unsafeGetTeamJsonMessage } from './db/chat';
+import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
 import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus,
 	SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
@@ -49,12 +49,25 @@ export function initSocket(rawHttpServer) {
 			//TODO: permission check for joining rooms
 			socket.join(room);
 			const socketRequest = socket.request as any;
+			log('Socket %s joined room %s', socket.id, room);
 			if (socketRequest?.session?.token) {
 				//if it has auth (only webapp atm), send back joined message
 				socket.emit('joined', room);
 				log('Emitting join message back to %s in room %s', socket.id, room);
+				const session = await unsafeGetSessionById(room);
+				if (!session || session.status === SessionStatus.STARTED) {
+					return;
+				}
+				const fromPythonMessage = await getAgentMessageForSession(room);
+				if (fromPythonMessage) {
+					return;
+				}
+				//await unsafeSetSessionStatus(room, SessionStatus.STARTED); //NOTE: may race
+				io.to('task_queue').emit(SessionType.TEAM, {
+					task: session.prompt,
+					sessionId: room,
+				});
 			}
-			log('Socket %s joined room %s', socket.id, room);
 		});
 
 		socket.on('terminate', async (data) => {
@@ -93,6 +106,7 @@ export function initSocket(rawHttpServer) {
 				reportTo: null, //unused atm
 			}));
 			await unsafeSetSessionAgents(session._id, sessionAgents, sessionTeamJsonMessage?.message?.message?.text);
+			io.to(data.room).emit('type', SessionType.TASK);
 			io.to('task_queue').emit(SessionType.TASK, {
 				task: session.prompt,
 				sessionId: session._id.toString(),

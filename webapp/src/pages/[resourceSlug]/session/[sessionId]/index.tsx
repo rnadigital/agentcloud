@@ -28,6 +28,7 @@ export default function Session(props) {
 		setChatContext(session ? {
 			prompt: session.prompt,
 			status: session.status,
+			type: session.type,
 		} : null);
 	}, [session]);
 
@@ -81,8 +82,14 @@ export default function Session(props) {
 		log('Received chat status %s', status);
 		if (!status) {return;}
 		setChatContext({
-			prompt: session.prompt,
 			status,
+		});
+	}
+	function handleSocketType(type) {
+		log('Received chat type %s', type);
+		if (!type) {return;}
+		setChatContext({
+			type,
 		});
 	}
 	function scrollToBottom(timeout: number=300, behavior: string='smooth') {
