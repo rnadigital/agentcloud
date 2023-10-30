@@ -13,12 +13,12 @@ function classNames(...classes) {
 }
 
 export const SessionStatus = {
-	started: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10',
-	running: 'text-green-700 bg-green-50 ring-green-600/20',
-	waiting: 'text-gray-600 bg-gray-50 ring-gray-500/10',
-	warning: 'text-orange-700 bg-orange-50 ring-orange-600/10',
-	errored: 'text-red-700 bg-red-50 ring-red-600/10',
-	terminated: 'text-blue-700 bg-blue-50 ring-blue-600/10',
+	started: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10 fill-yellow-500',
+	running: 'text-green-700 bg-green-50 ring-green-600/20 fill-green-500',
+	waiting: 'text-gray-600 bg-yellow-50 ring-yellow-500/10 fill-yellow-500',
+	warning: 'text-orange-700 bg-orange-50 ring-orange-600/10 fill-orange-500',
+	errored: 'text-red-700 bg-red-50 ring-red-600/10 fill-red-500',
+	terminated: 'text-gray-700 bg-gray-50 ring-blue-600/10 fill-gray-500',
 };
 
 export default function SessionCards({ sessions, fetchSessions }: { sessions: any[], fetchSessions?: any }) {
