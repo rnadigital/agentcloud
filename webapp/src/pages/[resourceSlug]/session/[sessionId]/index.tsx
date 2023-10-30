@@ -217,7 +217,7 @@ export default function Session(props) {
 							isFeedback={m.isFeedback}
 						/>;
 					})}
-					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8 mt-4'>
+					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>
 						<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
