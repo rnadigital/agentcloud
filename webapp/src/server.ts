@@ -5,8 +5,15 @@ process
 	.on('unhandledRejection', console.error);
 
 import dotenv from 'dotenv';
-//TODO Add asyc later
 dotenv.config({ path: '.env' });
+import { getShortCommitHash } from './lib/commit';
+if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
+	try {
+		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
+	} catch(e) {
+		console.warn('NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',  e);
+	}
+}
 
 import * as http from 'http';
 import express from 'express';

@@ -20,6 +20,7 @@ services:
       context: webapp/
       args:
         - GOOGLE_KEYPATH=keyfile.json
+        - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -35,6 +36,7 @@ services:
       - PROJECT_ID=
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
       - URL_APP=http://localhost:3000
+      - DEBUG=webapp:*
     healthcheck:
       test: ["CMD", "curl", "http://localhost:3000"]
       start_period: 5s
@@ -47,6 +49,7 @@ services:
       context: agent-backend/
       args:
         - GOOGLE_KEYPATH=keyfile.json
+        - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
       - '127.0.0.1:8080:8080'
     image: agent_backend

@@ -16,9 +16,17 @@ To run this project up locally, you'll need docker-compose. Follow the steps bel
   - [agent backend env vars](agent-backend/README.md)
 2. **Start Services**: Simply run the following command:
 
+Linux:
 ```
+SHORT_COMMIT_HASH=$(git rev-parse --short HEAD) docker-compose up --build
+```
+
+Windows:
+```
+$SHORT_COMMIT_HASH = $(git rev-parse --short HEAD)
 docker-compose up
 ```
+
 This will start both the agent backend and the webapp.
 
 ## Current Workflow

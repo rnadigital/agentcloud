@@ -12,6 +12,7 @@ import Router from 'next/router';
 import Link from 'next/link';
 import { Fragment, useState, useEffect } from 'react';
 import classNames from './ClassNames';
+import packageJson from '../../package.json';
 
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import {
@@ -590,7 +591,7 @@ export default withRouter(function Layout(props) {
 			</div>
 
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs`}>
-				<div className='py-3'>© 2023 RNA Digital</div>
+				<div className='py-3'>© 2023 RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
 			</footer>
 		</>
 	);
