@@ -85,16 +85,16 @@ export default function Session(props) {
 			status,
 		});
 	}
-	function scrollToBottom() {
+	function scrollToBottom(timeout: numbre=300, behavior: string='smooth') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 			setTimeout(() => {
 				scrollContainerRef.current.scrollTo({
 					left: 0,
 					top: scrollContainerRef.current.scrollHeight,
-					behavior: 'smooth',
+					behavior,
 				});
-			}, 250);
+			}, timeout);
 		}
 	}
 	useEffect(() => {
@@ -202,7 +202,7 @@ export default function Session(props) {
 				<h3 className='pl-2 font-semibold text-gray-900'>Session {sessionId}</h3>
 			</div>*/}
 
-			<div className='flex flex-col -m-7 -my-10 flex flex-col flex-1'>
+			<div className='flex flex-col -m-7 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
 					{messages && messages.map((m, mi, marr) => {
@@ -216,6 +216,7 @@ export default function Session(props) {
 							incoming={m.incoming}
 							ts={m.ts}
 							isFeedback={m.isFeedback}
+							isLastMessage={mi === marr.length-1}
 						/>;
 					})}
 					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>
@@ -237,7 +238,10 @@ export default function Session(props) {
 						<div className='min-w-0 flex-1 h-full'>
 							{terminated 
 								? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>
-								: <SessionChatbox chatBusyState={chatBusyState} onSubmit={sendMessage} />}
+								: <SessionChatbox
+									scrollToBottom={scrollToBottom}
+									chatBusyState={chatBusyState}
+									onSubmit={sendMessage} />}
 						</div>
 					</div>
 				</div>

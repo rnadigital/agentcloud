@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 import classNames from './ClassNames';
 
-export default function SessionChatbox({ chatBusyState, onSubmit }) {
+export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -10,6 +10,7 @@ export default function SessionChatbox({ chatBusyState, onSubmit }) {
 	const [promptValue, setPromptValue] = useState('');
 
 	function handleKeyDown(e) {
+		scrollToBottom(1, 'instant');
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
 			if (chatBusyState) { return; }

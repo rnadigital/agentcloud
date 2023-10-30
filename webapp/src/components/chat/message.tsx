@@ -104,6 +104,7 @@ export function Message({
 	messageType,
 	messageLanguage,
 	isFeedback,
+	isLastMessage,
 	ts,
 	authorName,
 	authorImage,
@@ -114,6 +115,7 @@ export function Message({
 		messageType?: string,
 		messageLanguage?: string,
 		isFeedback?: boolean,
+		isLastMessage?: boolean,
 		ts?: number,
 		authorName?: string,
 		authorImage?: string,
@@ -142,7 +144,7 @@ export function Message({
 		</span>
 	</div>;
 
-	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 			<strong className='capitalize pe-1'>{authorName}</strong>
@@ -152,11 +154,11 @@ export function Message({
 
 	return <>
 		{authorNameSection}
-		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'}`}>
+		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto`}>
+				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200' : ''}`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
