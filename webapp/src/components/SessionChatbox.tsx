@@ -24,7 +24,7 @@ export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom
 	return <form action='/forms/session/add' className='relative' onSubmit={onSubmit}>
 		<input type='hidden' name='_csrf' value={csrf} />
 		<input type='hidden' name='type' value='generate_team' />
-		<div className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
+		<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 			<div className='block w-full min-h-20'>
 				<textarea
 					onKeyDown={handleKeyDown}
@@ -45,7 +45,7 @@ export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom
 					<div className='h-9' />
 				</div>
 			</div>
-		</div>
+		</label>
 
 		<div className='pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
 			{/*<div className='flex items-center space-x-5'>
