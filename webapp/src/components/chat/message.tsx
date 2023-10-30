@@ -11,6 +11,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 import { toast } from 'react-toastify';
 import Blockies from 'react-blockies';
 
+const COLLAPSE_AFTER_LINES = 10;
+
 export function CopyToClipboardButton({ dataToCopy }) {
 
 	const handleCopyClick = async () => {
@@ -34,14 +36,14 @@ export function CopyToClipboardButton({ dataToCopy }) {
 function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 	const isLongMessage = messageContent
 		&& typeof messageContent.split === 'function'
-		&& messageContent.split(/\r?\n/).length > 10;
+		&& messageContent.split(/\r?\n/).length > COLLAPSE_AFTER_LINES;
 	const [ collapsed, setCollapsed ] = useState(isLongMessage);
 	return <>
 		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
 			<CopyToClipboardButton dataToCopy={messageContent} />
 		</span>
-		<div className='overlay-container'>
+		<div className={isLongMessage ? 'overlay-container' : ''}>
 			<SyntaxHighlighter
 				wrapLongLines
 				className={collapsed ? 'overlay-gradient' : null}
@@ -52,14 +54,14 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 			>
 				{messageContent}
 			</SyntaxHighlighter>
-			<button
+			{isLongMessage && <button
 				className='overlay-button btn bg-indigo-600 rounded-md text-white'
 				onClick={() => {
 					setCollapsed(oldCollapsed => !oldCollapsed);
 				}}
 			>
 				{collapsed ? 'Expand' : 'Collapse'}
-			</button>
+			</button>}
 		</div>
 	</>;
 }
