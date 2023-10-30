@@ -66,7 +66,7 @@ def init_socket_generate_team(task: str, session_id: str):
 Return the team in the below JSON structure:""", json.dumps(file, indent=2), "There are no hard limits on the number or the combination of team members."]
 
         config_list = autogen.config_list_from_json(
-            "./src/config/OAI_CONFIG_LIST.json",
+            f"{BASE_PATH}/config/OAI_CONFIG_LIST.json",
             filter_dict={
                 "model": {
                     "gpt-4",
