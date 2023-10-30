@@ -157,7 +157,9 @@ export default function Session(props) {
 			resourceSlug: account.currentTeam,
 			sessionId,
 		}, (_messages) => {
-			setMessages(_messages.map(m => m.message));
+			setMessages(_messages
+				.map(m => m.message)
+				.sort((ma, mb) => ma.ts - mb.ts));
 		}, setError, router);
 	}, []);
 	useEffect(() => {
@@ -202,7 +204,7 @@ export default function Session(props) {
 				<h3 className='pl-2 font-semibold text-gray-900'>Session {sessionId}</h3>
 			</div>*/}
 
-			<div className='flex flex-col -m-7 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
+			<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
 					{messages && messages.map((m, mi, marr) => {
