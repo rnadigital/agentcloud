@@ -51,3 +51,13 @@ export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMes
 export async function addChatMessage(chatMessage: ChatMessage): Promise<db.InsertResult> {
 	return ChatCollection().insertOne(chatMessage);
 }
+
+export function getLatestChatMessage(sessionId: db.IdOrStr): Promise<ChatMessage|null> {
+	return ChatCollection().findOne({
+		sessionId: toObjectId(sessionId),
+	}, null, {
+		sort: {
+			ts: -1, //TODO: revise ts
+		}
+	});
+}

@@ -9,7 +9,8 @@ import { useRouter } from 'next/router';
 import { Message } from '../../../../components/chat/message';
 import SessionChatbox from '../../../../components/SessionChatbox';
 import classNames from '../../../../components/ClassNames';
-// import { toast } from 'react-toastify';
+import debug from 'debug';
+const log = debug('webapp:socket');
 
 export default function Session(props) {
 
@@ -60,12 +61,12 @@ export default function Session(props) {
 		socketContext.emit('join_room', sessionId);
 	}
 	function handleTerminateMessage(message) {
-		console.log('Received terminate message', message);
+		log('Received terminate message %s', message);
 		setTerminated(true);
 		//TODO: set terminates state
 	}
 	function handleSocketMessage(message) {
-		console.log(message);
+		log('Received chat message %O', message);
 		if (!message) {return;}
 		const newMessage = typeof message === 'string'
 			? { type: null, text: message }
@@ -77,7 +78,7 @@ export default function Session(props) {
 		});
 	}
 	function handleSocketStatus(status) {
-		console.log('chat status', status);
+		log('Received chat status %s', status);
 		if (!status) {return;}
 		setChatContext({
 			prompt: session.prompt,

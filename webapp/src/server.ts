@@ -24,6 +24,8 @@ import * as db from './db';
 import router from './router';
 import { v4 as uuidv4 } from 'uuid';
 import * as ses from './lib/email/ses';
+import debug from 'debug';
+const log = debug('webapp:http');
 
 app.prepare()
 	.then(async () => {
@@ -57,17 +59,17 @@ app.prepare()
 			return res.send('An error occurred. Please contact support with code: '+uuid);
 		});
 
-		rawHttpServer.listen(3000, '0.0.0.0', () => {
+		rawHttpServer.listen(3000, '0.0.0.0', () => { //TODO: configurable
 			if (typeof process.send === 'function') {
-				console.log('SENT READY SIGNAL TO PM2');
+				log('SENT READY SIGNAL TO PM2');
 				process.send('ready');
 			}
-			console.log('> Ready on http://localhost:3000');
+			log('Ready on http://0.0.0.0:3000');
 		});
 
 		//graceful stop handling
 		const gracefulStop = () => {
-			console.log('SIGINT SIGNAL RECEIVED');
+			log('SIGINT SIGNAL RECEIVED');
 			db.client().close();
 			redis.close();
 			process.exit(0);

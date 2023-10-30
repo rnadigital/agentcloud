@@ -3,11 +3,14 @@
 import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { client } from './redis';
+import debug from 'debug';
+const log = debug('webapp:socket');
 
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
-import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus,
+	SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
 
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
@@ -36,10 +39,10 @@ export function initSocket(rawHttpServer) {
 
 	//NOTE: there is almost no security/validation here, yet
 	io.on('connection', async (socket) => {
-		console.log('Socket', socket.id, 'connected');
+		log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			console.log('Received socket event', eventName, 'args:', args);
+			log('Received socket event %s args: %O', eventName, args);
 		});
 
 		socket.on('join_room', async (room: string) => {
@@ -49,9 +52,9 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest?.session?.token) {
 				//if it has auth (only webapp atm), send back joined message
 				socket.emit('joined', room);
-				console.log('Emitting join message back to', socket.id, 'in room', room);
+				log('Emitting join message back to %s in room %s', socket.id, room);
 			}
-			console.log('Socket', socket.id, 'joined room', room);
+			log('Socket %s joined room %s', socket.id, room);
 		});
 
 		socket.on('terminate', async (data) => {
@@ -151,13 +154,16 @@ export function initSocket(rawHttpServer) {
 					isFeedback: finalMessage?.isFeedback || false,
 				});
 				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
-				await unsafeSetSessionStatus(data.message.sessionId, newStatus);
-				io.to(data.room).emit('status', newStatus);
+				if (newStatus !== session.status) { //Note: chat messages can be received out of order
+					log('updating session status to %s', newStatus);
+					await unsafeSetSessionStatus(session._id, newStatus);
+					io.to(data.room).emit('status', newStatus);
+				}
 			}
 
 			io.to(data.room).emit(data.event, finalMessage);
 			if (data.room !== 'task_queue' && finalMessage.message && (finalMessage.incoming === true || socketRequest?.session?.account?._id)) {
-				console.log('Relaying message', finalMessage, 'to private room', `_${data.room}`);
+				log('Relaying message %O to private room %s', finalMessage, `_${data.room}`);
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
 			}
 

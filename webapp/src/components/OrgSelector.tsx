@@ -22,7 +22,6 @@ export default function OrgSelector({ orgs }) {
 	const [_error, setError] = useState();
 
 	async function switchTeam(orgId, teamId) {
-		console.log('switchTeam', orgId, teamId);
 		await API.switchTeam({
 			orgId,
 			teamId,

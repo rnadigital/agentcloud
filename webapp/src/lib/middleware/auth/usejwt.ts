@@ -2,6 +2,8 @@
 
 import jwt from 'jsonwebtoken';
 import { getAccountById, Account } from '../../../db/account';
+import debug from 'debug';
+const log = debug('webapp:middleware');
 
 export type JWTData = {
 	accountId: string;
@@ -31,11 +33,11 @@ export default async function useJWT(req, res, next): Promise<void> {
 	} else if (req.headers && req.headers['Authorization']?.startsWith('Bearer ')) {
 		token = req.headers['Authorization'].substring(7);
 	}
-	console.log('useJWT token:', token);
+	log('useJWT token: %s', token);
 	if (token && token.length > 0) {
 		try {
 			const verifiedToken: JWTData = await verifyJwt(token);
-			console.log('useJWT verifiedToken:', verifiedToken);
+			log('useJWT verifiedToken: %s', verifiedToken);
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
 				if (account) {

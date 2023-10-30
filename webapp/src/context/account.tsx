@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as API from '../api';
 import { useRouter } from 'next/router';
+import debug from 'debug';
+const log = debug('webapp:context');
 
 const AccountContext = createContext({});
 
@@ -35,7 +37,7 @@ export function AccountWrapper({ children, pageProps }) {
 		}
 	}, [router.asPath]);
 
-	console.log('AppWrapper sharedState', sharedState);
+	log('AppWrapper sharedState %O', sharedState);
 
 	return (
 		<AccountContext.Provider value={[sharedState, refreshAccountContext]}>
