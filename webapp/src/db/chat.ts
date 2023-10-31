@@ -5,18 +5,26 @@ import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import { SessionType } from '../lib/struct/session';
 
+export type ChatChunk = {
+	ts: number;
+	chunk: string;
+	tokens: number; //might remove
+}
+
 export type ChatMessage = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
 	sessionId: ObjectId;
+	chunkId?: string;
 	message: any;
 	ts: number;
 	type: SessionType,
 	authorId: ObjectId;
 	isFeedback: boolean;
-	authorName: string; //Downside, author names need to be updated in historical chats if we want
-						//Upside, more efficient because we don't need to query all authors for a chat and store them in a map to display names on the frontend
+	authorName: string;
+	tokens?: number;
+	chunks?: ChatChunk[];
 }
 
 export function ChatCollection() {
@@ -53,6 +61,21 @@ export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMes
 	}).sort({
 		_id: -1,
 	}).limit(1).toArray().then(res => res && res.length > 0 ? res[0] : null);
+}
+
+export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId: string, chunk: ChatChunk) {
+	console.log('updateMessageWithChunkById', sessionId, chunkId, chunk);
+	return ChatCollection().updateOne({
+		sessionId: toObjectId(sessionId),
+		chunkId,
+	}, {
+		$push: {
+			chunks: chunk,
+		},
+		$inc: {
+			tokens: chunk.tokens,
+		}
+	})
 }
 
 export async function addChatMessage(chatMessage: ChatMessage): Promise<db.InsertResult> {

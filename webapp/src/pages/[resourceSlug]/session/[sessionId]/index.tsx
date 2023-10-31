@@ -75,6 +75,16 @@ export default function Session(props) {
 			? { type: null, text: message }
 			: message;
 		setMessages(oldMessages => {
+			if (message?.message?.first === false) {
+				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
+				const newChunk = { chunk: message.message.text, ts: message.ts };
+				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[])
+					.concat([newChunk])
+					.sort((ma, mb) => ma.ts - mb.ts);
+				oldMessages[oldMessages.length-1].chunks = newChunks;
+				oldMessages[oldMessages.length-1].message.text = newChunks.map(c => c.chunk).join('');
+				return [...oldMessages];
+			}
 			return oldMessages
 				.concat([newMessage])
 				.sort((ma, mb) => ma.ts - mb.ts);
@@ -176,7 +186,15 @@ export default function Session(props) {
 			sessionId,
 		}, (_messages) => {
 			setMessages(_messages
-				.map(m => m.message)
+				.map(m => {
+					const _m = m.message;
+					const combinedChunks = (m.chunks||[])
+						.sort((ca, cb) => ca.ts - cb.ts)
+						.map(x => x.chunk)
+						.join('');
+					_m.message.text = combinedChunks;
+					return _m;
+				})
 				.sort((ma, mb) => ma.ts - mb.ts));
 		}, setError, router);
 	}, []);

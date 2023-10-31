@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { useAccountContext } from '../context/account';
+import Select from "react-tailwindcss-select";
 import {
   // PaperClipIcon,
 	PlusIcon,
@@ -18,6 +19,8 @@ export default function StartSessionChatbox() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
+
+	const [selectedTeam, setSelectedTeam] = useState('Auto-generate team');
 
 	async function addSession(e) {
 		e.preventDefault();
@@ -41,6 +44,24 @@ export default function StartSessionChatbox() {
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<input type='hidden' name='_csrf' value={csrf} />
 						<input type='hidden' name='type' value='generate_team' />
+						
+				        <Select
+				            primaryColor={"indigo"}
+				            value={selectedTeam}
+				            onChange={setSelectedTeam}
+				            formatOptionLabel={data => (
+				                <li
+				                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded ${
+				                        !data.isSelected
+				                            ? `text-white bg-blue-500`
+				                            : `bg-blue-100 text-blue-500`
+				                    }`}
+				                >
+				                    {data.label}
+				                </li>
+				            )}
+				            options={['Auto-generate team', 'Team A', 'Team B', '+ Create new team'].map(x => ({label:x,value:x}))}
+				        />
 						<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea

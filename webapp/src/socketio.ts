@@ -7,7 +7,7 @@ import debug from 'debug';
 const log = debug('webapp:socket');
 
 import { ObjectId } from 'mongodb';
-import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession } from './db/chat';
+import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
 import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
 import { SessionType, SessionStatus } from './lib/struct/session';
@@ -39,10 +39,10 @@ export function initSocket(rawHttpServer) {
 
 	//NOTE: there is almost no security/validation here, yet
 	io.on('connection', async (socket) => {
-		log('Socket %s connected', socket.id);
+		//log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			log('Received socket event %s args: %O', eventName, args);
+			//log('Received socket event %s args: %O', eventName, args);
 		});
 
 		socket.on('join_room', async (room: string) => {
@@ -156,20 +156,29 @@ export function initSocket(rawHttpServer) {
 				//TODO: change to normal getsessionbyid, but then the python thing would need to be authed as a special user.
 				const session = await unsafeGetSessionById(finalMessage.room);
 				await unsafeSetSessionUpdatedDate(finalMessage.room);
-				await addChatMessage({
-					orgId: session.orgId,
-					teamId: session.teamId,
-					sessionId: session._id,
-					message: finalMessage,
-					type: session.type as SessionType,
-					authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
-					authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
-					ts: finalMessage.ts || messageTimestamp,
-					isFeedback: finalMessage?.isFeedback || false,
-				});
+				const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage.message.tokens };
+				if (finalMessage.message.first === false) {
+					//This is a previous message that is returning in chunks
+					await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
+				} else {
+					await addChatMessage({
+						orgId: session.orgId,
+						teamId: session.teamId,
+						sessionId: session._id,
+						message: finalMessage,
+						type: session.type as SessionType,
+						authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
+						authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
+						ts: finalMessage.ts || messageTimestamp,
+						isFeedback: finalMessage?.isFeedback || false,
+						chunkId: finalMessage.message.chunkId || null,
+						tokens: finalMessage?.message.tokens || 0,
+						chunks: [chunk]
+					});
+				}
 				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 				if (newStatus !== session.status) { //Note: chat messages can be received out of order
-					log('updating session status to %s', newStatus);
+					//log('updating session status to %s', newStatus);
 					await unsafeSetSessionStatus(session._id, newStatus);
 					io.to(data.room).emit('status', newStatus);
 				}
