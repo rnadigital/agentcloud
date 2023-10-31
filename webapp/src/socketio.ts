@@ -63,10 +63,10 @@ export function initSocket(rawHttpServer) {
 					return;
 				}
 				//await unsafeSetSessionStatus(room, SessionStatus.STARTED); //NOTE: may race
-				io.to('task_queue').emit(SessionType.TEAM, {
+				/*io.to('task_queue').emit(SessionType.TEAM, {
 					task: session.prompt,
 					sessionId: room,
-				});
+				});*/
 			}
 		});
 
@@ -189,6 +189,10 @@ export function initSocket(rawHttpServer) {
 				log('Relaying message %O to private room %s', finalMessage, `_${data.room}`);
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
 			}
+
+		});
+
+		socket.on('message_complete', async (data) => {
 
 		});
 
