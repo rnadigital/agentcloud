@@ -64,7 +64,6 @@ export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMes
 }
 
 export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId: string, chunk: ChatChunk) {
-	console.log('updateMessageWithChunkById', sessionId, chunkId, chunk);
 	return ChatCollection().updateOne({
 		sessionId: toObjectId(sessionId),
 		chunkId,
@@ -75,7 +74,21 @@ export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId:
 		$inc: {
 			tokens: chunk.tokens,
 		}
-	})
+	});
+}
+
+export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string) {
+	return ChatCollection().updateOne({
+		sessionId: toObjectId(sessionId),
+		chunkId,
+	}, {
+		$unset: {
+			chunks: '',
+		},
+		$set: {
+			'message.message.text': text,
+		}
+	});
 }
 
 export async function addChatMessage(chatMessage: ChatMessage): Promise<db.InsertResult> {

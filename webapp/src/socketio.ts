@@ -7,7 +7,7 @@ import debug from 'debug';
 const log = debug('webapp:socket');
 
 import { ObjectId } from 'mongodb';
-import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk } from './db/chat';
+import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk, updateCompletedMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
 import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
 import { SessionType, SessionStatus } from './lib/struct/session';
@@ -193,7 +193,9 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('message_complete', async (data) => {
-
+			if (data?.message?.text) {
+				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text);
+			}
 		});
 
 	});
