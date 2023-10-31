@@ -16,7 +16,7 @@ To run this project up locally, you'll need docker-compose. Follow the steps bel
   - [agent backend env vars](agent-backend/README.md)
 2. **Start Services**: Simply run the following command:
 
-Linux:
+Mac & Linux:
 ```
 SHORT_COMMIT_HASH=$(git rev-parse --short HEAD) docker-compose up --build
 ```
