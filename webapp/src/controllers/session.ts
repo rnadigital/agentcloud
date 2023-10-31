@@ -1,6 +1,7 @@
 'use strict';
 
-import { getSessionsByTeam, getSessionById, addSession, SessionStatus, SessionType, deleteSessionById } from '../db/session';
+import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
+import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession } from '../db/chat';
 import { dynamicResponse } from '../util';
 

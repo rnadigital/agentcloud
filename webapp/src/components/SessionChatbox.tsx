@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 import classNames from './ClassNames';
 
-export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom }) {
+export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -32,7 +32,7 @@ export default function SessionChatbox({ chatBusyState, onSubmit, scrollToBottom
 					name='prompt'
 					id='prompt'
 					className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6'
-					placeholder={'Type a message...'}
+					placeholder={lastMessageFeedback ? 'Provide feedback...' : 'Type a message...'}
 					defaultValue={''}
 					value={promptValue}
 					onChange={(e) => setPromptValue(e.target.value)}

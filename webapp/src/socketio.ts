@@ -9,8 +9,8 @@ const log = debug('webapp:socket');
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
-import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus,
-	SessionType, SessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import { SessionType, SessionStatus } from './lib/struct/session';
 
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';

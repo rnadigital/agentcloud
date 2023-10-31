@@ -3,20 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-
-export enum SessionStatus {
-	STARTED = 'started',
-	RUNNING = 'running',
-	WAITING = 'waiting',
-	WARNING = 'warning',
-	ERRORED = 'error',
-	TERMINATED = 'terminated',
-}
-
-export enum SessionType {
-	TEAM = 'generate_team',
-	TASK = 'execute_task',
-}
+import { SessionStatus, SessionType } from '../lib/struct/session';
 
 export type SessionAgent = {
 	agentId: ObjectId; //Object ID of Agent

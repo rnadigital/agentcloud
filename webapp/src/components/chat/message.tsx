@@ -1,8 +1,11 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect, useMemo } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { useChatContext } from '../../context/chat';
 import { relativeString } from '../../lib/time';
 import dynamic from 'next/dynamic';
+import { FeedbackOption, SessionType } from '../../lib/struct/session';
+
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
@@ -11,7 +14,32 @@ const Markdown = dynamic(() => import('react-markdown'), {
 import { toast } from 'react-toastify';
 import Blockies from 'react-blockies';
 
-const COLLAPSE_AFTER_LINES = 10;
+const COLLAPSE_AFTER_LINES = 10
+	, feedbackLabels = {
+		[SessionType.TEAM]: {
+			[FeedbackOption.EXIT]: 'Accept team',
+			[FeedbackOption.CONTINUE]: 'Auto reply',
+			[FeedbackOption.CANCEL]: 'End session',
+		},
+		[SessionType.TASK]: {
+			// [FeedbackOption.EXIT]: 'Continue',
+			[FeedbackOption.CONTINUE]: 'Continue',
+			[FeedbackOption.CANCEL]: 'End session',
+		},
+	}
+	, feedbackMessages = {
+		[SessionType.TEAM]: {
+			[FeedbackOption.EXIT]: 'exit',
+			[FeedbackOption.CONTINUE]: '\n',
+			[FeedbackOption.CANCEL]: 'TERMINATE',
+		},
+		[SessionType.TASK]: {
+			// [FeedbackOption.EXIT]: 'Looks good!',
+			[FeedbackOption.CONTINUE]: '\n',
+			[FeedbackOption.CANCEL]: 'TERMINATE',
+		},
+	};
+	
 
 export function CopyToClipboardButton({ dataToCopy }) {
 
@@ -106,6 +134,7 @@ export function Message({
 	messageType,
 	messageLanguage,
 	isFeedback,
+	feedbackOptions,
 	isLastMessage,
 	ts,
 	authorName,
@@ -118,6 +147,7 @@ export function Message({
 		messageType?: string,
 		messageLanguage?: string,
 		isFeedback?: boolean,
+		feedbackOptions?: string[],
 		isLastMessage?: boolean,
 		ts?: number,
 		authorName?: string,
@@ -125,6 +155,8 @@ export function Message({
 		incoming?: boolean,
 		sendMessage?: Function,
 	}) {
+
+	const [chatContext]: any = useChatContext();
 
 	const [ style, setStyle ] = useState(null);
 	useEffect(() => {
@@ -175,20 +207,20 @@ export function Message({
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
 
-		{isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} bg-yellow-50`}>
+		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} bg-yellow-50`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
-				<div>
+				{feedbackOptions && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
 					<button
-						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2'
+						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
 							e.preventDefault();
-							sendMessage('exit');
+							sendMessage(feedbackMessages[chatContext.type][fo]);
 						}}
 					>
-						Exit
+						{feedbackLabels[chatContext.type][fo]}
 					</button>
-				</div>
+				</div>)).filter(n => n)}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>}

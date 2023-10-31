@@ -22,6 +22,7 @@ export default function Session(props) {
 	const [error, setError] = useState();
 	const { sessionId } = props.query || router.query;
 	const { session } = state;
+	const scrollContainerRef = useRef(null);
 
 	const [_chatContext, setChatContext]: any = useChatContext();
 	useEffect(() => {
@@ -29,11 +30,11 @@ export default function Session(props) {
 			prompt: session.prompt,
 			status: session.status,
 			type: session.type,
+			scrollToBottom,
 		} : null);
 	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
-	const scrollContainerRef = useRef(null);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
 		const handleScroll = () => {
@@ -231,6 +232,7 @@ export default function Session(props) {
 							messageType={m.message?.type}
 							messageLanguage={m.message?.language}
 							authorName={m.authorName}
+							feedbackOptions={m.options}
 							incoming={m.incoming}
 							ts={m.ts}
 							isFeedback={m.isFeedback}
@@ -259,6 +261,7 @@ export default function Session(props) {
 								? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>
 								: <SessionChatbox
 									scrollToBottom={scrollToBottom}
+									lastMessageFeedback={lastMessageFeedback}
 									chatBusyState={chatBusyState}
 									onSubmit={sendMessage} />}
 						</div>

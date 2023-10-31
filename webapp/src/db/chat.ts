@@ -3,7 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-import { SessionType } from './session';
+import { SessionType } from '../lib/struct/session';
 
 export type ChatMessage = {
 	_id?: ObjectId;
