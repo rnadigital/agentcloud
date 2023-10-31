@@ -1,6 +1,6 @@
 'use strict';
 
-export default function handleShiftNewlines(e, value, onSubmit, setInputValue, scrollToBottom, chatBusyState) {
+export default function handleShiftNewlines(e, value, onSubmit, setInputValue, scrollToBottom?, chatBusyState?) {
 	scrollToBottom && scrollToBottom(1, 'instant');
 	if (e.key === 'Enter' && !e.shiftKey) {
 		e.preventDefault();

@@ -39,7 +39,6 @@ const COLLAPSE_AFTER_LINES = 10
 			[FeedbackOption.CANCEL]: 'TERMINATE',
 		},
 	};
-	
 
 export function CopyToClipboardButton({ dataToCopy }) {
 
