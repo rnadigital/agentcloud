@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { Message } from '../../../../components/chat/message';
 import SessionChatbox from '../../../../components/SessionChatbox';
 import classNames from '../../../../components/ClassNames';
+import Blockies from 'react-blockies';
 import debug from 'debug';
 const log = debug('webapp:socket');
 
@@ -249,11 +250,9 @@ export default function Session(props) {
 
 				<div className='flex flex-row justify-center border-t p-4 mt-auto'>
 					<div className='flex items-start space-x-4 basis-1/2'>
-						<div className='flex-shrink-0  ring-1 rounded-full ring-gray-300'>
-							<span
-								className='inline-block h-10 w-10 text-center pt-2 font-bold'
-							>
-								{account.name.charAt(0).toUpperCase()}
+						<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+							<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1`}>
+								<Blockies seed={account.name} />
 							</span>
 						</div>
 						<div className='min-w-0 flex-1 h-full'>

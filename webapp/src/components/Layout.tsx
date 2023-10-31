@@ -12,6 +12,7 @@ import Router from 'next/router';
 import Link from 'next/link';
 import { Fragment, useState, useEffect } from 'react';
 import classNames from './ClassNames';
+import Blockies from 'react-blockies';
 import packageJson from '../../package.json';
 
 import { Dialog, Menu, Transition } from '@headlessui/react';
@@ -476,7 +477,7 @@ export default withRouter(function Layout(props) {
 
 								{/* Profile dropdown */}
 								{account && <Menu as='div' className='relative'>
-									<Menu.Button className='-m-1.5 flex items-center p-1.5'>
+									<Menu.Button className='-m-1.5 flex items-center'>
 										<span className='sr-only'>Open user menu</span>
 										{/*<ResolvedImage
 											className='h-8 w-8 rounded-full bg-gray-50'
@@ -485,7 +486,8 @@ export default withRouter(function Layout(props) {
 											width={64}
 											height={64}
 										/>*/}
-										<span className='hidden lg:flex lg:items-center'>
+										<Blockies className='rounded-full' seed={account.name} />
+										<span className='hidden lg:flex lg:items-center ps-2'>
 											<span
 												className='text-sm font-semibold leading-6 text-gray-900'
 												aria-hidden='true'

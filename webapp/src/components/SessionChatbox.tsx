@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
+import Blockies from 'react-blockies';
 import classNames from './ClassNames';
 
 export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) { //TODO: just get scrolltobottom from chatcontext

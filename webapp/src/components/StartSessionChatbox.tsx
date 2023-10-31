@@ -7,7 +7,6 @@ import {
   // PaperClipIcon,
 	PlusIcon,
 } from '@heroicons/react/20/solid';
-import Blockies from 'react-blockies';
 import * as API from '../api';
 
 export default function StartSessionChatbox() {
