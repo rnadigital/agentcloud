@@ -39,7 +39,7 @@ This will start both the agent backend and the webapp.
 
 ## License
 
-This project is licensed under the Affero General Public License, version 3 only. Please refer to the [LICENSE](LICENSE) file for more details.
+This project is licensed under the Apache 2.0 License
 
 ## Contributions & Feedback
 
