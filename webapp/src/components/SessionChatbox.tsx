@@ -1,25 +1,14 @@
 import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
+import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import classNames from './ClassNames';
 
-export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) {
+export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) { //TODO: just get scrolltobottom from chatcontext
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 
 	const [promptValue, setPromptValue] = useState('');
-
-	function handleKeyDown(e) {
-		scrollToBottom(1, 'instant');
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			if (chatBusyState) { return; }
-			if (promptValue.trim().length > 0) {
-				onSubmit(e);		
-				setPromptValue('');
-			}
-		}
-	}
 
 	return <form action='/forms/session/add' className='relative' onSubmit={onSubmit}>
 		<input type='hidden' name='_csrf' value={csrf} />
@@ -27,8 +16,8 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 		<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 			<div className='block w-full min-h-20'>
 				<textarea
-					onKeyDown={handleKeyDown}
-					rows={Math.min(5, promptValue.split(/\r?\n/).length)}
+					onKeyDown={e => handleShiftNewlines(e, promptValue, onSubmit, setPromptValue, scrollToBottom, chatBusyState)}
+					rows={Math.min(10, promptValue.split(/\r?\n/).length)}
 					name='prompt'
 					id='prompt'
 					className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6'
@@ -63,7 +52,7 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 				<button
 					disabled={chatBusyState || promptValue.trim().length === 0}
 					type='submit'
-					className={classNames('inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
+					className={classNames('pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
 						!chatBusyState
 							? 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 							: 'bg-indigo-400 cursor-wait')}
