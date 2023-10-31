@@ -70,9 +70,19 @@ class MongoClientConnection(MongoConnection):
             agent_data["type"] = agent.get("type", "AssistantAgent")
             agent_data["llm_config"] = agent.get("llmConfig", "gpt4_config")
             code_execution = agent.get("codeExecutionConfig")
-            agent_data["code_execution_config"] = False if code_execution is None else {
-                "last_n_messages": code_execution.get("lastNMessages", 3), "work_dir": code_execution.get("workDirectory", "output"),
-                "use_docker": False}
+            if code_execution:
+                print(f"Code execution: {code_execution}")
+                print(f"Last N messages: {code_execution.get('lastNMessages')}")
+                last_n_messages = code_execution.get("lastNMessages", 3)
+                agent_data["code_execution_config"] = {
+                    "last_n_messages": last_n_messages if last_n_messages is not None else 3,
+                    "work_dir": code_execution.get("workDirectory", "output"),
+                    "use_docker": False
+                }
+            else:
+                agent_data["code_execution_config"] = False
+            print("==Final Code Execution Cofig==")
+            print(agent_data["code_execution_config"])
             agent_data["system_message"] = agent.get("systemMessage", "You are an AI assistant")
             agent_data["human_input_mode"] = agent.get("humanInputMode", "NEVER")
             agent_data["is_user_proxy"] = agent.get("isUserProxy", False)
