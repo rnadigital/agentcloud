@@ -70,6 +70,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	const PreWithRef = (preProps) => (
 		<pre {...preProps} ref={codeBlockRef} />
 	);
+	// debugger;
 	const cachedResult = useMemo(() => <>
 		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
@@ -96,7 +97,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 				{collapsed ? 'Expand' : 'Collapse'}
 			</button>}
 		</div>
-	</>, [messageContent, collapsed, chunking]);
+	</>, [collapsed]);
 	return cachedResult;
 }
 

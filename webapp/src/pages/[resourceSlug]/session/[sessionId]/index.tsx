@@ -36,13 +36,12 @@ export default function Session(props) {
 	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
-	console.log('isAtBottom', isAtBottom);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
 		const handleScroll = (e) => {
 			const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
 			// Check if scrolled to the bottom
-			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 20);
+			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 10);
 			if (isCurrentlyAtBottom !== isAtBottom) {
 				setIsAtBottom(isCurrentlyAtBottom);
 			}
@@ -53,7 +52,7 @@ export default function Session(props) {
 		return () => {
 			container.removeEventListener('scroll', handleScroll);
 		};
-	}, [isAtBottom]);
+	}, [isAtBottom, scrollContainerRef?.current]);
 
 	const socketContext = useSocketContext();
 	const [messages, setMessages] = useState(null);
@@ -106,7 +105,7 @@ export default function Session(props) {
 			type,
 		});
 	}
-	function scrollToBottom(timeout: number=50, behavior: string='smooth') {
+	function scrollToBottom(timeout: number=5, behavior: string='smooth') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 			setTimeout(() => {
