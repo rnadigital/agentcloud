@@ -64,7 +64,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	const isLongMessage = messageContent
 		&& typeof messageContent.split === 'function'
 		&& messageContent.split(/\r?\n/).length > COLLAPSE_AFTER_LINES;
-	// console.log('chunking', chunking);
+	console.log('chunking', chunking);
 	const [ collapsed, setCollapsed ] = useState(isLongMessage && !chunking);
 	const codeBlockRef = useRef(null);
 	const PreWithRef = (preProps) => (
@@ -87,7 +87,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 			>
 				{messageContent}
 			</SyntaxHighlighter>
-			{isLongMessage && <button
+			{isLongMessage && !chunking && <button
 				className='overlay-button btn bg-indigo-600 rounded-md text-white'
 				onClick={() => {
 					setCollapsed(oldCollapsed => !oldCollapsed);
@@ -96,7 +96,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 				{collapsed ? 'Expand' : 'Collapse'}
 			</button>}
 		</div>
-	</>, [messageContent, collapsed]);
+	</>, [messageContent, collapsed, chunking]);
 	return cachedResult;
 }
 

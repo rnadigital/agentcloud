@@ -36,12 +36,13 @@ export default function Session(props) {
 	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	console.log('isAtBottom', isAtBottom)
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
 		const handleScroll = (e) => {
 			const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
 			// Check if scrolled to the bottom
-			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 50);
+			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 20);
 			if (isCurrentlyAtBottom !== isAtBottom) {
 				setIsAtBottom(isCurrentlyAtBottom);
 			}
@@ -78,13 +79,14 @@ export default function Session(props) {
 			if (message?.message?.first === false) {
 				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
 				const newChunk = { chunk: message.message.text, ts: message.ts };
-				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[])
+				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])
 					.concat([newChunk])
 					.sort((ma, mb) => ma.ts - mb.ts);
 				oldMessages[oldMessages.length-1].chunks = newChunks;
 				oldMessages[oldMessages.length-1].message.text = newChunks.map(c => c.chunk).join('');
 				return [...oldMessages];
 			}
+			// debugger;
 			return oldMessages
 				.concat([newMessage])
 				.sort((ma, mb) => ma.ts - mb.ts);
@@ -104,17 +106,17 @@ export default function Session(props) {
 			type,
 		});
 	}
-	function scrollToBottom(timeout: number=100, behavior: string='smooth') {
+	function scrollToBottom(timeout: number=50, behavior: string='smooth') {
 		//scroll to bottom when messages added (if currently at bottom)
-		setTimeout(() => {
-			if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
-				scrollContainerRef.current.scrollTo({
-					left: 0,
-					top: scrollContainerRef.current.scrollHeight,
-					behavior,
-				});
-			}
-		}, timeout);
+		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
+			setTimeout(() => {
+					scrollContainerRef.current.scrollTo({
+						left: 0,
+						top: scrollContainerRef.current.scrollHeight,
+						behavior,
+					});
+			}, timeout);
+		}
 	}
 	useEffect(() => {
 		scrollToBottom();
