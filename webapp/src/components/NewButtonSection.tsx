@@ -9,7 +9,7 @@ export default function NewButtonSection({ link, emptyMessage, icon, message, bu
 	const resourceSlug = account.currentTeam;
 
 	return (
-		<div className='text-center'>
+		<div className='text-center py-4'>
 			{icon}
 			<h3 className='mt-2 text-sm font-semibold text-gray-900'>{emptyMessage}</h3>
 			<p className='mt-1 text-sm text-gray-500'>{message}</p>

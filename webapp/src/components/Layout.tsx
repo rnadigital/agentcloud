@@ -51,7 +51,7 @@ const teamNavigation = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
 	{ name: 'Sessions', href: '/sessions', icon: Square3Stack3DIcon },
 	{ name: 'Agents', href: '/agents', icon: CpuChipIcon },
-	{ name: 'Teams', href: '/teams', icon: UserGroupIcon },
+	{ name: 'Groups', href: '/groups', icon: UserGroupIcon },
 ];
 
 const libraryNavigation = [/*

@@ -12,7 +12,7 @@ import csrfMiddleware from './lib/middleware/auth/csrf';
 
 //TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
-import * as teamController from './controllers/team';
+import * as groupController from './controllers/group';
 import * as sessionController from './controllers/session';
 import * as integrationController from './controllers/integrations';
 import * as agentController from './controllers/agent';
@@ -42,6 +42,7 @@ export default function router(server, app) {
 	accountFormRouter.post('/changepassword', accountController.changePassword);
 	accountFormRouter.post('/verify', accountController.verifyToken);
 	accountFormRouter.post('/logout', checkSession, csrfMiddleware, accountController.logout);
+	accountFormRouter.post('/switch', checkSession, csrfMiddleware, accountController.switchTeam);
 	server.use('/forms/account', unauthedMiddlewareChain, accountFormRouter);
 
 	/*
@@ -58,8 +59,6 @@ export default function router(server, app) {
 	server.get('/integrations.json', authedMiddlewareChain, integrationController.integrationsJson);
 	
 	const teamPagesRouter = Router({ caseSensitive: true });
-	teamPagesRouter.get('/home', teamController.homePage.bind(null, app));
-	teamPagesRouter.get('/home.json', teamController.homeJson);
 
 	teamPagesRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
 	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
@@ -72,8 +71,10 @@ export default function router(server, app) {
 	teamPagesRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
 	teamPagesRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
 	
-	teamPagesRouter.get('/tools', teamController.toolsPage.bind(null, app));
-	teamPagesRouter.get('/tools.json', teamController.toolsJson);
+	teamPagesRouter.get('/groups', groupController.groupsPage.bind(null, app));
+	teamPagesRouter.get('/groups.json', groupController.groupsJson);
+	teamPagesRouter.get('/group/add', groupController.groupEditPage.bind(null, app));
+	teamPagesRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
 	
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
 
@@ -88,10 +89,6 @@ export default function router(server, app) {
 	//agentFormRouter.post('/:sessionId([a-f0-9]{24})/edit', sessionController.editSessionApi);
 	sessionFormRouter.delete('/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
 	server.use('/forms/session', authedMiddlewareChain, sessionFormRouter);
-
-	const teamFormRouter = Router({ caseSensitive: true });
-	teamFormRouter.post('/switch', teamController.switchTeam);
-	server.use('/forms/team', authedMiddlewareChain, teamFormRouter);
 
 	const integrationFormRouter = Router({ caseSensitive: true });
 	integrationFormRouter.post('/googleads', integrationController.addIntegrationApi);

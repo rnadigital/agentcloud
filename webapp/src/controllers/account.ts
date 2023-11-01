@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
+import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -220,4 +220,28 @@ export async function verifyToken(req, res) {
 	}
 	await verifyAccount(deletedVerification.accountId);
 	return dynamicResponse(req, res, 302, { redirect: '/login?verifysuccess=true' });
+}
+
+/**
+ * POST /forms/account/switchteam
+ * switch teams
+ */
+export async function switchTeam(req, res, _next) {
+
+	const { orgId, teamId } = req.body;
+	if (!orgId || typeof orgId !== 'string'
+		|| !teamId || typeof teamId !== 'string') {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const switchOrg = res.locals.account.orgs.find(o => o.id.toString() === orgId);
+	const switchTeam = switchOrg && switchOrg.teams.find(t => t.id.toString() === teamId);
+	if (!switchOrg || !switchTeam) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	await setCurrentTeam(res.locals.account._id, orgId, teamId);
+
+	return res.json({ redirect: `/${teamId}/sessions` });
+
 }
