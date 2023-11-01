@@ -10,7 +10,7 @@ export async function groupsData(req, res, _next) {
 	return {
 		csrf: req.csrfToken(),
 		groups,
-		hasAgents: teamAgens.length > 0,
+		hasAgents: teamAgents.length > 0,
 	};
 }
 
@@ -20,7 +20,7 @@ export async function groupData(req, res, _next) {
 	return {
 		csrf: req.csrfToken(),
 		groupData,
-		hasAgents: teamAgens.length > 0,
+		hasAgents: teamAgents.length > 0,
 	};
 }
 
