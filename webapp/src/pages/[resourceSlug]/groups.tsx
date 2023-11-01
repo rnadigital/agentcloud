@@ -5,7 +5,7 @@ import * as API from '../../api';
 import { useRouter } from 'next/router';
 import { useAccountContext } from '../../context/account';
 import NewButtonSection from '../../components/NewButtonSection';
-import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { ExclamationTriangleIcon, HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Groups(props) {
 
@@ -16,7 +16,7 @@ export default function Groups(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { groups } = state;
+	const { groups, hasAgents } = state;
 
 	function fetchGroups() {
 		API.getGroups({ resourceSlug: resourceSlug }, dispatch, setError, router);
@@ -42,7 +42,27 @@ export default function Groups(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Groups</h3>
 		</div>
 
-		{groups.length === 0 && <NewButtonSection
+		{!hasAgents && <div className='rounded-md bg-yellow-50 p-4'>
+		      <div className='flex'>
+		        <div className='flex-shrink-0'>
+		          <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' aria-hidden='true' />
+		        </div>
+		        <div className='ml-3'>
+		          <h3 className='text-sm font-medium text-yellow-800'>Attention needed</h3>
+		          <div className='mt-2 text-sm text-yellow-700'>
+		            <p>
+		              You have no agents. You need at least 3 agents to create a group.{' '}
+		              <Link href={`/${resourceSlug}/agent/add`} className='font-medium text-yellow-700 underline hover:text-yellow-600'>
+		              						Create agents
+		              		            </Link>
+		              		            .
+		            </p>
+		          </div>
+		        </div>
+		      </div>
+		    </div>}
+
+		{hasAgents && groups.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/group/add`}
 			emptyMessage={'No groups'}
 			icon={<svg
@@ -59,6 +79,7 @@ export default function Groups(props) {
 			message={'Get started by creating a new group.'}
 			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 			buttonMessage={'New Group'}
+			disabled={!hasAgents}
 		/>}
 
 	</>);

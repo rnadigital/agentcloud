@@ -2,7 +2,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 
-export default function NewButtonSection({ link, emptyMessage, icon, message, buttonIcon, buttonMessage }) {
+export default function NewButtonSection({ link, emptyMessage, icon, message, buttonIcon, buttonMessage, disabled }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
@@ -16,8 +16,9 @@ export default function NewButtonSection({ link, emptyMessage, icon, message, bu
 			<div className='mt-6'>
 				<Link href={link}>
 					<button
+						disabled={true}
 						type='button'
-						className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
 					>
 						{buttonIcon}
 						{buttonMessage}

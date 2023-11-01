@@ -55,9 +55,9 @@ export default function OrgSelector({ orgs }) {
 						
 					</div>*/}
 					<div className='py-1'>
-						{orgs.map((org, oi) => (<>
+						{orgs.map((org, oi) => (<span key={`org_${oi}`}>
 							{oi > 0 && <hr />}
-							<Menu.Item disabled key={`org_${oi}`}>
+							<Menu.Item disabled>
 								{({ active }) => (
 									<a
 										href='#'
@@ -86,7 +86,7 @@ export default function OrgSelector({ orgs }) {
 									)}
 								</Menu.Item>
 							))}
-						</>))}
+						</span>))}
 					</div>
 				</Menu.Items>
 			</Transition>

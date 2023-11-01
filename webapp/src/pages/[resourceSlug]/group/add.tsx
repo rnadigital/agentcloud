@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import * as API from '../../../api';
-import AgentForm from '../../../components/AgentForm';
+import GroupForm from '../../../components/GroupForm';
 import { useRouter } from 'next/router';
 import { useAccountContext } from '../../../context/account';
 
-export default function AddAgent(props) {
+export default function AddGroup(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -14,25 +14,25 @@ export default function AddAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, hasAgent } = state;
+	const { groups } = state;
 
 	useEffect(() => {
-		if (!agents) {
-			API.getAgents({ resourceSlug: account.currentOrg }, dispatch, setError, router);
+		if (!groups) {
+			API.getGroups({ resourceSlug: account.currentOrg }, dispatch, setError, router);
 		}
 	}, []);
 	
-	if (agents == null) {
+	if (groups == null) {
 		return 'Loading...'; //TODO: loader
 	}
 
 	return (<>
 
 		<Head>
-			<title>New Agent - {teamName}</title>
+			<title>New Group - {teamName}</title>
 		</Head>
 
-		<AgentForm />
+		<GroupForm />
 
 	</>);
 }
