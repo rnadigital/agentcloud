@@ -39,10 +39,10 @@ export function initSocket(rawHttpServer) {
 
 	//NOTE: there is almost no security/validation here, yet
 	io.on('connection', async (socket) => {
-		//log('Socket %s connected', socket.id);
+		log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			//log('Received socket event %s args: %O', eventName, args);
+			log('Received socket event %s args: %O', eventName, args);
 		});
 
 		socket.on('join_room', async (room: string) => {
@@ -78,7 +78,15 @@ export function initSocket(rawHttpServer) {
 				return io.to(data.room).emit('terminate', true);
 			}
 			const sessionTeamJsonMessage = await unsafeGetTeamJsonMessage(data.message.sessionId);
-			const generatedRoles = sessionTeamJsonMessage?.message?.message?.text?.roles;
+			if (!sessionTeamJsonMessage) {
+				return console.warn('No code blocks found for terminated session', data.message.sessionId);
+			}
+			let generatedRoles;
+			try {
+				generatedRoles = JSON.parse(sessionTeamJsonMessage.codeBlocks[0].codeBlock).roles;
+			} catch(e) {
+				console.warn(e);
+			}
 			if (!generatedRoles) {
 				return console.warn('No generated roles found for terminated session', data.message.sessionId);
 			}
@@ -178,7 +186,7 @@ export function initSocket(rawHttpServer) {
 				}
 				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 				if (newStatus !== session.status) { //Note: chat messages can be received out of order
-					//log('updating session status to %s', newStatus);
+					log('updating session status to %s', newStatus);
 					await unsafeSetSessionStatus(session._id, newStatus);
 					io.to(data.room).emit('status', newStatus);
 				}
@@ -194,7 +202,7 @@ export function initSocket(rawHttpServer) {
 
 		socket.on('message_complete', async (data) => {
 			if (data?.message?.text) {
-				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text);
+				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks);
 			}
 		});
 

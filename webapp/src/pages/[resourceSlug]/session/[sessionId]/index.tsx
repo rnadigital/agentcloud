@@ -38,10 +38,10 @@ export default function Session(props) {
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
-		const handleScroll = () => {
+		const handleScroll = (e) => {
 			const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
 			// Check if scrolled to the bottom
-			const isCurrentlyAtBottom = scrollTop + clientHeight >= scrollHeight;
+			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 50);
 			if (isCurrentlyAtBottom !== isAtBottom) {
 				setIsAtBottom(isCurrentlyAtBottom);
 			}
@@ -104,17 +104,17 @@ export default function Session(props) {
 			type,
 		});
 	}
-	function scrollToBottom(timeout: number=300, behavior: string='smooth') {
+	function scrollToBottom(timeout: number=100, behavior: string='smooth') {
 		//scroll to bottom when messages added (if currently at bottom)
-		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
-			setTimeout(() => {
+		setTimeout(() => {
+			if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 				scrollContainerRef.current.scrollTo({
 					left: 0,
 					top: scrollContainerRef.current.scrollHeight,
 					behavior,
 				});
-			}, timeout);
-		}
+			}
+		}, timeout);
 	}
 	useEffect(() => {
 		scrollToBottom();
@@ -192,7 +192,9 @@ export default function Session(props) {
 						.sort((ca, cb) => ca.ts - cb.ts)
 						.map(x => x.chunk)
 						.join('');
-					_m.message.text = combinedChunks;
+					if (combinedChunks?.length > 0) {
+						_m.message.text = (_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') + combinedChunks;
+					}
 					return _m;
 				})
 				.sort((ma, mb) => ma.ts - mb.ts));
@@ -257,6 +259,7 @@ export default function Session(props) {
 							isFeedback={m.isFeedback}
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
+							chunking={m.chunks?.length > 0}
 						/>;
 					})}
 					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>

@@ -427,7 +427,7 @@ export default withRouter(function Layout(props) {
 						/>
 
 						<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap'>
-							{chatContext?.prompt && `"${chatContext.prompt}"`}
+							{chatContext?.prompt && chatContext.prompt}
 						</h5>
 
 						<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>

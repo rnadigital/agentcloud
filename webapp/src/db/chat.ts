@@ -11,6 +11,11 @@ export type ChatChunk = {
 	tokens: number; //might remove
 }
 
+export type ChatCodeBlock = {
+	language: string;
+	codeBlock: string;
+}
+
 export type ChatMessage = {
 	_id?: ObjectId;
 	orgId: ObjectId;
@@ -25,6 +30,7 @@ export type ChatMessage = {
 	authorName: string;
 	tokens?: number;
 	chunks?: ChatChunk[];
+	codeBlocks?: ChatCodeBlock[];
 }
 
 export function ChatCollection() {
@@ -55,8 +61,7 @@ export function getAgentMessageForSession(sessionId: db.IdOrStr): Promise<ChatMe
 export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMessage|null> {
 	return ChatCollection().find({
 		sessionId: toObjectId(sessionId),
-		'message.message.type': 'code',
-		'message.message.language': 'json', //TODO once fixed in autogen fork
+		'codeBlocks.language': 'json',
 		type: SessionType.TEAM,
 	}).sort({
 		_id: -1,
@@ -77,18 +82,20 @@ export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId:
 	});
 }
 
-export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string) {
-	return ChatCollection().updateOne({
-		sessionId: toObjectId(sessionId),
-		chunkId,
-	}, {
+export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string, codeBlocks: ChatCodeBlock) {
+	const update = {
 		$unset: {
 			chunks: '',
 		},
 		$set: {
 			'message.message.text': text,
+			codeBlocks,
 		}
-	});
+	};
+	return ChatCollection().updateOne({
+		sessionId: toObjectId(sessionId),
+		chunkId,
+	}, update);
 }
 
 export async function addChatMessage(chatMessage: ChatMessage): Promise<db.InsertResult> {

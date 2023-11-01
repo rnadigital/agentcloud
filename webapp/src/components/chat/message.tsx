@@ -1,5 +1,5 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import { useChatContext } from '../../context/chat';
 import { relativeString } from '../../lib/time';
@@ -60,12 +60,17 @@ export function CopyToClipboardButton({ dataToCopy }) {
 	);
 }
 
-function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
+function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }) {
 	const isLongMessage = messageContent
 		&& typeof messageContent.split === 'function'
 		&& messageContent.split(/\r?\n/).length > COLLAPSE_AFTER_LINES;
-	const [ collapsed, setCollapsed ] = useState(isLongMessage);
-	return <>
+	// console.log('chunking', chunking);
+	const [ collapsed, setCollapsed ] = useState(isLongMessage && !chunking);
+	const codeBlockRef = useRef(null);
+	const PreWithRef = (preProps) => (
+		<pre {...preProps} ref={codeBlockRef} />
+	);
+	const cachedResult = useMemo(() => <>
 		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
 			<CopyToClipboardButton dataToCopy={messageContent} />
@@ -77,6 +82,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 				language={messageLanguage}
 				style={style}
 				showLineNumbers={true}
+				PreTag={PreWithRef}
 				customStyle={{ margin: 0, maxHeight: collapsed ? '10em' : 'unset' }}
 			>
 				{messageContent}
@@ -90,10 +96,11 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style }) {
 				{collapsed ? 'Expand' : 'Collapse'}
 			</button>}
 		</div>
-	</>;
+	</>, [messageContent, collapsed]);
+	return cachedResult;
 }
 
-function MessageBody({ message, messageType, messageLanguage, style }) {
+function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
 	const messageContent = messageLanguage === 'json'
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
@@ -103,6 +110,7 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 				messageContent={messageContent}
 				messageLanguage={messageLanguage}
 				style={style}
+				chunking={chunking}
 			/>;
 		case 'text':
 		default:
@@ -116,6 +124,7 @@ function MessageBody({ message, messageType, messageLanguage, style }) {
 							messageContent={String(children).replace(/\n$/, '')}
 							messageLanguage={match[1]}
 							style={style}
+							chunking={chunking}
 						/>) : (<code {...rest} className={className}>
 							{children}
 						</code>);
@@ -140,6 +149,7 @@ export function Message({
 	authorImage,
 	incoming,
 	sendMessage,
+	chunking,
 }: {
 		prevMessage?: any,
 		message?: any,
@@ -153,6 +163,7 @@ export function Message({
 		authorImage?: string,
 		incoming?: boolean,
 		sendMessage?: Function,
+		chunking?: boolean,
 	}) {
 
 	const [chatContext]: any = useChatContext();
@@ -182,7 +193,7 @@ export function Message({
 	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
-			<strong className='capitalize pe-1'>{authorName}</strong>
+			<strong className='capitalize pe-1'>{authorName.replaceAll('_', ' ')}</strong>
 		</small>
 		<div className='invisible xl:visible col-span-1'></div>
 	</div>;
@@ -195,7 +206,7 @@ export function Message({
 				{!incoming && profilePicture}
 				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200' : ''}`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
-						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} />
+						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
 							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 						</small>
