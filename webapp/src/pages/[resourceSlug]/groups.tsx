@@ -82,6 +82,8 @@ export default function Groups(props) {
 			disabled={!hasAgents}
 		/>}
 
+		<pre>{JSON.stringify(groups, null, 2)}</pre>
+
 	</>);
 }
 

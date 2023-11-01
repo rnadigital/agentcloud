@@ -14,7 +14,7 @@ export default function AddAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, hasAgent } = state;
+	const { agents } = state;
 
 	useEffect(() => {
 		if (!agents) {
@@ -35,6 +35,7 @@ export default function AddAgent(props) {
 		<AgentForm />
 
 	</>);
+
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {

@@ -35,6 +35,7 @@ export default function AddGroup(props) {
 		<GroupForm />
 
 	</>);
+
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
