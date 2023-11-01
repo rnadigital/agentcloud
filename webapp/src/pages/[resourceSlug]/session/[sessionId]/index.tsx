@@ -36,7 +36,7 @@ export default function Session(props) {
 	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
-	console.log('isAtBottom', isAtBottom)
+	console.log('isAtBottom', isAtBottom);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
 		const handleScroll = (e) => {
@@ -110,11 +110,11 @@ export default function Session(props) {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
 			setTimeout(() => {
-					scrollContainerRef.current.scrollTo({
-						left: 0,
-						top: scrollContainerRef.current.scrollHeight,
-						behavior,
-					});
+				scrollContainerRef.current.scrollTo({
+					left: 0,
+					top: scrollContainerRef.current.scrollHeight,
+					behavior,
+				});
 			}, timeout);
 		}
 	}
