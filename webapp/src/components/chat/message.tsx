@@ -69,7 +69,6 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	const PreWithRef = (preProps) => (
 		<pre {...preProps} ref={codeBlockRef} />
 	);
-	// debugger;
 	const cachedResult = useMemo(() => <>
 		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
@@ -96,7 +95,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 				{collapsed ? 'Expand' : 'Collapse'}
 			</button>}
 		</div>
-	</>, [collapsed]);
+	</>, [collapsed, messageContent]);
 	return cachedResult;
 }
 
@@ -104,36 +103,38 @@ function MessageBody({ message, messageType, messageLanguage, style, chunking })
 	const messageContent = messageLanguage === 'json'
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
-	switch(messageType) {
-		case 'code':
-			return <CollapsingCodeBody
-				messageContent={messageContent}
-				messageLanguage={messageLanguage}
-				style={style}
-				chunking={chunking}
-			/>;
-		case 'text':
-		default:
-			return <Markdown
-				className={'markdown-content'}
-				components={{
-					code(props) {
-						const { children, className, node, ...rest } = props;
-						const match = /language-(\w+)/.exec(className || '');
-						return match ? (<CollapsingCodeBody
-							messageContent={String(children).replace(/\n$/, '')}
-							messageLanguage={match[1]}
-							style={style}
-							chunking={chunking}
-						/>) : (<code {...rest} className={className}>
-							{children}
-						</code>);
-					}
-				}}
-			>
-				{message}
-			</Markdown>;
-	}
+	return useMemo(() => {
+		switch(messageType) {
+			case 'code':
+				return <CollapsingCodeBody
+					messageContent={messageContent}
+					messageLanguage={messageLanguage}
+					style={style}
+					chunking={chunking}
+				/>;
+			case 'text':
+			default:
+				return <Markdown
+					className={'markdown-content'}
+					components={{
+						code(props) {
+							const { children, className, node, ...rest } = props;
+							const match = /language-(\w+)/.exec(className || '');
+							return match ? (<CollapsingCodeBody
+								messageContent={String(children).replace(/\n$/, '')}
+								messageLanguage={match[1]}
+								style={style}
+								chunking={chunking}
+							/>) : (<code {...rest} className={className}>
+								{children}
+							</code>);
+						}
+					}}
+				>
+					{message}
+				</Markdown>;
+		}
+	}, [messageContent, messageType, messageLanguage, style, chunking]);
 }
 
 export function Message({

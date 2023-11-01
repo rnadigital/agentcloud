@@ -32,6 +32,7 @@ import {
 import {
 	ChevronDownIcon,
 	MagnifyingGlassIcon,
+	UserGroupIcon,
 } from '@heroicons/react/20/solid';
 import { SessionStatus } from './SessionCards';
 
@@ -50,7 +51,7 @@ const teamNavigation = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
 	{ name: 'Sessions', href: '/sessions', icon: Square3Stack3DIcon },
 	{ name: 'Agents', href: '/agents', icon: CpuChipIcon },
-	// { name: 'Tools', href: '/tools', icon: WrenchScrewdriverIcon },
+	{ name: 'Teams', href: '/teams', icon: UserGroupIcon },
 ];
 
 const libraryNavigation = [/*
