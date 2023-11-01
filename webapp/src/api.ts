@@ -56,6 +56,12 @@ export function getAgents(body, dispatch, errorCallback, router) {
 export function getGroup(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/group/${body.groupId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function addGroup(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/group/add', 'POST', body, dispatch, errorCallback, router);
+}
+export function editGroup(groupId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/forms/group/${groupId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
 export function getGroups(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
 }

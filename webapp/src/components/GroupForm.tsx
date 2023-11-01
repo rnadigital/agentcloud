@@ -15,7 +15,7 @@ export default function GroupForm({ group = {}, editing }: { group?: any, editin
 	const [groupState, setGroup] = useState(group);
 	const [error, setError] = useState();
 
-	const { _id, name, group } = groupState;
+	const { _id, name, agents } = groupState;
 
 	async function groupPost(e) {
 		e.preventDefault();
