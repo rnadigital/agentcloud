@@ -64,7 +64,6 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	const isLongMessage = messageContent
 		&& typeof messageContent.split === 'function'
 		&& messageContent.split(/\r?\n/).length > COLLAPSE_AFTER_LINES;
-	console.log('chunking', chunking);
 	const [ collapsed, setCollapsed ] = useState(isLongMessage && !chunking);
 	const codeBlockRef = useRef(null);
 	const PreWithRef = (preProps) => (

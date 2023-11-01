@@ -105,16 +105,14 @@ export default function Session(props) {
 			type,
 		});
 	}
-	function scrollToBottom(timeout: number=5, behavior: string='smooth') {
+	function scrollToBottom(behavior: string='instant') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
-			setTimeout(() => {
-				scrollContainerRef.current.scrollTo({
-					left: 0,
-					top: scrollContainerRef.current.scrollHeight,
-					behavior,
-				});
-			}, timeout);
+			scrollContainerRef.current.scrollTo({
+				left: 0,
+				top: scrollContainerRef.current.scrollHeight,
+				behavior,
+			});
 		}
 	}
 	useEffect(() => {
@@ -260,7 +258,7 @@ export default function Session(props) {
 							isFeedback={m.isFeedback}
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
-							chunking={m.chunks?.length > 0}
+							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}
 					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>
