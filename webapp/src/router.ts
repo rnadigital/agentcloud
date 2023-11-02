@@ -90,6 +90,12 @@ export default function router(server, app) {
 	sessionFormRouter.delete('/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
 	server.use('/forms/session', authedMiddlewareChain, sessionFormRouter);
 
+	const groupFormRouter = Router({ caseSensitive: true });
+	groupFormRouter.post('/add', groupController.addGroupApi);
+	groupFormRouter.post('/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
+	groupFormRouter.delete('/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+	server.use('/forms/group', authedMiddlewareChain, groupFormRouter);
+
 	const integrationFormRouter = Router({ caseSensitive: true });
 	integrationFormRouter.post('/googleads', integrationController.addIntegrationApi);
 	server.use('/forms/integrations/', authedMiddlewareChain, integrationFormRouter);

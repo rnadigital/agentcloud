@@ -59,9 +59,9 @@ export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent
 	});
 }
 
-export function deleteAgentById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Promise<any> {
+export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<any> {
 	return AgentCollection().deleteOne({
-		_id: toObjectId(sessionId),
+		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId),
 	});
 }
