@@ -13,16 +13,18 @@ export default function AddGroup(props) {
 
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
+	const [agentChoices, setAgentChoices] = useState(null);
 	const [error, setError] = useState();
 	const { groups } = state;
 
 	useEffect(() => {
-		if (!groups) {
-			API.getGroups({ resourceSlug: account.currentOrg }, dispatch, setError, router);
+		if (groups == null || agentChoices == null) {
+			API.getGroups({ resourceSlug: account.currentTeam }, dispatch, setError, router);
+			API.getAgents({ resourceSlug: account.currentTeam }, setAgentChoices, setError, router);
 		}
 	}, []);
 	
-	if (groups == null) {
+	if (groups == null || agentChoices == null) {
 		return 'Loading...'; //TODO: loader
 	}
 
@@ -32,7 +34,7 @@ export default function AddGroup(props) {
 			<title>New Group - {teamName}</title>
 		</Head>
 
-		<GroupForm />
+		<GroupForm agentChoices={agentChoices?.agents} />
 
 	</>);
 

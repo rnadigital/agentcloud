@@ -21,7 +21,7 @@ export default function Agents(props) {
 
 	useEffect(() => {
 		if (!agents) {
-			API.getAgents({ resourceSlug: account.currentTeam }, dispatch, setError, router);
+			API.getAgents({ resourceSlug }, dispatch, setError, router);
 		}
 	}, []);
 	

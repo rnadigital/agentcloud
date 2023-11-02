@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import Select from 'react-tailwindcss-select';
+// import 'react-tailwindcss-select/dist/index.css';
 
 export default function GroupForm({ agentChoices = [], group = {}, editing }: { agentChoices?: any[], group?: any, editing?: boolean }) { //TODO: fix any types
 
@@ -20,6 +21,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 	const [userProxyAgent, setUserProxyAgent] = useState(null);
 	const [executorAgent, setExecutorAgent] = useState(null);
 	const [otherAgents, setOtherAgents] = useState([]);
+	console.log(userProxyAgent, executorAgent, otherAgents);
 
 	const { _id, name, agents } = groupState;
 
@@ -29,17 +31,24 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 			await API.editGroup(groupState._id, {
 				_csrf: e.target._csrf.value,
 				name: e.target.name.value,
-				//TODO: edit group data
+				userProxyAgent: userProxyAgent?.value,
+				executorAgent: executorAgent?.value,
+				otherAgents: otherAgents.map(a => a.value),
 			}, null, setError, null);
 			toast.success('Group Updated');
 		} else {
 			API.addGroup({
 				_csrf: e.target._csrf.value,
 				name: e.target.name.value,
-				//TODO: add group data
+				userProxyAgent: userProxyAgent?.value,
+				executorAgent: executorAgent?.value,
+				otherAgents: otherAgents.map(a => a.value),
 			}, null, setError, router);
+			toast.success('Group Added');
 		}
 	}
+
+	console.log('agentChoices', agentChoices);
 
 	return (<form onSubmit={groupPost}>
 		<input
@@ -82,7 +91,39 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            primaryColor={'indigo'}
 					            value={userProxyAgent}
 					            onChange={setUserProxyAgent}
-					            options={[{label:'test', value:'test'}]}
+					            options={agentChoices.filter(a => a.isUserProxy === true)
+									.map(a => ({ label: a.name, value: a._id }))}
+					        />
+						</div>
+					</div>
+
+					<div className='sm:col-span-12'>
+						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+								Code Execution Agent
+						</label>
+						<div className='mt-2'>
+							<Select
+					            primaryColor={'indigo'}
+					            value={executorAgent}
+					            onChange={setExecutorAgent}
+					            options={agentChoices.filter(a => a.codeExecutionConfig != null)
+									.map(a => ({ label: a.name, value: a._id }))}
+					        />
+						</div>
+					</div>
+
+					<div className='sm:col-span-12'>
+						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+								Other Agents
+						</label>
+						<div className='mt-2'>
+							<Select
+								isMultiple
+					            primaryColor={'indigo'}
+					            value={otherAgents}
+					            onChange={(v: any) => setOtherAgents(v)}
+					            options={agentChoices.filter(a => a.isUserProxy !== true && a.codeExecutionConfig == null)
+									.map(a => ({ label: a.name, value: a._id }))}
 					        />
 						</div>
 					</div>
