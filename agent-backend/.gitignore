@@ -166,3 +166,4 @@ src/orgs/*.py
 keyfile.json
 .*.ipynb
 poetry.lock
+src/output

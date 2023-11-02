@@ -38,12 +38,12 @@
     {
       "name": "Executor",
       "type": "UserProxyAgent",
-      "system_message": "Executor. Execute the code written by the engineer and report the result. Do NOT use Docker to run you code",
-      "human_input_mode": "NEVER",
+      "system_message": "Executor. Execute the code written by the engineer and report the result. Reply TERMINATE if the task has been solved at full satisfaction. Otherwise, reply CONTINUE, or the reason why the task is not solved yet.",
+      "human_input_mode": "TERMINATE",
       "code_execution_config": {
         "last_n_messages": 3,
         "work_dir": "output",
-        "use_docker": false
+        "use_docker": "python:3"
       }
     }
   ]

@@ -4,6 +4,7 @@ from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from random import randint
+from init.env_variables import BASE_PATH
 
 
 class MongoClientConnection(MongoConnection):
@@ -76,8 +77,8 @@ class MongoClientConnection(MongoConnection):
                 last_n_messages = code_execution.get("lastNMessages", 3)
                 agent_data["code_execution_config"] = {
                     "last_n_messages": last_n_messages if last_n_messages is not None else 3,
-                    "work_dir": code_execution.get("workDirectory", "output"),
-                    "use_docker": False
+                    "work_dir": f"{BASE_PATH}/{code_execution.get('workDirectory', 'output')}",
+                    "use_docker": "python:3"
                 }
             else:
                 agent_data["code_execution_config"] = False
