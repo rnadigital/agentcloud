@@ -17,35 +17,41 @@ export function requestChangePassword(body, dispatch, errorCallback, router) {
 export function changePassword(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/changepassword', 'POST', body, dispatch, errorCallback, router);
 }
-export function addAgent(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/agent/add', 'POST', body, dispatch, errorCallback, router);
-}
-export function addSession(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/session/add', 'POST', body, dispatch, errorCallback, router);
-}
-export function editAgent(agentId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/agent/${agentId}/edit`, 'POST', body, dispatch, errorCallback, router);
-}
 export function verifyToken(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/verify', 'POST', body, dispatch, errorCallback, router);
+}
+export function switchTeam(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/team/switch', 'POST', body, dispatch, errorCallback, router);
 }
 export function getIntegrations(dispatch, errorCallback, router) {
 	return ApiCall('/integrations.json', 'GET', null, dispatch, errorCallback, router);
 }
-export function getHome(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/home.json`, 'GET', null, dispatch, errorCallback, router);
+
+// Chats
+export function getMessages(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json`, 'GET', null, dispatch, errorCallback, router);
 }
+
+// Sessions
 export function getSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function deleteSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/forms/session/${body.sessionId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
-export function getMessages(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json`, 'GET', null, dispatch, errorCallback, router);
+export function addSession(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/session/add', 'POST', body, dispatch, errorCallback, router);
 }
 export function getSessions(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/sessions.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+// Agents
+export function addAgent(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/agent/add', 'POST', body, dispatch, errorCallback, router);
+}
+export function editAgent(agentId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/forms/agent/${agentId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 export function getAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/agent/${body.agentId}.json`, 'GET', null, dispatch, errorCallback, router);
@@ -53,6 +59,11 @@ export function getAgent(body, dispatch, errorCallback, router) {
 export function getAgents(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/agents.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function deleteAgent(body, dispatch, errorCallback, router) {
+	return ApiCall(`/forms/agent/${body.agentId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+
+// Groups
 export function getGroup(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/group/${body.groupId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
@@ -67,9 +78,6 @@ export function deleteGroup(body, dispatch, errorCallback, router) {
 }
 export function getGroups(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function switchTeam(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/team/switch', 'POST', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {
