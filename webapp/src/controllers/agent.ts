@@ -130,7 +130,7 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateAgent(res.locals.account.currenTeam, req.params.agentId, {
+	await updateAgent(res.locals.account.currentTeam, req.params.agentId, {
 	    name,
 	 	type: type as AgentType,
 		llmConfig: llmConfigType as LlmConfigType,
@@ -162,7 +162,7 @@ export async function deleteAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteAgentById(res.locals.account.currenTeam, agentId);
+	await deleteAgentById(res.locals.account.currentTeam, agentId);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agents`*/ });
 
