@@ -18,7 +18,6 @@ export async function groupsData(req, res, _next) {
 export async function groupData(req, res, _next) {
 	const groupData = await getGroupById(res.locals.account.currentTeam, req.params.groupId);
 	const teamAgents = await getAgentsByTeam(res.locals.account.currentTeam);
-	console.log('groupData', groupData);
 	return {
 		csrf: req.csrfToken(),
 		groupData,
@@ -139,7 +138,7 @@ export async function editGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateGroup(res.locals.account.currenTeam, req.params.groupId, {
+	await updateGroup(res.locals.account.currentTeam, req.params.groupId, {
 	    name,
 	    executorAgent: toObjectId(executorAgent),
 	    userProxyAgent: toObjectId(userProxyAgent),
