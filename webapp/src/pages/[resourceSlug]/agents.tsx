@@ -19,9 +19,13 @@ export default function Agents(props) {
 	const [error, setError] = useState();
 	const { agents } = state;
 
+	function fetchAgents() {
+		API.getAgents({ resourceSlug }, dispatch, setError, router);
+	}
+
 	useEffect(() => {
 		if (!agents) {
-			API.getAgents({ resourceSlug }, dispatch, setError, router);
+			fetchAgents();
 		}
 	}, []);
 	
@@ -58,7 +62,7 @@ export default function Agents(props) {
 			buttonMessage={'New Agent'}
 		/>}
 		
-		<AgentList agents={agents} />
+		<AgentList agents={agents} fetchAgents={fetchAgents} />
 
 		{agents.length > 0 && <Link href={`/${resourceSlug}/agent/add`}>
 			<button

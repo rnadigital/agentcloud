@@ -1,11 +1,27 @@
 import { TrashIcon, PencilIcon } from '@heroicons/react/20/solid';
 import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
+import * as API from '../api';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/router';
 
-export default function AgentList({ agents }) {
+export default function AgentList({ agents, fetchAgents }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { account } = accountContext as any;
+	const { account, csrf } = accountContext as any;
+	const router = useRouter();
+
+	async function deleteAgent(agentId) {
+		API.deleteAgent({
+			_csrf: csrf,
+			agentId,
+		}, () => {
+			fetchAgents();
+			toast('Deleted agent');
+		}, () => {
+			toast.error('Error deleting agent');
+		}, router);
+	}
 
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
@@ -39,8 +55,7 @@ export default function AgentList({ agents }) {
 							<div className='-ml-px flex w-0 flex-1'>
 								<button
 									onClick={(e) => {
-										//TODO: delete agent api call
-										confirm(`Are you sure you want to delete ${agent.name}?`);
+										deleteAgent(agent._id);
 									}}
 									className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
 								>
