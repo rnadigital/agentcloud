@@ -164,7 +164,7 @@ export async function deleteGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteGroupById(res.locals.account.currenTeam, groupId);
+	await deleteGroupById(res.locals.account.currentTeam, groupId);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/groups`*/ });
 

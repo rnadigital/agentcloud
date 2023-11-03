@@ -62,6 +62,9 @@ export function addGroup(body, dispatch, errorCallback, router) {
 export function editGroup(groupId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/forms/group/${groupId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
+export function deleteGroup(body, dispatch, errorCallback, router) {
+	return ApiCall(`/forms/group/${body.groupId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
 export function getGroups(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
 }
