@@ -51,7 +51,6 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 		}
 	}
 
-
 	return (<form onSubmit={groupPost}>
 		<input
 			type='hidden'
@@ -92,7 +91,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 							<Select
 					            primaryColor={'indigo'}
 					            value={userProxyAgent}
-					            onChange={setUserProxyAgent}
+					            onChange={(e: any) => setUserProxyAgent(e)}
 					            options={agentChoices.filter(a => a.isUserProxy === true)
 									.map(a => ({ label: a.name, value: a._id }))}
 					        />
@@ -107,7 +106,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 							<Select
 					            primaryColor={'indigo'}
 					            value={executorAgent}
-					            onChange={setExecutorAgent}
+					            onChange={(e: any) => setExecutorAgent(e)}
 					            options={agentChoices.filter(a => a.codeExecutionConfig != null)
 									.map(a => ({ label: a.name, value: a._id }))}
 					        />

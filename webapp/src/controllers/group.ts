@@ -18,7 +18,7 @@ export async function groupsData(req, res, _next) {
 export async function groupData(req, res, _next) {
 	const groupData = await getGroupById(res.locals.account.currentTeam, req.params.groupId);
 	const teamAgents = await getAgentsByTeam(res.locals.account.currentTeam);
-	console.log('groupData', groupData)
+	console.log('groupData', groupData);
 	return {
 		csrf: req.csrfToken(),
 		groupData,
