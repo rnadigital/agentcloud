@@ -157,6 +157,7 @@ export default function Session(props) {
 		// socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
+		socketContext.on('type', handleSocketType);
 		socketContext.on('joined', handleJoinedRoom);
 		socketContext.connected ? joinSessionRoom() : socketContext.connect();
 	}
@@ -167,6 +168,7 @@ export default function Session(props) {
 		socketContext.off('joined', handleJoinedRoom);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
+		socketContext.off('type', handleSocketType);
 		// socketContext.connected && socketContext.disconnect();
 	}
 	useEffect(() => {
