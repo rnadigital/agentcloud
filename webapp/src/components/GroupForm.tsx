@@ -17,12 +17,15 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 	const [groupState, setGroup] = useState(group);
 	const [error, setError] = useState();
 
-	//TODO: set initial state to filtered agents from group, (or store them as separate properties of group?)
-	const [userProxyAgent, setUserProxyAgent] = useState(null);
-	const [executorAgent, setExecutorAgent] = useState(null);
-	const [otherAgents, setOtherAgents] = useState([]);
-	console.log(userProxyAgent, executorAgent, otherAgents);
-
+	const initialUserProxyAgent = agentChoices.find(a => a._id === group.userProxyAgent);
+	const [userProxyAgent, setUserProxyAgent] = useState(initialUserProxyAgent ? { label: initialUserProxyAgent.name, value: group.userProxyAgent } : null);
+	const initialExecutorAgent = agentChoices.find(a => a._id === group.executorAgent);
+	const [executorAgent, setExecutorAgent] = useState(initialExecutorAgent ? { label: initialExecutorAgent.name, value: group.executorAgent } : null);
+	const initialOtherAgents = group.otherAgents && group.otherAgents.map(a => {
+		const oa = agentChoices.find(ai => ai._id === a);
+		return { label: oa.name, value: a };
+	});
+	const [otherAgents, setOtherAgents] = useState(initialOtherAgents || []);
 	const { _id, name, agents } = groupState;
 
 	async function groupPost(e) {
@@ -44,11 +47,10 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 				executorAgent: executorAgent?.value,
 				otherAgents: otherAgents.map(a => a.value),
 			}, null, setError, router);
-			toast.success('Group Added');
+			// toast.success('Group Added');
 		}
 	}
 
-	console.log('agentChoices', agentChoices);
 
 	return (<form onSubmit={groupPost}>
 		<input

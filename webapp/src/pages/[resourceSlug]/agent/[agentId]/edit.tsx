@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import { useAccountContext } from '../../../../context/account';
 import { PhotoIcon, UserCircleIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
 
-export default function Agents(props) {
+export default function EditAgent(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
@@ -21,12 +21,12 @@ export default function Agents(props) {
 	useEffect(() => {
 		if (!agent) {
 			API.getAgent({
-				resourceSlug: account.currentOrg,
+				resourceSlug: account.currentTeam,
 				agentId: router.query.agentId,
 			}, dispatch, setError, router);
 		}
 	}, []);
-	
+
 	if (agent == null) {
 		return 'Loading...'; //TODO: loader
 	}

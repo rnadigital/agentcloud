@@ -74,6 +74,7 @@ export default function router(server, app) {
 	teamPagesRouter.get('/groups', groupController.groupsPage.bind(null, app));
 	teamPagesRouter.get('/groups.json', groupController.groupsJson);
 	teamPagesRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
+	teamPagesRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
 	teamPagesRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
 	
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);

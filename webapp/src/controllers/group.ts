@@ -18,6 +18,7 @@ export async function groupsData(req, res, _next) {
 export async function groupData(req, res, _next) {
 	const groupData = await getGroupById(res.locals.account.currentTeam, req.params.groupId);
 	const teamAgents = await getAgentsByTeam(res.locals.account.currentTeam);
+	console.log('groupData', groupData)
 	return {
 		csrf: req.csrfToken(),
 		groupData,
@@ -33,6 +34,15 @@ export async function groupsPage(app, req, res, next) {
 	const data = await groupsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, '/[resourceSlug]/groups');
+}
+
+/**
+ * GET /[resourceSlug]/group/[groupId].json
+ * group json data
+ */
+export async function groupJson(req, res, next) {
+	const data = await groupData(req, res, next);
+	return res.json({ ...data, account: res.locals.account });
 }
 
 /**
@@ -60,8 +70,16 @@ export async function groupAddPage(app, req, res, next) {
  */
 export async function groupEditPage(app, req, res, next) {
 	const data = await groupData(req, res, next);
-	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/[resourceSlug]/group/[groupId]/edit');
+	res.locals.data = {
+		...data,
+		account: res.locals.account,
+		query: {
+			resourceSlug: res.locals.account.currentTeam,
+			groupId: req.params.groupId,
+		}
+	};
+	return app.render(req, res, `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit`); 
+	//`/[resourceSlug]/group/[groupId]/edit`);
 }
 
 /**
@@ -96,7 +114,7 @@ export async function addGroupApi(req, res, next) {
 	    otherAgents: otherAgents.map(toObjectId),
 	 });
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
+	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
 
 }
 

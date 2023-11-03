@@ -45,7 +45,7 @@ export async function sessionData(req, res, _next) {
 
 /**
  * GET /[resourceSlug]/session/[sessionId]
- * home page html
+ * session page html
  */
 export async function sessionPage(app, req, res, next) {
 	const data = await sessionData(req, res, next);
