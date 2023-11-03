@@ -93,7 +93,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            value={userProxyAgent}
 					            onChange={(e: any) => setUserProxyAgent(e)}
 					            options={agentChoices.filter(a => a.isUserProxy === true)
-									.map(a => ({ label: a.name, value: a._id }))}
+									.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
 					        />
 						</div>
 					</div>
@@ -108,7 +108,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            value={executorAgent}
 					            onChange={(e: any) => setExecutorAgent(e)}
 					            options={agentChoices.filter(a => a.codeExecutionConfig != null)
-									.map(a => ({ label: a.name, value: a._id }))}
+									.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
 					        />
 						</div>
 					</div>
@@ -124,7 +124,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            value={otherAgents}
 					            onChange={(v: any) => setOtherAgents(v)}
 					            options={agentChoices.filter(a => a.isUserProxy !== true && a.codeExecutionConfig == null)
-									.map(a => ({ label: a.name, value: a._id }))}
+									.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
 					        />
 						</div>
 					</div>
