@@ -99,7 +99,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	return cachedResult;
 }
 
-function MessageBody({ message, messageType, messageLanguage, style, chunking, displayMessage }) {
+function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
 	const messageContent = messageLanguage === 'json'
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
