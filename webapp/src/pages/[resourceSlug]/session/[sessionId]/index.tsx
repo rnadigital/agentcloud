@@ -77,7 +77,7 @@ export default function Session(props) {
 		setMessages(oldMessages => {
 			if (message?.message?.first === false) {
 				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
-				const newChunk = { chunk: message.message.text, ts: message.ts };
+				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])
 					.concat([newChunk])
 					.sort((ma, mb) => ma.ts - mb.ts);
@@ -197,6 +197,7 @@ export default function Session(props) {
 					if (combinedChunks?.length > 0) {
 						_m.message.text = (_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') + combinedChunks;
 					}
+					_m.tokens = m.tokens || _m.tokens;
 					return _m;
 				})
 				.sort((ma, mb) => ma.ts - mb.ts));
@@ -248,6 +249,7 @@ export default function Session(props) {
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
 					{messages && messages.map((m, mi, marr) => {
+						// console.log(m?.tokens, m?.message.tokens, m?.chunks?.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0));
 						return <Message
 							key={`message_${mi}`}
 							prevMessage={mi > 0 ? marr[mi-1] : null}
@@ -262,6 +264,7 @@ export default function Session(props) {
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
 							displayMessage={m.displayMessage}
+							tokens={m?.chunks?.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) + (m?.tokens || m?.message?.tokens || 0)}
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}

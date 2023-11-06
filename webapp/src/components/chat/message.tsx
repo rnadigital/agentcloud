@@ -152,6 +152,7 @@ export function Message({
 	sendMessage,
 	chunking,
 	displayMessage,
+	tokens,
 }: {
 		prevMessage?: any,
 		message?: any,
@@ -167,6 +168,7 @@ export function Message({
 		sendMessage?: Function,
 		chunking?: boolean,
 		displayMessage?: string,
+		tokens?: number,
 	}) {
 
 	const [chatContext]: any = useChatContext();
@@ -221,6 +223,7 @@ export function Message({
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
+							{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
 							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 						</small>
 					</p>
