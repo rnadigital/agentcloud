@@ -207,7 +207,7 @@ tiktoken = "*"
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
 reference = "main"
-resolved_reference = "c24030876537267aab0bb2d877122427767e5403"
+resolved_reference = "15fde2e66f50bf9de7598672f365c3f3b864ba52"
 
 [[package]]
 name = "bidict"
