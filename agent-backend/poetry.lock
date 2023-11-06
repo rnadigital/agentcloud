@@ -211,6 +211,7 @@ develop = false
 arxiv = "^2.0.0"
 bs4 = "^0.0.1"
 diskcache = "*"
+feedparser = "^6.0.10"
 flaml = "*"
 numpy = "1.25.0"
 openai = "*"
@@ -226,7 +227,7 @@ wikipedia = "^1.4.0"
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
 reference = "main"
-resolved_reference = "03053cdd1e9cc9c134bea3307c7fdc653a200c7a"
+resolved_reference = "51ac7b95efb40bb32386362d10f42ec3fa57161a"
 
 [[package]]
 name = "beautifulsoup4"

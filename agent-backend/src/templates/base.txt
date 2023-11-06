@@ -13,7 +13,7 @@ config_list = autogen.config_list_from_json(
         f"{BASE_PATH}/config/OAI_CONFIG_LIST.json",
         filter_dict={
             "model": {
-                "gpt-4",
+                "gpt-4-32k",
             }
         }
     )
@@ -31,7 +31,7 @@ gpt4_config = {
 user_proxy = UserProxyAgent(
     name="Admin",
     llm_config=gpt4_config,
-    system_message="{{ role.system_message }}",
+    system_message="""{{ role.system_message }}""",
     human_input_mode="{{ role.human_input_mode | default(ALWAYS) }}",
     code_execution_config={{ role.code_execution_config | default(False) }},
     use_sockets=True,
@@ -42,7 +42,7 @@ user_proxy = UserProxyAgent(
 {{ role.name|format_role_name }} = {{ role.type }}(
     name="{{ role.name|format_role_name }}",
     llm_config=gpt4_config,
-    system_message="{{ role.system_message }}",
+    system_message="""{{ role.system_message }}""",
     human_input_mode="{{ role.human_input_mode | default(NEVER) }}",
     code_execution_config={{ role.code_execution_config| default(False) }},
     use_sockets=True,
