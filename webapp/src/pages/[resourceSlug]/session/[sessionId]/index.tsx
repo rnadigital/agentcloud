@@ -69,13 +69,14 @@ export default function Session(props) {
 		//TODO: set terminates state
 	}
 	function handleSocketMessage(message) {
-		log('Received chat message %O', message);
+		console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) {return;}
 		const newMessage = typeof message === 'string'
 			? { type: null, text: message }
 			: message;
 		setMessages(oldMessages => {
-			if (message?.message?.first === false) {
+			if (oldMessages[oldMessages.length-1]
+					&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId) {
 				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])

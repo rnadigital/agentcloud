@@ -83,6 +83,16 @@ export function unsafeSetSessionAgents(sessionId: db.IdOrStr, agents: SessionAge
 	});
 }
 
+export function unsafeIncrementTokens(sessionId: db.IdOrStr, tokens: number): Promise<any> {
+	return SessionCollection().updateOne({
+		_id: toObjectId(sessionId),
+	}, {
+		$inc: {
+			tokensUsed: tokens,
+		}
+	});
+}
+
 export function unsafeSetSessionUpdatedDate(sessionId: db.IdOrStr): Promise<any> {
 	return SessionCollection().updateOne({
 		_id: toObjectId(sessionId),

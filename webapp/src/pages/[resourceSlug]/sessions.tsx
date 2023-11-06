@@ -26,7 +26,7 @@ export default function Sessions(props) {
 	}
 
 	useEffect(() => {
-		if (!sessions) {
+		if (!props.sessions) {
 			fetchSessions();
 		}
 	}, [account]);

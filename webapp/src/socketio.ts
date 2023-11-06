@@ -9,7 +9,7 @@ const log = debug('webapp:socket');
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk, updateCompletedMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
-import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
 import { SessionType, SessionStatus } from './lib/struct/session';
 
 import useJWT from './lib/middleware/auth/usejwt';
@@ -168,6 +168,7 @@ export function initSocket(rawHttpServer) {
 				if (finalMessage.message.first === false) {
 					//This is a previous message that is returning in chunks
 					await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
+					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
 				} else {
 					await addChatMessage({
 						orgId: session.orgId,
