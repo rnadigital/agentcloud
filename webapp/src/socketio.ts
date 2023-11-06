@@ -181,6 +181,7 @@ export function initSocket(rawHttpServer) {
 						isFeedback: finalMessage?.isFeedback || false,
 						chunkId: finalMessage.message.chunkId || null,
 						tokens: finalMessage?.message.tokens || 0,
+						displayMessage: finalMessage?.displayMessage || null,
 						chunks: [chunk]
 					});
 				}

@@ -1,6 +1,6 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon, ChatBubbleLeftIcon } from '@heroicons/react/20/solid';
 import { useChatContext } from '../../context/chat';
 import { relativeString } from '../../lib/time';
 import dynamic from 'next/dynamic';
@@ -99,7 +99,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	return cachedResult;
 }
 
-function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
+function MessageBody({ message, messageType, messageLanguage, style, chunking, displayMessage }) {
 	const messageContent = messageLanguage === 'json'
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
@@ -151,6 +151,7 @@ export function Message({
 	incoming,
 	sendMessage,
 	chunking,
+	displayMessage,
 }: {
 		prevMessage?: any,
 		message?: any,
@@ -165,6 +166,7 @@ export function Message({
 		incoming?: boolean,
 		sendMessage?: Function,
 		chunking?: boolean,
+		displayMessage?: string,
 	}) {
 
 	const [chatContext]: any = useChatContext();
@@ -184,6 +186,16 @@ export function Message({
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
+
+	if (displayMessage) {
+		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+			<div className='invisible xl:visible col-span-1'></div>
+			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
+				<ChatBubbleLeftIcon width={14} className='mx-1' />Option selected: {displayMessage}
+			</div>
+			<div className='invisible xl:visible col-span-1'></div>
+		</div>;
+	}
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
@@ -226,7 +238,7 @@ export function Message({
 						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
 							e.preventDefault();
-							sendMessage(feedbackMessages[chatContext.type][fo]);
+							sendMessage(feedbackMessages[chatContext.type][fo], { displayMessage: feedbackLabels[chatContext.type][fo] });
 						}}
 					>
 						{feedbackLabels[chatContext.type][fo]}

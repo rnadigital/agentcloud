@@ -23,6 +23,7 @@ export type ChatMessage = {
 	sessionId: ObjectId;
 	chunkId?: string;
 	message: any;
+	displayMessage: string;
 	ts: number;
 	type: SessionType,
 	authorId: ObjectId;

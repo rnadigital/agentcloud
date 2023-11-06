@@ -118,11 +118,12 @@ export default function Session(props) {
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages]);
-	function sendFeedbackMessage(message: string) {
+	function sendFeedbackMessage(message: string, options?: { displayMessage?: string }) {
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account.name,
 			incoming: true,
+			displayMessage: options && options.displayMessage,
 			message: {
 				type: 'text',
 				text: message,
@@ -260,6 +261,7 @@ export default function Session(props) {
 							isFeedback={m.isFeedback}
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
+							displayMessage={m.displayMessage}
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}
