@@ -85,7 +85,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
-								User Proxy Agent
+								Group Chat Manager
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -100,7 +100,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
-								Code Execution Agent
+							Code Execution Agent
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -115,7 +115,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
-								Other Agents
+								Assistant Agents
 						</label>
 						<div className='mt-2'>
 							<Select

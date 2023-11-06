@@ -218,3 +218,6 @@ body {
 div.grow.pl-2\.5.py-2.pr-2.flex.flex-wrap.gap-1 {
   width: 80%!important;
 }
+div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
+  overflow: hidden;
+}

@@ -1,6 +1,6 @@
 'use strict';
 
-import { getGroupsByTeam } from '../db/group';
+import { getGroupsByTeam, getGroupById } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession } from '../db/chat';
@@ -98,22 +98,30 @@ export async function addSessionApi(req, res, next) {
 
 	const { type, prompt }  = req.body;
 
-	if (!prompt || typeof prompt !== 'string' || prompt.length === 0
-		|| !type || typeof type !== 'string' || type.length === 0) {
+	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	let agents = [];
+	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
+		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
+		if (group) {
+			agents = [group.userProxyAgent, group.executorAgent, ...group.otherAgents]
+				.map(x => ({ agentId: x }));
+		}
 	}
 
 	const addedSession = await addSession({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    prompt,
-	 	type: type as SessionType,
+	 	type: agents.length > 0 ? SessionType.TASK : SessionType.TEAM,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
-    	agents: [],
 		status: SessionStatus.STARTED,
+		agents,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/session/${addedSession.insertedId}` });

@@ -11,7 +11,7 @@ import {
 import * as API from '../api';
 
 const GroupDefaultOptions = [
-	{ label: 'Auto-generate team', value: 'auto' },
+	{ label: 'Auto-generate group', value: 'auto' },
 ];
 
 export default function StartSessionChatbox({ groups = [] }) {
@@ -23,8 +23,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
-
-	const [selectedTeam, setSelectedTeam] = useState(GroupDefaultOptions[0]);
+	const [selectedGroup, setSelectedGroup] = useState(GroupDefaultOptions[0]);
 
 	async function addSession(e) {
 		e.preventDefault();
@@ -32,7 +31,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 		await API.addSession({
 			_csrf: target._csrf.value,
 			prompt: target.prompt.value,
-			type: target.type.value,
+			group: selectedGroup.value,
 		}, null, setError, router);
 	}
 
@@ -52,12 +51,11 @@ export default function StartSessionChatbox({ groups = [] }) {
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<input type='hidden' name='_csrf' value={csrf} />
-						<input type='hidden' name='type' value='generate_team' />
-						
+
 				        <Select
 				            primaryColor={'indigo'}
-				            value={selectedTeam}
-				            onChange={setSelectedTeam}
+				            value={selectedGroup}
+				            onChange={(e: any) => setSelectedGroup(e)}
 				            options={GroupDefaultOptions.concat(groupOptions)}
 				        />
 						<label className='bg-white mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
