@@ -104,7 +104,7 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 									<div className='text-sm leading-6'>
 										<label htmlFor='executor-agent' className='block text-sm font-semibold leading-6 text-gray-900'>
 						                    Executor Agent
-											<p className='font-medium text-gray-500'>A proxy agent for the user, that can execute code and provide feedback to the other agents.</p>
+											<p className='font-medium text-gray-500'>An agent that executes code.</p>
 										</label>
 									</div>
 								</div>
