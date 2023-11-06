@@ -75,8 +75,9 @@ export default function Session(props) {
 			? { type: null, text: message }
 			: message;
 		setMessages(oldMessages => {
-			if (oldMessages[oldMessages.length-1]
-					&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId) {
+			if (!message.incoming
+				&& oldMessages[oldMessages.length-1]
+				&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId) {
 				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])
