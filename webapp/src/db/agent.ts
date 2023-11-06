@@ -4,7 +4,11 @@ import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 
-export type AgentType = 'UserProxyAgent' | 'AssistantAgent';
+export enum AgentType {
+	USER_PROXY_AGENT = 'UserProxyAgent',
+	ASSISTANT_AGENT = 'AssistantAgent',
+	EXECUTOR_AGENT = 'ExecutorAgent',
+}
 export type LlmConfigType = 'gpt-4-32k' | 'gpt-4-32k-0314';
 export type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
 export type CodeExecutionConfigType = {

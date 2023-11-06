@@ -80,7 +80,7 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, llmConfigType, type, systemMessage, isUserProxy }  = req.body;
+	const { name, llmConfigType, type, systemMessage }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !llmConfigType || typeof llmConfigType !== 'string' || llmConfigType.length === 0
@@ -93,15 +93,20 @@ export async function addAgentApi(req, res, next) {
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
-	 	type: type as AgentType,
+	 	type: type === AgentType.EXECUTOR_AGENT
+	 		? AgentType.USER_PROXY_AGENT
+	 		: type as AgentType, //TODO: revise
 		llmConfig: llmConfigType as LlmConfigType,
-		codeExecutionConfig: { //TODO: do these need to be cusomisable or omitted when not an executor??
-			lastNMessages: 5,
-			workDirectory: 'output',
-		},
-		isUserProxy: isUserProxy != null,
+		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
+			? { lastNMessages: 5, workDirectory: 'output' }
+			: null,
+		isUserProxy: type === AgentType.USER_PROXY_AGENT,
 		systemMessage,
-		humanInputMode: 'ALWAYS', //TODO: this needs to be a field on the frontend, but probably also depends on  other props similar to isUserProxy
+		humanInputMode: type === AgentType.EXECUTOR_AGENT
+			? 'TERMINAL'
+			: type === AgentType.USER_PROXY_AGENT
+				? 'ALWAYS'
+				: null,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
@@ -132,15 +137,20 @@ export async function editAgentApi(req, res, next) {
 
 	await updateAgent(res.locals.account.currentTeam, req.params.agentId, {
 	    name,
-	 	type: type as AgentType,
+	 	type: type === AgentType.EXECUTOR_AGENT
+	 		? AgentType.USER_PROXY_AGENT
+	 		: type as AgentType, //TODO: revise
 		llmConfig: llmConfigType as LlmConfigType,
-		codeExecutionConfig: { //TODO: do these need to be cusomisable or omitted when not an executor??
-			lastNMessages: 5,
-			workDirectory: 'output',
-		},
-		isUserProxy: isUserProxy != null,
+		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT
+			? { lastNMessages: 5, workDirectory: 'output' }
+			: null,
+		isUserProxy: isUserProxy === true,
 		systemMessage,
-		humanInputMode: 'ALWAYS',
+		humanInputMode: type === AgentType.EXECUTOR_AGENT
+			? 'TERMINAL'
+			: type === AgentType.USER_PROXY_AGENT
+				? 'ALWAYS'
+				: null,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit` });

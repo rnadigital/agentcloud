@@ -7,7 +7,6 @@ export default function Document() {
 			<Head />
 			<body className='h-full scroll-smooth'>
 				<Main />
-				{/* <NextScript className='flex flex-col' /> */}
 				<NextScript />
 				<style>
 					{`

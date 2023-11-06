@@ -10,7 +10,11 @@ import {
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
 
-export default function StartSessionChatbox() {
+const GroupDefaultOptions = [
+	{ label: 'Auto-generate team', value: 'auto' },
+];
+
+export default function StartSessionChatbox({ groups = [] }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -20,7 +24,7 @@ export default function StartSessionChatbox() {
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
 
-	const [selectedTeam, setSelectedTeam] = useState('Auto-generate team');
+	const [selectedTeam, setSelectedTeam] = useState(GroupDefaultOptions[0]);
 
 	async function addSession(e) {
 		e.preventDefault();
@@ -31,6 +35,11 @@ export default function StartSessionChatbox() {
 			type: target.type.value,
 		}, null, setError, router);
 	}
+
+	const groupOptions = groups.map(g => ({
+		label: g.name,
+		value: g._id,
+	}));
 
 	return (<div className='flex flex-col mb-10'>
 
@@ -45,24 +54,13 @@ export default function StartSessionChatbox() {
 						<input type='hidden' name='_csrf' value={csrf} />
 						<input type='hidden' name='type' value='generate_team' />
 						
-				        {/*<Select
+				        <Select
 				            primaryColor={'indigo'}
 				            value={selectedTeam}
 				            onChange={setSelectedTeam}
-				            formatOptionLabel={data => (
-				                <li
-				                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded ${
-				                        !data.isSelected
-				                            ? 'text-white bg-blue-500'
-				                            : 'bg-blue-100 text-blue-500'
-				                    }`}
-				                >
-				                    {data.label}
-				                </li>
-				            )}
-				            options={['Auto-generate team', 'Team A', 'Team B', '+ Create new team'].map(x => ({label:x,value:x}))}
-				        />*/}
-						<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
+				            options={GroupDefaultOptions.concat(groupOptions)}
+				        />
+						<label className='bg-white mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}

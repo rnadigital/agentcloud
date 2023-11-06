@@ -18,7 +18,7 @@ export default function Sessions(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { sessions } = state;
+	const { sessions, groups } = state;
 	const resourceSlug = account?.currentTeam;
 
 	function fetchSessions() {
@@ -45,7 +45,7 @@ export default function Sessions(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
 		</div>}
 	
-		<StartSessionChatbox />
+		<StartSessionChatbox groups={groups} />
 		
 		<SessionCards sessions={sessions} fetchSessions={fetchSessions} />
 

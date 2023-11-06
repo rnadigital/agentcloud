@@ -1,14 +1,17 @@
 'use strict';
 
+import { getGroupsByTeam } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession } from '../db/chat';
 import { dynamicResponse } from '../util';
 
 export async function sessionsData(req, res, _next) {
+	const groups = await getGroupsByTeam(res.locals.account.currentTeam); //TODO: change data fetched here to list of groups
 	const sessions = await getSessionsByTeam(res.locals.account.currentTeam);
 	return {
 		csrf: req.csrfToken(),
+		groups,
 		sessions,
 	};
 }

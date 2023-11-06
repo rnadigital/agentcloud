@@ -16,29 +16,23 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, llmConfig, type, systemMessage, isUserProxy } = agentState;
+	const { _id, name, llmConfig, type, systemMessage, codeExecutionConfig, isUserProxy } = agentState;
 
 	async function agentPost(e) {
 		e.preventDefault();
+		const body = {
+			_csrf: e.target._csrf.value,
+			name: e.target.name.value,
+			type: e.target.type.value,
+			llmConfigType: e.target.llmConfigType.value,
+			systemMessage: e.target.systemMessage.value,
+		};
 		if (editing) {			
-			await API.editAgent(agentState._id, {
-				_csrf: e.target._csrf.value,
-				name: e.target.name.value,
-				type: e.target.type.value,
-				llmConfigType: e.target.llmConfigType.value,
-				systemMessage: e.target.systemMessage.value,
-				isUserProxy: e.target.isUserProxy.checked,
-			}, null, setError, null);
-			toast.success('Agent Updated');
+			await API.editAgent(agentState._id, body, () => {
+				toast.success('Agent Updated');
+			}, setError, null);
 		} else {
-			API.addAgent({
-				_csrf: e.target._csrf.value,
-				name: e.target.name.value,
-				type: e.target.type.value,
-				llmConfigType: e.target.llmConfigType.value,
-				systemMessage: e.target.systemMessage.value,
-				isUserProxy: e.target.isUserProxy.checked,
-			}, null, setError, router);
+			API.addAgent(body, null, setError, router);
 		}
 	}
 
@@ -93,35 +87,27 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 
 					<div className='sm:col-span-12'>
 						<fieldset>
+							<legend className='mb-2 text-sm font-semibold leading-6 text-gray-900'>Type</legend>
 							<div className='space-y-6'>
-								<div className='relative flex gap-x-3'>
-									<div className='flex h-12 items-center'>
+								<div className='flex items-center gap-x-3'>
+									<div className='flex h-6 items-center'>
 										<input
-											id='comments'
-											name='isUserProxy'
-											type='checkbox'
-											defaultChecked={isUserProxy}
-											onChange={(e) => {
-												setAgent({
-													...agent,
-													isUserProxy: e.target.checked,
-												});
-											}}
-											className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600'
+											required
+											id='executor-agent'
+											name='type'
+											type='radio'
+											value='ExecutorAgent'
+											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+											defaultChecked={codeExecutionConfig != null}
 										/>
 									</div>
 									<div className='text-sm leading-6'>
-										<label htmlFor='comments' className='font-semibold text-gray-900'>
-					                      					Is User Proxy?
-											<p className='text-gray-500 font-medium'>This agent interacts with a human (provides feedback, takes inputs, etc)</p>
+										<label htmlFor='executor-agent' className='block text-sm font-semibold leading-6 text-gray-900'>
+						                    Executor Agent
+											<p className='font-medium text-gray-500'>A proxy agent for the user, that can execute code and provide feedback to the other agents.</p>
 										</label>
 									</div>
 								</div>
-							</div>
-						</fieldset>
-						<fieldset>
-							<legend className='mt-5 mb-2 text-sm font-semibold leading-6 text-gray-900'>Type</legend>
-							<div className='space-y-6'>
 								<div className='flex items-center gap-x-3'>
 									<div className='flex h-6 items-center'>
 										<input
@@ -131,13 +117,12 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 											type='radio'
 											value='UserProxyAgent'
 											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											checked={isUserProxy}
-											onChange={() => {}}
+											defaultChecked={isUserProxy}
 										/>
 									</div>
 									<div className='text-sm leading-6'>
 										<label htmlFor='user-proxy-agent' className='block text-sm font-semibold leading-6 text-gray-900'>
-						                    				User Proxy Agent
+	                    					User Proxy Agent
 											<p className='font-medium text-gray-500'>A proxy agent for the user, that can execute code and provide feedback to the other agents.</p>
 										</label>
 									</div>
@@ -149,8 +134,8 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 											name='type'
 											type='radio'
 											value='AssistantAgent'
-											disabled={isUserProxy}
 											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+											defaultChecked={type === 'AssistantAgent'}
 										/>
 									</div>
 									<div className='text-sm leading-6'>
