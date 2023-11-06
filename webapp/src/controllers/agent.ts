@@ -76,7 +76,6 @@ export async function agentJson(app, req, res, next) {
  * @apiParam {String} LlmConfigType Model the agent uses
  * @apiParam {String} type UserProxyAgent | AssistantAgent
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
- * @apiParam {boolean} isUserProxy Is this agent a user proxy
  */
 export async function addAgentApi(req, res, next) {
 
@@ -122,11 +121,10 @@ export async function addAgentApi(req, res, next) {
  * @apiParam {String} LlmConfigType Model the agent uses
  * @apiParam {String} type UserProxyAgent | AssistantAgent
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
- * @apiParam {boolean} isUserProxy Is this agent a user proxy
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, llmConfigType, type, systemMessage, isUserProxy }  = req.body;
+	const { name, llmConfigType, type, systemMessage }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !llmConfigType || typeof llmConfigType !== 'string' || llmConfigType.length === 0
