@@ -54,5 +54,5 @@ export default function Sessions(props) {
 };
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data || null }));
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 };

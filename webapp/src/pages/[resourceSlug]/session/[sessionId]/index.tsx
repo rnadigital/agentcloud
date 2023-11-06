@@ -21,7 +21,7 @@ export default function Session(props) {
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { sessionId } = props.query || router.query;
+	const { sessionId } = router.query || props.query;
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 
@@ -304,5 +304,5 @@ export default function Session(props) {
 };
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data }));
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 };

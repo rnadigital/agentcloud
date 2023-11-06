@@ -51,7 +51,6 @@ export default function StartSessionChatbox({ groups = [] }) {
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<input type='hidden' name='_csrf' value={csrf} />
-
 				        <Select
 				            primaryColor={'indigo'}
 				            value={selectedGroup}
