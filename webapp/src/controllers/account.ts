@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
+import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -243,5 +243,22 @@ export async function switchTeam(req, res, _next) {
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
 	return res.json({ redirect: `/${teamId}/sessions` });
+
+}
+
+/**
+ * POST /forms/account/token
+ * set oai token
+ */
+export async function setToken(req, res, _next) {
+
+	const { token } = req.body;
+	if (!token || typeof token !== 'string') {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	console.log(res.locals.account._id);
+	await setAccountToken(res.locals.account._id, token);
+
+	return res.json({ /* redirect: '/account' */ });
 
 }
