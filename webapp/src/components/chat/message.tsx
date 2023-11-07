@@ -30,12 +30,12 @@ const COLLAPSE_AFTER_LINES = 10
 	, feedbackMessages = {
 		[SessionType.TEAM]: {
 			[FeedbackOption.EXIT]: 'exit',
-			[FeedbackOption.CONTINUE]: '\n',
+			[FeedbackOption.CONTINUE]: '',
 			[FeedbackOption.CANCEL]: 'TERMINATE',
 		},
 		[SessionType.TASK]: {
 			// [FeedbackOption.EXIT]: 'Looks good!',
-			[FeedbackOption.CONTINUE]: '\n',
+			[FeedbackOption.CONTINUE]: '',
 			[FeedbackOption.CANCEL]: 'TERMINATE',
 		},
 	};
