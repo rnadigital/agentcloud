@@ -57,7 +57,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 				            onChange={(e: any) => setSelectedGroup(e)}
 				            options={GroupDefaultOptions.concat(groupOptions)}
 				        />
-						<label className='bg-white mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label className='bg-white dark:bg-gray-900 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}
