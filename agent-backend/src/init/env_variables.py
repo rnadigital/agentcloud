@@ -23,6 +23,8 @@ MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test") if LOCAL else access_secret("
 DB_URL = os.getenv("DB_URL") if LOCAL else access_secret("DB_URL")
 MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+REDIS_HOST = '127.0.0.1' if LOCAL else access_secret('redis_host')
+REDIS_PORT = 6379 if LOCAL else access_secret("redis_port")
 
 
 def _set_max_threads() -> int:

@@ -8,9 +8,26 @@ from agents.base import init_socket_generate_team, task_execution
 from concurrency.locked_threading import LockedThreadPoolExecutor
 from init.env_variables import SOCKET_URL, MAX_THREADS, MAX_RETRIES
 from utils.log_exception_context_manager import log_exception
+from bullmq import Worker
+from init.env_variables import REDIS_HOST, REDIS_PORT
 
 sio = socketio.Client()
 thread_pool = LockedThreadPoolExecutor(max_workers=MAX_THREADS)
+
+
+def process(job, job_token):
+    print(job_token)
+    execute_task(job)
+    return True
+
+
+async def consume_tasks():
+    worker = Worker(
+        "task_queue",
+        process,
+        {"connection": f"rediss://{REDIS_HOST}:{REDIS_PORT}"}
+    )
+    await worker.close()
 
 
 def backoff(attempt, base_delay=1.0, max_delay=60):
@@ -31,7 +48,6 @@ def generate_team(data: dict):
                 init_socket_generate_team(task, session_id))  # Pass task to be executed
 
 
-@sio.event
 def execute_task(data: dict):
     with log_exception():
         task = data.get("task")

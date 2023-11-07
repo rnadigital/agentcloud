@@ -167,3 +167,5 @@ keyfile.json
 .*.ipynb
 poetry.lock
 src/output
+output
+
