@@ -12,11 +12,14 @@ import { AgentType, addAgents } from './db/agent';
 import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
 import { SessionType, SessionStatus } from './lib/struct/session';
 
+import { taskQueue } from './lib/queue/bull';
+
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
 import fetchSession from './lib/middleware/auth/fetchsession';
 import checkSession from './lib/middleware/auth/checksession';
 const socketMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession];
+
 
 export function initSocket(rawHttpServer) {
 
@@ -194,7 +197,12 @@ export function initSocket(rawHttpServer) {
 				}
 			}
 
-			io.to(data.room).emit(data.event, finalMessage);
+			if (data.room === 'task_queue') {
+				taskQueue.add(data.event, finalMessage);
+			} else {
+				io.to(data.room).emit(data.event, finalMessage);
+			}
+
 			if (data.room !== 'task_queue' && finalMessage.message && (finalMessage.incoming === true || socketRequest?.session?.account?._id)) {
 				log('Relaying message %O to private room %s', finalMessage, `_${data.room}`);
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
