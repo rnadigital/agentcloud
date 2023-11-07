@@ -1,5 +1,7 @@
 import logging
 import os
+import threading
+
 from dotenv import load_dotenv
 import google.auth
 from gcp.cloud_secrets import access_secret
@@ -29,7 +31,8 @@ REDIS_PORT = 6379 if LOCAL else access_secret("redis_port")
 
 def _set_max_threads() -> int:
     try:
-        max_threads: int = int(os.getenv("MAX_THREADS", 50))
+        initial_threads = threading.active_count()
+        max_threads: int = int(os.getenv("MAX_THREADS", 50)) + initial_threads
         return max_threads
     except ValueError:
         logging.warning("Max Threads could not be coerced to an integer. Falling back to default value of 50 workers")
