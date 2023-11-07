@@ -21,19 +21,12 @@ export default function Session(props) {
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { sessionId } = router.query || props.query;
+	// @ts-ignore
+	const { sessionId } = router.query && router.query.sessionId.startsWith('[') ? props.query : router.query;
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 
 	const [_chatContext, setChatContext]: any = useChatContext();
-	useEffect(() => {
-		setChatContext(session ? {
-			prompt: session.prompt,
-			status: session.status,
-			type: session.type,
-			scrollToBottom,
-		} : null);
-	}, [session]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
@@ -184,7 +177,17 @@ export default function Session(props) {
 		API.getSession({
 			resourceSlug: account.currentTeam,
 			sessionId,
-		}, dispatch, setError, router);
+		}, (res) => {
+			dispatch(res);
+			if (res && res?.session) {
+				setChatContext({
+					prompt: res.session.prompt,
+					status: res.session.status,
+					type: res.session.type,
+					scrollToBottom,
+				});
+			}
+		}, setError, router);
 		API.getMessages({
 			resourceSlug: account.currentTeam,
 			sessionId,
@@ -251,21 +254,20 @@ export default function Session(props) {
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
 					{messages && messages.map((m, mi, marr) => {
-						// console.log(m?.tokens, m?.message.tokens, m?.chunks?.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0));
 						return <Message
 							key={`message_${mi}`}
 							prevMessage={mi > 0 ? marr[mi-1] : null}
-							message={m.message.text}
-							messageType={m.message?.type}
-							messageLanguage={m.message?.language}
-							authorName={m.authorName}
-							feedbackOptions={m.options}
-							incoming={m.incoming}
-							ts={m.ts}
-							isFeedback={m.isFeedback}
+							message={m?.message?.text}
+							messageType={m?.message?.type}
+							messageLanguage={m?.message?.language}
+							authorName={m?.authorName}
+							feedbackOptions={m?.options}
+							incoming={m?.incoming}
+							ts={m?.ts}
+							isFeedback={m?.isFeedback}
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
-							displayMessage={m.displayMessage}
+							displayMessage={m?.displayMessage}
 							tokens={m?.chunks?.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) + (m?.tokens || m?.message?.tokens || 0)}
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;

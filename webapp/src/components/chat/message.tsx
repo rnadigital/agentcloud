@@ -174,12 +174,16 @@ export function Message({
 	const [chatContext]: any = useChatContext();
 
 	const [ style, setStyle ] = useState(null);
-	useEffect(() => {
-		if (!style) {
-			import('react-syntax-highlighter/dist/esm/styles/prism/material-dark')
-				.then(mod => setStyle(mod.default));
-		}
-	});
+	try {
+		useEffect(() => {
+			if (!style) {
+				import('react-syntax-highlighter/dist/esm/styles/prism/material-dark')
+					.then(mod => setStyle(mod.default));
+			}
+		}, []);
+	} catch(e){
+		console.error(e);
+	}
 	
 	if (!style) { return null; }
 

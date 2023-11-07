@@ -451,14 +451,14 @@ export default withRouter(function Layout(props) {
 								</>
 							</form>*/}
 							<div className='flex flex-1 justify-end items-center'>
-								{chatContext?.status && <span
+								{chatContext?.status && chatContext?.type && <span
 									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200'
 									onClick={chatContext.scrollToBottom}
 								>
 									<svg className={`h-1.5 w-1.5 ${SessionStatus[chatContext.status]}`} viewBox='0 0 6 6' aria-hidden='true'>
 										<circle cx={3} cy={3} r={3} />
 									</svg>
-									{chatContext.type.replace('_', ' ')}: {chatContext.status}
+									{chatContext.type && chatContext.type.replace('_', ' ')}: {chatContext.status}
 								</span>}
 							</div>
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
