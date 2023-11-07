@@ -19,7 +19,7 @@ async def consume_tasks():
         print("Listening to task queue..")
 
         async def process(job: Job, token: str):
-            print(f"Running task for session: {token}...")
+            print(f'Running session ID: {job.data.get("sessionId")}')
             # Send job to the correct executor based on the job type
             match job.name:
                 case "execute_task":
