@@ -13,6 +13,7 @@ export default async function fetchSession(req, res, next) {
 				orgs: account.orgs,
 				currentOrg: account.currentOrg,
 				currentTeam: account.currentTeam,
+				token: account.token,
 			};
 			return next();
 		}

@@ -23,8 +23,8 @@ export function verifyToken(body, dispatch, errorCallback, router) {
 export function switchTeam(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/team/switch', 'POST', body, dispatch, errorCallback, router);
 }
-export function getIntegrations(dispatch, errorCallback, router) {
-	return ApiCall('/integrations.json', 'GET', null, dispatch, errorCallback, router);
+export function setAccountToken(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/token', 'POST', body, dispatch, errorCallback, router);
 }
 
 // Chats

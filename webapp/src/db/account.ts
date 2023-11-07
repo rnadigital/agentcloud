@@ -25,6 +25,7 @@ export type Account = {
 	currentTeam: ObjectId;
 	emailVerified: boolean;
 	apiJwt?: string;
+	token?: string;
 }
 
 export function AccountCollection() {
@@ -70,6 +71,16 @@ export function changeAccountPassword(userId: db.IdOrStr, passwordHash: string):
 	}, {
 		$set: {
 			passwordHash,
+		}
+	});
+}
+
+export function setAccountToken(userId: db.IdOrStr, token: string): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$set: {
+			token,
 		}
 	});
 }

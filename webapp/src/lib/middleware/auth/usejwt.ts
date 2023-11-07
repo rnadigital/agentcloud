@@ -48,6 +48,7 @@ export default async function useJWT(req, res, next): Promise<void> {
 						orgs: account.orgs,
 						currentOrg: account.currentOrg,
 						currentTeam: account.currentTeam,
+						token: account.token,
 					};
 					return next();
 				}

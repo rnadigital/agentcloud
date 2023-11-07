@@ -16,12 +16,12 @@ function classNames(...classes) {
 }
 
 export const SessionStatus = {
-	started: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10 fill-yellow-500',
-	running: 'text-green-700 bg-green-50 ring-green-600/20 fill-green-500',
-	waiting: 'text-gray-600 bg-yellow-50 ring-yellow-500/10 fill-yellow-500',
-	warning: 'text-orange-700 bg-orange-50 ring-orange-600/10 fill-orange-500',
-	errored: 'text-red-700 bg-red-50 ring-red-600/10 fill-red-500',
-	terminated: 'text-gray-700 bg-gray-50 ring-blue-600/10 fill-gray-500',
+	started: 'text-yellow-700 bg-yellow-50 ring-yellow-600/10 fill-yellow-500 dark:bg-yellow-900 dark:text-yellow-200',
+	running: 'text-green-700 bg-green-50 ring-green-600/20 fill-green-500 dark:bg-green-900 dark:text-green-200',
+	waiting: 'text-gray-600 bg-yellow-50 ring-yellow-500/10 fill-yellow-500 dark:bg-yellow-900 dark:text-yellow-200',
+	warning: 'text-orange-700 bg-orange-50 ring-orange-600/10 fill-orange-500 dark:bg-orange-900 dark:text-orange-200',
+	errored: 'text-red-700 bg-red-50 ring-red-600/10 fill-red-500 dark:bg-red-900 dark:text-red-200',
+	terminated: 'text-gray-700 bg-gray-50 ring-blue-600/10 fill-gray-500 dark:bg-gray-900 dark:text-gray-200',
 };
 
 export default function SessionCards({ sessions, fetchSessions }: { sessions: any[], fetchSessions?: any }) {
@@ -46,8 +46,8 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
 			{sessions.map((session) => (
-				<li key={session._id} className='overflow-hidden rounded-xl border border-gray-200'>
-					<div className='flex items-center gap-x-4 border-b border-gray-900/5 bg-gray-50 p-6'>
+				<li key={session._id} className='overflow-hidden rounded-xl border border-gray-200 dark:border-gray-900'>
+					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-gray-900 bg-gray-50 p-6'>
 						<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
 							<path d='M10.1625 12.675H8.13749C7.68749 12.675 7.27499 13.05 7.27499 13.5375C7.27499 14.025 7.64999 14.4 8.13749 14.4H10.1625C10.6125 14.4 11.025 14.025 11.025 13.5375C11.025 13.05 10.65 12.675 10.1625 12.675Z' fill='#111928'/>
 							<path d='M15.825 12.675H13.8C13.35 12.675 12.9375 13.05 12.9375 13.5375C12.9375 14.025 13.3125 14.4 13.8 14.4H15.825C16.275 14.4 16.6875 14.025 16.6875 13.5375C16.6875 13.05 16.3125 12.675 15.825 12.675Z' fill='#111928'/>
@@ -112,7 +112,7 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 							</Transition>
 						</Menu>
 					</div>
-					<dl className='-my-3 divide-y divide-gray-100 px-6 py-3 text-sm leading-6'>
+					<dl className='-my-3 divide-y divide-gray-100 dark:divide-gray-900 px-6 py-3 text-sm leading-6'>
 						<div className='flex justify-between gap-x-4 py-2'>
 							<dt className='text-gray-500'>Started</dt>
 							<dd className='text-gray-700'>
