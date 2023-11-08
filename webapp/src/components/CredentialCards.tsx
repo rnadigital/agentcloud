@@ -35,9 +35,9 @@ export default function CredentialCards({ credentials, fetchCredentials }: { cre
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
 			{credentials.map((credential) => (
-				<li key={credential._id} className='overflow-hidden rounded-xl border border-gray-200 dark:border-gray-900'>
+				<li key={credential._id} className='rounded-xl border border-gray-200 dark:border-gray-900'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-gray-900 bg-gray-50 p-6'>
-						<KeyIcon classNames='w-6 h-6' />
+						<KeyIcon height='24' />
 						<Link
 							href={`/${resourceSlug}/credential/${credential._id}`}
 							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'
