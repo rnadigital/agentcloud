@@ -1,6 +1,6 @@
 'use strict';
 
-import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, CredentialPlatform, Credential } from '../db/credential';
+import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, CredentialPlatform, CredentialPlatforms, Credential } from '../db/credential';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {
@@ -67,21 +67,24 @@ export async function credentialJson(app, req, res, next) {
  */
 export async function addCredentialApi(req, res, next) {
 
-	const { name, key }  = req.body;
+	const { name, platform, key }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !key || typeof key !== 'string' || key.length === 0) {
+		|| !key || typeof key !== 'string' || key.length === 0
+		|| !platform || typeof platform !== 'string' || platform.length === 0 || !CredentialPlatforms.includes(platform as CredentialPlatform)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-/*	await addCredential({
+	await addCredential({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
-	    data: {
+	    createdDate: new Date(),
+	    platform: platform as CredentialPlatform,
+	    credentials: {
 			key,
 	    }
-	});*/
+	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/credentials` });
 

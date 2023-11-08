@@ -4,7 +4,8 @@ import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 
-export type CredentialPlatform = 'OPENAI' | 'AZURE'; //TODO: more
+export const CredentialPlatforms = ['OPENAI', 'AZURE'] as const; // TODO: more
+export type CredentialPlatform = typeof CredentialPlatforms[number]; // 'OPENAI' | 'AZURE'
 
 export type Credential = {
 	_id?: ObjectId;
@@ -27,12 +28,20 @@ export function getCredentialById(teamId: db.IdOrStr, credentialId: db.IdOrStr):
 	return CredentialCollection().findOne({
 		_id: toObjectId(credentialId),
 		teamId: toObjectId(teamId),
+	}, {
+		projection: {
+			credentials: 0,
+		}
 	});
 }
 
 export function getCredentialsByTeam(teamId: db.IdOrStr): Promise<Credential> {
 	return CredentialCollection().find({
 		teamId: toObjectId(teamId),
+	}, {
+		projection: {
+			credentials: 0,
+		}
 	}).toArray();
 }
 

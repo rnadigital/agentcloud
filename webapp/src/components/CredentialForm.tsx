@@ -69,14 +69,14 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='platform' className='block text-sm font-medium leading-6 text-gray-900'>
 							Platform
 						</label>
 						<div className='mt-2'>
 							<select
 								required
-								id='model'
-								name='llmConfigType'
+								id='platform'
+								name='platform'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 							>
 								<option disabled value=''>Select a platform...</option>
@@ -93,7 +93,7 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 						<div className='mt-2'>
 							<input
 								required
-								type='text'
+								type='password'
 								name='key'
 								id='key'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
