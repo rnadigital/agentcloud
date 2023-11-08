@@ -2,12 +2,10 @@ import threading
 import time
 
 from messaging.client import consume_tasks
+from init.env_variables import MAX_THREADS
 from fastapi import FastAPI
-# from config.config import update_openai_api_key
 
 app = FastAPI()
-
-# update_openai_api_key()
 
 
 @app.on_event("startup")

@@ -36,6 +36,10 @@ class MongoClientConnection(MongoConnection):
     def _get_teams_collection(self) -> collection.Collection:
         return self.db["teams"]
 
+    @property
+    def _get_credentials_collection(self) -> collection.Collection:
+        return self.db["credentials"]
+
     def insert_chat_messages(self, message: str):
         with log_exception():
             self.db = self._get_db
@@ -59,12 +63,6 @@ class MongoClientConnection(MongoConnection):
             self.collection = self._get_sessions_collection
             team = {
                 "group_chat": True,
-                "gpt4_config": {
-                    "seed": randint(1, 1000),
-                    "temperature": 0,
-                    "request_timeout": 300,
-                    "retry_wait_time": 60
-                },
                 "roles": []
             }
         list_of_agents = list()
@@ -82,12 +80,23 @@ class MongoClientConnection(MongoConnection):
         agent_data = dict()
         agent = self.collection.find_one({"_id": ObjectId(agent_id)})
         if agent is not None:
+            credential_id = agent.get("credentialId")
+            credential_obj = self._get_credentials_collection.find_one({"_id": credential_id},
+                                                                       {"platform": 1, "credentials": 1})
+            if credential_obj is not None and len(credential_obj) > 0:
+                creds = credential_obj.get("credentials")
+                platform = credential_obj.get("platform")
+                match platform:
+                    case "open_ai":
+                        agent_data["key"] = creds.get("key")
+                    case "azure":
+                        agent_data["key"] = creds.get("key")
+                    case _:
+                        print("DO NOT SUPPORT!")
+                agent_data["platform"] = platform
             agent_data["name"] = agent.get("name")
             agent_data["type"] = agent.get("type", "AssistantAgent")
-            agent_data["model"] = agent.get("llmConfig", "gpt-4-32k")
-            agent_data["key"] = ""
-            agent_data["platform"] = "open_ai"
-            # agent_data["credentials"] = agent.get("credentials")
+            agent_data["model"] = agent.get("model", "gpt-4-32k")
             code_execution = agent.get("codeExecutionConfig")
             if code_execution:
                 last_n_messages = code_execution.get("lastNMessages", 3)

@@ -2,6 +2,7 @@ import autogen
 from autogen import AssistantAgent, GroupChat, GroupChatManager, UserProxyAgent
 from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
+from random import randint
 
 session_id = f"{{session_id}}"
 
@@ -11,10 +12,10 @@ socket.emit("join_room", f"_{session_id}")
 
 {% for role in roles %}
 {{ role.name|format_role_name }}_config = {
-    "seed": {{ gpt4_config.seed }},
-    "temperature": {{ gpt4_config.temperature }},
-    "request_timeout": {{ gpt4_config.request_timeout }},
-    "retry_wait_time": {{ gpt4_config.retry_wait_time }},
+    "seed": randint(1, 1000),
+    "temperature": 0,
+    "request_timeout": 300,
+    "retry_wait_time": 60,
     "config_list": autogen.get_config_list(
         api_keys = ["{{role.key}}"],
         api_type = "{{role.platform}}"
