@@ -106,8 +106,7 @@ export async function addSessionApi(req, res, next) {
 	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
 		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
 		if (group) {
-			agents = [group.userProxyAgent, group.executorAgent, ...group.otherAgents]
-				.map(x => ({ agentId: x }));
+			agents = group.agents.map(x => ({ agentId: x }));
 		}
 	}
 

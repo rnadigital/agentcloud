@@ -34,7 +34,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8 my-4'>
 			{groups.map((group) => (
-				<li key={group._id} className='overflow-hidden rounded-xl border border-gray-200'>
+				<li key={group._id} className='rounded-xl border border-gray-200'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 bg-gray-50 p-6'>
 						<svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
 							<path d='M10.1625 12.675H8.13749C7.68749 12.675 7.27499 13.05 7.27499 13.5375C7.27499 14.025 7.64999 14.4 8.13749 14.4H10.1625C10.6125 14.4 11.025 14.025 11.025 13.5375C11.025 13.05 10.65 12.675 10.1625 12.675Z' fill='#111928'/>
@@ -97,7 +97,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 						<div className='flex justify-between gap-x-4 py-2'>
 							<dt className='text-gray-500'>Members</dt>
 							<dd className='text-gray-700'>
-								<div>{group.otherAgents.length + 2}</div>
+								<div>{group?.agents?.length}</div>
 							</dd>
 						</div>
 						{/* TODO: what else here?? */}

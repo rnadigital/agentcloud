@@ -63,6 +63,7 @@ services:
       - BASE_PATH=/app
       - SOCKET_URL=http://webapp_next:3000/
       - DB_URL=mongodb://docker_mongo:27017/test
+      - REDIS_HOST=docker_redis
       - MONGO_DB_NAME=test
       - OPENAI_API_KEY=changeme
       - MAX_RETRIES=10

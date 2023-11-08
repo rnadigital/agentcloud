@@ -40,6 +40,15 @@ export function getAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<A
 	});
 }
 
+export function getAgentsById(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promise<Agent[]> {
+	return AgentCollection().find({
+		_id: {
+			$in: agentIds.map(toObjectId),
+		},
+		teamId: toObjectId(teamId),
+	}).toArray();
+}
+
 export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 	return AgentCollection().find({
 		teamId: toObjectId(teamId),

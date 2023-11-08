@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 import StartSessionChatbox from '../../components/StartSessionChatbox';
 import SessionCards from '../../components/SessionCards';
-// import NewButtonSection from '../../components/NewButtonSection';
 import { useRouter } from 'next/router';
 import { SessionStatus } from '../../lib/struct/session';
 // import classNames from '../../components/ClassNames';
@@ -18,7 +16,7 @@ export default function Sessions(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const [filter, setFilter] = useState<string>(null);
+	const [filter, setFilter] = useState<string>('all');
 	const filterOptions = Object.values(SessionStatus);
 	const { sessions, groups } = state;
 	const resourceSlug = account?.currentTeam;
@@ -58,7 +56,7 @@ export default function Sessions(props) {
 				onChange={(e) => setFilter(e.target.value)}
 				className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md'
 			>
-				<option value={null}>Filter...</option>
+				<option value={'all'}>All</option>
 				{filterOptions.map((option) => (
 					<option key={option} value={option} className='capitalize'>
 						{option}
@@ -67,7 +65,7 @@ export default function Sessions(props) {
 			</select>
 		</div>		
 
-		<SessionCards sessions={sessions.filter(s => !filter || s.status === filter)} fetchSessions={fetchSessions} />
+		<SessionCards sessions={sessions.filter(s => filter === 'all' || s.status === filter)} fetchSessions={fetchSessions} />
 
 	</>);
 

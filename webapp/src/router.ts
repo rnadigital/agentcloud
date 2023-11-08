@@ -15,6 +15,7 @@ import * as accountController from './controllers/account';
 import * as groupController from './controllers/group';
 import * as sessionController from './controllers/session';
 import * as agentController from './controllers/agent';
+import * as credentialController from './controllers/credential';
 
 export default function router(server, app) {
 
@@ -65,6 +66,10 @@ export default function router(server, app) {
 	teamPagesRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
 	teamPagesRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
 	teamPagesRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
+	teamPagesRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
+	teamPagesRouter.get('/credentials.json', credentialController.credentialsJson);
+	teamPagesRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
+	teamPagesRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
 
 	const agentFormRouter = Router({ caseSensitive: true });
@@ -72,6 +77,11 @@ export default function router(server, app) {
 	agentFormRouter.post('/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
 	agentFormRouter.delete('/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
 	server.use('/forms/agent', authedMiddlewareChain, agentFormRouter);
+	
+	const credentialFormRouter = Router({ caseSensitive: true });
+	credentialFormRouter.post('/add', credentialController.addCredentialApi);
+	credentialFormRouter.delete('/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
+	server.use('/forms/credential', authedMiddlewareChain, credentialFormRouter);
 	
 	const sessionFormRouter = Router({ caseSensitive: true });
 	sessionFormRouter.post('/add', sessionController.addSessionApi);

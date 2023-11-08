@@ -27,6 +27,7 @@
     "aws-sdk": "^2.1467.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
+    "bullmq": "^4.13.0",
     "connect-redis": "^7.1.0",
     "cookie-parser": "^1.4.6",
     "csurf": "^1.11.0",

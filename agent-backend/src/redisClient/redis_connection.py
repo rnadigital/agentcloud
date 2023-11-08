@@ -1,16 +1,13 @@
 import logging
-
 import redis
-
-from gcp.cloud_secrets import access_secret
-from init.env_variables import LOCAL
+from init.env_variables import REDIS_HOST, REDIS_PORT
 
 
 class RedisConnection:
 
     def __init__(self):
-        self.redis_host = '127.0.0.1' if LOCAL else access_secret('redis_host')
-        self.redis_port = 6379 if LOCAL else access_secret("redis_port")
+        self.redis_host = REDIS_HOST
+        self.redis_port = REDIS_PORT
 
     def connect(self) -> redis:
         try:

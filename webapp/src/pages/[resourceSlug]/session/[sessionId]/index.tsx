@@ -20,6 +20,7 @@ export default function Session(props) {
 
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
+	const [ready, setReady] = useState(false);
 	const [error, setError] = useState();
 	// @ts-ignore
 	const { sessionId } = router.query && router.query.sessionId.startsWith('[') ? props.query : router.query;
@@ -56,10 +57,12 @@ export default function Session(props) {
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);
 	}
+	async function leaveSessionRoom() {
+		socketContext.emit('leave_room', sessionId);
+	}
 	function handleTerminateMessage(message) {
 		log('Received terminate message %s', message);
 		setTerminated(true);
-		//TODO: set terminates state
 	}
 	function handleSocketMessage(message) {
 		console.log('Received chat message %O', JSON.stringify(message, null, 2));
@@ -126,6 +129,7 @@ export default function Session(props) {
 		});
 	}
 	function handleJoinedRoom() {
+		console.log('messages.length', messages.length);
 		if (messages.length === 0) {
 			socketContext.emit('message', {
 				room: sessionId,
@@ -149,23 +153,23 @@ export default function Session(props) {
 	}
 	function handleSocketStart() {
 		socketContext.on('connect', joinSessionRoom);
+		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('terminate', handleTerminateMessage);
-		// socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
 		socketContext.on('type', handleSocketType);
 		socketContext.on('joined', handleJoinedRoom);
-		socketContext.connected ? joinSessionRoom() : socketContext.connect();
+		joinSessionRoom();
 	}
 	function handleSocketStop() {
 		socketContext.off('connect', joinSessionRoom);
-		// socketContext.off('reconnect', joinSessionRoom);
+		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('terminate', handleTerminateMessage);
 		socketContext.off('joined', handleJoinedRoom);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
 		socketContext.off('type', handleSocketType);
-		// socketContext.connected && socketContext.disconnect();
+		leaveSessionRoom();
 	}
 	useEffect(() => {
 		if (session) {
@@ -209,15 +213,19 @@ export default function Session(props) {
 		}, setError, router);
 	}, []);
 	useEffect(() => {
-		//once we have the session and messages (or empty message array is fine), start
-		if (session && messages != null) {
+		if (ready) {
 			handleSocketStart();
-			return () => {
-				//stop/disconnect on unmount
-				handleSocketStop();
-			};
 		}
-	}, [session, messages]);
+		return () => {
+			//stop/disconnect on unmount
+			handleSocketStop();
+		};
+	}, [ready]);
+	useEffect(() => {
+		if (messages) {
+			setReady(true);
+		}
+	}, [messages]);
 
 	function sendMessage(e) {
 		e.preventDefault();

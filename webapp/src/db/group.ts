@@ -8,10 +8,8 @@ export type Group = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
 	teamId?: ObjectId;
-    name: string;
-	executorAgent: ObjectId;
-    userProxyAgent: ObjectId;
-    otherAgents: ObjectId[];
+	name: string;
+	agents: ObjectId[];
 };
 
 export function GroupCollection() {
