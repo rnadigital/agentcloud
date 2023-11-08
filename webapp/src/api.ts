@@ -80,6 +80,11 @@ export function getGroups(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
 }
 
+// Credentials
+export function getCredentials(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/credentials.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
 function buildOptions(_route, method, body) {
 
 	// Convert method uppercase
