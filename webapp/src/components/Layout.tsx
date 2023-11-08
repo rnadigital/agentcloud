@@ -510,10 +510,10 @@ export default withRouter(function Layout(props) {
 										leaveFrom='transform opacity-100 scale-100'
 										leaveTo='transform opacity-0 scale-95'
 									>
-										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-gray-900 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
 											{account && <div className='px-4 py-3'>
 												<p className='text-sm'>Signed in as</p>
-												<p className='truncate text-sm font-semibold text-gray-900'>{account.email}</p>
+												<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>{account.email}</p>
 											</div>}
 											{userNavigation.map((item) => (
 												<Menu.Item key={item.name}>

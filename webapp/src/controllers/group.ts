@@ -132,7 +132,7 @@ export async function editGroupApi(req, res, next) {
 	const { name, executorAgent, userProxyAgent, otherAgents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !executorAgent || typeof executorAgent !== 'string' || executorAgent.length != 24
+		|| (executorAgent && (typeof executorAgent !== 'string' || executorAgent.length != 24))
 		|| !userProxyAgent || typeof userProxyAgent !== 'string' || userProxyAgent.length != 24
 		|| !otherAgents || !Array.isArray(otherAgents) || otherAgents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -140,7 +140,7 @@ export async function editGroupApi(req, res, next) {
 
 	await updateGroup(res.locals.account.currentTeam, req.params.groupId, {
 	    name,
-	    executorAgent: toObjectId(executorAgent),
+	    executorAgent: executorAgent ? toObjectId(executorAgent) : null,
 	    userProxyAgent: toObjectId(userProxyAgent),
 	    otherAgents: otherAgents.map(toObjectId),
 	});

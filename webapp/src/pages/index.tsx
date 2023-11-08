@@ -22,5 +22,5 @@ export default function Index() {
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale}) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data }));
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

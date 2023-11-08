@@ -20,7 +20,6 @@ import fetchSession from './lib/middleware/auth/fetchsession';
 import checkSession from './lib/middleware/auth/checksession';
 const socketMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession];
 
-
 export function initSocket(rawHttpServer) {
 
 	const io = new Server();
@@ -45,7 +44,11 @@ export function initSocket(rawHttpServer) {
 		log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			log('Received socket event %s args: %O', eventName, args);
+			//log('Received socket event %s args: %O', eventName, args);
+		});
+
+		socket.on('leave_room', async (room: string) => {
+			socket.leave(room);
 		});
 
 		socket.on('join_room', async (room: string) => {
@@ -66,10 +69,6 @@ export function initSocket(rawHttpServer) {
 					return;
 				}
 				//await unsafeSetSessionStatus(room, SessionStatus.STARTED); //NOTE: may race
-				/*io.to('task_queue').emit(SessionType.TEAM, {
-					task: session.prompt,
-					sessionId: room,
-				});*/
 			}
 		});
 
@@ -82,6 +81,7 @@ export function initSocket(rawHttpServer) {
 			}
 			const sessionTeamJsonMessage = await unsafeGetTeamJsonMessage(data.message.sessionId);
 			if (!sessionTeamJsonMessage) {
+				io.to(data.room).emit('status', SessionStatus.ERRORED);
 				return console.warn('No code blocks found for terminated session', data.message.sessionId);
 			}
 			let generatedRoles;
@@ -91,6 +91,7 @@ export function initSocket(rawHttpServer) {
 				console.warn(e);
 			}
 			if (!generatedRoles) {
+				io.to(data.room).emit('status', SessionStatus.ERRORED);
 				return console.warn('No generated roles found for terminated session', data.message.sessionId);
 			}
 			const mappedRolesToAgents = generatedRoles.map(role => ({ //TODO: type these
@@ -101,7 +102,7 @@ export function initSocket(rawHttpServer) {
 				name: role.name,
 				type: role.type as AgentType,
 				llmConfig: role.llm_config,
-				codeExecutionConfig: role.code_execution_config
+				codeExecutionConfig: typeof role.code_execution_config == 'object'
 					? {
 						lastNMessages: role.code_execution_config.last_n_messages,
 						workDirectory: role.code_execution_config.work_dir
@@ -118,7 +119,7 @@ export function initSocket(rawHttpServer) {
 			}));
 			await unsafeSetSessionAgents(session._id, sessionAgents, sessionTeamJsonMessage?.message?.message?.text);
 			io.to(data.room).emit('type', SessionType.TASK);
-			io.to('task_queue').emit(SessionType.TASK, {
+			taskQueue.add(SessionType.TASK, {
 				task: session.prompt,
 				sessionId: session._id.toString(),
 			});
