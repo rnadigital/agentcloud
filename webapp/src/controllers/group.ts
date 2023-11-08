@@ -2,7 +2,7 @@
 
 import { getGroupById, getGroupsByTeam, addGroup, updateGroup, deleteGroupById } from '../db/group';
 import toObjectId from '../lib/misc/toobjectid';
-import { getAgentsByTeam } from '../db/agent';
+import { getAgentsById, getAgentsByTeam, AgentType } from '../db/agent';
 import { dynamicResponse } from '../util';
 
 export async function groupsData(req, res, _next) {
@@ -94,11 +94,14 @@ export async function addGroupApi(req, res, next) {
 	const { name, agents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !agents || !Array.isArray(agents) || agents.some(i => typeof i !== 'string' || i.length != 24)) {
+		|| !agents || !Array.isArray(agents) || agents.length === 0 || agents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: check that all agents exist and Ids are for correct type (executor, admin, other)
+	const foundAgents = await getAgentsById(res.locals.account.currentTeam, agents);
+	if (!foundAgents || foundAgents.length !== agents.length || !foundAgents.some(a => a.type === AgentType.USER_PROXY_AGENT)) {
+		return dynamicResponse(req, res, 400, { error: 'Please select at least one agent that is a UserProxyAgent' });
+	}
 
 	await addGroup({
 		orgId: res.locals.account.currentOrg,
