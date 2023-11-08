@@ -20,9 +20,11 @@ export function ChatWrapper({ children }) {
 		if (update == null) {
 			return setSharedState({});
 		}
-		setSharedState({
-			...sharedState,
-			...update,
+		setSharedState(oldState => {
+			return {
+				...oldState,
+				...update,
+			};
 		});
 	}
 

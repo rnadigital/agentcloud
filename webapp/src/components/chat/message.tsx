@@ -240,7 +240,7 @@ export function Message({
 		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} bg-yellow-50`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
-				{feedbackOptions && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
+				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
 					<button
 						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
