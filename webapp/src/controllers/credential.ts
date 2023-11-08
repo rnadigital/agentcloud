@@ -1,6 +1,7 @@
 'use strict';
 
-import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, CredentialPlatform, CredentialPlatforms, Credential } from '../db/credential';
+import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
+import { CredentialPlatform, CredentialPlatforms } from '../lib/struct/credentials';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {

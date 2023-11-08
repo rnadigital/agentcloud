@@ -3,9 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-
-export const CredentialPlatforms = ['OPENAI', 'AZURE'] as const; // TODO: more
-export type CredentialPlatform = typeof CredentialPlatforms[number]; // 'OPENAI' | 'AZURE'
+import { CredentialPlatform, CredentialPlatforms } from '../lib/struct/credentials';
 
 export type Credential = {
 	_id?: ObjectId;

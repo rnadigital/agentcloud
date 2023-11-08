@@ -9,7 +9,6 @@ export enum AgentType {
 	ASSISTANT_AGENT = 'AssistantAgent',
 	EXECUTOR_AGENT = 'ExecutorAgent',
 }
-export type LlmConfigType = 'gpt-4-32k' | 'gpt-4-32k-0314';
 export type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
 export type CodeExecutionConfigType = {
 	lastNMessages: number;
@@ -22,11 +21,12 @@ export type Agent = {
 	teamId?: ObjectId;
     name: string;
  	type: AgentType;
-	llmConfig?: LlmConfigType;
 	codeExecutionConfig?: CodeExecutionConfigType;
 	isUserProxy?: boolean;
 	systemMessage: string;
 	humanInputMode: HumanInputModeType;
+	credentialId: ObjectId;
+	model: string;
 };
 
 export function AgentCollection() {

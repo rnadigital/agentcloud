@@ -14,6 +14,11 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
+//TODO: move to lib
+const platformIcons = {
+	'OPENAI': <img height='24' width='24' className='invert' src='https://openai.com/favicon.ico' />
+}
+
 export default function CredentialCards({ credentials, fetchCredentials }: { credentials: any[], fetchCredentials?: any }) {
 
 	const [accountContext]: any = useAccountContext();
@@ -52,7 +57,7 @@ export default function CredentialCards({ credentials, fetchCredentials }: { cre
 			{credentials.map((credential) => (
 				<li key={credential._id} className='rounded-xl border border-gray-200 dark:border-gray-900'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-gray-900 bg-gray-50 p-6'>
-						<KeyIcon height='24' />
+						{platformIcons[credential.platform] || <KeyIcon height='24' />}
 						<Link
 							href={`/${resourceSlug}/credential/${credential._id}`}
 							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'

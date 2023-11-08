@@ -16,15 +16,13 @@ export default function EditAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agent } = state;
+	const { agent, credentials } = state;
 
 	useEffect(() => {
-		if (!agent) {
-			API.getAgent({
-				resourceSlug: account.currentTeam,
-				agentId: router.query.agentId,
-			}, dispatch, setError, router);
-		}
+		API.getAgent({
+			resourceSlug: account.currentTeam,
+			agentId: router.query.agentId,
+		}, dispatch, setError, router);
 	}, []);
 
 	if (agent == null) {
@@ -51,7 +49,7 @@ export default function EditAgent(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
 		</div>
 
-		<AgentForm editing={true} agent={agent} />
+		<AgentForm editing={true} agent={agent} credentials={credentials} />
 
 	</>);
 }

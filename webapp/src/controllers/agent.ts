@@ -1,13 +1,19 @@
 'use strict';
 
-import { getAgentById, getAgentsByTeam, addAgent, AgentType, LlmConfigType, updateAgent, deleteAgentById } from '../db/agent';
+import { getAgentById, getAgentsByTeam, addAgent, AgentType, updateAgent, deleteAgentById } from '../db/agent';
+import { getCredentialsByTeam } from '../db/credential';
 import { dynamicResponse } from '../util';
+import toObjectId from '../lib/misc/toobjectid';
 
 export async function agentsData(req, res, _next) {
-	const agents = await getAgentsByTeam(res.locals.account.currentTeam);
+	const [agents, credentials] = await Promise.all([
+		getAgentsByTeam(res.locals.account.currentTeam),
+		getCredentialsByTeam(res.locals.account.currentTeam),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
+		credentials,
 	};
 }
 
@@ -41,10 +47,14 @@ export async function agentAddPage(app, req, res, next) {
 }
 
 export async function agentData(req, res, _next) {
-	const agent = await getAgentById(res.locals.account.currentTeam, req.params.agentId);
+	const [agent, credentials] = await Promise.all([
+		getAgentById(res.locals.account.currentTeam, req.params.agentId),
+		getCredentialsByTeam(res.locals.account.currentTeam),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
+		credentials,
 	};
 }
 
@@ -73,16 +83,16 @@ export async function agentJson(app, req, res, next) {
  * @apiGroup Agent
  *
  * @apiParam {String} name Agent name
- * @apiParam {String} LlmConfigType Model the agent uses
  * @apiParam {String} type UserProxyAgent | AssistantAgent
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, llmConfigType, type, systemMessage }  = req.body;
+	const { name, model, credentialId, type, systemMessage }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !llmConfigType || typeof llmConfigType !== 'string' || llmConfigType.length === 0
+		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
+		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
 		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -95,7 +105,6 @@ export async function addAgentApi(req, res, next) {
 	 	type: type === AgentType.EXECUTOR_AGENT
 	 		? AgentType.USER_PROXY_AGENT
 	 		: type as AgentType, //TODO: revise
-		llmConfig: llmConfigType as LlmConfigType,
 		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
 			? { lastNMessages: 5, workDirectory: 'output' }
 			: null,
@@ -106,6 +115,8 @@ export async function addAgentApi(req, res, next) {
 			: type === AgentType.USER_PROXY_AGENT
 				? 'ALWAYS'
 				: null,
+		model,
+		credentialId: toObjectId(credentialId),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
@@ -118,16 +129,16 @@ export async function addAgentApi(req, res, next) {
  * @apiGroup Agent
  *
  * @apiParam {String} name Agent name
- * @apiParam {String} LlmConfigType Model the agent uses
  * @apiParam {String} type UserProxyAgent | AssistantAgent
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, llmConfigType, type, systemMessage }  = req.body;
+	const { name, model, credentialId, type, systemMessage }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !llmConfigType || typeof llmConfigType !== 'string' || llmConfigType.length === 0
+		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
+		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
 		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -138,7 +149,6 @@ export async function editAgentApi(req, res, next) {
 	 	type: type === AgentType.EXECUTOR_AGENT
 	 		? AgentType.USER_PROXY_AGENT
 	 		: type as AgentType, //TODO: revise
-		llmConfig: llmConfigType as LlmConfigType,
 		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT
 			? { lastNMessages: 5, workDirectory: 'output' }
 			: null,
@@ -149,6 +159,8 @@ export async function editAgentApi(req, res, next) {
 			: type === AgentType.USER_PROXY_AGENT
 				? 'ALWAYS'
 				: null,
+		model,
+		credentialId: toObjectId(credentialId),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit` });

@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAccountContext } from '../context/account';
+import { ModelList } from '../lib/struct/models';
 import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 
-export default function AgentForm({ agent = {}, editing }: { agent?: any, editing?: boolean }) { //TODO: fix any type
+export default function AgentForm({ agent = {}, credentials = [], editing }: { agent?: any, credentials?: any[], editing?: boolean }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -18,7 +19,8 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, llmConfig, type, systemMessage, codeExecutionConfig, isUserProxy } = agentState;
+	const { _id, name, type, systemMessage, codeExecutionConfig, isUserProxy, credentialId, model } = agentState;
+	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 
 	async function agentPost(e) {
 		e.preventDefault();
@@ -26,7 +28,8 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 			_csrf: e.target._csrf.value,
 			name: e.target.name.value,
 			type: e.target.type.value,
-			llmConfigType: e.target.llmConfigType.value,
+			model: e.target.model.value,
+			credentialId: e.target.credentialId.value,
 			systemMessage: e.target.systemMessage.value,
 		};
 		if (editing) {			
@@ -37,7 +40,7 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 			API.addAgent(body, null, setError, router);
 		}
 	}
-
+	
 	return (<form onSubmit={agentPost}>
 		<input
 			type='hidden'
@@ -49,7 +52,7 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
 				<div>
 					<h2 className='text-base font-semibold leading-7 text-gray-900'>Agent Details</h2>
-					<p className='mt-1 text-sm leading-6 text-gray-600'>Choose the name and model to use for this agent.</p>
+					<p className='mt-1 text-sm leading-6 text-gray-600'>Choose the name, credentials and model to use for this agent.</p>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
@@ -70,6 +73,31 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 					</div>
 
 					<div className='sm:col-span-12'>
+						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900'>
+							Credentials
+						</label>
+						<div className='mt-2'>
+							<select
+								required
+								id='credentialId'
+								name='credentialId'
+								value={credentialId}
+								onChange={(e) => setAgent(oldAgent => {
+									return {
+										...oldAgent,
+										credentialId: e.target.value,
+										model: '',
+									};
+								})}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+							>
+								<option value=''>Select credential...</option>
+								{credentials && credentials.map(c => (<option key={c._id} value={c._id}>{c.name}</option>))}
+							</select>
+						</div>
+					</div>
+
+					{credentialId && <div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
 								Model
 						</label>
@@ -77,15 +105,15 @@ export default function AgentForm({ agent = {}, editing }: { agent?: any, editin
 							<select
 								required
 								id='model'
-								name='llmConfigType'
+								name='model'
+								defaultValue={model}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
 							>
 								<option disabled value=''>Select a model...</option>
-								<option value='gpt-4-32k'>gpt-4-32k</option>
-								<option value='gpt-4-32k-0314'>gpt-4-32k-0314</option>
+								{ModelList && foundCredential && ModelList[foundCredential.platform] && ModelList[foundCredential.platform].map(m => (<option key={m} value={m}>{m}</option>))}
 							</select>
 						</div>
-					</div>
+					</div>}
 
 					<div className='sm:col-span-12'>
 						<fieldset>
