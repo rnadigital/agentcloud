@@ -32,11 +32,26 @@ class MongoClientConnection(MongoConnection):
     def _get_agents_collection(self) -> collection.Collection:
         return self.db["agents"]
 
+    @property
+    def _get_teams_collection(self) -> collection.Collection:
+        return self.db["teams"]
+
     def insert_chat_messages(self, message: str):
         with log_exception():
             self.db = self._get_db
             self.collection = self._get_chat_collection
             self.collection.insert_one({"_id": ObjectId(), "message": message})
+
+    def get_token(self, session_id):
+        with log_exception():
+            self.db = self._get_db
+            self.collection = self._get_sessions_collection
+            session = self.collection.find_one({"_id": ObjectId(session_id)}, {"teamId": 1})
+            if session:
+                team_id = session.get("teamId")
+                team = self._get_teams_collection.find_one({"_id": team_id}, {"tokens": 1})
+                tokens = team.get("tokens")
+                return tokens
 
     def get_team(self, session_id: str) -> dict:
         with log_exception():
@@ -69,7 +84,10 @@ class MongoClientConnection(MongoConnection):
         if agent is not None:
             agent_data["name"] = agent.get("name")
             agent_data["type"] = agent.get("type", "AssistantAgent")
-            agent_data["llm_config"] = agent.get("llmConfig", "gpt4_config")
+            agent_data["model"] = agent.get("llmConfig", "gpt-4-32k")
+            agent_data["key"] = ""
+            agent_data["platform"] = "open_ai"
+            # agent_data["credentials"] = agent.get("credentials")
             code_execution = agent.get("codeExecutionConfig")
             if code_execution:
                 last_n_messages = code_execution.get("lastNMessages", 3)

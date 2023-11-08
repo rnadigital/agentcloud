@@ -10,6 +10,7 @@ from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
 from autogen import GroupChat
 import json
+from config.config import create_config_file_with_key_from_mongo
 
 mongo_client = start_mongo_session()
 
@@ -35,6 +36,7 @@ def task_execution(task: str, session_id: str):
         socket.emit("join_room", f"_{session_id}")
         # Load team structure from DB
         team = mongo_client.get_team(session_id)
+        # if create_config_file_with_key_from_mongo(session_id, "gpt-4-32k"):
         try:
             # Use team structure to create AutGen team
             org = Org(session_id, team)
@@ -53,6 +55,10 @@ def task_execution(task: str, session_id: str):
             logging.warning(f"Could not find module: {module_name} in path!")
             logging.exception(mnf)
 
+        # else:
+        #     socket.emit("message", {"message": "Unable to fetch OPENAI key from Database!"})
+        #     return False
+
 
 def init_socket_generate_team(task: str, session_id: str):
     with log_exception():
@@ -63,7 +69,8 @@ def init_socket_generate_team(task: str, session_id: str):
 
 "{task}" 
 
-Return the team in the below JSON structure:""", json.dumps(file, indent=2), "There are no hard limits on the number or the combination of team members."]
+Return the team in the below JSON structure:""", json.dumps(file, indent=2),
+                     "There are no hard limits on the number or the combination of team members."]
 
         config_list = autogen.config_list_from_json(
             f"{BASE_PATH}/config/OAI_CONFIG_LIST.json",

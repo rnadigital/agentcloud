@@ -12,8 +12,9 @@ class Org:
     @property
     def _load_template(self):
         try:
-            def format_role_name(role_name):
-                return role_name.replace(" ", "_").lower()
+            def format_role_name(role_name: str):
+                name: str = role_name.replace(" ", "_").replace("(", "").replace(")", "").replace("#", "")
+                return name.lower()
 
             env = Environment(loader=FileSystemLoader(f"{BASE_PATH}/templates/"))
             env.filters['format_role_name'] = format_role_name

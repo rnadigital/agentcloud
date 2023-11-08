@@ -9,28 +9,24 @@ socket = SimpleClient()
 socket.connect(url=SOCKET_URL)
 socket.emit("join_room", f"_{session_id}")
 
-config_list = autogen.config_list_from_json(
-        f"{BASE_PATH}/config/OAI_CONFIG_LIST.json",
-        filter_dict={
-            "model": {
-                "gpt-4",
-            }
-        }
-    )
-
-gpt4_config = {
+{% for role in roles %}
+{{ role.name|format_role_name }}_config = {
     "seed": {{ gpt4_config.seed }},
     "temperature": {{ gpt4_config.temperature }},
     "request_timeout": {{ gpt4_config.request_timeout }},
     "retry_wait_time": {{ gpt4_config.retry_wait_time }},
-    "config_list": config_list,
+    "config_list": autogen.get_config_list(
+        api_keys = ["{{role.key}}"],
+        api_type = "{{role.platform}}"
+    ),
 }
+{% endfor %}
 
 {% for role in roles %}
 {% if role.is_user_proxy %}
 user_proxy = UserProxyAgent(
     name="Admin",
-    llm_config=gpt4_config,
+    llm_config={{ role.name|format_role_name }}_config,
     system_message="""{{ role.system_message }}""",
     human_input_mode="{{ role.human_input_mode | default(ALWAYS) }}",
     code_execution_config={{ role.code_execution_config | default(False) }},
@@ -41,7 +37,7 @@ user_proxy = UserProxyAgent(
 {% else %}
 {{ role.name|format_role_name }} = {{ role.type }}(
     name="{{ role.name|format_role_name }}",
-    llm_config=gpt4_config,
+    llm_config={{ role.name|format_role_name }}_config,
     system_message="""{{ role.system_message }}""",
     human_input_mode="{{ role.human_input_mode | default(NEVER) }}",
     code_execution_config={{ role.code_execution_config| default(False) }},
@@ -54,10 +50,5 @@ user_proxy = UserProxyAgent(
 
 {% if group_chat %}
 groupchat = GroupChat(agents=[user_proxy{% for role in roles %}{% if not role.is_user_proxy %}, {{ role.name|format_role_name }}{% endif %}{% endfor %}], messages=[], max_round=50)
-manager = GroupChatManager(
-            groupchat=groupchat,
-            llm_config=gpt4_config,
-            use_sockets=True,
-            socket_client=socket,
-            sid=session_id)
+manager = GroupChatManager( groupchat=groupchat, llm_config=admin_config, use_sockets=True, socket_client=socket, sid=session_id)
 {% endif %}
