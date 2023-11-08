@@ -219,7 +219,7 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 
 		</div>
 
-		<div className='mt-6 flex items-center justify-end gap-x-6'>
+		<div className='mt-6 flex items-center justify-between gap-x-6'>
 			<Link
 				className='text-sm font-semibold leading-6 text-gray-900'
 				href={`/${resourceSlug}/agents`}

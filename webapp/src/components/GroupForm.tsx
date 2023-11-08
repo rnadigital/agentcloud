@@ -84,7 +84,21 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            primaryColor={'indigo'}
 					            value={agentsState}
 					            onChange={(v: any) => setAgentsState(v)}
-					            options={agentChoices.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
+					            options={agentChoices.map(a => ({ label: a.name, value: a._id }))}
+					            formatOptionLabel={data => {
+					            	const optionAgent = agentChoices.find(ac => ac._id === data.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : ''
+					                    }`}
+					                >
+					                    {optionAgent.isUserProxy && <span className='me-2 inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'>
+											User Proxy
+										</span>}{data.label}{` - ${optionAgent.systemMessage}`}
+					                </li>);
+					            }}
 					        />
 						</div>
 					</div>

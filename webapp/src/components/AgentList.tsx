@@ -26,7 +26,7 @@ export default function AgentList({ agents, fetchAgents }) {
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
 			{agents.map((agent) => (
-				<li key={agent.email} className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow'>
+				<li key={agent._id} className='col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow'>
 					<div className='flex w-full items-center justify-between space-x-6 p-6'>
 						<div className='flex-1 truncate'>
 							<div className='flex items-center space-x-3'>
