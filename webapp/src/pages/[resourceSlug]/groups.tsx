@@ -24,9 +24,7 @@ export default function Groups(props) {
 	}
 
 	useEffect(() => {
-		if (!groups) {
-			fetchGroups();
-		}
+		fetchGroups();
 	}, [account]);
 
 	if (!groups) {

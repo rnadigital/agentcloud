@@ -11,7 +11,7 @@ export type Credential = {
 	orgId: ObjectId;
 	teamId: ObjectId;
 	platform: CredentialPlatform;
-	data: {
+	credentials: {
 		key?: string;
 		//TODO: more
 	};

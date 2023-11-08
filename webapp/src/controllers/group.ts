@@ -87,18 +87,14 @@ export async function groupEditPage(app, req, res, next) {
  * @apiGroup Group
  *
  * @apiParam {String} name Group name
- * @apiParam {String} executorAgent executor agent id
- * @apiParam {String} userProxyAgent user proxy agent id
- * @apiParam {String[]} otherAgents array of other agent ids
+ * @apiParam {String[]} agents array of other agent ids
  */
 export async function addGroupApi(req, res, next) {
 
-	const { name, executorAgent, userProxyAgent, otherAgents }  = req.body;
+	const { name, agents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !executorAgent || typeof executorAgent !== 'string' || executorAgent.length != 24
-		|| !userProxyAgent || typeof userProxyAgent !== 'string' || userProxyAgent.length != 24
-		|| !otherAgents || !Array.isArray(otherAgents) || otherAgents.some(i => typeof i !== 'string' || i.length != 24)) {
+		|| !agents || !Array.isArray(agents) || agents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -108,9 +104,7 @@ export async function addGroupApi(req, res, next) {
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
-	    executorAgent: toObjectId(executorAgent),
-	    userProxyAgent: toObjectId(userProxyAgent),
-	    otherAgents: otherAgents.map(toObjectId),
+	    agents: agents.map(toObjectId),
 	 });
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
@@ -123,26 +117,20 @@ export async function addGroupApi(req, res, next) {
  * @apiGroup Agent
  *
  * @apiParam {String} name Group name
- * @apiParam {String} executorAgent executor agent id
- * @apiParam {String} userProxyAgent user proxy agent id
- * @apiParam {String[]} otherAgents array of other agent ids
+ * @apiParam {String[]} agents array of other agent ids
  */
 export async function editGroupApi(req, res, next) {
 
-	const { name, executorAgent, userProxyAgent, otherAgents }  = req.body;
+	const { name, agents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| (executorAgent && (typeof executorAgent !== 'string' || executorAgent.length != 24))
-		|| !userProxyAgent || typeof userProxyAgent !== 'string' || userProxyAgent.length != 24
-		|| !otherAgents || !Array.isArray(otherAgents) || otherAgents.some(i => typeof i !== 'string' || i.length != 24)) {
+		|| !agents || !Array.isArray(agents) || agents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	await updateGroup(res.locals.account.currentTeam, req.params.groupId, {
 	    name,
-	    executorAgent: executorAgent ? toObjectId(executorAgent) : null,
-	    userProxyAgent: toObjectId(userProxyAgent),
-	    otherAgents: otherAgents.map(toObjectId),
+	    agents: agents.map(toObjectId),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit` });

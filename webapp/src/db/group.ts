@@ -9,9 +9,7 @@ export type Group = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
     name: string;
-	executorAgent: ObjectId;
-    userProxyAgent: ObjectId;
-    otherAgents: ObjectId[];
+    agents: ObjectId[];
 };
 
 export function GroupCollection() {
