@@ -16,7 +16,7 @@ function classNames(...classes) {
 
 //TODO: move to lib
 const platformIcons = {
-	'OPENAI': <img height='24' width='24' className='invert' src='https://openai.com/favicon.ico' />
+	'open_ai': <img height='24' width='24' className='invert' src='https://openai.com/favicon.ico' />
 };
 
 export default function CredentialCards({ credentials, fetchCredentials }: { credentials: any[], fetchCredentials?: any }) {
