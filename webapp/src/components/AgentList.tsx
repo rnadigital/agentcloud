@@ -35,7 +35,7 @@ export default function AgentList({ agents, fetchAgents }) {
 									User Proxy
 								</span>}
 							</div>
-							<p className='mt-1 truncate text-sm text-gray-500'>{agent.type} - {agent.llmConfig}</p>
+							<p className='mt-1 truncate text-sm text-gray-500'>{agent.type} - {agent.model}</p>
 						</div>
 						<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 text-center text-xl font-bold pt-1'>
 							<span>{agent.name.charAt(0).toUpperCase()}</span>

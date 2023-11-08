@@ -84,8 +84,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            primaryColor={'indigo'}
 					            value={agentsState}
 					            onChange={(v: any) => setAgentsState(v)}
-					            options={agentChoices.filter(a => a.isUserProxy !== true && a.codeExecutionConfig == null)
-									.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
+					            options={agentChoices.map(a => ({ label: `${a.name} - ${a.systemMessage}`, value: a._id }))}
 					        />
 						</div>
 					</div>
