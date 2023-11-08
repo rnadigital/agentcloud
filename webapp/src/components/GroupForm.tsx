@@ -37,7 +37,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 			await API.editGroup(groupState._id, body, null, setError, null);
 			toast.success('Group Updated');
 		} else {
-			API.addGroup(body, null, setError, router);
+			API.addGroup(body, null, toast.error, router);
 			// toast.success('Group Added');
 		}
 	}
