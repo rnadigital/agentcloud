@@ -26,6 +26,9 @@ export function switchTeam(body, dispatch, errorCallback, router) {
 export function setAccountToken(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/token', 'POST', body, dispatch, errorCallback, router);
 }
+export function getPaymentLink(dispatch, errorCallback, router) {
+	return ApiCall('/stripe-paymentlink', 'POST', null, dispatch, errorCallback, router);
+}
 
 // Chats
 export function getMessages(body, dispatch, errorCallback, router) {

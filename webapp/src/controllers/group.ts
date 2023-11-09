@@ -106,9 +106,9 @@ export async function addGroupApi(req, res, next) {
 	await addGroup({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
-	    name,
-	    agents: agents.map(toObjectId),
-	 });
+		name,
+		agents: agents.map(toObjectId),
+	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
 

@@ -21,12 +21,12 @@ import * as stripeController from './controllers/stripe';
 
 export default function router(server, app) {
 
-	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);	
+	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
 	server.set('query parser', 'simple');
 	server.use(bodyParser.json()); // for parsing application/json
 	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
-		
+
 	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 	const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
@@ -41,6 +41,7 @@ export default function router(server, app) {
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
 	server.get('/socket', authedMiddlewareChain, accountController.socketTestPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
+	server.post('/stripe-paymentlink', unauthedMiddlewareChain, stripeController.createPaymentLink);
 
 	const accountFormRouter = Router({ caseSensitive: true });
 	accountFormRouter.post('/login', unauthedMiddlewareChain, accountController.login);
