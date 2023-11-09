@@ -8,6 +8,7 @@ export type CheckoutSession = {
 	_id?: ObjectId;
 	accountId?: ObjectId;
 	checkoutSessionId: string;
+	createdDate: Date;
 	payload: any; //TODO: make this use stripe typings?
 };
 

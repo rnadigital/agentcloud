@@ -9,6 +9,7 @@ export type PaymentLink = {
 	accountId?: ObjectId;
 	paymentLinkId: string;
 	url: string;
+	createdDate: Date;
 	payload: any; //TODO: make this use stripe typings?
 };
 

@@ -48,6 +48,7 @@ export async function webhookHandler(req, res, next) {
 				accountId: foundPaymentLink.accountId,
 				checkoutSessionId: checkoutSession.id,
 				payload: checkoutSession,
+				createdDate: new Date(),
 			});
 			break;
 		//TODO: handle cancel/subscription update events
@@ -80,6 +81,7 @@ export async function createPaymentLink(req, res, next) {
 		paymentLinkId: paymentLink.id,
 		url: paymentLink.url,
 		payload: paymentLink,
+		createdDate: new Date(),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
