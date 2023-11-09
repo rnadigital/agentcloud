@@ -13,6 +13,7 @@ export default function Account(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
+	const { checkoutSession } = state;
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
@@ -38,20 +39,29 @@ export default function Account(props) {
 
 			{error && <ErrorAlert error={error} />}
 
+			<div className='border-b pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900'>Account Settings</h3>
+			</div>
+
+			<p>Nothing here... yet.</p>
+
+			<div className='border-b pb-2 my-2 mt-20'>
+				<h3 className='pl-2 font-semibold text-gray-900'>Subscription Status</h3>
+			</div>
+			
 			<form onSubmit={getPaymentLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='mt-2 flex items-center justify-start gap-x-6'>
-					<label htmlFor='token' className='block text-sm font-medium leading-6 text-gray-900'>
-						Subscribe to agentcloud
-					</label>
 					<button
 						type='submit'
 						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
-						Generate payment link
+						Subscribe
 					</button>
 				</div>
 			</form>
+
+			<p>Subscribed: {checkoutSession ? `Yes (${checkoutSession._id})` : 'No'}</p>
 
 		</>
 	);

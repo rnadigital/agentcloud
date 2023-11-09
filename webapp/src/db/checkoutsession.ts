@@ -29,6 +29,12 @@ export function unsafeGetCheckoutSessionById(checkoutSessionId: string): Promise
 	});
 }
 
+export function getCheckoutSessionByAccountId(accountId: db.IdOrStr): Promise<CheckoutSession> {
+	return CheckoutSessionCollection().findOne({
+		accountId: toObjectId(accountId),
+	});
+}
+
 export async function addCheckoutSession(checkoutSession: CheckoutSession): Promise<db.InsertResult> {
 	return CheckoutSessionCollection().insertOne(checkoutSession);
 }
