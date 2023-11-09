@@ -14,6 +14,11 @@ const log = debug('webapp:stripe');
  */
 export async function webhookHandler(req, res, next) {
 
+	if (!process.env['STRIPE_WEBHOOK_SECRET']) {
+		log('Received stripe webhook but STRIPE_WEBHOOK_SECRET is not set');
+		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
+	}
+
 	const sig = req.headers['stripe-signature'];
 	let event;
 	try {
@@ -56,6 +61,10 @@ export async function webhookHandler(req, res, next) {
 }
 
 export async function createPaymentLink(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
 
 	const paymentLink = await stripe.paymentLinks.create({
 		line_items: [
