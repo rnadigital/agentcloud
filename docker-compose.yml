@@ -1,5 +1,6 @@
 version: '3.7'
 services:
+
   docker_mongo:
     restart: always
     image: mongo:latest
@@ -37,11 +38,8 @@ services:
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
       - URL_APP=http://localhost:3000
       - DEBUG=webapp:*
-    healthcheck:
-      test: ["CMD", "curl", "http://localhost:3000"]
-      start_period: 5s
-      timeout: 5s
-      retries: 10
+      - STRIPE_WEBHOOK_SECRET=
+      - STRIPE_ACCOUNT_SECRET=
 
   agent_backend:
     restart: always
@@ -53,9 +51,6 @@ services:
     ports:
       - '127.0.0.1:8080:8080'
     image: agent_backend
-    depends_on:
-      webapp_next: 
-        condition: service_healthy
     environment:
       - LOCAL=True
       - MAX_THREADS=50
@@ -65,7 +60,6 @@ services:
       - DB_URL=mongodb://docker_mongo:27017/test
       - REDIS_HOST=docker_redis
       - MONGO_DB_NAME=test
-      - OPENAI_API_KEY=changeme
       - MAX_RETRIES=10
 
 volumes:

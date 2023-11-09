@@ -1,6 +1,6 @@
 'use strict';
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
@@ -9,6 +9,7 @@ import checkSession from './lib/middleware/auth/checksession';
 import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import renderStaticPage from './lib/middleware/render/staticpage';
 import csrfMiddleware from './lib/middleware/auth/csrf';
+import bodyParser from 'body-parser';
 
 //TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
@@ -16,17 +17,18 @@ import * as groupController from './controllers/group';
 import * as sessionController from './controllers/session';
 import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
+import * as stripeController from './controllers/stripe';
 
 export default function router(server, app) {
 
-	/*
-	 *
-	 * Unauthed routes (WITHOUT checkSession)
-	 *
-	 */
+	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);	
+
+	server.set('query parser', 'simple');
+	server.use(bodyParser.json()); // for parsing application/json
+	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
+		
 	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 	const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
-
 	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
 		const homeRedirect = res.locals.account
 			? `/${res.locals.account.currentTeam}/sessions`

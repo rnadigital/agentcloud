@@ -24,7 +24,6 @@ const dev = process.env.NODE_ENV !== 'production'
 	, app = next({ dev, hostname, port })
 	, handle = app.getRequestHandler();
 
-import bodyParser from 'body-parser';
 import * as redis from './redis';
 import { initSocket } from './socketio';
 import * as db from './db';
@@ -44,9 +43,6 @@ app.prepare()
 		const rawHttpServer: http.Server = http.createServer(server);
 		initSocket(rawHttpServer);
 
-		server.set('query parser', 'simple');
-		server.use(bodyParser.json()); // for parsing application/json
-		server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
 		server.disable('x-powered-by');
 		server.set('trust proxy', 1);
 
