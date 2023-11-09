@@ -1,9 +1,13 @@
 'use strict';
 
-//import {  } from '../db/stripe';
+import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
+import { addCheckoutSession, unsafeGetCheckoutSessionById } from '../db/checkoutsession';
+import toObjectId from '../lib/misc/toobjectid';
 import { dynamicResponse } from '../util';
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env['STRIPE_ACCOUNT_SECRET']);
+import debug from 'debug';
+const log = debug('webapp:stripe');
 
 /**
  * @api {post} /stripe-webhook
@@ -15,26 +19,35 @@ export async function webhookHandler(req, res, next) {
 	try {
 		event = stripe.webhooks.constructEvent(req.body, sig, process.env['STRIPE_WEBHOOK_SECRET']);
 	} catch (err) {
-		console.warn(err);
+		log(err);
 		return res.status(400).send(`Webhook Error: ${err.message}`);
 	}
 
-	console.log('event', event);
+	log(`Stripe webhook "${event.type}":`, event);
 
 	// Handle the event
 	switch (event.type) {
 		case 'checkout.session.completed':
-			const checkoutSessionCompleted = event.data.object;
-			const paymentLink = checkoutSessionCompleted?.data?.object?.payment_link;
+			const checkoutSession = event.data.object;
+			const paymentLink = checkoutSession.payment_link;
 			if (!paymentLink) {
-				console.warn('Completed checkout session without .data.object.payment_link:', checkoutSessionCompleted);
-			} else {
-				//TODO: fetch payment link from the db, set the user as subscribed
+				log('Completed checkout session without .data.object.payment_link:', checkoutSession);
+				break;
 			}
+			const foundPaymentLink = await unsafeGetPaymentLinkById(paymentLink);
+			if (!foundPaymentLink) {
+				log('No payment link found for payment link id:', paymentLink);
+				break;
+			}
+			await addCheckoutSession({
+				accountId: foundPaymentLink.accountId,
+				checkoutSessionId: checkoutSession.id,
+				payload: checkoutSession,
+			});
 			break;
 		//TODO: handle cancel/subscription update events
 		default:
-			console.log(`Unhandled event type ${event.type}`);
+			log(`Unhandled stripe webhook event type "${event.type}"`);
 	}
 
 	// Return a 200 response to acknowledge receipt of the event
@@ -53,8 +66,12 @@ export async function createPaymentLink(req, res, next) {
 		],
 	});
 
-	console.log('paymentLink', paymentLink);
-	//TODO: insert the payment link into the db with the userId
+	await addPaymentLink({
+		accountId: toObjectId(res.locals.account._id),
+		paymentLinkId: paymentLink.id,
+		url: paymentLink.url,
+		payload: paymentLink,
+	});
 
 	return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
 
