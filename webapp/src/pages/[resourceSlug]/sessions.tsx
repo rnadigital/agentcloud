@@ -27,7 +27,7 @@ export default function Sessions(props) {
 
 	useEffect(() => {
 		fetchSessions();
-	}, []);
+	}, [resourceSlug]);
 
 	if (!sessions) {
 		return 'Loading...'; //TODO: loader
