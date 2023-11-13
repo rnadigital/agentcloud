@@ -297,7 +297,7 @@ export default function Session(props) {
 				</div>
 
 				<div className='flex flex-col p-4 mt-auto'>
-					{chatBusyState && <div className='flex flex-row justify-center'>
+					{/*chatBusyState && <div className='flex flex-row justify-center'>
 						<div className='flex items-end space-x-4 basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}
@@ -308,7 +308,7 @@ export default function Session(props) {
 								<span>Stop generating</span>
 							</button>
 						</div>
-					</div>}
+					</div>*/}
 					<div className='flex flex-row justify-center border-t p-4'>
 					
 						<div className='flex items-start space-x-4 basis-1/2'>
