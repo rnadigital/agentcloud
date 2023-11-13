@@ -99,28 +99,28 @@ export async function addSessionApi(req, res, next) {
 	const { type, prompt }  = req.body;
 
 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	let agents = [];
+	let groupId = null;
 	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
 		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
-		if (group) {
-			agents = group.agents.map(x => ({ agentId: x }));
+		if (!group) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
+		groupId = group._id;
 	}
 
 	const addedSession = await addSession({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    prompt,
-	 	type: agents.length > 0 ? SessionType.TASK : SessionType.TEAM,
+	 	type: groupId !== null ? SessionType.TASK : SessionType.TEAM,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		agents,
+		groupId,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/session/${addedSession.insertedId}` });

@@ -50,6 +50,8 @@ export async function webhookHandler(req, res, next) {
 				payload: checkoutSession,
 				createdDate: new Date(),
 			});
+			//TODO:create stripe customer
+			
 			break;
 		//TODO: handle cancel/subscription update events
 		default:

@@ -9,6 +9,7 @@ export type Group = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
 	name: string;
+	adminAgent: ObjectId;
 	agents: ObjectId[];
 };
 

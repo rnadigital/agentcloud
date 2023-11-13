@@ -19,6 +19,9 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 	const [groupState, setGroup] = useState(group);
 	const [error, setError] = useState();
 
+	const initialAdminAgent = group.adminAgent && agentChoices.find(ai => ai._id === group.adminAgent);
+	const [adminAgentState, setAdminAgentState] = useState(initialAdminAgent ? { label: initialAdminAgent.name, value: initialAdminAgent._id } : null);
+
 	const initialAgents = group.agents && group.agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
 		return { label: oa.name, value: a };
@@ -31,6 +34,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 		const body = {
 			_csrf: e.target._csrf.value,
 			name: e.target.name.value,
+			adminAgent: adminAgentState?.value,
 			agents: agentsState.map(a => a.value),
 		};
 		if (editing) {
@@ -76,6 +80,32 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+								Group Admin
+						</label>
+						<div className='mt-2'>
+							<Select
+					            primaryColor={'indigo'}
+					            value={adminAgentState}
+					            onChange={(v: any) => setAdminAgentState(v)}
+					            options={agentChoices.filter(a => a.type === 'UserProxyAgent').map(a => ({ label: a.name, value: a._id }))}
+					            formatOptionLabel={data => {
+									const optionAgent = agentChoices.find(ac => ac._id === data.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : ''
+					                    }`}
+					                >
+					                    {data.label}{` - ${optionAgent.systemMessage}`}
+					                </li>);
+					            }}
+					        />
+						</div>
+					</div>
+
+					<div className='sm:col-span-12'>
+						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
 								Group Members
 						</label>
 						<div className='mt-2'>
@@ -84,7 +114,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					            primaryColor={'indigo'}
 					            value={agentsState}
 					            onChange={(v: any) => setAgentsState(v)}
-					            options={agentChoices.map(a => ({ label: a.name, value: a._id }))}
+					            options={agentChoices.filter(a => a._id !== adminAgentState?.value).map(a => ({ label: a.name, value: a._id }))}
 					            formatOptionLabel={data => {
 					            	const optionAgent = agentChoices.find(ac => ac._id === data.value);
 					                return (<li
@@ -94,9 +124,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					                            : ''
 					                    }`}
 					                >
-					                    {optionAgent.isUserProxy && <span className='me-2 inline-flex flex-shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'>
-											User Proxy
-										</span>}{data.label}{` - ${optionAgent.systemMessage}`}
+					                    {data.label}{` - ${optionAgent.systemMessage}`}
 					                </li>);
 					            }}
 					        />
