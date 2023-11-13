@@ -22,6 +22,7 @@ services:
       args:
         - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
+        - POSTHOG_KEY=
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -40,8 +41,6 @@ services:
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
-      - NEXT_PUBLIC_POSTHOG_KEY=
-      - NEXT_PUBLIC_POSTHOG_HOST=
 
   agent_backend:
     restart: always
