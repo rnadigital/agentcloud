@@ -40,6 +40,8 @@ services:
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
+      - NEXT_PUBLIC_POSTHOG_KEY=
+      - NEXT_PUBLIC_POSTHOG_HOST=
 
   agent_backend:
     restart: always
