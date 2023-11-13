@@ -2,7 +2,7 @@
 
 import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { client } from './redis';
+import { client } from './lib/redis/redis';
 import debug from 'debug';
 const log = debug('webapp:socket');
 
@@ -209,6 +209,11 @@ export function initSocket(rawHttpServer) {
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
 			}
 
+		});
+
+		socket.on('stop_generating', async (data) => {
+			//set redis flag to stop generating, read inside autogen
+			client.set(`${data.room}_stop`, '1');
 		});
 
 		socket.on('message_complete', async (data) => {

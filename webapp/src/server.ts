@@ -24,7 +24,7 @@ const dev = process.env.NODE_ENV !== 'production'
 	, app = next({ dev, hostname, port })
 	, handle = app.getRequestHandler();
 
-import * as redis from './redis';
+import * as redis from './lib/redis/redis';
 import { initSocket } from './socketio';
 import * as db from './db';
 import router from './router';

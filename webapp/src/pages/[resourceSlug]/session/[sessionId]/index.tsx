@@ -10,6 +10,9 @@ import { Message } from '../../../../components/chat/message';
 import SessionChatbox from '../../../../components/SessionChatbox';
 import classNames from '../../../../components/ClassNames';
 import Blockies from 'react-blockies';
+import {
+	StopIcon,
+} from '@heroicons/react/24/outline';
 import debug from 'debug';
 const log = debug('webapp:socket');
 
@@ -227,6 +230,12 @@ export default function Session(props) {
 		}
 	}, [messages]);
 
+	function stopGenerating() {
+		socketContext.emit('stop_generating', {
+			room: sessionId,
+		});
+	}
+
 	function sendMessage(e) {
 		e.preventDefault();
 		const message: string = e.target.prompt ? e.target.prompt.value : e.target.value;
@@ -287,21 +296,36 @@ export default function Session(props) {
 					</div>}
 				</div>
 
-				<div className='flex flex-row justify-center border-t p-4 mt-auto'>
-					<div className='flex items-start space-x-4 basis-1/2'>
-						<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
-							<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
-								<Blockies seed={account.name} />
-							</span>
+				<div className='flex flex-col p-4 mt-auto'>
+					{chatBusyState && <div className='flex flex-row justify-center'>
+						<div className='flex items-end space-x-4 basis-1/2'>
+							<button
+								onClick={() => stopGenerating()}
+								type='submit'
+								className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto me-2 mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+							>
+								<StopIcon className={'w-5 me-1'} />
+								<span>Stop generating</span>
+							</button>
 						</div>
-						<div className='min-w-0 flex-1 h-full'>
-							{terminated 
-								? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>
-								: <SessionChatbox
-									scrollToBottom={scrollToBottom}
-									lastMessageFeedback={lastMessageFeedback}
-									chatBusyState={chatBusyState}
-									onSubmit={sendMessage} />}
+					</div>}
+					<div className='flex flex-row justify-center border-t p-4'>
+					
+						<div className='flex items-start space-x-4 basis-1/2'>
+							<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+								<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
+									<Blockies seed={account.name} />
+								</span>
+							</div>
+							<div className='min-w-0 flex-1 h-full'>
+								{terminated 
+									? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>
+									: <SessionChatbox
+										scrollToBottom={scrollToBottom}
+										lastMessageFeedback={lastMessageFeedback}
+										chatBusyState={chatBusyState}
+										onSubmit={sendMessage} />}
+							</div>
 						</div>
 					</div>
 				</div>

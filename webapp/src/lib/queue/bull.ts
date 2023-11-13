@@ -1,6 +1,6 @@
 import { Queue, Worker } from 'bullmq';
 
-import { client as redisClient } from '../../redis';
+import { client as redisClient } from '../redis/redis';
 
 export const taskQueue = new Queue('task_queue', {
 	connection: redisClient
