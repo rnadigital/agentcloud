@@ -134,6 +134,7 @@ export default function Session(props) {
 	function handleJoinedRoom() {
 		console.log('messages.length', messages.length);
 		if (messages.length === 0) {
+			console.log('sending initial incoming message and task_queue. messages:', messages, 'messages.length', messages.length);
 			socketContext.emit('message', {
 				room: sessionId,
 				authorName: account.name,
@@ -181,6 +182,7 @@ export default function Session(props) {
 		}
 	}, [session]);
 	useEffect(() => {
+		console.log('running getmessages with currentteam', account.currentTeam)
 		API.getSession({
 			resourceSlug: account.currentTeam,
 			sessionId,
@@ -296,21 +298,20 @@ export default function Session(props) {
 					</div>}
 				</div>
 
-				<div className='flex flex-col p-4 mt-auto'>
-					{/*chatBusyState && <div className='flex flex-row justify-center'>
-						<div className='flex items-end space-x-4 basis-1/2'>
+				<div className='flex flex-col mt-auto'>
+					<div className='flex flex-row justify-center border-t pt-3'>
+						{chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}
 								type='submit'
-								className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto me-2 mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+								className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 							>
 								<StopIcon className={'w-5 me-1'} />
 								<span>Stop generating</span>
 							</button>
-						</div>
-					</div>*/}
-					<div className='flex flex-row justify-center border-t p-4'>
-					
+						</div>}
+					</div>
+					<div className='flex flex-row justify-center pb-3'>
 						<div className='flex items-start space-x-4 basis-1/2'>
 							<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
 								<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>

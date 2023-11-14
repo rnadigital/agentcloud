@@ -217,8 +217,9 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('stop_generating', async (data) => {
-			//set redis flag to stop generating, read inside autogen
 			client.set(`${data.room}_stop`, '1');
+			await unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED);
+			return io.to(data.room).emit('terminate', true);
 		});
 
 		socket.on('message_complete', async (data) => {
