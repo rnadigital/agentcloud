@@ -73,6 +73,7 @@ class MongoClientConnection(MongoConnection):
                 if group_query and len(group_query) > 0:
                     agents = group_query.get("agents")
                     admin_agent = group_query.get("adminAgent")
+                    agents.append(admin_agent)
                     for agent in agents:
                         agent_data: dict = self._get_team_member(agent)
                         agent_data["is_admin"] = True if agent == admin_agent else False
