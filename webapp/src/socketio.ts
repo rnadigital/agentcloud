@@ -120,7 +120,7 @@ export function initSocket(rawHttpServer) {
 				name: `Auto generated group: "${session.prompt}"`,
 				adminAgent: mappedRolesToAgents[0]._id,
 				agents: mappedRolesToAgents.slice(1).map(x => x._id),
-			}
+			};
 			await addGroup(generatedGroup);
 			await unsafeSetSessionGroupId(session._id, generatedGroup._id);
 			io.to(data.room).emit('type', SessionType.TASK);
