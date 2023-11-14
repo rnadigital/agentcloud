@@ -50,6 +50,6 @@ user_proxy = UserProxyAgent(
 {% endfor %}
 
 {% if group_chat %}
-groupchat = GroupChat(agents=[user_proxy{% for role in roles %}{% if not role.is_user_proxy %}, {{ role.name|format_role_name }}{% endif %}{% endfor %}], messages=[], max_round=50)
+groupchat = GroupChat(agents=[user_proxy{% for role in roles %}{% if not role.is_admin %}, {{ role.name|format_role_name }}{% endif %}{% endfor %}], messages=[], max_round=50)
 manager = GroupChatManager( groupchat=groupchat, llm_config=admin_config, use_sockets=True, socket_client=socket, sid=session_id)
 {% endif %}
