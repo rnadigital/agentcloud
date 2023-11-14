@@ -97,7 +97,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 						<div className='flex justify-between gap-x-4 py-2'>
 							<dt className='text-gray-500'>Members</dt>
 							<dd className='text-gray-700'>
-								<div>{group?.agents?.length}</div>
+								<div>{group?.agents?.length+1}</div>
 							</dd>
 						</div>
 						{/* TODO: what else here?? */}
