@@ -300,7 +300,7 @@ export default function Session(props) {
 
 				<div className='flex flex-col mt-auto'>
 					<div className='flex flex-row justify-center border-t pt-3'>
-						{chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
+						{/*chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}
 								type='submit'
@@ -309,7 +309,7 @@ export default function Session(props) {
 								<StopIcon className={'w-5 me-1'} />
 								<span>Stop generating</span>
 							</button>
-						</div>}
+						</div>*/}
 					</div>
 					<div className='flex flex-row justify-center pb-3'>
 						<div className='flex items-start space-x-4 basis-1/2'>
