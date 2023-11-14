@@ -65,16 +65,19 @@ class MongoClientConnection(MongoConnection):
                 "roles": []
             }
         list_of_agents = list()
-        query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
-        agents = query_results.get("agents")
-        admin_agent = query_results.get("adminAgent")
-        for agent in agents:
-            agent_id: ObjectId = agent.get("agentId")
-            agent_data: dict = self._get_team_member(agent_id)
-            agent_data["is_admin"] = True if agent_id == admin_agent else False
-            list_of_agents.append(agent_data)
-        team["roles"] = list_of_agents
-        return team
+        session_query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"groupId": 1})
+        if session_query_results and len(session_query_results) > 0:
+            group_query_results = session_query_results.get("groupId")
+            if group_query_results and len(group_query_results) > 0:
+                agents = group_query_results.get("agents")
+                admin_agent = group_query_results.get("adminAgent")
+                for agent in agents:
+                    agent_id: ObjectId = agent.get("agentId")
+                    agent_data: dict = self._get_team_member(agent_id)
+                    agent_data["is_admin"] = True if agent_id == admin_agent else False
+                    list_of_agents.append(agent_data)
+                team["roles"] = list_of_agents
+                return team
 
     def _get_team_member(self, agent_id: ObjectId) -> dict:
         self.collection = self._get_agents_collection
