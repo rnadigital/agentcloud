@@ -3,7 +3,7 @@ const log = debug('webapp:migration:0.0.3');
 
 export default async function(db) {
 	log('Terminating all existing sessions, and removing their agents array');
-	await db.collection('agents').updateMany({}, {
+	await db.collection('sessions').updateMany({}, {
 		$set: {
 			status: 'terminated',
 		},

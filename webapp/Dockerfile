@@ -3,13 +3,10 @@ FROM node:latest
 WORKDIR /app
 ENV NODE_ENV production
 
-COPY package.json /app/package.json
-COPY package-lock.json /app/package-lock.json
-
-RUN npm install
-
 COPY . /app
 RUN touch /app/.env
+
+RUN npm install
 
 ARG SHORT_COMMIT_HASH
 ENV NEXT_PUBLIC_SHORT_COMMIT_HASH=$SHORT_COMMIT_HASH
