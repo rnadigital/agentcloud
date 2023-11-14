@@ -3,7 +3,6 @@ from mongo.client import MongoConnection
 from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from random import randint
 from init.env_variables import BASE_PATH
 
 
@@ -14,7 +13,6 @@ class MongoClientConnection(MongoConnection):
         self.mongo_client = self.connect()
         self.db_name = MONGO_DB_NAME
         self.db = None
-        self.collection = None
 
     @property
     def _get_db(self) -> database.Database:
@@ -27,6 +25,10 @@ class MongoClientConnection(MongoConnection):
     @property
     def _get_sessions_collection(self) -> collection.Collection:
         return self.db["sessions"]
+
+    @property
+    def _get_groups_collection(self) -> collection.Collection:
+        return self.db["groups"]
 
     @property
     def _get_agents_collection(self) -> collection.Collection:
@@ -43,46 +45,58 @@ class MongoClientConnection(MongoConnection):
     def insert_chat_messages(self, message: str):
         with log_exception():
             self.db = self._get_db
-            self.collection = self._get_chat_collection
-            self.collection.insert_one({"_id": ObjectId(), "message": message})
+            collection = self._get_chat_collection
+            collection.insert_one({"_id": ObjectId(), "message": message})
 
     def get_token(self, session_id):
         with log_exception():
             self.db = self._get_db
-            self.collection = self._get_sessions_collection
-            session = self.collection.find_one({"_id": ObjectId(session_id)}, {"teamId": 1})
+            collection = self._get_sessions_collection
+            session = collection.find_one({"_id": ObjectId(session_id)}, {"teamId": 1})
             if session:
                 team_id = session.get("teamId")
                 team = self._get_teams_collection.find_one({"_id": team_id}, {"tokens": 1})
                 tokens = team.get("tokens")
                 return tokens
 
-    def get_team(self, session_id: str) -> dict:
+    def get_group(self, session_id: str) -> dict:
         with log_exception():
             self.db = self._get_db
-            self.collection = self._get_sessions_collection
             team = {
                 "group_chat": True,
                 "roles": []
             }
-        list_of_agents = list()
-        query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
-        agents = query_results.get("agents")
-        for agent in agents:
-            agent_id: ObjectId = agent.get("agentId")
-            agent_data: dict = self._get_team_member(agent_id)
-            list_of_agents.append(agent_data)
-        team["roles"] = list_of_agents
-        return team
+            list_of_agents = list()
+            sessions_collection = self._get_sessions_collection
+            session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)}, {"groupId": 1})
+            if session_query_results is None:
+                raise Exception(f"session not found for session _id {session_id}")
+            group_id = session_query_results.get("groupId")
+            if group_id is None:
+                raise Exception(f"groupId not found on session id {session_id}")
+            groups_collection = self._get_groups_collection
+            group_query_results = groups_collection.find_one({"_id": group_id})
+            if group_query_results is None:
+                raise Exception(f"group not found from session groupId {session_group_id}")
+            agents = group_query_results.get("agents")
+            admin_agent = group_query_results.get("adminAgent")
+            agents.append(admin_agent)
+            for agent in agents:
+                agent_data: dict = self._get_group_member(agent)
+                agent_data["is_admin"] = True if agent == admin_agent else False
+                list_of_agents.append(agent_data)
+            team["roles"] = list_of_agents
+            return team
 
-    def _get_team_member(self, agent_id: ObjectId) -> dict:
-        self.collection = self._get_agents_collection
+    def _get_group_member(self, agent_id: ObjectId) -> dict:
+        collection = self._get_agents_collection
         agent_data = dict()
-        agent = self.collection.find_one({"_id": ObjectId(agent_id)})
+        agent = collection.find_one({"_id": ObjectId(agent_id)})
         if agent is not None:
             credential_id = agent.get("credentialId")
-            credential_obj = self._get_credentials_collection.find_one({"_id": credential_id},
-                                                                       {"platform": 1, "credentials": 1})
+            credential_obj = self._get_credentials_collection.find_one(
+                {"_id": credential_id},
+                {"platform": 1, "credentials": 1})
             if credential_obj is not None and len(credential_obj) > 0:
                 creds = credential_obj.get("credentials")
                 platform = credential_obj.get("platform")

@@ -2,7 +2,7 @@
 
 import { getGroupById, getGroupsByTeam, addGroup, updateGroup, deleteGroupById } from '../db/group';
 import toObjectId from '../lib/misc/toobjectid';
-import { getAgentsById, getAgentsByTeam, AgentType } from '../db/agent';
+import { getAgentsById, getAgentById, getAgentsByTeam, AgentType } from '../db/agent';
 import { dynamicResponse } from '../util';
 
 export async function groupsData(req, res, _next) {
@@ -91,16 +91,21 @@ export async function groupEditPage(app, req, res, next) {
  */
 export async function addGroupApi(req, res, next) {
 
-	const { name, agents }  = req.body;
+	const { name, adminAgent, agents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
+		|| !adminAgent || typeof adminAgent !== 'string' || adminAgent.length !== 24
 		|| !agents || !Array.isArray(agents) || agents.length === 0 || agents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	const foundAgents = await getAgentsById(res.locals.account.currentTeam, agents);
-	if (!foundAgents || foundAgents.length !== agents.length || !foundAgents.some(a => a.type === AgentType.USER_PROXY_AGENT)) {
-		return dynamicResponse(req, res, 400, { error: 'Please select at least one agent that is a UserProxyAgent' });
+	if (!foundAgents || foundAgents.length !== agents.length) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	const foundAdminAgent = await getAgentById(res.locals.account.currentTeam, adminAgent);
+	if (!foundAdminAgent || foundAdminAgent.type !== AgentType.USER_PROXY_AGENT) {
+		return dynamicResponse(req, res, 400, { error: 'Group admin must be a user proxy agent' });
 	}
 
 	await addGroup({
@@ -108,6 +113,7 @@ export async function addGroupApi(req, res, next) {
 		teamId: res.locals.account.currentTeam,
 		name,
 		agents: agents.map(toObjectId),
+		adminAgent: toObjectId(adminAgent),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
@@ -124,9 +130,10 @@ export async function addGroupApi(req, res, next) {
  */
 export async function editGroupApi(req, res, next) {
 
-	const { name, agents }  = req.body;
+	const { name, adminAgent, agents }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
+		|| !adminAgent || typeof adminAgent !== 'string' || adminAgent.length !== 24
 		|| !agents || !Array.isArray(agents) || agents.some(i => typeof i !== 'string' || i.length != 24)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -134,6 +141,7 @@ export async function editGroupApi(req, res, next) {
 	await updateGroup(res.locals.account.currentTeam, req.params.groupId, {
 	    name,
 	    agents: agents.map(toObjectId),
+		adminAgent: toObjectId(adminAgent),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit` });

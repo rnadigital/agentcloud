@@ -22,7 +22,6 @@ export type Agent = {
     name: string;
  	type: AgentType;
 	codeExecutionConfig?: CodeExecutionConfigType;
-	isUserProxy?: boolean;
 	systemMessage: string;
 	humanInputMode: HumanInputModeType;
 	credentialId: ObjectId;

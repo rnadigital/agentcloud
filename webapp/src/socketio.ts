@@ -9,7 +9,8 @@ const log = debug('webapp:socket');
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk, updateCompletedMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
-import { addSession, unsafeGetSessionById, unsafeSetSessionAgents, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
+import { addGroup } from './db/group';
+import { unsafeGetSessionById, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
 import { SessionType, SessionStatus } from './lib/struct/session';
 
 import { taskQueue } from './lib/queue/bull';
@@ -17,8 +18,8 @@ import { taskQueue } from './lib/queue/bull';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
 import fetchSession from './lib/middleware/auth/fetchsession';
-import checkSession from './lib/middleware/auth/checksession';
-const socketMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession];
+//import checkSession from './lib/middleware/auth/checksession';
+//const socketMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession];
 
 export function initSocket(rawHttpServer) {
 
@@ -75,7 +76,7 @@ export function initSocket(rawHttpServer) {
 		socket.on('terminate', async (data) => {
 			//TODO: ensure only sent by python app
 			const session = await unsafeGetSessionById(data.message.sessionId);
-			if (session.agents && session.agents.length > 0) {
+			if (session?.groupId) {
 				await unsafeSetSessionStatus(data.message.sessionId, SessionStatus.TERMINATED);
 				return io.to(data.room).emit('terminate', true);
 			}
@@ -108,16 +109,20 @@ export function initSocket(rawHttpServer) {
 						workDirectory: role.code_execution_config.work_dir
 					}
 					: null,
-				isUserProxy: role.is_user_proxy || false,
 				systemMessage: role.system_message,
 				humanInputMode: role.human_input_mode,
 			}));
-			await addAgents(mappedRolesToAgents); //TODO: pass teamId
-			const sessionAgents = mappedRolesToAgents.map(agent => ({
-				agentId: agent._id,
-				reportTo: null, //unused atm
-			}));
-			await unsafeSetSessionAgents(session._id, sessionAgents, sessionTeamJsonMessage?.message?.message?.text);
+			await addAgents(mappedRolesToAgents);
+			const generatedGroup = {
+				_id: new ObjectId(),
+				orgId: session.orgId,
+				teamId: session.teamId,
+				name: `Auto generated group: "${session.prompt}"`,
+				adminAgent: mappedRolesToAgents[0]._id,
+				agents: mappedRolesToAgents.slice(1).map(x => x._id),
+			};
+			await addGroup(generatedGroup);
+			await unsafeSetSessionGroupId(session._id, generatedGroup._id);
 			io.to(data.room).emit('type', SessionType.TASK);
 			taskQueue.add(SessionType.TASK, {
 				task: session.prompt,

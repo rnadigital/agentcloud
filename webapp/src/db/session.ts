@@ -5,11 +5,6 @@ import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 
-export type SessionAgent = {
-	agentId: ObjectId; //Object ID of Agent
-	reportTo: ObjectId;
-}
-
 export type Session = {
 	_id?: ObjectId;
 	orgId: ObjectId;
@@ -19,10 +14,9 @@ export type Session = {
     startDate: Date;
     lastUpdatedDate: Date;
     tokensUsed: number;
-    agents: SessionAgent[];
 	status: SessionStatus;
 	type: SessionType;
-	team?: any; //temporary, for ragy
+	groupId?: ObjectId;
 }
 
 export function SessionCollection() {
@@ -71,14 +65,12 @@ export function unsafeSetSessionStatus(sessionId: db.IdOrStr, newStatus: Session
 	});
 }
 
-export function unsafeSetSessionAgents(sessionId: db.IdOrStr, agents: SessionAgent[], team: string): Promise<any> {
+export function unsafeSetSessionGroupId(sessionId: db.IdOrStr, groupId: db.IdOrStr): Promise<any> {
 	return SessionCollection().updateOne({
 		_id: toObjectId(sessionId),
 	}, {
 		$set: {
-			agents,
-			type: SessionType.TASK,
-			team,
+			groupId: toObjectId(groupId),
 		}
 	});
 }

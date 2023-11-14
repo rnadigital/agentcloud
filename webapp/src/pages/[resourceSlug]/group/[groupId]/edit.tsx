@@ -18,7 +18,6 @@ export default function EditGroup(props) {
 	const [agents, setAgents] = useState(null); //TODO: take from prop
 	const [error, setError] = useState();
 	const { groupData } = state;
-	console.log('agents', agents);
 	useEffect(() => {
 		if (!groupData || !agents) {
 			API.getGroup({

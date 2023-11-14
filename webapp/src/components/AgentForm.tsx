@@ -19,7 +19,7 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, type, systemMessage, codeExecutionConfig, isUserProxy, credentialId, model } = agentState;
+	const { _id, name, type, systemMessage, codeExecutionConfig, credentialId, model } = agentState;
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 
 	async function agentPost(e) {
@@ -147,7 +147,7 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 											type='radio'
 											value='UserProxyAgent'
 											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											defaultChecked={isUserProxy}
+											defaultChecked={type === 'UserProxyAgent'}
 										/>
 									</div>
 									<div className='text-sm leading-6'>

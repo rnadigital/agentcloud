@@ -49,8 +49,6 @@ export default function App({ Component, pageProps }) {
 		}
 	}, []);
 
-	console.log('process.env.NEXT_PUBLIC_POSTHOG_KEY', process.env.NEXT_PUBLIC_POSTHOG_KEY);
-
 	const [pagePropsState] = useState(pageProps);
 	return (
 		<PostHogProvider client={posthog}>
@@ -68,11 +66,11 @@ export default function App({ Component, pageProps }) {
 							pauseOnHover={false}
 							hideProgressBar={true}
 						/>
-						<Layout {...pagePropsState}>
+						<Layout {...pageProps}>
 							<style>
 								{''}
 							</style>
-							<Component {...pagePropsState} />
+							<Component {...pageProps} />
 						</Layout>
 					</SocketWrapper>
 				</ChatWrapper>

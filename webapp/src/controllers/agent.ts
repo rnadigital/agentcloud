@@ -108,7 +108,6 @@ export async function addAgentApi(req, res, next) {
 		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
 			? { lastNMessages: 5, workDirectory: 'output' }
 			: null,
-		isUserProxy: type === AgentType.USER_PROXY_AGENT,
 		systemMessage,
 		humanInputMode: type === AgentType.EXECUTOR_AGENT
 			? 'TERMINAL'
@@ -152,7 +151,6 @@ export async function editAgentApi(req, res, next) {
 		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT
 			? { lastNMessages: 5, workDirectory: 'output' }
 			: null,
-		isUserProxy: type === AgentType.USER_PROXY_AGENT,
 		systemMessage,
 		humanInputMode: type === AgentType.EXECUTOR_AGENT
 			? 'TERMINAL'

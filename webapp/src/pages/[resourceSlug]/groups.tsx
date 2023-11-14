@@ -27,7 +27,7 @@ export default function Groups(props) {
 		fetchGroups();
 	}, [account]);
 
-	if (!groups) {
+	if (groups == null) {
 		return 'Loading...'; //TODO: loader
 	}
 
