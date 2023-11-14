@@ -24,7 +24,7 @@ socket.emit("join_room", f"_{session_id}")
 {% endfor %}
 
 {% for role in roles %}
-{% if role.is_user_proxy %}
+{% if role.is_admin %}
 user_proxy = UserProxyAgent(
     name="Admin",
     llm_config={{ role.name|format_role_name }}_config,

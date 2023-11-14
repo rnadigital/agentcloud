@@ -10,7 +10,6 @@ from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
 from autogen import GroupChat
 import json
-from config.config import create_config_file_with_key_from_mongo
 
 mongo_client = start_mongo_session()
 

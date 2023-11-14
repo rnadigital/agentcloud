@@ -3,7 +3,6 @@ from mongo.client import MongoConnection
 from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from random import randint
 from init.env_variables import BASE_PATH
 
 
@@ -68,9 +67,11 @@ class MongoClientConnection(MongoConnection):
         list_of_agents = list()
         query_results = self.collection.find_one({"_id": ObjectId(session_id)}, {"agents": 1})
         agents = query_results.get("agents")
+        admin_agent = query_results.get("adminAgent")
         for agent in agents:
             agent_id: ObjectId = agent.get("agentId")
             agent_data: dict = self._get_team_member(agent_id)
+            agent_data["is_admin"] = True if agent_id == admin_agent else False
             list_of_agents.append(agent_data)
         team["roles"] = list_of_agents
         return team
@@ -81,8 +82,9 @@ class MongoClientConnection(MongoConnection):
         agent = self.collection.find_one({"_id": ObjectId(agent_id)})
         if agent is not None:
             credential_id = agent.get("credentialId")
-            credential_obj = self._get_credentials_collection.find_one({"_id": credential_id},
-                                                                       {"platform": 1, "credentials": 1})
+            credential_obj = self._get_credentials_collection.find_one(
+                {"_id": credential_id},
+                {"platform": 1, "credentials": 1})
             if credential_obj is not None and len(credential_obj) > 0:
                 creds = credential_obj.get("credentials")
                 platform = credential_obj.get("platform")
