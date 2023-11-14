@@ -18,8 +18,8 @@ with open(f"{BASE_PATH}/config/base.json", 'r') as f:
     file = json.loads(f.read())
 
 
-def _append_team_members_to_agent_system_message(_groupchat: GroupChat, agent_name: str):
-    # Ensuring the planner is aware of its own team members
+def _append_group_members_to_agent_system_message(_groupchat: GroupChat, agent_name: str):
+    # Ensuring the planner is aware of its own group members
     if bool({f"{agent_name}", f"{agent_name.lower()}"} & set(_groupchat.agent_names)):
         _name = list({f"{agent_name}", f"{agent_name.lower()}"} & set(_groupchat.agent_names))[0]
         _index = _groupchat.agent_names.index(_name)
@@ -35,17 +35,17 @@ def task_execution(task: str, session_id: str):
         socket.connect(url=SOCKET_URL)
         socket.emit("join_room", f"_{session_id}")
         # Load team structure from DB
-        team = mongo_client.get_team(session_id)
+        group = mongo_client.get_group(session_id)
         # if create_config_file_with_key_from_mongo(session_id, "gpt-4-32k"):
         try:
-            # Use team structure to create AutGen team
-            org = Org(session_id, team)
+            # Use group structure to create AutGen team
+            org = Org(session_id, group)
             org_saved = org.save_org_structure()
-            # Execute task using above team
+            # Execute task using above group
             if org_saved:
                 module_name = f"orgs.{session_id}"
                 loaded_module = importlib.import_module(module_name)
-                _append_team_members_to_agent_system_message(loaded_module.groupchat, "Planner")
+                _append_group_members_to_agent_system_message(loaded_module.groupchat, "Planner")
                 loaded_module.user_proxy.initiate_chat(
                     recipient=loaded_module.manager,
                     clear_history=True,
@@ -60,7 +60,7 @@ def task_execution(task: str, session_id: str):
         #     return False
 
 
-def init_socket_generate_team(task: str, session_id: str):
+def init_socket_generate_group(task: str, session_id: str):
     with log_exception():
         socket = SimpleClient()
         socket.connect(url=SOCKET_URL)

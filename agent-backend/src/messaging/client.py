@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from agents.base import init_socket_generate_team, task_execution
+from agents.base import init_socket_generate_group, task_execution
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
@@ -41,7 +41,7 @@ def generate_team(data: dict):
     with log_exception():
         task = data.get("task")
         session_id = data.get("sessionId")
-        init_socket_generate_team(task, session_id)  # Pass task to be executed
+        init_socket_generate_group(task, session_id)  # Pass task to be executed
 
 
 def execute_task(data: dict):
