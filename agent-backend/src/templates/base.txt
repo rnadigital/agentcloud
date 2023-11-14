@@ -16,10 +16,11 @@ socket.emit("join_room", f"_{session_id}")
     "temperature": 0,
     "request_timeout": 300,
     "retry_wait_time": 60,
-    "config_list": autogen.get_config_list(
-        api_keys = ["{{role.key}}"],
-        api_type = "{{role.platform}}"
-    ),
+    "config_list":[{
+        "api_key" : "{{role.key}}",
+        "api_type" : "{{role.platform}}",
+        "model" : "{{role.model}}"
+        }]
 }
 {% endfor %}
 
