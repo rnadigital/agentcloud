@@ -5,8 +5,7 @@ import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import semver from 'semver';
 import debug from 'debug';
-import migrationVersions from '../migrations/index';
-import { migrationVersion } from '../../package.json';
+import { migrationVersions, migrationVersion } from '../migrations/index';
 const log = debug('webapp:migration');
 
 export function VersionCollection() {

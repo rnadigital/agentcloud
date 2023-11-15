@@ -6,7 +6,7 @@
     "outDir": "dist",
     "noEmit": false
   },
-  "include": ["src/server.ts"],
+  "include": ["src/server.ts", "src/migrations/*.ts"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node",

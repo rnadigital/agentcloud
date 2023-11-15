@@ -1,7 +1,6 @@
 {
   "name": "webapp-next",
   "version": "0.0.3",
-  "migrationVersion": "0.0.3",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -10,7 +9,7 @@
     "build:server": "tsc --project tsconfig.server.json",
     "build:doc": "apidoc -i src/controllers -o doc",
     "build": "npm run build:next && npm run build:server",
-    "start": "NODE_ENV=production node dist/src/server.js",
+    "start": "NODE_ENV=production node dist/server.js",
     "lint:nextjs": "next lint",
     "lint:all": "eslint ./"
   },
@@ -69,6 +68,7 @@
     "postcss": "^8.4.30",
     "tailwindcss": "^3.3.3",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "typescript-eslint": "^0.0.1-alpha.0"
   }
 }
