@@ -1,7 +1,7 @@
 import fs from 'fs';
 import semver from 'semver';
 
-let versions = [];
+let migrationVersions = [];
 
 // rather this than write a static index file
 fs.readdirSync(__dirname).forEach(file => {
@@ -9,7 +9,10 @@ fs.readdirSync(__dirname).forEach(file => {
 	if (!semver.valid(version)) {
 		return;
 	}
-	versions.push(version);
+	migrationVersions.push(version);
 });
 
-export default versions;
+const sortedVersions = migrationVersions.sort(semver.compare);
+const migrationVersion = sortedVersions[sortedVersions.length-1];
+
+export { migrationVersions, migrationVersion };

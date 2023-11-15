@@ -1,4 +1,3 @@
-import autogen
 from autogen import AssistantAgent, GroupChat, GroupChatManager, UserProxyAgent
 from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
@@ -10,39 +9,53 @@ socket = SimpleClient()
 socket.connect(url=SOCKET_URL)
 socket.emit("join_room", f"_{session_id}")
 
-{% for role in roles %}
-{{ role.name|format_role_name }}_config = {
+{% for n in range(roles | length) %}
+{% if roles[n].is_admin %}
+admin_config = {
     "seed": randint(1, 1000),
     "temperature": 0,
     "request_timeout": 300,
     "retry_wait_time": 60,
     "config_list":[{
-        "api_key" : "{{role.key}}",
-        "api_type" : "{{role.platform}}",
-        "model" : "{{role.model}}"
+        "api_key" : "{{roles[n].key}}",
+        "api_type" : "{{roles[n].platform}}",
+        "model" : "{{roles[n].model}}"
         }]
 }
+{% else %}
+agent_{{n}}_config = {
+    "seed": randint(1, 1000),
+    "temperature": 0,
+    "request_timeout": 300,
+    "retry_wait_time": 60,
+    "config_list":[{
+        "api_key" : "{{roles[n].key}}",
+        "api_type" : "{{roles[n].platform}}",
+        "model" : "{{roles[n].model}}"
+        }]
+}
+{% endif %}
 {% endfor %}
 
-{% for role in roles %}
-{% if role.is_admin %}
+{% for n in range(roles | length) %}
+{% if roles[n].is_admin %}
 user_proxy = UserProxyAgent(
-    name="Admin",
-    llm_config={{ role.name|format_role_name }}_config,
-    system_message="""{{ role.system_message }}""",
-    human_input_mode="{{ role.human_input_mode | default(ALWAYS) }}",
-    code_execution_config={{ role.code_execution_config | default(False) }},
+    name="admin",
+    llm_config=admin_config,
+    system_message="""{{ roles[n].system_message }}""",
+    human_input_mode="{{ roles[n].human_input_mode | default(ALWAYS) }}",
+    code_execution_config={{ roles[n].code_execution_config | default(False) }},
     use_sockets=True,
     socket_client=socket,
     sid=session_id
 )
 {% else %}
-{{ role.name|format_role_name }} = {{ role.type }}(
-    name="{{ role.name|format_role_name }}",
-    llm_config={{ role.name|format_role_name }}_config,
-    system_message="""{{ role.system_message }}""",
-    human_input_mode="{{ role.human_input_mode | default(NEVER) }}",
-    code_execution_config={{ role.code_execution_config| default(False) }},
+agent_{{n}} = {{ roles[n].type }}(
+    name="{{ roles[n].name | format_role_name }}",
+    llm_config=agent_{{n}}_config,
+    system_message="""{{ roles[n].system_message }}""",
+    human_input_mode="{{ roles[n].human_input_mode | default(NEVER) }}",
+    code_execution_config={{ roles[n].code_execution_config| default(False) }},
     use_sockets=True,
     socket_client=socket,
     sid=session_id
@@ -51,6 +64,6 @@ user_proxy = UserProxyAgent(
 {% endfor %}
 
 {% if group_chat %}
-groupchat = GroupChat(agents=[user_proxy{% for role in roles %}{% if not role.is_admin %}, {{ role.name|format_role_name }}{% endif %}{% endfor %}], messages=[], max_round=50)
-manager = GroupChatManager( groupchat=groupchat, llm_config=admin_config, use_sockets=True, socket_client=socket, sid=session_id)
+groupchat = GroupChat(agents=[user_proxy,{% for n in range(roles | length -1) %}agent_{{n}},{% endfor %}], messages=[], max_round=50)
+manager = GroupChatManager( groupchat=groupchat, llm_config=agent_0, use_sockets=True, socket_client=socket, sid=session_id)
 {% endif %}

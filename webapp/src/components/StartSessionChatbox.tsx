@@ -42,7 +42,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 
 	return (<div className='flex flex-col mb-10'>
 
-		<div className='text-center my-2'>
+		<div className='text-center my-2 dark:text-white'>
 			To start a new session, describe a task in natural language:
 		</div>
 
@@ -54,17 +54,24 @@ export default function StartSessionChatbox({ groups = [] }) {
 				        <Select
 				            primaryColor={'indigo'}
 				            value={selectedGroup}
+				            classNames={{
+								menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+								menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+								list: 'dark:bg-slate-700',
+								listGroupLabel: 'dark:bg-slate-700',
+								listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+				            }}
 				            onChange={(e: any) => setSelectedGroup(e)}
 				            options={GroupDefaultOptions.concat(groupOptions)}
 				        />
-						<label className='bg-white dark:bg-gray-900 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label className='bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}
 									rows={Math.min(10, promptValue.split(/\r?\n/).length)}
 									name='prompt'
 									id='prompt'
-									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6'
+									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:text-white'
 									placeholder={'Describe a task...'}
 									defaultValue={''}
 									value={promptValue}

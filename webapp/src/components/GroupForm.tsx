@@ -57,13 +57,13 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
 				<div>
-					<h2 className='text-base font-semibold leading-7 text-gray-900'>Group Details</h2>
-					<p className='mt-1 text-sm leading-6 text-gray-600'>Choose the name and team members to use for this group.</p>
+					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Group Details</h2>
+					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name and team members to use for this group.</p>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
-						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Group Name
 						</label>
 						<div className='mt-2'>
@@ -73,18 +73,25 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 								name='name'
 								id='name'
 								defaultValue={name}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Group Admin
 						</label>
 						<div className='mt-2'>
 							<Select
 					            primaryColor={'indigo'}
+					            classNames={{
+									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+									list: 'dark:bg-slate-700',
+									listGroupLabel: 'dark:bg-slate-700',
+									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+					            }}
 					            value={adminAgentState}
 					            onChange={(v: any) => setAdminAgentState(v)}
 					            options={agentChoices.filter(a => a.type === 'UserProxyAgent').map(a => ({ label: a.name, value: a._id }))}
@@ -94,7 +101,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 					                        data.isSelected
 					                            ? 'bg-blue-100 text-blue-500'
-					                            : ''
+					                            : 'dark:text-white'
 					                    }`}
 					                >
 					                    {data.label}{` - ${optionAgent.systemMessage}`}
@@ -105,13 +112,20 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Group Members
 						</label>
 						<div className='mt-2'>
 							<Select
 								isMultiple
 					            primaryColor={'indigo'}
+					            classNames={{
+									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+									list: 'dark:bg-slate-700',
+									listGroupLabel: 'dark:bg-slate-700',
+									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+					            }}
 					            value={agentsState}
 					            onChange={(v: any) => setAgentsState(v)}
 					            options={agentChoices.filter(a => a._id !== adminAgentState?.value).map(a => ({ label: a.name, value: a._id }))}
@@ -121,7 +135,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 					                        data.isSelected
 					                            ? 'bg-blue-100 text-blue-500'
-					                            : ''
+					                            : 'dark:text-white'
 					                    }`}
 					                >
 					                    {data.label}{` - ${optionAgent.systemMessage}`}

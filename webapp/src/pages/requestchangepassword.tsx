@@ -47,10 +47,10 @@ export default function RequestChangePassword() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12'>
+					<div className='bg-white dark:bg-slate-800 px-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						<form className='space-y-6' onSubmit={requestChangePassword} action='/forms/requestchangepassword' method='POST'>
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Email Address
 								</label>
 								<div className='mt-2'>
@@ -60,7 +60,7 @@ export default function RequestChangePassword() {
 										type='text'
 										autoComplete='email'
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 								</div>
 							</div>

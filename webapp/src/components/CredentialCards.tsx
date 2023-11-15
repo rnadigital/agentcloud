@@ -55,15 +55,14 @@ export default function CredentialCards({ credentials, fetchCredentials }: { cre
 		/>
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
 			{credentials.map((credential) => (
-				<li key={credential._id} className='rounded-xl border border-gray-200 dark:border-gray-900'>
-					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-gray-900 bg-gray-50 p-6'>
+				<li key={credential._id} className='rounded-xl border border-gray-200 dark:border-gray-900 dark:border-slate-600 overflow-hidden'>
+					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-slate-800 bg-gray-50 p-6'>
 						{platformIcons[credential.platform] || <KeyIcon height='24' />}
-						<Link
-							href={`/${resourceSlug}/credential/${credential._id}`}
-							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'
+						<span
+							className='text-ellipsis overflow-hidden whitespace-nowrap'
 						>
 							{credential.name}
-						</Link>
+						</span>
 						{/*<img
 							src={'/images/favicon.ico'}
 							alt={session.name.charAt(0).toUpperCase()}
