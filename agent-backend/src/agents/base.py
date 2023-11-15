@@ -54,10 +54,6 @@ def task_execution(task: str, session_id: str):
             logging.warning(f"Could not find module: {module_name} in path!")
             logging.exception(mnf)
 
-        # else:
-        #     socket.emit("message", {"message": "Unable to fetch OPENAI key from Database!"})
-        #     return False
-
 
 def init_socket_generate_group(task: str, session_id: str):
     with log_exception():
