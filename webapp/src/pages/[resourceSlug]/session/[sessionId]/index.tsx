@@ -291,7 +291,7 @@ export default function Session(props) {
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}
-					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8'>
+					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
 						<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
@@ -299,7 +299,7 @@ export default function Session(props) {
 				</div>
 
 				<div className='flex flex-col mt-auto'>
-					<div className='flex flex-row justify-center border-t pt-3'>
+					<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
 						{/*chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}

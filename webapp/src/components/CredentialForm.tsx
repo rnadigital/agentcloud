@@ -48,13 +48,13 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 
 			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
 				<div>
-					<h2 className='text-base font-semibold leading-7 text-gray-900'>Credential</h2>
-					<p className='mt-1 text-sm leading-6 text-gray-600'>Add your credentials to authenticate agentcloud to various APIs.</p>
+					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Credential</h2>
+					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Add your credentials to authenticate agentcloud to various APIs.</p>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
-						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Name
 						</label>
 						<div className='mt-2'>
@@ -63,13 +63,13 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 								type='text'
 								name='name'
 								id='name'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='platform' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='platform' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Platform
 						</label>
 						<div className='mt-2'>
@@ -77,7 +77,7 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 								required
 								id='platform'
 								name='platform'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							>
 								<option disabled value=''>Select a platform...</option>
 								<option value='open_ai'>OpenAI</option>
@@ -87,7 +87,7 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='key' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label htmlFor='key' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Key
 						</label>
 						<div className='mt-2'>
@@ -96,7 +96,7 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 								type='password'
 								name='key'
 								id='key'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
 					</div>

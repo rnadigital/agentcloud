@@ -54,7 +54,7 @@ export default function Login() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 pb-6 py-12 shadow sm:rounded-lg sm:px-12'>
+					<div className='bg-white dark:bg-slate-800 px-6 pb-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						<form className='space-y-6' onSubmit={login} action='/forms/login' method='POST'>
 
 							{verifysuccess && <SuccessAlert message='Email verified, you may now sign in.' />}
@@ -63,7 +63,7 @@ export default function Login() {
 							{noverify && <InfoAlert message='Email verification skipped because you are missing secret manager credentials.' />}
 
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Email Address
 								</label>
 								<div className='mt-2'>
@@ -73,13 +73,13 @@ export default function Login() {
 										type='text'
 										autoComplete='email'
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 								</div>
 							</div>
 
 							<div>
-								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Password
 								</label>
 								<div className='relative mt-2'>
@@ -88,7 +88,7 @@ export default function Login() {
 										name='password'
 										type={showPassword ? 'text' : 'password'}
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 									<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3'>
 										{showPassword
@@ -117,7 +117,7 @@ export default function Login() {
 
 							<div className='flex items-center justify-center'>
 								<div className='flex items-center'>
-									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900'>
+									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900 dark:text-slate-400'>
                    						By signing in, you agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
 									</label>
 								</div>

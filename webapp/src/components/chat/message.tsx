@@ -209,7 +209,7 @@ export function Message({
 		</span>
 	</div>;
 
-	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white' : 'bg-gray-50'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 			<strong className='capitalize pe-1'>{authorName.replaceAll('_', ' ')}</strong>
@@ -219,7 +219,7 @@ export function Message({
 
 	return <>
 		{authorNameSection}
-		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
