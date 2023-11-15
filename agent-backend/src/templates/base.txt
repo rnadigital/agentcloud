@@ -65,5 +65,5 @@ agent_{{n}} = {{ roles[n].type }}(
 
 {% if group_chat %}
 groupchat = GroupChat(agents=[user_proxy,{% for n in range(roles | length -1) %}agent_{{n}},{% endfor %}], messages=[], max_round=50)
-manager = GroupChatManager( groupchat=groupchat, llm_config=agent_0, use_sockets=True, socket_client=socket, sid=session_id)
+manager = GroupChatManager( groupchat=groupchat, llm_config=agent_0_config, use_sockets=True, socket_client=socket, sid=session_id)
 {% endif %}
