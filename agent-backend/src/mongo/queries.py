@@ -77,7 +77,7 @@ class MongoClientConnection(MongoConnection):
             groups_collection = self._get_groups_collection
             group_query_results = groups_collection.find_one({"_id": group_id})
             if group_query_results is None:
-                raise Exception(f"group not found from session groupId {session_group_id}")
+                raise Exception(f"group not found from session groupId {group_id}")
             agents = group_query_results.get("agents")
             admin_agent = group_query_results.get("adminAgent")
             agents.append(admin_agent)

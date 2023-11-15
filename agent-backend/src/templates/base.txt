@@ -11,7 +11,7 @@ socket.connect(url=SOCKET_URL)
 socket.emit("join_room", f"_{session_id}")
 
 {% for role in roles %}
-{{ role.name|format_role_name }}_config = {
+{{ role.name }}_config = {
     "seed": randint(1, 1000),
     "temperature": 0,
     "request_timeout": 300,
@@ -24,25 +24,25 @@ socket.emit("join_room", f"_{session_id}")
 }
 {% endfor %}
 
-{% for role in roles %}
-{% if role.is_admin %}
+{% for n in range(roles | length) %}
+{% if roles[n].is_user_proxy %}
 user_proxy = UserProxyAgent(
-    name="Admin",
-    llm_config={{ role.name|format_role_name }}_config,
-    system_message="""{{ role.system_message }}""",
-    human_input_mode="{{ role.human_input_mode | default(ALWAYS) }}",
-    code_execution_config={{ role.code_execution_config | default(False) }},
+    name="admin",
+    llm_config=admin_config,
+    system_message="""{{ roles[n].system_message }}""",
+    human_input_mode="{{ roles[n].human_input_mode | default(ALWAYS) }}",
+    code_execution_config={{ roles[n].code_execution_config | default(False) }},
     use_sockets=True,
     socket_client=socket,
     sid=session_id
 )
 {% else %}
-{{ role.name|format_role_name }} = {{ role.type }}(
-    name="{{ role.name|format_role_name }}",
-    llm_config={{ role.name|format_role_name }}_config,
-    system_message="""{{ role.system_message }}""",
-    human_input_mode="{{ role.human_input_mode | default(NEVER) }}",
-    code_execution_config={{ role.code_execution_config| default(False) }},
+agent_{{n}} = {{ roles[n].type }}(
+    name="{{ roles[n].name | format }}",
+    llm_config={{ roles[n].name}}_config,
+    system_message="""{{ roles[n].system_message }}""",
+    human_input_mode="{{ roles[n].human_input_mode | default(NEVER) }}",
+    code_execution_config={{ roles[n].code_execution_config| default(False) }},
     use_sockets=True,
     socket_client=socket,
     sid=session_id
@@ -51,6 +51,6 @@ user_proxy = UserProxyAgent(
 {% endfor %}
 
 {% if group_chat %}
-groupchat = GroupChat(agents=[user_proxy{% for role in roles %}{% if not role.is_admin %}, {{ role.name|format_role_name }}{% endif %}{% endfor %}], messages=[], max_round=50)
-manager = GroupChatManager( groupchat=groupchat, llm_config=admin_config, use_sockets=True, socket_client=socket, sid=session_id)
+groupchat = GroupChat(agents=[{% for n in range(roles | length) %}agent_{{n}},{% endfor %}], messages=[], max_round=50)
+manager = GroupChatManager( groupchat=groupchat, llm_config=agent_1, use_sockets=True, socket_client=socket, sid=session_id)
 {% endif %}
