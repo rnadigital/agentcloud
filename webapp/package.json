@@ -10,7 +10,7 @@
     "build:server": "tsc --project tsconfig.server.json",
     "build:doc": "apidoc -i src/controllers -o doc",
     "build": "npm run build:next && npm run build:server",
-    "start": "NODE_ENV=production node dist/server.js",
+    "start": "NODE_ENV=production node dist/src/server.js",
     "lint:nextjs": "next lint",
     "lint:all": "eslint ./"
   },

@@ -13,10 +13,27 @@ export function VersionCollection() {
 	return db.db().collection('version');
 }
 
+export function setVersion(ver: string) {
+	return VersionCollection().replaceOne({
+		'_id': 'version',
+	}, {
+		'_id': 'version',
+		'version': ver,
+	}, {
+		upsert: true,
+	});
+}
+
 export async function migrate() {
 	let currentVersion = await VersionCollection().findOne({
 		'_id': 'version'
-	}).then(res => res ? res.version : '0.0.0'); // 0.0.0 for pre-versioned, will always be less in a semver.lt
+	}).then(res => res ? res.version : null);
+	if (!currentVersion) {
+		//set latest version if version doesn't exist i.e new install
+		log(`New database, setting latest version: ${migrationVersion}`);
+		await setVersion(migrationVersion);
+		return;
+	}
 	if (semver.lt(currentVersion, migrationVersion)) {
 		log(`Current version: ${currentVersion}`);
 		const neededMigrations = migrationVersions
@@ -28,14 +45,7 @@ export async function migrate() {
 			try {
 				const migrationModule = await import(`../migrations/${ver}`);
 				await migrationModule.default(db.db());
-				await VersionCollection().replaceOne({
-					'_id': 'version'
-				}, {
-					'_id': 'version',
-					'version': ver
-				}, {
-					upsert: true
-				});
+				await setVersion(ver);
 			} catch (e) {
 				console.error(e);
 				console.warn(`Migration to ${ver} encountered an error`);
