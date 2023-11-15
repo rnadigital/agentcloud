@@ -194,7 +194,7 @@ export function Message({
 	const relativeDateString = relativeString(new Date(), messageDate);
 
 	if (displayMessage) {
-		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
 				<ChatBubbleLeftIcon width={14} className='mx-1' /> {displayMessage}
@@ -209,7 +209,7 @@ export function Message({
 		</span>
 	</div>;
 
-	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t' : ''} ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t dark:border-slate-600' : ''} ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 		<div className='invisible xl:visible col-span-1'></div>
 		<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 			<strong className='capitalize pe-1'>{authorName.replaceAll('_', ' ')}</strong>
@@ -219,14 +219,14 @@ export function Message({
 
 	return <>
 		{authorNameSection}
-		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50' : ''}`}>
+		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200' : ''}`}>
+				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
-						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500'}`}>
+						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500 dark:text-white'}`}>
 							{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
 							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 						</small>
@@ -237,7 +237,7 @@ export function Message({
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
 
-		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white' : 'bg-gray-50'} bg-yellow-50`}>
+		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
