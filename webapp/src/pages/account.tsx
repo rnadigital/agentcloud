@@ -17,7 +17,16 @@ export default function Account(props) {
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
-		API.getPaymentLink(null, setError, router);
+		API.getPaymentLink({
+			_csrf: e.target._csrf.value,
+		}, null, setError, router);
+	}
+
+	async function getPortalLink(e) {
+		e.preventDefault();
+		API.getPortalLink({
+			_csrf: e.target._csrf.value,
+		}, null, setError, router);
 	}
 
 	useEffect(() => {
@@ -61,6 +70,19 @@ export default function Account(props) {
 				</div>
 			</form>
 
+			{true && <form onSubmit={getPortalLink}>
+				<input type='hidden' name='_csrf' value={csrf} />
+				<div className='mb-2 flex items-center justify-start gap-x-6'>
+					<button
+						type='submit'
+						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
+						Cancel subscription
+					</button>
+				</div>
+			</form>}
+
+			{/* TODO: change logic for showing yes/no */}
 			<p>Subscribed: {checkoutSession ? `Yes (${checkoutSession._id})` : 'No'}</p>
 
 		</>
