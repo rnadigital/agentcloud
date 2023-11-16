@@ -20,9 +20,6 @@ export default function Session(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	if (!account) {
-		return null;
-	}
 
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
