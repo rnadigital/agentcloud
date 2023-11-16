@@ -204,6 +204,7 @@ export function initSocket(rawHttpServer) {
 			}
 
 			if (data.room === 'task_queue') {
+				//TODO: remove
 				taskQueue.add(data.event, finalMessage);
 			} else {
 				io.to(data.room).emit(data.event, finalMessage);

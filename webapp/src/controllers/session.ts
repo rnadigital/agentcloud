@@ -3,8 +3,9 @@
 import { getGroupsByTeam, getGroupById } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
-import { getChatMessagesBySession } from '../db/chat';
+import { getChatMessagesBySession, addChatMessage } from '../db/chat';
 import { dynamicResponse } from '../util';
+import { taskQueue } from '../lib/queue/bull';
 
 export async function sessionsData(req, res, _next) {
 	const groups = await getGroupsByTeam(res.locals.account.currentTeam); //TODO: change data fetched here to list of groups
@@ -99,6 +100,7 @@ export async function addSessionApi(req, res, next) {
 	const { type, prompt }  = req.body;
 
 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	let groupId = null;
@@ -121,6 +123,39 @@ export async function addSessionApi(req, res, next) {
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		groupId,
+	});
+
+	const now = Date.now();
+	const message = {
+		room: addedSession.insertedId.toString(),
+		authorName: res.locals.account.name,
+		incoming: true,
+		message: {
+			type: 'text',
+			text: prompt,
+		},
+		event: 'message',
+		ts: now
+	};
+	await addChatMessage({
+		orgId: res.locals.account.currentOrg,
+		teamId: res.locals.account.currentTeam,
+		sessionId: addedSession.insertedId,
+		message,
+		type: SessionType.TASK,
+		authorId: null,
+		authorName: res.locals.account.name,
+		ts: now,
+		isFeedback: false,
+		chunkId: null,
+		tokens: 0,
+		displayMessage: null,
+		chunks: [ { ts: now, chunk: 'test chat', tokens: undefined } ]
+	});
+
+	taskQueue.add(SessionType.TASK, {
+		task: prompt,
+		sessionId: addedSession.insertedId.toString(),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/session/${addedSession.insertedId}` });

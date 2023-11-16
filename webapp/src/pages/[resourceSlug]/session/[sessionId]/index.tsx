@@ -20,6 +20,9 @@ export default function Session(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
+	if (!account) {
+		return null;
+	}
 
 	const router = useRouter();	
 	const [state, dispatch] = useState(props);
@@ -131,28 +134,7 @@ export default function Session(props) {
 			}
 		});
 	}
-	function handleJoinedRoom() {
-		console.log('messages.length', messages.length);
-		if (messages.length === 0) {
-			console.log('sending initial incoming message and task_queue. messages:', messages, 'messages.length', messages.length);
-			socketContext.emit('message', {
-				room: sessionId,
-				authorName: account.name,
-				incoming: true,
-				message: {
-					type: 'text',
-					text: session.prompt,
-				}
-			});
-			socketContext.emit('message', {
-				room: 'task_queue',
-				event: session.type,
-				message: {
-					task: session.prompt,
-					sessionId,
-				},
-			});
-		}
+	function handleSocketJoined() {
 		scrollToBottom();
 	}
 	function handleSocketStart() {
@@ -162,17 +144,17 @@ export default function Session(props) {
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
 		socketContext.on('type', handleSocketType);
-		socketContext.on('joined', handleJoinedRoom);
+		socketContext.on('joined', handleSocketJoined);
 		joinSessionRoom();
 	}
 	function handleSocketStop() {
 		socketContext.off('connect', joinSessionRoom);
 		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('terminate', handleTerminateMessage);
-		socketContext.off('joined', handleJoinedRoom);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
 		socketContext.off('type', handleSocketType);
+		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
 	useEffect(() => {
@@ -219,15 +201,18 @@ export default function Session(props) {
 	}, []);
 	useEffect(() => {
 		if (ready) {
+			console.log('useEffect ready check handleSocketStart()');
 			handleSocketStart();
 		}
 		return () => {
 			//stop/disconnect on unmount
+			console.log('useEffect ready check handleSocketStop()');
 			handleSocketStop();
 		};
 	}, [ready]);
 	useEffect(() => {
-		if (messages) {
+		if (messages && messages.length > 0 && ready === false) {
+			console.log('useEffect messages check setReady(true)');
 			setReady(true);
 		}
 	}, [messages]);
