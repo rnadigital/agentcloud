@@ -8,13 +8,23 @@ from build.template import Org
 from init.mongo_session import start_mongo_session
 from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
+from socketio.exceptions import DisconnectedError
 from autogen import GroupChat
 import json
+import os
 
 mongo_client = start_mongo_session()
 
-with open(f"{BASE_PATH}/config/base.json", 'r') as f:
-    file = json.loads(f.read())
+
+def session_cleanup(session_id) -> bool:
+    try:
+        os.remove(f"{BASE_PATH}/orgs/{session_id}.py")
+        return True
+    except ModuleNotFoundError as mnf:
+        logging.warning("The module you are trying to delete can not be found")
+        logging.exception(mnf)
+    except Exception as e:
+        logging.exception(e)
 
 
 def _append_group_members_to_agent_system_message(_groupchat: GroupChat, agent_name: str):
@@ -29,13 +39,12 @@ def _append_group_members_to_agent_system_message(_groupchat: GroupChat, agent_n
 
 
 def task_execution(task: str, session_id: str):
-    with log_exception():
+    try:
         socket = SimpleClient()
         socket.connect(url=SOCKET_URL)
         socket.emit("join_room", f"_{session_id}")
         # Load team structure from DB
         group = mongo_client.get_group(session_id)
-        # if create_config_file_with_key_from_mongo(session_id, "gpt-4-32k"):
         try:
             # Use group structure to create AutGen team
             org = Org(session_id, group)
@@ -50,13 +59,18 @@ def task_execution(task: str, session_id: str):
                     clear_history=True,
                     message=task,
                 )
+                session_cleanup(session_id)
         except ModuleNotFoundError as mnf:
             logging.warning(f"Could not find module: {module_name} in path!")
             logging.exception(mnf)
-
-        # else:
-        #     socket.emit("message", {"message": "Unable to fetch OPENAI key from Database!"})
-        #     return False
+            session_cleanup(session_id)
+    except DisconnectedError as de:
+        session_cleanup(session_id)
+        logging.warning("The socket connection was disconnected")
+        logging.exception(de)
+    except Exception as e:
+        session_cleanup(session_id)
+        logging.exception(e)
 
 
 def init_socket_generate_group(task: str, session_id: str):
@@ -64,11 +78,15 @@ def init_socket_generate_group(task: str, session_id: str):
         socket = SimpleClient()
         socket.connect(url=SOCKET_URL)
         socket.emit("join_room", f"_{session_id}")
-        team_task = [f"""Given the following task, create the ideal team that will be best suited to complete the task:
 
+        with open(f"{BASE_PATH}/config/base.json", 'r') as f:
+            group_generation = json.loads(f.read())
+
+        team_task = [f"""Given the following task, create the ideal team that will be best suited to complete the task:
+    
 "{task}" 
 
-Return the team in the below JSON structure:""", json.dumps(file, indent=2),
+Return the team in the below JSON structure:""", json.dumps(group_generation, indent=2),
                      "There are no hard limits on the number or the combination of team members."]
 
         config_list = autogen.config_list_from_json(
