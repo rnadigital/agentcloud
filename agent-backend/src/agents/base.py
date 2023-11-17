@@ -8,6 +8,7 @@ from build.template import Org
 from init.mongo_session import start_mongo_session
 from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
+from socketio.exceptions import DisconnectedError
 from autogen import GroupChat
 import json
 import os
@@ -63,9 +64,13 @@ def task_execution(task: str, session_id: str):
             logging.warning(f"Could not find module: {module_name} in path!")
             logging.exception(mnf)
             session_cleanup(session_id)
-    except Exception as e:
-        logging.exception(e)
+    except DisconnectedError as de:
         session_cleanup(session_id)
+        logging.warning("The socket connection was disconnected")
+        logging.exception(de)
+    except Exception as e:
+        session_cleanup(session_id)
+        logging.exception(e)
 
 
 def init_socket_generate_group(task: str, session_id: str):

@@ -1,5 +1,6 @@
 import logging
-from jinja2 import FileSystemLoader, Environment, exceptions
+from jinja2 import FileSystemLoader, exceptions
+from jinja2.sandbox import SandboxedEnvironment, SecurityError
 from init.env_variables import BASE_PATH
 
 
@@ -19,13 +20,15 @@ class Org:
                              .replace("#", ""))
                 return name.lower()
 
-            env = Environment(loader=FileSystemLoader(f"{BASE_PATH}/templates/"))
+            env = SandboxedEnvironment(loader=FileSystemLoader(f"{BASE_PATH}/templates/"))
             env.filters['format_role_name'] = format_role_name
             template = env.get_template("base.txt")
             return template
         except exceptions.TemplateNotFound as tnf:
             logging.exception(tnf)
-            raise
+        except SecurityError as se:
+            logging.warning("This template contains unsafe code")
+            logging.exception(se)
 
     @property
     def _build_units(self):
