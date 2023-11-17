@@ -131,28 +131,7 @@ export default function Session(props) {
 			}
 		});
 	}
-	function handleJoinedRoom() {
-		console.log('messages.length', messages.length);
-		if (messages.length === 0) {
-			console.log('sending initial incoming message and task_queue. messages:', messages, 'messages.length', messages.length);
-			socketContext.emit('message', {
-				room: sessionId,
-				authorName: account.name,
-				incoming: true,
-				message: {
-					type: 'text',
-					text: session.prompt,
-				}
-			});
-			socketContext.emit('message', {
-				room: 'task_queue',
-				event: session.type,
-				message: {
-					task: session.prompt,
-					sessionId,
-				},
-			});
-		}
+	function handleSocketJoined() {
 		scrollToBottom();
 	}
 	function handleSocketStart() {
@@ -162,17 +141,17 @@ export default function Session(props) {
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
 		socketContext.on('type', handleSocketType);
-		socketContext.on('joined', handleJoinedRoom);
+		socketContext.on('joined', handleSocketJoined);
 		joinSessionRoom();
 	}
 	function handleSocketStop() {
 		socketContext.off('connect', joinSessionRoom);
 		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('terminate', handleTerminateMessage);
-		socketContext.off('joined', handleJoinedRoom);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
 		socketContext.off('type', handleSocketType);
+		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
 	useEffect(() => {
@@ -219,15 +198,18 @@ export default function Session(props) {
 	}, []);
 	useEffect(() => {
 		if (ready) {
+			console.log('useEffect ready check handleSocketStart()');
 			handleSocketStart();
 		}
 		return () => {
 			//stop/disconnect on unmount
+			console.log('useEffect ready check handleSocketStop()');
 			handleSocketStop();
 		};
 	}, [ready]);
 	useEffect(() => {
-		if (messages) {
+		if (messages && messages.length > 0 && ready === false) {
+			console.log('useEffect messages check setReady(true)');
 			setReady(true);
 		}
 	}, [messages]);
@@ -300,16 +282,16 @@ export default function Session(props) {
 
 				<div className='flex flex-col mt-auto'>
 					<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
-						{/*chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
+						{chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}
 								type='submit'
 								className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 							>
 								<StopIcon className={'w-5 me-1'} />
-								<span>Stop generating</span>
+								<span>Cancel</span>
 							</button>
-						</div>*/}
+						</div>}
 					</div>
 					<div className='flex flex-row justify-center pb-3'>
 						<div className='flex items-start space-x-4 basis-1/2'>

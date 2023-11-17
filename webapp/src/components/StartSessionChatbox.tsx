@@ -9,9 +9,10 @@ import {
 	PlusIcon,
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
+import { toast } from 'react-toastify';
 
 const GroupDefaultOptions = [
-	{ label: 'Auto-generate group', value: 'auto' },
+	// { label: 'Auto-generate group', value: 'auto' },
 ];
 
 export default function StartSessionChatbox({ groups = [] }) {
@@ -23,10 +24,13 @@ export default function StartSessionChatbox({ groups = [] }) {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
-	const [selectedGroup, setSelectedGroup] = useState(GroupDefaultOptions[0]);
+	const [selectedGroup, setSelectedGroup] = useState(null);
 
 	async function addSession(e) {
 		e.preventDefault();
+		if (!selectedGroup?.value) {
+			return toast.error('Please select a group');
+		} 
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,

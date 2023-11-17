@@ -30,6 +30,16 @@ export function getGroupsByTeam(teamId: db.IdOrStr): Promise<Group[]> {
 	}).toArray();
 }
 
+export function getGroupsWithAgent(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Group[]> {
+	return GroupCollection().find({
+		teamId: toObjectId(teamId),
+		$or: [
+			{ agents: toObjectId(agentId) },
+			{ adminAgent: toObjectId(agentId) },
+		],
+	}).toArray();
+}
+
 export async function addGroup(group: Group): Promise<db.InsertResult> {
 	return GroupCollection().insertOne(group);
 }
