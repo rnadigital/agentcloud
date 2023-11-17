@@ -24,9 +24,7 @@ export default function Agents(props) {
 	}
 
 	useEffect(() => {
-		if (!props.agents) {
-			fetchAgents();
-		}
+		fetchAgents();
 	}, []);
 	
 	if (agents == null) {

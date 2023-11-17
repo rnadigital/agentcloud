@@ -1,7 +1,8 @@
 'use strict';
 
 import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
-import { addCheckoutSession, unsafeGetCheckoutSessionById } from '../db/checkoutsession';
+import { addPortalLink, unsafeGetPortalLinkById } from '../db/portallink';
+import { addCheckoutSession, unsafeGetCheckoutSessionById, getCheckoutSessionByAccountId } from '../db/checkoutsession';
 import toObjectId from '../lib/misc/toobjectid';
 import { dynamicResponse } from '../util';
 import Stripe from 'stripe';
@@ -60,6 +61,40 @@ export async function webhookHandler(req, res, next) {
 
 	// Return a 200 response to acknowledge receipt of the event
 	res.status(200).send();
+
+}
+
+export async function createPortalLink(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	const checkoutSession = await getCheckoutSessionByAccountId(res.locals.account._id);
+	if (!checkoutSession || !checkoutSession?.payload?.customer) {
+		return dynamicResponse(req, res, 400, { error: 'No subscription' });
+	}
+
+	const portalLink = await stripe.billingPortal.sessions.create({
+		customer: checkoutSession?.payload?.customer,
+		return_url: 'https://example.com/account/overview',
+		flow_data: {
+			type: 'subscription_cancel',
+			subscription_cancel: {
+				subscription: checkoutSession?.payload?.subscription,
+			},
+		},
+	});
+
+	await addPortalLink({
+		accountId: toObjectId(res.locals.account._id),
+		portalLinkId: portalLink.id,
+		url: portalLink.url,
+		payload: portalLink,
+		createdDate: new Date(),
+	});
+
+	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 
 }
 

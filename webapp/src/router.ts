@@ -41,7 +41,8 @@ export default function router(server, app) {
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
 	server.get('/socket', authedMiddlewareChain, accountController.socketTestPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
-	server.post('/stripe-paymentlink', unauthedMiddlewareChain, stripeController.createPaymentLink);
+	server.post('/stripe-paymentlink', authedMiddlewareChain, stripeController.createPaymentLink);
+	server.post('/stripe-portallink', authedMiddlewareChain, stripeController.createPortalLink);
 
 	const accountFormRouter = Router({ caseSensitive: true });
 	accountFormRouter.post('/login', unauthedMiddlewareChain, accountController.login);

@@ -35,7 +35,7 @@ export default function OrgSelector({ orgs }) {
 	return (<>
 		<Menu as='div' className='relative inline-block text-left w-full'>
 			<div>
-				<Menu.Button className='bg-slate-800 text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
+				<Menu.Button className='text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
           			<span>{teamName}</span>
 					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400 bs-auto' aria-hidden='true' />
 				</Menu.Button>
