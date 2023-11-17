@@ -151,7 +151,7 @@ export async function addSessionApi(req, res, next) {
 		chunkId: null,
 		tokens: 0,
 		displayMessage: null,
-		chunks: [ { ts: now, chunk: 'test chat', tokens: undefined } ]
+		chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
 	});
 
 	taskQueue.add(SessionType.TASK, {
