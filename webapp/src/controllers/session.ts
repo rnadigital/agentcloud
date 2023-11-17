@@ -6,6 +6,7 @@ import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
 import { dynamicResponse } from '../util';
 import { taskQueue } from '../lib/queue/bull';
+import { client } from '../lib/redis/redis';
 
 export async function sessionsData(req, res, _next) {
 	const groups = await getGroupsByTeam(res.locals.account.currentTeam); //TODO: change data fetched here to list of groups
@@ -178,6 +179,7 @@ export async function deleteSessionApi(req, res, next) {
 	}
 
 	await deleteSessionById(res.locals.account.currentTeam, sessionId);
+	client.set(`${sessionId}_stop`, '1');
 
 	return dynamicResponse(req, res, 200, { /*redirect: `/${res.locals.account.currentTeam}/sessions`*/ });
 
