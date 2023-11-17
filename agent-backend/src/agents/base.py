@@ -64,6 +64,9 @@ def task_execution(task: str, session_id: str):
             logging.warning(f"Could not find module: {module_name} in path!")
             logging.exception(mnf)
             session_cleanup(session_id)
+        except Exception as e:
+            logging.exception(e)
+            session_cleanup(session_id)
     except DisconnectedError as de:
         session_cleanup(session_id)
         logging.warning("The socket connection was disconnected")
