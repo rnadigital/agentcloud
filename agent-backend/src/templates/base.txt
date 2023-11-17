@@ -16,6 +16,7 @@ admin_config = {
     "temperature": 0,
     "request_timeout": 300,
     "retry_wait_time": 60,
+    "stream": True,
     "config_list":[{
         "api_key" : "{{roles[n].key}}",
         "api_type" : "{{roles[n].platform}}",
@@ -28,6 +29,7 @@ agent_{{n}}_config = {
     "temperature": 0,
     "request_timeout": 300,
     "retry_wait_time": 60,
+    "stream": True,
     "config_list":[{
         "api_key" : "{{roles[n].key}}",
         "api_type" : "{{roles[n].platform}}",

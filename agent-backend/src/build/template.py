@@ -1,6 +1,6 @@
 import logging
 from jinja2 import FileSystemLoader, exceptions
-from jinja2.sandbox import SandboxedEnvironment, SecurityError
+from jinja2.sandbox import SecurityError, Environment
 from init.env_variables import BASE_PATH
 
 
@@ -20,7 +20,7 @@ class Org:
                              .replace("#", ""))
                 return name.lower()
 
-            env = SandboxedEnvironment(loader=FileSystemLoader(f"{BASE_PATH}/templates/"))
+            env = Environment(loader=FileSystemLoader(f"{BASE_PATH}/templates/"))
             env.filters['format_role_name'] = format_role_name
             template = env.get_template("base.txt")
             return template
