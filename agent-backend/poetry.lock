@@ -88,8 +88,8 @@ wikipedia = "^1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
-reference = "ago-fork"
-resolved_reference = "b51a088b2f023a9784ff8024e0c15b50c197b0da"
+reference = "v0.2.1"
+resolved_reference = "309f55e877a7de25363a027d462476b92eef8e4b"
 
 [[package]]
 name = "beautifulsoup4"
@@ -1771,4 +1771,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "d793b32fac7d1fe36401260df4d44787055f31b99950a4f2d1c9436e19902fee"
+content-hash = "b5f9255b8ef3937dd11bd8588b054f458a05603897bdd6f628813154537ebfe5"
