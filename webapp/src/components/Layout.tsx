@@ -99,7 +99,7 @@ export default withRouter(function Layout(props) {
 				<link rel='shortcut icon' href='/images/favicon.ico' />
 			</Head>
 
-			<div className='flex flex-col flex-1'>
+			<div className='flex flex-col flex-1 bg-white dark:bg-slate-900'>
 				<Transition.Root show={sidebarOpen} as={Fragment}>
 					<Dialog
 						as='div'
@@ -282,7 +282,7 @@ export default withRouter(function Layout(props) {
 				{/* Static sidebar for desktop */}
 				{showNavs && <div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
 					{/* Sidebar component, swap this element with another sidebar if you like */}
-					<div className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4'>
+					<div className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'>
 						<div className='flex h-16 shrink-0 items-center'>
 							<img
 								src='/images/favicon.ico'
@@ -405,7 +405,7 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					{showNavs && <div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
+					{showNavs && <div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
 						<button
 							type='button'
 							className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
@@ -446,7 +446,7 @@ export default withRouter(function Layout(props) {
 							</form>*/}
 							<div className='flex flex-1 justify-end items-center'>
 								{chatContext?.status && chatContext?.type && <span
-									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200'
+									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
 									onClick={chatContext.scrollToBottom}
 								>
 									<svg className={`h-1.5 w-1.5 ${SessionStatus[chatContext.status]}`} viewBox='0 0 6 6' aria-hidden='true'>
@@ -484,13 +484,13 @@ export default withRouter(function Layout(props) {
 										<Blockies className='rounded-full' seed={account.name} />
 										<span className='hidden lg:flex lg:items-center ps-2'>
 											<span
-												className='text-sm font-semibold leading-6 text-gray-900'
+												className='text-sm font-semibold leading-6 text-gray-900 dark:text-white'
 												aria-hidden='true'
 											>
 												{account.name}
 											</span>
 											<ChevronDownIcon
-												className='ml-2 h-5 w-5 text-gray-400'
+												className='ml-2 h-5 w-5 text-gray-400 dark:text-white'
 												aria-hidden='true'
 											/>
 										</span>
@@ -504,7 +504,7 @@ export default withRouter(function Layout(props) {
 										leaveFrom='transform opacity-100 scale-100'
 										leaveTo='transform opacity-0 scale-95'
 									>
-										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-gray-900 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
 											{account && <div className='px-4 py-3'>
 												<p className='text-sm'>Signed in as</p>
 												<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>{account.email}</p>
@@ -517,8 +517,8 @@ export default withRouter(function Layout(props) {
 																<input type='hidden' name='_csrf' value={csrf} />
 																<button
 																	className={classNames(
-																		active ? 'bg-gray-50' : '',
-																		'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900',
+																		active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																		'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white',
 																	)}
 																	type='submit'>
 																	Log out
@@ -528,8 +528,8 @@ export default withRouter(function Layout(props) {
 														return <a
 															href={item.href}
 															className={classNames(
-																active ? 'bg-gray-50' : '',
-																'block px-3 py-1 text-sm leading-6 text-gray-900',
+																active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white',
 															)}
 														>
 															{item.name}
@@ -590,7 +590,7 @@ export default withRouter(function Layout(props) {
 				</div>
 			</div>
 
-			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs`}>
+			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
 				<div className='py-3'>© 2023 RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
 			</footer>
 		</>

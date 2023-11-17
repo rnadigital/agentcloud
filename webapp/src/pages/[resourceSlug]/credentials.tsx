@@ -37,8 +37,8 @@ export default function Credentials(props) {
 			<title>Credentials - {teamName}</title>
 		</Head>
 
-		{credentials.length > 0 && <div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Credentials</h3>
+		{credentials.length > 0 && <div className='border-b pb-2 my-2 dark:border-slate-600'>
+			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Credentials</h3>
 		</div>}
 
 		<CredentialCards credentials={credentials} fetchCredentials={fetchCredentials} />

@@ -35,7 +35,7 @@ export default function OrgSelector({ orgs }) {
 	return (<>
 		<Menu as='div' className='relative inline-block text-left w-full'>
 			<div>
-				<Menu.Button className='bg-black bg-opacity-20 text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
+				<Menu.Button className='text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
           			<span>{teamName}</span>
 					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400 bs-auto' aria-hidden='true' />
 				</Menu.Button>
@@ -50,7 +50,7 @@ export default function OrgSelector({ orgs }) {
 				leaveFrom='transform opacity-100 scale-100'
 				leaveTo='transform opacity-0 scale-95'
 			>
-				<Menu.Items className='absolute left-0 z-10 mt-2 w-56 origin-top-left divide-y divide-gray-700 rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
+				<Menu.Items className='absolute left-0 z-10 mt-2 w-56 origin-top-left divide-y divide-gray-700 rounded-md bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
 					{/*<div className='py-1'>
 						
 					</div>*/}
@@ -77,8 +77,8 @@ export default function OrgSelector({ orgs }) {
 											onClick={() => switchTeam(org.id, team.id)}
 											href='#'
 											className={classNames(
-												active ? 'bg-gray-100' : 'text-gray-100',
-												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700'
+												active ? '' : 'text-gray-100',
+												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700'
 											)}
 										>
 											{team.name}

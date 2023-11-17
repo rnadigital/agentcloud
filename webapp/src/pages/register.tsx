@@ -52,10 +52,10 @@ export default function Register() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12'>
+					<div className='bg-white dark:bg-slate-800 px-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						<form className='space-y-6' onSubmit={register} action='/forms/register' method='POST'>
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Name
 								</label>
 								<div className='mt-2'>
@@ -64,13 +64,13 @@ export default function Register() {
 										name='name'
 										type='text'
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 								</div>
 							</div>
 
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Email Address
 								</label>
 								<div className='mt-2'>
@@ -80,13 +80,13 @@ export default function Register() {
 										type='text'
 										autoComplete='email'
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 								</div>
 							</div>
 
 							<div>
-								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900'>
+								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Password
 								</label>
 								<div className='relative mt-2'>
@@ -95,7 +95,7 @@ export default function Register() {
 										name='password'
 										type={showPassword ? 'text' : 'password'}
 										required
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									/>
 									<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3'>
 										{showPassword
@@ -111,9 +111,9 @@ export default function Register() {
 										id='tos'
 										name='tos'
 										type='checkbox'
-										className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600'
+										className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
 									/>
-									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900'>
+									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900 dark:text-slate-400'>
                    						I agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
 									</label>
 								</div>

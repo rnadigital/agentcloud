@@ -24,9 +24,7 @@ export default function Agents(props) {
 	}
 
 	useEffect(() => {
-		if (!props.agents) {
-			fetchAgents();
-		}
+		fetchAgents();
 	}, []);
 	
 	if (agents == null) {
@@ -39,8 +37,8 @@ export default function Agents(props) {
 			<title>Agents - {teamName}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2 mb-6'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Agents</h3>
+		<div className='border-b pb-2 my-2 mb-6 dark:border-slate-600'>
+			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Agents</h3>
 		</div>
 
 		{agents.length === 0 && <NewButtonSection

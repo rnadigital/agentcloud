@@ -26,8 +26,11 @@ export function switchTeam(body, dispatch, errorCallback, router) {
 export function setAccountToken(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/token', 'POST', body, dispatch, errorCallback, router);
 }
-export function getPaymentLink(dispatch, errorCallback, router) {
-	return ApiCall('/stripe-paymentlink', 'POST', null, dispatch, errorCallback, router);
+export function getPaymentLink(body, dispatch, errorCallback, router) {
+	return ApiCall('/stripe-paymentlink', 'POST', body, dispatch, errorCallback, router);
+}
+export function getPortalLink(body, dispatch, errorCallback, router) {
+	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
 
 // Chats

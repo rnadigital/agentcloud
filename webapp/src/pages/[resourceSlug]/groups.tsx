@@ -37,8 +37,8 @@ export default function Groups(props) {
 			<title>Groups - {teamName}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Groups</h3>
+		<div className='border-b pb-2 my-2 dark:border-slate-600'>
+			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Groups</h3>
 		</div>
 
 		{!hasAgents && <div className='rounded-md bg-yellow-50 p-4'>

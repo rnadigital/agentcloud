@@ -17,7 +17,16 @@ export default function Account(props) {
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
-		API.getPaymentLink(null, setError, router);
+		API.getPaymentLink({
+			_csrf: e.target._csrf.value,
+		}, null, setError, router);
+	}
+
+	async function getPortalLink(e) {
+		e.preventDefault();
+		API.getPortalLink({
+			_csrf: e.target._csrf.value,
+		}, null, setError, router);
 	}
 
 	useEffect(() => {
@@ -39,19 +48,19 @@ export default function Account(props) {
 
 			{error && <ErrorAlert error={error} />}
 
-			<div className='border-b pb-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900'>Account Settings</h3>
+			<div className='border-b dark:border-slate-400 pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Account Settings</h3>
 			</div>
 
 			<p>Nothing here... yet.</p>
 
-			<div className='border-b pb-2 my-2 mt-20'>
-				<h3 className='pl-2 font-semibold text-gray-900'>Subscription Status</h3>
+			<div className='border-b dark:border-slate-400 pb-2 my-2 mt-20'>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Subscription Status</h3>
 			</div>
 			
 			<form onSubmit={getPaymentLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
-				<div className='mt-2 flex items-center justify-start gap-x-6'>
+				<div className='my-2 flex items-center justify-start gap-x-6'>
 					<button
 						type='submit'
 						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
@@ -61,6 +70,19 @@ export default function Account(props) {
 				</div>
 			</form>
 
+			{true && <form onSubmit={getPortalLink}>
+				<input type='hidden' name='_csrf' value={csrf} />
+				<div className='mb-2 flex items-center justify-start gap-x-6'>
+					<button
+						type='submit'
+						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
+						Cancel subscription
+					</button>
+				</div>
+			</form>}
+
+			{/* TODO: change logic for showing yes/no */}
 			<p>Subscribed: {checkoutSession ? `Yes (${checkoutSession._id})` : 'No'}</p>
 
 		</>
