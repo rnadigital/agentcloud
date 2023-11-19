@@ -76,7 +76,8 @@ export default function Session(props) {
 		setMessages(oldMessages => {
 			if (!message.incoming
 				&& oldMessages[oldMessages.length-1]
-				&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId) {
+				&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId
+				&& message?.authorName === oldMessages[oldMessages.length-1]?.authorName) {
 				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])
@@ -220,7 +221,7 @@ export default function Session(props) {
 		});
 	}
 
-	function sendMessage(e) {
+	function sendMessage(e, reset) {
 		e.preventDefault();
 		const message: string = e.target.prompt ? e.target.prompt.value : e.target.value;
 		if (!message || message.trim().length === 0) { return; }
@@ -233,7 +234,7 @@ export default function Session(props) {
 				text: message,
 			}
 		});
-		e.target.reset ? e.target.reset() : e.target.form.reset();
+		reset && reset();
 	}
 
 	if (!session || messages == null) {
