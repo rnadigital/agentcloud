@@ -89,9 +89,9 @@ class MongoClientConnection(MongoConnection):
             return team
 
     def _get_group_member(self, agent_id: ObjectId) -> dict:
-        collection = self._get_agents_collection
+        _collection = self._get_agents_collection
         agent_data = dict()
-        agent = collection.find_one({"_id": ObjectId(agent_id)})
+        agent = _collection.find_one({"_id": ObjectId(agent_id)})
         if agent is not None:
             credential_id = agent.get("credentialId")
             credential_obj = self._get_credentials_collection.find_one(

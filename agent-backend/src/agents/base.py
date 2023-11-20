@@ -1,41 +1,16 @@
-import importlib
 import logging
 import random
 import autogen
 
 from utils.log_exception_context_manager import log_exception
-from build.template import Org
 from init.mongo_session import start_mongo_session
 from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
 from socketio.exceptions import DisconnectedError
-from autogen import GroupChat
 import json
-import os
+from build.build_group import create_run_chat
 
 mongo_client = start_mongo_session()
-
-
-def session_cleanup(session_id) -> bool:
-    try:
-        os.remove(f"{BASE_PATH}/orgs/{session_id}.py")
-        return True
-    except ModuleNotFoundError as mnf:
-        logging.warning("The module you are trying to delete can not be found")
-        logging.exception(mnf)
-    except Exception as e:
-        logging.exception(e)
-
-
-def _append_group_members_to_agent_system_message(_groupchat: GroupChat, agent_name: str):
-    # Ensuring the planner is aware of its own group members
-    if bool({f"{agent_name}", f"{agent_name.lower()}"} & set(_groupchat.agent_names)):
-        _name = list({f"{agent_name}", f"{agent_name.lower()}"} & set(_groupchat.agent_names))[0]
-        _index = _groupchat.agent_names.index(_name)
-        team_members = [x for x in _groupchat.agent_names if x != _name]
-        new_message = f"""{_groupchat.agents[_index].system_message}. 
-        Your team is made up of the following members: {', '.join(team_members)}"""
-        _groupchat.agents[_index].update_system_message(new_message)
 
 
 def task_execution(task: str, session_id: str):
@@ -46,33 +21,13 @@ def task_execution(task: str, session_id: str):
         # Load team structure from DB
         group = mongo_client.get_group(session_id)
         try:
-            # Use group structure to create AutGen team
-            org = Org(session_id, group)
-            org_saved = org.save_org_structure()
-            # Execute task using above group
-            if org_saved:
-                module_name = f"orgs.{session_id}"
-                loaded_module = importlib.import_module(module_name)
-                _append_group_members_to_agent_system_message(loaded_module.groupchat, "Planner")
-                loaded_module.user_proxy.initiate_chat(
-                    recipient=loaded_module.manager,
-                    clear_history=True,
-                    message=task,
-                )
-                session_cleanup(session_id)
-        except ModuleNotFoundError as mnf:
-            logging.warning(f"Could not find module: {module_name} in path!")
-            logging.exception(mnf)
-            session_cleanup(session_id)
+            create_run_chat(session_id, group.get("roles"), group.get("group_chat"), task, {})
         except Exception as e:
             logging.exception(e)
-            session_cleanup(session_id)
     except DisconnectedError as de:
-        session_cleanup(session_id)
         logging.warning("The socket connection was disconnected")
         logging.exception(de)
     except Exception as e:
-        session_cleanup(session_id)
         logging.exception(e)
 
 
