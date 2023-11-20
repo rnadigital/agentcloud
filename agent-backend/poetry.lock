@@ -88,8 +88,8 @@ wikipedia = "^1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
-reference = "v0.2.1"
-resolved_reference = "309f55e877a7de25363a027d462476b92eef8e4b"
+reference = "v0.2.3"
+resolved_reference = "9d9f72ee6293311811dbd16d884ee63bc6d9eceb"
 
 [[package]]
 name = "beautifulsoup4"
@@ -1761,4 +1761,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "b5f9255b8ef3937dd11bd8588b054f458a05603897bdd6f628813154537ebfe5"
+content-hash = "9ae3af090e6ab90ef21c0ff6d435ee6acc379cd7c5d37a80dcfafcaedab148a0"
