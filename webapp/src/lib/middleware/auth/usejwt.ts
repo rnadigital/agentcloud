@@ -49,6 +49,8 @@ export default async function useJWT(req, res, next): Promise<void> {
 						currentOrg: account.currentOrg,
 						currentTeam: account.currentTeam,
 						token: account.token,
+						stripeCustomerId: account.stripeCustomerId,
+						stripeEndsAt: account.stripeEndsAt,
 					};
 					return next();
 				}

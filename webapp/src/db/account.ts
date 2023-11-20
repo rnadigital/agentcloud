@@ -24,6 +24,8 @@ export type Account = {
 	currentOrg: ObjectId;
 	currentTeam: ObjectId;
 	emailVerified: boolean;
+	stripeCustomerId?: string;
+	stripeEndsAt?: number;
 	apiJwt?: string;
 	token?: string;
 }
@@ -81,6 +83,39 @@ export function setAccountToken(userId: db.IdOrStr, token: string): Promise<any>
 	}, {
 		$set: {
 			token,
+		}
+	});
+}
+
+export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$set: {
+			stripeCustomerId,
+		}
+	});
+}
+
+export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number): Promise<any> {
+	console.log('updateStripeCustomer', stripeCustomerId, stripeEndsAt);
+	return AccountCollection().updateOne({
+		stripeCustomerId,
+	}, {
+		$set: {
+			stripeCustomerId: stripeCustomerId,
+			stripeEndsAt: stripeEndsAt,
+		}
+	});
+}
+
+export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
+	return AccountCollection().updateOne({
+		stripeCustomerId,
+	}, {
+		$unset: {
+			stripeCustomerId: '',
+			stripeEndsAt: '',
 		}
 	});
 }

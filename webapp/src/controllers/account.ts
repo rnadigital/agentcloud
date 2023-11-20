@@ -2,7 +2,6 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { getCheckoutSessionByAccountId } from '../db/checkoutsession';
 import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
@@ -14,10 +13,8 @@ import SecretKeys from '../lib/secret/secretkeys';
 import { getSecret } from '../lib/secret/secretmanager';
 
 export async function accountData(req, res, _next) {
-	const checkoutSession = await getCheckoutSessionByAccountId(res.locals.account._id);
 	return {
 		csrf: req.csrfToken(),
-		checkoutSession,
 	};
 };
 

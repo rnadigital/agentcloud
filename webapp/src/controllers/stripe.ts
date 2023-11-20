@@ -1,14 +1,33 @@
 'use strict';
 
 import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
-import { addPortalLink, unsafeGetPortalLinkById } from '../db/portallink';
-import { addCheckoutSession, unsafeGetCheckoutSessionById, getCheckoutSessionByAccountId } from '../db/checkoutsession';
+import { addPortalLink } from '../db/portallink';
+import { addCheckoutSession, getCheckoutSessionByAccountId } from '../db/checkoutsession';
+import { updateStripeCustomer, unsetStripeCustomer, setStripeCustomerId } from '../db/account';
 import toObjectId from '../lib/misc/toobjectid';
 import { dynamicResponse } from '../util';
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env['STRIPE_ACCOUNT_SECRET']);
 import debug from 'debug';
 const log = debug('webapp:stripe');
+
+async function getFirstActiveSubscription(stripeCustomerId: string) {
+	try {
+		const subscriptions = await stripe.subscriptions.list({
+			customer: stripeCustomerId,
+			status: 'active',
+			limit: 1 // fetch only the first subscription
+		});
+		if (subscriptions.data.length > 0) {
+			return subscriptions.data[0]; // return the first active subscription
+		} else {
+			return null; // no active subscriptions found
+		}
+	} catch (error) {
+		console.error('Error fetching subscriptions:', error);
+		throw error;
+	}
+}
 
 /**
  * @api {post} /stripe-webhook
@@ -51,10 +70,38 @@ export async function webhookHandler(req, res, next) {
 				payload: checkoutSession,
 				createdDate: new Date(),
 			});
-			//TODO:create stripe customer
-			
+			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
+			const activeSub = await getFirstActiveSubscription(checkoutSession.customer);
+			if (activeSub) {
+				await updateStripeCustomer(activeSub.customer as string, activeSub.current_period_end*1000);
+			}
 			break;
-		//TODO: handle cancel/subscription update events
+//		case 'customer.subscription.created':
+//			const subscriptionCreated = event.data.object;
+//			const activeSub = await getFirstActiveSubscription(subscriptionCreated.customer);
+//			console.log('activeSub', activeSub)
+//			if (activeSub) {
+//				await updateStripeCustomer(activeSub.customer as string, activeSub.current_period_end*1000);
+//			}
+//			break;
+		case 'customer.subscription.updated':
+			const subscriptionUpdated = event.data.object;
+			if (subscriptionUpdated.current_period_end) {
+				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.current_period_end*1000);
+			}
+			if (subscriptionUpdated['cancel_at_period_end'] === true) {
+				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
+				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.cancel_at);
+			}
+			if (subscriptionUpdated['status'] === 'canceled') {
+				log(`${subscriptionUpdated.customer} canceled their subscription`);
+				await unsetStripeCustomer(subscriptionUpdated.customer);
+			}
+			break;
+		case 'customer.subscription.deleted':
+			const subscriptionDeleted = event.data.object;
+			await unsetStripeCustomer(subscriptionDeleted.customer);
+			break;
 		default:
 			log(`Unhandled stripe webhook event type "${event.type}"`);
 	}
@@ -70,18 +117,22 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	const checkoutSession = await getCheckoutSessionByAccountId(res.locals.account._id);
-	if (!checkoutSession || !checkoutSession?.payload?.customer) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription' });
+	if (!res.locals.account.stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
+	}
+
+	const activeSub = await getFirstActiveSubscription(res.locals.account.stripeCustomerId);
+	if (!activeSub) {
+		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
 	}
 
 	const portalLink = await stripe.billingPortal.sessions.create({
-		customer: checkoutSession?.payload?.customer,
+		customer: res.locals.account.stripeCustomerId,
 		return_url: 'https://example.com/account/overview',
 		flow_data: {
 			type: 'subscription_cancel',
 			subscription_cancel: {
-				subscription: checkoutSession?.payload?.subscription,
+				subscription: activeSub.id,
 			},
 		},
 	});
@@ -102,6 +153,10 @@ export async function createPaymentLink(req, res, next) {
 
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	if (res.locals.account.stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Already subscribed' });
 	}
 
 	const paymentLink = await stripe.paymentLinks.create({

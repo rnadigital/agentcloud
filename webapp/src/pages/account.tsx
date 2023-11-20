@@ -13,7 +13,7 @@ export default function Account(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { checkoutSession } = state;
+	const { stripeCustomerId, stripeEndsAt } = account;
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
@@ -58,7 +58,7 @@ export default function Account(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Subscription Status</h3>
 			</div>
 			
-			<form onSubmit={getPaymentLink}>
+			{!stripeCustomerId && <form onSubmit={getPaymentLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='my-2 flex items-center justify-start gap-x-6'>
 					<button
@@ -68,9 +68,9 @@ export default function Account(props) {
 						Subscribe
 					</button>
 				</div>
-			</form>
+			</form>}
 
-			{true && <form onSubmit={getPortalLink}>
+			{stripeCustomerId && <form onSubmit={getPortalLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='mb-2 flex items-center justify-start gap-x-6'>
 					<button
@@ -83,7 +83,9 @@ export default function Account(props) {
 			</form>}
 
 			{/* TODO: change logic for showing yes/no */}
-			<p>Subscribed: {checkoutSession ? `Yes (${checkoutSession._id})` : 'No'}</p>
+			<p>Subscribed: {stripeCustomerId ? 'Yes' : 'No'}</p>
+			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
+			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
 
 		</>
 	);
