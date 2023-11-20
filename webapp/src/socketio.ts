@@ -224,8 +224,10 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('message_complete', async (data) => {
+			log(`received message_complete event: ${JSON.stringify(data, null, '\t')}`);
 			if (data?.message?.text) {
-				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks);
+				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks, data.message.deltaTokens || 0);
+				await unsafeIncrementTokens(data.room, data.message.deltaTokens || 0);
 			}
 		});
 

@@ -32,6 +32,7 @@ export type ChatMessage = {
 	tokens?: number;
 	chunks?: ChatChunk[];
 	codeBlocks?: ChatCodeBlock[];
+	completed?: boolean;
 }
 
 export function ChatCollection() {
@@ -73,6 +74,9 @@ export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId:
 	return ChatCollection().updateOne({
 		sessionId: toObjectId(sessionId),
 		chunkId,
+		completed: {
+			$ne: true,
+		},
 	}, {
 		$push: {
 			chunks: chunk,
@@ -83,7 +87,7 @@ export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId:
 	});
 }
 
-export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string, codeBlocks: ChatCodeBlock) {
+export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string, codeBlocks: ChatCodeBlock, tokens: number) {
 	const update = {
 		$unset: {
 			chunks: '',
@@ -91,6 +95,10 @@ export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: str
 		$set: {
 			'message.message.text': text,
 			codeBlocks,
+			completed: true,
+		},
+		$inc: {
+			tokens: tokens,
 		}
 	};
 	return ChatCollection().updateOne({

@@ -270,7 +270,7 @@ export default function Session(props) {
 							isLastMessage={mi === marr.length-1}
 							sendMessage={sendFeedbackMessage}
 							displayMessage={m?.displayMessage || m?.message?.displayMessage}
-							tokens={m?.chunks?.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) + (m?.tokens || m?.message?.tokens || 0)}
+							tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}
