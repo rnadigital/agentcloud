@@ -147,7 +147,7 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 											type='radio'
 											value='UserProxyAgent'
 											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-											defaultChecked={type === 'UserProxyAgent'}
+											defaultChecked={type === 'UserProxyAgent' && !codeExecutionConfig}
 										/>
 									</div>
 									<div className='text-sm leading-6'>
