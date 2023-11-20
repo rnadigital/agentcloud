@@ -4,7 +4,6 @@ import threading
 
 from dotenv import load_dotenv
 import google.auth
-from gcp.cloud_secrets import access_secret
 
 load_dotenv()
 
@@ -20,12 +19,12 @@ if not LOCAL and google_cloud_credentials_path and len(google_cloud_credentials_
 
 # Get project ID and Local var from .env file
 BASE_PATH = os.getenv("BASE_PATH", "./src") if LOCAL else "."
-SOCKET_URL = os.getenv("SOCKET_URL", "http://webapp_next:3000/") if LOCAL else access_secret("SOCKET_URL")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test") if LOCAL else access_secret("MONGO_DB_NAME")
-DB_URL = os.getenv("DB_URL") if LOCAL else access_secret("DB_URL")
+SOCKET_URL = os.getenv("SOCKET_URL", "http://webapp_next:3000/")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test")
+DB_URL = os.getenv("DB_URL")
 MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
-REDIS_HOST = os.getenv("REDIS_HOST") if LOCAL else access_secret('redis_host')
-REDIS_PORT = 6379 if LOCAL else access_secret("redis_port")
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = 6379
 
 
 def _set_max_threads() -> int:
