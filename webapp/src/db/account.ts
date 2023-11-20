@@ -24,10 +24,11 @@ export type Account = {
 	currentOrg: ObjectId;
 	currentTeam: ObjectId;
 	emailVerified: boolean;
-	stripeCustomerId?: string;
-	stripeEndsAt?: number;
 	apiJwt?: string;
 	token?: string;
+	stripeCustomerId?: string;
+	stripeEndsAt?: number;
+	stripeCancelled?: boolean;
 }
 
 export function AccountCollection() {
@@ -97,7 +98,7 @@ export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string
 	});
 }
 
-export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number): Promise<any> {
+export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number, stripeCancelled?: boolean): Promise<any> {
 	console.log('updateStripeCustomer', stripeCustomerId, stripeEndsAt);
 	return AccountCollection().updateOne({
 		stripeCustomerId,
@@ -105,6 +106,7 @@ export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: num
 		$set: {
 			stripeCustomerId: stripeCustomerId,
 			stripeEndsAt: stripeEndsAt,
+			stripeCancelled: stripeCancelled || false,
 		}
 	});
 }

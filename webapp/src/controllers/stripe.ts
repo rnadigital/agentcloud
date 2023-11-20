@@ -91,7 +91,7 @@ export async function webhookHandler(req, res, next) {
 			}
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.cancel_at);
+				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.cancel_at, true);
 			}
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);

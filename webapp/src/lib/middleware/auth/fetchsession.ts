@@ -16,6 +16,7 @@ export default async function fetchSession(req, res, next) {
 				token: account.token,
 				stripeCustomerId: account.stripeCustomerId,
 				stripeEndsAt: account.stripeEndsAt,
+				stripeCancelled: account.stripeCancelled,
 			};
 			return next();
 		}

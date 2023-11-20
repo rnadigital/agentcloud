@@ -13,7 +13,7 @@ export default function Account(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { stripeCustomerId, stripeEndsAt } = account;
+	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account;
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
@@ -70,7 +70,7 @@ export default function Account(props) {
 				</div>
 			</form>}
 
-			{stripeCustomerId && <form onSubmit={getPortalLink}>
+			{stripeCustomerId && !stripeCancelled && <form onSubmit={getPortalLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='mb-2 flex items-center justify-start gap-x-6'>
 					<button
@@ -86,6 +86,7 @@ export default function Account(props) {
 			<p>Subscribed: {stripeCustomerId ? 'Yes' : 'No'}</p>
 			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
 			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
+			{stripeCancelled && <p>Stripe subscription cancelled.</p>}
 
 		</>
 	);
