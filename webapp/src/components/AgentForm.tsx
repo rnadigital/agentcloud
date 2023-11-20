@@ -184,15 +184,17 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 			
 			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
 				<div>
-					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Task Definition</h2>
+					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Instructions</h2>
 					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							This is the task definition. You <strong>must</strong> specify the following:
+						Provide instructions for your agent. Here are some questions to answer for some example custom instructions:
 					</p>
 					<ol className='pl-5 list-disc mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-						<li>Skills - What skills this agent posesses.</li>
-						<li>Task(s) - What inputs to take, what to do with them and what tools to use.</li>
-						<li>Boundaries - Things the agent should not do, limits it should not exceed.</li>
-						<li>Output - The output to be produced.</li>
+						<li>What skills does the agent have?</li>
+						<li>What should the agent do?</li>
+						<li>What inputs and/or outputs should this agent process?</li>
+						<li>Who should this agent interact with?</li>
+						<li>How formal or casual should your agent be?</li>
+						<li>How long or short should responses generally be?</li>
 					</ol>
 				</div>
 
@@ -200,7 +202,7 @@ export default function AgentForm({ agent = {}, credentials = [], editing }: { a
 
 					<div className='col-span-full'>
 						<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Definition
+							Instructions
 						</label>
 						<div className='mt-2'>
 							<textarea
