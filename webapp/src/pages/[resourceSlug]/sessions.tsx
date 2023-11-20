@@ -4,6 +4,7 @@ import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 import StartSessionChatbox from '../../components/StartSessionChatbox';
 import SessionCards from '../../components/SessionCards';
+import SubscriptionModal from '../../components/SubscriptionModal';
 import { useRouter } from 'next/router';
 import { SessionStatus } from '../../lib/struct/session';
 // import classNames from '../../components/ClassNames';
@@ -42,6 +43,8 @@ export default function Sessions(props) {
 		{sessions.length > 0 && <div className='border-b pb-2 my-2'>
 			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
 		</div>}
+
+		{/*<SubscriptionModal /> TODO: show only when trying to create a session in cloud */}
 	
 		<StartSessionChatbox groups={groups} />
 
