@@ -33,7 +33,7 @@ def create_run_chat(session_id: str, roles: list, group_chat: bool, prompt: str,
             name="admin" if role.get("is_admin") else role.get("name"),
             llm_config=configs[i],
             system_message=role.get("system_message"),
-            human_input_mode=role.get("human_input_mode") or "ALWAYS",
+            human_input_mode=role.get("human_input_mode") or "NEVER",
             code_execution_config=role.get('code_execution_config', False),
             socket_client=socket,
             sid=session_id
