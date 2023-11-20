@@ -5,8 +5,7 @@ import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { useAccountContext } from '../context/account';
 import Select from 'react-tailwindcss-select';
 import {
-  // PaperClipIcon,
-	PlusIcon,
+	PaperAirplaneIcon,
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
 import { toast } from 'react-toastify';
@@ -47,7 +46,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 	return (<div className='flex flex-col mb-10'>
 
 		<div className='text-center my-2 dark:text-white'>
-			To start a new session, describe a task in natural language:
+			To start a new session, select a team and describe a task in natural language:
 		</div>
 
 		<div className='flex flex-row justify-center'>
@@ -84,7 +83,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 								/>
 							</div>
 							{/* Spacer element to match the height of the toolbar */}
-							<div className='py-2 w-32' aria-hidden='true'>
+							<div className='py-2 w-10' aria-hidden='true'>
 								{/* Matches height of button in toolbar (1px border + 36px content height) */}
 								<div className='py-px'>
 									<div className='h-9' />
@@ -97,7 +96,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 									type='submit'
 									className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
-									Start Session
+									<PaperAirplaneIcon className='h-4 w-4' />
 								</button>
 							</div>
 						</div>

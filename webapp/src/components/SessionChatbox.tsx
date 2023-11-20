@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import Blockies from 'react-blockies';
+import {
+	PaperAirplaneIcon,
+} from '@heroicons/react/20/solid';
 import classNames from './ClassNames';
 
 export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) { //TODO: just get scrolltobottom from chatcontext
@@ -58,7 +61,7 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 							? 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 							: 'bg-indigo-400 cursor-wait')}
 				>
-					Send
+					<PaperAirplaneIcon className='h-4 w-4' />
 				</button>
 			</div>
 		</div>
