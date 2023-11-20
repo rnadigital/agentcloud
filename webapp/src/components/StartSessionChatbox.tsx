@@ -56,6 +56,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<input type='hidden' name='_csrf' value={csrf} />
 				        <Select
+				        	isSearchable
 				            primaryColor={'indigo'}
 				            value={selectedGroup}
 				            classNames={{
