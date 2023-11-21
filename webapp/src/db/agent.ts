@@ -51,7 +51,7 @@ export function getAgentsById(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promi
 export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 	return AgentCollection().aggregate([
 		{
-			$match: { teamId }
+			$match: { teamId: toObjectId(teamId) }
 		}, {
 			$lookup: { from: 'groups', as: 'group', localField: '_id', foreignField: 'agents' }
 		}, {
