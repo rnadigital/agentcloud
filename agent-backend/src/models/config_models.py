@@ -9,6 +9,8 @@ class ConfigList(BaseModel):
     api_key: Optional[str] = ""
     api_type: Optional[str] = "open_ai"
     model: Optional[str] = "gpt-4"
+    timeout: int = 300
+    max_retries: int = 10
 
 
 class LLMConfig(BaseModel):
@@ -16,9 +18,10 @@ class LLMConfig(BaseModel):
     seed: int = randint(1, 100)
     config_list: List[ConfigList] = field(default_factory=list)
     temperature: float = 0
-    use_cache: bool = True
-    tools: list = None
-    request_timeout: Optional[int] = None
+    tools: Optional[list] = list()
+    timeout: int = 300
+    max_retries: int = 10
+    stream: bool = True
 
 
 class AgentConfig(BaseModel):
@@ -26,6 +29,7 @@ class AgentConfig(BaseModel):
     name: str
     llm_config: LLMConfig
     human_input_mode: str = "NEVER"
+    system_message: str = ""
     max_consecutive_auto_reply: int = 10
     is_termination_msg: Union[bool, str] = None
     code_execution_config: Optional[Union[bool, str, Dict[str, Any]]] = None

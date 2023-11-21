@@ -16,14 +16,14 @@ def create_run_chat(session_id: str, roles: list, group_chat: bool, prompt: str,
     configs = []
     for role in roles:
         config: LLMConfig = LLMConfig(
-            tools=[],
             config_list=[ConfigList(
                 api_key=role.get("key"),
                 api_type=role.get("platform"),
                 model=role.get("model")
-            )]
+            ).model_dump()],
+            stream=True,
         )
-        configs.append(config)
+        configs.append(config.model_dump(exclude_unset=True))
 
     # Initialize agents
     agents = []
@@ -36,13 +36,14 @@ def create_run_chat(session_id: str, roles: list, group_chat: bool, prompt: str,
             human_input_mode=role.get("human_input_mode") or "NEVER",
             code_execution_config=role.get('code_execution_config', False),
             socket_client=socket,
-            sid=session_id
+            sid=session_id,
         )
         agent = agent_type(**_agent.model_dump())
         if agent.name == 'admin':
             user_proxy = agent
             agents.append(user_proxy)
-        agents.append(agent)
+        else:
+            agents.append(agent)
 
     # Initialize group chat if required
     if group_chat:
