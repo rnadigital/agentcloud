@@ -128,7 +128,7 @@ export async function createPortalLink(req, res, next) {
 
 	const portalLink = await stripe.billingPortal.sessions.create({
 		customer: res.locals.account.stripeCustomerId,
-		return_url: 'https://example.com/account/overview',
+		return_url: `${process.env.URL_APP}/account`,
 		flow_data: {
 			type: 'subscription_cancel',
 			subscription_cancel: {
@@ -166,6 +166,12 @@ export async function createPaymentLink(req, res, next) {
 				quantity: 1,
 			},
 		],
+		after_completion: {
+			type: 'redirect',
+			redirect: {
+				url: `${process.env.URL_APP}/account`,
+			},
+		},
 	});
 
 	await addPaymentLink({
