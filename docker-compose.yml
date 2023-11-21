@@ -41,7 +41,7 @@ services:
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
-      #- NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
+      - NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
 
   agent_backend:
     restart: always
