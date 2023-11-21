@@ -4,11 +4,13 @@ import { useAccountContext } from '../context/account';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 export default function AgentList({ agents, fetchAgents }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
+	const resourceSlug = account?.currentTeam;
 	const router = useRouter();
 
 	async function deleteAgent(agentId) {
@@ -32,7 +34,15 @@ export default function AgentList({ agents, fetchAgents }) {
 							<div className='flex items-center space-x-3'>
 								<h3 className='truncate text-sm font-medium text-gray-900 dark:text-white'>{agent.name}</h3>
 							</div>
-							<p className='mt-1 truncate text-sm text-gray-500 dark:text-slate-400'>{agent.type} - {agent.model}</p>
+							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>{agent.type} - {agent.model}</p>
+							{agent?.group && <>
+								<p className='mt-2 pt-1 truncate text-sm dark:text-slate-400'>Groups:</p>
+								<ul className='list-disc list-inside'>
+									{agent.group.map(g => (<li key={g._id} className='text-sm text-gray-500 dark:text-slate-400'>
+										<Link href={`/${resourceSlug}/group/${g._id}/edit`}>{g.name}</Link>
+									</li>))}
+								</ul>
+							</>}
 						</div>
 						<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold pt-1'>
 							<span>{agent.name.charAt(0).toUpperCase()}</span>
