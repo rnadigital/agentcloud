@@ -25,10 +25,12 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 	async function addSession(e) {
 		e.preventDefault();
 		if (!stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
-			return setOpen(true);
+			setOpen(true);
+			return null;
 		}
 		if (!selectedGroup?.value) {
-			return toast.error('Please select a group');
+			toast.error('Please select a group');
+			return null;
 		} 
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
