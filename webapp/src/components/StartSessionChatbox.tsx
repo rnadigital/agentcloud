@@ -10,15 +10,12 @@ import {
 import * as API from '../api';
 import { toast } from 'react-toastify';
 
-const GroupDefaultOptions = [
-	// { label: 'Auto-generate group', value: 'auto' },
-];
-
-export default function StartSessionChatbox({ groups = [] }) {
+export default function StartSessionChatbox({ groups = [], setOpen }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const resourceSlug = account.currentTeam;
+	const { stripeCustomerId } = account;
 
 	const router = useRouter();
 	const [error, setError] = useState();
@@ -27,6 +24,9 @@ export default function StartSessionChatbox({ groups = [] }) {
 
 	async function addSession(e) {
 		e.preventDefault();
+		if (!stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
+			return setOpen(true);
+		}
 		if (!selectedGroup?.value) {
 			return toast.error('Please select a group');
 		} 
@@ -66,7 +66,7 @@ export default function StartSessionChatbox({ groups = [] }) {
 								listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 				            }}
 				            onChange={(e: any) => setSelectedGroup(e)}
-				            options={GroupDefaultOptions.concat(groupOptions)}
+				            options={groupOptions}
 				        />
 						<label className='bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>

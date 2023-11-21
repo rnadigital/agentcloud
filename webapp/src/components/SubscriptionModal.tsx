@@ -5,13 +5,11 @@ import * as API from '../api';
 import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
 
-export default function SubscriptionModal() {
+export default function SubscriptionModal({ open, setOpen }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
-
-	const [open, setOpen] = useState(true);
 
 	async function getPaymentLink(e) {
 		e.preventDefault();

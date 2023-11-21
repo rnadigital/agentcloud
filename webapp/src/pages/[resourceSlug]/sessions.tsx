@@ -18,6 +18,7 @@ export default function Sessions(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [filter, setFilter] = useState<string>('all');
+	const [open, setOpen] = useState(false);
 	const filterOptions = Object.values(SessionStatus);
 	const { sessions, groups } = state;
 	const resourceSlug = account?.currentTeam;
@@ -44,9 +45,9 @@ export default function Sessions(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
 		</div>}
 
-		{/*<SubscriptionModal /> TODO: show only when trying to create a session in cloud */}
+		<SubscriptionModal open={open} setOpen={setOpen}/>
 	
-		<StartSessionChatbox groups={groups} />
+		<StartSessionChatbox groups={groups} setOpen={setOpen} />
 
 		<div className='w-64 pb-4'>
 			<label htmlFor='filter' className='block text-sm font-medium text-gray-900 dark:text-slate-400'>
