@@ -18,10 +18,10 @@ class LLMConfig(BaseModel):
     seed: int = randint(1, 100)
     config_list: List[ConfigList] = field(default_factory=list)
     temperature: float = 0
-    tools: Optional[list] = list()
     timeout: int = 300
     max_retries: int = 10
     stream: bool = True
+    # tools: Optional[list] = list()
 
 
 class AgentConfig(BaseModel):
