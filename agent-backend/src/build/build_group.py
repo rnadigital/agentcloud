@@ -8,6 +8,7 @@ from models.config_models import AgentConfig
 from importlib import import_module
 from pprint import pprint
 
+
 class ChatBuilder:
     def __init__(self, prompt, session_id: str, group_chat: bool, history: Optional[dict]):
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
@@ -28,7 +29,6 @@ class ChatBuilder:
                 agent_config: Dict = agent.llm_config
                 if agent_config and len(agent_config) > 0:
                     functions: List[Dict] = agent_config.get("functions")
-                    pprint(functions)
                     if functions and len(functions) > 0:
                         for function in functions:
                             func_name: str = f"{function.get('name')}"
@@ -67,7 +67,8 @@ class ChatBuilder:
         # Initialize group chat if required
         if self.group_chat:
             groupchat = autogen.GroupChat(agents=self.agents, messages=[], max_round=50)
-            manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=self.agents[0].llm_config, use_sockets=True,
+            manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=self.agents[0].llm_config,
+                                               use_sockets=True,
                                                socket_client=self.socket, sid=self.session_id)
             if self.user_proxy:
                 self.user_proxy.initiate_chat(recipient=manager, message=self.prompt, clear_history=True,

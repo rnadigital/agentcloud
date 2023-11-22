@@ -76,12 +76,6 @@ class MongoClientConnection(MongoConnection):
             _collection = self._get_agents_collection
             agent = _collection.find_one({"_id": ObjectId(agent_id)})
 
-            # Instantiate all necessary objects
-            agent_data = dict()
-            agent_config = dict()
-            config_list = dict()
-            llm_config = dict()
-
             # Construct Agent Config List
             # Get agent credentials
             if agent is not None:
@@ -91,16 +85,11 @@ class MongoClientConnection(MongoConnection):
                     {"platform": 1, "credentials": 1})
                 if credential_obj is not None and len(credential_obj) > 0:
                     creds = credential_obj.get("credentials")
-                    platform = credential_obj.get("platform")
-                    match platform:
-                        case "open_ai" | "azure":
-                            config_list["api_key"] = creds.get("key")
-                        case _:
-                            print("DO NOT SUPPORT!")
-                    config_list["api_type"] = platform
-                config_list["model"] = agent.get("model")
-
-                _config_list = ConfigList(**config_list)
+                    _config_list = ConfigList(
+                        api_key=creds.get("key"),
+                        api_type=credential_obj.get("platform"),
+                        model=agent.get("model")
+                    )
 
                 # Construct LLMConfig
                 tool_ids: List[ObjectId] = agent.get("toolIds")
@@ -113,35 +102,36 @@ class MongoClientConnection(MongoConnection):
                         if tool and len(tool) > 0:
                             agent_tool = ToolData(**tool.get("data"))
                             list_of_agent_tools.append(agent_tool)
-                llm_config["functions"] = list_of_agent_tools
-                llm_config["config_list"] = [_config_list]
 
-                _llm_config = LLMConfig(**llm_config)
+                _llm_config = LLMConfig(
+                    functions=list_of_agent_tools,
+                    config_list=[_config_list]
+                )
 
                 # Construct Agent Config
-                agent_config["name"] = agent.get("name")
                 code_execution = agent.get("codeExecutionConfig")
                 if code_execution and len(code_execution) > 0:
                     last_n_messages = code_execution.get("lastNMessages", 3)
-                    agent_config["code_execution_config"] = {
+                    code_execution_config = {
                         "last_n_messages": last_n_messages if last_n_messages is not None else 3,
                         "work_dir": f"{BASE_PATH}/{code_execution.get('workDirectory', 'output')}",
                         "use_docker": "python:3"
                     }
                 else:
-                    agent_config["code_execution_config"] = {}
-                agent_config["system_message"] = agent.get("systemMessage")
-                agent_config["human_input_mode"] = agent.get("humanInputMode") or "NEVER"
-                agent_config["llm_config"] = _llm_config
-
-                _agent_config = AgentConfig(**agent_config)
+                    code_execution_config = {}
+                _agent_config = AgentConfig(
+                    name=agent.get("name"),
+                    system_message=agent.get("systemMessage"),
+                    human_input_mode=agent.get("humanInputMode") or "NEVER",
+                    llm_config=_llm_config,
+                    code_execution_config=code_execution_config
+                )
 
             # Construct Agent Data
-            agent_data["type"] = agent.get("type", "AssistantAgent")
-            agent_data["data"] = _agent_config
-
-            _agent_data = AgentData(**agent_data)
-
+            _agent_data = AgentData(
+                type=agent.get("type", "AssistantAgent"),
+                data=_agent_config
+            )
             return _agent_data
         except Exception as e:
             logging.exception(e)

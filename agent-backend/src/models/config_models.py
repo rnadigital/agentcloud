@@ -27,13 +27,6 @@ class ToolData(BaseModel):
     name: str
 
 
-# class Tool(BaseModel):
-#     name: str
-#     functionName: str = 'function_name'
-#     type: ToolType
-#     data: Optional[ToolData] = None
-
-
 class Platforms(str, Enum):
     OpenAI = 'open_ai'
     Azure = 'azure'
@@ -50,24 +43,23 @@ class ConfigList(BaseModel):
     api_key: Optional[str] = ""
     api_type: Optional[Platforms] = Platforms.OpenAI
     model: Optional[Models] = Models.GPT4
-    timeout: int = 300
-    max_retries: int = 10
+    timeout: Optional[int] = 300
+    max_retries: Optional[int] = 10
 
 
 class LLMConfig(BaseModel):
     """Data model for Autogen  LLMConfig"""
-    seed: int = randint(1, 100)
+    seed: Optional[int] = randint(1, 100)
     config_list: List[ConfigList] = field(default_factory=list)
-    temperature: float = 0
-    timeout: int = 300
-    max_retries: int = 10
-    stream: bool = True
+    temperature: Optional[float] = 0
+    timeout: Optional[int] = 300
+    max_retries: Optional[int] = 10
+    stream: Optional[bool] = True
     functions: Optional[List[ToolData]] = None
 
 
 class AgentConfig(BaseModel):
     """Data model for Autogen Agent Config"""
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     llm_config: LLMConfig
     human_input_mode: Optional[str] = "NEVER"
