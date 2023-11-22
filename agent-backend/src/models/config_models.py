@@ -1,7 +1,7 @@
 from dataclasses import field
 from typing import Any, Dict, List, Optional, Union, Callable
 from random import randint
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from enum import Enum
 
 
