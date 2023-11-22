@@ -18,7 +18,7 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { name, platform, key } = credentialState;
+	const { name, platform, key, endpointURL } = credentialState;
 
 	async function credentialPost(e) {
 		e.preventDefault();
@@ -78,6 +78,11 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 								id='platform'
 								name='platform'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								value={platform}
+								onChange={e => setCredential({
+									...credentialState,
+									platform: e.target.value,
+								})}
 							>
 								<option disabled value=''>Select a platform...</option>
 								<option value='open_ai'>OpenAI</option>
@@ -100,6 +105,21 @@ export default function CredentialForm({ credential = {}, editing }: { credentia
 							/>
 						</div>
 					</div>
+
+					{platform === 'azure' && <div className='sm:col-span-12'>
+						<label htmlFor='endpointURL' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Endpoint URL
+						</label>
+						<div className='mt-2'>
+							<input
+								required
+								type='test'
+								name='endpointURL'
+								id='endpointURL'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
+						</div>
+					</div>}
 
 				</div>
 

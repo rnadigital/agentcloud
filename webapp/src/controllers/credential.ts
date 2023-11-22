@@ -68,11 +68,12 @@ export async function credentialJson(app, req, res, next) {
  */
 export async function addCredentialApi(req, res, next) {
 
-	const { name, platform, key }  = req.body;
+	const { name, platform, key, endpointURL }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !key || typeof key !== 'string' || key.length === 0
-		|| !platform || typeof platform !== 'string' || platform.length === 0 || !CredentialPlatforms.includes(platform as CredentialPlatform)) {
+		|| !platform || typeof platform !== 'string' || platform.length === 0 || !CredentialPlatforms.includes(platform as CredentialPlatform)
+		/*TODO: endpointUrl*/) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -84,7 +85,8 @@ export async function addCredentialApi(req, res, next) {
 	    platform: platform as CredentialPlatform,
 	    credentials: {
 			key,
-	    }
+		    endpointURL,
+	    },
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/credentials` });

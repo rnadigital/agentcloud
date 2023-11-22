@@ -14,6 +14,7 @@ export type Credential = {
 	platform: CredentialPlatform;
 	credentials: {
 		key?: string;
+		endpointURL?: string;
 		clientId?: string;
 		clientSecret?: string;
 		authURL?: string;
