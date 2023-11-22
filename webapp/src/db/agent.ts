@@ -50,9 +50,28 @@ export function getAgentsById(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promi
 }
 
 export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
-	return AgentCollection().find({
-		teamId: toObjectId(teamId),
-	}).toArray();
+	return AgentCollection().aggregate([
+		{
+			$match: { teamId: toObjectId(teamId) }
+		}, {
+			$lookup: { from: 'groups', as: 'group', localField: '_id', foreignField: 'agents' }
+		}, {
+			$addFields: {
+				isGroupSet: { $cond: { if: { $gt: [{ $size: '$group' }, 0] }, then: true, else: false } },
+			}
+		}, {
+			$lookup: { from: 'groups', as: 'tempGroup', localField: '_id', foreignField: 'adminAgent' }
+		},  {
+			$addFields: {
+				group: { $cond: { if: '$isGroupSet', then: '$group', else: '$tempGroup' } },
+			}
+		}, {
+			$project: {
+				isGroupSet: 0,
+				tempGroup: 0,
+			}
+		}
+	]).toArray();
 }
 
 export async function addAgent(agent: Agent): Promise<db.InsertResult> {

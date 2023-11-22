@@ -107,6 +107,13 @@ export default function Session(props) {
 			type,
 		});
 	}
+	function handleSocketTokens(tokens) {
+		log('Received chat type %s', tokens);
+		if (!tokens) {return;}
+		setChatContext({
+			tokens,
+		});
+	}
 	function scrollToBottom(behavior: string='instant') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
@@ -141,6 +148,7 @@ export default function Session(props) {
 		socketContext.on('terminate', handleTerminateMessage);
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
+		socketContext.on('tokens', handleSocketTokens);
 		socketContext.on('type', handleSocketType);
 		socketContext.on('joined', handleSocketJoined);
 		joinSessionRoom();
@@ -151,6 +159,7 @@ export default function Session(props) {
 		socketContext.off('terminate', handleTerminateMessage);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
+		socketContext.off('tokens', handleSocketTokens);
 		socketContext.off('type', handleSocketType);
 		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
@@ -173,6 +182,7 @@ export default function Session(props) {
 					prompt: res.session.prompt,
 					status: res.session.status,
 					type: res.session.type,
+					tokens: res.session.tokensUsed,
 					scrollToBottom,
 				});
 			}
@@ -224,7 +234,7 @@ export default function Session(props) {
 	function sendMessage(e, reset) {
 		e.preventDefault();
 		const message: string = e.target.prompt ? e.target.prompt.value : e.target.value;
-		if (!message || message.trim().length === 0) { return; }
+		if (!message || message.trim().length === 0) { return null; }
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account.name,
@@ -235,6 +245,7 @@ export default function Session(props) {
 			}
 		});
 		reset && reset();
+		return true;
 	}
 
 	if (!session || messages == null) {

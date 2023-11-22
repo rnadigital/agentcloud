@@ -21,13 +21,12 @@ import {
 	ChatBubbleLeftIcon,
 	XMarkIcon,
 	ArrowRightOnRectangleIcon,
-	CpuChipIcon,
+	CreditCardIcon,
 	KeyIcon,
 	WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import {
 	ChevronDownIcon,
-	UserGroupIcon,
 } from '@heroicons/react/20/solid';
 import { SessionStatus } from './SessionCards';
 
@@ -447,6 +446,12 @@ export default withRouter(function Layout(props) {
 								</>
 							</form>*/}
 							<div className='flex flex-1 justify-end items-center'>
+								{chatContext?.tokens != null && <span
+									className='me-2 whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
+								>
+									<CreditCardIcon className='h-5 w-5' />
+									Tokens used: {chatContext?.tokens||0}
+								</span>}
 								{chatContext?.status && chatContext?.type && <span
 									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
 									onClick={chatContext.scrollToBottom}
