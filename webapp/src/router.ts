@@ -18,6 +18,7 @@ import * as sessionController from './controllers/session';
 import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
+import * as toolController from './controllers/tool';
 
 export default function router(server, app) {
 
@@ -74,6 +75,8 @@ export default function router(server, app) {
 	teamPagesRouter.get('/credentials.json', credentialController.credentialsJson);
 	teamPagesRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
 	teamPagesRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
+	teamPagesRouter.get('/tools', toolController.toolsPage.bind(null, app));
+	teamPagesRouter.get('/tools.json', toolController.toolsJson);
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
 
 	const agentFormRouter = Router({ caseSensitive: true });

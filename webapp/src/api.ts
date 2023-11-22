@@ -33,11 +33,6 @@ export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
 
-// Chats
-export function getMessages(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json`, 'GET', null, dispatch, errorCallback, router);
-}
-
 // Sessions
 export function getSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}.json`, 'GET', null, dispatch, errorCallback, router);
@@ -50,6 +45,9 @@ export function addSession(body, dispatch, errorCallback, router) {
 }
 export function getSessions(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/sessions.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getMessages(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json`, 'GET', null, dispatch, errorCallback, router);
 }
 
 // Agents
@@ -95,6 +93,11 @@ export function deleteCredential(body, dispatch, errorCallback, router) {
 }
 export function addCredential(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/credential/add', 'POST', body, dispatch, errorCallback, router);
+}
+
+// Tools
+export function getTools(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/tools.json`, 'GET', null, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

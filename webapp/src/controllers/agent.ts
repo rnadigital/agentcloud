@@ -117,6 +117,7 @@ export async function addAgentApi(req, res, next) {
 				: null,
 		model,
 		credentialId: toObjectId(credentialId),
+		toolIds: [],
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
@@ -160,6 +161,7 @@ export async function editAgentApi(req, res, next) {
 				: null,
 		model,
 		credentialId: toObjectId(credentialId),
+		toolIds: [],
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit`*/ });

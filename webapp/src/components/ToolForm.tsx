@@ -1,0 +1,365 @@
+'use strict';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useAccountContext } from '../context/account';
+import { ModelList } from '../lib/struct/models';
+import { useRouter } from 'next/router';
+import * as API from '../api';
+import { toast } from 'react-toastify';
+import OpenAPIClientAxios from 'openapi-client-axios';
+
+const authenticationMethods = [
+	{ label: 'None', value: 'none' },
+	{ label: 'API Key', value: 'api' },
+	{ label: 'Oauth', value: 'oauth' },
+];
+
+const authorizationMethods = [
+	{ label: 'Basic', value: 'basic' },
+	{ label: 'Bearer', value: 'bearer' },
+	{ label: 'Custom', value: 'custom' },
+];
+
+export default function ToolForm({ tool = {}, credentials = [], editing }: { tool?: any, credentials?: any[], editing?: boolean }) { //TODO: fix any type
+
+	const [accountContext]: any = useAccountContext();
+	const { account, csrf } = accountContext as any;
+	const resourceSlug = account?.currentTeam;
+
+	const router = useRouter();
+	const [importOpen, setImportOpen] = useState(false);
+	const [importValue, setImportValue] = useState('');
+	const [codeValue, setCodeValue] = useState('');
+	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
+	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
+	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
+	const [functionsList, setFunctionsList] = useState(null);
+	const [error, setError] = useState();
+
+	async function toolPost(e) {
+		e.preventDefault();
+		const body = {
+			_csrf: e.target._csrf.value,
+			name: e.target.name.value,
+			type: e.target.type.value,
+			model: e.target.model.value,
+			credentialId: e.target.credentialId.value,
+			systemMessage: e.target.systemMessage.value,
+		};
+		// if (editing) {			
+		// 	await API.editTool(toolState._id, body, () => {
+		// 		toast.success('Tool Updated');
+		// 	}, setError, null);
+		// } else {
+		// 	API.addTool(body, null, setError, router);
+		// }
+	}
+
+	return (<form onSubmit={toolPost}>
+		<input
+			type='hidden'
+			name='_csrf'
+			value={csrf}
+		/>
+		<div className='space-y-12'>
+		
+			<div className='space-y-6'>
+				<div className='border-gray-900/10'>
+					<div className='flex justify-between'>
+						<h2 className='text-base font-semibold leading-7 text-gray-900'>
+							Schema
+						</h2>
+						<span>
+							{!importOpen && <button
+								className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+								onClick={(e) => {
+									e.preventDefault();
+									setImportOpen(true);
+								}}
+							>Import from URL</button>}
+							{importOpen && <div className='flex items-center gap-2'>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									onChange={e => setImportValue(e.target.value)}
+									value={importValue}
+									placeholder='https://api.example.com/specification.json'
+								/>
+								<button
+									className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									onClick={async (e) => {
+										e.preventDefault();
+										//NOTE: just for testing on client side, converting imported url into autogen function params
+										const api = new OpenAPIClientAxios({ definition: importValue });
+										const client = await api.init();
+										const funs = [];
+										client.api.getOperations().forEach(op => {
+											const baseParams = {
+												__baseurl: {
+													type: 'string',
+													description: 'The request path e.g. https://api.example.com',
+												},
+												__path: {
+													type: 'string',
+													description: 'The request path e.g. /api/v3/whatever',
+												},
+												__method: {
+													type: 'string',
+													description: 'The request method, e.g. GET or POST',
+												}
+											};
+											const functionProps = op?.parameters?.reduce((acc, par: any) => {
+												acc[par.name] = {
+													type: par.schema.type,
+													description: `${par.description||''}, e.g. ${par.schema.example}`,
+												};
+												return acc;
+											}, baseParams);
+											funs.push({
+												name: op.summary,
+												description: `${op.description}. The __path for this function is "${op.path}", the __method is "${op.method}", and the __baseurl is "${client.api.instance.defaults.baseURL}".`,
+												parameters: {
+													type: 'object',
+													properties: functionProps,
+													required: ['__baseurl', '__path', '__method'],
+												}
+											});
+										});
+										setFunctionsList(funs);
+									}}
+								>Import</button>
+								<button
+									className='rounded-md bg-slate-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									onClick={(e) => {
+										e.preventDefault();
+										setImportOpen(false);
+										setImportValue('');
+										setFunctionsList(null);
+									}}
+								>Cancel</button>
+							</div>}
+						</span>
+					</div>
+					<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+						<div className='col-span-full'>
+
+							<div className='mt-2'>
+								<textarea
+									id='about'
+									name='about'
+									rows={3}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+									placeholder={'OpenAPI schema...'}
+									defaultValue={''}
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className='border-gray-900/10'>
+					<div>
+						<label className='text-base font-semibold text-gray-900'>Authentication</label>
+						<fieldset className='mt-2'>
+							<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+								{authenticationMethods.map((authenticationMethod) => (
+									<div key={authenticationMethod.value} className='flex items-center'>
+										<input
+											id={authenticationMethod.value}
+											value={authenticationMethod.value}
+											name='authenticationMethod'
+											type='radio'
+											onChange={e => setAuthenticationMethod(e.target.value)}
+											defaultChecked={authenticationMethod.value === authenticationMethodState}
+											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+										/>
+										<label htmlFor={authenticationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+											{authenticationMethod.label}
+										</label>
+									</div>
+								))}
+							</div>
+						</fieldset>
+					</div>
+
+					{/* api key authentication */}
+					{authenticationMethodState === 'api' && <div className='mt-4 flex flex-col space-y-3'>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>API Key</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Authorization</label>
+							<fieldset className='mt-2'>
+								<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+									{authorizationMethods.map((authorizationMethod) => (
+										<div key={authorizationMethod.value} className='flex items-center'>
+											<input
+												id={authorizationMethod.value}
+												value={authorizationMethod.value}
+												name='authorizationMethod'
+												type='radio'
+												onChange={e => setAuthorizationMethod(e.target.value)}
+												defaultChecked={authorizationMethod.value === authorizationMethodState}
+												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+											/>
+											<label htmlFor={authorizationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+												{authorizationMethod.label}
+											</label>
+										</div>
+									))}
+								</div>
+							</fieldset>
+						</div>
+						{authorizationMethodState === 'custom' && <div>
+							<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									placeholder='X-Api-Token'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>}
+					</div>}
+
+					{/* oauth authentiation */}
+					{authenticationMethodState === 'oauth' && <div className='mt-4 flex flex-col space-y-3'>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Client ID</label>
+							<div>
+								<input
+									type='password'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Client Secret</label>
+							<div>
+								<input
+									type='password'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Authorization URL</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Token URL</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Scope</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Token Exchange Method</label>
+							<fieldset className='mt-2'>
+								<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+									<div className='flex items-center'>
+										<input
+											id='post'
+											value='post'
+											name='tokenExchangeMethod'
+											type='radio'
+											onChange={e => setAuthorizationMethod(e.target.value)}
+											defaultChecked={tokenExchangeMethod === 'post'}
+											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+										/>
+										<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+											POST request (default)
+										</label>
+									</div>
+									<div className='flex items-center'>
+										<input
+											id='basic'
+											value='basic'
+											name='tokenExchangeMethod'
+											type='radio'
+											onChange={e => setAuthorizationMethod(e.target.value)}
+											defaultChecked={tokenExchangeMethod === 'basic'}
+											className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+										/>
+										<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+											Basic authorization header
+										</label>
+									</div>
+								</div>
+							</fieldset>
+						</div>
+						{authorizationMethodState === 'custom' && <div>
+							<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
+							<div>
+								<input
+									type='text'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+									placeholder='X-Api-Token'
+									// onChange={e => setImportValue(e.target.value)}
+									// value={importValue}
+								/>
+							</div>
+						</div>}
+					</div>}					
+					
+				</div>
+
+				{functionsList && <div className='border-gray-900/10'>
+					<pre>{JSON.stringify(functionsList, null, 2)}</pre>
+				</div>}
+			</div>
+		</div>
+		{/*<div className='mt-6 flex items-center justify-between gap-x-6'>
+			<Link
+				className='text-sm font-semibold leading-6 text-gray-900'
+				href={`/${resourceSlug}/agents`}
+			>
+				Back
+			</Link>
+			<button
+				type='submit'
+				className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+			>
+				Save
+			</button>
+		</div>*/}
+	</form>);
+
+}
