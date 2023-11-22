@@ -21,7 +21,7 @@ class LLMConfig(BaseModel):
     timeout: int = 300
     max_retries: int = 10
     stream: bool = True
-    # tools: Optional[list] = list()
+    functions: Optional[Any] = None
 
 
 class AgentConfig(BaseModel):
