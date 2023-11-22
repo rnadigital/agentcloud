@@ -9,9 +9,6 @@ def get_papers_from_arvix(query: str) -> list:
         results = []
         for result in arxiv.Client().results(search):
             results.append(result.title)
-        else:
-            print("Error occurred while making the API request.")
-
         return results
     except Exception as e:
         print(f"An error occurred: {str(e)}")

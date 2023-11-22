@@ -12,23 +12,6 @@ from build.build_group import ChatBuilder
 
 mongo_client = start_mongo_session()
 
-function_config = [
-    {
-        "name": "get_papers_from_arvix",
-        "description": "Return papers from Arvix based on the query",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Valid query to be used to search the Arvix library. This query is essentially the papers you want to be returned",
-                }
-            },
-            "required": ["query"],
-        },
-    }
-]
-
 
 def task_execution(task: str, session_id: str):
     try:
@@ -36,7 +19,7 @@ def task_execution(task: str, session_id: str):
             # Load team structure from DB
             group = mongo_client.get_group(session_id)
             build_chat = ChatBuilder(task, session_id, group.get("group_chat"), {})
-            build_chat.create_group(group.get("roles"), function_config)
+            build_chat.create_group(group.get("roles"))
             build_chat.attach_tools_to_agent()
             build_chat.run_chat()
         except Exception as e:

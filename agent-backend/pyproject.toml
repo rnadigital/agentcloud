@@ -9,7 +9,7 @@ packages = [{include = "agent-backend"}]
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 
-autogen = { git = "https://github.com/rnadigital/autogen.git", tag = "v0.2.5" }
+autogen = { git = "https://github.com/rnadigital/autogen.git", branch = "main" }
 fastapi = "^0.103.2"
 uvicorn = "^0.23.2"
 python-dotenv = "^1.0.0"
