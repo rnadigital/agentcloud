@@ -99,6 +99,12 @@ export function addCredential(body, dispatch, errorCallback, router) {
 export function getTools(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/tools.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function addTool(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/tool/add', 'POST', body, dispatch, errorCallback, router);
+}
+export function editTool(toolId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
 
 function buildOptions(_route, method, body) {
 

@@ -95,6 +95,10 @@ export default function router(server, app) {
 	sessionFormRouter.delete('/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
 	server.use('/forms/session', authedMiddlewareChain, sessionFormRouter);
 
+	const toolFormRouter = Router({ caseSensitive: true });
+	toolFormRouter.post('/add', toolController.addToolApi);
+	server.use('/forms/tool', authedMiddlewareChain, toolFormRouter);
+
 	const groupFormRouter = Router({ caseSensitive: true });
 	groupFormRouter.post('/add', groupController.addGroupApi);
 	groupFormRouter.post('/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);

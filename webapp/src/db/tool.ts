@@ -3,11 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-
-export enum ToolType {
-	API_TOOL = 'api',
-	HOSTED_FUNCTION_TOOL = 'function',
-}
+import { ToolType } from '../lib/struct/tools';
 
 export type FunctionProperty = {
 	type: string; // should probably be string | number | whatever

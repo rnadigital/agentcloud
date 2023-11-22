@@ -24,7 +24,7 @@ export default function Tools(props) {
 		fetchTools();
 	}, [resourceSlug]);
 
-	const { tools } = state;
+	const { tools, credentials } = state;
 
 	if (!tools) {
 		return 'Loading...'; //TODO: loader
