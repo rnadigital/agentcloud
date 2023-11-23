@@ -18,7 +18,7 @@ export type Tool = {
     name: string;
  	type: ToolType;
 	data?: {
-		builtin: boolean;
+		builtin?: boolean;
 		name: string;
 		description?: string;
 		parameters?: {

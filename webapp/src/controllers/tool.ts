@@ -57,7 +57,7 @@ export async function addToolApi(req, res, next) {
 	 	type: type as ToolType,
 		data: {
 			...data,
-			builtin: false,
+			builtin: false, //TODO: when the openapi function handling is done, set this to true and overwrite the snake case name
 		    name: toSnakeCase(name), //TODO: add unique index? or enforce unique on applying to agent
 		},
 	});
