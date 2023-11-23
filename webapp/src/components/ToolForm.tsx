@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import OpenAPIClientAxios from 'openapi-client-axios';
+import ParameterForm from '../components/ParameterForm';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -38,6 +39,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
+	const [parameters, setParameters] = useState([{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
 	const [error, setError] = useState();
 
@@ -418,12 +420,15 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 				{functionsList && <div className='border-gray-900/10'>
 					<pre>{JSON.stringify(functionsList, null, 2)}</pre>
 				</div>}
+
+				<ParameterForm parameters={parameters} setParameters={setParameters} />
+
 			</div>
 		</div>
 		<div className='mt-6 flex items-center justify-between gap-x-6'>
 			<Link
 				className='text-sm font-semibold leading-6 text-gray-900'
-				href={`/${resourceSlug}/agents`}
+				href={`/${resourceSlug}/tools`}
 			>
 				Back
 			</Link>

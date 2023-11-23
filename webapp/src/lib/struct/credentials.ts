@@ -8,4 +8,5 @@ export enum CredentialPlatform {
 	OAUTH = 'oauth',
 	//TODO: more
 }
+
 export const CredentialPlatforms = Object.values(CredentialPlatform);
