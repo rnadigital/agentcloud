@@ -57,6 +57,7 @@ export async function addToolApi(req, res, next) {
 	 	type: type as ToolType,
 		data: {
 			...data,
+			builtin: false,
 		    name: toSnakeCase(name), //TODO: add unique index? or enforce unique on applying to agent
 		},
 	});

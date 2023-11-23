@@ -18,7 +18,7 @@ export type Tool = {
     name: string;
  	type: ToolType;
 	data?: {
-		global: boolean;
+		builtin: boolean;
 		name: string;
 		description?: string;
 		parameters?: {
@@ -39,7 +39,7 @@ export function initGlobalTools() {
 	if (GlobalTools.length === 0) { return; }
 	return ToolCollection().bulkWrite(GlobalTools.map(gt => ({
 		replaceOne: {
-			filter: { 'data.global': true, name: gt.name },
+			filter: { 'data.builtin': true, name: gt.name },
 			replacement: gt,
 		}
 	})));
