@@ -15,6 +15,7 @@ class ChatBuilder:
         self.prompt: str = prompt
         self.history: Optional[dict] = history
         self.group_chat: bool = group_chat
+        self.function_map = dict()
 
         # Initialize the socket client and connect
         self.socket = SimpleClient()
@@ -22,16 +23,35 @@ class ChatBuilder:
         self.socket.connect(url=SOCKET_URL)
         self.socket.emit("join_room", f"_{session_id}")
 
-    def write_function_code_to_file(self, func_code: str):
+    def build_function_map(self):
+        for agent in self.agents:
+            agent_config: Dict = agent.llm_config
+            if agent_config and len(agent_config) > 0:
+                functions: List[Dict] = agent_config.get("functions")
+                if functions and len(functions) > 0:
+                    for function in functions:
+                        if not function.get("builtin"):
+                            func_name: str = f"{function.get('name')}"
+                            func_code: str = function.get("code")
+                            self.function_map.update(
+                                {func_name: func_code}
+                            )
+
+        self.write_function_code_to_file()
+
+    def write_function_code_to_file(self):
         try:
-            if func_code and len(func_code) > 0:
-                with open(f"./src/tools/{self.session_id}.py", "a") as f:
-                    f.write(func_code)
+            if self.function_map and len(self.function_map) > 0:
+                functions = "\n".join([v + "\n" for v in self.function_map.values()])
+                if functions and len(functions) > 0:
+                    with open(f"./src/tools/{self.session_id}.py", "w") as f:
+                        f.write(functions)
         except Exception as e:
             logging.exception(e)
 
     def attach_tools_to_agent(self):
         try:
+            self.build_function_map()
             for i, agent in enumerate(self.agents):
                 agent_config: Dict = agent.llm_config
                 if agent_config and len(agent_config) > 0:
@@ -41,7 +61,6 @@ class ChatBuilder:
                             func_name: str = f"{function.get('name')}"
                             module_path = "tools.global_tools"
                             if not function.get("builtin"):
-                                self.write_function_code_to_file(function.get("code"))
                                 module_path = f"tools.{self.session_id}"
                             try:
                                 # Import the function from the tools directory
