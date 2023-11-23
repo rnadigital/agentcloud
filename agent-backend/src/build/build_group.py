@@ -22,6 +22,14 @@ class ChatBuilder:
         self.socket.connect(url=SOCKET_URL)
         self.socket.emit("join_room", f"_{session_id}")
 
+    def write_function_code_to_file(self, func_code: str):
+        try:
+            if func_code and len(func_code) > 0:
+                with open(f"./src/tools/{self.session_id}.py", "a") as f:
+                    f.write(func_code)
+        except Exception as e:
+            logging.exception(e)
+
     def attach_tools_to_agent(self):
         try:
             for i, agent in enumerate(self.agents):
@@ -31,9 +39,13 @@ class ChatBuilder:
                     if functions and len(functions) > 0:
                         for function in functions:
                             func_name: str = f"{function.get('name')}"
+                            module_path = "tools.global_tools"
+                            if not function.get("builtin"):
+                                self.write_function_code_to_file(function.get("code"))
+                                module_path = f"tools.{self.session_id}"
                             try:
                                 # Import the function from the tools directory
-                                module = import_module("tools.global_tools")
+                                module = import_module(module_path)
                                 func: Callable = getattr(module, func_name)
                             except ModuleNotFoundError as mnf:
                                 logging.exception(mnf)
@@ -41,9 +53,12 @@ class ChatBuilder:
                             # Register function associated with agent
                             agent.register_function(
                                 function_map={
-                                    func_name: func
+                                    func_name: func,
                                 }
                             )
+                            # Remove built and code variables it as it is a system variable and does not need to be passed to autogen
+                            function.pop("code")
+                            function.pop("builtin")
                             self.agents[i] = agent
         except Exception as e:
             logging.exception(e)
@@ -56,8 +71,11 @@ class ChatBuilder:
             agent_config["name"] = "admin" if role.get("is_admin") else agent_config.get("name")
             agent_config["socket_client"] = self.socket
             agent_config["sid"] = self.session_id
-            _agent: AgentConfig = AgentConfig(**agent_config)
-            agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(**_agent.model_dump())
+            agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(
+                **AgentConfig(
+                    **agent_config
+                ).model_dump()
+            )
             if agent.name == "admin":
                 self.user_proxy = agent
             self.agents.append(agent)

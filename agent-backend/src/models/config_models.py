@@ -25,6 +25,8 @@ class ToolData(BaseModel):
     description: str
     parameters: ToolParameters
     name: str
+    code: str
+    builtin: bool
 
 
 class Platforms(str, Enum):
