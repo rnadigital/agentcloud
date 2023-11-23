@@ -1,4 +1,4 @@
-def get_papers_from_arvix(query: str) -> list:
+def get_papers_from_arxiv(query: str) -> list:
     try:
         import arxiv
         search = arxiv.Search(
