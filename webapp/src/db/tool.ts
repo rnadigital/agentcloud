@@ -4,6 +4,7 @@ import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import { ToolType } from '../lib/struct/tools';
+import GlobalTools from '../lib/struct/globaltools';
 
 export type FunctionProperty = {
 	type: string; // should probably be string | number | whatever
@@ -15,9 +16,10 @@ export type Tool = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
     name: string;
-    functionName: string; //snake_case_name
  	type: ToolType;
 	data?: {
+		global: boolean;
+		name: string;
 		description?: string;
 		parameters?: {
 			//type: string;
@@ -31,6 +33,16 @@ export type Tool = {
 
 export function ToolCollection() {
 	return db.db().collection('tools');
+}
+
+export function initGlobalTools() {
+	if (GlobalTools.length === 0) { return; }
+	return ToolCollection().bulkWrite(GlobalTools.map(gt => ({
+		replaceOne: {
+			filter: { 'data.global': true, name: gt.name },
+			replacement: gt,
+		}
+	})));
 }
 
 export function getToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Tool> {

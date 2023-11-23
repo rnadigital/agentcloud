@@ -54,9 +54,11 @@ export async function addToolApi(req, res, next) {
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
-	    functionName: toSnakeCase(name), //TODO: add unique index? or enforce unique on applying to agent
 	 	type: type as ToolType,
-		data,
+		data: {
+			...data,
+		    name: toSnakeCase(name), //TODO: add unique index? or enforce unique on applying to agent
+		},
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/tools` });

@@ -27,6 +27,7 @@ const dev = process.env.NODE_ENV !== 'production'
 import * as redis from './lib/redis/redis';
 import { initSocket } from './socketio';
 import * as db from './db';
+import { initGlobalTools } from './db/tool';
 import { migrate } from './db/migrate';
 import router from './router';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,6 +40,7 @@ app.prepare()
 
 		await db.connect();
 		await migrate();
+		await initGlobalTools();
 		await ses.init();
 
 		const server = express();
