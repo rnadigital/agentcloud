@@ -1,6 +1,6 @@
 'use strict';
 
-import { getToolsByTeam, addTool, getToolById } from '../db/tool';
+import { getToolsByTeam, addTool, getToolById, deleteToolById } from '../db/tool';
 import { getCredentialsByTeam } from '../db/credential';
 import { dynamicResponse } from '../util';
 import toObjectId from '../lib/misc/toobjectid';
@@ -107,6 +107,23 @@ export async function addToolApi(req, res, next) {
 
 }
 
+/**
+ * @api {delete} /forms/tool/[toolId] Delete a tool
+ * @apiName delete
+ * @apiGroup Tool
+ *
+ * @apiParam {String} toolID tool id
+ */
 export async function deleteToolApi(req, res, next) {
-	return dynamicResponse(req, res, 400, { error: 'Not implemented' });
+
+	const { toolId } = req.body;
+
+	if (!toolId || typeof toolId !== 'string' || toolId.length !== 24) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	await deleteToolById(res.locals.account.currentTeam, toolId);
+
+	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agents`*/ });
+
 }
