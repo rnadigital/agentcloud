@@ -35,6 +35,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState('');
 	const [toolName, setToolName] = useState('');
+	const [toolDescription, setToolDescription] = useState('');
 	const [toolType, setToolType] = useState(ToolType.API_TOOL);
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
@@ -60,6 +61,18 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			case ToolType.HOSTED_FUNCTION_TOOL:
 				body.data = {
 					code: toolCode,
+					description: toolDescription,
+					parameters: {
+						type: 'object',
+						required: parameters.filter(x => x.required).map(x => x.name.trim()),
+						properties: parameters.reduce((acc, par) => {
+							acc[par.name.trim()] = {
+								type: par.type,
+								description: par.description,
+							};
+							return acc;
+						}, {}),
+					},
 				};
 				break;
 			default:
@@ -89,7 +102,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						<input
 							type='text'
 							name='toolName'
-							className='w-1/4 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 							onChange={e => setToolName(e.target.value)}
 							value={toolName}
 						/>
@@ -99,12 +112,25 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 					</div>
 				</div>
 				<div>
+					<label className='text-base font-semibold text-gray-900'>Description</label>
+					<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
+					<div>
+						<textarea
+							name='toolName'
+							className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+							onChange={e => setToolDescription(e.target.value)}
+							rows={3}
+							value={toolDescription}
+						/>
+					</div>
+				</div>
+				<div>
 					<label className='text-base font-semibold text-gray-900'>Tool Type</label>
 					<div>
 						<select
 							required
 							name='toolType'
-							className='w-1/4 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							value={toolType}
 							onChange={(e) => setToolType(e.target.value as ToolType)}
 						>
