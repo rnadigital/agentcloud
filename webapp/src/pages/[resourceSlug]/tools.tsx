@@ -5,6 +5,7 @@ import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 import { useRouter } from 'next/router';
 import ToolForm from '../../components/ToolForm';
+import ToolList from '../../components/ToolList';
 import NewButtonSection from '../../components/NewButtonSection';
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 
@@ -62,7 +63,7 @@ export default function Tools(props) {
 			buttonMessage={'New Tool'}
 		/>}
 		
-		{/* TODO: tools listed in cards/table */}
+		<ToolList tools={tools} fetchTools={fetchTools} />
 
 		{tools.length > 0 && <Link href={`/${resourceSlug}/tool/add`}>
 			<button

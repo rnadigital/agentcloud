@@ -41,7 +41,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
-		const [parname, par] = entry;
+		const [parname, par]: any = entry;
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
 		return acc;
 	}, []);
