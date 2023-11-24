@@ -1,7 +1,7 @@
 import logging
 
 from socketio.simple_client import SimpleClient
-from init.env_variables import SOCKET_URL
+from init.env_variables import SOCKET_URL, BASE_PATH
 import autogen
 from typing import Optional, Union, List, Dict, Callable
 from models.config_models import AgentConfig
@@ -44,7 +44,7 @@ class ChatBuilder:
             if self.function_map and len(self.function_map) > 0:
                 functions = "\n".join([v + "\n" for v in self.function_map.values()])
                 if functions and len(functions) > 0:
-                    with open(f"./src/tools/{self.session_id}.py", "w") as f:
+                    with open(f"{BASE_PATH}/tools/{self.session_id}.py", "w") as f:
                         f.write(functions)
         except Exception as e:
             logging.exception(e)
