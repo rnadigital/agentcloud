@@ -77,6 +77,9 @@ export default function router(server, app) {
 	teamPagesRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
 	teamPagesRouter.get('/tools', toolController.toolsPage.bind(null, app));
 	teamPagesRouter.get('/tools.json', toolController.toolsJson);
+	teamPagesRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
+	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
+	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
 
 	const agentFormRouter = Router({ caseSensitive: true });
@@ -97,6 +100,7 @@ export default function router(server, app) {
 
 	const toolFormRouter = Router({ caseSensitive: true });
 	toolFormRouter.post('/add', toolController.addToolApi);
+	toolFormRouter.delete('/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
 	server.use('/forms/tool', authedMiddlewareChain, toolFormRouter);
 
 	const groupFormRouter = Router({ caseSensitive: true });

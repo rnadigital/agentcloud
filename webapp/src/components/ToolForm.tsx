@@ -33,14 +33,19 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [toolState, setToolState] = useState(tool); // TODO: remove?
 	const [importOpen, setImportOpen] = useState(false);
 	const [importValue, setImportValue] = useState('');
-	const [toolCode, setToolCode] = useState('');
-	const [toolName, setToolName] = useState('');
-	const [toolDescription, setToolDescription] = useState('');
-	const [toolType, setToolType] = useState(ToolType.API_TOOL);
+	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
+	const [toolName, setToolName] = useState(tool?.data?.name || '');
+	const [toolDescription, setToolDescription] = useState(tool?.data?.description || '');
+	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.HOSTED_FUNCTION_TOOL);
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
-	const [parameters, setParameters] = useState([{ name: '', type: '', description: '', required: false }]);
+	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
+		const [parname, par] = entry;
+		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
+		return acc;
+	}, []);
+	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
 	const [error, setError] = useState();
 
@@ -134,8 +139,8 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 							value={toolType}
 							onChange={(e) => setToolType(e.target.value as ToolType)}
 						>
-							<option value={ToolType.API_TOOL}>Api call (OpenAPI)</option>
 							<option value={ToolType.HOSTED_FUNCTION_TOOL}>Custom code</option>
+							<option value={ToolType.API_TOOL}>Api call (OpenAPI)</option>
 						</select>
 					</div>
 				</div>
@@ -153,7 +158,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 								<div className='mt-2'>
 									<textarea
 										name='code'
-										rows={3}
+										rows={10}
 										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 										placeholder={'import requests\n...'}
 										value={toolCode}
