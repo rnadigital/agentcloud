@@ -3,18 +3,21 @@
 import { getAgentById, getAgentsByTeam, addAgent, AgentType, updateAgent, deleteAgentById } from '../db/agent';
 import { getGroupsWithAgent } from '../db/group';
 import { getCredentialsByTeam } from '../db/credential';
+import { getToolsByTeam, getToolsById } from '../db/tool';
 import { dynamicResponse } from '../util';
 import toObjectId from '../lib/misc/toobjectid';
 
 export async function agentsData(req, res, _next) {
-	const [agents, credentials] = await Promise.all([
+	const [agents, credentials, tools] = await Promise.all([
 		getAgentsByTeam(res.locals.account.currentTeam),
 		getCredentialsByTeam(res.locals.account.currentTeam),
+		getToolsByTeam(res.locals.account.currentTeam),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
 		credentials,
+		tools,
 	};
 }
 
@@ -48,14 +51,16 @@ export async function agentAddPage(app, req, res, next) {
 }
 
 export async function agentData(req, res, _next) {
-	const [agent, credentials] = await Promise.all([
+	const [agent, credentials, tools] = await Promise.all([
 		getAgentById(res.locals.account.currentTeam, req.params.agentId),
 		getCredentialsByTeam(res.locals.account.currentTeam),
+		getToolsByTeam(res.locals.account.currentTeam),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
 		credentials,
+		tools,
 	};
 }
 
@@ -89,13 +94,20 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, model, credentialId, type, systemMessage }  = req.body;
+	const { name, model, credentialId, type, systemMessage, toolIds }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
 		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
-		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0) {
+		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
+		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const foundTools = await getToolsById(res.locals.account.currentTeam, toolIds);
+	if (!foundTools || foundTools.length !== toolIds.length) {
+		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -117,7 +129,7 @@ export async function addAgentApi(req, res, next) {
 				: null,
 		model,
 		credentialId: toObjectId(credentialId),
-		toolIds: [],
+		toolIds: foundTools.map(t => t._id),
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
@@ -135,13 +147,20 @@ export async function addAgentApi(req, res, next) {
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, model, credentialId, type, systemMessage }  = req.body;
+	const { name, model, credentialId, type, systemMessage, toolIds }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
 		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
-		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0) {
+		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
+		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const foundTools = await getToolsById(res.locals.account.currentTeam, toolIds);
+	if (!foundTools || foundTools.length !== toolIds.length) {
+		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -161,7 +180,7 @@ export async function editAgentApi(req, res, next) {
 				: null,
 		model,
 		credentialId: toObjectId(credentialId),
-		toolIds: [],
+		toolIds: foundTools.map(t => t._id),
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit`*/ });

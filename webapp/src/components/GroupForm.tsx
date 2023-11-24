@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import Select from 'react-tailwindcss-select';
-// import 'react-tailwindcss-select/dist/index.css';
 
 export default function GroupForm({ agentChoices = [], group = {}, editing }: { agentChoices?: any[], group?: any, editing?: boolean }) { //TODO: fix any types
 

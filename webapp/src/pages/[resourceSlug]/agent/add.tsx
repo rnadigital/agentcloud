@@ -14,7 +14,7 @@ export default function AddAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, credentials } = state;
+	const { agents, credentials, tools } = state;
 
 	useEffect(() => {
 		API.getAgents({ resourceSlug: account.currentTeam }, dispatch, setError, router);
@@ -30,7 +30,7 @@ export default function AddAgent(props) {
 			<title>New Agent - {teamName}</title>
 		</Head>
 
-		<AgentForm credentials={credentials} />
+		<AgentForm credentials={credentials} tools={tools} />
 
 	</>);
 

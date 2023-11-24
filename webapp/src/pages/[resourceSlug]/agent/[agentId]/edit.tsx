@@ -16,7 +16,7 @@ export default function EditAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agent, credentials } = state;
+	const { agent, credentials, tools } = state;
 
 	useEffect(() => {
 		API.getAgent({
@@ -39,7 +39,7 @@ export default function EditAgent(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
 		</div>
 
-		<AgentForm editing={true} agent={agent} credentials={credentials} />
+		<AgentForm editing={true} agent={agent} credentials={credentials} tools={tools} />
 
 	</>);
 }
