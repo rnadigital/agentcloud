@@ -21,7 +21,8 @@ export default function ParameterForm({ parameters, setParameters }) {
 	};
 
 	return (
-		<div>
+		<div>				
+			<label className='text-base font-semibold text-gray-900'>Parameters</label>
 			{parameters.map((param, index) => (
 				<div key={index} className='grid grid-cols-1 md:grid-cols-5 gap-4 mb-4'>
 					<input
