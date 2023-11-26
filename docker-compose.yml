@@ -22,6 +22,7 @@ services:
       args:
         - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
+        - NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
         - POSTHOG_KEY=
     ports:
       - "127.0.0.1:3000:3000"
