@@ -1,7 +1,7 @@
 'use strict';
 
 import { getAgentById, getAgentsByTeam, addAgent, AgentType, updateAgent, deleteAgentById } from '../db/agent';
-import { getGroupsWithAgent } from '../db/group';
+import { removeAgentFromGroups } from '../db/group';
 import { getCredentialsByTeam } from '../db/credential';
 import { getToolsByTeam, getToolsById } from '../db/tool';
 import { dynamicResponse } from '../util';
@@ -202,7 +202,7 @@ export async function deleteAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//const affectedGroups = await getGroupsWithAgent(res.locals.account.currentTeam, agentId);
+	await removeAgentFromGroups(res.locals.account.currentTeam, agentId);
 
 	await deleteAgentById(res.locals.account.currentTeam, agentId);
 

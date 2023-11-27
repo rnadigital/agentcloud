@@ -1,6 +1,7 @@
 'use strict';
 
 import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
+import { removeAgentsCredential } from '../db/agent';
 import { CredentialPlatform, CredentialPlatforms } from '../lib/struct/credentials';
 import { dynamicResponse } from '../util';
 
@@ -108,7 +109,10 @@ export async function deleteCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteCredentialById(res.locals.account.currentTeam, credentialId);
+	await Promise.all([
+		removeAgentsCredential(res.locals.account.currentTeam, credentialId),
+		deleteCredentialById(res.locals.account.currentTeam, credentialId),
+	]);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/credentials`*/ });
 

@@ -40,7 +40,9 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 		}, null, setError, router);
 	}
 
-	const groupOptions = groups.map(g => ({
+	const groupOptions = groups.filter(g => {
+		return g.adminAgent && g.agents.length > 0;
+	}).map(g => ({
 		label: g.name,
 		value: g._id,
 	}));

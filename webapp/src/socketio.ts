@@ -45,7 +45,7 @@ export function initSocket(rawHttpServer) {
 		log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			//log('Received socket event %s args: %O', eventName, args);
+			log('Received socket event %s args: %O', eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {

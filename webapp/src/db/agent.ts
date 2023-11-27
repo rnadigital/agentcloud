@@ -52,7 +52,9 @@ export function getAgentsById(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promi
 export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 	return AgentCollection().aggregate([
 		{
-			$match: { teamId: toObjectId(teamId) }
+			$match: {
+				teamId: toObjectId(teamId),
+			}
 		}, {
 			$lookup: { from: 'groups', as: 'group', localField: '_id', foreignField: 'agents' }
 		}, {
@@ -88,6 +90,17 @@ export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent
 		teamId: toObjectId(teamId),
 	}, {
 		$set: agent,
+	});
+}
+
+export function removeAgentsCredential(teamId: db.IdOrStr, credentialId: db.IdOrStr): Promise<any> {
+	return AgentCollection().updateMany({
+		teamId: toObjectId(teamId),
+		credentialId: toObjectId(credentialId)
+	}, {
+		$unset: {
+			credentialId: '',
+		},
 	});
 }
 
