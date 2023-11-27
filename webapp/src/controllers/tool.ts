@@ -2,6 +2,7 @@
 
 import { getToolsByTeam, addTool, getToolById, deleteToolById } from '../db/tool';
 import { getCredentialsByTeam } from '../db/credential';
+import { removeAgentsTool } from '../db/agent';
 import { dynamicResponse } from '../util';
 import toObjectId from '../lib/misc/toobjectid';
 import { ToolType } from '../lib/struct/tools';
@@ -122,7 +123,10 @@ export async function deleteToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteToolById(res.locals.account.currentTeam, toolId);
+	await Promise.all([
+		deleteToolById(res.locals.account.currentTeam, toolId),
+		removeAgentsTool(res.locals.account.currentTeam, toolId),
+	]);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agents`*/ });
 

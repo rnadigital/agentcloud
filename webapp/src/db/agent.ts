@@ -104,6 +104,17 @@ export function removeAgentsCredential(teamId: db.IdOrStr, credentialId: db.IdOr
 	});
 }
 
+export function removeAgentsTool(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
+	return AgentCollection().updateMany({
+		teamId: toObjectId(teamId),
+		toolIds: toObjectId(toolId)
+	}, {
+		$pull: {
+			toolIds: toObjectId(toolId),
+		},
+	});
+}
+
 export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<any> {
 	return AgentCollection().deleteOne({
 		_id: toObjectId(agentId),
