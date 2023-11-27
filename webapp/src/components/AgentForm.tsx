@@ -25,8 +25,9 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 
 	const initialTools = agent.toolIds && agent.toolIds.map(tid => {
 		const foundTool = tools.find(t => t._id === tid);
+		if (!foundTool) { return null; }
 		return { label: foundTool.name, value: foundTool._id };
-	});
+	}).filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
 
 	async function agentPost(e) {
