@@ -140,7 +140,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 							onChange={(e) => setToolType(e.target.value as ToolType)}
 						>
 							<option value={ToolType.HOSTED_FUNCTION_TOOL}>Custom code</option>
-							<option value={ToolType.API_TOOL}>Api call (OpenAPI)</option>
+							<option disabled value={ToolType.API_TOOL}>OpenAPI endpoint <em>(coming soon)</em></option>
 						</select>
 					</div>
 				</div>
