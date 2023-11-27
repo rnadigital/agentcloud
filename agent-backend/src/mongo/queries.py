@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from init.env_variables import BASE_PATH
 from models.config_models import ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
-from typing import List, Dict
+from typing import List, Dict, Union
 
 
 class MongoClientConnection(MongoConnection):
@@ -64,18 +64,20 @@ class MongoClientConnection(MongoConnection):
             agents = group_query_results.get("agents")
             admin_agent = group_query_results.get("adminAgent")
             agents.append(admin_agent)
-            for agent in agents:
-                agent_data: AgentData = self._get_group_member(agent)
-                agent_data.is_admin = True if agent == admin_agent else False
-                list_of_agents.append(agent_data.model_dump())
+            if agents and len(agents) > 0:
+                for agent in agents:
+                    agent_data: Union[AgentData, None] = self._get_group_member(agent)
+                    if agent_data:
+                        agent_data.is_admin = True if agent == admin_agent else False
+                        list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
             return team
 
-    def _get_group_member(self, agent_id: ObjectId) -> AgentData:
+    def _get_group_member(self, agent_id: ObjectId) -> Union[AgentData, None]:
         try:
             _collection = self._get_agents_collection
             agent = _collection.find_one({"_id": ObjectId(agent_id)})
-
+            _config_list: ConfigList = ConfigList()
             # Get agent credentials
             if agent is not None:
                 credential_id = agent.get("credentialId")
@@ -107,7 +109,6 @@ class MongoClientConnection(MongoConnection):
                     functions=list_of_agent_tools,
                     config_list=[_config_list]
                 )
-
                 # Construct Agent Config
                 code_execution = agent.get("codeExecutionConfig")
                 if code_execution and len(code_execution) > 0:
@@ -127,11 +128,13 @@ class MongoClientConnection(MongoConnection):
                     code_execution_config=code_execution_config
                 )
 
-            # Construct Agent Data
-            _agent_data = AgentData(
-                type=agent.get("type", "AssistantAgent"),
-                data=_agent_config
-            )
-            return _agent_data
+                # Construct Agent Data
+                _agent_data = AgentData(
+                    type=agent.get("type", "AssistantAgent"),
+                    data=_agent_config
+                )
+                return _agent_data
+            else:
+                return None
         except Exception as e:
             logging.exception(e)

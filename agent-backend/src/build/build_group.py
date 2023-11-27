@@ -8,6 +8,9 @@ from models.config_models import AgentConfig
 from importlib import import_module
 
 
+# TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
+# tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
+
 class ChatBuilder:
     def __init__(self, prompt, session_id: str, group_chat: bool, history: Optional[dict]):
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
@@ -66,15 +69,15 @@ class ChatBuilder:
                                 # Import the function from the tools directory
                                 module = import_module(module_path)
                                 func: Callable = getattr(module, func_name)
+                                # Register function associated with agent
+                                agent.register_function(
+                                    function_map={
+                                        func_name: func,
+                                    }
+                                )
                             except ModuleNotFoundError as mnf:
                                 logging.exception(mnf)
                                 pass
-                            # Register function associated with agent
-                            agent.register_function(
-                                function_map={
-                                    func_name: func,
-                                }
-                            )
                             # Remove built and code variables it as it is a system variable and does not need to be passed to autogen
                             function.pop("code")
                             function.pop("builtin")
@@ -96,7 +99,7 @@ class ChatBuilder:
                 ).model_dump()
             )
             if agent.name == "admin":
-                self.user_proxy = agent
+                self.user_proxy: autogen.UserProxyAgent = agent
             self.agents.append(agent)
 
     def run_chat(self):
