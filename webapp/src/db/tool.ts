@@ -39,7 +39,7 @@ export function ToolCollection() {
 
 export function initGlobalTools() {
 	if (GlobalTools.length === 0) {
-		log('No global tools found.')
+		log('No global tools found.');
 		return;
 	}
 	return ToolCollection().bulkWrite(GlobalTools.map(gt => ({
