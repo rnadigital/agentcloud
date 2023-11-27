@@ -5,6 +5,8 @@ import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import { ToolType } from '../lib/struct/tools';
 import GlobalTools from '../lib/struct/globaltools';
+import debug from 'debug';
+const log = debug('webapp:db:tools');
 
 export type FunctionProperty = {
 	type: string; // should probably be string | number | whatever
@@ -36,11 +38,15 @@ export function ToolCollection() {
 }
 
 export function initGlobalTools() {
-	if (GlobalTools.length === 0) { return; }
+	if (GlobalTools.length === 0) {
+		log('No global tools found.')
+		return;
+	}
 	return ToolCollection().bulkWrite(GlobalTools.map(gt => ({
 		replaceOne: {
 			filter: { 'data.builtin': true, name: gt.name },
 			replacement: gt,
+			upsert: true,
 		}
 	})));
 }
@@ -57,13 +63,19 @@ export function getToolsById(teamId: db.IdOrStr, toolIds: db.IdOrStr[]): Promise
 		_id: {
 			$in: toolIds.map(toObjectId),
 		},
-		teamId: toObjectId(teamId),
+		$or: [
+			{ teamId: toObjectId(teamId) },
+			{ 'data.builtin': true },
+		],
 	}).toArray();
 }
 
 export function getToolsByTeam(teamId: db.IdOrStr): Promise<Tool[]> {
 	return ToolCollection().find({
-		teamId: toObjectId(teamId),
+		$or: [
+			{ teamId: toObjectId(teamId) },
+			{ 'data.builtin': true },
+		],
 	}).toArray();
 }
 
