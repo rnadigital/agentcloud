@@ -17,6 +17,7 @@ if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
 
 import * as http from 'http';
 import express from 'express';
+import passport from 'passport';
 import next from 'next';
 const dev = process.env.NODE_ENV !== 'production'
 	, hostname = 'localhost'

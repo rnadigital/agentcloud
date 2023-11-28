@@ -60,8 +60,8 @@ export async function login(req, res) {
 	}
 	const passwordMatch = await bcrypt.compare(password, account.passwordHash);
 	if (passwordMatch === true) {
-		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET);	//jwt
-		req.session.token = token;																				//jwt (cookie)
+		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
+		req.session.token = token; //jwt (cookie)
 		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam}/sessions`, token });
 	}
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });

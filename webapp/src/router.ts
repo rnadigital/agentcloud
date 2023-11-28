@@ -10,6 +10,7 @@ import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import renderStaticPage from './lib/middleware/render/staticpage';
 import csrfMiddleware from './lib/middleware/auth/csrf';
 import bodyParser from 'body-parser';
+import passport from 'passport';
 
 //TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
@@ -19,17 +20,51 @@ import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
 import * as toolController from './controllers/tool';
+import * as oauthController from './controllers/oauth';
 
 export default function router(server, app) {
 
+	// Passport session setup
+	passport.serializeUser(oauthController.serializeHandler);
+	passport.deserializeUser(oauthController.deserializeHandler);
+
+	// Setup all the oauth handlers
+	oauthController.OAUTH_STRATEGIES.forEach((s: oauthController.Strategy) => {
+		if (!process.env[`OAUTH_${s.env}_CLIENT_ID`]) { return; }
+		passport.use(new s.strategy({
+			clientID: process.env[`OAUTH_${s.env}_CLIENT_ID`],
+			clientSecret: process.env[`OAUTH_${s.env}_CLIENT_SECRET`],
+			callbackURL: `${process.env.URL_APP}${s.path}`,
+		}, s.callback));
+	});
+
+	// Initialize Passport
+	const oauthRouter = Router({ caseSensitive: true });
+	oauthRouter.use(passport.initialize());
+	oauthRouter.use(passport.session());
+	// Github OAuth routers
+	oauthRouter.get('/github', useSession, passport.authenticate('github'));
+	oauthRouter.get('/github/callback', useSession, passport.authenticate('github', { failureRedirect: '/login' }), (_req, res) => {
+		res.redirect('/account'); // Or handle as needed
+	});
+	// Google OAuth routes
+	oauthRouter.get('/google', useSession, passport.authenticate('google', { scope: ['profile', 'email'] }));
+	oauthRouter.get('/google/callback', useSession, passport.authenticate('google', { failureRedirect: '/login' }), (_req, res) => {
+		res.redirect('/account'); // Or handle as needed
+	});
+	server.use('/auth', useSession, oauthRouter);
+
+	// Stripe webhook handler
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
+	// Body and query parsing middleware
 	server.set('query parser', 'simple');
 	server.use(bodyParser.json()); // for parsing application/json
 	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
 
 	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 	const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
+	
 	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
 		const homeRedirect = res.locals.account
 			? `/${res.locals.account.currentTeam}/sessions`

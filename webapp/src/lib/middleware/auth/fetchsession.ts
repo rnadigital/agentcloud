@@ -1,8 +1,11 @@
 'use strict';
 
 import { getAccountById, Account } from '../../../db/account';
+import debug from 'debug';
+const log = debug('webapp:http');
 
 export default async function fetchSession(req, res, next) {
+	log('req.session:', req.session);
 	if (req.session && req.session.accountId) {
 		const account: Account = await getAccountById(req.session.accountId);
 		if (account) {
