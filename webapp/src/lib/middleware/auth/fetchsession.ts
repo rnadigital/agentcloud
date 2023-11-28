@@ -5,8 +5,7 @@ import debug from 'debug';
 const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {
-	log('req.headers["cookie"]:', req.headers['cookie']);
-	log('req.session:', req.session);
+	// log('req.session:', req.session);
 	if (req.session) {
 		let account: Account;
 		if (req.session.accountId) {
@@ -15,7 +14,7 @@ export default async function fetchSession(req, res, next) {
 			const { oauthId, provider } = req.session.passport?.user;
 			account = await getAccountByOAuth(oauthId, provider);
 		}
-		log('account:', account);
+		// log('account:', account);
 		if (account) {
 			res.locals.account = {
 				_id: account._id.toString(),
