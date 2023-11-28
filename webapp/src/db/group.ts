@@ -53,6 +53,37 @@ export async function updateGroup(teamId: db.IdOrStr, groupId: db.IdOrStr, group
 	});
 }
 
+export function removeAgentFromGroups(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<any> {
+	return GroupCollection().bulkWrite([
+		{
+			updateMany: {
+				filter: {
+					adminAgent: toObjectId(agentId),
+					teamId: toObjectId(teamId),
+				},
+				update: {
+					$unset: {
+						adminAgent: '',
+					}
+				},
+			}
+		},
+		{
+			updateMany: {
+				filter: {
+					agents: toObjectId(agentId),
+					teamId: toObjectId(teamId),
+				},
+				update: {
+					$pull: {
+						agents: toObjectId(agentId),
+					}
+				},
+			}
+		}
+	]);
+}
+
 export function deleteGroupById(teamId: db.IdOrStr, groupId: db.IdOrStr): Promise<any> {
 	return GroupCollection().deleteOne({
 		_id: toObjectId(groupId),

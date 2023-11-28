@@ -21,12 +21,12 @@ import {
 	ChatBubbleLeftIcon,
 	XMarkIcon,
 	ArrowRightOnRectangleIcon,
-	CpuChipIcon,
+	CreditCardIcon,
 	KeyIcon,
+	WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import {
 	ChevronDownIcon,
-	UserGroupIcon,
 } from '@heroicons/react/20/solid';
 import { SessionStatus } from './SessionCards';
 
@@ -39,6 +39,7 @@ const noNavPages = [
 	'/changepassword',
 	'/requestchangepassword',
 	'/verify',
+	'/redirect',
 ];
 
 const teamNavigation = [
@@ -52,6 +53,7 @@ const teamNavigation = [
 		<path d='M21.3 11.625C20.5125 10.6875 19.5375 10.0125 18.4875 9.59995C19.5375 8.88745 20.2125 7.68745 20.2125 6.29995C20.2125 4.08745 18.4125 2.32495 16.2375 2.32495C14.0625 2.32495 12.225 4.12495 12.225 6.33745C12.225 7.68745 12.9 8.92495 13.95 9.63745C12.9 10.05 11.925 10.725 11.1375 11.6625C11.1 11.7 11.1 11.7375 11.0625 11.7375C10.725 11.55 10.3875 11.4 10.05 11.25C11.1 10.5375 11.775 9.33745 11.775 7.94995C11.775 5.73745 9.97499 3.97495 7.79999 3.97495C5.62499 3.97495 3.82499 5.77495 3.82499 7.94995C3.82499 9.29995 4.49999 10.5375 5.54999 11.25C4.49999 11.6625 3.52499 12.3375 2.73749 13.275C1.46249 14.8125 0.712488 16.9125 0.674988 19.2C0.674988 19.5375 0.862488 19.8375 1.12499 19.95C1.91249 20.3625 4.72499 21.6375 7.79999 21.6375C11.1 21.6375 13.7625 20.325 14.5125 19.95C14.55 19.95 14.55 19.9125 14.5875 19.9125C15.15 19.9874 15.7125 20.025 16.2375 20.025C19.5 20.025 22.2 18.7125 22.9125 18.3375C23.175 18.1875 23.3625 17.8875 23.3625 17.5875C23.2875 15.3 22.575 13.1625 21.3 11.625ZM16.2 4.01245C17.475 4.01245 18.4875 5.06245 18.4875 6.29995C18.4875 7.53745 17.475 8.62495 16.2 8.62495C14.925 8.62495 13.9125 7.57495 13.9125 6.33745C13.9125 5.09995 14.925 4.01245 16.2 4.01245ZM7.79999 5.62495C9.07499 5.62495 10.0875 6.67495 10.0875 7.91245C10.0875 9.14995 9.03749 10.2 7.79999 10.2C6.56249 10.2 5.51249 9.14995 5.51249 7.91245C5.51249 6.67495 6.52499 5.62495 7.79999 5.62495ZM7.79999 19.9874C5.54999 19.9874 3.37499 19.1625 2.36249 18.7125C2.47499 17.025 3.07499 15.4875 4.01249 14.3625C5.02499 13.1625 6.37499 12.525 7.79999 12.525C9.26249 12.525 10.575 13.1625 11.5875 14.3625C12.525 15.4875 13.125 17.025 13.2375 18.7125C12.3 19.1625 10.2 19.9874 7.79999 19.9874ZM16.2 18.375C15.7875 18.375 15.3375 18.3375 14.85 18.2625C14.6625 16.35 13.95 14.5875 12.8625 13.275C12.7125 13.0875 12.5625 12.9375 12.375 12.75C12.375 12.75 12.375 12.75 12.4125 12.7125C13.425 11.5125 14.7375 10.875 16.2 10.875C17.6625 10.875 18.975 11.5125 19.9875 12.7125C20.925 13.8375 21.4875 15.375 21.6375 17.0625C20.625 17.55 18.6 18.375 16.2 18.375Z' fill='currentColor'/>
 	</svg> },
 	{ name: 'Credentials', href: '/credentials', icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Tools', href: '/tools', icon: <WrenchScrewdriverIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const libraryNavigation = [/*
@@ -69,11 +71,6 @@ import { useAccountContext } from '../context/account';
 import { useChatContext } from '../context/chat';
 import * as API from '../api';
 
-// const pages = [
-//   { name: 'Projects', href: '#', current: false },
-//   { name: 'Project Nero', href: '#', current: true },
-// ];
-
 export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
@@ -90,7 +87,7 @@ export default withRouter(function Layout(props) {
 		//from pages that aren't SSRd, account fetched async in context
 		// return 'Loading...'; //TODO: loader?
 	}
-		
+
 	return (
 		<>
 			<Head>
@@ -445,6 +442,12 @@ export default withRouter(function Layout(props) {
 								</>
 							</form>*/}
 							<div className='flex flex-1 justify-end items-center'>
+								{chatContext?.tokens != null && <span
+									className='me-2 whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
+								>
+									<CreditCardIcon className='h-5 w-5' />
+									Tokens used: {chatContext?.tokens||0}
+								</span>}
 								{chatContext?.status && chatContext?.type && <span
 									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
 									onClick={chatContext.scrollToBottom}

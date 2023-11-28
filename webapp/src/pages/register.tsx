@@ -133,7 +133,7 @@ export default function Register() {
 							
 						</form>
 
-						{/*<div>
+						<div>
 							<div className='relative mt-10'>
 								<div className='absolute inset-0 flex items-center' aria-hidden='true'>
 									<div className='w-full border-t border-gray-200' />
@@ -144,18 +144,23 @@ export default function Register() {
 							</div>
 
 							<div className='mt-6 grid grid-cols-2 gap-4'>
-								<a
-									href='#'
-									className='flex w-full items-center justify-center gap-3 rounded-md bg-[#1D9BF0] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1D9BF0]'
-								>
-									<svg className='h-5 w-5' aria-hidden='true' fill='currentColor' viewBox='0 0 20 20'>
-										<path d='M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84' />
-									</svg>
-									<span className='text-sm font-semibold leading-6'>Twitter</span>
-								</a>
 
-								<a
-									href='#'
+								<Link
+									href='/auth/google'
+									className='flex w-full items-center justify-center gap-3 rounded-md bg-[#4285F4] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4285F4]'
+								>
+									<svg
+										viewBox='0 0 1024 1024'
+										fill='currentColor'
+										className='h-5 w-5'
+									>
+										<path d='M881 442.4H519.7v148.5h206.4c-8.9 48-35.9 88.6-76.6 115.8-34.4 23-78.3 36.6-129.9 36.6-99.9 0-184.4-67.5-214.6-158.2-7.6-23-12-47.6-12-72.9s4.4-49.9 12-72.9c30.3-90.6 114.8-158.1 214.7-158.1 56.3 0 106.8 19.4 146.6 57.4l110-110.1c-66.5-62-153.2-100-256.6-100-149.9 0-279.6 86-342.7 211.4-26 51.8-40.8 110.4-40.8 172.4S151 632.8 177 684.6C240.1 810 369.8 896 519.7 896c103.6 0 190.4-34.4 253.8-93 72.5-66.8 114.4-165.2 114.4-282.1 0-27.2-2.4-53.3-6.9-78.5z' />
+									</svg>
+									<span className='text-sm font-semibold leading-6'>Google</span>
+								</Link>
+
+								<Link
+									href='/auth/github'
 									className='flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]'
 								>
 									<svg className='h-5 w-5' aria-hidden='true' fill='currentColor' viewBox='0 0 20 20'>
@@ -166,9 +171,10 @@ export default function Register() {
 										/>
 									</svg>
 									<span className='text-sm font-semibold leading-6'>GitHub</span>
-								</a>
+								</Link>
 							</div>
-						</div>*/}
+						</div>
+
 					</div>
 
 					<p className='mt-10 text-center text-sm text-gray-500'>

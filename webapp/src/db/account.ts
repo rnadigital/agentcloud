@@ -3,6 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
+import { OAUTH_PROVIDER } from '../controllers/oauth';
 
 type AccountTeam = {
 	id: ObjectId;
@@ -15,10 +16,19 @@ type AccountOrg = {
 	teams: AccountTeam[];
 }
 
+export type AccountOAuthId = string | number; // <- Proof that typescript is pointless busywork
+
+export type AccountOAuthData = {
+	id: AccountOAuthId,
+	// potentially more stuff here later...
+}
+
+export type OAuthRecordType = Partial<Record<OAUTH_PROVIDER,AccountOAuthData>>;
+
 export type Account = {
 	_id?: ObjectId;
 	name: string;
-	email: string;
+	email?: string;
 	passwordHash?: string;
 	orgs: AccountOrg[];
 	currentOrg: ObjectId;
@@ -26,9 +36,11 @@ export type Account = {
 	emailVerified: boolean;
 	apiJwt?: string;
 	token?: string;
+	//TODO: move these stripe things to a "stripe" key
 	stripeCustomerId?: string;
 	stripeEndsAt?: number;
 	stripeCancelled?: boolean;
+	oauth?: OAuthRecordType,
 }
 
 export function AccountCollection() {
@@ -44,6 +56,12 @@ export function getAccountById(userId: db.IdOrStr): Promise<Account> {
 export function getAccountByEmail(email: string): Promise<Account> {
 	return AccountCollection().findOne({
 		email: email,
+	});
+}
+
+export function getAccountByOAuth(oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<Account> {
+	return AccountCollection().findOne({
+		[`oauth.${provider}.id`]: oauthId,
 	});
 }
 

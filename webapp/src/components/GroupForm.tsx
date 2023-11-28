@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import Select from 'react-tailwindcss-select';
-// import 'react-tailwindcss-select/dist/index.css';
 
 export default function GroupForm({ agentChoices = [], group = {}, editing }: { agentChoices?: any[], group?: any, editing?: boolean }) { //TODO: fix any types
 
@@ -153,12 +152,19 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 		</div>
 
 		<div className='mt-6 flex items-center justify-between gap-x-6'>
-			<Link
+			<button
 				className='text-sm font-semibold leading-6 text-gray-900'
-				href={`/${resourceSlug}/groups`}
+				onClick={(e) => {
+					e.preventDefault();
+					if (window.history.length > 1) {
+						router.back();
+					} else {
+						router.push(`/${resourceSlug}/groups`);
+					}
+				}}
 			>
 				Back
-			</Link>
+			</button>
 			<button
 				type='submit'
 				className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'

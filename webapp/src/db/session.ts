@@ -76,12 +76,14 @@ export function unsafeSetSessionGroupId(sessionId: db.IdOrStr, groupId: db.IdOrS
 }
 
 export function unsafeIncrementTokens(sessionId: db.IdOrStr, tokens: number): Promise<any> {
-	return SessionCollection().updateOne({
+	return SessionCollection().findOneAndUpdate({
 		_id: toObjectId(sessionId),
-	}, {
+	},{
 		$inc: {
 			tokensUsed: tokens,
 		}
+	},{
+		returnDocument: 'after'
 	});
 }
 

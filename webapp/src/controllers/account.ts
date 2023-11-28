@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
+import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -60,8 +60,8 @@ export async function login(req, res) {
 	}
 	const passwordMatch = await bcrypt.compare(password, account.passwordHash);
 	if (passwordMatch === true) {
-		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET);	//jwt
-		req.session.token = token;																				//jwt (cookie)
+		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
+		req.session.token = token; //jwt (cookie)
 		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam}/sessions`, token });
 	}
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
@@ -123,6 +123,7 @@ export async function register(req, res) {
 			currentOrg: orgId,
 			currentTeam: teamId,
 			emailVerified,
+			oauth: {} as OAuthRecordType,
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

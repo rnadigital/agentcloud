@@ -1,54 +1,119 @@
+import logging
+
 from socketio.simple_client import SimpleClient
-from init.env_variables import SOCKET_URL
+from init.env_variables import SOCKET_URL, BASE_PATH
 import autogen
-from typing import Optional
-from models.config_models import LLMConfig, AgentConfig, ConfigList
+from typing import Optional, Union, List, Dict, Callable
+from models.config_models import AgentConfig
+from importlib import import_module
 
 
-def create_run_chat(session_id: str, roles: list, group_chat: bool, prompt: str, history: Optional[dict],
-                    **function_config):
-    # Initialize the socket client and connect
-    socket = SimpleClient()
-    socket.connect(url=SOCKET_URL)
-    socket.emit("join_room", f"_{session_id}")
+# TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
+# tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
 
-    # Create configurations for each role
-    configs = []
-    for role in roles:
-        config: LLMConfig = LLMConfig(
-            config_list=[ConfigList(
-                api_key=role.get("key"),
-                api_type=role.get("platform"),
-                model=role.get("model")
-            ).model_dump()],
-            stream=True,
-        )
-        configs.append(config.model_dump(exclude_unset=True))
+class ChatBuilder:
+    def __init__(self, prompt, session_id: str, group_chat: bool, history: Optional[dict]):
+        self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        self.agents: Optional[List[Union[autogen.AssistantAgent, autogen.UserProxyAgent]]] = list()
+        self.prompt: str = prompt
+        self.history: Optional[dict] = history
+        self.group_chat: bool = group_chat
+        self.function_map = dict()
 
-    # Initialize agents
-    agents = []
-    for i, role in enumerate(roles):
-        agent_type = getattr(autogen, role.get("type"))
-        _agent: AgentConfig = AgentConfig(
-            name="admin" if role.get("is_admin") else role.get("name"),
-            llm_config=configs[i],
-            system_message=role.get("system_message"),
-            human_input_mode=role.get("human_input_mode") or "NEVER",
-            code_execution_config=role.get('code_execution_config', False),
-            socket_client=socket,
-            sid=session_id,
-        )
-        agent = agent_type(**_agent.model_dump())
-        if agent.name == 'admin':
-            user_proxy = agent
-            agents.append(user_proxy)
+        # Initialize the socket client and connect
+        self.socket = SimpleClient()
+        self.session_id = session_id
+        self.socket.connect(url=SOCKET_URL)
+        self.socket.emit("join_room", f"_{session_id}")
+
+    def build_function_map(self):
+        for agent in self.agents:
+            agent_config: Dict = agent.llm_config
+            if agent_config and len(agent_config) > 0:
+                functions: List[Dict] = agent_config.get("functions")
+                if functions and len(functions) > 0:
+                    for function in functions:
+                        if not function.get("builtin"):
+                            func_name: str = f"{function.get('name')}"
+                            func_code: str = function.get("code")
+                            self.function_map.update(
+                                {func_name: func_code}
+                            )
+
+        self.write_function_code_to_file()
+
+    def write_function_code_to_file(self):
+        try:
+            if self.function_map and len(self.function_map) > 0:
+                functions = "\n".join([v + "\n" for v in self.function_map.values()])
+                if functions and len(functions) > 0:
+                    with open(f"{BASE_PATH}/tools/{self.session_id}.py", "w") as f:
+                        f.write(functions)
+        except Exception as e:
+            logging.exception(e)
+
+    def attach_tools_to_agent(self):
+        try:
+            self.build_function_map()
+            for i, agent in enumerate(self.agents):
+                agent_config: Dict = agent.llm_config
+                if agent_config and len(agent_config) > 0:
+                    functions: List[Dict] = agent_config.get("functions")
+                    if functions and len(functions) > 0:
+                        for function in functions:
+                            func_name: str = f"{function.get('name')}"
+                            module_path = "tools.global_tools"
+                            if not function.get("builtin"):
+                                module_path = f"tools.{self.session_id}"
+                            try:
+                                # Import the function from the tools directory
+                                module = import_module(module_path)
+                                func: Callable = getattr(module, func_name)
+                                # Register function associated with agent
+                                agent.register_function(
+                                    function_map={
+                                        func_name: func,
+                                    }
+                                )
+                            except ModuleNotFoundError as mnf:
+                                logging.exception(mnf)
+                                pass
+                            # Remove built and code variables it as it is a system variable and does not need to be passed to autogen
+                            function.pop("code")
+                            function.pop("builtin")
+                            self.agents[i] = agent
+        except Exception as e:
+            logging.exception(e)
+
+    def create_group(self, roles: List):
+        # Initialize agents
+        for i, role in enumerate(roles):
+            agent_type = getattr(autogen, role.get("type"))
+            agent_config = role.get("data")
+            agent_config["name"] = "admin" if role.get("is_admin") else agent_config.get("name")
+            agent_config["socket_client"] = self.socket
+            agent_config["sid"] = self.session_id
+            agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(
+                **AgentConfig(
+                    **agent_config
+                ).model_dump()
+            )
+            if agent.name == "admin":
+                self.user_proxy: autogen.UserProxyAgent = agent
+            self.agents.append(agent)
+
+    def run_chat(self):
+        # Initialize group chat if required
+        if self.group_chat:
+            groupchat = autogen.GroupChat(agents=self.agents, messages=[], max_round=50)
+            # Ensuring all members are aware of their team members
+            manager = autogen.GroupChatManager(
+                groupchat=groupchat, llm_config=self.agents[0].llm_config,
+                use_sockets=True,
+                socket_client=self.socket, sid=self.session_id)
+            if self.user_proxy:
+                self.user_proxy.initiate_chat(recipient=manager, message=self.prompt, clear_history=True,
+                                              **self.history)
         else:
-            agents.append(agent)
-
-    # Initialize group chat if required
-    if group_chat:
-        groupchat = autogen.GroupChat(agents=agents, messages=[], max_round=50)
-        manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=configs[0], use_sockets=True,
-                                           socket_client=socket, sid=session_id)
-        if user_proxy:
-            user_proxy.initiate_chat(recipient=manager, message=prompt, clear_history=True, **history)
+            recipient = [agent for agent in self.agents if agent.name != 'admin']
+            self.user_proxy.initiate_chat(recipient=recipient[0], message=self.prompt)

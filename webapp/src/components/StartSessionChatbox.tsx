@@ -25,10 +25,12 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 	async function addSession(e) {
 		e.preventDefault();
 		if (!stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
-			return setOpen(true);
+			setOpen(true);
+			return null;
 		}
 		if (!selectedGroup?.value) {
-			return toast.error('Please select a group');
+			toast.error('Please select a group');
+			return null;
 		} 
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
@@ -38,7 +40,9 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 		}, null, setError, router);
 	}
 
-	const groupOptions = groups.map(g => ({
+	const groupOptions = groups.filter(g => {
+		return g.adminAgent && g.agents.length > 0;
+	}).map(g => ({
 		label: g.name,
 		value: g._id,
 	}));

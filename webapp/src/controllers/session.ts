@@ -4,6 +4,7 @@ import { getGroupsByTeam, getGroupById } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
+import { getAgentsById } from '../db/agent';
 import { dynamicResponse } from '../util';
 import { taskQueue } from '../lib/queue/bull';
 import { client } from '../lib/redis/redis';
@@ -107,7 +108,11 @@ export async function addSessionApi(req, res, next) {
 	let groupId = null;
 	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
 		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
-		if (!group) {
+		if (!group || !group.adminAgent || group.agents.length === 0) {
+			return dynamicResponse(req, res, 400, { error: 'Group missing member(s)' });
+		}
+		const agents = await getAgentsById(res.locals.account.currentTeam, [group.adminAgent, ...group.agents]);
+		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		groupId = group._id;

@@ -40,6 +40,7 @@ export default function App({ Component, pageProps }) {
 
 	useEffect(() => {
 		if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+			posthog.debug(false);
 			// Track page views
 			const handleRouteChange = () => posthog?.capture('$pageview');
 			Router.events.on('routeChangeComplete', handleRouteChange);

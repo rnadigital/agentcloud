@@ -17,6 +17,7 @@ if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
 
 import * as http from 'http';
 import express from 'express';
+import passport from 'passport';
 import next from 'next';
 const dev = process.env.NODE_ENV !== 'production'
 	, hostname = 'localhost'
@@ -27,18 +28,20 @@ const dev = process.env.NODE_ENV !== 'production'
 import * as redis from './lib/redis/redis';
 import { initSocket } from './socketio';
 import * as db from './db';
+import { initGlobalTools } from './db/tool';
 import { migrate } from './db/migrate';
 import router from './router';
 import { v4 as uuidv4 } from 'uuid';
 import * as ses from './lib/email/ses';
 import debug from 'debug';
-const log = debug('webapp:http');
+const log = debug('webapp:server');
 
 app.prepare()
 	.then(async () => {
 
 		await db.connect();
 		await migrate();
+		await initGlobalTools();
 		await ses.init();
 
 		const server = express();
@@ -50,6 +53,11 @@ app.prepare()
 
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
+		});
+
+		server.use((req, _res, next) => {
+			log(req.url);
+			next();
 		});
 
 		router(server, app);

@@ -52,6 +52,7 @@ export default async function useJWT(req, res, next): Promise<void> {
 						stripeCustomerId: account.stripeCustomerId,
 						stripeEndsAt: account.stripeEndsAt,
 						stripeCancelled: account.stripeCancelled,
+						oauth: account.oauth,
 					};
 					return next();
 				}

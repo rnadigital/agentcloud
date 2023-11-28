@@ -10,6 +10,7 @@ import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import renderStaticPage from './lib/middleware/render/staticpage';
 import csrfMiddleware from './lib/middleware/auth/csrf';
 import bodyParser from 'body-parser';
+import passport from 'passport';
 
 //TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
@@ -18,17 +19,53 @@ import * as sessionController from './controllers/session';
 import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
+import * as toolController from './controllers/tool';
+import * as oauthController from './controllers/oauth';
 
 export default function router(server, app) {
 
+	// Passport session setup
+	passport.serializeUser(oauthController.serializeHandler);
+	passport.deserializeUser(oauthController.deserializeHandler);
+
+	// Setup all the oauth handlers
+	oauthController.OAUTH_STRATEGIES.forEach((s: oauthController.Strategy) => {
+		if (!process.env[`OAUTH_${s.env}_CLIENT_ID`]) { return; }
+		passport.use(new s.strategy({
+			clientID: process.env[`OAUTH_${s.env}_CLIENT_ID`],
+			clientSecret: process.env[`OAUTH_${s.env}_CLIENT_SECRET`],
+			callbackURL: `${process.env.URL_APP}${s.path}`,
+			...s.extra,
+		}, s.callback));
+	});
+
+	// Initialize Passport
+	server.use(passport.initialize());
+	const oauthRouter = Router({ caseSensitive: true });
+	// Github OAuth routers
+	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
+	oauthRouter.get('/github', useSession, useJWT, passport.authenticate('github'));
+	oauthRouter.get('/github/callback', useSession, useJWT, passport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
+		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
+	});
+	// Google OAuth routes
+	oauthRouter.get('/google', useSession, useJWT, passport.authenticate('google', { scope: ['profile', 'email'] }));
+	oauthRouter.get('/google/callback', useSession, useJWT, passport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
+		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
+	});
+	server.use('/auth', useSession, passport.session(), oauthRouter);
+
+	// Stripe webhook handler
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
+	// Body and query parsing middleware
 	server.set('query parser', 'simple');
 	server.use(bodyParser.json()); // for parsing application/json
 	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
 
 	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 	const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
+	
 	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
 		const homeRedirect = res.locals.account
 			? `/${res.locals.account.currentTeam}/sessions`
@@ -74,6 +111,11 @@ export default function router(server, app) {
 	teamPagesRouter.get('/credentials.json', credentialController.credentialsJson);
 	teamPagesRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
 	teamPagesRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
+	teamPagesRouter.get('/tools', toolController.toolsPage.bind(null, app));
+	teamPagesRouter.get('/tools.json', toolController.toolsJson);
+	teamPagesRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
+	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
+	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
 
 	const agentFormRouter = Router({ caseSensitive: true });
@@ -91,6 +133,11 @@ export default function router(server, app) {
 	sessionFormRouter.post('/add', sessionController.addSessionApi);
 	sessionFormRouter.delete('/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
 	server.use('/forms/session', authedMiddlewareChain, sessionFormRouter);
+
+	const toolFormRouter = Router({ caseSensitive: true });
+	toolFormRouter.post('/add', toolController.addToolApi);
+	toolFormRouter.delete('/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
+	server.use('/forms/tool', authedMiddlewareChain, toolFormRouter);
 
 	const groupFormRouter = Router({ caseSensitive: true });
 	groupFormRouter.post('/add', groupController.addGroupApi);

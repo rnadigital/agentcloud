@@ -8,20 +8,20 @@ from init.env_variables import SOCKET_URL, BASE_PATH
 from socketio.simple_client import SimpleClient
 from socketio.exceptions import DisconnectedError
 import json
-from build.build_group import create_run_chat
+from build.build_group import ChatBuilder
 
 mongo_client = start_mongo_session()
 
 
 def task_execution(task: str, session_id: str):
     try:
-        socket = SimpleClient()
-        socket.connect(url=SOCKET_URL)
-        socket.emit("join_room", f"_{session_id}")
-        # Load team structure from DB
-        group = mongo_client.get_group(session_id)
         try:
-            create_run_chat(session_id, group.get("roles"), group.get("group_chat"), task, {})
+            # Load team structure from DB
+            group = mongo_client.get_group(session_id)
+            build_chat = ChatBuilder(task, session_id, group.get("group_chat"), {})
+            build_chat.create_group(group.get("roles"))
+            build_chat.attach_tools_to_agent()
+            build_chat.run_chat()
         except Exception as e:
             logging.exception(e)
     except DisconnectedError as de:

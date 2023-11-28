@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import * as API from '../../../api';
-import AgentForm from '../../../components/AgentForm';
+import ToolForm from '../../../components/ToolForm';
 import { useRouter } from 'next/router';
 import { useAccountContext } from '../../../context/account';
 
-export default function AddAgent(props) {
+export default function AddTool(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -14,23 +14,32 @@ export default function AddAgent(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, credentials, tools } = state;
+	const { tools, credentials } = state;
+	const resourceSlug = account?.currentTeam;
+
+	function fetchTools() {
+		API.getTools({ resourceSlug: resourceSlug }, dispatch, setError, router);
+	}
 
 	useEffect(() => {
-		API.getAgents({ resourceSlug: account.currentTeam }, dispatch, setError, router);
-	}, []);
-	
-	if (agents == null) {
+		fetchTools();
+	}, [resourceSlug]);
+
+	if (!tools) {
 		return 'Loading...'; //TODO: loader
 	}
 
 	return (<>
 
 		<Head>
-			<title>New Agent - {teamName}</title>
+			<title>New Tool - {teamName}</title>
 		</Head>
 
-		<AgentForm credentials={credentials} tools={tools} />
+		{tools.length > 0 && <div className='border-b pb-2 my-2'>
+			<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
+		</div>}
+
+		<ToolForm credentials={credentials} />
 
 	</>);
 

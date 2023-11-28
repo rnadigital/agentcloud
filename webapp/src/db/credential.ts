@@ -3,7 +3,9 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-import { CredentialPlatform, CredentialPlatforms } from '../lib/struct/credentials';
+import { CredentialPlatform } from '../lib/struct/credentials';
+
+export type TokenExchangeMethod = 'post' | 'basic';
 
 export type Credential = {
 	_id?: ObjectId;
@@ -12,7 +14,13 @@ export type Credential = {
 	platform: CredentialPlatform;
 	credentials: {
 		key?: string;
-		//TODO: more
+		endpointURL?: string;
+		clientId?: string;
+		clientSecret?: string;
+		authURL?: string;
+		tokenURL?: string;
+		scope?: string;
+		tokenExchangeMethod?: TokenExchangeMethod;
 	};
     name: string;
     createdDate: Date;

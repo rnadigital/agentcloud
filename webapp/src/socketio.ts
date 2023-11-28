@@ -45,7 +45,7 @@ export function initSocket(rawHttpServer) {
 		log('Socket %s connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			//log('Received socket event %s args: %O', eventName, args);
+			log('Received socket event %s args: %O', eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {
@@ -178,6 +178,8 @@ export function initSocket(rawHttpServer) {
 					//This is a previous message that is returning in chunks
 					await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
 					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+					//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+					//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
 				} else {
 					await addChatMessage({
 						orgId: session.orgId,
@@ -227,7 +229,8 @@ export function initSocket(rawHttpServer) {
 			log(`received message_complete event: ${JSON.stringify(data, null, '\t')}`);
 			if (data?.message?.text) {
 				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks, data.message.deltaTokens || 0);
-				await unsafeIncrementTokens(data.room, data.message.deltaTokens || 0);
+				const updatedSession = await unsafeIncrementTokens(data.room, data.message.deltaTokens || 0);
+				io.to(data.room).emit('tokens', updatedSession.tokensUsed);
 			}
 		});
 
