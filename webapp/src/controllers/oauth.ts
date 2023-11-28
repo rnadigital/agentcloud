@@ -24,13 +24,22 @@ export enum OAUTH_PROVIDER {
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 export const OAUTH_STRATEGIES: Strategy[] = [
 	{ strategy: GitHubStrategy, env: 'GITHUB', callback: githubCallback, path: '/auth/github/callback', extra: { scope: ['user:email'] } },
-	{ strategy: GoogleStrategy, env: 'GOOGLE', callback: googleCallback, path: '/auth/google/callback' },
+	{ strategy: GoogleStrategy, env: 'GOOGLE', callback: googleCallback, path: '/auth/google/callback', extra: { /* google doesnt need yet */ } },
 	//TODO: add more here if desired?
 ];
 
 // GitHub callback handler
 export async function githubCallback(accessToken, refreshToken, profile, done) {
 	// log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+
+	const emails = await fetch('https://api.github.com/user/emails', {
+		headers: {
+			'User-Agent': 'Agentcloud',
+			'Authorization': `token ${accessToken}`,
+		}
+	}).then(res => res.json());
+	const primaryEmail = emails.find(email => (email.primary && email.verified)).email;
+	profile.email = primaryEmail;
 
 	/*TODO: refactor so this account/default team creation code isnt
 	repeated in both oauth handlers and account register controller */
@@ -54,7 +63,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 		await addAccount({
 			_id: newAccountId,
 			name: profile.displayName,
-			email: null,
+			email: profile.email,
 			passwordHash: null,
 			orgs: [{
 				id: orgId,
@@ -100,8 +109,8 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 		const teamId = addedTeam.insertedId;
 		await addAccount({
 			_id: newAccountId,
-			name: '',
-			email: null,
+			name: profile.displayName,
+			email: profile.emails.find(e => e.verified === true).value,
 			passwordHash: null,
 			orgs: [{
 				id: orgId,

@@ -35,6 +35,7 @@ export default function router(server, app) {
 			clientID: process.env[`OAUTH_${s.env}_CLIENT_ID`],
 			clientSecret: process.env[`OAUTH_${s.env}_CLIENT_SECRET`],
 			callbackURL: `${process.env.URL_APP}${s.path}`,
+			...s.extra,
 		}, s.callback));
 	});
 
