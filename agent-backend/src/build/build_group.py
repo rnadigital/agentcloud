@@ -106,9 +106,11 @@ class ChatBuilder:
         # Initialize group chat if required
         if self.group_chat:
             groupchat = autogen.GroupChat(agents=self.agents, messages=[], max_round=50)
-            manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=self.agents[0].llm_config,
-                                               use_sockets=True,
-                                               socket_client=self.socket, sid=self.session_id)
+            # Ensuring all members are aware of their team members
+            manager = autogen.GroupChatManager(
+                groupchat=groupchat, llm_config=self.agents[0].llm_config,
+                use_sockets=True,
+                socket_client=self.socket, sid=self.session_id)
             if self.user_proxy:
                 self.user_proxy.initiate_chat(recipient=manager, message=self.prompt, clear_history=True,
                                               **self.history)
