@@ -17,7 +17,6 @@ if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
 
 import * as http from 'http';
 import express from 'express';
-import passport from 'passport';
 import next from 'next';
 const dev = process.env.NODE_ENV !== 'production'
 	, hostname = 'localhost'
@@ -53,11 +52,6 @@ app.prepare()
 
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
-		});
-
-		server.use((req, _res, next) => {
-			log(req.url);
-			next();
 		});
 
 		router(server, app);

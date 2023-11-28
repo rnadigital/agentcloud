@@ -143,7 +143,7 @@ export default function Register() {
 								</div>
 							</div>
 
-							<div className='mt-6 grid grid-cols-2 gap-4'>
+							<div className={`mt-6 grid grid-cols-${process.env.NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH && process.env.NEXT_PUBLIC_ENABLE_GITHUB_OAUTH ? '2' : '1'} gap-4`}>
 
 								{process.env.NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH && <Link
 									href='/auth/google'
