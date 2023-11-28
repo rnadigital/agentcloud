@@ -10,6 +10,7 @@ import * as API from '../api';
 import { toast } from 'react-toastify';
 import OpenAPIClientAxios from 'openapi-client-axios';
 import ParameterForm from '../components/ParameterForm';
+import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -31,6 +32,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 
 	const router = useRouter();
 	const [toolState, setToolState] = useState(tool); // TODO: remove?
+	const isBuiltin = toolState?.data?.builtin === true;
 	const [importOpen, setImportOpen] = useState(false);
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
@@ -48,6 +50,22 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
 	const [error, setError] = useState();
+	
+	// Instantiate Monaco Editor
+
+	const onInitializePane: MonacoOnInitializePane = (
+		monacoEditorRef,
+		editorRef,
+		model
+	) => {
+    // editorRef.current.setScrollTop(1)
+    // editorRef.current.setPosition({
+    //   lineNumber: 2,
+    //   column: 0,
+    // })
+		editorRef.current.focus();
+    // monacoEditorRef.current.setModelMarkers(model[0], 'owner', null)
+	};
 
 	async function toolPost(e) {
 		e.preventDefault();
@@ -105,6 +123,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 					<label className='text-base font-semibold text-gray-900'>Name</label>
 					<div>
 						<input
+							readOnly={isBuiltin}
 							type='text'
 							name='toolName'
 							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
@@ -121,6 +140,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 					<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
 					<div>
 						<textarea
+							readOnly={isBuiltin}
 							name='toolName'
 							className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 							onChange={e => setToolDescription(e.target.value)}
@@ -129,7 +149,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						/>
 					</div>
 				</div>
-				<div>
+				{!isBuiltin && <div>
 					<label className='text-base font-semibold text-gray-900'>Tool Type</label>
 					<div>
 						<select
@@ -140,12 +160,12 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 							onChange={(e) => setToolType(e.target.value as ToolType)}
 						>
 							<option value={ToolType.HOSTED_FUNCTION_TOOL}>Custom code</option>
-							<option disabled value={ToolType.API_TOOL}>OpenAPI endpoint <em>(coming soon)</em></option>
+							<option disabled value={ToolType.API_TOOL}>OpenAPI endpoint (coming soon)</option>
 						</select>
 					</div>
-				</div>
+				</div>}
 
-				{toolType === ToolType.HOSTED_FUNCTION_TOOL && <>
+				{toolType === ToolType.HOSTED_FUNCTION_TOOL && !isBuiltin && <>
 					<div className='border-gray-900/10'>
 						<div className='flex justify-between'>
 							<h2 className='text-base font-semibold leading-7 text-gray-900'>
@@ -154,15 +174,14 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						</div>
 						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 							<div className='col-span-full'>
-
 								<div className='mt-2'>
-									<textarea
-										name='code'
-										rows={10}
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-										placeholder={'import requests\n...'}
-										value={toolCode}
-										onChange={(e) => setToolCode(e.target.value)}
+									<ScriptEditor
+										code={toolCode}
+										setCode={setToolCode}
+										editorOptions={{
+											stopRenderingLineAfter: 1000,
+										}}
+										onInitializePane={onInitializePane}
 									/>
 								</div>
 							</div>
@@ -452,7 +471,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 					<pre>{JSON.stringify(functionsList, null, 2)}</pre>
 				</div>}
 
-				<ParameterForm parameters={parameters} setParameters={setParameters} />
+				<ParameterForm readonly={isBuiltin} parameters={parameters} setParameters={setParameters} />
 
 			</div>
 		</div>
@@ -463,12 +482,12 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			>
 				Back
 			</Link>
-			<button
+			{!isBuiltin && <button
 				type='submit'
 				className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 			>
 				Save
-			</button>
+			</button>}
 		</div>
 	</form>);
 

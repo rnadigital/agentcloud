@@ -54,7 +54,10 @@ export function initGlobalTools() {
 export function getToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Tool> {
 	return ToolCollection().findOne({
 		_id: toObjectId(toolId),
-		teamId: toObjectId(teamId),
+		$or: [
+			{ teamId: toObjectId(teamId) },
+			{ 'data.builtin': true },
+		],
 	});
 }
 
