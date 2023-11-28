@@ -3,6 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
+import { OAUTH_PROVIDER } from '../controllers/oauth';
 
 type AccountTeam = {
 	id: ObjectId;
@@ -13,6 +14,11 @@ type AccountOrg = {
 	id: ObjectId;
 	name: string;
 	teams: AccountTeam[];
+}
+
+export type AccountOAuthData = {
+	id: string | number,
+	//TODO: need any more stuff here?
 }
 
 export type Account = {
@@ -26,9 +32,11 @@ export type Account = {
 	emailVerified: boolean;
 	apiJwt?: string;
 	token?: string;
+	//TODO: move these stripe things to a "stripe" key
 	stripeCustomerId?: string;
 	stripeEndsAt?: number;
 	stripeCancelled?: boolean;
+	oauth?: Record<OAUTH_PROVIDER,AccountOAuthData>
 }
 
 export function AccountCollection() {
