@@ -33,6 +33,10 @@ This will start both the agent backend and the webapp.
 
 This project is licensed under the Apache License, Version 2.0.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## Contributions & Feedback
 
 If you wish to contribute or provide feedback, please follow the contribution guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
