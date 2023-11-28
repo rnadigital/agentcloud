@@ -43,6 +43,10 @@ services:
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
       - NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
+      - OAUTH_GITHUB_CLIENT_ID=
+      - OAUTH_GITHUB_CLIENT_SECRET=
+      - OAUTH_GOOGLE_CLIENT_ID=
+      - OAUTH_GOOGLE_CLIENT_SECRET=
 
   agent_backend:
     restart: always
