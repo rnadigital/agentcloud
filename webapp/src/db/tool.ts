@@ -86,6 +86,15 @@ export async function addTool(tool: Tool): Promise<db.InsertResult> {
 	return ToolCollection().insertOne(tool);
 }
 
+export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Tool): Promise<db.InsertResult> {
+	return ToolCollection().updateOne({
+		_id: toObjectId(toolId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: tool,
+	});
+}
+
 export function deleteToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
 	return ToolCollection().deleteOne({
 		_id: toObjectId(toolId),

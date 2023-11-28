@@ -63,7 +63,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
     //   lineNumber: 2,
     //   column: 0,
     // })
-		editorRef.current.focus();
+	// editorRef.current.focus();
     // monacoEditorRef.current.setModelMarkers(model[0], 'owner', null)
 	};
 
@@ -102,7 +102,10 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 				return;
 		}
 		if (editing) {
-			await API.editTool(toolState._id, body, () => {
+			await API.editTool(toolState._id, {
+				...body,
+				toolId: toolState._id,
+			}, () => {
 				toast.success('Tool Updated');
 			}, setError, null);
 		} else {

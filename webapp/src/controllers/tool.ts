@@ -1,6 +1,6 @@
 'use strict';
 
-import { getToolsByTeam, addTool, getToolById, deleteToolById } from '../db/tool';
+import { getToolsByTeam, addTool, getToolById, deleteToolById, editTool } from '../db/tool';
 import { getCredentialsByTeam } from '../db/credential';
 import { removeAgentsTool } from '../db/agent';
 import { dynamicResponse } from '../util';
@@ -80,7 +80,6 @@ export async function toolAddPage(app, req, res, next) {
 	return app.render(req, res, `/${res.locals.account.currentTeam}/tool/add`);
 }
 
-//TODO: add tool form, delete, etc
 export async function addToolApi(req, res, next) {
 
 	const { name, type, data, credentialId }  = req.body;
@@ -99,12 +98,30 @@ export async function addToolApi(req, res, next) {
 	 	type: type as ToolType,
 		data: {
 			...data,
-			builtin: (type as ToolType) === ToolType.API_TOOL,
+			builtin: false,
 		    name: toSnakeCase(name),
 		},
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/tools` });
+
+}
+
+export async function editToolApi(req, res, next) {
+
+	const { name, type, data, toolId }  = req.body;
+
+	await editTool(res.locals.account.currentTeam, toolId, {
+	    name,
+	 	type: type as ToolType,
+		data: {
+			...data,
+			builtin: false,
+		    name: toSnakeCase(name),
+		},
+	});
+
+	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/tools`*/ });
 
 }
 

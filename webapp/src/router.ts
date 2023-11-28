@@ -136,6 +136,7 @@ export default function router(server, app) {
 
 	const toolFormRouter = Router({ caseSensitive: true });
 	toolFormRouter.post('/add', toolController.addToolApi);
+	toolFormRouter.post('/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
 	toolFormRouter.delete('/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
 	server.use('/forms/tool', authedMiddlewareChain, toolFormRouter);
 
