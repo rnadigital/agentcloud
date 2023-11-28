@@ -88,7 +88,7 @@ wikipedia = "^1.4.0"
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/autogen.git"
-reference = "main"
+reference = "v0.2.7"
 resolved_reference = "f064fbc67599ba4f2687427ce89947ff32e1c670"
 
 [[package]]
@@ -1761,4 +1761,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "dfe3de1cdc1f248dc70fd9497c8224ae02d964d83e8bf7c01f23ac28888b1574"
+content-hash = "3bb5d0d017270e6349acd16968be9e330c4607a8040ed0587f958736192c033e"
