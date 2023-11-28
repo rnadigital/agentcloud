@@ -39,20 +39,20 @@ export default function router(server, app) {
 	});
 
 	// Initialize Passport
+	server.use(passport.initialize());
 	const oauthRouter = Router({ caseSensitive: true });
-	oauthRouter.use(passport.initialize());
-	oauthRouter.use(passport.session());
 	// Github OAuth routers
-	oauthRouter.get('/github', useSession, passport.authenticate('github'));
-	oauthRouter.get('/github/callback', useSession, passport.authenticate('github', { failureRedirect: '/login' }), (_req, res) => {
-		res.redirect('/account'); // Or handle as needed
+	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
+	oauthRouter.get('/github', useSession, useJWT, passport.authenticate('github'));
+	oauthRouter.get('/github/callback', useSession, useJWT, passport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
+		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
 	});
 	// Google OAuth routes
-	oauthRouter.get('/google', useSession, passport.authenticate('google', { scope: ['profile', 'email'] }));
-	oauthRouter.get('/google/callback', useSession, passport.authenticate('google', { failureRedirect: '/login' }), (_req, res) => {
-		res.redirect('/account'); // Or handle as needed
+	oauthRouter.get('/google', useSession, useJWT, passport.authenticate('google', { scope: ['profile', 'email'] }));
+	oauthRouter.get('/google/callback', useSession, useJWT, passport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
+		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
 	});
-	server.use('/auth', useSession, oauthRouter);
+	server.use('/auth', useSession, passport.session(), oauthRouter);
 
 	// Stripe webhook handler
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);

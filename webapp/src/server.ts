@@ -34,7 +34,7 @@ import router from './router';
 import { v4 as uuidv4 } from 'uuid';
 import * as ses from './lib/email/ses';
 import debug from 'debug';
-const log = debug('webapp:http');
+const log = debug('webapp:server');
 
 app.prepare()
 	.then(async () => {
@@ -53,6 +53,11 @@ app.prepare()
 
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
+		});
+
+		server.use((req, _res, next) => {
+			log(req.url);
+			next();
 		});
 
 		router(server, app);

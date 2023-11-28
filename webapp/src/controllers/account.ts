@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
+import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -123,6 +123,7 @@ export async function register(req, res) {
 			currentOrg: orgId,
 			currentTeam: teamId,
 			emailVerified,
+			oauth: {} as OAuthRecordType,
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

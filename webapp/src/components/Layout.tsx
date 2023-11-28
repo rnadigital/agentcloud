@@ -39,6 +39,7 @@ const noNavPages = [
 	'/changepassword',
 	'/requestchangepassword',
 	'/verify',
+	'/redirect',
 ];
 
 const teamNavigation = [
@@ -70,11 +71,6 @@ import { useAccountContext } from '../context/account';
 import { useChatContext } from '../context/chat';
 import * as API from '../api';
 
-// const pages = [
-//   { name: 'Projects', href: '#', current: false },
-//   { name: 'Project Nero', href: '#', current: true },
-// ];
-
 export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
@@ -91,7 +87,7 @@ export default withRouter(function Layout(props) {
 		//from pages that aren't SSRd, account fetched async in context
 		// return 'Loading...'; //TODO: loader?
 	}
-		
+
 	return (
 		<>
 			<Head>

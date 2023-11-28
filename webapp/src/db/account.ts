@@ -16,15 +16,19 @@ type AccountOrg = {
 	teams: AccountTeam[];
 }
 
+export type AccountOAuthId = string | number; // <- Proof that typescript is pointless busywork
+
 export type AccountOAuthData = {
-	id: string | number,
-	//TODO: need any more stuff here?
+	id: AccountOAuthId,
+	// potentially more stuff here later...
 }
+
+export type OAuthRecordType = Partial<Record<OAUTH_PROVIDER,AccountOAuthData>>;
 
 export type Account = {
 	_id?: ObjectId;
 	name: string;
-	email: string;
+	email?: string;
 	passwordHash?: string;
 	orgs: AccountOrg[];
 	currentOrg: ObjectId;
@@ -36,7 +40,7 @@ export type Account = {
 	stripeCustomerId?: string;
 	stripeEndsAt?: number;
 	stripeCancelled?: boolean;
-	oauth?: Record<OAUTH_PROVIDER,AccountOAuthData>
+	oauth?: OAuthRecordType,
 }
 
 export function AccountCollection() {
@@ -52,6 +56,12 @@ export function getAccountById(userId: db.IdOrStr): Promise<Account> {
 export function getAccountByEmail(email: string): Promise<Account> {
 	return AccountCollection().findOne({
 		email: email,
+	});
+}
+
+export function getAccountByOAuth(oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<Account> {
+	return AccountCollection().findOne({
+		[`oauth.${provider}.id`]: oauthId,
 	});
 }
 

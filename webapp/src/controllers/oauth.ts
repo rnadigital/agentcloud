@@ -1,6 +1,9 @@
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Account } from '../db/account';
+import { addAccount, getAccountByOAuth, Account } from '../db/account';
+import { ObjectId } from 'mongodb';
+import { addTeam } from '../db/team';
+import { addOrg } from '../db/org';
 import debug from 'debug';
 const log = debug('webapp:oauth');
 
@@ -27,12 +30,49 @@ export const OAUTH_STRATEGIES: Strategy[] = [
 
 // GitHub callback handler
 export async function githubCallback(accessToken, refreshToken, profile, done) {
-	log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+	// log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 
-	//1. find account by oauth.github.id:
-	//2. if not exist, create
-	
+	/*TODO: refactor so this account/default team creation code isnt
+	repeated in both oauth handlers and account register controller */
 	profile.provider = OAUTH_PROVIDER.GITHUB;
+	const account: Account = await getAccountByOAuth(profile.id, profile.provider);
+	log('githubCallback account', account);
+	if (!account) {
+		const newAccountId = new ObjectId();
+		const addedOrg = await addOrg({
+			name: 'My Org',
+			teamIds: [],
+			members: [newAccountId],
+		});
+		const addedTeam = await addTeam({
+			name: 'My Team',
+			orgId: addedOrg.insertedId,
+			members: [newAccountId],
+		});
+		const orgId = addedOrg.insertedId;
+		const teamId = addedTeam.insertedId;
+		await addAccount({
+			_id: newAccountId,
+			name: profile.displayName,
+			email: null,
+			passwordHash: null,
+			orgs: [{
+				id: orgId,
+				name: 'My Org',
+				teams: [{
+					id: teamId,
+					name: 'My Team'
+				}]
+			}],
+			currentOrg: orgId,
+			currentTeam: teamId,
+			emailVerified: true, //redundant in oauth?
+			oauth: {
+				[profile.provider as OAUTH_PROVIDER]: { id: profile.id },
+			},
+		});
+	}
+
 	done(null, profile);
 }
 
@@ -40,43 +80,77 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 export async function googleCallback(accessToken, refreshToken, profile, done) {
 	log(`googleCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 
-	//1. find account by oauth.google.id:
-	//2. if not exist, create
-
+	/*TODO: refactor so this account/default team creation code isnt
+	repeated in both oauth handlers and account register controller */
 	profile.provider = OAUTH_PROVIDER.GOOGLE;
+	const account: Account = await getAccountByOAuth(profile.id, profile.provider);
+	if (!account) {
+		const newAccountId = new ObjectId();
+		const addedOrg = await addOrg({
+			name: 'My Org',
+			teamIds: [],
+			members: [newAccountId],
+		});
+		const addedTeam = await addTeam({
+			name: 'My Team',
+			orgId: addedOrg.insertedId,
+			members: [newAccountId],
+		});
+		const orgId = addedOrg.insertedId;
+		const teamId = addedTeam.insertedId;
+		await addAccount({
+			_id: newAccountId,
+			name: '',
+			email: null,
+			passwordHash: null,
+			orgs: [{
+				id: orgId,
+				name: 'My Org',
+				teams: [{
+					id: teamId,
+					name: 'My Team'
+				}]
+			}],
+			currentOrg: orgId,
+			currentTeam: teamId,
+			emailVerified: true, //redundant in oauth?
+			oauth: {
+				[profile.provider as OAUTH_PROVIDER]: { id: profile.id },
+			},
+		});
+	}
+
 	done(null, profile);
 }
 
 export async function serializeHandler(user, done) {
-	log(`serializeHandler user: ${JSON.stringify(user, null, '\t')}`);
-
-	//TODO: When serializing the user, store both the user ID and the provider name in the session.
-	
+	log('serializeHandler user', user);
 	done(null, { oauthId: user.id, provider: user.provider });
 }
 
 export async function deserializeHandler(obj, done) {
-	log(`deserializeHandler obj: ${JSON.stringify(obj, null, '\t')}`);
+	log('deserializeHandler obj', obj);
 
 	const { oauthId, provider } = obj;
 
     // Use provider information to retrieve the user e.g.
-	// const account: Account = await getAccountByOauthId(oauthId, provider);
-	// if (account) {
-	// 	const accountObj = {
-	// 		_id: account._id.toString(),
-	// 		name: account.name,
-	// 		email: account.email,
-	// 		orgs: account.orgs,
-	// 		currentOrg: account.currentOrg,
-	// 		currentTeam: account.currentTeam,
-	// 		token: account.token,
-	// 		stripeCustomerId: account.stripeCustomerId,
-	// 		stripeEndsAt: account.stripeEndsAt,
-	// 		stripeCancelled: account.stripeCancelled,
-	// 	};
-	// 	done(null, accountObj);
-	// }
+	const account: Account = await getAccountByOAuth(oauthId, provider);
+	if (account) {
+		const accountObj = {
+			_id: account._id.toString(),
+			name: account.name,
+			email: account.email,
+			orgs: account.orgs,
+			currentOrg: account.currentOrg,
+			currentTeam: account.currentTeam,
+			token: account.token,
+			stripeCustomerId: account.stripeCustomerId,
+			stripeEndsAt: account.stripeEndsAt,
+			stripeCancelled: account.stripeCancelled,
+			oauth: account.oauth,
+		};
+		return done(null, accountObj);
+	}
 
 	done(null, null);
 
