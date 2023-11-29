@@ -31,7 +31,7 @@ This will start both the agent backend and the webapp.
 
 ## License
 
-This project is licensed under the Apache License, Version 2.0.
+This project is licensed under the GNU Affero General Public License, version 3 only.
 
 ## Changelog
 
