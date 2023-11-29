@@ -25,5 +25,5 @@ First off, thank you for considering contributing to agentcloud. It's people lik
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's existing license, the Apache License, Version 2.0.
+By contributing, you agree that your contributions will be licensed under the project's existing license, the GNU Affero General Public License, version 3 only.
 
