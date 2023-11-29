@@ -110,11 +110,12 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId }  = req.body;
+	const { name, type, data, toolId, schema }  = req.body;
 
 	await editTool(res.locals.account.currentTeam, toolId, {
 	    name,
 	 	type: type as ToolType,
+	 	schema: schema,
 		data: {
 			...data,
 			builtin: false,

@@ -60,7 +60,7 @@ export default function router(server, app) {
 
 	// Body and query parsing middleware
 	server.set('query parser', 'simple');
-	server.use(bodyParser.json()); // for parsing application/json
+	server.use(bodyParser.json({limit: '10mb'})); // for parsing application/json
 	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
 
 	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];

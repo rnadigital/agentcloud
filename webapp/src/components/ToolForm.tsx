@@ -573,7 +573,7 @@ The __path for this function is "${op.path}", the __method is "${op.method}", an
 											acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
 											return acc;
 										}, []);
-										setParameters(functionParameters);
+										setParameters(functionParameters || []);
 									}}
 								/>
 							))
