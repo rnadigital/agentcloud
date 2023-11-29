@@ -100,7 +100,7 @@ export async function addToolApi(req, res, next) {
 		data: {
 			...data,
 			builtin: false,
-		    name: toSnakeCase(name),
+		    name: (type as ToolType) === ToolType.API_TOOL ? 'openapi_request' : toSnakeCase(name),
 		},
 	});
 
@@ -119,7 +119,7 @@ export async function editToolApi(req, res, next) {
 		data: {
 			...data,
 			builtin: false,
-		    name: toSnakeCase(name),
+		    name: (type as ToolType) === ToolType.API_TOOL ? 'openapi_request' : toSnakeCase(name),
 		},
 	});
 

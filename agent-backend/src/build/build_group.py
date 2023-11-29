@@ -63,7 +63,7 @@ class ChatBuilder:
                         for function in functions:
                             func_name: str = f"{function.get('name')}"
                             module_path = "tools.global_tools"
-                            if not function.get("builtin"):
+                            if not function.get("builtin") and len(function.get("code", "")) > 0:
                                 module_path = f"tools.{self.session_id}"
                             try:
                                 # Import the function from the tools directory

@@ -47,7 +47,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
-	const [searchTerm, setSearchTerm] = useState('');
+	const [searchTerm, setSearchTerm] = useState((tool?.name || '').toLowerCase());
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
@@ -76,7 +76,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			case ToolType.API_TOOL:
 				body.schema = toolAPISchema;
 				body.data = {
-					code: null,
+					code: '',
 					description: toolDescription,
 					parameters: {
 						type: 'object',
