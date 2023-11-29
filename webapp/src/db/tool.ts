@@ -19,6 +19,7 @@ export type Tool = {
 	teamId?: ObjectId;
     name: string;
  	type: ToolType;
+ 	schema?: string; //NOTE: not really used since the function description and params are based on one function
 	data?: {
 		builtin?: boolean;
 		name: string;

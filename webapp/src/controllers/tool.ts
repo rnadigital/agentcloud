@@ -82,7 +82,7 @@ export async function toolAddPage(app, req, res, next) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, credentialId }  = req.body;
+	const { name, type, data, credentialId, schema }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !type || typeof type !== 'string' || type.length === 0 // TODO: or is not one of valid types
@@ -96,6 +96,7 @@ export async function addToolApi(req, res, next) {
 		teamId: res.locals.account.currentTeam,
 	    name,
 	 	type: type as ToolType,
+	 	schema: schema,
 		data: {
 			...data,
 			builtin: false,
