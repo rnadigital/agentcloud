@@ -99,7 +99,7 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	const { type, prompt }  = req.body;
+	let { type, prompt }  = req.body;
 
 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -117,6 +117,8 @@ export async function addSessionApi(req, res, next) {
 		}
 		groupId = group._id;
 	}
+
+	prompt = `${prompt}\n`;
 
 	const addedSession = await addSession({
 		orgId: res.locals.account.currentOrg,
