@@ -5,7 +5,7 @@ export default async function(db) {
 	log('Updating all existing "groups" in db to groupChat: true');
 	await db.collection('groups').updateMany({}, {
 		$set: {
-			grpuChat: true,
+			groupChat: true,
 		},
 	});
 }
