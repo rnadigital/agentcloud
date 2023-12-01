@@ -214,7 +214,7 @@ The __path for this function is "${op.path}", the __method is "${op.method}", an
 		}, 500); // 500ms delay, adjust as needed
 		// Clear the timeout if the value changes
 		return () => {
-			// clearTimeout(handler);
+			clearTimeout(handler);
 		};
 	}, [toolAPISchema]); // Only re-run the effect if inputValue changes
 
