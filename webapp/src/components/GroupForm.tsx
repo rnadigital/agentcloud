@@ -99,7 +99,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Group Admin
+								Admin Agent
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -134,7 +134,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					<div className='sm:col-span-12'>
 					
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Group Members
+								Members
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -149,7 +149,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 					            }}
 					            value={agentsState}
-					            onChange={(v: any) => setAgentsState(v)}
+					            onChange={(v: any) => setAgentsState(groupChatState ? (v||[]) : v.length > 0 ? [v[v.length-1]] : [])}
 					            options={agentChoices.filter(a => a._id !== adminAgentState?.value).map(a => ({ label: a.name, value: a._id }))}
 					            formatOptionLabel={data => {
 					            	const optionAgent = agentChoices.find(ac => ac._id === data.value);
