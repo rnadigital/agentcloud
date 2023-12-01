@@ -105,7 +105,12 @@ class ChatBuilder:
     def run_chat(self):
         # Initialize group chat if required
         if self.group_chat:
-            groupchat = autogen.GroupChat(agents=self.agents, messages=[], max_round=50)
+            groupchat = autogen.GroupChat(
+                agents=self.agents,
+                messages=[],
+                max_round=50,
+                allow_repeat_speaker=False
+            )
             # Ensuring all members are aware of their team members
             manager = autogen.GroupChatManager(
                 groupchat=groupchat, llm_config=self.agents[0].llm_config,
