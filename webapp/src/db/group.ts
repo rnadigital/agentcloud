@@ -11,6 +11,7 @@ export type Group = {
 	name: string;
 	adminAgent: ObjectId;
 	agents: ObjectId[];
+	groupChat?: boolean;
 };
 
 export function GroupCollection() {

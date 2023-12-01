@@ -26,6 +26,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 		return { label: oa.name, value: a };
 	});
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
+	const [groupChatState, setGroupChatState] = useState(group?.groupChat || false);
 	const { _id, name, agents } = groupState;
 
 	async function groupPost(e) {
@@ -35,6 +36,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 			name: e.target.name.value,
 			adminAgent: adminAgentState?.value,
 			agents: agentsState.map(a => a.value),
+			groupChat: e.target.groupChat.checked,
 		};
 		if (editing) {
 			await API.editGroup(groupState._id, body, null, setError, null);
@@ -76,6 +78,24 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 							/>
 						</div>
 					</div>
+					
+					<div className='sm:col-span-12'>
+						<label className='flex items-center space-x-2'>
+							<input
+								type='checkbox'
+								name='groupChat'
+								checked={groupChatState}
+								onChange={(e) => {
+									if (groupChatState && agentsState.length > 0) {
+										setAgentsState([agentsState[0]]);
+									}
+									setGroupChatState(e.target.checked);
+								}}
+								className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
+							/>
+							<span>Group Chat</span>
+						</label>
+					</div>
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -110,8 +130,9 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					        />
 						</div>
 					</div>
-
+										
 					<div className='sm:col-span-12'>
+					
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Group Members
 						</label>
