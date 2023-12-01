@@ -10,9 +10,6 @@ export default function FunctionCard({ name, description, parameters, onClickFun
 	// Filter out parameters starting with __
 	const paramNames = Object.keys(parameters).filter(p => !p.startsWith('__'));
 
-	// Strip the sentence starting with "The __path"
-	const updatedDescription = description.substring(0, description.indexOf('Weight(IP)'));
-
 	return (
 		<div className={`p-4 overflow-hidden border rounded shadow-sm cursor-pointer ${highlighted ? 'bg-yellow-100 hover:bg-yellow-100' : 'hover:bg-yellow-50'}`} onClick={onClickFunction}>
 			<h3 className='text-lg font-semibold'>{name}</h3>
@@ -20,7 +17,7 @@ export default function FunctionCard({ name, description, parameters, onClickFun
 				<Markdown
 					className={'markdown-content'}
 				>
-					{updatedDescription}
+					{description}
 				</Markdown>
 			</p>
 			{/*<ul>
