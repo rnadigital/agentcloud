@@ -91,7 +91,7 @@ export async function groupEditPage(app, req, res, next) {
  */
 export async function addGroupApi(req, res, next) {
 
-	const { name, adminAgent, agents }  = req.body;
+	const { name, adminAgent, agents, groupChat }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !adminAgent || typeof adminAgent !== 'string' || adminAgent.length !== 24
@@ -114,6 +114,7 @@ export async function addGroupApi(req, res, next) {
 		name,
 		agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
+		groupChat: groupChat === true,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
@@ -130,7 +131,7 @@ export async function addGroupApi(req, res, next) {
  */
 export async function editGroupApi(req, res, next) {
 
-	const { name, adminAgent, agents }  = req.body;
+	const { name, adminAgent, agents, groupChat }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !adminAgent || typeof adminAgent !== 'string' || adminAgent.length !== 24
@@ -142,6 +143,7 @@ export async function editGroupApi(req, res, next) {
 	    name,
 	    agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
+		groupChat: groupChat === true,
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit` });

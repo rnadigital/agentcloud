@@ -19,6 +19,7 @@ export type Tool = {
 	teamId?: ObjectId;
     name: string;
  	type: ToolType;
+ 	schema?: string; //NOTE: not really used since the function description and params are based on one function
 	data?: {
 		builtin?: boolean;
 		name: string;
@@ -37,11 +38,12 @@ export function ToolCollection() {
 	return db.db().collection('tools');
 }
 
-export function initGlobalTools() {
+export async function initGlobalTools() {
 	if (GlobalTools.length === 0) {
 		log('No global tools found.');
 		return;
 	}
+	await ToolCollection().deleteMany({ 'data.builtin': true }); //monkey patch until we have a better deployment flow for alpha
 	return ToolCollection().bulkWrite(GlobalTools.map(gt => ({
 		replaceOne: {
 			filter: { 'data.builtin': true, name: gt.name },

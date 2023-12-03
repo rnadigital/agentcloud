@@ -66,6 +66,7 @@ export default function App({ Component, pageProps }) {
 							pauseOnFocusLoss={false}
 							pauseOnHover={false}
 							hideProgressBar={true}
+							limit={3}
 						/>
 						<Layout {...pageProps}>
 							<style>

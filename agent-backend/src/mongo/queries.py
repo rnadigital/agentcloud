@@ -46,7 +46,6 @@ class MongoClientConnection(MongoConnection):
         with log_exception():
             self.db = self._get_db
             team = {
-                "group_chat": True,
                 "roles": []
             }
             list_of_agents = list()
@@ -61,6 +60,7 @@ class MongoClientConnection(MongoConnection):
             group_query_results = groups_collection.find_one({"_id": group_id})
             if group_query_results is None:
                 raise Exception(f"group not found from session groupId {group_id}")
+            team["group_chat"] = group_query_results.get("groupChat")
             agents = group_query_results.get("agents")
             admin_agent = group_query_results.get("adminAgent")
             agents.append(admin_agent)

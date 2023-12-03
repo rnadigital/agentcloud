@@ -63,7 +63,7 @@ class ChatBuilder:
                         for function in functions:
                             func_name: str = f"{function.get('name')}"
                             module_path = "tools.global_tools"
-                            if not function.get("builtin"):
+                            if not function.get("builtin") and len(function.get("code", "")) > 0:
                                 module_path = f"tools.{self.session_id}"
                             try:
                                 # Import the function from the tools directory
@@ -105,7 +105,12 @@ class ChatBuilder:
     def run_chat(self):
         # Initialize group chat if required
         if self.group_chat:
-            groupchat = autogen.GroupChat(agents=self.agents, messages=[], max_round=50)
+            groupchat = autogen.GroupChat(
+                agents=self.agents,
+                messages=[],
+                max_round=50,
+                allow_repeat_speaker=False
+            )
             # Ensuring all members are aware of their team members
             manager = autogen.GroupChatManager(
                 groupchat=groupchat, llm_config=self.agents[0].llm_config,

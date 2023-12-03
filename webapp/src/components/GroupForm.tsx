@@ -26,6 +26,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 		return { label: oa.name, value: a };
 	});
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
+	const [groupChatState, setGroupChatState] = useState(group?.groupChat || false);
 	const { _id, name, agents } = groupState;
 
 	async function groupPost(e) {
@@ -35,6 +36,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 			name: e.target.name.value,
 			adminAgent: adminAgentState?.value,
 			agents: agentsState.map(a => a.value),
+			groupChat: e.target.groupChat.checked,
 		};
 		if (editing) {
 			await API.editGroup(groupState._id, body, null, setError, null);
@@ -76,10 +78,28 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 							/>
 						</div>
 					</div>
+					
+					<div className='sm:col-span-12'>
+						<label className='flex items-center space-x-2'>
+							<input
+								type='checkbox'
+								name='groupChat'
+								checked={groupChatState}
+								onChange={(e) => {
+									if (groupChatState && agentsState.length > 0) {
+										setAgentsState([agentsState[0]]);
+									}
+									setGroupChatState(e.target.checked);
+								}}
+								className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
+							/>
+							<span>Group Chat</span>
+						</label>
+					</div>
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Group Admin
+								Admin Agent
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -110,10 +130,11 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 					        />
 						</div>
 					</div>
-
+										
 					<div className='sm:col-span-12'>
+					
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Group Members
+								Members
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -128,7 +149,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing }: { 
 									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 					            }}
 					            value={agentsState}
-					            onChange={(v: any) => setAgentsState(v)}
+					            onChange={(v: any) => setAgentsState(groupChatState ? (v||[]) : v.length > 0 ? [v[v.length-1]] : [])}
 					            options={agentChoices.filter(a => a._id !== adminAgentState?.value).map(a => ({ label: a.name, value: a._id }))}
 					            formatOptionLabel={data => {
 					            	const optionAgent = agentChoices.find(ac => ac._id === data.value);

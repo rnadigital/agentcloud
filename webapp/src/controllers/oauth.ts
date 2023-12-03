@@ -62,7 +62,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 		const teamId = addedTeam.insertedId;
 		await addAccount({
 			_id: newAccountId,
-			name: profile.displayName,
+			name: profile.displayName || profile.email,
 			email: profile.email,
 			passwordHash: null,
 			orgs: [{
@@ -92,6 +92,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 	/*TODO: refactor so this account/default team creation code isnt
 	repeated in both oauth handlers and account register controller */
 	profile.provider = OAUTH_PROVIDER.GOOGLE;
+	const verifiedEmail = profile.emails.find(e => e.verified === true).value;
 	const account: Account = await getAccountByOAuth(profile.id, profile.provider);
 	if (!account) {
 		const newAccountId = new ObjectId();
@@ -109,8 +110,8 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 		const teamId = addedTeam.insertedId;
 		await addAccount({
 			_id: newAccountId,
-			name: profile.displayName,
-			email: profile.emails.find(e => e.verified === true).value,
+			name: profile.displayName || verifiedEmail,
+			email: verifiedEmail,
 			passwordHash: null,
 			orgs: [{
 				id: orgId,

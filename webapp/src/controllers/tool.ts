@@ -82,7 +82,7 @@ export async function toolAddPage(app, req, res, next) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, credentialId }  = req.body;
+	const { name, type, data, credentialId, schema }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !type || typeof type !== 'string' || type.length === 0 // TODO: or is not one of valid types
@@ -96,10 +96,11 @@ export async function addToolApi(req, res, next) {
 		teamId: res.locals.account.currentTeam,
 	    name,
 	 	type: type as ToolType,
+	 	schema: schema,
 		data: {
 			...data,
 			builtin: false,
-		    name: toSnakeCase(name),
+		    name: (type as ToolType) === ToolType.API_TOOL ? 'openapi_request' : toSnakeCase(name),
 		},
 	});
 
@@ -109,15 +110,16 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId }  = req.body;
+	const { name, type, data, toolId, schema }  = req.body;
 
 	await editTool(res.locals.account.currentTeam, toolId, {
 	    name,
 	 	type: type as ToolType,
+	 	schema: schema,
 		data: {
 			...data,
 			builtin: false,
-		    name: toSnakeCase(name),
+		    name: (type as ToolType) === ToolType.API_TOOL ? 'openapi_request' : toSnakeCase(name),
 		},
 	});
 
