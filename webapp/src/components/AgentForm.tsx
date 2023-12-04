@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccountContext } from '../context/account';
 import { ModelList } from '../lib/struct/models';
@@ -9,7 +9,8 @@ import * as API from '../api';
 import { toast } from 'react-toastify';
 import Select from 'react-tailwindcss-select';
 
-export default function AgentForm({ agent = {}, credentials = [], tools=[], editing }: { agent?: any, credentials?: any[], tools?: any[], editing?: boolean }) { //TODO: fix any types
+export default function AgentForm({ agent = {}, credentials = [], tools=[], editing, compact=false, callback }
+	: { agent?: any, credentials?: any[], tools?: any[], editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -30,6 +31,16 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 	}).filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
 
+	useEffect(() => {
+		if (credentials && credentials.length > 0 && !credentialId) {
+			setAgent({
+				...agentState,
+				credentialId: credentials[0]._id,
+				model: ModelList[credentials[0].platform],
+			});
+		}
+	}, []);
+
 	async function agentPost(e) {
 		e.preventDefault();
 		const body = {
@@ -46,7 +57,8 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 				toast.success('Agent Updated');
 			}, setError, null);
 		} else {
-			API.addAgent(body, null, setError, router);
+			const addedAgent: any = await API.addAgent(body, null, setError, compact ? null : router);
+			callback && addedAgent && callback(addedAgent._id);
 		}
 	}
 
@@ -56,13 +68,13 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 			name='_csrf'
 			value={csrf}
 		/>
-		<div className='space-y-12'>
+		<div className={`space-y-${compact ? '6' : '12'}`}>
 
-			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
-				<div>
+			<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
+				{!compact && <div>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Agent Details</h2>
 					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, credentials and model to use for this agent.</p>
-				</div>
+				</div>}
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
@@ -230,8 +242,8 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 
 			</div>
 			
-			<div className='grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-12 md:grid-cols-3'>
-				<div>
+			<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-6 md:grid-cols-${compact ? '1' : '3'}`}>
+				{!compact && <div>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Instructions</h2>
 					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
 						Provide instructions for your agent. Here are some questions to answer for some example custom instructions:
@@ -244,7 +256,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 						<li>How formal or casual should your agent be?</li>
 						<li>How long or short should responses generally be?</li>
 					</ol>
-				</div>
+				</div>}
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 
@@ -270,15 +282,15 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], edit
 		</div>
 
 		<div className='mt-6 flex items-center justify-between gap-x-6'>
-			<Link
+			{!compact && <Link
 				className='text-sm font-semibold leading-6 text-gray-900'
 				href={`/${resourceSlug}/agents`}
 			>
 				Back
-			</Link>
+			</Link>}
 			<button
 				type='submit'
-				className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+				className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 			>
 					Save
 			</button>

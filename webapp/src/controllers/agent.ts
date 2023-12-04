@@ -111,7 +111,7 @@ export async function addAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await addAgent({
+	const addedAgent = await addAgent({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
@@ -132,7 +132,7 @@ export async function addAgentApi(req, res, next) {
 		toolIds: foundTools.map(t => t._id),
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/agents` });
+	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${res.locals.account.currentTeam}/agents` });
 
 }
 

@@ -307,11 +307,11 @@ export default function Session(props) {
 					</div>
 					<div className='flex flex-row justify-center pb-3'>
 						<div className='flex items-start space-x-4 basis-1/2'>
-							<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+							{!terminated && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
 								<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
 									<Blockies seed={account.name} />
 								</span>
-							</div>
+							</div>}
 							<div className='min-w-0 flex-1 h-full'>
 								{terminated 
 									? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>

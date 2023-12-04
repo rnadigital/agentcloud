@@ -4,18 +4,22 @@ import { getGroupsByTeam, getGroupById } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
-import { getAgentsById } from '../db/agent';
+import { getAgentsById, getAgentsByTeam } from '../db/agent';
 import { dynamicResponse } from '../util';
 import { taskQueue } from '../lib/queue/bull';
 import { client } from '../lib/redis/redis';
 
 export async function sessionsData(req, res, _next) {
-	const groups = await getGroupsByTeam(res.locals.account.currentTeam); //TODO: change data fetched here to list of groups
-	const sessions = await getSessionsByTeam(res.locals.account.currentTeam);
+	const [groups, sessions, agents] = await Promise.all([
+		getGroupsByTeam(res.locals.account.currentTeam),
+		getSessionsByTeam(res.locals.account.currentTeam),
+		getAgentsByTeam(res.locals.account.currentTeam),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		groups,
 		sessions,
+		agents,
 	};
 }
 

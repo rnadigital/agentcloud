@@ -17,8 +17,10 @@ export default function AddAgent(props) {
 	const { agents, credentials, tools } = state;
 
 	useEffect(() => {
-		API.getAgents({ resourceSlug: account.currentTeam }, dispatch, setError, router);
-	}, []);
+		if (account?.currentTeam) {
+			API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
+		}
+	}, [account?.currentTeam]);
 	
 	if (agents == null) {
 		return 'Loading...'; //TODO: loader
