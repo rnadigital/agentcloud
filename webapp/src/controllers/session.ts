@@ -4,7 +4,7 @@ import { getGroupsByTeam, getGroupById } from '../db/group';
 import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
 import { SessionStatus, SessionType } from '../lib/struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
-import { getAgentsById, getAgentsByTeam } from '../db/agent';
+import { getAgentsById, getAgentById, getAgentsByTeam } from '../db/agent';
 import { dynamicResponse } from '../util';
 import { taskQueue } from '../lib/queue/bull';
 import { client } from '../lib/redis/redis';
@@ -109,7 +109,8 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	let groupId = null;
+	let groupId = null
+		, agentId = null;
 	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
 		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
 		if (!group || !group.adminAgent || group.agents.length === 0) {
@@ -120,6 +121,12 @@ export async function addSessionApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		groupId = group._id;
+	} else if (req.body.agent && typeof req.body.agent === 'string' && req.body.agent.length === 24) {
+		const agent = await getAgentById(res.locals.account.currentTeam, req.body.agent);
+		if (!agent || !agent.credentialId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+		agentId = agent._id;
 	}
 
 	prompt = `${prompt}\n`;
@@ -128,13 +135,14 @@ export async function addSessionApi(req, res, next) {
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    prompt,
-	 	type: groupId !== null ? SessionType.TASK : SessionType.TEAM,
+	 	type: SessionType.TASK,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		groupId,
+		agentId,
 	});
 
 	const now = Date.now();

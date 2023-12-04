@@ -17,6 +17,7 @@ export type Session = {
 	status: SessionStatus;
 	type: SessionType;
 	groupId?: ObjectId;
+	agentId?: ObjectId;
 }
 
 export function SessionCollection() {

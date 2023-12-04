@@ -42,10 +42,6 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			setOpen(true);
 			return null;
 		}
-		if (!selectedGroup?.value) {
-			toast.error('Please select a group');
-			return null;
-		} 
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,
