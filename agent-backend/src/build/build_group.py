@@ -111,7 +111,7 @@ class ChatBuilder:
         # single agent, make non-executing UserProxyAgent
         if self.single_agent:
             user_proxy = autogen.UserProxyAgent(
-                name="User Proxy",
+                name=self.agents[0].name,
                 use_sockets=True,
                 socket_client=self.socket,
                 sid=self.session_id,
