@@ -162,7 +162,6 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 									id='prompt'
 									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:text-white'
 									placeholder={'Describe a task...'}
-									defaultValue={''}
 									value={promptValue}
 									onChange={(e) => setPromptValue(e.target.value)}
 								/>
