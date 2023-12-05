@@ -37,7 +37,7 @@ export default function Sessions(props) {
 	return (<>
 
 		<Head>
-			<title>Sessions - {teamName}</title>
+			<title>{`Sessions - ${teamName}`}</title>
 		</Head>
 
 		{sessions.length > 0 && <div className='border-b pb-2 my-2'>

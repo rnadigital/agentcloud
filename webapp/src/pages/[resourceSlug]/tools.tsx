@@ -37,7 +37,7 @@ export default function Tools(props) {
 	return (<>
 
 		<Head>
-			<title>Tools - {teamName}</title>
+			<title>{`Tools - ${teamName}`}</title>
 		</Head>
 
 		{tools.length > 0 && <div className='border-b pb-2 my-2'>

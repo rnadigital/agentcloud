@@ -32,7 +32,7 @@ export default function AddTool(props) {
 	return (<>
 
 		<Head>
-			<title>New Tool - {teamName}</title>
+			<title>{`New Tool - ${teamName}`}</title>
 		</Head>
 
 		{tools.length > 0 && <div className='border-b pb-2 my-2'>

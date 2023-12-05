@@ -35,7 +35,7 @@ export default function EditTool(props) {
 	return (<>
 
 		<Head>
-			<title>Edit Tool - {teamName}</title>
+			<title>{`Edit Tool - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2'>
