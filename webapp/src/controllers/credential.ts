@@ -78,7 +78,7 @@ export async function addCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await addCredential({
+	const addedCredential = await addCredential({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 	    name,
@@ -90,7 +90,7 @@ export async function addCredentialApi(req, res, next) {
 	    },
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/credentials` });
+	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${res.locals.account.currentTeam}/credentials` });
 
 }
 

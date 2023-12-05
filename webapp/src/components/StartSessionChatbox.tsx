@@ -65,9 +65,8 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			foundAgent && setSelectedAgent({ label: foundAgent.name, value: foundAgent._id });
 		} else {
 			const foundGroup = groups.find(g => g._id === addedId);
-			setSelectedGroup({ label: foundGroup.name, value: foundGroup._id });
+			foundGroup && setSelectedGroup({ label: foundGroup.name, value: foundGroup._id });
 		}
-		setSelectedGroup(null);
 		setAddedId(null);
 		setModalOpen(false);
 	}, [agents, groups]);

@@ -1,28 +1,9 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import AgentForm from './AgentForm';
-import { useRouter } from 'next/router';
+import CredentialForm from './CredentialForm';
 
-export default function CreateAgentModal({ open, setOpen, callback }) {
+export default function CreateCredentialModal({ open, setOpen, callback }) {
 
-	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
-	const router = useRouter();
-
-	const [state, dispatch] = useState({});
-	const [error, setError] = useState();
-	const { agents, credentials, tools } = state as any;
-
-	async function fetchAgentFormData() {
-		await API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
-	}
-	
-	useEffect(() => {
-		fetchAgentFormData();
-	}, []);
-	
 	return (
 		<Transition.Root show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
@@ -51,13 +32,13 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 						>
 							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible'>
 								<div>
-									<div className=''>
+									<div>
 										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
-											Create an agent
+											Create a credential
 										</Dialog.Title>
 									</div>
 								</div>
-								<AgentForm credentials={credentials} tools={tools} compact={true} callback={callback} fetchAgentFormData={fetchAgentFormData} />
+								<CredentialForm compact={true} callback={callback} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>
