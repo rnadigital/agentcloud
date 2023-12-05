@@ -165,7 +165,6 @@ src/orgs/*.py
 .DS_Store
 keyfile.json
 *.ipynb
-poetry.lock
 src/output
 output
 src/tools
