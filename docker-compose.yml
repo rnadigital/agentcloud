@@ -60,6 +60,8 @@ services:
     ports:
       - '127.0.0.1:8080:8080'
     image: agent_backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - LOCAL=True
       - MAX_THREADS=50
