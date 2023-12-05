@@ -50,8 +50,8 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 			_csrf: e.target._csrf.value,
 			name: e.target.name.value,
 			type: e.target.type.value,
-			model: e.target.model.value,
-			credentialId: e.target.credentialId.value,
+			model: model,
+			credentialId: credentialId,
 			systemMessage: e.target.systemMessage.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
 		};

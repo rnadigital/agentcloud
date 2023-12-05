@@ -14,8 +14,13 @@ export default function CreateGroupModal({ open, setOpen, callback }) {
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
 	const { agents } = state as any;
+
+	async function fetchAgents() {
+		await API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
+	}
+	
 	useEffect(() => {
-		API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
+		fetchAgents();
 	}, []);
 	
 	return (
@@ -53,7 +58,7 @@ export default function CreateGroupModal({ open, setOpen, callback }) {
 										</Dialog.Title>
 									</div>
 								</div>
-								<GroupForm agentChoices={agents} compact={true} callback={callback} />
+								<GroupForm agentChoices={agents} compact={true} callback={callback} fetchAgents={fetchAgents} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

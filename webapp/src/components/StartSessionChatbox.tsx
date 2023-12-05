@@ -53,12 +53,14 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 	}
 
 	async function callback(id: string) {
-		await fetchSessions();
+		console.log('id', id);
 		setAddedId(id);
+		await fetchSessions();
 	}
 
 	//When agents or groups change set the selected group from the callback
 	useEffect(() => {
+		console.log('addedId', addedId);
 		if (!addedId) { return; }
 		if (sessionRadio === 'single') {
 			const foundAgent = agents.find(a => a._id === addedId);
