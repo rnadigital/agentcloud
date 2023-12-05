@@ -2,8 +2,8 @@
 
 import * as db from './index';
 import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
-import { SessionType } from '../lib/struct/session';
+import toObjectId from 'misc/toobjectid';
+import { SessionType } from 'struct/session';
 
 export type ChatChunk = {
 	ts: number;

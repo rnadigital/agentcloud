@@ -1,6 +1,6 @@
 'use strict';
 
-import { CredentialPlatform } from './credentials';
+import { CredentialPlatform } from './credential';
 
 //TODO: types
 export const ModelList = {

@@ -2,17 +2,8 @@
 
 import * as db from './index';
 import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
-
-export type Group = {
-	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
-	name: string;
-	adminAgent: ObjectId;
-	agents: ObjectId[];
-	groupChat?: boolean;
-};
+import toObjectId from 'misc/toobjectid';
+import { Group } from 'struct/group';
 
 export function GroupCollection() {
 	return db.db().collection('groups');

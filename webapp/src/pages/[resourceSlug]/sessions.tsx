@@ -6,7 +6,7 @@ import StartSessionChatbox from '../../components/StartSessionChatbox';
 import SessionCards from '../../components/SessionCards';
 import SubscriptionModal from '../../components/SubscriptionModal';
 import { useRouter } from 'next/router';
-import { SessionStatus } from '../../lib/struct/session';
+import { SessionStatus } from 'struct/session';
 
 export default function Sessions(props) {
 

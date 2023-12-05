@@ -1,7 +1,7 @@
 'use strict';
 
 import { Tool } from '../../db/tool';
-import { ToolType } from './tools';
+import { ToolType } from './tool';
 
 const GlobalTools: Tool[] = [
 	{

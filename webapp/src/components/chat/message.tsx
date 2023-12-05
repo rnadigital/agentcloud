@@ -2,9 +2,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ClipboardDocumentIcon, ChatBubbleLeftIcon } from '@heroicons/react/20/solid';
 import { useChatContext } from '../../context/chat';
-import { relativeString } from '../../lib/time';
+import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
-import { FeedbackOption, SessionType } from '../../lib/struct/session';
+import { FeedbackOption, SessionType } from 'struct/session';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {

@@ -4,7 +4,37 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "outDir": "dist",
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": "./src",
+    "paths": {
+      "struct/*": [
+        "lib/struct/*"
+      ],
+      "email/*": [
+        "lib/email/*"
+      ],
+      "middleware/*": [
+        "lib/middleware/*"
+      ],
+      "misc/*": [
+        "lib/misc/*"
+      ],
+      "queue/*": [
+        "lib/queue/*"
+      ],
+      "redis/*": [
+        "lib/redis/*"
+      ],
+      "secret/*": [
+        "lib/secret/*"
+      ],
+      "styles/*": [
+        "lib/styles/*"
+      ],
+      "lib/*": [
+        "lib/*"
+      ]
+    }
   },
   "include": ["src/server.ts", "src/migrations/*.ts"],
   "ts-node": {

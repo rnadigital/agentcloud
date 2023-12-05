@@ -2,9 +2,9 @@
 
 import * as db from './index';
 import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
-import { ToolType } from '../lib/struct/tools';
-import GlobalTools from '../lib/struct/globaltools';
+import toObjectId from 'misc/toobjectid';
+import { ToolType } from 'struct/tool';
+import GlobalTools from 'struct/globaltools';
 import debug from 'debug';
 const log = debug('webapp:db:tools');
 
