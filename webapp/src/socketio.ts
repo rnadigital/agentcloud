@@ -194,7 +194,7 @@ export function initSocket(rawHttpServer) {
 						chunkId: finalMessage.message.chunkId || null,
 						tokens: finalMessage?.message.tokens || 0,
 						displayMessage: finalMessage?.displayMessage || null,
-                        chunks: finalMessage?.message?.single ? [] : [chunk],
+						chunks: finalMessage?.message?.single ? [] : [chunk],
 					});
 				}
 				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
