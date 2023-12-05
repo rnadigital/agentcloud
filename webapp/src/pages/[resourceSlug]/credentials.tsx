@@ -34,7 +34,7 @@ export default function Credentials(props) {
 	return (<>
 
 		<Head>
-			<title>Credentials - {teamName}</title>
+			<title>{`Credentials - ${teamName}`}</title>
 		</Head>
 
 		{credentials.length > 0 && <div className='border-b pb-2 my-2 dark:border-slate-600'>

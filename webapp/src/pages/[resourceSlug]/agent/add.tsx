@@ -29,7 +29,7 @@ export default function AddAgent(props) {
 	return (<>
 
 		<Head>
-			<title>New Agent - {teamName}</title>
+			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
 		<AgentForm credentials={credentials} tools={tools} />

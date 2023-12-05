@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccountContext } from '../context/account';
-// import toSnakeCase from '../lib/misc/tosnakecase';
-import { ToolType } from '../lib/struct/tools';
+import { ToolType } from 'struct/tool';
 import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';

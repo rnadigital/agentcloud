@@ -6,7 +6,7 @@ import StartSessionChatbox from '../../components/StartSessionChatbox';
 import SessionCards from '../../components/SessionCards';
 import SubscriptionModal from '../../components/SubscriptionModal';
 import { useRouter } from 'next/router';
-import { SessionStatus } from '../../lib/struct/session';
+import { SessionStatus } from 'struct/session';
 
 export default function Sessions(props) {
 
@@ -37,7 +37,7 @@ export default function Sessions(props) {
 	return (<>
 
 		<Head>
-			<title>Sessions - {teamName}</title>
+			<title>{`Sessions - ${teamName}`}</title>
 		</Head>
 
 		{sessions.length > 0 && <div className='border-b pb-2 my-2'>

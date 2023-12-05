@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccountContext } from '../context/account';
-import { ModelList } from '../lib/struct/models';
 import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
 import Select from 'react-tailwindcss-select';
+import { ModelList } from 'struct/model';
+// import { Group } from ''
+	// Tool, Credential, Agent, ModelList } from 'struct/index';
 
-export default function AgentForm({ agent = {}, credentials = [], tools=[], editing, compact=false, callback }
-	: { agent?: any, credentials?: any[], tools?: any[], editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any types
+export default function AgentForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback }
+	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;

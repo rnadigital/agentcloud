@@ -2,8 +2,8 @@
 
 import * as db from './index';
 import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
-import { CredentialPlatform } from '../lib/struct/credentials';
+import toObjectId from 'misc/toobjectid';
+import { CredentialPlatform } from 'struct/credential';
 
 export type TokenExchangeMethod = 'post' | 'basic';
 

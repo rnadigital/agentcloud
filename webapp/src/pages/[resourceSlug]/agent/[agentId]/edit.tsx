@@ -32,7 +32,7 @@ export default function EditAgent(props) {
 	return (<>
 
 		<Head>
-			<title>Edit Agent - {teamName}</title>
+			<title>{`Edit Agent - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2 mb-6'>

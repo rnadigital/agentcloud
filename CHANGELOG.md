@@ -1,3 +1,10 @@
+### v0.3.0
+ - Option for single vs multi agent sessions
+ - Function calls now support openapi and importing spec from copy/pasted file or URL
+ - Update webapp tsconfig to use relative import paths for lib
+ - Allow creating a new agent or group in a modal, with "create new" in dropdowns
+ - Update AWS SES SDK to v3
+
 ### v0.0.4
  - Add OAuth login for Google and Github with Passport
  - Added function calls

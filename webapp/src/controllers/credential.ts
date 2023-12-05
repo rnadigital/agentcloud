@@ -2,7 +2,7 @@
 
 import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
 import { removeAgentsCredential } from '../db/agent';
-import { CredentialPlatform, CredentialPlatforms } from '../lib/struct/credentials';
+import { CredentialPlatform, CredentialPlatforms } from 'struct/credential';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {

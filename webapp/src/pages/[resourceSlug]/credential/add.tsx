@@ -11,7 +11,7 @@ export default function AddCredential(props) {
 	return (<>
 
 		<Head>
-			<title>New Credential - {teamName}</title>
+			<title>{`New Credential - ${teamName}`}</title>
 		</Head>
 
 		<CredentialForm />

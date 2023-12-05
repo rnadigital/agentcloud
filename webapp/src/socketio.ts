@@ -11,7 +11,7 @@ import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, up
 import { AgentType, addAgents } from './db/agent';
 import { addGroup } from './db/group';
 import { unsafeGetSessionById, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
-import { SessionType, SessionStatus } from './lib/struct/session';
+import { SessionType, SessionStatus } from 'struct/session';
 
 import { taskQueue } from './lib/queue/bull';
 

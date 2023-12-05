@@ -1,56 +1,58 @@
 'use strict';
 
-import * as aws from 'aws-sdk';
-import { getSecret } from '../secret/secretmanager';
-import SecretKeys from '../secret/secretkeys';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { getSecret } from 'secret/secretmanager';
+import SecretKeys from 'secret/secretkeys';
+import debug from 'debug';
+const log = debug('webapp:email');
 
 let amazonAccessID;
 let amazonSecretAccessKey;
-let ses;
+let sesClient;
 
 export async function init() {
 	amazonAccessID = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
 	amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);
+	log('amazonAccessID', amazonAccessID);
+	log('amazonSecretAccessKey', amazonSecretAccessKey);
 	if (!amazonAccessID) { return; }
-	await aws.config.update({
+	sesClient = new SESClient({
 		region: 'us-east-1',
-		accessKeyId: amazonAccessID,
-		secretAccessKey: amazonSecretAccessKey,
-	});
-	ses = new aws.SES({
-		apiVersion: 'latest'
+		credentials: {
+			accessKeyId: amazonAccessID,
+			secretAccessKey: amazonSecretAccessKey,
+		}
 	});
 }
 
-export function sendEmail(options) {
-	if (!ses) { return; }
-	return new Promise((res, rej) => {
-		ses.sendEmail({
-			Source: options.from,
-			Destination: {
-				BccAddresses: options.bcc,
-				CcAddresses: options.cc,
-				ToAddresses: options.to,
+export async function sendEmail(options) {
+	if (!sesClient) { return; }
+	log('Sending email', options);
+	const emailParams = {
+		Source: options.from,
+		Destination: {
+			BccAddresses: options.bcc,
+			CcAddresses: options.cc,
+			ToAddresses: options.to,
+		},
+		Message: {
+			Subject: {
+				Data: options.subject,
 			},
-			Message: {
-				Subject: {
-					Data: options.subject,
-				},
-				Body: {
-					Html: {
-						Data: options.body,
-					},
+			Body: {
+				Html: {
+					Data: options.body,
 				},
 			},
-			ReplyToAddresses: options.replyTo,
-		}, (err, info) => {
-			if (err) {
-				rej(err);
-			} else if (info != null) {
-				res(info);
-			} else {
-				rej(new Error('Error in ses email sending'));
-			}
-		});
-	});
+		},
+		ReplyToAddresses: options.replyTo,
+	};
+
+	try {
+		const command = new SendEmailCommand(emailParams);
+		const response = await sesClient.send(command);
+		return response;
+	} catch (error) {
+		throw error;
+	}
 }
