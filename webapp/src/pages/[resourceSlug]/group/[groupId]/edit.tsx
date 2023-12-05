@@ -37,7 +37,7 @@ export default function EditGroup(props) {
 	return (<>
 
 		<Head>
-			<title>Edit Group - {teamName}</title>
+			<title>{`Edit Group - ${teamName}`}</title>
 		</Head>
 
 		<div>

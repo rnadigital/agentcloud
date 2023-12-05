@@ -42,33 +42,43 @@ class MongoClientConnection(MongoConnection):
     def _get_tools_collection(self) -> collection.Collection:
         return self.db["tools"]
 
-    def get_group(self, session_id: str) -> Dict:
+    def get_session(self, session_id: str) -> Dict:
+        with log_exception():
+            self.db = self._get_db
+            sessions_collection = self._get_sessions_collection
+            session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)}, {"groupId": 1, "agentId": 1})
+            if session_query_results is None:
+                raise Exception(f"session not found for session _id {session_id}")
+            return session_query_results
+
+    def get_group(self, session: dict) -> Dict:
         with log_exception():
             self.db = self._get_db
             team = {
                 "roles": []
             }
             list_of_agents = list()
-            sessions_collection = self._get_sessions_collection
-            session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)}, {"groupId": 1})
-            if session_query_results is None:
-                raise Exception(f"session not found for session _id {session_id}")
-            group_id = session_query_results.get("groupId")
-            if group_id is None:
-                raise Exception(f"groupId not found on session id {session_id}")
-            groups_collection = self._get_groups_collection
-            group_query_results = groups_collection.find_one({"_id": group_id})
-            if group_query_results is None:
-                raise Exception(f"group not found from session groupId {group_id}")
-            team["group_chat"] = group_query_results.get("groupChat")
-            agents = group_query_results.get("agents")
-            admin_agent = group_query_results.get("adminAgent")
-            agents.append(admin_agent)
+            group_id = session.get("groupId")
+            agent_id = session.get("agentId")
+            if group_id is None and agent_id is None:
+                raise Exception(f"no groupId or agentId found on session id {session_id}")
+            agents = list()
+            if agent_id:
+                agents.append(agent_id)
+            elif group_id:
+                groups_collection = self._get_groups_collection
+                group_query_results = groups_collection.find_one({"_id": group_id})
+                if group_query_results is None:
+                    raise Exception(f"group not found from session groupId {group_id}")
+                team["group_chat"] = group_query_results.get("groupChat")
+                agents = group_query_results.get("agents")
+                admin_agent = group_query_results.get("adminAgent")
+                agents.append(admin_agent)
             if agents and len(agents) > 0:
                 for agent in agents:
                     agent_data: Union[AgentData, None] = self._get_group_member(agent)
                     if agent_data:
-                        agent_data.is_admin = True if agent == admin_agent else False
+                        agent_data.is_admin = True if (group_id and agent == admin_agent) else False
                         list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
             return team

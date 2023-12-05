@@ -34,7 +34,7 @@ export default function Groups(props) {
 	return (<>
 
 		<Head>
-			<title>Groups - {teamName}</title>
+			<title>{`Groups - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2 dark:border-slate-600'>

@@ -34,7 +34,7 @@ export default function Agents(props) {
 	return (<>
 
 		<Head>
-			<title>Agents - {teamName}</title>
+			<title>{`Agents - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2 mb-6 dark:border-slate-600'>

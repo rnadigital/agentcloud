@@ -6,8 +6,7 @@ import StartSessionChatbox from '../../components/StartSessionChatbox';
 import SessionCards from '../../components/SessionCards';
 import SubscriptionModal from '../../components/SubscriptionModal';
 import { useRouter } from 'next/router';
-import { SessionStatus } from '../../lib/struct/session';
-// import classNames from '../../components/ClassNames';
+import { SessionStatus } from 'struct/session';
 
 export default function Sessions(props) {
 
@@ -20,11 +19,11 @@ export default function Sessions(props) {
 	const [filter, setFilter] = useState<string>('all');
 	const [open, setOpen] = useState(false);
 	const filterOptions = Object.values(SessionStatus);
-	const { sessions, groups } = state;
+	const { sessions, groups, agents } = state;
 	const resourceSlug = account?.currentTeam;
 
-	function fetchSessions() {
-		API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
+	async function fetchSessions() {
+		await API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -38,7 +37,7 @@ export default function Sessions(props) {
 	return (<>
 
 		<Head>
-			<title>Sessions - {teamName}</title>
+			<title>{`Sessions - ${teamName}`}</title>
 		</Head>
 
 		{sessions.length > 0 && <div className='border-b pb-2 my-2'>
@@ -47,7 +46,7 @@ export default function Sessions(props) {
 
 		<SubscriptionModal open={open} setOpen={setOpen}/>
 	
-		<StartSessionChatbox groups={groups} setOpen={setOpen} />
+		<StartSessionChatbox groups={groups} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 
 		<div className='w-64 pb-4'>
 			<label htmlFor='filter' className='block text-sm font-medium text-gray-900 dark:text-slate-400'>

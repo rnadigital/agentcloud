@@ -17,9 +17,11 @@ def task_execution(task: str, session_id: str):
     try:
         try:
             # Load team structure from DB
-            group = mongo_client.get_group(session_id)
-            build_chat = ChatBuilder(task, session_id, group.get("group_chat"), {})
-            build_chat.create_group(group.get("roles"))
+            session = mongo_client.get_session(session_id)
+            group = mongo_client.get_group(session)
+            single_agent = session.get('agentId') is not None
+            build_chat = ChatBuilder(task, session_id, group, single_agent, {})
+            build_chat.create_group()
             build_chat.attach_tools_to_agent()
             build_chat.run_chat()
         except Exception as e:

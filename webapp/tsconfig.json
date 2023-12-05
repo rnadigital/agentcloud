@@ -18,7 +18,37 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "target": "ES2022"
+    "target": "ES2022",
+    "baseUrl": "./src",
+    "paths": {
+      "struct/*": [
+        "lib/struct/*"
+      ],
+      "email/*": [
+        "lib/email/*"
+      ],
+      "middleware/*": [
+        "lib/middleware/*"
+      ],
+      "misc/*": [
+        "lib/misc/*"
+      ],
+      "queue/*": [
+        "lib/queue/*"
+      ],
+      "redis/*": [
+        "lib/redis/*"
+      ],
+      "secret/*": [
+        "lib/secret/*"
+      ],
+      "styles/*": [
+        "lib/styles/*"
+      ],
+      "lib/*": [
+        "lib/*"
+      ]
+    },
   },
   "include": [
     "next-env.d.ts",

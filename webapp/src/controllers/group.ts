@@ -108,7 +108,7 @@ export async function addGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Group admin must be a user proxy agent' });
 	}
 
-	await addGroup({
+	const addedGroup = await addGroup({
 		orgId: res.locals.account.currentOrg,
 		teamId: res.locals.account.currentTeam,
 		name,
@@ -117,7 +117,7 @@ export async function addGroupApi(req, res, next) {
 		groupChat: groupChat === true,
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/groups` });
+	return dynamicResponse(req, res, 302, { _id: addedGroup.insertedId, redirect: `/${res.locals.account.currentTeam}/groups` });
 
 }
 

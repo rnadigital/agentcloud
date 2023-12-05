@@ -31,7 +31,7 @@ export default function AddGroup(props) {
 	return (<>
 
 		<Head>
-			<title>New Group - {teamName}</title>
+			<title>{`New Group - ${teamName}`}</title>
 		</Head>
 
 		<GroupForm agentChoices={agentChoices?.agents} />

@@ -12,12 +12,14 @@ from importlib import import_module
 # tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
 
 class ChatBuilder:
-    def __init__(self, prompt, session_id: str, group_chat: bool, history: Optional[dict]):
+    def __init__(self, prompt, session_id: str, group: dict, single_agent: bool, history: Optional[dict]):
         self.user_proxy: Optional[autogen.UserProxyAgent] = None
         self.agents: Optional[List[Union[autogen.AssistantAgent, autogen.UserProxyAgent]]] = list()
+        self.single_agent = single_agent
+        self.group = group
         self.prompt: str = prompt
         self.history: Optional[dict] = history
-        self.group_chat: bool = group_chat
+        self.group_chat: bool = group.get("group_chat") if group else False
         self.function_map = dict()
 
         # Initialize the socket client and connect
@@ -85,25 +87,50 @@ class ChatBuilder:
         except Exception as e:
             logging.exception(e)
 
-    def create_group(self, roles: List):
-        # Initialize agents
+    def process_role(self, role):
+        agent_type = getattr(autogen, role.get("type"))
+        agent_config = role.get("data")
+        agent_config["name"] = "admin" if role.get("is_admin") else agent_config.get("name")
+        agent_config["socket_client"] = self.socket
+        agent_config["sid"] = self.session_id
+        agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(
+            **AgentConfig(
+                **agent_config
+            ).model_dump()
+        )
+        if agent.name == "admin":
+            self.user_proxy: autogen.UserProxyAgent = agent
+        self.agents.append(agent)
+
+    def create_group(self):
+        roles = self.group.get('roles')
         for i, role in enumerate(roles):
-            agent_type = getattr(autogen, role.get("type"))
-            agent_config = role.get("data")
-            agent_config["name"] = "admin" if role.get("is_admin") else agent_config.get("name")
-            agent_config["socket_client"] = self.socket
-            agent_config["sid"] = self.session_id
-            agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(
-                **AgentConfig(
-                    **agent_config
-                ).model_dump()
-            )
-            if agent.name == "admin":
-                self.user_proxy: autogen.UserProxyAgent = agent
-            self.agents.append(agent)
+            self.process_role(role)
 
     def run_chat(self):
-        # Initialize group chat if required
+        # single agent, make non-executing UserProxyAgent
+        if self.single_agent:
+            user_proxy = autogen.UserProxyAgent(
+                name="User Proxy",
+                use_sockets=True,
+                socket_client=self.socket,
+                sid=self.session_id,
+            )
+            return user_proxy.initiate_chat(
+                recipient=self.agents[0],
+                message=self.prompt,
+                use_sockets=True,
+                socket_client=self.socket,
+                sid=self.session_id
+            )
+            # self.agents[0].initiate_chat(
+            #     recipient=user_proxy,
+            #     message=self.prompt,
+            #     use_sockets=True,
+            #     socket_client=self.socket,
+            #     sid=self.session_id
+            # )
+        # not single agent
         if self.group_chat:
             groupchat = autogen.GroupChat(
                 agents=self.agents,
@@ -113,12 +140,22 @@ class ChatBuilder:
             )
             # Ensuring all members are aware of their team members
             manager = autogen.GroupChatManager(
-                groupchat=groupchat, llm_config=self.agents[0].llm_config,
+                groupchat=groupchat,
+                llm_config=self.agents[0].llm_config,
                 use_sockets=True,
-                socket_client=self.socket, sid=self.session_id)
+                socket_client=self.socket,
+                sid=self.session_id
+            )
             if self.user_proxy:
-                self.user_proxy.initiate_chat(recipient=manager, message=self.prompt, clear_history=True,
-                                              **self.history)
+                self.user_proxy.initiate_chat(
+                    recipient=manager,
+                    message=self.prompt,
+                    clear_history=True,
+                    **self.history
+                )
         else:
             recipient = [agent for agent in self.agents if agent.name != 'admin']
-            self.user_proxy.initiate_chat(recipient=recipient[0], message=self.prompt)
+            self.user_proxy.initiate_chat(
+                recipient=recipient[0],
+                message=self.prompt
+            )

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { useAccountContext } from '../context/account';
@@ -8,9 +8,19 @@ import {
 	PaperAirplaneIcon,
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
+import SelectClassNames from '../lib/styles/SelectClassNames';
+import CreateAgentModal from '../components/CreateAgentModal';
+import CreateGroupModal from '../components/CreateGroupModal';
 import { toast } from 'react-toastify';
 
-export default function StartSessionChatbox({ groups = [], setOpen }) {
+const sessionRadios = [
+	{ name: 'single', title: 'Single Agent' },
+	{ name: 'multi', title: 'Multi Agent', badge: <span className='inline-flex items-center rounded-md bg-blue-100 mx-1 px-2 py-1 text-xs font-medium text-blue-700'>
+		BETA
+	</span> },
+];
+
+export default function StartSessionChatbox({ agents = [], groups = [], setOpen, fetchSessions }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -20,7 +30,11 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
+	const [sessionRadio, setSessionRadio] = useState('single');
 	const [selectedGroup, setSelectedGroup] = useState(null);
+	const [selectedAgent, setSelectedAgent] = useState(null);
+	const [addedId, setAddedId] = useState(null);
+	const [modalOpen, setModalOpen] = useState(false);
 
 	async function addSession(e) {
 		e.preventDefault();
@@ -28,17 +42,35 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 			setOpen(true);
 			return null;
 		}
-		if (!selectedGroup?.value) {
-			toast.error('Please select a group');
-			return null;
-		} 
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,
 			prompt: target.prompt.value,
-			group: selectedGroup.value,
+			group: selectedGroup?.value,
+			agent: selectedAgent?.value,
+			type: sessionRadio,
 		}, null, setError, router);
 	}
+
+	async function callback(id: string) {
+		await fetchSessions();
+		setAddedId(id);
+	}
+
+	//When agents or groups change set the selected group from the callback
+	useEffect(() => {
+		if (!addedId) { return; }
+		if (sessionRadio === 'single') {
+			const foundAgent = agents.find(a => a._id === addedId);
+			foundAgent && setSelectedAgent({ label: foundAgent.name, value: foundAgent._id });
+		} else {
+			const foundGroup = groups.find(g => g._id === addedId);
+			setSelectedGroup({ label: foundGroup.name, value: foundGroup._id });
+		}
+		setSelectedGroup(null);
+		setAddedId(null);
+		setModalOpen(false);
+	}, [agents, groups]);
 
 	const groupOptions = groups.filter(g => {
 		return g.adminAgent && g.agents.length > 0;
@@ -47,32 +79,81 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 		value: g._id,
 	}));
 
+	const agentOptions = agents.map(a => ({
+		label: a.name,
+		value: a._id,
+	}));
+
 	return (<div className='flex flex-col mb-10'>
 
-		<div className='text-center my-2 dark:text-white'>
-			To start a new session, select a team and describe a task in natural language:
+		<div className='text-center my-3 dark:text-white'>
+			Start a new chat session:
 		</div>
+
+		{sessionRadio === 'single'
+			? <CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={callback} />
+			: <CreateGroupModal open={modalOpen} setOpen={setModalOpen} callback={callback} />}
 
 		<div className='flex flex-row justify-center'>
 			<div className='flex items-start space-x-4 basis-1/2'>
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
+						<div>
+							<p className='text-sm'>Select your agent type</p>
+							<fieldset className='my-3'>
+								<legend className='sr-only'>Notification method</legend>
+								<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+									{sessionRadios.map((r) => (
+										<div key={r.name} className='flex items-center'>
+											<input
+												id={r.name}
+												name='notification-method'
+												type='radio'
+												onChange={(e) => setSessionRadio(e.target.id)}
+												defaultChecked={r.name === sessionRadio}
+												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+											/>
+											<label htmlFor={r.name} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+												{r.title} {r.badge}
+											</label>
+										</div>
+									))}
+								</div>
+							</fieldset>
+						</div>
 						<input type='hidden' name='_csrf' value={csrf} />
-				        <Select
-				        	isSearchable
-				            primaryColor={'indigo'}
-				            value={selectedGroup}
-				            classNames={{
-								menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-								menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-								list: 'dark:bg-slate-700',
-								listGroupLabel: 'dark:bg-slate-700',
-								listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-				            }}
-				            onChange={(e: any) => setSelectedGroup(e)}
-				            options={groupOptions}
-				        />
-						<label className='bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
+						{sessionRadio === 'multi'
+							? <Select
+								isSearchable={groupOptions.length > 5}
+								isClearable
+								primaryColor={'indigo'}
+								value={selectedGroup}
+								classNames={SelectClassNames}
+								onChange={(e: any) => {
+									if (e?.value === null) {
+										//Create new pressed
+										return setModalOpen(true);
+									}
+									setSelectedGroup(e);
+								}}
+								options={groupOptions.concat([{ label: '+ Create new group', value: null }])}
+							/>
+							: <Select
+								isSearchable={agentOptions.length > 5}
+								isClearable
+								primaryColor={'indigo'}
+								value={selectedAgent}
+								classNames={SelectClassNames}
+								onChange={(e: any) => {
+									if (e?.value === null) {
+										//Create new pressed
+										return setModalOpen(true);
+									}
+									setSelectedAgent(e);
+								}}
+								options={agentOptions.concat([{ label: '+ Create new agent', value: null }])}
+							/>}
+						<label style={{ opacity: (selectedGroup||selectedAgent) ? '1' : '0' }} className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}
@@ -81,7 +162,6 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 									id='prompt'
 									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:text-white'
 									placeholder={'Describe a task...'}
-									defaultValue={''}
 									value={promptValue}
 									onChange={(e) => setPromptValue(e.target.value)}
 								/>
@@ -94,7 +174,7 @@ export default function StartSessionChatbox({ groups = [], setOpen }) {
 								</div>
 							</div>
 						</label>
-						<div className='pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
+						<div style={{ opacity: (selectedGroup||selectedAgent) ? '1' : '0' }} className='transition-all pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
 							<div className='flex-shrink-0'>
 								<button
 									type='submit'

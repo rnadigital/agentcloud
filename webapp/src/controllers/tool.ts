@@ -4,9 +4,9 @@ import { getToolsByTeam, addTool, getToolById, deleteToolById, editTool } from '
 import { getCredentialsByTeam } from '../db/credential';
 import { removeAgentsTool } from '../db/agent';
 import { dynamicResponse } from '../util';
-import toObjectId from '../lib/misc/toobjectid';
-import { ToolType } from '../lib/struct/tools';
-import toSnakeCase from '../lib/misc/tosnakecase';
+import toObjectId from 'misc/toobjectid';
+import { ToolType } from 'struct/tool';
+import toSnakeCase from 'misc/tosnakecase';
 
 export async function toolsData(req, res, _next) {
 	const [tools, credentials] = await Promise.all([

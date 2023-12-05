@@ -2,9 +2,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ClipboardDocumentIcon, ChatBubbleLeftIcon } from '@heroicons/react/20/solid';
 import { useChatContext } from '../../context/chat';
-import { relativeString } from '../../lib/time';
+import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
-import { FeedbackOption, SessionType } from '../../lib/struct/session';
+import { FeedbackOption, SessionType } from 'struct/session';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -223,7 +223,7 @@ export function Message({
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
-				<div className={`flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
+				<div className={`shadow-sm flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
 					<p className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500 dark:text-white'}`}>
