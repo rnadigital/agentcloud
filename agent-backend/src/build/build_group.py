@@ -123,13 +123,6 @@ class ChatBuilder:
                 socket_client=self.socket,
                 sid=self.session_id
             )
-            # self.agents[0].initiate_chat(
-            #     recipient=user_proxy,
-            #     message=self.prompt,
-            #     use_sockets=True,
-            #     socket_client=self.socket,
-            #     sid=self.session_id
-            # )
         # not single agent
         if self.group_chat:
             groupchat = autogen.GroupChat(
