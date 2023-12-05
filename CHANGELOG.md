@@ -1,3 +1,7 @@
+### 0.4.0
+ - Add modal (and support for nested) creation of credentials, agents and groups for a much improved flow of starting a session
+ - Fix single agent mode to correctly display the name of the single agent instead of "User Proxy"
+
 ### v0.3.0
  - Option for single vs multi agent sessions
  - Function calls now support openapi and importing spec from copy/pasted file or URL
