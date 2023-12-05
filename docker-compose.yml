@@ -55,7 +55,6 @@ services:
     build:
       context: agent-backend/
       args:
-        - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
       - '127.0.0.1:8080:8080'

@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-google_cloud_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
 LOCAL = os.getenv("LOCAL", "True") == 'True'
 
 # Get project ID and Local var from .env file

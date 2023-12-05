@@ -22,11 +22,6 @@ FROM base AS final
 # Copy the rest of the application code into the container
 COPY ./src/ /app/
 
-# Add the google application credentials
-ARG GOOGLE_KEYPATH
-COPY $GOOGLE_KEYPATH /app/keyfile.json
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
-
 # Expose port 8080 for the FastAPI application
 EXPOSE 8080
 
