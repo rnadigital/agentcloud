@@ -14,3 +14,4 @@ Mandatory:
 - `MONGO_DB_NAME` - mongodb db name
 - `OPENAI_API_KEY` - open ai api key
 - `MAX_RETRIES` - number of retries when connecting to webapp socketio
+- `AGENT_BACKEND_SOCKET_TOKEN` - token to identify agent backend in socket session

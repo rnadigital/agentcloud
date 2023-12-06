@@ -12,6 +12,7 @@ LOCAL = os.getenv("LOCAL", "True") == 'True'
 BASE_PATH = os.getenv("BASE_PATH", "./src") if LOCAL else "."
 SOCKET_URL = os.getenv("SOCKET_URL", "http://webapp_next:3000/")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test")
+AGENT_BACKEND_SOCKET_TOKEN = os.getenv("AGENT_BACKEND_SOCKET_TOKEN")
 DB_URL = os.getenv("DB_URL")
 MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
 REDIS_HOST = os.getenv("REDIS_HOST")

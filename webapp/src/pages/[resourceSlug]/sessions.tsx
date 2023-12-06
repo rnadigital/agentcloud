@@ -23,7 +23,6 @@ export default function Sessions(props) {
 	const resourceSlug = account?.currentTeam;
 
 	async function fetchSessions() {
-		console.log('fetching sessions');
 		await API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
 	}
 

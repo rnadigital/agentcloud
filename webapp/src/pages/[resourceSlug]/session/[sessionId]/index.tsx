@@ -139,7 +139,8 @@ export default function Session(props) {
 			}
 		});
 	}
-	function handleSocketJoined() {
+	function handleSocketJoined(joinMessage) {
+		log('Received chat joined %s', joinMessage);
 		scrollToBottom();
 	}
 	function handleSocketStart() {

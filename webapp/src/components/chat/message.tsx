@@ -66,9 +66,12 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 		&& messageContent.split(/\r?\n/).length > COLLAPSE_AFTER_LINES;
 	const [ collapsed, setCollapsed ] = useState(isLongMessage && !chunking);
 	const codeBlockRef = useRef(null);
-	const PreWithRef = (preProps) => (
-		<pre {...preProps} ref={codeBlockRef} />
-	);
+	const PreWithRef = (preProps) => {
+		// console.log(preProps);
+		return (
+			<pre {...preProps} ref={codeBlockRef} />
+		);
+	};
 	const cachedResult = useMemo(() => <>
 		<span className='rounded-t overflow-hidden h-8 bg-gray-700 p-2 text-white w-full block text-xs ps-2 flex justify-between'>
 			{messageLanguage}
@@ -224,13 +227,13 @@ export function Message({
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
 				<div className={`shadow-sm flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
-					<p className={`${incoming ? 'text-white' : ''} w-full`}>
+					<div className={`${incoming ? 'text-white' : ''} w-full`}>
 						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500 dark:text-white'}`}>
 							{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
 							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 						</small>
-					</p>
+					</div>
 				</div>
 				{incoming && profilePicture}
 			</div>
