@@ -156,7 +156,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		let api, client;
 		try {
 			api = new OpenAPIClientAxios(apiOptions);
-			client = await api.initSync();
+			client = await api.init();
 		} catch(e) {
 			console.warn(e);
 			setFunctionsList(null);
