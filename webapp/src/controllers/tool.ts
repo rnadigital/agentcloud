@@ -91,9 +91,8 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: change orgId
 	await addTool({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	 	type: type as ToolType,

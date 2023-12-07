@@ -132,9 +132,8 @@ export async function addSessionApi(req, res, next) {
 
 	prompt = `${prompt}\n`;
 
-	//TODO: change currentOrg to the org with the resourceSlug team in it
 	const addedSession = await addSession({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    prompt,
 	 	type: SessionType.TASK,
@@ -160,7 +159,7 @@ export async function addSessionApi(req, res, next) {
 		ts: now
 	};
 	await addChatMessage({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		sessionId: addedSession.insertedId,
 		message,

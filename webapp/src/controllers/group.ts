@@ -107,9 +107,8 @@ export async function addGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Group admin must be a user proxy agent' });
 	}
 
-	//TODO: change orgID
 	const addedGroup = await addGroup({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		agents: agents.map(toObjectId),

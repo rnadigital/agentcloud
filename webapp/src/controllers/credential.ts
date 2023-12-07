@@ -79,9 +79,8 @@ export async function addCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: change the org to the one matching the resourceSlug team
 	const addedCredential = await addCredential({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	    createdDate: new Date(),

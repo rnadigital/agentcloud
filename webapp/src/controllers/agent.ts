@@ -112,7 +112,7 @@ export async function addAgentApi(req, res, next) {
 	}
 
 	const addedAgent = await addAgent({
-		orgId: res.locals.account.currentOrg,
+		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	 	type: type === AgentType.EXECUTOR_AGENT

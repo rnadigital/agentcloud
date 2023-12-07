@@ -14,5 +14,11 @@ export default function checkResourceSlug(req, res, next) {
 	if (!allowedSlugs.includes(req.params.resourceSlug.toString())) {
 		return res.status(403).send({ error: 'No permission' });
 	}
+	const matchingOrg = res.locals.account.orgs
+		.find(o => o.teams.find(t => t.id.toString() === req.params.resourceSlug));
+	if (!matchingOrg) {
+		return res.status(403).send({ error: 'No permission' });
+	}
+	res.locals.matchingOrg = matchingOrg;
 	next();
 }
