@@ -24,7 +24,7 @@ export default function Agents(props) {
 
 	useEffect(() => {
 		fetchAgents();
-	}, []);
+	}, [resourceSlug]);
 	
 	if (agents == null) {
 		return 'Loading...'; //TODO: loader

@@ -24,7 +24,7 @@ export default function Groups(props) {
 
 	useEffect(() => {
 		fetchGroups();
-	}, [account]);
+	}, [resourceSlug]);
 
 	if (groups == null) {
 		return 'Loading...'; //TODO: loader

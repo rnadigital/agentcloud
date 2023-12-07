@@ -23,7 +23,7 @@ export default function Credentials(props) {
 
 	useEffect(() => {
 		fetchCredentials();
-	}, []);
+	}, [resourceSlug]);
 
 	if (!credentials) {
 		return 'Loading...'; //TODO: loader
