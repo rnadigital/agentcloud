@@ -23,10 +23,19 @@ export default function OrgSelector({ orgs }) {
 	const [_error, setError] = useState();
 
 	async function switchTeam(orgId, teamId) {
+		const splitLocation = location.pathname.split('/').filter(n => n);
+		const foundResourceSlug = account.orgs
+			.find(o => o.teams.find(t => t.id.toString() === splitLocation[0]));
+		let redirect = location.pathname;
+		if (foundResourceSlug) {
+			splitLocation.shift();
+			redirect = `/${teamId}/${splitLocation.join('/')}`;
+		}
 		await API.switchTeam({
 			orgId,
 			teamId,
 			_csrf: csrf,
+			redirect,
 		}, dispatch, setError, router);
 		refreshAccountContext();
 	}

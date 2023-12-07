@@ -222,9 +222,10 @@ export async function verifyToken(req, res) {
  */
 export async function switchTeam(req, res, _next) {
 
-	const { orgId, teamId } = req.body;
+	const { orgId, teamId, redirect } = req.body;
 	if (!orgId || typeof orgId !== 'string'
-		|| !teamId || typeof teamId !== 'string') {
+		|| !teamId || typeof teamId !== 'string'
+		|| (redirect && typeof redirect !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -236,6 +237,6 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	return res.json({ redirect: `/${teamId}/sessions` });
+	return res.json({ redirect: redirect || `/${teamId}/sessions` });
 
 }
