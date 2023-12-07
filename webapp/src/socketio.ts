@@ -58,7 +58,7 @@ export function initSocket(rawHttpServer) {
 	});
 
 	io.on('connection', async (socket) => {
-		log('socket.id "%s" connected with locals: %O', socket.id, socket.locals);
+		log('socket.id "%s" connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
 			log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
