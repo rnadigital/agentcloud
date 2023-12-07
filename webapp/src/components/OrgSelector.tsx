@@ -17,7 +17,7 @@ export default function OrgSelector({ orgs }) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const teamName = orgs?.find(o => o.teams.find(t => t.id === resourceSlug))?.name;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();

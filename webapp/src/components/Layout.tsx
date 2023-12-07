@@ -77,7 +77,7 @@ export default withRouter(function Layout(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const { children, router } = props as any;
-	const { resourceSlug } = router.query;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
