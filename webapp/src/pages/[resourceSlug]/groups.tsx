@@ -12,15 +12,14 @@ export default function Groups(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { groups, hasAgents } = state;
 
 	function fetchGroups() {
-		API.getGroups({ resourceSlug: resourceSlug }, dispatch, setError, router);
+		API.getGroups({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {

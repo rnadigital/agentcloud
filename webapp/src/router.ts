@@ -9,8 +9,12 @@ import checkSession from './lib/middleware/auth/checksession';
 import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import renderStaticPage from './lib/middleware/render/staticpage';
 import csrfMiddleware from './lib/middleware/auth/csrf';
+import homeRedirect from './lib/middleware/homeredirect';
+import myPassport from './lib/middleware/mypassport';
 import bodyParser from 'body-parser';
-import passport from 'passport';
+
+const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
+const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
 //TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
@@ -20,130 +24,86 @@ import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
 import * as toolController from './controllers/tool';
-import * as oauthController from './controllers/oauth';
 
 export default function router(server, app) {
-
-	// Passport session setup
-	passport.serializeUser(oauthController.serializeHandler);
-	passport.deserializeUser(oauthController.deserializeHandler);
-
-	// Setup all the oauth handlers
-	oauthController.OAUTH_STRATEGIES.forEach((s: oauthController.Strategy) => {
-		if (!process.env[`OAUTH_${s.env}_CLIENT_ID`]) { return; }
-		passport.use(new s.strategy({
-			clientID: process.env[`OAUTH_${s.env}_CLIENT_ID`],
-			clientSecret: process.env[`OAUTH_${s.env}_CLIENT_SECRET`],
-			callbackURL: `${process.env.URL_APP}${s.path}`,
-			...s.extra,
-		}, s.callback));
-	});
-
-	// Initialize Passport
-	server.use(passport.initialize());
-	const oauthRouter = Router({ caseSensitive: true });
-	// Github OAuth routers
-	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
-	oauthRouter.get('/github', useSession, useJWT, passport.authenticate('github'));
-	oauthRouter.get('/github/callback', useSession, useJWT, passport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
-		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
-	});
-	// Google OAuth routes
-	oauthRouter.get('/google', useSession, useJWT, passport.authenticate('google', { scope: ['profile', 'email'] }));
-	oauthRouter.get('/google/callback', useSession, useJWT, passport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => {
-		res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); // Or handle as needed
-	});
-	server.use('/auth', useSession, passport.session(), oauthRouter);
 
 	// Stripe webhook handler
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
+	// Oauth handlers
+	server.use(myPassport.initialize());
+	const oauthRouter = Router({ mergeParams: true, caseSensitive: true });
+	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
+	oauthRouter.get('/github', useSession, useJWT, myPassport.authenticate('github'));
+	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', { scope: ['profile', 'email'] }));
+	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	server.use('/auth', useSession, myPassport.session(), oauthRouter);
+
 	// Body and query parsing middleware
 	server.set('query parser', 'simple');
-	server.use(bodyParser.json({limit: '10mb'})); // for parsing application/json
-	server.use(bodyParser.urlencoded({ extended: false })); // for parsing application/x-www-form-urlencoded
+	server.use(bodyParser.json({limit: '10mb'}));
+	server.use(bodyParser.urlencoded({ extended: false }));
 
-	const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
-	const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
-	
-	server.get('/', unauthedMiddlewareChain, (_req, res, _next) => {
-		const homeRedirect = res.locals.account
-			? `/${res.locals.account.currentTeam}/sessions`
-			: '/register';
-		res.redirect(homeRedirect);
-	});
+	// Non team endpoints
+	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
-	server.get('/socket', authedMiddlewareChain, accountController.socketTestPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
 	server.post('/stripe-paymentlink', authedMiddlewareChain, stripeController.createPaymentLink);
 	server.post('/stripe-portallink', authedMiddlewareChain, stripeController.createPortalLink);
 
-	const accountFormRouter = Router({ caseSensitive: true });
-	accountFormRouter.post('/login', unauthedMiddlewareChain, accountController.login);
-	accountFormRouter.post('/register', unauthedMiddlewareChain, accountController.register);
-	accountFormRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
-	accountFormRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
-	accountFormRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
-	accountFormRouter.post('/logout', authedMiddlewareChain, accountController.logout);
-	accountFormRouter.post('/switch', authedMiddlewareChain, accountController.switchTeam);
-	accountFormRouter.post('/token', authedMiddlewareChain, accountController.setToken);
-	server.use('/forms/account', accountFormRouter);
-	
-	const teamPagesRouter = Router({ caseSensitive: true });
-	teamPagesRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
-	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
-	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
-	teamPagesRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
-	teamPagesRouter.get('/sessions.json', sessionController.sessionsJson);
-	teamPagesRouter.get('/agents', agentController.agentsPage.bind(null, app));
-	teamPagesRouter.get('/agents.json', agentController.agentsJson);
-	teamPagesRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
-	teamPagesRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
-	teamPagesRouter.get('/groups', groupController.groupsPage.bind(null, app));
-	teamPagesRouter.get('/groups.json', groupController.groupsJson);
-	teamPagesRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
-	teamPagesRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
-	teamPagesRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
-	teamPagesRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
-	teamPagesRouter.get('/credentials.json', credentialController.credentialsJson);
-	teamPagesRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
-	teamPagesRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
-	teamPagesRouter.get('/tools', toolController.toolsPage.bind(null, app));
-	teamPagesRouter.get('/tools.json', toolController.toolsJson);
-	teamPagesRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
-	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
-	teamPagesRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
-	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamPagesRouter);
+	// Account endpoints
+	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
+	accountRouter.post('/login', unauthedMiddlewareChain, accountController.login);
+	accountRouter.post('/register', unauthedMiddlewareChain, accountController.register);
+	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
+	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
+	accountRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
+	accountRouter.post('/logout', authedMiddlewareChain, accountController.logout);
+	accountRouter.post('/switch', authedMiddlewareChain, accountController.switchTeam);
+	server.use('/forms/account', accountRouter);
 
-	const agentFormRouter = Router({ caseSensitive: true });
-	agentFormRouter.post('/add', agentController.addAgentApi);
-	agentFormRouter.post('/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
-	agentFormRouter.delete('/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
-	server.use('/forms/agent', authedMiddlewareChain, agentFormRouter);
-	
-	const credentialFormRouter = Router({ caseSensitive: true });
-	credentialFormRouter.post('/add', credentialController.addCredentialApi);
-	credentialFormRouter.delete('/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
-	server.use('/forms/credential', authedMiddlewareChain, credentialFormRouter);
-	
-	const sessionFormRouter = Router({ caseSensitive: true });
-	sessionFormRouter.post('/add', sessionController.addSessionApi);
-	sessionFormRouter.delete('/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
-	server.use('/forms/session', authedMiddlewareChain, sessionFormRouter);
-
-	const toolFormRouter = Router({ caseSensitive: true });
-	toolFormRouter.post('/add', toolController.addToolApi);
-	toolFormRouter.post('/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
-	toolFormRouter.delete('/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
-	server.use('/forms/tool', authedMiddlewareChain, toolFormRouter);
-
-	const groupFormRouter = Router({ caseSensitive: true });
-	groupFormRouter.post('/add', groupController.addGroupApi);
-	groupFormRouter.post('/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
-	groupFormRouter.delete('/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
-	server.use('/forms/group', authedMiddlewareChain, groupFormRouter);
+	// Team endpoints
+	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
+	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
+	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
+	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
+	teamRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
+	teamRouter.get('/sessions.json', sessionController.sessionsJson);
+	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
+	teamRouter.get('/agents.json', agentController.agentsJson);
+	teamRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
+	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
+	teamRouter.get('/groups', groupController.groupsPage.bind(null, app));
+	teamRouter.get('/groups.json', groupController.groupsJson);
+	teamRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
+	teamRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
+	teamRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
+	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
+	teamRouter.get('/credentials.json', credentialController.credentialsJson);
+	teamRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
+	teamRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
+	teamRouter.get('/tools', toolController.toolsPage.bind(null, app));
+	teamRouter.get('/tools.json', toolController.toolsJson);
+	teamRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
+	teamRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
+	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
+	teamRouter.post('/forms/agent/add', agentController.addAgentApi);
+	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
+	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
+	teamRouter.post('/forms/credential/add', credentialController.addCredentialApi);
+	teamRouter.delete('/forms/credential/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
+	teamRouter.post('/forms/session/add', sessionController.addSessionApi);
+	teamRouter.delete('/forms/session/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
+	teamRouter.post('/forms/tool/add', toolController.addToolApi);
+	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
+	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
+	teamRouter.post('/forms/group/add', groupController.addGroupApi);
+	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
+	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
 }

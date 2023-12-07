@@ -24,10 +24,8 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
-	const { stripeCustomerId } = account;
-
 	const router = useRouter();
+	const { stripeCustomerId } = account;
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
 	const [sessionRadio, setSessionRadio] = useState('single');

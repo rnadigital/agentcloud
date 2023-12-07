@@ -12,18 +12,17 @@ export default function Sessions(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [filter, setFilter] = useState<string>('all');
 	const [open, setOpen] = useState(false);
 	const filterOptions = Object.values(SessionStatus);
 	const { sessions, groups, agents } = state;
-	const resourceSlug = account?.currentTeam;
 
 	async function fetchSessions() {
-		await API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
+		await API.getSessions({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {

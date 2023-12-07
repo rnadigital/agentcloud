@@ -13,15 +13,14 @@ export default function Tools(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [open, setOpen] = useState(false);
-	const resourceSlug = account?.currentTeam;
 
 	function fetchTools() {
-		API.getTools({ resourceSlug: resourceSlug }, dispatch, setError, router);
+		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {

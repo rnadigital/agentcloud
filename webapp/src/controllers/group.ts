@@ -6,8 +6,8 @@ import { getAgentsById, getAgentById, getAgentsByTeam, AgentType } from '../db/a
 import { dynamicResponse } from '../util';
 
 export async function groupsData(req, res, _next) {
-	const groups = await getGroupsByTeam(res.locals.account.currentTeam); //TODO: change data fetched here to list of groups
-	const teamAgents = await getAgentsByTeam(res.locals.account.currentTeam);
+	const groups = await getGroupsByTeam(req.params.resourceSlug); //TODO: change data fetched here to list of groups
+	const teamAgents = await getAgentsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
 		groups,
@@ -16,8 +16,8 @@ export async function groupsData(req, res, _next) {
 }
 
 export async function groupData(req, res, _next) {
-	const groupData = await getGroupById(res.locals.account.currentTeam, req.params.groupId);
-	const teamAgents = await getAgentsByTeam(res.locals.account.currentTeam);
+	const groupData = await getGroupById(req.params.resourceSlug, req.params.groupId);
+	const teamAgents = await getAgentsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
 		groupData,
@@ -32,7 +32,7 @@ export async function groupData(req, res, _next) {
 export async function groupsPage(app, req, res, next) {
 	const data = await groupsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/[resourceSlug]/groups');
+	return app.render(req, res, `/${req.params.resourceSlug}/groups`);
 }
 
 /**
@@ -60,7 +60,7 @@ export async function groupsJson(req, res, next) {
 export async function groupAddPage(app, req, res, next) {
 	const data = await groupsData(req, res, next); //needed? also see agents controller
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/[resourceSlug]/group/add');
+	return app.render(req, res, `/${req.params.resourceSlug}/groups/add`);
 }
 
 /**
@@ -72,13 +72,12 @@ export async function groupEditPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
-		query: {
-			resourceSlug: res.locals.account.currentTeam,
-			groupId: req.params.groupId,
-		}
+		// query: {
+		// 	resourceSlug: req.params.resourceSlug,
+		// 	groupId: req.params.groupId,
+		// }
 	};
-	return app.render(req, res, `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit`); 
-	//`/[resourceSlug]/group/[groupId]/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/group/${req.params.groupId}/edit`); 
 }
 
 /**
@@ -99,25 +98,26 @@ export async function addGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundAgents = await getAgentsById(res.locals.account.currentTeam, agents);
+	const foundAgents = await getAgentsById(req.params.resourceSlug, agents);
 	if (!foundAgents || foundAgents.length !== agents.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	const foundAdminAgent = await getAgentById(res.locals.account.currentTeam, adminAgent);
+	const foundAdminAgent = await getAgentById(req.params.resouceSlug, adminAgent);
 	if (!foundAdminAgent || foundAdminAgent.type !== AgentType.USER_PROXY_AGENT) {
 		return dynamicResponse(req, res, 400, { error: 'Group admin must be a user proxy agent' });
 	}
 
+	//TODO: change orgID
 	const addedGroup = await addGroup({
 		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		teamId: req.params.resouceSlug,
 		name,
 		agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
 		groupChat: groupChat === true,
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedGroup.insertedId, redirect: `/${res.locals.account.currentTeam}/groups` });
+	return dynamicResponse(req, res, 302, { _id: addedGroup.insertedId, redirect: `/${req.params.resouceSlug}/groups` });
 
 }
 
@@ -139,14 +139,14 @@ export async function editGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateGroup(res.locals.account.currentTeam, req.params.groupId, {
+	await updateGroup(req.params.resouceSlug, req.params.groupId, {
 	    name,
 	    agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
 		groupChat: groupChat === true,
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/group/${req.params.groupId}/edit` });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resouceSlug}/group/${req.params.groupId}/edit` });
 
 }
 
@@ -165,8 +165,8 @@ export async function deleteGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteGroupById(res.locals.account.currentTeam, groupId);
+	await deleteGroupById(req.params.resouceSlug, groupId);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/groups`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/groups`*/ });
 
 }

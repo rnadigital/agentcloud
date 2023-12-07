@@ -10,8 +10,8 @@ import toSnakeCase from 'misc/tosnakecase';
 
 export async function toolsData(req, res, _next) {
 	const [tools, credentials] = await Promise.all([
-		getToolsByTeam(res.locals.account.currentTeam),
-		getCredentialsByTeam(res.locals.account.currentTeam),
+		getToolsByTeam(req.params.resouceSlug),
+		getCredentialsByTeam(req.params.resouceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -27,7 +27,7 @@ export async function toolsData(req, res, _next) {
 export async function toolsPage(app, req, res, next) {
 	const data = await toolsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/tools`);
+	return app.render(req, res, `/${req.params.resourceSlug}/tools`);
 }
 
 /**
@@ -41,8 +41,8 @@ export async function toolsJson(req, res, next) {
 
 export async function toolData(req, res, _next) {
 	const [tool, credentials] = await Promise.all([
-		getToolById(res.locals.account.currentTeam, req.params.toolId),
-		getCredentialsByTeam(res.locals.account.currentTeam),
+		getToolById(req.params.resouceSlug, req.params.toolId),
+		getCredentialsByTeam(req.params.resouceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -67,7 +67,7 @@ export async function toolJson(req, res, next) {
 export async function toolEditPage(app, req, res, next) {
 	const data = await toolData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/tool/${data.tool._id}/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/tool/${data.tool._id}/edit`);
 }
  
 /**
@@ -77,7 +77,7 @@ export async function toolEditPage(app, req, res, next) {
 export async function toolAddPage(app, req, res, next) {
 	const data = await toolData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/tool/add`);
+	return app.render(req, res, `/${req.params.resourceSlug}/tool/add`);
 }
 
 export async function addToolApi(req, res, next) {
@@ -91,9 +91,10 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	//TODO: change orgId
 	await addTool({
 		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		teamId: req.params.resouceSlug,
 	    name,
 	 	type: type as ToolType,
 	 	schema: schema,
@@ -104,7 +105,7 @@ export async function addToolApi(req, res, next) {
 		},
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/tools` });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resouceSlug}/tools` });
 
 }
 
@@ -112,7 +113,7 @@ export async function editToolApi(req, res, next) {
 
 	const { name, type, data, toolId, schema }  = req.body;
 
-	await editTool(res.locals.account.currentTeam, toolId, {
+	await editTool(req.params.resouceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
 	 	schema: schema,
@@ -123,7 +124,7 @@ export async function editToolApi(req, res, next) {
 		},
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/tools`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/tools`*/ });
 
 }
 
@@ -143,10 +144,10 @@ export async function deleteToolApi(req, res, next) {
 	}
 
 	await Promise.all([
-		deleteToolById(res.locals.account.currentTeam, toolId),
-		removeAgentsTool(res.locals.account.currentTeam, toolId),
+		deleteToolById(req.params.resouceSlug, toolId),
+		removeAgentsTool(req.params.resouceSlug, toolId),
 	]);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agents`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/agents`*/ });
 
 }

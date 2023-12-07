@@ -21,10 +21,7 @@ export function verifyToken(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/verify', 'POST', body, dispatch, errorCallback, router);
 }
 export function switchTeam(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/team/switch', 'POST', body, dispatch, errorCallback, router);
-}
-export function setAccountToken(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/account/token', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall('/forms/account/switch', 'POST', body, dispatch, errorCallback, router);
 }
 export function getPaymentLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-paymentlink', 'POST', body, dispatch, errorCallback, router);
@@ -38,10 +35,10 @@ export function getSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function deleteSession(body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/session/${body.sessionId}`, 'DELETE', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/session/${body.sessionId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function addSession(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/session/add', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/session/add`, 'POST', body, dispatch, errorCallback, router);
 }
 export function getSessions(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/sessions.json`, 'GET', null, dispatch, errorCallback, router);
@@ -52,10 +49,10 @@ export function getMessages(body, dispatch, errorCallback, router) {
 
 // Agents
 export function addAgent(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/agent/add', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/agent/add`, 'POST', body, dispatch, errorCallback, router);
 }
 export function editAgent(agentId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/agent/${agentId}/edit`, 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/agent/${agentId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 export function getAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/agent/${body.agentId}.json`, 'GET', null, dispatch, errorCallback, router);
@@ -64,7 +61,7 @@ export function getAgents(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/agents.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function deleteAgent(body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/agent/${body.agentId}`, 'DELETE', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/agent/${body.agentId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 // Groups
@@ -72,13 +69,13 @@ export function getGroup(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/group/${body.groupId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function addGroup(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/group/add', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/group/add`, 'POST', body, dispatch, errorCallback, router);
 }
 export function editGroup(groupId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/group/${groupId}/edit`, 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/group/${groupId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 export function deleteGroup(body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/group/${body.groupId}`, 'DELETE', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/group/${body.groupId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function getGroups(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
@@ -89,10 +86,10 @@ export function getCredentials(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/credentials.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function deleteCredential(body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/credential/${body.credentialId}`, 'DELETE', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/credential/${body.credentialId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function addCredential(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/credential/add', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/credential/add`, 'POST', body, dispatch, errorCallback, router);
 }
 
 // Tools
@@ -103,13 +100,13 @@ export function getTool(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/tool/${body.toolId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
 export function addTool(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/tool/add', 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/tool/add`, 'POST', body, dispatch, errorCallback, router);
 }
 export function deleteTool(body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function editTool(toolId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

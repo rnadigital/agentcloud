@@ -10,8 +10,8 @@ export default function AddGroup(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [agentChoices, setAgentChoices] = useState(null);
 	const [error, setError] = useState();
@@ -19,8 +19,8 @@ export default function AddGroup(props) {
 
 	useEffect(() => {
 		if (groups == null || agentChoices == null) {
-			API.getGroups({ resourceSlug: account.currentTeam }, dispatch, setError, router);
-			API.getAgents({ resourceSlug: account.currentTeam }, setAgentChoices, setError, router);
+			API.getGroups({ resourceSlug }, dispatch, setError, router);
+			API.getAgents({ resourceSlug }, setAgentChoices, setError, router);
 		}
 	}, []);
 	

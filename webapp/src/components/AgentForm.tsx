@@ -16,9 +16,8 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [agentState, setAgent] = useState(agent);
 	const [error, setError] = useState();
@@ -88,7 +87,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 			/>
 			<div className={`space-y-${compact ? '6' : '12'}`}>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
 					{!compact && <div>
 						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Agent Details</h2>
 						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, credentials and model to use for this agent.</p>

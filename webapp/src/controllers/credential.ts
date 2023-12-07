@@ -6,7 +6,7 @@ import { CredentialPlatform, CredentialPlatforms } from 'struct/credential';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {
-	const credentials = await getCredentialsByTeam(res.locals.account.currentTeam);
+	const credentials = await getCredentialsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
 		credentials,
@@ -20,7 +20,7 @@ export async function credentialsData(req, res, _next) {
 export async function credentialsPage(app, req, res, next) {
 	const data = await credentialsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/credentials`);
+	return app.render(req, res, `/${req.params.resourceSlug}/credentials`);
 }
 
 /**
@@ -39,11 +39,11 @@ export async function credentialsJson(req, res, next) {
 export async function credentialAddPage(app, req, res, next) {
 	const data = await credentialsData(req, res, next); //needed?
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/credential/add`);
+	return app.render(req, res, `/${req.params.resourceSlug}/credential/add`);
 }
 
 export async function credentialData(req, res, _next) {
-	const credential = await getCredentialById(res.locals.account.currentTeam, req.params.credentialId);
+	const credential = await getCredentialById(req.params.resourceSlug, req.params.credentialId);
 	return {
 		csrf: req.csrfToken(),
 		credential,
@@ -78,9 +78,10 @@ export async function addCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	//TODO: change the org to the one matching the resourceSlug team
 	const addedCredential = await addCredential({
 		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		teamId: req.params.resourceSlug,
 	    name,
 	    createdDate: new Date(),
 	    platform: platform as CredentialPlatform,
@@ -90,7 +91,7 @@ export async function addCredentialApi(req, res, next) {
 	    },
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${res.locals.account.currentTeam}/credentials` });
+	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${req.params.resourceSlug}/credentials` });
 
 }
 
@@ -110,10 +111,10 @@ export async function deleteCredentialApi(req, res, next) {
 	}
 
 	await Promise.all([
-		removeAgentsCredential(res.locals.account.currentTeam, credentialId),
-		deleteCredentialById(res.locals.account.currentTeam, credentialId),
+		removeAgentsCredential(req.params.resourceSlug, credentialId),
+		deleteCredentialById(req.params.resourceSlug, credentialId),
 	]);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/credentials`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });
 
 }

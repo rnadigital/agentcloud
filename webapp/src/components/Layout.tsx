@@ -77,10 +77,10 @@ export default withRouter(function Layout(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const { children, router } = props as any;
+	const { resourceSlug } = router.query;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
-	const resourceSlug = account?.currentTeam;
 	const orgs = account?.orgs || [];
 
 	if (!account) {

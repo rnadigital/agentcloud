@@ -9,9 +9,9 @@ import toObjectId from '../lib/misc/toobjectid';
 
 export async function agentsData(req, res, _next) {
 	const [agents, credentials, tools] = await Promise.all([
-		getAgentsByTeam(res.locals.account.currentTeam),
-		getCredentialsByTeam(res.locals.account.currentTeam),
-		getToolsByTeam(res.locals.account.currentTeam),
+		getAgentsByTeam(req.params.resourceSlug),
+		getCredentialsByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -28,7 +28,7 @@ export async function agentsData(req, res, _next) {
 export async function agentsPage(app, req, res, next) {
 	const data = await agentsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/agents`);
+	return app.render(req, res, `/${req.params.resourceSlug}/agents`);
 }
 
 /**
@@ -47,14 +47,14 @@ export async function agentsJson(req, res, next) {
 export async function agentAddPage(app, req, res, next) {
 	const data = await agentsData(req, res, next); //needed?
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/agent/add`);
+	return app.render(req, res, `/${req.params.resourceSlug}/agent/add`);
 }
 
 export async function agentData(req, res, _next) {
 	const [agent, credentials, tools] = await Promise.all([
-		getAgentById(res.locals.account.currentTeam, req.params.agentId),
-		getCredentialsByTeam(res.locals.account.currentTeam),
-		getToolsByTeam(res.locals.account.currentTeam),
+		getAgentById(req.params.resourceSlug, req.params.agentId),
+		getCredentialsByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -71,7 +71,7 @@ export async function agentData(req, res, _next) {
 export async function agentEditPage(app, req, res, next) {
 	const data = await agentData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${res.locals.account.currentTeam}/agent/${data.agent._id}/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/agent/${data.agent._id}/edit`);
 }
 
 /**
@@ -105,7 +105,7 @@ export async function addAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundTools = await getToolsById(res.locals.account.currentTeam, toolIds);
+	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -113,7 +113,7 @@ export async function addAgentApi(req, res, next) {
 
 	const addedAgent = await addAgent({
 		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		teamId: req.params.resourceSlug,
 	    name,
 	 	type: type === AgentType.EXECUTOR_AGENT
 	 		? AgentType.USER_PROXY_AGENT
@@ -132,7 +132,7 @@ export async function addAgentApi(req, res, next) {
 		toolIds: foundTools.map(t => t._id),
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${res.locals.account.currentTeam}/agents` });
+	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${req.params.resourceSlug}/agents` });
 
 }
 
@@ -158,13 +158,13 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundTools = await getToolsById(res.locals.account.currentTeam, toolIds);
+	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateAgent(res.locals.account.currentTeam, req.params.agentId, {
+	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
 	 	type: type === AgentType.EXECUTOR_AGENT
 	 		? AgentType.USER_PROXY_AGENT
@@ -183,7 +183,7 @@ export async function editAgentApi(req, res, next) {
 		toolIds: foundTools.map(t => t._id),
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agent/${req.params.agentId}/edit`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
 
 }
 
@@ -202,10 +202,10 @@ export async function deleteAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await removeAgentFromGroups(res.locals.account.currentTeam, agentId);
+	await removeAgentFromGroups(req.params.resourceSlug, agentId);
 
-	await deleteAgentById(res.locals.account.currentTeam, agentId);
+	await deleteAgentById(req.params.resourceSlug, agentId);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${res.locals.account.currentTeam}/agents`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 
 }

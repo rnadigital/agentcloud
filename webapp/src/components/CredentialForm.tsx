@@ -12,9 +12,8 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [credentialState, setCredential] = useState(credential);
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;

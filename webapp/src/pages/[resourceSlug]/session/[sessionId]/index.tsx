@@ -20,8 +20,8 @@ export default function Session(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-
-	const router = useRouter();	
+	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [ready, setReady] = useState(false);
 	const [error, setError] = useState();
@@ -172,9 +172,8 @@ export default function Session(props) {
 		}
 	}, [session]);
 	useEffect(() => {
-		console.log('running getmessages with currentteam', account.currentTeam);
 		API.getSession({
-			resourceSlug: account.currentTeam,
+			resourceSlug,
 			sessionId,
 		}, (res) => {
 			dispatch(res);
@@ -189,7 +188,7 @@ export default function Session(props) {
 			}
 		}, setError, router);
 		API.getMessages({
-			resourceSlug: account.currentTeam,
+			resourceSlug,
 			sessionId,
 		}, (_messages) => {
 			setMessages(_messages

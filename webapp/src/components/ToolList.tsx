@@ -10,8 +10,8 @@ export default function ToolList({ tools, fetchTools }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 
 	async function deleteTool(toolId) {
 		API.deleteTool({
@@ -44,7 +44,7 @@ export default function ToolList({ tools, fetchTools }) {
 						<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
 							<div className='flex w-0 flex-1'>
 								<a
-									href={`/${account.currentTeam}/tool/${tool._id}/edit`}
+									href={`/${resourceSlug}/tool/${tool._id}/edit`}
 									className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
 								>
 									<PencilIcon className='h-5 w-5 text-gray-400 dark:text-white' aria-hidden='true' />

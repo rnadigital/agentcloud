@@ -28,12 +28,6 @@ export async function accountPage(app, req, res, next) {
 	return app.render(req, res, '/account');
 }
 
-export async function socketTestPage(app, req, res, next) {
-	const data = await accountData(req, res, next);
-	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, '/socket');
-}
-
 /**
  * GET /account.json
  * account page json data
@@ -62,7 +56,7 @@ export async function login(req, res) {
 	if (passwordMatch === true) {
 		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam}/sessions`, token });
+		return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/sessions`, token });
 	}
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 }
@@ -242,22 +236,5 @@ export async function switchTeam(req, res, _next) {
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
 	return res.json({ redirect: `/${teamId}/sessions` });
-
-}
-
-/**
- * POST /forms/account/token
- * set oai token
- */
-export async function setToken(req, res, _next) {
-
-	const { token } = req.body;
-	if (!token || typeof token !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-	console.log(res.locals.account._id);
-	await setAccountToken(res.locals.account._id, token);
-
-	return res.json({ /* redirect: '/account' */ });
 
 }
