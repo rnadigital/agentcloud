@@ -10,8 +10,8 @@ import toSnakeCase from 'misc/tosnakecase';
 
 export async function toolsData(req, res, _next) {
 	const [tools, credentials] = await Promise.all([
-		getToolsByTeam(req.params.resouceSlug),
-		getCredentialsByTeam(req.params.resouceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getCredentialsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -41,8 +41,8 @@ export async function toolsJson(req, res, next) {
 
 export async function toolData(req, res, _next) {
 	const [tool, credentials] = await Promise.all([
-		getToolById(req.params.resouceSlug, req.params.toolId),
-		getCredentialsByTeam(req.params.resouceSlug),
+		getToolById(req.params.resourceSlug, req.params.toolId),
+		getCredentialsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -94,7 +94,7 @@ export async function addToolApi(req, res, next) {
 	//TODO: change orgId
 	await addTool({
 		orgId: res.locals.account.currentOrg,
-		teamId: req.params.resouceSlug,
+		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	 	type: type as ToolType,
 	 	schema: schema,
@@ -105,7 +105,7 @@ export async function addToolApi(req, res, next) {
 		},
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resouceSlug}/tools` });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/tools` });
 
 }
 
@@ -113,7 +113,7 @@ export async function editToolApi(req, res, next) {
 
 	const { name, type, data, toolId, schema }  = req.body;
 
-	await editTool(req.params.resouceSlug, toolId, {
+	await editTool(req.params.resourceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
 	 	schema: schema,
@@ -124,7 +124,7 @@ export async function editToolApi(req, res, next) {
 		},
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/tools`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });
 
 }
 
@@ -144,10 +144,10 @@ export async function deleteToolApi(req, res, next) {
 	}
 
 	await Promise.all([
-		deleteToolById(req.params.resouceSlug, toolId),
-		removeAgentsTool(req.params.resouceSlug, toolId),
+		deleteToolById(req.params.resourceSlug, toolId),
+		removeAgentsTool(req.params.resourceSlug, toolId),
 	]);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/agents`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 
 }

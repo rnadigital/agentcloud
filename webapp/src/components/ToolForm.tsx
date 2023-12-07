@@ -65,6 +65,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: toolName,
 			type: toolType,
 			data: null,

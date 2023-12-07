@@ -47,6 +47,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: e.target.name.value,
 			type: e.target.type.value,
 			model: model,

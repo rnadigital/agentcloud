@@ -24,6 +24,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: e.target.name.value,
 			platform: e.target.platform.value,
 			key: e.target.key.value,

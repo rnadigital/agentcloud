@@ -35,6 +35,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: e.target.name.value,
 			adminAgent: adminAgentState?.value,
 			agents: agentsState.map(a => a.value),

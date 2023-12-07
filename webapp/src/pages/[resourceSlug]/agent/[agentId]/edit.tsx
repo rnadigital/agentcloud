@@ -20,7 +20,7 @@ export default function EditAgent(props) {
 	useEffect(() => {
 		console.log(router.query);
 		API.getAgent({
-			resourceSlug: account.currentTeam,
+			resourceSlug,
 			agentId: router.query.agentId,
 		}, dispatch, setError, router);
 	}, []);

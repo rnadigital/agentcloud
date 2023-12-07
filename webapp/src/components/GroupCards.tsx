@@ -23,6 +23,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 	async function deleteGroup(groupId) {
 		API.deleteGroup({
 			_csrf: csrf,
+			resourceSlug,
 			groupId,
 		}, () => {
 			fetchGroups();

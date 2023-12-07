@@ -25,6 +25,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const { stripeCustomerId } = account;
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
@@ -43,6 +44,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,
+			resourceSlug,
 			prompt: target.prompt.value,
 			group: selectedGroup?.value,
 			agent: selectedAgent?.value,

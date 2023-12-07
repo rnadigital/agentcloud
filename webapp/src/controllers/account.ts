@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import * as ses from '../lib/email/ses';
 import SecretKeys from '../lib/secret/secretkeys';
 import { getSecret } from '../lib/secret/secretmanager';
+import toObjectId from 'misc/toobjectid';
 
 export async function accountData(req, res, _next) {
 	return {

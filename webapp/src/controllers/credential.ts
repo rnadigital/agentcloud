@@ -2,6 +2,7 @@
 
 import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
 import { removeAgentsCredential } from '../db/agent';
+import toObjectId from 'misc/toobjectid';
 import { CredentialPlatform, CredentialPlatforms } from 'struct/credential';
 import { dynamicResponse } from '../util';
 
@@ -81,7 +82,7 @@ export async function addCredentialApi(req, res, next) {
 	//TODO: change the org to the one matching the resourceSlug team
 	const addedCredential = await addCredential({
 		orgId: res.locals.account.currentOrg,
-		teamId: req.params.resourceSlug,
+		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	    createdDate: new Date(),
 	    platform: platform as CredentialPlatform,

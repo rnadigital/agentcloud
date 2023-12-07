@@ -5,6 +5,7 @@ import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from
 import { SessionStatus, SessionType } from 'struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
 import { getAgentsById, getAgentById, getAgentsByTeam } from '../db/agent';
+import toObjectId from 'misc/toobjectid';
 import { dynamicResponse } from '../util';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
@@ -134,7 +135,7 @@ export async function addSessionApi(req, res, next) {
 	//TODO: change currentOrg to the org with the resourceSlug team in it
 	const addedSession = await addSession({
 		orgId: res.locals.account.currentOrg,
-		teamId: req.params.resourceSlug,
+		teamId: toObjectId(req.params.resourceSlug),
 	    prompt,
 	 	type: SessionType.TASK,
 	    name: '',
@@ -160,7 +161,7 @@ export async function addSessionApi(req, res, next) {
 	};
 	await addChatMessage({
 		orgId: res.locals.account.currentOrg,
-		teamId: req.params.resourceSlug,
+		teamId: toObjectId(req.params.resourceSlug),
 		sessionId: addedSession.insertedId,
 		message,
 		type: SessionType.TASK,

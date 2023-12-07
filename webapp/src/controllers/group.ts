@@ -1,7 +1,7 @@
 'use strict';
 
 import { getGroupById, getGroupsByTeam, addGroup, updateGroup, deleteGroupById } from '../db/group';
-import toObjectId from '../lib/misc/toobjectid';
+import toObjectId from 'misc/toobjectid';
 import { getAgentsById, getAgentById, getAgentsByTeam, AgentType } from '../db/agent';
 import { dynamicResponse } from '../util';
 
@@ -102,7 +102,7 @@ export async function addGroupApi(req, res, next) {
 	if (!foundAgents || foundAgents.length !== agents.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	const foundAdminAgent = await getAgentById(req.params.resouceSlug, adminAgent);
+	const foundAdminAgent = await getAgentById(req.params.resourceSlug, adminAgent);
 	if (!foundAdminAgent || foundAdminAgent.type !== AgentType.USER_PROXY_AGENT) {
 		return dynamicResponse(req, res, 400, { error: 'Group admin must be a user proxy agent' });
 	}
@@ -110,14 +110,14 @@ export async function addGroupApi(req, res, next) {
 	//TODO: change orgID
 	const addedGroup = await addGroup({
 		orgId: res.locals.account.currentOrg,
-		teamId: req.params.resouceSlug,
+		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
 		groupChat: groupChat === true,
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedGroup.insertedId, redirect: `/${req.params.resouceSlug}/groups` });
+	return dynamicResponse(req, res, 302, { _id: addedGroup.insertedId, redirect: `/${req.params.resourceSlug}/groups` });
 
 }
 
@@ -139,14 +139,14 @@ export async function editGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateGroup(req.params.resouceSlug, req.params.groupId, {
+	await updateGroup(req.params.resourceSlug, req.params.groupId, {
 	    name,
 	    agents: agents.map(toObjectId),
 		adminAgent: toObjectId(adminAgent),
 		groupChat: groupChat === true,
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resouceSlug}/group/${req.params.groupId}/edit` });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/group/${req.params.groupId}/edit` });
 
 }
 
@@ -165,8 +165,8 @@ export async function deleteGroupApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteGroupById(req.params.resouceSlug, groupId);
+	await deleteGroupById(req.params.resourceSlug, groupId);
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resouceSlug}/groups`*/ });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/groups`*/ });
 
 }

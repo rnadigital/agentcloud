@@ -24,12 +24,14 @@ export default function CredentialCards({ credentials, fetchCredentials }: { cre
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [deletingCredential, setDeletingCredential] = useState(null);
 	const [open, setOpen] = useState(false);
 
 	async function deleteCredential() {
 		await API.deleteCredential({
 			_csrf: csrf,
+			resourceSlug,
 			credentialId: deletingCredential._id,
 		}, () => {
 			fetchCredentials();

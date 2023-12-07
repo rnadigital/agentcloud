@@ -16,6 +16,7 @@ export default function ToolList({ tools, fetchTools }) {
 	async function deleteTool(toolId) {
 		API.deleteTool({
 			_csrf: csrf,
+			resourceSlug,
 			toolId,
 		}, () => {
 			fetchTools();

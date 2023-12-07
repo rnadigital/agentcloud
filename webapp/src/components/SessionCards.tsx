@@ -35,6 +35,7 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 	async function deleteSession(sessionId) {
 		API.deleteSession({
 			_csrf: csrf,
+			resourceSlug,
 			sessionId,
 		}, () => {
 			fetchSessions();

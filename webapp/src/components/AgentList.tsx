@@ -16,6 +16,7 @@ export default function AgentList({ agents, fetchAgents }) {
 	async function deleteAgent(agentId) {
 		API.deleteAgent({
 			_csrf: csrf,
+			resourceSlug,
 			agentId,
 		}, () => {
 			fetchAgents();
