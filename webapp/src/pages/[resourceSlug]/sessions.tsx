@@ -39,9 +39,9 @@ export default function Sessions(props) {
 			<title>{`Sessions - ${teamName}`}</title>
 		</Head>
 
-		{sessions.length > 0 && <div className='border-b pb-2 my-2'>
+		<div className='border-b pb-2 my-2'>
 			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
-		</div>}
+		</div>
 
 		<SubscriptionModal open={open} setOpen={setOpen}/>
 	
