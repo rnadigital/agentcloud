@@ -12,20 +12,18 @@ export default function Credentials(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { credentials } = state;
-	const resourceSlug = account?.currentTeam;
-
 	function fetchCredentials() {
-		API.getCredentials({ resourceSlug: resourceSlug }, dispatch, setError, router);
+		API.getCredentials({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
 		fetchCredentials();
-	}, []);
+	}, [resourceSlug]);
 
 	if (!credentials) {
 		return 'Loading...'; //TODO: loader

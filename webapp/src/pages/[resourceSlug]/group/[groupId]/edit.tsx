@@ -11,9 +11,8 @@ export default function EditGroup(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [agents, setAgents] = useState(null); //TODO: take from prop
 	const [error, setError] = useState();
@@ -21,11 +20,11 @@ export default function EditGroup(props) {
 	useEffect(() => {
 		if (!groupData || !agents) {
 			API.getGroup({
-				resourceSlug: account.currentTeam,
+				resourceSlug,
 				groupId: router.query.groupId,
 			}, dispatch, setError, router);
 			API.getAgents({
-				resourceSlug: account.currentTeam,
+				resourceSlug,
 			}, setAgents, setError, router);
 		}
 	}, []);

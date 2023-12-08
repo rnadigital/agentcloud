@@ -24,10 +24,9 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
-	const { stripeCustomerId } = account;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
+	const { stripeCustomerId } = account;
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
 	const [sessionRadio, setSessionRadio] = useState('single');
@@ -45,6 +44,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,
+			resourceSlug,
 			prompt: target.prompt.value,
 			group: selectedGroup?.value,
 			agent: selectedAgent?.value,
@@ -53,14 +53,12 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 	}
 
 	async function callback(id: string) {
-		console.log('id', id);
 		setAddedId(id);
 		await fetchSessions();
 	}
 
 	//When agents or groups change set the selected group from the callback
 	useEffect(() => {
-		console.log('addedId', addedId);
 		if (!addedId) { return; }
 		if (sessionRadio === 'single') {
 			const foundAgent = agents.find(a => a._id === addedId);

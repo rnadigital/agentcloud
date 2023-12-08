@@ -10,22 +10,21 @@ import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Agents(props) {
 
+	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
+	const { resourceSlug } = router.query;
 
-	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { agents } = state;
-
 	function fetchAgents() {
 		API.getAgents({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
 		fetchAgents();
-	}, []);
+	}, [resourceSlug]);
 	
 	if (agents == null) {
 		return 'Loading...'; //TODO: loader

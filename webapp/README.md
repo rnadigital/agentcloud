@@ -12,6 +12,7 @@ Mandatory:
 - `JWT_SECRET` - secret used to sign JWTs
 - `COOKIE_SECRET` - secret used to sign cookies
 - `URL_APP` - url of the frontend webapp, e.g. `http://localhost:3000`
+- `AGENT_BACKEND_SOCKET_TOKEN` - token to identify agent backend in socket session
 
 Optional:
 - `DEBUG` - for debugging, uses [debug format](https://www.npmjs.com/package/debug). there is webapp:socket, webapp:http, webapp:middleware, webapp:context, webapp:db, or webapp:* for all.

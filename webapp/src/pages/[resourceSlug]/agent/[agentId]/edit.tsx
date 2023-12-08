@@ -11,16 +11,16 @@ export default function EditAgent(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { agent, credentials, tools } = state;
 
 	useEffect(() => {
+		console.log(router.query);
 		API.getAgent({
-			resourceSlug: account.currentTeam,
+			resourceSlug,
 			agentId: router.query.agentId,
 		}, dispatch, setError, router);
 	}, []);

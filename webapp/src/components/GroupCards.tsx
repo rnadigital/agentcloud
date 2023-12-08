@@ -17,12 +17,13 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 
 	async function deleteGroup(groupId) {
 		API.deleteGroup({
 			_csrf: csrf,
+			resourceSlug,
 			groupId,
 		}, () => {
 			fetchGroups();

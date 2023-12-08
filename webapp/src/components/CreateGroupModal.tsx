@@ -10,13 +10,13 @@ export default function CreateGroupModal({ open, setOpen, callback }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
-
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
 	const { agents } = state as any;
 
 	async function fetchAgents() {
-		await API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
+		await API.getAgents({ resourceSlug }, dispatch, setError, router);
 	}
 	
 	useEffect(() => {

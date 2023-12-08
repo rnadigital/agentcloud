@@ -15,28 +15,40 @@ function classNames(...classes) {
 export default function OrgSelector({ orgs }) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
-
+	const { account, csrf } = accountContext as any;
 	const router = useRouter();
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const teamName = orgs?.find(o => o.teams.find(t => t.id === resourceSlug))?.name;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 
 	async function switchTeam(orgId, teamId) {
+		const splitLocation = location.pathname.split('/').filter(n => n);
+		const foundResourceSlug = account.orgs
+			.find(o => o.teams.find(t => t.id.toString() === splitLocation[0]));
+		let redirect = location.pathname;
+		if (foundResourceSlug) {
+			splitLocation.shift();
+			if (splitLocation.length <= 1) {
+				redirect = `/${teamId}/${splitLocation.join('/')}`;
+			} else {
+				redirect = `/${teamId}/${splitLocation[0]}s`;
+			}
+		}
 		await API.switchTeam({
 			orgId,
 			teamId,
 			_csrf: csrf,
+			redirect,
 		}, dispatch, setError, router);
 		refreshAccountContext();
 	}
-
-	//TODO: switch to usecontext so a global user and org/team context can be set, and switch route after page change
 
 	return (<>
 		<Menu as='div' className='relative inline-block text-left w-full'>
 			<div>
 				<Menu.Button className='text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
-          			<span>{teamName}</span>
+          			<span>{teamName||''}</span>
 					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400 bs-auto' aria-hidden='true' />
 				</Menu.Button>
 			</div>

@@ -10,12 +10,11 @@ export default function EditTool(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { tool, credentials } = state;
-	const resourceSlug = account?.currentTeam;
 
 	function fetchTools() {
 		API.getTool({

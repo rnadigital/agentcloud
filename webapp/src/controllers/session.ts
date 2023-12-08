@@ -5,15 +5,16 @@ import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from
 import { SessionStatus, SessionType } from 'struct/session';
 import { getChatMessagesBySession, addChatMessage } from '../db/chat';
 import { getAgentsById, getAgentById, getAgentsByTeam } from '../db/agent';
+import toObjectId from 'misc/toobjectid';
 import { dynamicResponse } from '../util';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 
 export async function sessionsData(req, res, _next) {
 	const [groups, sessions, agents] = await Promise.all([
-		getGroupsByTeam(res.locals.account.currentTeam),
-		getSessionsByTeam(res.locals.account.currentTeam),
-		getAgentsByTeam(res.locals.account.currentTeam),
+		getGroupsByTeam(req.params.resourceSlug),
+		getSessionsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -42,11 +43,11 @@ export async function sessionsPage(app, req, res, next) {
 		...data,
 		account: res.locals.account,
 	};
-	return app.render(req, res, '/[resourceSlug]/sessions');
+	return app.render(req, res, `/${req.params.resourceSlug}/sessions`);
 }
 
 export async function sessionData(req, res, _next) {
-	const session = await getSessionById(res.locals.account.currentTeam, req.params.sessionId);
+	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
 	return {
 		csrf: req.csrfToken(),
 		session,
@@ -62,12 +63,12 @@ export async function sessionPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
-		query: {
-			resourceSlug: res.locals.account.currentTeam,
-			sessionId: req.params.sessionId,
-		}
+		// query: {
+		// 	resourceSlug: req.params.resourceSlug,
+		// 	sessionId: req.params.sessionId,
+		// }
 	};
-	return app.render(req, res, '/[resourceSlug]/session/[sessionId]');
+	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
 
 /**
@@ -80,7 +81,7 @@ export async function sessionJson(req, res, next) {
 }
 
 export async function sessionMessagesData(req, res, _next) {
-	const messages = await getChatMessagesBySession(res.locals.account.currentTeam, req.params.sessionId);
+	const messages = await getChatMessagesBySession(req.params.resourceSlug, req.params.sessionId);
 	return messages;
 }
 
@@ -112,17 +113,17 @@ export async function addSessionApi(req, res, next) {
 	let groupId = null
 		, agentId = null;
 	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
-		const group = await getGroupById(res.locals.account.currentTeam, req.body.group);
+		const group = await getGroupById(req.params.resourceSlug, req.body.group);
 		if (!group || !group.adminAgent || group.agents.length === 0) {
 			return dynamicResponse(req, res, 400, { error: 'Group missing member(s)' });
 		}
-		const agents = await getAgentsById(res.locals.account.currentTeam, [group.adminAgent, ...group.agents]);
+		const agents = await getAgentsById(req.params.resourceSlug, [group.adminAgent, ...group.agents]);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		groupId = group._id;
 	} else if (req.body.agent && typeof req.body.agent === 'string' && req.body.agent.length === 24) {
-		const agent = await getAgentById(res.locals.account.currentTeam, req.body.agent);
+		const agent = await getAgentById(req.params.resourceSlug, req.body.agent);
 		if (!agent || !agent.credentialId) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -132,8 +133,8 @@ export async function addSessionApi(req, res, next) {
 	prompt = `${prompt}\n`;
 
 	const addedSession = await addSession({
-		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
 	    prompt,
 	 	type: SessionType.TASK,
 	    name: '',
@@ -158,8 +159,8 @@ export async function addSessionApi(req, res, next) {
 		ts: now
 	};
 	await addChatMessage({
-		orgId: res.locals.account.currentOrg,
-		teamId: res.locals.account.currentTeam,
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
 		sessionId: addedSession.insertedId,
 		message,
 		type: SessionType.TASK,
@@ -178,7 +179,7 @@ export async function addSessionApi(req, res, next) {
 		sessionId: addedSession.insertedId.toString(),
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam}/session/${addedSession.insertedId}` });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}` });
 
 }
 
@@ -197,9 +198,9 @@ export async function deleteSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteSessionById(res.locals.account.currentTeam, sessionId);
+	await deleteSessionById(req.params.resourceSlug, sessionId);
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${res.locals.account.currentTeam}/sessions`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/sessions`*/ });
 
 }

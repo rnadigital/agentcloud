@@ -1,13 +1,8 @@
 import Link from 'next/link';
-import React, { useState } from 'react';
-import { useAccountContext } from '../context/account';
+import React from 'react';
 
 export default function NewButtonSection({ link, emptyMessage, icon, message, buttonIcon, buttonMessage, disabled }:
 	{ link: string, emptyMessage: string, icon: any, message: string, buttonIcon: any, buttonMessage: string, disabled?: boolean}) {
-
-	const [accountContext]: any = useAccountContext();
-	const { account } = accountContext as any;
-	const resourceSlug = account.currentTeam;
 
 	return (
 		<div className='text-center py-4'>

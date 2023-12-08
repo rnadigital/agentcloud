@@ -29,12 +29,13 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account.currentTeam;
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 
 	async function deleteSession(sessionId) {
 		API.deleteSession({
 			_csrf: csrf,
+			resourceSlug,
 			sessionId,
 		}, () => {
 			fetchSessions();

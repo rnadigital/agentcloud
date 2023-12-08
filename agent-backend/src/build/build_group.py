@@ -1,7 +1,7 @@
 import logging
 
 from socketio.simple_client import SimpleClient
-from init.env_variables import SOCKET_URL, BASE_PATH
+from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 import autogen
 from typing import Optional, Union, List, Dict, Callable
 from models.config_models import AgentConfig
@@ -25,7 +25,10 @@ class ChatBuilder:
         # Initialize the socket client and connect
         self.socket = SimpleClient()
         self.session_id = session_id
-        self.socket.connect(url=SOCKET_URL)
+        custom_headers = {
+            'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
+        }
+        self.socket.connect(url=SOCKET_URL, headers=custom_headers)
         self.socket.emit("join_room", f"_{session_id}")
 
     def build_function_map(self):

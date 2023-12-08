@@ -12,9 +12,8 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [credentialState, setCredential] = useState(credential);
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
@@ -25,6 +24,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: e.target.name.value,
 			platform: e.target.platform.value,
 			key: e.target.key.value,
@@ -49,7 +49,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 		/>
 		<div className='space-y-12'>
 
-			<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
+			<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
 				{!compact && <div>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Credential</h2>
 					<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Add your credentials to authenticate agentcloud to various APIs.</p>

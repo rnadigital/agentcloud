@@ -38,6 +38,7 @@ services:
       - REDIS_PASS=
       - JWT_SECRET=changeme
       - COOKIE_SECRET=changeme
+      - AGENT_BACKEND_SOCKET_TOKEN=changeme
       - PROJECT_ID=
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
       - URL_APP=http://localhost:3000
@@ -49,7 +50,6 @@ services:
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
-
   agent_backend:
     restart: always
     build:
@@ -71,6 +71,7 @@ services:
       - REDIS_HOST=docker_redis
       - MONGO_DB_NAME=test
       - MAX_RETRIES=10
+      - AGENT_BACKEND_SOCKET_TOKEN=changeme
 
 volumes:
   mongodb_data_container:

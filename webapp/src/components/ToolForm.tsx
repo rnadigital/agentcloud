@@ -30,9 +30,8 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const resourceSlug = account?.currentTeam;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [toolState, setToolState] = useState(tool); // TODO: remove?
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = toolState?.data?.builtin === true;
@@ -66,6 +65,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			resourceSlug,
 			name: toolName,
 			type: toolType,
 			data: null,
@@ -156,7 +156,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		let api, client;
 		try {
 			api = new OpenAPIClientAxios(apiOptions);
-			client = await api.initSync();
+			client = await api.init();
 		} catch(e) {
 			console.warn(e);
 			setFunctionsList(null);

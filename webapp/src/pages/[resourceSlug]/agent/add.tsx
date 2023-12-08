@@ -10,17 +10,17 @@ export default function AddAgent(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { agents, credentials, tools } = state;
 
 	useEffect(() => {
 		if (account?.currentTeam) {
-			API.getAgents({ resourceSlug: account?.currentTeam }, dispatch, setError, router);
+			API.getAgents({ resourceSlug }, dispatch, setError, router);
 		}
-	}, [account?.currentTeam]);
+	}, [resourceSlug]);
 	
 	if (agents == null) {
 		return 'Loading...'; //TODO: loader

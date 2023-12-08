@@ -12,19 +12,17 @@ export default function Sessions(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
-
 	const router = useRouter();
+	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [filter, setFilter] = useState<string>('all');
 	const [open, setOpen] = useState(false);
 	const filterOptions = Object.values(SessionStatus);
 	const { sessions, groups, agents } = state;
-	const resourceSlug = account?.currentTeam;
 
 	async function fetchSessions() {
-		console.log('fetching sessions');
-		await API.getSessions({ resourceSlug: resourceSlug }, dispatch, setError, router);
+		await API.getSessions({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -41,9 +39,9 @@ export default function Sessions(props) {
 			<title>{`Sessions - ${teamName}`}</title>
 		</Head>
 
-		{sessions.length > 0 && <div className='border-b pb-2 my-2'>
+		<div className='border-b pb-2 my-2'>
 			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
-		</div>}
+		</div>
 
 		<SubscriptionModal open={open} setOpen={setOpen}/>
 	

@@ -5,21 +5,21 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { client } from './lib/redis/redis';
 import debug from 'debug';
 const log = debug('webapp:socket');
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env' });
 
+import { timingSafeEqual } from 'crypto';
 import { ObjectId } from 'mongodb';
 import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk, updateCompletedMessage } from './db/chat';
 import { AgentType, addAgents } from './db/agent';
 import { addGroup } from './db/group';
-import { unsafeGetSessionById, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
+import { unsafeGetSessionById, getSessionById, unsafeSetSessionGroupId, unsafeSetSessionStatus, setSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
 import { SessionType, SessionStatus } from 'struct/session';
-
 import { taskQueue } from './lib/queue/bull';
-
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
 import fetchSession from './lib/middleware/auth/fetchsession';
-//import checkSession from './lib/middleware/auth/checksession';
-//const socketMiddlewareChain  = [useSession, useJWT, fetchSession, checkSession];
+import checkSession from './lib/middleware/auth/checksession';
 
 export function initSocket(rawHttpServer) {
 
@@ -31,6 +31,20 @@ export function initSocket(rawHttpServer) {
 	io.adapter(createAdapter(pubClient, subClient));
 
 	io.use((socket, next) => {
+		if (!socket.request['locals']) {
+			socket.request['locals'] = {};
+		}
+		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
+		log('socket.id %s backendToken %s', socket.id, backendToken);
+		socket.request['locals'].isAgentBackend = backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length && timingSafeEqual(
+			Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as String),
+			Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
+		);
+		socket.request['locals'].isSocket = true;
+		log('socket locals %O', socket.request['locals']);
+		next();
+	});
+	io.use((socket, next) => {
 		useSession(socket.request, socket.request, next);
 	});
 	io.use((socket, next) => {
@@ -39,13 +53,15 @@ export function initSocket(rawHttpServer) {
 	io.use((socket, next) => {
 		fetchSession(socket.request, socket.request, next);
 	});
+	io.use((socket, next) => {
+		checkSession(socket.request, socket.request, next, socket);
+	});
 
-	//NOTE: there is almost no security/validation here, yet
 	io.on('connection', async (socket) => {
-		log('Socket %s connected', socket.id);
+		log('socket.id "%s" connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			log('Received socket event %s args: %O', eventName, args);
+			log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {
@@ -53,85 +69,38 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('join_room', async (room: string) => {
-			//TODO: permission check for joining rooms
-			socket.join(room);
 			const socketRequest = socket.request as any;
-			log('Socket %s joined room %s', socket.id, room);
+			log('socket.id "%s" join_room %s', socket.id, room);
 			if (socketRequest?.session?.token) {
-				//if it has auth (only webapp atm), send back joined message
+				const session = await (socketRequest.locals.isAgentBackend === true
+					? unsafeGetSessionById(room)
+					: getSessionById(socketRequest?.session?.account?.currentTeam, room));
+				if (!session) {
+					log('socket.id "%s" invalid session %s', socket.id, room);
+					return;
+				}
+				socket.join(room);
 				socket.emit('joined', room);
-				log('Emitting join message back to %s in room %s', socket.id, room);
-				const session = await unsafeGetSessionById(room);
-				if (!session || session.status === SessionStatus.STARTED) {
-					return;
-				}
-				const fromPythonMessage = await getAgentMessageForSession(room);
-				if (fromPythonMessage) {
-					return;
-				}
-				//await unsafeSetSessionStatus(room, SessionStatus.STARTED); //NOTE: may race
+				log('socket.id "%s" joined room %s', socket.id, room);
 			}
 		});
 
 		socket.on('terminate', async (data) => {
-			//TODO: ensure only sent by python app
-			const session = await unsafeGetSessionById(data.message.sessionId);
-			if (session?.groupId) {
-				await unsafeSetSessionStatus(data.message.sessionId, SessionStatus.TERMINATED);
-				return io.to(data.room).emit('terminate', true);
+			const socketRequest = socket.request as any;
+			const session = await (socketRequest.locals.isAgentBackend === true
+				? unsafeGetSessionById(data.message.sessionId)
+				: getSessionById(socketRequest?.session?.account?.currentTeam, data.message.sessionId));
+			if (!session) {
+				return log('socket.id "%s" terminate invalid session %s', socket.id, data.message.sessionId);
 			}
-			const sessionTeamJsonMessage = await unsafeGetTeamJsonMessage(data.message.sessionId);
-			if (!sessionTeamJsonMessage) {
-				io.to(data.room).emit('status', SessionStatus.ERRORED);
-				return console.warn('No code blocks found for terminated session', data.message.sessionId);
-			}
-			let generatedRoles;
-			try {
-				generatedRoles = JSON.parse(sessionTeamJsonMessage.codeBlocks[0].codeBlock).roles;
-			} catch(e) {
-				console.warn(e);
-			}
-			if (!generatedRoles) {
-				io.to(data.room).emit('status', SessionStatus.ERRORED);
-				return console.warn('No generated roles found for terminated session', data.message.sessionId);
-			}
-			const mappedRolesToAgents = generatedRoles.map(role => ({ //TODO: type these
-				_id: new ObjectId(),
-				sessionId: session._id,
-				orgId: session.orgId,
-				teamId: session.teamId,
-				name: role.name,
-				type: role.type as AgentType,
-				llmConfig: role.llm_config,
-				codeExecutionConfig: typeof role.code_execution_config == 'object'
-					? {
-						lastNMessages: role.code_execution_config.last_n_messages,
-						workDirectory: role.code_execution_config.work_dir
-					}
-					: null,
-				systemMessage: role.system_message,
-				humanInputMode: role.human_input_mode,
-			}));
-			await addAgents(mappedRolesToAgents);
-			const generatedGroup = {
-				_id: new ObjectId(),
-				orgId: session.orgId,
-				teamId: session.teamId,
-				name: `Auto generated group: "${session.prompt}"`,
-				adminAgent: mappedRolesToAgents[0]._id,
-				agents: mappedRolesToAgents.slice(1).map(x => x._id),
-			};
-			await addGroup(generatedGroup);
-			await unsafeSetSessionGroupId(session._id, generatedGroup._id);
-			io.to(data.room).emit('type', SessionType.TASK);
-			taskQueue.add(SessionType.TASK, {
-				task: session.prompt,
-				sessionId: session._id.toString(),
-			});
+			await (socketRequest.locals.isAgentBackend === true
+				? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
+				: setSessionStatus(socketRequest?.session?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
+			log('socket.id "%s" terminate %s', socket.id, session._id);
+			return io.to(data.room).emit('terminate', true);
 		});
 
 		socket.on('message', async (data) => {
-		
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
 			const messageTimestamp = data?.message?.timestamp || Date.now();
@@ -141,7 +110,6 @@ export function initSocket(rawHttpServer) {
 					text: data.message,
 				};
 			}
-
 			let message;
 			switch(data.message.type) {
 				case 'code':
@@ -157,76 +125,82 @@ export function initSocket(rawHttpServer) {
 					message = data.message; //any processing?
 					break;
 			}
-
-			let finalMessage = message;
-			if (data.room !== 'task_queue') {
-				finalMessage = {
-					...data,
-					incoming: data.incoming != null ? data.incoming : false,
-					authorName: data.authorName || 'System',
-					message: finalMessage,
-					ts: messageTimestamp,
-				};
+			const finalMessage = {
+				...data,
+				message,
+				incoming: socketRequest.locals.isAgentBackend === false,
+				authorName: data.authorName || 'System',
+				ts: messageTimestamp,
+			};
+			if (!finalMessage.room || finalMessage.room.length !== 24) {
+				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}
-
-			if (finalMessage.room && finalMessage.room.length === 24) {
-				//TODO: change to normal getsessionbyid, but then the python thing would need to be authed as a special user.
-				const session = await unsafeGetSessionById(finalMessage.room);
-				await unsafeSetSessionUpdatedDate(finalMessage.room);
-				const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage.message.tokens };
-				if (finalMessage.message.first === false) {
-					//This is a previous message that is returning in chunks
-					await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
-					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-					//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-					//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
-				} else {
-					await addChatMessage({
-						orgId: session.orgId,
-						teamId: session.teamId,
-						sessionId: session._id,
-						message: finalMessage,
-						type: session.type as SessionType,
-						authorId: finalMessage.authorId || socketRequest?.session?.account?._id || null, //TODO: fix for socket user id
-						authorName: finalMessage.authorName || socketRequest?.session?.account?.name || 'AgentCloud',  //TODO: fix for socket user name
-						ts: finalMessage.ts || messageTimestamp,
-						isFeedback: finalMessage?.isFeedback || false,
-						chunkId: finalMessage.message.chunkId || null,
-						tokens: finalMessage?.message.tokens || 0,
-						displayMessage: finalMessage?.displayMessage || null,
-						chunks: finalMessage?.message?.single ? [] : [chunk],
-					});
-				}
-				const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
-				if (newStatus !== session.status) { //Note: chat messages can be received out of order
-					log('updating session status to %s', newStatus);
-					await unsafeSetSessionStatus(session._id, newStatus);
-					io.to(data.room).emit('status', newStatus);
-				}
+			const session = await (socketRequest.locals.isAgentBackend === true
+				? unsafeGetSessionById(finalMessage.room)
+				: getSessionById(socketRequest?.session?.account?.currentTeam, finalMessage.room));
+			if (!session) {
+				return log('socket.id "%s" message invalid session %s', socket.id, finalMessage.room);
 			}
-
-			if (data.room === 'task_queue') {
-				//TODO: remove
-				taskQueue.add(data.event, finalMessage);
+			await unsafeSetSessionUpdatedDate(finalMessage.room);
+			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage.message.tokens };
+			if (finalMessage.message.first === false) {
+				//This is a previous message that is returning in chunks
+				await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
+				await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+				//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+				//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
 			} else {
-				io.to(data.room).emit(data.event, finalMessage);
+				await addChatMessage({
+					orgId: session.orgId,
+					teamId: session.teamId,
+					sessionId: session._id,
+					message: finalMessage,
+					type: session.type as SessionType,
+					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.session?.account?._id : null,
+					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.session?.account?.name : 'AgentCloud',
+					ts: finalMessage.ts || messageTimestamp,
+					isFeedback: finalMessage?.isFeedback || false,
+					chunkId: finalMessage.message.chunkId || null,
+					tokens: finalMessage?.message.tokens || 0,
+					displayMessage: finalMessage?.displayMessage || null,
+					chunks: finalMessage?.message?.single ? [] : [chunk],
+				});
 			}
-
-			if (data.room !== 'task_queue' && finalMessage.message && (finalMessage.incoming === true || socketRequest?.session?.account?._id)) {
-				log('Relaying message %O to private room %s', finalMessage, `_${data.room}`);
+			const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
+			if (newStatus !== session.status) { //Note: chat messages can be received out of order
+				log('socket.id "%s" updating session %s status to %s', socket.id, finalMessage.room, newStatus);
+				await (socketRequest.locals.isAgentBackend === true
+					? unsafeSetSessionStatus(session._id, newStatus)
+					: setSessionStatus(socketRequest?.session?.account?.currentTeam, session._id, newStatus));
+				io.to(data.room).emit('status', newStatus);
+			}
+			io.to(data.room).emit(data.event, finalMessage);
+			if (finalMessage.message && finalMessage.incoming === true) {
+				log('socket.id "%s" relaying message %O to private room %s', socket.id, finalMessage, `_${data.room}`);
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
 			}
-
 		});
 
 		socket.on('stop_generating', async (data) => {
+			const socketRequest = socket.request as any;
+			const session = await (socketRequest.locals.isAgentBackend === true
+				? unsafeGetSessionById(data.room)
+				: getSessionById(socketRequest?.session?.account?.currentTeam, data.room));
+			if (!session) {
+				return log('socket.id "%s" stop_generating invalid session %s', socket.id, data.message.sessionId);
+			}
 			client.set(`${data.room}_stop`, '1');
-			await unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED);
+			await (socketRequest.locals.isAgentBackend === true
+				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
+				: setSessionStatus(socketRequest?.session?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
 			return io.to(data.room).emit('terminate', true);
 		});
 
 		socket.on('message_complete', async (data) => {
-			log(`received message_complete event: ${JSON.stringify(data, null, '\t')}`);
+			const socketRequest = socket.request as any;
+			if (socketRequest.locals.isAgentBackend !== true) {
+				return log('socket.id "%s" message_complete invalid session %s', socket.id, data?.room);
+			}
 			if (data?.message?.text) {
 				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks, data.message.deltaTokens || 0);
 				const updatedSession = await unsafeIncrementTokens(data.room, data.message.deltaTokens || 0);

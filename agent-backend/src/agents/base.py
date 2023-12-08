@@ -4,7 +4,7 @@ import autogen
 
 from utils.log_exception_context_manager import log_exception
 from init.mongo_session import start_mongo_session
-from init.env_variables import SOCKET_URL, BASE_PATH
+from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 from socketio.simple_client import SimpleClient
 from socketio.exceptions import DisconnectedError
 import json
@@ -36,15 +36,18 @@ def task_execution(task: str, session_id: str):
 def init_socket_generate_group(task: str, session_id: str):
     with log_exception():
         socket = SimpleClient()
-        socket.connect(url=SOCKET_URL)
+        custom_headers = {
+            'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
+        }
+        socket.connect(url=SOCKET_URL, headers=custom_headers)
         socket.emit("join_room", f"_{session_id}")
 
         with open(f"{BASE_PATH}/config/base.json", 'r') as f:
             group_generation = json.loads(f.read())
 
         team_task = [f"""Given the following task, create the ideal team that will be best suited to complete the task:
-    
-"{task}" 
+
+"{task}"
 
 Return the team in the below JSON structure:""", json.dumps(group_generation, indent=2),
                      "There are no hard limits on the number or the combination of team members."]
