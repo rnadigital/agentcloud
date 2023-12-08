@@ -29,7 +29,11 @@ export default function OrgSelector({ orgs }) {
 		let redirect = location.pathname;
 		if (foundResourceSlug) {
 			splitLocation.shift();
-			redirect = `/${teamId}/${splitLocation.join('/')}`;
+			if (splitLocation.length <= 1) {
+				redirect = `/${teamId}/${splitLocation.join('/')}`;
+			} else {
+				redirect = `/${teamId}/${splitLocation[0]}s`;
+			}
 		}
 		await API.switchTeam({
 			orgId,
