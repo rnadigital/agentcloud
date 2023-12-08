@@ -24,6 +24,7 @@ import {
 	CreditCardIcon,
 	KeyIcon,
 	WrenchScrewdriverIcon,
+	CircleStackIcon,
 } from '@heroicons/react/24/outline';
 import {
 	ChevronDownIcon,
@@ -54,6 +55,7 @@ const teamNavigation = [
 	</svg> },
 	{ name: 'Credentials', href: '/credentials', icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Tools', href: '/tools', icon: <WrenchScrewdriverIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Data Sources', href: '/datasources', icon: <CircleStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const libraryNavigation = [/*

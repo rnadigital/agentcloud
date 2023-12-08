@@ -109,6 +109,23 @@ export function editTool(toolId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
+// Datasources
+export function getDatasources(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/datasources.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/datasource/${body.datasourceId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function addDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+export function editDatasource(datasourceId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${datasourceId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
 function buildOptions(_route, method, body) {
 
 	// Convert method uppercase

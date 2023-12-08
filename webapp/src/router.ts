@@ -24,6 +24,7 @@ import * as agentController from './controllers/agent';
 import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
 import * as toolController from './controllers/tool';
+import * as datasourceController from './controllers/datasource';
 
 export default function router(server, app) {
 
@@ -91,6 +92,11 @@ export default function router(server, app) {
 	teamRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
 	teamRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
 	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
+	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
+	teamRouter.get('/datasources.json', datasourceController.datasourcesJson);
+	teamRouter.get('/datasource/add', datasourceController.datasourceAddPage.bind(null, app));
+	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
+	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', datasourceController.datasourceEditPage.bind(null, app));
 	teamRouter.post('/forms/agent/add', agentController.addAgentApi);
 	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
 	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
