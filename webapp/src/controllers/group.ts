@@ -2,7 +2,8 @@
 
 import { getGroupById, getGroupsByTeam, addGroup, updateGroup, deleteGroupById } from '../db/group';
 import toObjectId from 'misc/toobjectid';
-import { getAgentsById, getAgentById, getAgentsByTeam, AgentType } from '../db/agent';
+import { getAgentsById, getAgentById, getAgentsByTeam } from '../db/agent';
+import { AgentType } from 'struct/agent';
 import { dynamicResponse } from '../util';
 
 export async function groupsData(req, res, _next) {

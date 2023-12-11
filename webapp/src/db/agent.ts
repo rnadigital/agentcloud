@@ -3,12 +3,8 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
+import { AgentType } from 'struct/agent';
 
-export enum AgentType {
-	USER_PROXY_AGENT = 'UserProxyAgent',
-	ASSISTANT_AGENT = 'AssistantAgent',
-	EXECUTOR_AGENT = 'ExecutorAgent',
-}
 export type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
 export type CodeExecutionConfigType = {
 	lastNMessages: number;

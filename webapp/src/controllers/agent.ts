@@ -1,6 +1,7 @@
 'use strict';
 
-import { getAgentById, getAgentsByTeam, addAgent, AgentType, updateAgent, deleteAgentById } from '../db/agent';
+import { getAgentById, getAgentsByTeam, addAgent, updateAgent, deleteAgentById } from '../db/agent';
+import { AgentType } from 'struct/agent';
 import { removeAgentFromGroups } from '../db/group';
 import { getCredentialsByTeam } from '../db/credential';
 import { getToolsByTeam, getToolsById } from '../db/tool';

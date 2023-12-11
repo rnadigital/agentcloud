@@ -10,6 +10,7 @@ import Select from 'react-tailwindcss-select';
 import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 import CreateCredentialModal from '../components/CreateCredentialModal';
+import { AgentType } from 'struct/agent';
 
 export default function AgentForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
@@ -195,7 +196,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 												id='executor-agent'
 												name='type'
 												type='radio'
-												value='ExecutorAgent'
+												value={AgentType.EXECUTOR_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
 												defaultChecked={codeExecutionConfig != null}
 											/>
@@ -214,9 +215,9 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 												id='user-proxy-agent'
 												name='type'
 												type='radio'
-												value='UserProxyAgent'
+												value={AgentType.USER_PROXY_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={type === 'UserProxyAgent' && !codeExecutionConfig}
+												defaultChecked={type === AgentType.USER_PROXY_AGENT && !codeExecutionConfig}
 											/>
 										</div>
 										<div className='text-sm leading-6'>
@@ -232,9 +233,9 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 												id='assistant-agent'
 												name='type'
 												type='radio'
-												value='AssistantAgent'
+												value={AgentType.ASSISTANT_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={type === 'AssistantAgent'}
+												defaultChecked={type === AgentType.ASSISTANT_AGENT}
 											/>
 										</div>
 										<div className='text-sm leading-6'>

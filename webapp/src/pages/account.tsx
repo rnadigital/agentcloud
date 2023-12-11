@@ -13,7 +13,7 @@ export default function Account(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account;
+	const { resourceSlug } = router.query;
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
@@ -33,11 +33,13 @@ export default function Account(props) {
 		if (!account) {
 			API.getAccount(dispatch, setError, router);
 		}
-	}, []);
+	}, [resourceSlug]);
 	
 	if (!account) {
 		return 'Loading...'; //TODO: loader
 	}
+
+	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account;
 
 	return (
 		<>
