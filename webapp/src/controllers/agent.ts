@@ -95,14 +95,15 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, model, credentialId, type, systemMessage, toolIds }  = req.body;
+	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
 		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
 		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
-		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))) {
+		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
+		|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(d => d.length !== 24)))) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -111,6 +112,8 @@ export async function addAgentApi(req, res, next) {
 		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	//TODO: fetch datasources by id and compare length like ^ to ensure valid
 
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
@@ -131,6 +134,7 @@ export async function addAgentApi(req, res, next) {
 		model,
 		credentialId: toObjectId(credentialId),
 		toolIds: foundTools.map(t => t._id),
+		datasourceIds: [], //TODO
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${req.params.resourceSlug}/agents` });

@@ -21,7 +21,8 @@ export type Agent = {
 	systemMessage: string;
 	humanInputMode: HumanInputModeType;
 	credentialId: ObjectId;
-	toolIds: ObjectId[];
+	toolIds?: ObjectId[];
+	datasourceIds?: ObjectId[];
 	model: string;
 };
 
