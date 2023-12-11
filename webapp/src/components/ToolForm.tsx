@@ -53,6 +53,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	}, []);
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
+	const [invalidFuns, setInvalidFuns] = useState(0);
 	const [selectedFunction, setSelectedFunction] = useState(null);
 	const [error, setError] = useState();
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
@@ -142,11 +143,13 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			}
 			if (!loadedDocument) {
 				setFunctionsList(null);
+				setInvalidFuns(0);
 				setSelectedFunction(null);
 				return toast.error('Failed to parse OpenAPI schema');
 			}
 		} else {
 			setFunctionsList(null);
+			setInvalidFuns(0);
 			setSelectedFunction(null);
 			return;
 		}
@@ -160,45 +163,54 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		} catch(e) {
 			console.warn(e);
 			setFunctionsList(null);
+			setInvalidFuns(0);
 			setSelectedFunction(null);
 			return toast.error('Failed to parse OpenAPI schema');
 		}
 		const funs = [];
-		client.api.getOperations().forEach(op => {
-			const baseParams = {
-				__baseurl: {
-					type: 'string',
-					description: 'The request path e.g. https://api.example.com',
-				},
-				__path: {
-					type: 'string',
-					description: 'The request path e.g. /api/v3/whatever',
-				},
-				__method: {
-					type: 'string',
-					description: 'The request method, e.g. GET or POST',
+		let newInvalidFuns = 0;
+		client.api.getOperations()
+			.filter(op => {
+				if (op.summary) {
+					return true;
 				}
-			};
-			const functionProps = op?.parameters?.reduce((acc, par: any) => {
-				acc[par.name] = {
-					type: par.schema.type,
-					description: `${par.description||''}, e.g. ${par.schema.example}`,
+				newInvalidFuns+=1;
+				return false;
+			})
+			.forEach(op => {
+				const baseParams = {
+					__baseurl: {
+						type: 'string',
+						description: 'The request path e.g. https://api.example.com',
+					},
+					__path: {
+						type: 'string',
+						description: 'The request path e.g. /api/v3/whatever',
+					},
+					__method: {
+						type: 'string',
+						description: 'The request method, e.g. GET or POST',
+					}
 				};
-				return acc;
-			}, baseParams);
-			funs.push({
-				name: op.summary,
-				description: `${op.description}.
-
-The __path for this function is "${op.path}", the __method is "${op.method}", and the __baseurl is "${client.api.instance.defaults.baseURL}".`,
-				parameters: {
-					type: 'object',
-					properties: functionProps,
-					required: ['__baseurl', '__path', '__method'],
-				}
+				const functionProps = op?.parameters?.reduce((acc, par: any) => {
+					acc[par.name] = {
+						type: par.schema.type,
+						description: `${par.description||''}, e.g. ${par.schema.example}`,
+					};
+					return acc;
+				}, baseParams);
+				funs.push({
+					name: op.summary,
+					description: `${op.description ? (op.description+'.\n\n') : ''}The __path for this function is "${op.path}", the __method is "${op.method}", and the __baseurl is "${client.api.instance.defaults.baseURL}".`,
+					parameters: {
+						type: 'object',
+						properties: functionProps,
+						required: ['__baseurl', '__path', '__method'],
+					}
+				});
 			});
-		});
 		console.log('openApi functions:', funs);
+		setInvalidFuns(newInvalidFuns);
 		setFunctionsList(funs);
 	}
 
@@ -333,6 +345,7 @@ The __path for this function is "${op.path}", the __method is "${op.method}", an
 											setImportOpen(false);
 											setImportValue('');
 											setFunctionsList(null);
+											setInvalidFuns(0);
 											setSelectedFunction(null);
 										}}
 									>Cancel</button>
@@ -551,11 +564,14 @@ The __path for this function is "${op.path}", the __method is "${op.method}", an
 								value={searchTerm}
 								className='p-2 border rounded'
 							/>
+							{invalidFuns > 0 && <span className='ms-4 rounded-md bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800'>
+								{invalidFuns} endpoint{invalidFuns > 1 ? 's are not shown because they are' : ' is not shown because it is'} missing a <code className='text-xs'>name</code> property in the api definition
+							</span>}
 						</div>
 					</div>
 					<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
 						{functionsList
-							.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm))
+							.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
 							.map((item, index) => (
 								<FunctionCard
 									key={`functionList_${index}`}
@@ -565,8 +581,8 @@ The __path for this function is "${op.path}", the __method is "${op.method}", an
 										// setFunctionList(null);
 										setSearchTerm(item.name.toLowerCase());
 										setSelectedFunction(item);
-										setToolName(item.name);
-										setToolDescription(item.description);
+										setToolName(item?.name);
+										setToolDescription(item?.description);
 										const functionParameters = item.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
 											const [parname, par]: any = entry;
 											acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
