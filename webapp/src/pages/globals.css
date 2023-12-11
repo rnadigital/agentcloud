@@ -221,3 +221,37 @@ div.grow.pl-2\.5.py-2.pr-2.flex.flex-wrap.gap-1 {
 div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
   overflow: hidden;
 }
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 350px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 50;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -175px;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
