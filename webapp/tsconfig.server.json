@@ -33,6 +33,12 @@
       ],
       "lib/*": [
         "lib/*"
+      ],
+      "components/*": [
+        "components/*"
+      ],
+      "context/*": [
+        "context/*"
       ]
     }
   },

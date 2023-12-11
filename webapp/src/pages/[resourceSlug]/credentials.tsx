@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import * as API from '../../api';
-import { useAccountContext } from '../../context/account';
-import CredentialCards from '../../components/CredentialCards';
-import NewButtonSection from '../../components/NewButtonSection';
+import { useAccountContext } from 'context/account';
+import CredentialCards from 'components/CredentialCards';
+import NewButtonSection from 'components/NewButtonSection';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/router';
 
