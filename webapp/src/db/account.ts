@@ -3,7 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-import { OAUTH_PROVIDER } from '../controllers/oauth';
+import { OAUTH_PROVIDER } from 'struct/oauth';
 
 type AccountTeam = {
 	id: ObjectId;
@@ -59,10 +59,19 @@ export function getAccountByEmail(email: string): Promise<Account> {
 	});
 }
 
-export function getAccountByOAuth(oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<Account> {
-	return AccountCollection().findOne({
+export function getAccountByOAuthOrEmail(oauthId: AccountOAuthId, provider: OAUTH_PROVIDER, email: string): Promise<Account> {
+	let query: any = {
 		[`oauth.${provider}.id`]: oauthId,
-	});
+	};
+	if (email != null && email.length > 0) {
+		query = {
+			$or: [
+				query,
+				{ email, emailVerified: true },
+			]
+		};
+	}
+	return AccountCollection().findOne(query);
 }
 
 export function setCurrentTeam(userId: db.IdOrStr, orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<Account> {
@@ -96,12 +105,14 @@ export function changeAccountPassword(userId: db.IdOrStr, passwordHash: string):
 	});
 }
 
-export function setAccountToken(userId: db.IdOrStr, token: string): Promise<any> {
+export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<any> {
 	return AccountCollection().updateOne({
 		_id: toObjectId(userId)
 	}, {
 		$set: {
-			token,
+			oauth: {
+				[provider]: { id: oauthId },
+			},
 		}
 	});
 }

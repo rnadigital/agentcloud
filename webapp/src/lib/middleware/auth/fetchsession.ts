@@ -1,6 +1,6 @@
 'use strict';
 
-import { getAccountById, Account, getAccountByOAuth } from '../../../db/account';
+import { getAccountById, Account, getAccountByOAuthOrEmail } from '../../../db/account';
 import debug from 'debug';
 const log = debug('webapp:session');
 
@@ -12,7 +12,7 @@ export default async function fetchSession(req, res, next) {
 			account = await getAccountById(req.session.accountId);
 		} else if (req.session.passport?.user) {
 			const { oauthId, provider } = req.session.passport?.user;
-			account = await getAccountByOAuth(oauthId, provider);
+			account = await getAccountByOAuthOrEmail(oauthId, provider, null);
 		}
 		// log('account:', account);
 		if (account) {

@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount, setAccountToken } from '../db/account';
+import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -57,7 +57,7 @@ export async function login(req, res) {
 	if (passwordMatch === true) {
 		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/sessions`, token });
+		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/sessions`, token });
 	}
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 }

@@ -1,9 +1,10 @@
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { addAccount, getAccountByOAuth, Account } from '../db/account';
+import { addAccount, getAccountByOAuthOrEmail, Account, setAccountOauth } from '../db/account';
 import { ObjectId } from 'mongodb';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
+import { OAUTH_PROVIDER } from 'struct/oauth';
 import debug from 'debug';
 const log = debug('webapp:oauth');
 
@@ -16,11 +17,6 @@ export type Strategy = {
 	extra?: any; // Stuff like scope (this object is a different shape depending on provider hence any)
 }
 
-export enum OAUTH_PROVIDER {
-	GOOGLE = 'google',
-	GITHUB = 'github',
-}
-
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 export const OAUTH_STRATEGIES: Strategy[] = [
 	{ strategy: GitHubStrategy, env: 'GITHUB', callback: githubCallback, path: '/auth/github/callback', extra: { scope: ['user:email'] } },
@@ -30,7 +26,7 @@ export const OAUTH_STRATEGIES: Strategy[] = [
 
 // GitHub callback handler
 export async function githubCallback(accessToken, refreshToken, profile, done) {
-	// log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+	log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 
 	const emails = await fetch('https://api.github.com/user/emails', {
 		headers: {
@@ -39,12 +35,12 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 		}
 	}).then(res => res.json());
 	const primaryEmail = emails.find(email => (email.primary && email.verified)).email;
+	profile.provider = OAUTH_PROVIDER.GITHUB;
 	profile.email = primaryEmail;
 
 	/*TODO: refactor so this account/default team creation code isnt
 	repeated in both oauth handlers and account register controller */
-	profile.provider = OAUTH_PROVIDER.GITHUB;
-	const account: Account = await getAccountByOAuth(profile.id, profile.provider);
+	const account: Account = await getAccountByOAuthOrEmail(profile.id, profile.provider, profile.email);
 	log('githubCallback account', account);
 	if (!account) {
 		const newAccountId = new ObjectId();
@@ -80,6 +76,11 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 				[profile.provider as OAUTH_PROVIDER]: { id: profile.id },
 			},
 		});
+	} else {
+		//existing account, check if it has the oauth ID else update it
+		if (!account.oauth || !account.oauth[profile.provider]) {
+			await setAccountOauth(account._id, profile.id, profile.provider);
+		}
 	}
 
 	done(null, profile);
@@ -89,11 +90,13 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 export async function googleCallback(accessToken, refreshToken, profile, done) {
 	log(`googleCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 
+	const verifiedEmail = profile.emails.find(e => e.verified === true).value;
+	profile.provider = OAUTH_PROVIDER.GOOGLE;
+	profile.email = verifiedEmail;
+
 	/*TODO: refactor so this account/default team creation code isnt
 	repeated in both oauth handlers and account register controller */
-	profile.provider = OAUTH_PROVIDER.GOOGLE;
-	const verifiedEmail = profile.emails.find(e => e.verified === true).value;
-	const account: Account = await getAccountByOAuth(profile.id, profile.provider);
+	const account: Account = await getAccountByOAuthOrEmail(profile.id, profile.provider, profile.email);
 	if (!account) {
 		const newAccountId = new ObjectId();
 		const addedOrg = await addOrg({
@@ -128,6 +131,11 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 				[profile.provider as OAUTH_PROVIDER]: { id: profile.id },
 			},
 		});
+	} else {
+		//existing account, check if it has the oauth ID else update it
+		if (!account.oauth || !account.oauth[profile.provider]) {
+			await setAccountOauth(account._id, profile.id, profile.provider);
+		}
 	}
 
 	done(null, profile);
@@ -144,7 +152,7 @@ export async function deserializeHandler(obj, done) {
 	const { oauthId, provider } = obj;
 
     // Use provider information to retrieve the user e.g.
-	const account: Account = await getAccountByOAuth(oauthId, provider);
+	const account: Account = await getAccountByOAuthOrEmail(oauthId, provider, null);
 	if (account) {
 		const accountObj = {
 			_id: account._id.toString(),
