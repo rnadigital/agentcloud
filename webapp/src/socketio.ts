@@ -73,15 +73,17 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			log('socket.id "%s" join_room %s', socket.id, room);
 			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(room)
+				? unsafeGetSessionById(room.substring(1)) // removing _
 				: getSessionById(socketRequest?.locals?.account?.currentTeam, room));
 			if (!session) {
 				log('socket.id "%s" invalid session %s', socket.id, room);
 				return;
 			}
-			socket.join(room);
-			socket.emit('joined', room);
 			log('socket.id "%s" joined room %s', socket.id, room);
+			socket.join(room);
+			if (socketRequest.locals.isAgentBackend !== true) {
+				socket.emit('joined', room); //only send to webapp clients
+			}
 		});
 
 		socket.on('terminate', async (data) => {
