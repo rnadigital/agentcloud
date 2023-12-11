@@ -24,14 +24,16 @@ export default function Session(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [ready, setReady] = useState(false);
+	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
 	const { sessionId } = router.query && router.query.sessionId.startsWith('[') ? props.query : router.query;
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
-
 	const [_chatContext, setChatContext]: any = useChatContext();
-
+	const socketContext = useSocketContext();
+	const [messages, setMessages] = useState(null);
+	const [terminated, setTerminated] = useState(null);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
@@ -41,6 +43,9 @@ export default function Session(props) {
 			const isCurrentlyAtBottom = scrollTop + clientHeight >= (scrollHeight - 10);
 			if (isCurrentlyAtBottom !== isAtBottom) {
 				setIsAtBottom(isCurrentlyAtBottom);
+				if (isCurrentlyAtBottom && messages?.length > 0) {
+					setLastSeenMessageId(messages[messages.length-1]._id);
+				}
 			}
 		};
 		const container = scrollContainerRef.current;
@@ -50,10 +55,6 @@ export default function Session(props) {
 			container.removeEventListener('scroll', handleScroll);
 		};
 	}, [isAtBottom, scrollContainerRef?.current]);
-
-	const socketContext = useSocketContext();
-	const [messages, setMessages] = useState(null);
-	const [terminated, setTerminated] = useState(null);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
 	const chatBusyState = sentLastMessage || !lastMessageFeedback;
@@ -67,9 +68,13 @@ export default function Session(props) {
 		log('Received terminate message %s', message);
 		setTerminated(true);
 	}
+	console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
 		console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) {return;}
+		if (isAtBottom) {
+			setLastSeenMessageId(message._id);
+		}
 		const newMessage = typeof message === 'string'
 			? { type: null, text: message }
 			: message;
@@ -191,7 +196,7 @@ export default function Session(props) {
 			resourceSlug,
 			sessionId,
 		}, (_messages) => {
-			setMessages(_messages
+			const sortedMessages = _messages
 				.map(m => {
 					const _m = m.message;
 					const combinedChunks = (m.chunks||[])
@@ -202,9 +207,14 @@ export default function Session(props) {
 						_m.message.text = (_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') + combinedChunks;
 					}
 					_m.tokens = m.tokens || _m.tokens;
+					_m._id = m._id; //id for last seen
 					return _m;
 				})
-				.sort((ma, mb) => ma.ts - mb.ts));
+				.sort((ma, mb) => ma.ts - mb.ts);
+			if (sortedMessages && sortedMessages.length > 0) {
+				setLastSeenMessageId(sortedMessages[sortedMessages.length-1]._id);
+			}
+			setMessages(sortedMessages);
 		}, setError, router);
 	}, []);
 	useEffect(() => {
@@ -259,10 +269,6 @@ export default function Session(props) {
 				<title>Session - {sessionId}</title>
 			</Head>
 
-			{/*<div className='border-b pb-2 my-2 mb-6'>
-				<h3 className='pl-2 font-semibold text-gray-900'>Session {sessionId}</h3>
-			</div>*/}
-
 			<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
 
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
@@ -279,6 +285,7 @@ export default function Session(props) {
 							ts={m?.ts}
 							isFeedback={m?.isFeedback}
 							isLastMessage={mi === marr.length-1}
+							isLastSeen={false /*lastSeenMessageId && lastSeenMessageId === m?._id*/}
 							sendMessage={sendFeedbackMessage}
 							displayMessage={m?.displayMessage || m?.message?.displayMessage}
 							tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}

@@ -148,6 +148,7 @@ export function Message({
 	isFeedback,
 	feedbackOptions,
 	isLastMessage,
+	isLastSeen,
 	ts,
 	authorName,
 	authorImage,
@@ -164,6 +165,7 @@ export function Message({
 		isFeedback?: boolean,
 		feedbackOptions?: string[],
 		isLastMessage?: boolean,
+		isLastSeen?: boolean,
 		ts?: number,
 		authorName?: string,
 		authorImage?: string,
@@ -222,7 +224,7 @@ export function Message({
 
 	return <>
 		{authorNameSection}
-		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
+		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
@@ -239,8 +241,7 @@ export function Message({
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
-
-		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800`}>
+		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800 ${isLastSeen && !isLastMessage ? 'border-b border-red-500' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
