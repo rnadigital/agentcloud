@@ -16,10 +16,12 @@ export default function AddAgent(props) {
 	const [error, setError] = useState();
 	const { agents, credentials, tools } = state;
 
+	async function fetchAgentFormData() {
+		await API.getAgents({ resourceSlug }, dispatch, setError, router);
+	}
+
 	useEffect(() => {
-		if (account?.currentTeam) {
-			API.getAgents({ resourceSlug }, dispatch, setError, router);
-		}
+		fetchAgentFormData();
 	}, [resourceSlug]);
 	
 	if (agents == null) {
@@ -32,7 +34,7 @@ export default function AddAgent(props) {
 			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
-		<AgentForm credentials={credentials} tools={tools} />
+		<AgentForm credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentFormData} />
 
 	</>);
 

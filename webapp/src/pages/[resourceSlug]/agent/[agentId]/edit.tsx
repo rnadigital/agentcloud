@@ -17,13 +17,16 @@ export default function EditAgent(props) {
 	const [error, setError] = useState();
 	const { agent, credentials, tools } = state;
 
-	useEffect(() => {
-		console.log(router.query);
-		API.getAgent({
+	async function fetchAgentData() {
+		await API.getAgent({
 			resourceSlug,
 			agentId: router.query.agentId,
 		}, dispatch, setError, router);
-	}, []);
+	}
+
+	useEffect(() => {
+		fetchAgentData();
+	}, [resourceSlug]);
 
 	if (agent == null) {
 		return 'Loading...'; //TODO: loader
@@ -39,7 +42,7 @@ export default function EditAgent(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
 		</div>
 
-		<AgentForm editing={true} agent={agent} credentials={credentials} tools={tools} />
+		<AgentForm editing={true} agent={agent} credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentData} />
 
 	</>);
 }

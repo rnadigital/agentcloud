@@ -67,7 +67,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 	}
 
 	const credentialCallback = async (addedCredentialId) => {
-		await fetchAgentFormData();
+		await fetchAgentFormData && fetchAgentFormData();
 		setModalOpen(false);
 		console.log(addedCredentialId);
 		setAgent(oldAgent => {
