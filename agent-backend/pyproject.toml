@@ -21,6 +21,7 @@ websocket-client = "^1.6.4"
 bullmq = "^1.15.4"
 openai = "^1.3.6"
 diskcache = "^5.6.3"
+canopy-sdk = {git = "https://github.com/rnadigital/canopy.git", branch= "main"}
 
 [build-system]
 requires = ["poetry-core"]
