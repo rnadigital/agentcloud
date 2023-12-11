@@ -17,17 +17,21 @@ export default function EditGroup(props) {
 	const [agents, setAgents] = useState(null); //TODO: take from prop
 	const [error, setError] = useState();
 	const { groupData } = state;
+
+	async function fetchAgents() {
+		API.getGroup({
+			resourceSlug,
+			groupId: router.query.groupId,
+		}, dispatch, setError, router);
+		await API.getAgents({
+			resourceSlug,
+		}, setAgents, setError, router);
+	}
 	useEffect(() => {
 		if (!groupData || !agents) {
-			API.getGroup({
-				resourceSlug,
-				groupId: router.query.groupId,
-			}, dispatch, setError, router);
-			API.getAgents({
-				resourceSlug,
-			}, setAgents, setError, router);
+			fetchAgents();
 		}
-	}, []);
+	}, [resourceSlug]);
 
 	if (groupData == null || agents == null) {
 		return 'Loading...'; //TODO: loader
@@ -53,7 +57,7 @@ export default function EditGroup(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Group</h3>
 		</div>
 
-		<GroupForm editing={true} group={groupData} agentChoices={agents.agents} />
+		<GroupForm editing={true} group={groupData} agentChoices={agents.agents} fetchAgents={fetchAgents} />
 
 	</>);
 }
