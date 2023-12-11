@@ -75,7 +75,7 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest?.session?.token) {
 				const session = await (socketRequest.locals.isAgentBackend === true
 					? unsafeGetSessionById(room)
-					: getSessionById(socketRequest?.session?.account?.currentTeam, room));
+					: getSessionById(socketRequest?.locals?.account?.currentTeam, room));
 				if (!session) {
 					log('socket.id "%s" invalid session %s', socket.id, room);
 					return;
@@ -90,13 +90,13 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(data.message.sessionId)
-				: getSessionById(socketRequest?.session?.account?.currentTeam, data.message.sessionId));
+				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.message.sessionId));
 			if (!session) {
 				return log('socket.id "%s" terminate invalid session %s', socket.id, data.message.sessionId);
 			}
 			await (socketRequest.locals.isAgentBackend === true
 				? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
-				: setSessionStatus(socketRequest?.session?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
+				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
 			log('socket.id "%s" terminate %s', socket.id, session._id);
 			return io.to(data.room).emit('terminate', true);
 		});
@@ -138,7 +138,7 @@ export function initSocket(rawHttpServer) {
 			}
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(finalMessage.room)
-				: getSessionById(socketRequest?.session?.account?.currentTeam, finalMessage.room));
+				: getSessionById(socketRequest?.locals?.account?.currentTeam, finalMessage.room));
 			if (!session) {
 				return log('socket.id "%s" message invalid session %s', socket.id, finalMessage.room);
 			}
@@ -157,8 +157,8 @@ export function initSocket(rawHttpServer) {
 					sessionId: session._id,
 					message: finalMessage,
 					type: session.type as SessionType,
-					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.session?.account?._id : null,
-					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.session?.account?.name : 'AgentCloud',
+					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
+					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?.name : 'AgentCloud',
 					ts: finalMessage.ts || messageTimestamp,
 					isFeedback: finalMessage?.isFeedback || false,
 					chunkId: finalMessage.message.chunkId || null,
@@ -172,7 +172,7 @@ export function initSocket(rawHttpServer) {
 				log('socket.id "%s" updating session %s status to %s', socket.id, finalMessage.room, newStatus);
 				await (socketRequest.locals.isAgentBackend === true
 					? unsafeSetSessionStatus(session._id, newStatus)
-					: setSessionStatus(socketRequest?.session?.account?.currentTeam, session._id, newStatus));
+					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, newStatus));
 				io.to(data.room).emit('status', newStatus);
 			}
 			io.to(data.room).emit(data.event, finalMessage);
@@ -186,14 +186,14 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(data.room)
-				: getSessionById(socketRequest?.session?.account?.currentTeam, data.room));
+				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
 			if (!session) {
-				return log('socket.id "%s" stop_generating invalid session %s', socket.id, data.message.sessionId);
+				return log('socket.id "%s" stop_generating invalid session %O', socket.id, data);
 			}
 			client.set(`${data.room}_stop`, '1');
 			await (socketRequest.locals.isAgentBackend === true
 				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
-				: setSessionStatus(socketRequest?.session?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
+				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
 			return io.to(data.room).emit('terminate', true);
 		});
 
