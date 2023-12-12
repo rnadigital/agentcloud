@@ -18,7 +18,7 @@ async def process(job: Job, token: str):
         case "generate_team":
             thread = threading.Thread(target=generate_team, args=[job.data])
             thread.start()
-        case "rag":
+        case "execute_rag":
             thread = threading.Thread(target=rag_execution, args=[job.data])
             thread.start()
     return True

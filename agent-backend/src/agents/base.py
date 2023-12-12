@@ -1,7 +1,6 @@
 import openai
 from openai._exceptions import OpenAIError
 from canopy_server.models.v1.api_models import ChatDebugInfo
-from canopy_cli.cli import check_server_health
 import time
 import logging
 import random
@@ -49,7 +48,6 @@ def rag_execution(
         print_debug_info=False,
 ):
     socket = SimpleClient()
-    check_server_health()
 
     output = ""
     history += [{"role": "user", "content": message}]
