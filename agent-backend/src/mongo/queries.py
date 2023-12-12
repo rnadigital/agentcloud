@@ -42,11 +42,16 @@ class MongoClientConnection(MongoConnection):
     def _get_tools_collection(self) -> collection.Collection:
         return self.db["tools"]
 
+    @property
+    def _get_chat_collection(self) -> collection.Collection:
+        return self.db["chat"]
+
     def get_session(self, session_id: str) -> Dict:
         with log_exception():
             self.db = self._get_db
             sessions_collection = self._get_sessions_collection
-            session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)}, {"groupId": 1, "agentId": 1})
+            session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)},
+                                                                 {"groupId": 1, "agentId": 1})
             if session_query_results is None:
                 raise Exception(f"session not found for session _id {session_id}")
             return session_query_results
@@ -61,7 +66,7 @@ class MongoClientConnection(MongoConnection):
             group_id = session.get("groupId")
             agent_id = session.get("agentId")
             if group_id is None and agent_id is None:
-                raise Exception(f"no groupId or agentId found on session id {session_id}")
+                raise Exception(f"no groupId or agentId found on session id {session.get('id')}")
             agents = list()
             if agent_id:
                 agents.append(agent_id)
@@ -148,3 +153,11 @@ class MongoClientConnection(MongoConnection):
                 return None
         except Exception as e:
             logging.exception(e)
+
+    # TODO we need to store chat history in the correct format to align with LLM return 
+    def get_chat_history(self, session_id: str) -> List[str]:
+        chat_collection = self._get_chat_collection
+        chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
+        messages = [m.get("message").get("message").get("text") for m in chat_messages if chat_messages is not None]
+        if messages and len(messages) > 0:
+            return messages
