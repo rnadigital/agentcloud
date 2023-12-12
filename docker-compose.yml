@@ -50,6 +50,7 @@ services:
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
+      - AIRBYTE_URL=http://localhost:8000
       - AIRBYTE_USERNAME=airbyte
       - AIRBYTE_PASSWORD=password
 

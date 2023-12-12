@@ -49,7 +49,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 			teamIds: [],
 			members: [newAccountId],
 		});
-		const addedTeam = await addTeam({
+		const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
 			name: 'My Team',
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
@@ -104,7 +104,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 			teamIds: [],
 			members: [newAccountId],
 		});
-		const addedTeam = await addTeam({
+		const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
 			name: 'My Team',
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
