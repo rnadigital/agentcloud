@@ -25,6 +25,7 @@ import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
 import * as toolController from './controllers/tool';
 import * as datasourceController from './controllers/datasource';
+import * as airbyteProxyController from './controllers/airbyte';
 
 export default function router(server, app) {
 
@@ -69,6 +70,7 @@ export default function router(server, app) {
 
 	// Team endpoints
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
+	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);

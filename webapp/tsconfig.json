@@ -21,6 +21,9 @@
     "target": "ES2022",
     "baseUrl": "./src",
     "paths": {
+      "@api": [
+        "api.ts"
+      ],
       "struct/*": [
         "lib/struct/*"
       ],

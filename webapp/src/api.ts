@@ -126,6 +126,14 @@ export function editDatasource(datasourceId, body, dispatch, errorCallback, rout
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${datasourceId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
+// Airbyte
+export function getSpecification(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+			sourceDefinitionId: body.sourceDefinitionId,
+		}).toString();
+	return ApiCall(`/${body.resourceSlug}/airbyte/specification?${queryString}`, 'GET', null, dispatch, errorCallback, router);
+}
+
 function buildOptions(_route, method, body) {
 
 	// Convert method uppercase

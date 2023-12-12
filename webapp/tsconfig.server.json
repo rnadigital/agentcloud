@@ -7,6 +7,9 @@
     "noEmit": false,
     "baseUrl": "./src",
     "paths": {
+      "@api": [
+        "api.ts"
+      ],
       "struct/*": [
         "lib/struct/*"
       ],

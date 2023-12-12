@@ -12,7 +12,7 @@ import rehypeRaw from 'rehype-raw';
 
 export default function DynamicForm({ spec }) {
 
-	console.log('spec:', JSON.stringify(spec, null, '\t'));
+	// console.log('spec:', JSON.stringify(spec, null, '\t'));
 
 	const [formData, setFormData] = useState({});
 	const [arrayParams, setArrayParams] = useState([]);

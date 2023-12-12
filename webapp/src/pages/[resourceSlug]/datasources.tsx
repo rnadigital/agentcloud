@@ -7,10 +7,6 @@ import DatasourceCards from 'components/DatasourceCards';
 import NewButtonSection from 'components/NewButtonSection';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic';
-const DynamicForm = dynamic(() => import('components/DynamicForm'), {
-	ssr: false,
-});
 
 export default function Datasources(props) {
 
