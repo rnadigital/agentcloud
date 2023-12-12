@@ -22,34 +22,13 @@ class MongoClientConnection(MongoConnection):
     def _get_db(self) -> database.Database:
         return self.mongo_client[self.db_name]
 
-    @property
-    def _get_sessions_collection(self) -> collection.Collection:
-        return self.db["sessions"]
-
-    @property
-    def _get_groups_collection(self) -> collection.Collection:
-        return self.db["groups"]
-
-    @property
-    def _get_agents_collection(self) -> collection.Collection:
-        return self.db["agents"]
-
-    @property
-    def _get_credentials_collection(self) -> collection.Collection:
-        return self.db["credentials"]
-
-    @property
-    def _get_tools_collection(self) -> collection.Collection:
-        return self.db["tools"]
-
-    @property
-    def _get_chat_collection(self) -> collection.Collection:
-        return self.db["chat"]
+    def _get_collection(self, collection_name: str) -> collection.Collection:
+        return self.db[collection_name]
 
     def get_session(self, session_id: str) -> Dict:
         with log_exception():
             self.db = self._get_db
-            sessions_collection = self._get_sessions_collection
+            sessions_collection = self._get_collection("sessions")
             session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)},
                                                                  {"groupId": 1, "agentId": 1})
             if session_query_results is None:
@@ -71,7 +50,7 @@ class MongoClientConnection(MongoConnection):
             if agent_id:
                 agents.append(agent_id)
             elif group_id:
-                groups_collection = self._get_groups_collection
+                groups_collection = self._get_collection("groups")
                 group_query_results = groups_collection.find_one({"_id": group_id})
                 if group_query_results is None:
                     raise Exception(f"group not found from session groupId {group_id}")
@@ -90,13 +69,13 @@ class MongoClientConnection(MongoConnection):
 
     def _get_group_member(self, agent_id: ObjectId) -> Union[AgentData, None]:
         try:
-            _collection = self._get_agents_collection
+            _collection = self._get_collection("agents")
             agent = _collection.find_one({"_id": ObjectId(agent_id)})
             _config_list: ConfigList = ConfigList()
             # Get agent credentials
             if agent is not None:
                 credential_id = agent.get("credentialId")
-                credential_obj = self._get_credentials_collection.find_one(
+                credential_obj = self._get_collection("credentials").find_one(
                     {"_id": credential_id},
                     {"platform": 1, "credentials": 1})
                 if credential_obj is not None and len(credential_obj) > 0:
@@ -113,7 +92,7 @@ class MongoClientConnection(MongoConnection):
                 list_of_agent_tools: List[ToolData] = list()
                 if tool_ids and len(tool_ids) > 0:
                     for tool_id in tool_ids:
-                        tool = self._get_tools_collection.find_one(
+                        tool = self._get_collection("tools").find_one(
                             {"_id": tool_id},
                             {"teamId": 0, "orgId": 0, "_id": 0})
                         if tool and len(tool) > 0:
@@ -154,9 +133,9 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.exception(e)
 
-    # TODO we need to store chat history in the correct format to align with LLM return 
+    # TODO we need to store chat history in the correct format to align with LLM return
     def get_chat_history(self, session_id: str) -> List[str]:
-        chat_collection = self._get_chat_collection
+        chat_collection = self._get_collection("chat")
         chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
         messages = [m.get("message").get("message").get("text") for m in chat_messages if chat_messages is not None]
         if messages and len(messages) > 0:
