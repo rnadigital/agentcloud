@@ -28,7 +28,7 @@ class MongoClientConnection(MongoConnection):
     def get_session(self, session_id: str) -> Dict:
         with log_exception():
             self.db = self._get_db
-            sessions_collection = self._get_collection("sessions")
+            sessions_collection: collection.Collection = self._get_collection("sessions")
             session_query_results = sessions_collection.find_one({"_id": ObjectId(session_id)},
                                                                  {"groupId": 1, "agentId": 1})
             if session_query_results is None:
@@ -50,7 +50,7 @@ class MongoClientConnection(MongoConnection):
             if agent_id:
                 agents.append(agent_id)
             elif group_id:
-                groups_collection = self._get_collection("groups")
+                groups_collection: collection.Collection = self._get_collection("groups")
                 group_query_results = groups_collection.find_one({"_id": group_id})
                 if group_query_results is None:
                     raise Exception(f"group not found from session groupId {group_id}")
@@ -69,7 +69,7 @@ class MongoClientConnection(MongoConnection):
 
     def _get_group_member(self, agent_id: ObjectId) -> Union[AgentData, None]:
         try:
-            _collection = self._get_collection("agents")
+            _collection: collection.Collection = self._get_collection("agents")
             agent = _collection.find_one({"_id": ObjectId(agent_id)})
             _config_list: ConfigList = ConfigList()
             # Get agent credentials
@@ -135,7 +135,7 @@ class MongoClientConnection(MongoConnection):
 
     # TODO we need to store chat history in the correct format to align with LLM return
     def get_chat_history(self, session_id: str) -> List[str]:
-        chat_collection = self._get_collection("chat")
+        chat_collection: collection.Collection = self._get_collection("chat")
         chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
         messages = [m.get("message").get("message").get("text") for m in chat_messages if chat_messages is not None]
         if messages and len(messages) > 0:
