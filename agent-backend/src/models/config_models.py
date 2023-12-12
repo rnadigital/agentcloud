@@ -1,8 +1,13 @@
 from dataclasses import field
 from typing import Any, Dict, List, Optional, Union, Callable
 from random import randint
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator, Field
 from enum import Enum
+from typing import Annotated
+
+# Represents an ObjectId field in the database.
+# It will be represented as a `str` on the model so that it can be serialized to JSON.
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
 
 class ToolType(str, Enum):
@@ -74,6 +79,7 @@ class AgentConfig(BaseModel):
     use_sockets: Optional[bool] = True
     socket_client: Any = None
     sid: str = None
+    datasourceIds: Optional[List[PyObjectId]] = Field(alias="_id", default=None)
 
 
 class AgentTypes(str, Enum):
@@ -88,3 +94,13 @@ class AgentData(BaseModel):
     data: AgentConfig
     type: str
     is_admin: Optional[bool] = False
+
+
+class Datasource(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    orgId: Optional[PyObjectId] = Field(default=None)
+    teamId: Optional[PyObjectId] = Field(default=None)
+    name: str
+    sourceId: str
+    sourceType: str
+    workspaceId: str
