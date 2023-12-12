@@ -1,29 +1,8 @@
 'use strict';
 
 import * as db from './index';
-import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
-import { AgentType } from 'struct/agent';
-
-export type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
-export type CodeExecutionConfigType = {
-	lastNMessages: number;
-	workDirectory: string;
-};
-
-export type Agent = {
-	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
-    name: string;
- 	type: AgentType;
-	codeExecutionConfig?: CodeExecutionConfigType;
-	systemMessage: string;
-	humanInputMode: HumanInputModeType;
-	credentialId: ObjectId;
-	toolIds: ObjectId[];
-	model: string;
-};
+import { HumanInputModeType, CodeExecutionConfigType, Agent, AgentType } from 'struct/agent';
 
 export function AgentCollection() {
 	return db.db().collection('agents');

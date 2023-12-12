@@ -1,20 +1,10 @@
 'use strict';
 
 import * as db from './index';
-import { ObjectId } from 'mongodb';
 import toObjectId from 'misc/toobjectid';
+import { Datasource } from 'struct/datasource';
 import debug from 'debug';
 const log = debug('webapp:db:datasources');
-
-export type Datasource = {
-    _id?: ObjectId;
-    orgId?: ObjectId;
-    teamId?: ObjectId;
-    name: string; //airbyte
-    sourceId: string; //airbyte
-    sourceType: string; //airbyte
-    workspaceId: string; //airbyte
-};
 
 export function DatasourceCollection() {
 	return db.db().collection('datasources');
