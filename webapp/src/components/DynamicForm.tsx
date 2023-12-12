@@ -27,13 +27,7 @@ export default function DynamicForm({ spec }) {
 	};
 
 	const isFieldRequired = (fieldName) => {
-		return spec.connectionSpecification.required.includes(fieldName);
-	};
-
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		console.log(formData);
-		// Process form data here
+		return spec?.connectionSpecification?.required?.includes(fieldName);
 	};
 
 	const fieldTooltip = (field) => {
@@ -51,7 +45,7 @@ export default function DynamicForm({ spec }) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-4'>
+		<>
 			{spec.connectionSpecification.properties && Object.keys(spec.connectionSpecification.properties).map((key) => {
 				const field = spec.connectionSpecification.properties[key];
 				if (!field.const //filter out consts
@@ -105,6 +99,6 @@ export default function DynamicForm({ spec }) {
 			<button type='submit' className='inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'>
 				Submit
 			</button>
-		</form>
+		</>
 	);
 }

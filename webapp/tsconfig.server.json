@@ -31,6 +31,9 @@
       "secret/*": [
         "lib/secret/*"
       ],
+      "airbyte/*": [
+        "lib/airbyte/*"
+      ],
       "styles/*": [
         "lib/styles/*"
       ],

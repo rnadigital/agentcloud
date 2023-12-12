@@ -31,6 +31,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	}
 
 	const [connectors, setConnectors] = useState([]);
+	const [connector, setConnector] = useState(null);
 	async function getConnectors() {
 		//TODO: change
 		fetch('https://connectors.airbyte.com/files/generated_reports/connector_registry_report.json')
@@ -69,38 +70,48 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	}
 
 	return (<>
-		<form onSubmit={datasourcePost}>
+
+		<Select
+			isClearable
+			isSearchable
+			loading={connectorOptions.length === 0}
+			primaryColor={'indigo'}
+			classNames={SelectClassNames}
+			value={connector}
+			onChange={(v: any) => {
+				console.log(v);
+				setConnector(v);
+				if (v) {
+					getSpecification(v.value);
+				} else {
+					setSpec(null);
+				}
+			}}
+			options={connectorOptions}
+			formatOptionLabel={data => {
+				return (<li
+					className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+						data.isSelected
+							? 'bg-blue-100 text-blue-500'
+							: 'dark:text-white'
+					}`}
+				>
+					{data.label}
+				</li>);
+			}}
+		/>
+
+		{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2 mt-4 border-t'>
+			<p>{}</p>
 			<input
 				type='hidden'
 				name='_csrf'
 				value={csrf}
 			/>
-
-			<Select
-				isClearable
-	            primaryColor={'indigo'}
-	            classNames={SelectClassNames}
-	            onChange={(v: any) => {
-					console.log(v);
-					getSpecification(v.value);
-            	}}
-	            options={connectorOptions}
-	            formatOptionLabel={data => {
-	                return (<li
-	                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-	                        data.isSelected
-	                            ? 'bg-blue-100 text-blue-500'
-	                            : 'dark:text-white'
-	                    }`}
-	                >
-	                    {data.label}
-	                </li>);
-	            }}
-	        />
 	        
-			{spec?.schema && <DynamicForm
+			<DynamicForm
 				spec={spec.schema}
-			/>}
+			/>
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
 				{!compact && <Link
@@ -116,7 +127,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 						Save
 				</button>
 			</div>
-		</form>
+		</form>}
 	</>);
 
 }

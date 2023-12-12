@@ -9,6 +9,7 @@ export type Team = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	members: ObjectId[],
+	airbyteWorkspaceId?: string;
 	name: string;
 }
 

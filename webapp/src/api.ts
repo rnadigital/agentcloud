@@ -129,8 +129,8 @@ export function editDatasource(datasourceId, body, dispatch, errorCallback, rout
 // Airbyte
 export function getSpecification(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
-			sourceDefinitionId: body.sourceDefinitionId,
-		}).toString();
+		sourceDefinitionId: body.sourceDefinitionId,
+	}).toString();
 	return ApiCall(`/${body.resourceSlug}/airbyte/specification?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
 

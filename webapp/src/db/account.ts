@@ -8,6 +8,7 @@ import { OAUTH_PROVIDER } from 'struct/oauth';
 type AccountTeam = {
 	id: ObjectId;
 	name: string;
+	airbyteWorkspaceId?: string;
 }
 
 type AccountOrg = {

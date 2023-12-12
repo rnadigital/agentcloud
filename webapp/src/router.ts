@@ -37,9 +37,9 @@ export default function router(server, app) {
 	const oauthRouter = Router({ mergeParams: true, caseSensitive: true });
 	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
 	oauthRouter.get('/github', useSession, useJWT, myPassport.authenticate('github'));
-	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', { scope: ['profile', 'email'] }));
-	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	server.use('/auth', useSession, myPassport.session(), oauthRouter);
 
 	// Body and query parsing middleware
