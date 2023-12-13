@@ -20,7 +20,7 @@ export default function DynamicForm({ spec }) {
 	const [oneOfState, setOneOfState] = useState(null);
 	const [arrayParamState, setArrayParamState] = useState(null);
 
-	const handleChange = (event, key, index = null) => {
+	const handleChange = (event, key, index=null) => {
 		if (index !== null) {
 			const updatedArray = [...formData[key]];
 			updatedArray[index] = { ...updatedArray[index], [event.target.name]: event.target.value };
@@ -81,20 +81,20 @@ export default function DynamicForm({ spec }) {
 			<div key={key} className='p-5 border m-4 me-0 rounded space-y-4'>
 				{formData[key] && formData[key].map((item, index) => (
 					<div key={index} className='ms-2 p-2 border-b'>
-						{renderFormFields(field.items.properties, field.items, false, true)}
+						{renderFormFields(field.items.properties, field.items, false, true, index)}
 						<button onClick={(e) => handleRemoveArrayItem(e, key, index)} className='mt-4 mb-2 rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'>
-Remove
+							Remove
 						</button>
 					</div>
 				))}
 				<button onClick={(e) => handleAddArrayItem(e, key)} className='rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600'>
-Add Item
+					Add Item
 				</button>
 			</div>
 		);
 	};
 
-	const renderInputField = (key, field, required = false) => {
+	const renderInputField = (key, field, required=false, index=null) => {
 		console.log(key, field);
 		switch (true) {
 			case (field.type === 'object' && field.oneOf != null):
@@ -112,7 +112,7 @@ Add Item
 						key={key}
 						id={key}
 						type='checkbox'
-						onChange={(e) => handleChange(e)}
+						onChange={(e) => handleChange(e, key, index)}
 						className='block p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'
 					/>
 				);
@@ -127,36 +127,36 @@ Add Item
 						type={field.type === 'integer' ? 'number' : 'text'}
 						rows={field.examples?.length > 0 && field.examples[0].startsWith('{') ? 5 : 1}
 						required={required}
-						onChange={(e) => handleChange(e)}
+						onChange={(e) => handleChange(e, key, index)}
 						className='block w-full p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'
 					/>
 				);
 		}
 	};
 
-	const renderFormFields = (properties, requiredParent=null, nested=false, hideOptional=false) => {
+	const renderFormFields = (properties, requiredParent=null, isNested=false, isArray=false, index=null) => {
 		const isFieldRequired = (fieldName) => {
 			return (requiredParent||spec?.connectionSpecification)?.required?.includes(fieldName);
 		};
-		return <div className={nested ? 'p-5 border-l-4 border m-4 me-0 rounded' : ''}>
+		return <div className={isNested ? 'p-5 border-l-4 border m-4 me-0 rounded' : ''}>
 			{properties && Object.keys(properties).map((key) => {
 				const field = properties[key];
 				if (!field.const //filter out consts
-					&& (isFieldRequired(key) || nested)) { //only required
+					&& (isFieldRequired(key) || isNested)) { //only required
 					return (
 						<div key={key}>
 							<label htmlFor={key} className='select-none block text-sm font-medium text-gray-700'>
 								{field.title||key}
 								{fieldTooltip(field)}
 							</label>
-							{renderInputField(key, field, true)}
+							{renderInputField(key, field, true, index)}
 						</div>
 					);
 				}
 				return null;
 			})}
-			{!nested && <div className='space-y-4'>
-				{!hideOptional && <button type='button' onClick={handleToggleOptionalFields} className='mt-4 mb-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+			{!isNested && <div className='space-y-4'>
+				{!isArray && <button type='button' onClick={handleToggleOptionalFields} className='mt-4 mb-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					{showOptional ? 'Hide Optional Fields' : 'Show Optional Fields'}
 				</button>}
 				{showOptional && Object.keys(properties).map((key) => {
@@ -169,7 +169,7 @@ Add Item
 									{field.title||key}
 									{fieldTooltip(field)}
 								</label>
-								{renderInputField(key, field)}
+								{renderInputField(key, field, false, index)}
 							</div>
 						);
 					}
