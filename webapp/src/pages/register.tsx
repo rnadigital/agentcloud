@@ -114,7 +114,7 @@ export default function Register() {
 										className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
 									/>
 									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900 dark:text-slate-400'>
-                   						I agree to the <a href='https://www.agentcloud.dev/legal/terms' target='_blank' className='text-indigo-600'>terms of service</a> and <a href='https://www.agentcloud.dev/legal/privacy' target='_blank' className='text-indigo-600'>privacy policy</a>.
+                   						I agree to the <a href='https://www.agentcloud.dev/legal/terms' target='_blank' className='text-indigo-600' rel='noreferrer'>terms of service</a> and <a href='https://www.agentcloud.dev/legal/privacy' target='_blank' className='text-indigo-600' rel='noreferrer'>privacy policy</a>.
 									</label>
 								</div>
 							</div>
