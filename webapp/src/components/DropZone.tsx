@@ -16,8 +16,8 @@ export default function DropZone(props) {
 
 	const uploadFiles = async () => {
 		const formData = new FormData();
-		formData.set('resourceSlug', resourceSlug);
-		formData.set('_csrf', csrf);
+		formData.set('resourceSlug', resourceSlug as string);
+		formData.set('_csrf', csrf as string);
 		acceptedFiles.forEach(file => {
 			formData.append('file', file);
 		});
@@ -34,6 +34,7 @@ export default function DropZone(props) {
 		console.log(acceptedFiles);
 	}, []);
 
+	// @ts-ignore
 	const { isDragActive, getRootProps, getInputProps, isDragReject, acceptedFiles, rejectedFiles } = useDropzone({
 		onDrop,
 		minSize: 0,
