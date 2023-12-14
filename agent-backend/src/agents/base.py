@@ -1,11 +1,8 @@
-import openai
-from openai._exceptions import OpenAIError
-from canopy_server.models.v1.api_models import ChatDebugInfo
+from openai._exceptions import APIError
 import time
 import logging
 import random
 import autogen
-
 from utils.log_exception_context_manager import log_exception
 from init.mongo_session import start_mongo_session
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
@@ -14,6 +11,9 @@ from socketio.exceptions import DisconnectedError
 import json
 from build.build_group import ChatBuilder
 from messaging.send_message_to_socket import send
+import requests
+from pydantic import ValidationError
+from models.canopy_server import APIChatResponse, ChatRequest
 
 mongo_client = start_mongo_session()
 
@@ -38,33 +38,44 @@ def task_execution(task: str, session_id: str):
         logging.exception(e)
 
 
-def rag_execution(
+def call_canopy(chat: ChatRequest) -> APIChatResponse:
+    res = requests.post("", chat.model_dump())
+    try:
+        chat_response: APIChatResponse = APIChatResponse(**res.json())
+        return chat_response
+    except ValidationError as e:
+        return e
+
+
+def execute_rag(
         model,
         history,
         message,
         openai_api_key=None,
         api_base=None,
         stream=True,
-        print_debug_info=False,
 ):
     socket = SimpleClient()
 
     output = ""
     history += [{"role": "user", "content": message}]
-    client = openai.OpenAI(base_url=api_base, api_key=openai_api_key)
 
     start = time.time()
     try:
-        openai_response = client.chat.completions.create(
-            model=model, messages=history, stream=stream
+        request = ChatRequest(
+            model=model,
+            message=history,
+            stream=True
+        )
+        openai_response: APIChatResponse = call_canopy(
+            request
         )
     except (Exception,) as e:
-        err = e.http_body if isinstance(e, OpenAIError) else str(e)
+        err = e.body if isinstance(e, APIError) else str(e)
         msg = f"Oops... something went wrong. The error I got is: {err}"
         raise Exception(msg)
     end = time.time()
     duration_in_sec = end - start
-    # click.echo(click.style(f"\n {speaker}:\n", fg=speaker_color))
     first = True
     if stream:
         for chunk in openai_response:
@@ -74,27 +85,9 @@ def rag_execution(
             output += text
             send(socket, openai_response_id, "message", "Rag", text, first=first)
             first = False
-        # click.echo()
-        debug_info = ChatDebugInfo(
-            id=openai_response_id,
-            internal_model=internal_model,
-            duration_in_sec=round(duration_in_sec, 2),
-        )
     else:
-        internal_model = openai_response.model
         text = openai_response.choices[0].message.content or ""
-        output = text
         send(socket, "openai_response_id", "message", "Rag", text, first=first)
-        # click.echo(text, nl=False)
-        debug_info = ChatDebugInfo(
-            id=openai_response.id,
-            internal_model=internal_model,
-            duration_in_sec=duration_in_sec,
-            prompt_tokens=openai_response.usage.prompt_tokens,
-            generated_tokens=openai_response.usage.completion_tokens,
-        )
-    history += [{"role": "assistant", "content": output}]
-    return debug_info
 
 
 def init_socket_generate_group(task: str, session_id: str):
@@ -160,3 +153,7 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
             clear_history=True,
             message=team_task
         )
+
+
+if __name__ == "__main__":
+    execute_rag("gpt-4", [], "can you add up all the spend on R&D Expense")

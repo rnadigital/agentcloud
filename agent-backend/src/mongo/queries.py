@@ -6,7 +6,7 @@ from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from init.env_variables import BASE_PATH
-from models.config_models import ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
+from models.mongo import ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
 from typing import List, Dict, Union
 
 

@@ -4,7 +4,7 @@ from socketio.simple_client import SimpleClient
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 import autogen
 from typing import Optional, Union, List, Dict, Callable
-from models.config_models import AgentConfig
+from models.mongo import AgentConfig
 from importlib import import_module
 
 

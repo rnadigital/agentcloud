@@ -5,6 +5,7 @@ from messaging.client import consume_tasks
 from init.env_variables import MAX_THREADS
 from fastapi import FastAPI
 
+
 app = FastAPI()
 
 
@@ -16,3 +17,6 @@ async def startup_event():
         print("All threads are busy...will try again")
         time.sleep(10)
         await consume_tasks()
+
+
+

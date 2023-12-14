@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from agents.base import init_socket_generate_group, task_execution, rag_execution
+from agents.base import init_socket_generate_group, task_execution, execute_rag
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
@@ -19,7 +19,7 @@ async def process(job: Job, token: str):
             thread = threading.Thread(target=generate_team, args=[job.data])
             thread.start()
         case "execute_rag":
-            thread = threading.Thread(target=rag_execution, args=[job.data])
+            thread = threading.Thread(target=execute_rag, args=[job.data])
             thread.start()
     return True
 
