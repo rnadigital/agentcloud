@@ -101,8 +101,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 			}}
 		/>
 
-		{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2 mt-4 border-t'>
-			<p>{}</p>
+		{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2'>
 			<input
 				type='hidden'
 				name='_csrf'

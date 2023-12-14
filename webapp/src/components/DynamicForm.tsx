@@ -95,7 +95,6 @@ export default function DynamicForm({ spec }) {
 	};
 
 	const renderInputField = (key, field, required=false, index=null) => {
-		console.log(key, field);
 		switch (true) {
 			case (field.type === 'object' && field.oneOf != null):
 				return <>
@@ -113,7 +112,7 @@ export default function DynamicForm({ spec }) {
 						id={key}
 						type='checkbox'
 						onChange={(e) => handleChange(e, key, index)}
-						className='block p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'
+						className='p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'
 					/>
 				);
 			case field.type === 'string':
@@ -148,8 +147,8 @@ export default function DynamicForm({ spec }) {
 							<label htmlFor={key} className='select-none block text-sm font-medium text-gray-700'>
 								{field.title||key}
 								{fieldTooltip(field)}
+								{renderInputField(key, field, true, index)}
 							</label>
-							{renderInputField(key, field, true, index)}
 						</div>
 					);
 				}
