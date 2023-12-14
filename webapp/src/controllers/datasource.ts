@@ -117,7 +117,7 @@ export async function deleteDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteDatasourceById(req.params.resourceSlug, datasourceId);
+	// await deleteDatasourceById(req.params.resourceSlug, datasourceId);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 
@@ -202,6 +202,7 @@ export async function uploadFileApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: newDatasourceId.toString(), //TODO: form on frontend
+	    originalName: uploadedFile.name,
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
 	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??

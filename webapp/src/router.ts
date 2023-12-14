@@ -117,6 +117,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
 	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
 	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
+	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
 }
