@@ -12,6 +12,7 @@ import csrfMiddleware from './lib/middleware/auth/csrf';
 import homeRedirect from './lib/middleware/homeredirect';
 import myPassport from './lib/middleware/mypassport';
 import bodyParser from 'body-parser';
+import fileUpload from 'express-fileupload';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
@@ -46,6 +47,8 @@ export default function router(server, app) {
 	server.set('query parser', 'simple');
 	server.use(bodyParser.json({limit: '10mb'}));
 	server.use(bodyParser.urlencoded({ extended: false }));
+	// Default options for express-fileupload
+	server.use(fileUpload());
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
@@ -79,6 +82,7 @@ export default function router(server, app) {
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
 	teamRouter.get('/agents.json', agentController.agentsJson);
 	teamRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
+	teamRouter.get('/agent/:agentId([a-f0-9]{24}).json', agentController.agentJson);
 	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
 	teamRouter.get('/groups', groupController.groupsPage.bind(null, app));
 	teamRouter.get('/groups.json', groupController.groupsJson);
@@ -112,6 +116,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/group/add', groupController.addGroupApi);
 	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
 	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
 }

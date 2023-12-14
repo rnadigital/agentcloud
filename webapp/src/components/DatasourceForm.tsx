@@ -8,6 +8,7 @@ import * as API from '@api';
 import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
 import Select from 'react-tailwindcss-select';
+import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
@@ -70,6 +71,10 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	}
 
 	return (<>
+
+		<DropZone />
+
+		<div className='border-t my-4'></div>
 
 		<Select
 			isClearable

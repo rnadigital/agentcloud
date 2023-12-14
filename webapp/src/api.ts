@@ -134,6 +134,11 @@ export function getSpecification(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/airbyte/specification?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
 
+//Temp datasource stuff
+export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.get('resourceSlug')}/forms/datasource/upload`, 'POST', body, dispatch, errorCallback, router);
+}
+
 function buildOptions(_route, method, body) {
 
 	// Convert method uppercase
@@ -147,6 +152,20 @@ function buildOptions(_route, method, body) {
 		}
 	};
 	if (body != null) {
+
+		//TODO: remove/change
+		if (body instanceof FormData) {
+			//formdata upload for files
+			return {
+				redirect: 'manual',
+				method,
+				headers: {
+					'Authorization': `Bearer ${localStorage.getItem('_jwt') || ''}`
+				},
+				body,
+			};
+		}
+	
 		options.body = JSON.stringify(body);
 	}
 

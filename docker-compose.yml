@@ -53,6 +53,7 @@ services:
       - AIRBYTE_WEB_URL=http://localhost:8000
       - AIRBYTE_API_URL=http://localhost:8006
       - AIRBYTE_ADMIN_WORKSPACE_ID=
+      - AIRBYTE_ADMIN_DESTINATION_ID=
       - AIRBYTE_USERNAME=
       - AIRBYTE_PASSWORD=
 

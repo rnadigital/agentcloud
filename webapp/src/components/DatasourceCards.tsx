@@ -39,7 +39,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-slate-800 bg-gray-50 p-6'>
 						<ChatBubbleLeftIcon className='h-6 w-6' />
 						<Link
-							href={`/${resourceSlug}/datasource/${datasource._id}`}
+							href={`/${resourceSlug}/datasource/${datasource._id}/edit`}
 							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'
 						>
 							{datasource.name}

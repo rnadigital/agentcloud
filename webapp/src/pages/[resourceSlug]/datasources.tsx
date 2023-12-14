@@ -29,7 +29,7 @@ export default function Datasources(props) {
 			.then(res => res.json())
 			.then(json => setConnectorList(json));
 	}, []);
-	console.log('connectorList', connectorList);
+	console.log('datasources', datasources);
 
 	useEffect(() => {
 		fetchDatasources();
