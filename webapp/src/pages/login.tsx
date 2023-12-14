@@ -117,8 +117,8 @@ export default function Login() {
 
 							<div className='flex items-center justify-center'>
 								<div className='flex items-center'>
-									<label htmlFor='tos' className='ml-3 block text-sm leading-6 text-gray-900 dark:text-slate-400'>
-                   						By signing in, you agree to the <Link href='/tos' target='_blank' className='text-indigo-600'>terms of service</Link>.
+									<label htmlFor='tos' className='-mx-5 block text-sm leading-6 text-gray-900 dark:text-slate-400'>
+                   						By signing in, you agree to the <a href='https://www.agentcloud.dev/legal/terms' target='_blank' className='text-indigo-600' rel='noreferrer'>terms of service</a> and <a href='https://www.agentcloud.dev/legal/privacy' target='_blank' className='text-indigo-600' rel='noreferrer'>privacy policy</a>.
 									</label>
 								</div>
 							</div>

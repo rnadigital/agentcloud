@@ -12,6 +12,7 @@ import csrfMiddleware from './lib/middleware/auth/csrf';
 import homeRedirect from './lib/middleware/homeredirect';
 import myPassport from './lib/middleware/mypassport';
 import bodyParser from 'body-parser';
+import fileUpload from 'express-fileupload';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
@@ -25,6 +26,7 @@ import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
 import * as toolController from './controllers/tool';
 import * as datasourceController from './controllers/datasource';
+import * as airbyteProxyController from './controllers/airbyte';
 
 export default function router(server, app) {
 
@@ -36,15 +38,17 @@ export default function router(server, app) {
 	const oauthRouter = Router({ mergeParams: true, caseSensitive: true });
 	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
 	oauthRouter.get('/github', useSession, useJWT, myPassport.authenticate('github'));
-	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', { scope: ['profile', 'email'] }));
-	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect('/account'); });
+	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	server.use('/auth', useSession, myPassport.session(), oauthRouter);
 
 	// Body and query parsing middleware
 	server.set('query parser', 'simple');
 	server.use(bodyParser.json({limit: '10mb'}));
 	server.use(bodyParser.urlencoded({ extended: false }));
+	// Default options for express-fileupload
+	server.use(fileUpload());
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
@@ -69,6 +73,7 @@ export default function router(server, app) {
 
 	// Team endpoints
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
+	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
@@ -77,6 +82,7 @@ export default function router(server, app) {
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
 	teamRouter.get('/agents.json', agentController.agentsJson);
 	teamRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
+	teamRouter.get('/agent/:agentId([a-f0-9]{24}).json', agentController.agentJson);
 	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
 	teamRouter.get('/groups', groupController.groupsPage.bind(null, app));
 	teamRouter.get('/groups.json', groupController.groupsJson);
@@ -110,6 +116,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/group/add', groupController.addGroupApi);
 	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
 	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
 }

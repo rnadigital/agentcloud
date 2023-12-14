@@ -15,7 +15,7 @@ export default function EditAgent(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agent, credentials, tools } = state;
+	const { agent, credentials, tools, datasources } = state;
 
 	async function fetchAgentData() {
 		await API.getAgent({
@@ -42,7 +42,7 @@ export default function EditAgent(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
 		</div>
 
-		<AgentForm editing={true} agent={agent} credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentData} />
+		<AgentForm editing={true} agent={agent} datasources={datasources} credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentData} />
 
 	</>);
 }

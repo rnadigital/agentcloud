@@ -1,3 +1,5 @@
+'use strict';
+
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { addAccount, getAccountByOAuthOrEmail, Account, setAccountOauth } from '../db/account';
@@ -5,6 +7,7 @@ import { ObjectId } from 'mongodb';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { OAUTH_PROVIDER } from 'struct/oauth';
+import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import debug from 'debug';
 const log = debug('webapp:oauth');
 
@@ -44,6 +47,14 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 	log('githubCallback account', account);
 	if (!account) {
 		const newAccountId = new ObjectId();
+		let airbyteWorkspaceId = null;
+		if (process.env.AIRBYTE_USERNAME) {
+			const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+			const workspace = await workspaceApi.createWorkspace(null, {
+				name: newAccountId.toString(), // account _id stringified as workspace name
+			}).then(res => res.data);
+			airbyteWorkspaceId = workspace.workspaceId;
+		}
 		const addedOrg = await addOrg({
 			name: 'My Org',
 			teamIds: [],
@@ -53,6 +64,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 			name: 'My Team',
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
+			airbyteWorkspaceId,
 		});
 		const orgId = addedOrg.insertedId;
 		const teamId = addedTeam.insertedId;
@@ -66,12 +78,13 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 				name: 'My Org',
 				teams: [{
 					id: teamId,
-					name: 'My Team'
+					name: 'My Team',
+					airbyteWorkspaceId,
 				}]
 			}],
 			currentOrg: orgId,
 			currentTeam: teamId,
-			emailVerified: true, //redundant in oauth?
+			emailVerified: true,
 			oauth: {
 				[profile.provider as OAUTH_PROVIDER]: { id: profile.id },
 			},
@@ -99,6 +112,14 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 	const account: Account = await getAccountByOAuthOrEmail(profile.id, profile.provider, profile.email);
 	if (!account) {
 		const newAccountId = new ObjectId();
+		let airbyteWorkspaceId = null;
+		if (process.env.AIRBYTE_USERNAME) {
+			const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+			const workspace = await workspaceApi.createWorkspace(null, {
+				name: newAccountId.toString(), // account _id stringified as workspace name
+			}).then(res => res.data);
+			airbyteWorkspaceId = workspace.workspaceId;
+		}
 		const addedOrg = await addOrg({
 			name: 'My Org',
 			teamIds: [],
@@ -108,6 +129,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 			name: 'My Team',
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
+			airbyteWorkspaceId,
 		});
 		const orgId = addedOrg.insertedId;
 		const teamId = addedTeam.insertedId;
@@ -121,7 +143,8 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 				name: 'My Org',
 				teams: [{
 					id: teamId,
-					name: 'My Team'
+					name: 'My Team',
+					airbyteWorkspaceId,
 				}]
 			}],
 			currentOrg: orgId,

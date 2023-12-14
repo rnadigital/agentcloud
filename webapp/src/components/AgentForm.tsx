@@ -12,8 +12,8 @@ import SelectClassNames from 'styles/SelectClassNames';
 import CreateCredentialModal from '../components/CreateCredentialModal';
 import { AgentType } from 'struct/agent';
 
-export default function AgentForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
-	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
+export default function AgentForm({ agent = {}, credentials = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+	: { agent?: any, credentials?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -34,13 +34,13 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 	}).filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
 
-	//TODO:
-	// const initialDatasources = agent.datasourceIds && agent.datasourceIds.map(did => {
-	// 	const foundSource = datasources.find(d => d._id === did);
-	// 	if (!foundSource) { return null; }
-	// 	return { label: foundSource.name, value: foundSource._id };
-	// }).filter(t => t);
-	// const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
+	//TODO: improve
+	const initialDatasources = agent.datasourceIds && agent.datasourceIds.map(did => {
+		const foundSource = datasources.find(d => d._id === did);
+		if (!foundSource) { return null; }
+		return { label: foundSource.name, value: foundSource._id };
+	}).filter(t => t);
+	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
 	useEffect(() => {
 		if (credentials && credentials.length > 0 && !credentialId) {
@@ -63,7 +63,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 			credentialId: credentialId,
 			systemMessage: e.target.systemMessage.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
-			datasourceIds: [], //TODO
+			datasourceIds: datasourcesState ? datasourcesState.map(d => d.value) : [],
 		};
 		if (editing) {			
 			await API.editAgent(agentState._id, body, () => {
@@ -312,12 +312,12 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], grou
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
-						            value={/*TODO: datasourcesState*/[]}
+						            value={datasourcesState}
 						            onChange={(v: any) => {
 						            	console.log(v);
-						            	//setDatasourcesState(v);
+						            	setDatasourcesState(v);
 					            	}}
-						            options={/*TODO:*/[].map(t => ({ label: t.name, value: t._id }))}
+						            options={datasources.map(t => ({ label: t.name, value: t._id }))}
 						            formatOptionLabel={data => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${

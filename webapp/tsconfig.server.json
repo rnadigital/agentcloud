@@ -7,6 +7,9 @@
     "noEmit": false,
     "baseUrl": "./src",
     "paths": {
+      "@api": [
+        "api.ts"
+      ],
       "struct/*": [
         "lib/struct/*"
       ],
@@ -27,6 +30,9 @@
       ],
       "secret/*": [
         "lib/secret/*"
+      ],
+      "airbyte/*": [
+        "lib/airbyte/*"
       ],
       "styles/*": [
         "lib/styles/*"

@@ -34,7 +34,6 @@ import { SessionStatus } from './SessionCards';
 import OrgSelector from './OrgSelector';
 
 const noNavPages = [
-	'/tos',
 	'/login',
 	'/register',
 	'/changepassword',

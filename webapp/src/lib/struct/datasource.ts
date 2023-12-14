@@ -6,8 +6,10 @@ export type Datasource = {
     _id?: ObjectId;
     orgId?: ObjectId;
     teamId?: ObjectId;
-    name: string; //airbyte
-    sourceId: string; //airbyte
+    name: string;
     sourceType: string; //airbyte
+    sourceId: string; //airbyte
+    destinationId: string; //airbyte
+    connectionId: string; //airbyte
     workspaceId: string; //airbyte
 };

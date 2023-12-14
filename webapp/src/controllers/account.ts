@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import * as ses from '../lib/email/ses';
 import SecretKeys from '../lib/secret/secretkeys';
 import { getSecret } from '../lib/secret/secretmanager';
+import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import toObjectId from 'misc/toobjectid';
 
 export async function accountData(req, res, _next) {
@@ -89,15 +90,24 @@ export async function register(req, res) {
 	const emailVerified = amazonKey == null;
 
 	const newAccountId = new ObjectId();
+	let airbyteWorkspaceId = null;
+	if (process.env.AIRBYTE_USERNAME) {
+		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+		const workspace = await workspaceApi.createWorkspace(null, {
+			name: newAccountId.toString(), // account _id stringified as workspace name
+		}).then(res => res.data);
+		airbyteWorkspaceId = workspace.workspaceId;
+	}
 	const addedOrg = await addOrg({
 		name: 'My Org',
 		teamIds: [],
 		members: [newAccountId],
 	});
-	const addedTeam = await addTeam({
+	const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
 		name: 'My Team',
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
+		airbyteWorkspaceId,
 	});
 	const orgId = addedOrg.insertedId;
 	const teamId = addedTeam.insertedId;
@@ -112,7 +122,8 @@ export async function register(req, res) {
 				name: 'My Org',
 				teams: [{
 					id: teamId,
-					name: 'My Team'
+					name: 'My Team',
+					airbyteWorkspaceId,
 				}]
 			}],
 			currentOrg: orgId,

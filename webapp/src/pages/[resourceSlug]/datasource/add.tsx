@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import * as API from '../../../api';
-import AgentForm from '../../../components/AgentForm';
+import DatasourceForm from 'components/DatasourceForm';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../../../context/account';
+import { useAccountContext } from 'context/account';
 
-export default function AddAgent(props) {
+export default function AddDatasource(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -14,7 +14,7 @@ export default function AddAgent(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, credentials, tools, datasources } = state;
+	const { agents, credentials, tools } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -34,7 +34,7 @@ export default function AddAgent(props) {
 			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
-		<AgentForm datasources={datasources} credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+		<DatasourceForm />
 
 	</>);
 
