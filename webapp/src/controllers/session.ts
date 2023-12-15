@@ -104,7 +104,7 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { type, prompt }  = req.body;
+	let { rag, prompt }  = req.body;
 
 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -132,11 +132,12 @@ export async function addSessionApi(req, res, next) {
 
 	prompt = `${prompt}\n`;
 
+	const sessionType = rag == true ? SessionType.RAG : SessionType.TASK;
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    prompt,
-	 	type: SessionType.TASK,
+	 	type: sessionType,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
@@ -163,7 +164,7 @@ export async function addSessionApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		sessionId: addedSession.insertedId,
 		message,
-		type: SessionType.TASK,
+		type: sessionType,
 		authorId: null,
 		authorName: res.locals.account.name,
 		ts: now,
@@ -174,7 +175,7 @@ export async function addSessionApi(req, res, next) {
 		chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
 	});
 
-	taskQueue.add(SessionType.TASK, {
+	taskQueue.add(sessionType, {
 		task: prompt,
 		sessionId: addedSession.insertedId.toString(),
 	});

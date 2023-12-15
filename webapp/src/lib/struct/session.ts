@@ -10,6 +10,7 @@ export enum SessionStatus {
 export enum SessionType {
 	TEAM = 'generate_team',
 	TASK = 'execute_task',
+	RAG = 'execute_rag',
 }
 
 export enum FeedbackOption {

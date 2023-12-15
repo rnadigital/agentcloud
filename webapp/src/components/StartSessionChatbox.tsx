@@ -15,6 +15,9 @@ import { toast } from 'react-toastify';
 
 const sessionRadios = [
 	{ name: 'single', title: 'Single Agent' },
+	{ name: 'rag', title: 'Single Agent', badge: <span className='inline-flex items-center rounded-md bg-green-100 mx-1 px-2 py-1 text-xs font-medium text-green-700'>
+		+ RAG
+	</span> },
 	{ name: 'multi', title: 'Multi Agent', badge: <span className='inline-flex items-center rounded-md bg-blue-100 mx-1 px-2 py-1 text-xs font-medium text-blue-700'>
 		BETA
 	</span> },
@@ -41,6 +44,10 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			setOpen(true);
 			return null;
 		}
+		if (!selectedGroup?.value && !selectedAgent?.value) {
+			toast.error(`Please select ${sessionRadio === 'multi' ? 'a group' : 'an agent'} from the dropdown`);
+			return null;
+		}
 		const target = e.target.form ? e.target.form : e.target;
 		await API.addSession({
 			_csrf: target._csrf.value,
@@ -48,7 +55,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			prompt: target.prompt.value,
 			group: selectedGroup?.value,
 			agent: selectedAgent?.value,
-			type: sessionRadio,
+			rag: sessionRadio === 'rag',
 		}, null, setError, router);
 	}
 
@@ -98,10 +105,10 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<div>
-							<p className='text-sm'>Select your agent type</p>
+							<p className='text-sm'>Select your session type:</p>
 							<fieldset className='my-3'>
 								<legend className='sr-only'>Notification method</legend>
-								<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+								<div className='space-y-4'>
 									{sessionRadios.map((r) => (
 										<div key={r.name} className='flex items-center'>
 											<input
@@ -152,7 +159,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 								}}
 								options={agentOptions.concat([{ label: '+ Create new agent', value: null }])}
 							/>}
-						<label style={{ opacity: (selectedGroup||selectedAgent) ? '1' : '0' }} className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}
@@ -173,7 +180,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 								</div>
 							</div>
 						</label>
-						<div style={{ opacity: (selectedGroup||selectedAgent) ? '1' : '0' }} className='transition-all pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
+						<div className='transition-all pointer-events-none absolute inset-x-0 bottom-0 flex justify-end py-2 pl-2 pr-2'>
 							<div className='flex-shrink-0'>
 								<button
 									type='submit'
