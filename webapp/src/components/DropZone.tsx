@@ -1,9 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import * as API from '../api';
 import { useRouter } from 'next/router';
 import { useAccountContext } from 'context/account';
+import ButtonSpinner from 'components/ButtonSpinner';
 import { toast } from 'react-toastify';
+import getFileFormat from 'misc/getfileformat';
+import path from 'path';
 
 export default function DropZone(props) {
 
@@ -11,23 +14,29 @@ export default function DropZone(props) {
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-
 	const maxSize = 10*1024*1024;//10MB
+	const [loading, setLoading] = useState(false);
 
 	const uploadFiles = async () => {
-		const formData = new FormData();
-		formData.set('resourceSlug', resourceSlug as string);
-		formData.set('_csrf', csrf as string);
-		acceptedFiles.forEach(file => {
-			formData.append('file', file);
-		});
-		console.log(formData);
-		await API.uploadDatasourceFileTemp(formData, (res) => {
-			console.log(res);
-		}, (res) => {
-			console.error(res);
-		}, router);
-		
+		try {
+			setLoading(true);
+			const formData = new FormData();
+			formData.set('resourceSlug', resourceSlug as string);
+			formData.set('_csrf', csrf as string);
+			acceptedFiles.forEach(file => {
+				formData.append('file', file);
+			});
+			console.log(formData);
+			await API.uploadDatasourceFileTemp(formData, (res) => {
+				toast.success('Datasource created successfully');
+			}, (res) => {
+				toast.error(res);
+			}, router);
+		} catch (e) {
+			console.error(e);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const onDrop = useCallback(acceptedFiles => {
@@ -57,18 +66,20 @@ export default function DropZone(props) {
 				)}
 			</div>
 		</div>
-		
+
 		<ul className='space-y-4'>
 			{acceptedFiles.length > 0 && acceptedFiles.map((acceptedFile, ai) => (
 				<li key={`acceptedFile_${ai}`} className='text-white bg-green-600 border-green-700 border rounded p-2'>
-					{acceptedFile.name} ({acceptedFile.size} bytes)
+					{acceptedFile.name} ({getFileFormat(path.extname(acceptedFile.name)) || 'Unknown type'}, {acceptedFile.size} bytes)
 				</li>
 			))}
 			<button
 				onClick={uploadFiles}
+				disabled={loading}
 				type='submit'
 				className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 			>
+				{loading && <ButtonSpinner />}
 				Upload
 			</button>
 		</ul>

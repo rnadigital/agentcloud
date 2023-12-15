@@ -8,6 +8,7 @@ export type Datasource = {
     teamId?: ObjectId;
     name: string;
     originalName: string;
+    gcsFilename: string;
     sourceType: string; //airbyte
     sourceId: string; //airbyte
     destinationId: string; //airbyte

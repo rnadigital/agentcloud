@@ -5,7 +5,7 @@ import {
 	EllipsisHorizontalIcon,
 	PlayIcon,
 	ArrowPathIcon,
-	ChatBubbleLeftIcon,
+	DocumentIcon,
 } from '@heroicons/react/20/solid';
 import * as API from '../api';
 import { useRouter } from 'next/router';
@@ -37,13 +37,13 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 			{datasources.map((datasource) => (
 				<li key={datasource._id} className='rounded-xl border border-gray-200 dark:border-slate-600'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-slate-800 bg-gray-50 p-6'>
-						<ChatBubbleLeftIcon className='h-6 w-6' />
+						<DocumentIcon className='h-6 w-6' />
 						<Link
 							href={`/${resourceSlug}/datasource/${datasource._id}/edit`}
 							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'
 						>
 							{datasource.originalName}
-							<span className='inline-flex items-center rounded-md bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-700/10'>
+							<span className='ms-2 inline-flex items-center rounded-md bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-700/10'>
 								{datasource.sourceType}
 							</span>
 						</Link>

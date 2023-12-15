@@ -26,7 +26,7 @@ export async function uploadFile(filename: string, uploadedFile: any) { //TODO: 
 			},
 		});
 		stream.on('error', (err) => {
-			log('Error:', err);
+			log('File upload error:', err);
 			rej(err);
 		});
 		stream.on('finish', () => {
@@ -37,10 +37,10 @@ export async function uploadFile(filename: string, uploadedFile: any) { //TODO: 
 	});
 }
 
-async function deleteFile(bucket: string, filePath: string, generation?: string) {
+export async function deleteFile(filename: string) {
+	log('Deleting file %s', filename);
 	const file = initialiseCloudStorageClient()
-		.bucket(bucket)
-		.file(filePath);
-	const options = generation? { ifGenerationMatch: generation } : {};
-	await file.delete(options);
+		.bucket('agentcloud-test') //TODO: env
+		.file(filename);
+	await file.delete({});
 }

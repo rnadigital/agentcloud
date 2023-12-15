@@ -4,7 +4,7 @@ import { getDatasourcesByTeam, addDatasource, getDatasourceById, deleteDatasourc
 import { dynamicResponse } from '../util';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
-import { uploadFile } from 'lib/google/gcs';
+import { uploadFile, deleteFile } from 'lib/google/gcs';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getFileFormat from 'misc/getfileformat';
 import convertStringToJsonl from 'misc/converttojsonl';
@@ -111,14 +111,49 @@ export async function editDatasourceApi(req, res, next) {
 */
 export async function deleteDatasourceApi(req, res, next) {
 
-	const { datasourceId } = req.body;
-
-	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length !== 24) {
+	if (!req.params.datasourceId || typeof req.params.datasourceId !== 'string' || req.params.datasourceId.length !== 24) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	// await deleteDatasourceById(req.params.resourceSlug, datasourceId);
+	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
 
+	// Run a reset job in airbyte
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+	const jobBody = {
+		connectionId: datasource.connectionId,
+		jobType: 'reset',
+	};
+	const resetJob = await jobsApi
+		.createJob(null, jobBody)
+		.then(res => res.data);
+	console.log('resetJob', resetJob);
+
+	// Delete the source file in GCS if this is a file
+	if (datasource.sourceType === 'file') { //TODO: make an enum?
+		await deleteFile(datasource.gcsFilename);
+	}
+
+	// Delete the connection in airbyte
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionBody = {
+		connectionId: datasource.connectionId,
+	};
+	const deletedConnection = await connectionsApi
+		.deleteConnection(connectionBody, connectionBody)
+		.then(res => res.data);
+	
+	// Delete the source in airbyte
+	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+	const sourceBody = {
+		sourceId: datasource.sourceId,
+	};
+	const deletedSource = await sourcesApi
+		.deleteSource(sourceBody, sourceBody)
+		.then(res => res.data);
+
+	// Delete the datasourcein the db
+	await deleteDatasourceById(req.params.resourceSlug, datasourceId);
+	
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 
 }
@@ -201,7 +236,8 @@ export async function uploadFileApi(req, res, next) {
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
-	    name: newDatasourceId.toString(), //TODO: form on frontend
+	    name: newDatasourceId.toString(),
+	    gcsFilename: filename,
 	    originalName: uploadedFile.name,
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
