@@ -1,7 +1,4 @@
-from pprint import pprint
-
 from openai._exceptions import APIError
-import time
 import logging
 import random
 import autogen
@@ -66,16 +63,16 @@ def rag_execution(
         try:
             if stream:
                 openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
-                                                request.model_dump_json(), stream=True)
-                for chunk in openai_response.iter_lines(decode_unicode=True):
-                    pprint(chunk)
-                    json_string = chunk.strip('data: ')
-                    # Parse the JSON string into a dictionary
-                    chunk_dict = json.loads(json_string)
-                    text = chunk_dict.get("choices")[0].get("delta").get("content") or ""
+                                                request.model_dump_json(), stream=True).iter_lines(decode_unicode=True)
+                for chunk in openai_response:
+                    if chunk.startswith("data: "):
+                        chunk = chunk.strip("data: ")
+                        chunk = json.loads(chunk)
+                        text = chunk.get("choices")[0].get("delta").get("content") or ""
+                    else:
+                        text = chunk
                     output += text
                     send(socket, session_id, "message", "Rag", text, first=first)
-                    # pprint(chunk.json())
                     first = False
             else:
                 openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
@@ -87,7 +84,7 @@ def rag_execution(
             msg = f"Oops... something went wrong. The error I got is: {err}"
             raise Exception(msg)
         send(socket, session_id, "message_complete", "Rag", output, first=first, single=True)
-
+        return True
         # return output
     except Exception as e:
         logging.exception(e)
