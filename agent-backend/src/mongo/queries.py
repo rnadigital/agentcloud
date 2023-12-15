@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from init.env_variables import BASE_PATH
 from models.mongo import ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any, Optional
 
 
 class MongoClientConnection(MongoConnection):
@@ -134,9 +134,14 @@ class MongoClientConnection(MongoConnection):
             logging.exception(e)
 
     # TODO we need to store chat history in the correct format to align with LLM return
-    def get_chat_history(self, session_id: str) -> List[str]:
+    def get_chat_history(self, session_id: str) -> Optional[List[dict[str, Union[str, Any]]]]:
+        self.db = self._get_db
         chat_collection: collection.Collection = self._get_collection("chat")
         chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
-        messages = [m.get("message").get("message").get("text") for m in chat_messages if chat_messages is not None]
-        if messages and len(messages) > 0:
-            return messages
+        if chat_messages:
+            messages = [{"role": f"{'user' if m.get('message').get('incoming') else 'assistant'}",
+                         "content": m.get("message").get("message").get("text")} for m in chat_messages]
+            if messages and len(messages) > 0:
+                return messages
+
+        return []

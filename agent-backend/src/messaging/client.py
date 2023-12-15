@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from agents.base import init_socket_generate_group, task_execution, execute_rag
+from agents.base import init_socket_generate_group, task_execution, rag_execution
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
@@ -53,3 +53,10 @@ def execute_task(data: dict):
         task = data.get("task")
         session_id = data.get("sessionId")
         task_execution(task, session_id)
+
+
+def execute_rag(data: dict):
+    with log_exception():
+        task = data.get("task")
+        session_id = data.get("sessionId")
+        rag_execution(task, session_id)

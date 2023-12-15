@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from openai._exceptions import APIError
 import time
 import logging
@@ -12,8 +14,7 @@ import json
 from build.build_group import ChatBuilder
 from messaging.send_message_to_socket import send
 import requests
-from pydantic import ValidationError
-from models.canopy_server import APIChatResponse, ChatRequest
+from models.canopy_server import ChatRequest
 
 mongo_client = start_mongo_session()
 
@@ -38,56 +39,59 @@ def task_execution(task: str, session_id: str):
         logging.exception(e)
 
 
-def call_canopy(chat: ChatRequest) -> APIChatResponse:
-    res = requests.post("", chat.model_dump())
-    try:
-        chat_response: APIChatResponse = APIChatResponse(**res.json())
-        return chat_response
-    except ValidationError as e:
-        return e
-
-
-def execute_rag(
-        model,
-        history,
-        message,
-        openai_api_key=None,
-        api_base=None,
-        stream=True,
+def rag_execution(
+        message: str,
+        session_id: str,
+        model: str = "gpt-4",
+        stream: bool = True
 ):
-    socket = SimpleClient()
-
-    output = ""
-    history += [{"role": "user", "content": message}]
-
-    start = time.time()
     try:
+        # session = mongo_client.get_session(session_id)
+        socket = SimpleClient()
+        custom_headers = {
+            'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
+        }
+        socket.connect(url=SOCKET_URL, headers=custom_headers)
+        socket.emit("join_room", f"_{session_id}")
+        history = mongo_client.get_chat_history(session_id)
+        output = ""
+        history += [{"role": "user", "content": message}]
+
+        first = True
         request = ChatRequest(
             model=model,
-            message=history,
-            stream=True
+            messages=history,
+            stream=stream
         )
-        openai_response: APIChatResponse = call_canopy(
-            request
-        )
-    except (Exception,) as e:
-        err = e.body if isinstance(e, APIError) else str(e)
-        msg = f"Oops... something went wrong. The error I got is: {err}"
-        raise Exception(msg)
-    end = time.time()
-    duration_in_sec = end - start
-    first = True
-    if stream:
-        for chunk in openai_response:
-            openai_response_id = chunk.id
-            internal_model = chunk.model
-            text = chunk.choices[0].delta.content or ""
-            output += text
-            send(socket, openai_response_id, "message", "Rag", text, first=first)
-            first = False
-    else:
-        text = openai_response.choices[0].message.content or ""
-        send(socket, "openai_response_id", "message", "Rag", text, first=first)
+        try:
+            if stream:
+                openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
+                                                request.model_dump_json(), stream=True)
+                for chunk in openai_response.iter_lines(decode_unicode=True):
+                    pprint(chunk)
+                    json_string = chunk.strip('data: ')
+                    # Parse the JSON string into a dictionary
+                    chunk_dict = json.loads(json_string)
+                    text = chunk_dict.get("choices")[0].get("delta").get("content") or ""
+                    output += text
+                    send(socket, session_id, "message", "Rag", text, first=first)
+                    # pprint(chunk.json())
+                    first = False
+            else:
+                openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
+                                                request.model_dump_json()).json()
+                output = openai_response.get("choices")[0].get("message").get("content") or ""
+                send(socket, session_id, "message", "Rag", output, first=first)
+        except (Exception,) as e:
+            err = e.body if isinstance(e, APIError) else str(e)
+            msg = f"Oops... something went wrong. The error I got is: {err}"
+            raise Exception(msg)
+        send(socket, session_id, "message_complete", "Rag", output, first=first, single=True)
+
+        # return output
+    except Exception as e:
+        logging.exception(e)
+        raise e
 
 
 def init_socket_generate_group(task: str, session_id: str):
@@ -156,4 +160,4 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
 
 
 if __name__ == "__main__":
-    execute_rag("gpt-4", [], "can you add up all the spend on R&D Expense")
+    rag_execution("gpt-4", [], "can you add up all the spend on R&D Expense")
