@@ -117,6 +117,10 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
 
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
 	// Run a reset job in airbyte
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 	const jobBody = {
@@ -152,9 +156,11 @@ export async function deleteDatasourceApi(req, res, next) {
 		.then(res => res.data);
 
 	// Delete the datasourcein the db
-	await deleteDatasourceById(req.params.resourceSlug, datasourceId);
+	await deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
 	
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
 }
 
