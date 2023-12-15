@@ -12,6 +12,7 @@ from build.build_group import ChatBuilder
 from messaging.send_message_to_socket import send
 import requests
 from models.canopy_server import ChatRequest
+from uuid import uuid4
 
 mongo_client = start_mongo_session()
 
@@ -53,6 +54,7 @@ def rag_execution(
         history = mongo_client.get_chat_history(session_id)
         output = ""
         history += [{"role": "user", "content": message}]
+        message_uuid = str(uuid4())
 
         first = True
         request = ChatRequest(
@@ -64,6 +66,7 @@ def rag_execution(
             if stream:
                 openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
                                                 request.model_dump_json(), stream=True).iter_lines(decode_unicode=True)
+                total_tokens = 0
                 for chunk in openai_response:
                     if chunk.startswith("data: "):
                         chunk = chunk.strip("data: ")
@@ -72,18 +75,28 @@ def rag_execution(
                     else:
                         text = chunk
                     output += text
-                    send(socket, session_id, "message", "Rag", text, first=first)
+                    send(
+                        socket,
+                        session_id,
+                        "message",
+                        "Rag",
+                        text,
+                        message_uuid,
+                        1,
+                        first=first
+                    )
                     first = False
+                    total_tokens += 1
             else:
                 openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
                                                 request.model_dump_json()).json()
                 output = openai_response.get("choices")[0].get("message").get("content") or ""
-                send(socket, session_id, "message", "Rag", output, first=first)
+                send(socket, session_id, "message", "Rag", output, message_id=message_uuid, first=first)
         except (Exception,) as e:
             err = e.body if isinstance(e, APIError) else str(e)
             msg = f"Oops... something went wrong. The error I got is: {err}"
             raise Exception(msg)
-        send(socket, session_id, "message_complete", "Rag", output, first=first, single=True)
+        send(socket, session_id, "message_complete", "Rag", output, message_id=message_uuid, tokens=total_tokens)
         return True
         # return output
     except Exception as e:
