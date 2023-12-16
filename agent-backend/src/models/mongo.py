@@ -106,16 +106,3 @@ class Datasource(BaseModel):
     workspaceId: str
     connectionId: str
     destinationId: str
-
-
-# class ChatDebugInfo(BaseModel):
-#     id: str
-#     duration_in_sec: float
-#     internal_model: str
-#     prompt_tokens: Optional[int] = None
-#     generated_tokens: Optional[int] = None
-#
-#     def to_text(
-#         self,
-#     ):
-#         return self.model_dump()

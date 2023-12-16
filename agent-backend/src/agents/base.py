@@ -13,6 +13,8 @@ from messaging.send_message_to_socket import send
 import requests
 from models.canopy_server import ChatRequest
 from uuid import uuid4
+from autogen.token_count_utils import count_token
+from models.sockets import SocketMessage, SocketEvents
 
 mongo_client = start_mongo_session()
 
@@ -44,7 +46,6 @@ def rag_execution(
         stream: bool = True
 ):
     try:
-        # session = mongo_client.get_session(session_id)
         socket = SimpleClient()
         custom_headers = {
             'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
@@ -62,11 +63,13 @@ def rag_execution(
             messages=history,
             stream=stream
         )
+        total_tokens = 0
         try:
             if stream:
-                openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
-                                                request.model_dump_json(), stream=True).iter_lines(decode_unicode=True)
-                total_tokens = 0
+                openai_response = requests.post(
+                    "http://127.0.0.1:8000/v1/chat/completions",
+                    request.model_dump_json(), stream=True
+                ).iter_lines(decode_unicode=True)
                 for chunk in openai_response:
                     if chunk.startswith("data: "):
                         chunk = chunk.strip("data: ")
@@ -74,31 +77,58 @@ def rag_execution(
                         text = chunk.get("choices")[0].get("delta").get("content") or ""
                     else:
                         text = chunk
-                    output += text
-                    send(
-                        socket,
-                        session_id,
-                        "message",
-                        "Rag",
-                        text,
-                        message_uuid,
-                        1,
+                    print(text)
+                    total_tokens += 1
+                    msg = SocketMessage(
+                        room=session_id,
+                        message=text,
+                        chunkId=message_uuid,
+                        tokens=total_tokens,
                         first=first
                     )
+                    send(
+                        socket,
+                        SocketEvents.MESSAGE,
+                        msg
+                    )
+                    output += text
                     first = False
-                    total_tokens += 1
             else:
-                openai_response = requests.post("http://127.0.0.1:8000/v1/chat/completions",
-                                                request.model_dump_json()).json()
+                openai_response = requests.post(
+                    "http://127.0.0.1:8000/v1/chat/completions",
+                    request.model_dump_json()
+                ).json()
                 output = openai_response.get("choices")[0].get("message").get("content") or ""
-                send(socket, session_id, "message", "Rag", output, message_id=message_uuid, first=first)
+                prompt_tokens = count_token(history, model)
+                msg = SocketMessage(
+                    room=session_id,
+                    message=output,
+                    chunkId=message_uuid,
+                    delta_tokens=prompt_tokens,
+                    single=True,
+                    first=first
+                )
+                send(
+                    socket,
+                    SocketEvents.MESSAGE,
+                    msg
+                )
         except (Exception,) as e:
             err = e.body if isinstance(e, APIError) else str(e)
             msg = f"Oops... something went wrong. The error I got is: {err}"
             raise Exception(msg)
-        send(socket, session_id, "message_complete", "Rag", output, message_id=message_uuid, tokens=total_tokens)
-        return True
-        # return output
+        prompt_tokens = count_token(history, model)
+        msg = SocketMessage(
+            room=session_id,
+            message=output,
+            chunkId=message_uuid,
+            delta_tokens=prompt_tokens,
+        )
+        send(
+            socket,
+            SocketEvents.MESSAGES_COMPLETE,
+            msg
+        )
     except Exception as e:
         logging.exception(e)
         raise e
