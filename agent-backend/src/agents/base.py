@@ -81,6 +81,7 @@ def rag_execution(
                     msg = SocketMessage(
                         room=session_id,
                         message=text,
+                        authorName="Rag",
                         chunkId=message_uuid,
                         tokens=total_tokens,
                         first=first
@@ -120,6 +121,7 @@ def rag_execution(
         msg = SocketMessage(
             room=session_id,
             message=output,
+            authorName="Rag",
             chunkId=message_uuid,
             delta_tokens=prompt_tokens,
         )
@@ -131,7 +133,8 @@ def rag_execution(
         send(socket, SocketEvents.MESSAGE, SocketMessage(
             room=session_id,
             chunkId=str(uuid4()),
-            message="Rag agent is awaiting you feedback",
+            authorName="System",
+            message="Rag agent is awaiting you feedback...",
             isFeedback=True
         ))
         feedback = socket.receive()

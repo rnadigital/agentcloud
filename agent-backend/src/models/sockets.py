@@ -21,6 +21,7 @@ class SocketMessage(BaseModel):
     message: str
     chunkId: Optional[str] = None
     codeBlock: Optional[List[str]] = None
+    authorName: Optional[str] = None
     tokens: Optional[int] = None
     deltaTokens: Optional[int] = None
     first: Optional[bool] = False
