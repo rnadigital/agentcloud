@@ -77,7 +77,6 @@ def rag_execution(
                         text = chunk.get("choices")[0].get("delta").get("content") or ""
                     else:
                         text = chunk
-                    print(text)
                     total_tokens += 1
                     msg = SocketMessage(
                         room=session_id,
@@ -129,6 +128,14 @@ def rag_execution(
             SocketEvents.MESSAGES_COMPLETE,
             msg
         )
+        send(socket, SocketEvents.MESSAGE, SocketMessage(
+            room=session_id,
+            chunkId=str(uuid4()),
+            message="Rag agent is awaiting you feedback",
+            isFeedback=True
+        ))
+        feedback = socket.receive()
+        print(feedback)
     except Exception as e:
         logging.exception(e)
         raise e
