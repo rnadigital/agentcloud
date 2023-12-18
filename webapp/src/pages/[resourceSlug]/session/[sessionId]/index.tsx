@@ -82,7 +82,7 @@ export default function Session(props) {
 			// There are existing messages
 			const matchingMessage = oldMessages.find(m => m?.message?.chunkId === message?.message?.chunkId
 				&& m?.authorName === message?.authorName);
-			if (matchingMessage) {				
+			if (matchingMessage && message?.incoming !== true) {
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (matchingMessage?.chunks||[{ ts: 0, chunk: matchingMessage.message.text || '' }])
 					.concat([newChunk])
