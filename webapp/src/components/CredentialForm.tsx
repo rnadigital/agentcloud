@@ -28,8 +28,8 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 			resourceSlug,
 			name: e.target.name.value,
 			platform: e.target.platform.value,
-			key: e.target.key.value,
-			endpointURL: e.target.endpointURL.value,
+			key: e.target?.key?.value,
+			endpointURL: e.target?.endpointURL?.value,
 		};
 		if (editing) {
 			//NOTE: no edit api for creds yet or maybe ever

@@ -68,9 +68,15 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 		if (editing) {			
 			await API.editAgent(agentState._id, body, () => {
 				toast.success('Agent Updated');
-			}, setError, null);
+			}, (res) => {
+				toast.error(res);
+			}, null);
 		} else {
-			const addedAgent: any = await API.addAgent(body, null, setError, compact ? null : router);
+			const addedAgent: any = await API.addAgent(body, () => {
+				toast.success('Added new agent');
+			}, (res) => {
+				toast.error(res);
+			}, compact ? null : router);
 			callback && addedAgent && callback(addedAgent._id);
 		}
 	}

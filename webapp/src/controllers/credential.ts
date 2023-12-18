@@ -73,9 +73,9 @@ export async function addCredentialApi(req, res, next) {
 	const { name, platform, key, endpointURL }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !key || typeof key !== 'string' || key.length === 0
 		|| !platform || typeof platform !== 'string' || platform.length === 0 || !CredentialPlatforms.includes(platform as CredentialPlatform)
-		/*TODO: endpointUrl*/) {
+		|| (platform === CredentialPlatform.LMSTUDIO && (!endpointURL || typeof endpointURL !== 'string' || endpointURL.length === 0))
+		|| (platform !== CredentialPlatform.LMSTUDIO && (!key || typeof key !== 'string' || key.length === 0))) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 

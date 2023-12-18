@@ -103,7 +103,6 @@ export async function addAgentApi(req, res, next) {
 	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
 		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
 		|| !type || typeof type !== 'string' || type.length === 0
 		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
@@ -119,6 +118,8 @@ export async function addAgentApi(req, res, next) {
 	}
 
 	//TODO: fetch datasources by id and compare length like ^ to ensure valid
+
+	//TODO: fetch credential by credentialId and validate, also check if the `model` in body is valid else reject
 
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
