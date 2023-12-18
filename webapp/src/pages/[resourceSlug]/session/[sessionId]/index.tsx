@@ -68,9 +68,9 @@ export default function Session(props) {
 		log('Received terminate message %s', message);
 		setTerminated(true);
 	}
-	console.log('lastSeenMessageId', lastSeenMessageId);
+	// console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
-		console.log('Received chat message %O', JSON.stringify(message, null, 2));
+		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) {return;}
 		if (isAtBottom) {
 			setLastSeenMessageId(message._id);
