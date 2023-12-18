@@ -143,11 +143,13 @@ export function initSocket(rawHttpServer) {
 				return log('socket.id "%s" message invalid session %s', socket.id, finalMessage.room);
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
-			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage.message.tokens };
+			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage?.message?.tokens };
 			if (finalMessage.message.first === false) {
 				//This is a previous message that is returning in chunks
 				await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
-				await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+				if (chunk?.tokens != null && chunk?.tokens > 0) {
+					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
+				}
 				//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
 				//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
 			} else {
@@ -162,7 +164,7 @@ export function initSocket(rawHttpServer) {
 					ts: finalMessage.ts || messageTimestamp,
 					isFeedback: finalMessage?.isFeedback || false,
 					chunkId: finalMessage.message.chunkId || null,
-					tokens: finalMessage?.message.tokens || 0,
+					tokens: finalMessage?.message?.tokens || 0,
 					displayMessage: finalMessage?.displayMessage || null,
 					chunks: finalMessage?.message?.single ? [] : [chunk],
 				});
@@ -204,8 +206,10 @@ export function initSocket(rawHttpServer) {
 			}
 			if (data?.message?.text) {
 				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks, data.message.deltaTokens || 0);
-				const updatedSession = await unsafeIncrementTokens(data.room, data.message.deltaTokens || 0);
-				io.to(data.room).emit('tokens', updatedSession.tokensUsed);
+				if (data?.message?.deltaTokens != null && data?.message?.deltaTokens > 0) {
+					const updatedSession = await unsafeIncrementTokens(data.room, data.message.deltaTokens);
+					io.to(data.room).emit('tokens', updatedSession.tokensUsed);
+				}
 			}
 		});
 
