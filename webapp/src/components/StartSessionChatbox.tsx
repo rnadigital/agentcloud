@@ -78,17 +78,25 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		setModalOpen(false);
 	}, [agents, groups]);
 
-	const groupOptions = groups.filter(g => {
-		return g.adminAgent && g.agents.length > 0;
-	}).map(g => ({
-		label: g.name,
-		value: g._id,
-	}));
+	const groupOptions = groups
+		.filter(g => {
+			return g.adminAgent && g.agents.length > 0;
+		}).map(g => ({
+			label: g.name,
+			value: g._id,
+		}));
 
-	const agentOptions = agents.map(a => ({
-		label: a.name,
-		value: a._id,
-	}));
+	const ragAgentOptions = agents
+		.filter(a => a?.datasourceIds?.length > 0)
+		.map(a => ({
+			label: a.name,
+			value: a._id,
+		}));
+	const agentOptions = agents
+		.map(a => ({
+			label: a.name,
+			value: a._id,
+		}));
 
 	return (<div className='flex flex-col mb-10'>
 
@@ -96,7 +104,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			Start a new chat session:
 		</div>
 
-		{sessionRadio === 'single'
+		{sessionRadio !== 'multi'
 			? <CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={callback} />
 			: <CreateGroupModal open={modalOpen} setOpen={setModalOpen} callback={callback} />}
 
@@ -157,7 +165,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 									}
 									setSelectedAgent(e);
 								}}
-								options={agentOptions.concat([{ label: '+ Create new agent', value: null }])}
+								options={(sessionRadio === 'rag' ? ragAgentOptions : agentOptions).concat([{ label: '+ Create new agent', value: null }])}
 							/>}
 						<label className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>

@@ -250,13 +250,14 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 												type='radio'
 												value={AgentType.ASSISTANT_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={type === AgentType.ASSISTANT_AGENT}
+												defaultChecked={!editing || type === AgentType.ASSISTANT_AGENT}
 											/>
 										</div>
 										<div className='text-sm leading-6'>
 											<label htmlFor='assistant-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
 							                    Assistant Agent
 												<p className='font-medium text-gray-500'>Assistant agent, designed to solve a task with LLM.</p>
+												<p className='font-bold text-gray-500'>Select this if you are using RAG or running a single agent session.</p>
 											</label>
 										</div>
 									</div>
@@ -266,7 +267,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 
 						<div className='sm:col-span-12'>
 							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Tools
+								Tools (Optional)
 							</label>
 							<div className='mt-2'>
 								<Select
@@ -304,7 +305,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 
 						<div className='sm:col-span-12'>
 							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Datasources
+								Datasources (Optional)
 							</label>
 							<div className='mt-2'>
 								<Select
