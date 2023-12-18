@@ -8,9 +8,6 @@ from models.canopy import Messages, Query, MessageBase
 from sse_starlette.sse import EventSourceResponse
 
 
-# TODO: consider separating these into modules: Chat, Context, Application, etc.
-
-
 class ChatRequest(BaseModel):
     model: str = Field(
         default="",

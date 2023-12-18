@@ -79,7 +79,7 @@ class AgentConfig(BaseModel):
     use_sockets: Optional[bool] = True
     socket_client: Any = None
     sid: str = None
-    datasourceIds: Optional[List[PyObjectId]] = Field(alias="_id", default=None)
+    # datasourceIds: Optional[List[PyObjectId]] = Field(alias="_id", default=None)
 
 
 class AgentTypes(str, Enum):

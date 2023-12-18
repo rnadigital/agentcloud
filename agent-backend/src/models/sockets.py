@@ -16,12 +16,10 @@ class MessageType(Enum):
     CODE = "code"
 
 
-class SocketMessage(BaseModel):
-    room: str
-    message: str
+class Message(BaseModel):
+    text: str
     chunkId: Optional[str] = None
     codeBlock: Optional[List[str]] = None
-    authorName: Optional[str] = None
     tokens: Optional[int] = None
     deltaTokens: Optional[int] = None
     first: Optional[bool] = False
@@ -29,6 +27,12 @@ class SocketMessage(BaseModel):
     isFeedback: Optional[bool] = False
     type: Optional[MessageType] = MessageType.TEXT.value
     timestamp: Optional[float] = datetime.now().timestamp() * 1000
+
+
+class SocketMessage(BaseModel):
+    room: str
+    authorName: Optional[str]
+    message: Message
 
     def json(self, **kwargs):
         # Convert the model to a dictionary and replace enum with its value

@@ -1,3 +1,6 @@
+from datetime import datetime
+from pprint import pprint
+
 from openai._exceptions import APIError
 import logging
 import random
@@ -14,7 +17,7 @@ import requests
 from models.canopy_server import ChatRequest
 from uuid import uuid4
 from autogen.token_count_utils import count_token
-from models.sockets import SocketMessage, SocketEvents
+from models.sockets import SocketMessage, SocketEvents, Message
 
 mongo_client = start_mongo_session()
 
@@ -54,91 +57,109 @@ def rag_execution(
         socket.emit("join_room", f"_{session_id}")
         history = mongo_client.get_chat_history(session_id)
         output = ""
-        history += [{"role": "user", "content": message}]
-        message_uuid = str(uuid4())
-
-        first = True
-        request = ChatRequest(
-            model=model,
-            messages=history,
-            stream=stream
-        )
         total_tokens = 0
-        try:
-            if stream:
-                openai_response = requests.post(
-                    "http://127.0.0.1:8000/v1/chat/completions",
-                    request.model_dump_json(), stream=True
-                ).iter_lines(decode_unicode=True)
-                for chunk in openai_response:
-                    if chunk.startswith("data: "):
-                        chunk = chunk.strip("data: ")
-                        chunk = json.loads(chunk)
-                        text = chunk.get("choices")[0].get("delta").get("content") or ""
-                    else:
-                        text = chunk
-                    total_tokens += 1
+        while True:
+            try:
+                history += [{"role": "user", "content": message}]
+                if total_tokens > 0:
+                    feedback = socket.receive()
+                    history = [{"role": "user", "content": feedback[1]}]
+                pprint(history)
+                message_uuid = str(uuid4())
+
+                first = True
+                request = ChatRequest(
+                    model=model,
+                    messages=history,
+                    stream=stream
+                )
+                if stream:
+                    openai_response = requests.post(
+                        "http://127.0.0.1:8000/v1/chat/completions",
+                        request.model_dump_json(), stream=True
+                    ).iter_lines(decode_unicode=True)
+                    for chunk in openai_response:
+                        if chunk.startswith("data: "):
+                            chunk = chunk.strip("data: ")
+                            chunk = json.loads(chunk)
+                            text = chunk.get("choices")[0].get("delta").get("content") or ""
+                        else:
+                            text = chunk
+                        total_tokens += 1
+                        msg = SocketMessage(
+                            room=session_id,
+                            authorName="Rag",
+                            message=Message(
+                                text=text,
+                                chunkId=message_uuid,
+                                tokens=total_tokens,
+                                first=first,
+                                timestamp= datetime.now().timestamp() * 1000
+
+                            )
+                        )
+                        send(
+                            socket,
+                            SocketEvents.MESSAGE,
+                            msg
+                        )
+                        output += text
+                        first = False
+                else:
+                    openai_response = requests.post(
+                        "http://127.0.0.1:8000/v1/chat/completions",
+                        request.model_dump_json()
+                    ).json()
+                    output = openai_response.get("choices")[0].get("message").get("content") or ""
+                    prompt_tokens = count_token(history, model)
                     msg = SocketMessage(
                         room=session_id,
-                        message=text,
                         authorName="Rag",
-                        chunkId=message_uuid,
-                        tokens=total_tokens,
-                        first=first
+                        message=Message(
+                            text=output,
+                            chunkId=message_uuid,
+                            delta_tokens=prompt_tokens,
+                            single=True,
+                            first=first,
+                            timestamp=datetime.now().timestamp() * 1000
+
+                        )
                     )
                     send(
                         socket,
                         SocketEvents.MESSAGE,
                         msg
                     )
-                    output += text
-                    first = False
-            else:
-                openai_response = requests.post(
-                    "http://127.0.0.1:8000/v1/chat/completions",
-                    request.model_dump_json()
-                ).json()
-                output = openai_response.get("choices")[0].get("message").get("content") or ""
-                prompt_tokens = count_token(history, model)
-                msg = SocketMessage(
-                    room=session_id,
-                    message=output,
+            except (Exception,) as e:
+                err = e.body if isinstance(e, APIError) else str(e)
+                msg = f"Oops... something went wrong. The error I got is: {err}"
+                raise Exception(msg)
+            prompt_tokens = count_token(history, model)
+            msg = SocketMessage(
+                room=session_id,
+                authorName="Rag",
+                message=Message(
+                    text=output,
                     chunkId=message_uuid,
                     delta_tokens=prompt_tokens,
-                    single=True,
-                    first=first
+                    timestamp=datetime.now().timestamp() * 1000
                 )
-                send(
-                    socket,
-                    SocketEvents.MESSAGE,
-                    msg
+            )
+            send(
+                socket,
+                SocketEvents.MESSAGES_COMPLETE,
+                msg
+            )
+            send(socket, SocketEvents.MESSAGE, SocketMessage(
+                room=session_id,
+                authorName="System",
+                message=Message(
+                    text="Rag agent is awaiting you feedback...",
+                    chunkId=str(uuid4()),
+                    isFeedback=True,
+                    timestamp=datetime.now().timestamp() * 1000
                 )
-        except (Exception,) as e:
-            err = e.body if isinstance(e, APIError) else str(e)
-            msg = f"Oops... something went wrong. The error I got is: {err}"
-            raise Exception(msg)
-        prompt_tokens = count_token(history, model)
-        msg = SocketMessage(
-            room=session_id,
-            message=output,
-            authorName="Rag",
-            chunkId=message_uuid,
-            delta_tokens=prompt_tokens,
-        )
-        send(
-            socket,
-            SocketEvents.MESSAGES_COMPLETE,
-            msg
-        )
-        send(socket, SocketEvents.MESSAGE, SocketMessage(
-            room=session_id,
-            chunkId=str(uuid4()),
-            authorName="System",
-            message="Rag agent is awaiting you feedback...",
-            isFeedback=True
-        ))
-        feedback = socket.receive()
-        print(feedback)
+            ))
     except Exception as e:
         logging.exception(e)
         raise e
