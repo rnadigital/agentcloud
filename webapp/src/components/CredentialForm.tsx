@@ -6,6 +6,7 @@ import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
+import { CredentialPlatform } from 'struct/credential';
 
 export default function CredentialForm({ credential = {}, editing, compact=false, callback }
 	: { credential?: any, editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any type
@@ -28,6 +29,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 			name: e.target.name.value,
 			platform: e.target.platform.value,
 			key: e.target.key.value,
+			endpointURL: e.target.endpointURL.value,
 		};
 		if (editing) {
 			//NOTE: no edit api for creds yet or maybe ever
@@ -88,13 +90,14 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 								})}
 							>
 								<option disabled value=''>Select a platform...</option>
-								<option value='open_ai'>OpenAI</option>
-								<option value='azure'>Azure</option>
+								<option value={CredentialPlatform.OPENAI}>OpenAI</option>
+								<option value={CredentialPlatform.AZURE}>Azure</option>
+								<option value={CredentialPlatform.LMSTUDIO}>LMStudio</option>
 							</select>
 						</div>
 					</div>
 
-					<div className='sm:col-span-12'>
+					{platform !== CredentialPlatform.LMSTUDIO && <div className='sm:col-span-12'>
 						<label htmlFor='key' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Key
 						</label>
@@ -107,16 +110,18 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
-					</div>
+					</div>}
 
-					{platform === 'azure' && <div className='sm:col-span-12'>
+					{platform !== CredentialPlatform.OPENAI && <div className='sm:col-span-12'>
 						<label htmlFor='endpointURL' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Endpoint URL
 						</label>
 						<div className='mt-2'>
 							<input
 								required
-								type='test'
+								defaultValue='http://localhost:1234/v1'
+								placeholder='http://localhost:1234/v1'
+								type='text'
 								name='endpointURL'
 								id='endpointURL'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'

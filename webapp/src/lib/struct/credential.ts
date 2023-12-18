@@ -4,6 +4,7 @@
 export enum CredentialPlatform {
 	OPENAI = 'open_ai',
 	AZURE = 'azure',
+	LMSTUDIO = 'lmstudio',
 	BEARER_TOKEN = 'bearer',
 	OAUTH = 'oauth',
 	//TODO: more

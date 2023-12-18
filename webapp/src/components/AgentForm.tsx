@@ -160,7 +160,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						        />
 							</div>
 						</div>
-						{credentialId && <div className='sm:col-span-12'>
+						{credentialId && foundCredential && ModelList[foundCredential.platform]?.length > 0 && <div className='sm:col-span-12'>
 							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Model
 							</label>
