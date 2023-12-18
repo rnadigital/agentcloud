@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import getFileFormat from 'misc/getfileformat';
 import path from 'path';
 
-export default function DropZone(props) {
+export default function DropZone({ setFiles, files }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -26,7 +26,6 @@ export default function DropZone(props) {
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);
 			});
-			console.log(formData);
 			await API.uploadDatasourceFileTemp(formData, (res) => {
 				toast.success('Datasource created successfully');
 			}, (res) => {
@@ -39,12 +38,12 @@ export default function DropZone(props) {
 		}
 	};
 
-	const onDrop = useCallback(acceptedFiles => {
-		console.log(acceptedFiles);
-	}, []);
+	const onDrop = useCallback(newAcceptedFiles => {
+		setFiles(newAcceptedFiles);
+	}, [files]);
 
 	// @ts-ignore
-	const { isDragActive, getRootProps, getInputProps, isDragReject, acceptedFiles, rejectedFiles } = useDropzone({
+	let { isDragActive, getRootProps, getInputProps, isDragReject, acceptedFiles, rejectedFiles } = useDropzone({
 		onDrop,
 		minSize: 0,
 		maxSize,
@@ -69,16 +68,25 @@ export default function DropZone(props) {
 			</div>
 
 			<ul className='space-y-4'>
-				{acceptedFiles.length > 0 && acceptedFiles.map((acceptedFile, ai) => (
+				{files?.length > 0 && files.map((acceptedFile, ai) => (
 					<li key={`acceptedFile_${ai}`} className='text-white bg-green-600 border-green-700 border rounded p-2'>
 						{acceptedFile.name} ({getFileFormat(path.extname(acceptedFile.name)) || 'Unknown type'}, {acceptedFile.size} bytes)
+						<button
+							type='button'
+							onClick={() => {
+								setFiles(null);
+							}}
+							className='text-red-500 hover:text-red-700'
+						>
+							Remove
+						</button>
 					</li>
 				))}
 				<button
 					onClick={uploadFiles}
-					disabled={loading}
+					disabled={loading || !files}
 					type='submit'
-					className='w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
 					{loading && <ButtonSpinner />}
 					Upload

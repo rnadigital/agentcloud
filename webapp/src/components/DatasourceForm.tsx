@@ -22,6 +22,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState();
+	const [files, setFiles] = useState(null);
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
@@ -73,19 +74,19 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	return (<div className='xs:p-5 xs:my-10 sm:p-20 sm:my-20'>
 
 		{!spec?.schema && <>
-			<DropZone />
-
-			<div className='relative my-20'>
-				<div className='absolute inset-0 flex items-center' aria-hidden='true'>
-					<div className='w-full border-t border-gray-200' />
-				</div>
-				<div className='relative flex justify-center text-sm font-bold leading-6'>
-					<span className='bg-white px-6 text-gray-900'>OR select a data source:</span>
-				</div>
-			</div>
+			<DropZone files={files} setFiles={setFiles} />
 		</>}
 
-		<span className='flex'>
+		{!files && !spec?.schema && <div className='relative my-20'>
+			<div className='absolute inset-0 flex items-center' aria-hidden='true'>
+				<div className='w-full border-t border-gray-200' />
+			</div>
+			<div className='relative flex justify-center text-sm font-bold leading-6'>
+				<span className='bg-white px-6 text-gray-900'>OR select a data source:</span>
+			</div>
+		</div>}
+
+		{!files && <span className='flex'>
 			<div className='w-full sm:w-1/2 m-auto'>
 				<Select
 					isClearable
@@ -144,7 +145,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					</div>
 				</form>}
 			</div>
-		</span>
+		</span>}
 
 	</div>);
 
