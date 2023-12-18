@@ -34,6 +34,10 @@ export default function AddDatasource(props) {
 			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
+		<div className='border-b pb-2 my-2'>
+			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
+		</div>
+
 		<DatasourceForm />
 
 	</>);

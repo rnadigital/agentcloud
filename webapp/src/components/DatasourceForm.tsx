@@ -70,68 +70,82 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		}
 	}
 
-	return (<>
+	return (<div className='xs:p-5 xs:my-10 sm:p-20 sm:my-20'>
 
-		<DropZone />
+		{!spec?.schema && <>
+			<DropZone />
 
-		<div className='border-t my-4'></div>
-
-		<Select
-			isClearable
-			isSearchable
-			loading={connectorOptions.length === 0}
-			primaryColor={'indigo'}
-			classNames={SelectClassNames}
-			value={connector}
-			onChange={(v: any) => {
-				console.log(v);
-				setConnector(v);
-				if (v) {
-					getSpecification(v.value);
-				} else {
-					setSpec(null);
-				}
-			}}
-			options={connectorOptions}
-			formatOptionLabel={data => {
-				return (<li
-					className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						data.isSelected
-							? 'bg-blue-100 text-blue-500'
-							: 'dark:text-white'
-					}`}
-				>
-					{data.label}
-				</li>);
-			}}
-		/>
-
-		{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2'>
-			<input
-				type='hidden'
-				name='_csrf'
-				value={csrf}
-			/>
-	        
-			<DynamicForm
-				spec={spec.schema}
-			/>
-
-			<div className='mt-6 flex items-center justify-between gap-x-6'>
-				{!compact && <Link
-					className='text-sm font-semibold leading-6 text-gray-900'
-					href={`/${resourceSlug}/datasources`}
-				>
-					Back
-				</Link>}
-				<button
-					type='submit'
-					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-				>
-						Save
-				</button>
+			<div className='relative my-20'>
+				<div className='absolute inset-0 flex items-center' aria-hidden='true'>
+					<div className='w-full border-t border-gray-200' />
+				</div>
+				<div className='relative flex justify-center text-sm font-bold leading-6'>
+					<span className='bg-white px-6 text-gray-900'>OR select a data source:</span>
+				</div>
 			</div>
-		</form>}
-	</>);
+		</>}
+
+		<span className='flex'>
+			<div className='w-full sm:w-1/2 m-auto'>
+				<Select
+					isClearable
+					isSearchable
+					loading={connectorOptions.length === 0}
+					primaryColor={'indigo'}
+					classNames={SelectClassNames}
+					value={connector}
+					onChange={(v: any) => {
+						console.log(v);
+						setConnector(v);
+						if (v) {
+							getSpecification(v.value);
+						} else {
+							setSpec(null);
+						}
+					}}
+					options={connectorOptions}
+					formatOptionLabel={data => {
+						return (<li
+							className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+								data.isSelected
+									? 'bg-blue-100 text-blue-500'
+									: 'dark:text-white'
+							}`}
+						>
+							{data.label}
+						</li>);
+					}}
+				/>
+
+				{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2'>
+					<input
+						type='hidden'
+						name='_csrf'
+						value={csrf}
+					/>
+			        
+					<DynamicForm
+						spec={spec.schema}
+					/>
+
+					<div className='mt-6 flex items-center justify-between gap-x-6'>
+						{!compact && <Link
+							className='text-sm font-semibold leading-6 text-gray-900'
+							href={`/${resourceSlug}/datasources`}
+						>
+							Back
+						</Link>}
+						<button
+							type='submit'
+							className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+						>
+								Save
+						</button>
+					</div>
+				</form>}
+			</div>
+		</span>
+
+	</div>);
 
 }
