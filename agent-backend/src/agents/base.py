@@ -56,9 +56,10 @@ def rag_execution(
         socket.connect(url=SOCKET_URL, headers=custom_headers)
         socket.emit("join_room", f"_{session_id}")
         history = mongo_client.get_chat_history(session_id)
-        output = ""
         total_tokens = 0
+        agent_name = "Retriever"
         while True:
+            output = ""
             try:
                 history += [{"role": "user", "content": message}]
                 if total_tokens > 0:
@@ -88,13 +89,13 @@ def rag_execution(
                         total_tokens += 1
                         msg = SocketMessage(
                             room=session_id,
-                            authorName="Rag",
+                            authorName=agent_name,
                             message=Message(
                                 text=text,
                                 chunkId=message_uuid,
                                 tokens=total_tokens,
                                 first=first,
-                                timestamp= datetime.now().timestamp() * 1000
+                                timestamp=datetime.now().timestamp() * 1000
 
                             )
                         )
@@ -114,7 +115,7 @@ def rag_execution(
                     prompt_tokens = count_token(history, model)
                     msg = SocketMessage(
                         room=session_id,
-                        authorName="Rag",
+                        authorName=agent_name,
                         message=Message(
                             text=output,
                             chunkId=message_uuid,
@@ -137,7 +138,7 @@ def rag_execution(
             prompt_tokens = count_token(history, model)
             msg = SocketMessage(
                 room=session_id,
-                authorName="Rag",
+                authorName=agent_name,
                 message=Message(
                     text=output,
                     chunkId=message_uuid,
@@ -153,10 +154,12 @@ def rag_execution(
             send(socket, SocketEvents.MESSAGE, SocketMessage(
                 room=session_id,
                 authorName="System",
+                isFeedback=True,
                 message=Message(
-                    text="Rag agent is awaiting you feedback...",
+                    text="Rag agent is awaiting your feedback...",
+                    first=True,
+                    single=True,
                     chunkId=str(uuid4()),
-                    isFeedback=True,
                     timestamp=datetime.now().timestamp() * 1000
                 )
             ))
