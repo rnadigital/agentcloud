@@ -143,12 +143,12 @@ beautifulsoup4 = "*"
 
 [[package]]
 name = "bullmq"
-version = "1.22.0"
+version = "1.23.0"
 description = "BullMQ for Python"
 optional = false
 python-versions = ">=3.10.0"
 files = [
-    {file = "bullmq-1.22.0.tar.gz", hash = "sha256:999210c7fa59ea47e5bc89ba7eb921199034ae307a377c40f489c8fa09340e69"},
+    {file = "bullmq-1.23.0.tar.gz", hash = "sha256:e7c9c3fec25b96adb2c563dace2cf7b2d37f5991c829f90a53a6e15e1b5b0b2f"},
 ]
 
 [package.dependencies]
@@ -1815,4 +1815,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "336db8dac2c1ef142caa5969e21d0e99ed1c18004a85e483c56cbea08a5ca640"
+content-hash = "87f85eb1e29b02bba5e84c048c95466b08bfba60770516db8bf0f3a54185132a"
