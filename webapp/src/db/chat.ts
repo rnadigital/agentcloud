@@ -82,7 +82,7 @@ export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId:
 			chunks: chunk,
 		},
 		$inc: {
-			tokens: chunk.tokens,
+			tokens: chunk.tokens || 0,
 		}
 	});
 }
@@ -98,7 +98,7 @@ export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: str
 			completed: true,
 		},
 		$inc: {
-			tokens: tokens,
+			tokens: tokens || 0,
 		}
 	};
 	return ChatCollection().updateOne({

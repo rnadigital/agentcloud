@@ -79,20 +79,18 @@ export default function Session(props) {
 			? { type: null, text: message }
 			: message;
 		setMessages(oldMessages => {
-			if (!message.incoming
-				&& oldMessages[oldMessages.length-1]
-				&& message?.message?.chunkId === oldMessages[oldMessages.length-1]?.message?.chunkId
-				&& message?.authorName === oldMessages[oldMessages.length-1]?.authorName) {
-				// console.log('oldmessage', oldMessages[oldMessages.length-1].chunks)
+			// There are existing messages
+			const matchingMessage = oldMessages.find(m => m?.message?.chunkId === message?.message?.chunkId
+				&& m?.authorName === message?.authorName);
+			if (matchingMessage) {				
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
-				const newChunks = (oldMessages[oldMessages.length-1]?.chunks||[{ ts: 0, chunk: oldMessages[oldMessages.length-1].message.text || '' }])
+				const newChunks = (matchingMessage?.chunks||[{ ts: 0, chunk: matchingMessage.message.text || '' }])
 					.concat([newChunk])
 					.sort((ma, mb) => ma.ts - mb.ts);
-				oldMessages[oldMessages.length-1].chunks = newChunks;
-				oldMessages[oldMessages.length-1].message.text = newChunks.map(c => c.chunk).join('');
+				matchingMessage.chunks = newChunks;
+				matchingMessage.message.text = newChunks.map(c => c.chunk).join('');
 				return [...oldMessages];
 			}
-			// debugger;
 			return oldMessages
 				.concat([newMessage])
 				.sort((ma, mb) => ma.ts - mb.ts);
