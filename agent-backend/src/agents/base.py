@@ -87,22 +87,21 @@ def rag_execution(
                         else:
                             text = chunk
                         total_tokens += 1
-                        msg = SocketMessage(
-                            room=session_id,
-                            authorName=agent_name,
-                            message=Message(
-                                text=text,
-                                chunkId=message_uuid,
-                                tokens=total_tokens,
-                                first=first,
-                                timestamp=datetime.now().timestamp() * 1000
-
-                            )
-                        )
                         send(
                             socket,
                             SocketEvents.MESSAGE,
-                            msg
+                            SocketMessage(
+                                room=session_id,
+                                authorName=agent_name,
+                                message=Message(
+                                    text=text,
+                                    chunkId=message_uuid,
+                                    tokens=total_tokens,
+                                    first=first,
+                                    timestamp=datetime.now().timestamp() * 1000
+
+                                )
+                            )
                         )
                         output += text
                         first = False
@@ -112,44 +111,40 @@ def rag_execution(
                         request.model_dump_json()
                     ).json()
                     output = openai_response.get("choices")[0].get("message").get("content") or ""
-                    prompt_tokens = count_token(history, model)
-                    msg = SocketMessage(
-                        room=session_id,
-                        authorName=agent_name,
-                        message=Message(
-                            text=output,
-                            chunkId=message_uuid,
-                            delta_tokens=prompt_tokens,
-                            single=True,
-                            first=first,
-                            timestamp=datetime.now().timestamp() * 1000
-
-                        )
-                    )
                     send(
                         socket,
                         SocketEvents.MESSAGE,
-                        msg
+                        SocketMessage(
+                            room=session_id,
+                            authorName=agent_name,
+                            message=Message(
+                                text=output,
+                                chunkId=message_uuid,
+                                delta_tokens=count_token(history, model),
+                                single=True,
+                                first=first,
+                                timestamp=datetime.now().timestamp() * 1000
+
+                            )
+                        )
                     )
             except (Exception,) as e:
                 err = e.body if isinstance(e, APIError) else str(e)
                 msg = f"Oops... something went wrong. The error I got is: {err}"
                 raise Exception(msg)
-            prompt_tokens = count_token(history, model)
-            msg = SocketMessage(
-                room=session_id,
-                authorName=agent_name,
-                message=Message(
-                    text=output,
-                    chunkId=message_uuid,
-                    delta_tokens=prompt_tokens,
-                    timestamp=datetime.now().timestamp() * 1000
-                )
-            )
             send(
                 socket,
                 SocketEvents.MESSAGES_COMPLETE,
-                msg
+                SocketMessage(
+                    room=session_id,
+                    authorName=agent_name,
+                    message=Message(
+                        text=output,
+                        chunkId=message_uuid,
+                        deltaTokens=count_token(history, model),
+                        timestamp=datetime.now().timestamp() * 1000
+                    )
+                )
             )
             send(socket, SocketEvents.MESSAGE, SocketMessage(
                 room=session_id,
