@@ -7,9 +7,14 @@ import { useRouter } from 'next/router';
 import * as API from '@api';
 import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
+import getConnectors from 'airbyte/getconnectors';
 import Select from 'react-tailwindcss-select';
 import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
+const TailwindForm = dynamic(() => import('components/rjsf'), {
+	ssr: false,
+});
+import validator from '@rjsf/validator-ajv8';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
@@ -34,40 +39,44 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
-	async function getConnectors() {
-		//TODO: change
-		fetch('https://connectors.airbyte.com/files/generated_reports/connector_registry_report.json')
-			.then(response => response.json())
-			.then(data => setConnectors(data))
-			.catch(e => {
-				setConnectors([]);
-				console.error(e);
-			});
-	}
 	useEffect(() => {
-		getConnectors();
+		getConnectors()
+			.then(json => setConnectors(json))
+			.catch(e => {
+				toast.error('Failed to fetch source connector list');
+				setConnectors([]);
+			});
 	}, []);
 	const connectorOptions = connectors ? Object.keys(connectors)
 		.filter(key => connectors[key]?.connector_type === 'source')
 		.map(key => ({
 		  value: connectors[key]?.definitionId,
 		  label: connectors[key]?.name_oss || 'test',
+		  icon: connectors[key]?.iconUrl_oss,
 		})) : [];
 
 	async function datasourcePost(e) {
-		e.preventDefault();
 		const body = {
-			_csrf: e.target._csrf.value,
+			...e.formData,
+			_csrf: csrf,
+			connectorId: connector.value,
+			connectorName: connector.label,
 			resourceSlug,
-			//TODO
 		};
+
+		console.log(JSON.stringify(body, null, 2));
+
 		if (editing) {			
 			// await API.editAgent(agentState._id, body, () => {
 			// 	toast.success('Agent Updated');
 			// }, setError, null);
 		} else {
-			// const addedAgent: any = await API.addAgent(body, null, setError, compact ? null : router);
-			// callback && addedAgent && callback(addedAgent._id);
+			const addedDatasource: any = await API.addDatasource(body, () => {
+				toast.success('Added datasource');
+			}, (res) => {
+				toast.error(res);
+			}, compact ? null : router);
+			callback && addedAgent && callback(addedAgent._id);
 		}
 	}
 
@@ -96,7 +105,6 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					classNames={SelectClassNames}
 					value={connector}
 					onChange={(v: any) => {
-						console.log(v);
 						setConnector(v);
 						if (v) {
 							getSpecification(v.value);
@@ -113,37 +121,26 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 									: 'dark:text-white'
 							}`}
 						>
-							{data.label}
+							<span>
+								{data.icon && <img
+									src={data.icon}
+									loading='lazy'
+									className='inline-flex me-2 w-4 h-4'
+								/>}
+								{data.label}
+							</span>
 						</li>);
 					}}
 				/>
 
-				{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2'>
-					<input
-						type='hidden'
-						name='_csrf'
-						value={csrf}
-					/>
-			        
-					<DynamicForm
-						spec={spec.schema}
-					/>
+				{spec?.schema && <TailwindForm
+					schema={spec.schema.connectionSpecification}
+					validator={validator}
+					onSubmit={datasourcePost}
+					transformErrors={() => {return [] /*Disable internal validation for now*/}}
+					noHtml5Validate
+				/>}
 
-					<div className='mt-6 flex items-center justify-between gap-x-6'>
-						{!compact && <Link
-							className='text-sm font-semibold leading-6 text-gray-900'
-							href={`/${resourceSlug}/datasources`}
-						>
-							Back
-						</Link>}
-						<button
-							type='submit'
-							className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-						>
-								Save
-						</button>
-					</div>
-				</form>}
 			</div>
 		</span>}
 

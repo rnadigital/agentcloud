@@ -13,7 +13,10 @@ import { readFileSync } from 'fs';
 import toObjectId from 'misc/toobjectid';
 import { promisify } from 'util';
 import { PDFExtract } from 'pdf.js-extract';
+import getConnectors from 'airbyte/getconnectors';
 const pdfExtract = new PDFExtract();
+import Ajv from 'ajv';
+const ajv = new Ajv({ strict: "log" });
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
@@ -84,12 +87,86 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { name /* TODO */ }  = req.body;
+	const { connectorId, connectorName }  = req.body;
 
-	//TODO: form validation
-	
-	//TODO: addDatasource
+	const connectorList = await getConnectors();
+	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
+	if (!submittedConnector) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
+	}
+	const spec = submittedConnector.spec_oss.connectionSpecification;
 
+	console.log(spec);
+	const validate = ajv.compile(spec);
+	const x = validate(req.body);
+	console.log(x, validate.errors);
+
+	const newDatasourceId = new ObjectId();
+
+	return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+
+/*
+	// File is uploaded, create source in airbyte
+	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+	const sourceBody = {
+		configuration: {
+			sourceType: 'file', //TODO:
+			dataset_name: newDatasourceId.toString(),
+		},
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
+		name: newDatasourceId.toString()
+	};
+	const createdSource = await sourcesApi
+		.createSource(null, sourceBody)
+		.then(res => res.data);
+	console.log('createdSource', createdSource);
+
+	// Create a connection to our destination in airbyte
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionBody = {
+		schedule: {scheduleType: 'manual'},
+		dataResidency: 'auto',
+		namespaceDefinition: 'destination',
+		namespaceFormat: null,
+		nonBreakingSchemaUpdatesBehavior: 'ignore',
+		name: createdSource.sourceId,
+		sourceId: createdSource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+		status: 'active'
+	};
+	const createdConnection = await connectionsApi
+		.createConnection(null, connectionBody)
+		.then(res => res.data);
+	console.log('createdConnection', createdConnection);
+
+	// Create a job to trigger the connection to sync
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+	const jobBody = {
+		connectionId: createdConnection.connectionId,
+		jobType: 'sync',
+	};
+	const createdJob = await jobsApi
+		.createJob(null, jobBody)
+		.then(res => res.data);
+	console.log('createdJob', createdJob);
+
+	//Create the actual datasource in the db
+	await addDatasource({
+	    _id: newDatasourceId,
+	    orgId: toObjectId(res.locals.matchingOrg.id),
+	    teamId: toObjectId(req.params.resourceSlug),
+	    name: newDatasourceId.toString(),
+	    gcsFilename: null,
+	    originalName: null, //TODO?
+	    sourceId: createdSource.sourceId,
+	    connectionId: createdConnection.connectionId,
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+	    sourceType: 'TODO',
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace
+	});
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
+*/
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
 }
