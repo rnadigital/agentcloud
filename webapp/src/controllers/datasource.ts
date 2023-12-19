@@ -11,6 +11,10 @@ import convertStringToJsonl from 'misc/converttojsonl';
 import path from 'path';
 import { readFileSync } from 'fs';
 import toObjectId from 'misc/toobjectid';
+import { promisify } from 'util';
+import { PDFExtract } from 'pdf.js-extract';
+const pdfExtract = new PDFExtract();
+const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
@@ -174,9 +178,37 @@ export async function uploadFileApi(req, res, next) {
 
 	const uploadedFile = req.files.file;
 	let fileExtension = path.extname(uploadedFile.name);
-	if (fileExtension === '.txt') { //TODO: more advanced file processing to coalesce it into something airbyte understands
-		const convertedJsonl = convertStringToJsonl(uploadedFile.data.toString('utf-8'));
-		uploadedFile.data = Buffer.from(convertedJsonl, 'utf-8');
+	//TODO: refactor this "special handling" to a separate module
+	switch (fileExtension) {
+		case '.txt': {
+			const convertedJsonl = convertStringToJsonl(uploadedFile.data.toString('utf-8'));
+			uploadedFile.data = Buffer.from(convertedJsonl, 'utf-8');
+			break;
+		}
+		case '.pdf': {
+			const pdfData: any = await pdfExtractPromisified(uploadedFile.data, {});
+			if (pdfData && pdfData.pages) {
+				const pdfJsonl = pdfData.pages
+					.reduce((acc, page) => {
+						const pageJsons = page.content.map(c => ({
+							...c,
+							page: page.pageInfo.num,
+							pageHeight: page.pageInfo.height,
+							pageWidth: page.pageInfo.width,
+						}));
+						acc = acc.concat(pageJsons);
+						return acc;
+					}, [])
+					.map(x => JSON.stringify(x))
+					.join('\n');
+				uploadedFile.data = Buffer.from(pdfJsonl, 'utf-8');
+			} else {
+				return dynamicResponse(req, res, 400, { error: 'Failed to extract text from PDF' });
+			}
+			break;
+		}
+		default:
+			break; //no special handling for other files
 	}
 	const fileFormat = getFileFormat(fileExtension);
 	if (!fileFormat) {
