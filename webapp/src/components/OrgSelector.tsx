@@ -90,7 +90,8 @@ export default function OrgSelector({ orgs }) {
 											href='#'
 											className={classNames(
 												active ? '' : 'text-gray-100',
-												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700'
+												resourceSlug === team.id ? 'bg-indigo-900': '',
+												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
 											)}
 										>
 											{team.name}
