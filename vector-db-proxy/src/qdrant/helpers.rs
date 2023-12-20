@@ -210,10 +210,10 @@ pub async fn embed_custom_variable_row(row: &HashMap<String, HashMapValues>) -> 
     if !row.is_empty() {
         if let Some(_id) = row.get("event_id") {
             let payload: HashMap<String, serde_json::Value> = hash_map_values_as_serde_values!(row);
-            let text = custom_variables_row_to_a_sentence(&payload)?;
+            let text = payload.get("message").unwrap().to_string();
             // Embedding sentences using OpenAI ADA2
             let llm_struct = LLM::new();
-            let embedding_vec = llm_struct.embed_text(text.to_vec()).await?;
+            let embedding_vec = llm_struct.embed_text(vec![text]).await?;
             // Construct PointStruct to insert into DB
             if !embedding_vec.is_empty() {
                 for embedding in embedding_vec {
