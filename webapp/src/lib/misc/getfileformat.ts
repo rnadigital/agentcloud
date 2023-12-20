@@ -3,6 +3,7 @@
 const fileTypes = {
 	'.csv': 'csv',
 	'.json': 'json',
+	'.pdf': 'jsonl',
 	'.jsonl': 'jsonl',
 	'.txt': 'jsonl',		// Converted from txt
 	'.xls': 'excel',       // For older Excel files
@@ -15,6 +16,6 @@ const fileTypes = {
 	'.yml': 'yaml'         // .yml is also used for YAML files
 };
 
-export default function getFileType(extension) {
+export default function getFileFormat(extension) {
 	return fileTypes[extension.toLowerCase()];
 }

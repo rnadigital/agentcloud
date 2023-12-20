@@ -319,7 +319,7 @@ export default function Session(props) {
 							</div>}
 							<div className='min-w-0 flex-1 h-full'>
 								{terminated 
-									? <p className='text-center h-full me-14 pt-3'>This session was terminated.</p>
+									? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
 									: <SessionChatbox
 										scrollToBottom={scrollToBottom}
 										lastMessageFeedback={lastMessageFeedback}
