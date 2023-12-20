@@ -47,7 +47,10 @@ export default function BaseInputTemplate<
     border rounded p-1.5 focus:border-primary focus:outline-none w-full bg-background
     ${rawErrors.length > 0 ? "border-red-500" : "border-muted-foreground"}
   `
-
+  if (schema.const && !value) {
+    const changeFunc = onChangeOverride || _onChange;
+    changeFunc({ target: { value: schema.const } });
+  }
   return (
     <>
       <input
@@ -58,11 +61,11 @@ export default function BaseInputTemplate<
         autoFocus={autofocus}
         required={required}
         disabled={disabled}
-        readOnly={readonly}
+        readOnly={readonly || schema.const}
         className={inputClass}
         list={schema.examples ? examplesId<T>(id) : undefined}
         {...inputProps}
-        value={value || value === 0 ? value : ""}
+        value={schema.const ? schema.const : (value || value === 0 ? value : "")}
         onChange={onChangeOverride || _onChange}
         onBlur={_onBlur}
         onFocus={_onFocus}
