@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import * as API from '../api';
 import { useRouter } from 'next/router';
 import debug from 'debug';
@@ -36,6 +37,17 @@ export function AccountWrapper({ children, pageProps }) {
 			refreshAccountContext();
 		}
 	}, [router.asPath]);
+
+	useEffect(() => {
+		if (sharedState?.account?.name) {
+			posthog.identify(
+				sharedState.account._id,
+				{ email: sharedState.account.email, name: sharedState.account.name },
+			);
+		} else {
+			posthog.reset();
+		}
+	}, [sharedState?.account?.name]);
 
 	log('AppWrapper sharedState %O', sharedState);
 
