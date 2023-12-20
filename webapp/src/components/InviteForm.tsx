@@ -6,7 +6,7 @@ import * as API from '@api';
 import { toast } from 'react-toastify';
 import { useAccountContext } from 'context/account';
 
-export default function InviteToTeamForm({ callback }) {
+export default function InviteToTeamForm({ callback }: { callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;

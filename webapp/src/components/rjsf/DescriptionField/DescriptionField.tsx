@@ -26,7 +26,7 @@ export default function DescriptionField<
   					rehypePlugins={[rehypeRaw as any]}
   					className={'markdown-content text-sm'}
   				>
-  					{description}
+  					{description as any}
   				</Markdown>
 				</div>
 			</div>

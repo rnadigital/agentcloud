@@ -325,7 +325,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						            	setDatasourcesState(v);
 					            	}}
 						            options={datasources.map(t => ({ label: `${t.originalName || t.name} (${t.sourceType})`, value: t._id, ...t }))}
-						            formatOptionLabel={data => {
+						            formatOptionLabel={(data: any) => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 						                        data.isSelected

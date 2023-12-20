@@ -81,7 +81,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 			}, (res) => {
 				toast.error(res);
 			}, compact ? null : router);
-			callback && addedAgent && callback(addedAgent._id);
+			callback && addedDatasource && callback(addedDatasource._id);
 		}
 	}
 
@@ -118,7 +118,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 						}
 					}}
 					options={connectorOptions}
-					formatOptionLabel={data => {
+					formatOptionLabel={(data: any) => {
 						return (<li
 							className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 								data.isSelected

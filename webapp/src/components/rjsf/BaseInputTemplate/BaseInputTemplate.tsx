@@ -50,7 +50,7 @@ export default function BaseInputTemplate<
   `;
 	if (schema.const && !value) {
 		const changeFunc = onChangeOverride || _onChange;
-		changeFunc({ target: { value: schema.const } });
+		changeFunc({ target: { value: schema.const as string } } as any);
 	}
 	return (
 		<>

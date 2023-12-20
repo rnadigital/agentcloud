@@ -23,7 +23,7 @@ export default function Verify() {
 	const [error, setError] = useState();
 	const { token, newpassword } = router.query;
 
-	async function verifyToken(e) {
+	async function verifyToken(e=null) {
 		e && e.preventDefault();
 		await API.verifyToken({
 			token,
