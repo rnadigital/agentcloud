@@ -1,9 +1,9 @@
 import {
-  DescriptionFieldProps,
-  FormContextType,
-  RJSFSchema,
-  StrictRJSFSchema,
-} from "@rjsf/utils"
+	DescriptionFieldProps,
+	FormContextType,
+	RJSFSchema,
+	StrictRJSFSchema,
+} from '@rjsf/utils';
 
 import dynamic from 'next/dynamic';
 // @ts-ignore
@@ -18,20 +18,20 @@ export default function DescriptionField<
   S extends StrictRJSFSchema = RJSFSchema,
   F extends FormContextType = any
 >({ id, description }: DescriptionFieldProps<T, S, F>) {
-  if (description) {
-    return (
-      <div>
-        <div id={id} className="mb-1">
+	if (description) {
+		return (
+			<div>
+				<div id={id} className='mb-1'>
   				<Markdown
   					rehypePlugins={[rehypeRaw as any]}
   					className={'markdown-content text-sm'}
   				>
   					{description}
   				</Markdown>
-        </div>
-      </div>
-    )
-  }
+				</div>
+			</div>
+		);
+	}
 
-  return null
+	return null;
 }
