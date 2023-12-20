@@ -16,7 +16,7 @@ import { PDFExtract } from 'pdf.js-extract';
 import getConnectors from 'airbyte/getconnectors';
 const pdfExtract = new PDFExtract();
 import Ajv from 'ajv';
-const ajv = new Ajv({ strict: "log" });
+const ajv = new Ajv({ strict: 'log' });
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
@@ -87,7 +87,7 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName, sourceConfig }  = req.body;
+	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -117,7 +117,7 @@ export async function addDatasourceApi(req, res, next) {
 			...req.body.sourceConfig,
 		},
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
-		name: newDatasourceId.toString()
+		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 	};
 	console.log('sourceBody', sourceBody);	
 	const createdSource = await sourcesApi
@@ -163,7 +163,7 @@ export async function addDatasourceApi(req, res, next) {
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: newDatasourceId.toString(),
 	    gcsFilename: null,
-	    originalName: null, //TODO?
+	    originalName: datasourceName, //TODO?
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
 	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
@@ -316,7 +316,7 @@ export async function uploadFileApi(req, res, next) {
 			dataset_name: newDatasourceId.toString(),
 		},
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
-		name: newDatasourceId.toString()
+		name: `${uploadedFile.name} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 	};
 	const createdSource = await sourcesApi
 		.createSource(null, sourceBody)
@@ -331,7 +331,7 @@ export async function uploadFileApi(req, res, next) {
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: createdSource.sourceId,
+		name: `${createdSource.sourceId} - ${res.locals.account.name} (${res.locals.account._id})`,
 		sourceId: createdSource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
 		status: 'active'

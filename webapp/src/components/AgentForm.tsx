@@ -324,7 +324,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						            	console.log(v);
 						            	setDatasourcesState(v);
 					            	}}
-						            options={datasources.map(t => ({ label: t.name, value: t._id }))}
+						            options={datasources.map(t => ({ label: `${t.originalName || t.name} (${t.sourceType})`, value: t._id, ...t }))}
 						            formatOptionLabel={data => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
@@ -333,7 +333,14 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						                            : 'dark:text-white'
 						                    }`}
 						                >
-						                    {data.label}
+						                    <span>
+												<img
+													src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${data.sourceType}/latest/icon.svg`}
+													loading='lazy'
+													className='inline-flex me-2 w-4 h-4'
+												/>
+												{data.label}
+											</span>
 						                </li>);
 						            }}
 						        />

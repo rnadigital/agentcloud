@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
 import getConnectors from 'airbyte/getconnectors';
 import Select from 'react-tailwindcss-select';
+import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
@@ -28,6 +29,8 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
+	const [datasourceName, setDatasourceName] = useState('');
+	const [loading, setLoading] = useState(false);
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
@@ -63,6 +66,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 			connectorId: connector.value,
 			connectorName: connector.label,
 			resourceSlug,
+			datasourceName,
 		};
 
 		console.log(JSON.stringify(body, null, 2));
@@ -134,13 +138,31 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					}}
 				/>
 
-				{spec?.schema && <TailwindForm
-					schema={spec.schema.connectionSpecification}
-					validator={validator}
-					onSubmit={datasourcePost}
-					transformErrors={() => {return [] /*Disable internal validation for now*/}}
-					noHtml5Validate
-				/>}
+				{spec?.schema && <>
+					<div className='sm:col-span-12 mt-3'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Datasource Name<span className='text-red-700'> *</span>
+						</label>
+						<div className='mt-2'>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								onChange={(e) => setDatasourceName(e.target.value)}
+								value={datasourceName}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
+						</div>
+					</div>
+					<TailwindForm
+						schema={spec.schema.connectionSpecification}
+						validator={validator}
+						onSubmit={datasourcePost}
+						transformErrors={() => {return []; /*Disable internal validation for now*/}}
+						noHtml5Validate
+					/>
+				</>}
 
 			</div>
 		</span>}
