@@ -99,12 +99,12 @@ export async function register(req, res) {
 		airbyteWorkspaceId = workspace.workspaceId;
 	}
 	const addedOrg = await addOrg({
-		name: 'My Org',
+		name: `${name}'s Org`,
 		teamIds: [],
 		members: [newAccountId],
 	});
 	const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
-		name: 'My Team',
+		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
 		airbyteWorkspaceId,
@@ -119,10 +119,10 @@ export async function register(req, res) {
 			passwordHash: passwordHash,
 			orgs: [{
 				id: orgId,
-				name: 'My Org',
+				name: `${name}'s Org`,
 				teams: [{
 					id: teamId,
-					name: 'My Team',
+					name: `${name}'s Team`,
 					airbyteWorkspaceId,
 				}]
 			}],

@@ -70,12 +70,12 @@ export async function inviteTeamMemberApi(req, res) {
 			airbyteWorkspaceId = workspace.workspaceId;
 		}
 		const addedOrg = await addOrg({
-			name: 'My Org',
+			name: `${name}'s Org`,
 			teamIds: [],
 			members: [newAccountId],
 		});
 		const addedTeam = await addTeam({
-			name: 'My Team',
+			name: `${name}'s Team`,
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
 			airbyteWorkspaceId,
@@ -90,10 +90,10 @@ export async function inviteTeamMemberApi(req, res) {
 				passwordHash: null, //Note: invited user will create password in verification page, w/backend check
 				orgs: [{
 					id: orgId,
-					name: 'My Org',
+					name: `${name}'s Org`,
 					teams: [{
 						id: teamId,
-						name: 'My Team',
+						name: `${name}'s Team`,
 						airbyteWorkspaceId,
 					}] //Note: adding the inviting team here
 				}, {
