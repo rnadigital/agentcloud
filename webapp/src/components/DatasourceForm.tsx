@@ -55,9 +55,10 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		  icon: connectors[key]?.iconUrl_oss,
 		})) : [];
 
+	console.log(connector);
 	async function datasourcePost(e) {
 		const body = {
-			...e.formData,
+			sourceConfig: e.formData,
 			_csrf: csrf,
 			connectorId: connector.value,
 			connectorName: connector.label,

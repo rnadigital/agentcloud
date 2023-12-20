@@ -87,7 +87,11 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName }  = req.body;
+	const { connectorId, connectorName, sourceConfig }  = req.body;
+
+	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
@@ -95,31 +99,33 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
 	}
 	const spec = submittedConnector.spec_oss.connectionSpecification;
-
-	console.log(spec);
 	const validate = ajv.compile(spec);
-	const x = validate(req.body);
-	console.log(x, validate.errors);
-
+	const validated = validate(req.body.sourceConfig);
 	const newDatasourceId = new ObjectId();
+	if (!validated || validate?.errors?.length > 0 ) {
+		//TODO: forward the errors to frontend and display them
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
-	return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-
-/*
-	// File is uploaded, create source in airbyte
+	// Create source in airbyte based on the validated form
 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
 	const sourceBody = {
 		configuration: {
-			sourceType: 'file', //TODO:
-			dataset_name: newDatasourceId.toString(),
+			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
+			sourceType,
+			...req.body.sourceConfig,
 		},
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
 		name: newDatasourceId.toString()
 	};
+	console.log('sourceBody', sourceBody);	
 	const createdSource = await sourcesApi
 		.createSource(null, sourceBody)
 		.then(res => res.data);
 	console.log('createdSource', createdSource);
+
+	// return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -161,12 +167,12 @@ export async function addDatasourceApi(req, res, next) {
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
 	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
-	    sourceType: 'TODO',
+	    sourceType,
 	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
-*/
+
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
 }
