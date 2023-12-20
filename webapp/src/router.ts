@@ -17,8 +17,8 @@ import fileUpload from 'express-fileupload';
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
-//TODO: import { ... } from a controllers/index file?
 import * as accountController from './controllers/account';
+import * as teamController from './controllers/team';
 import * as groupController from './controllers/group';
 import * as sessionController from './controllers/session';
 import * as agentController from './controllers/agent';
@@ -71,54 +71,71 @@ export default function router(server, app) {
 	accountRouter.post('/switch', authedMiddlewareChain, accountController.switchTeam);
 	server.use('/forms/account', accountRouter);
 
-	// Team endpoints
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
+
+	//sessions
 	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
 	teamRouter.get('/sessions.json', sessionController.sessionsJson);
+	teamRouter.post('/forms/session/add', sessionController.addSessionApi);
+	teamRouter.delete('/forms/session/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
+
+	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
 	teamRouter.get('/agents.json', agentController.agentsJson);
 	teamRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
 	teamRouter.get('/agent/:agentId([a-f0-9]{24}).json', agentController.agentJson);
 	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
+	teamRouter.post('/forms/agent/add', agentController.addAgentApi);
+	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
+	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
+
+	//groups
 	teamRouter.get('/groups', groupController.groupsPage.bind(null, app));
 	teamRouter.get('/groups.json', groupController.groupsJson);
 	teamRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
 	teamRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
 	teamRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
+	teamRouter.post('/forms/group/add', groupController.addGroupApi);
+	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
+	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+
+	//credentials
 	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
 	teamRouter.get('/credentials.json', credentialController.credentialsJson);
 	teamRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
 	teamRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
+	teamRouter.post('/forms/credential/add', credentialController.addCredentialApi);
+	teamRouter.delete('/forms/credential/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
+
+	//tools
 	teamRouter.get('/tools', toolController.toolsPage.bind(null, app));
 	teamRouter.get('/tools.json', toolController.toolsJson);
 	teamRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
 	teamRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
 	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
+	teamRouter.post('/forms/tool/add', toolController.addToolApi);
+	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
+	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
+
+	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
 	teamRouter.get('/datasources.json', datasourceController.datasourcesJson);
 	teamRouter.get('/datasource/add', datasourceController.datasourceAddPage.bind(null, app));
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', datasourceController.datasourceEditPage.bind(null, app));
-	teamRouter.post('/forms/agent/add', agentController.addAgentApi);
-	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
-	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
-	teamRouter.post('/forms/credential/add', credentialController.addCredentialApi);
-	teamRouter.delete('/forms/credential/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
-	teamRouter.post('/forms/session/add', sessionController.addSessionApi);
-	teamRouter.delete('/forms/session/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
-	teamRouter.post('/forms/tool/add', toolController.addToolApi);
-	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
-	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
-	teamRouter.post('/forms/group/add', groupController.addGroupApi);
-	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
-	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
 	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
+
+	//team
+	teamRouter.get('/team', teamController.teamPage.bind(null, app));
+	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
+
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
 }

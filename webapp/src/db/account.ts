@@ -5,13 +5,13 @@ import { ObjectId } from 'mongodb';
 import toObjectId from '../lib/misc/toobjectid';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
-type AccountTeam = {
+export type AccountTeam = {
 	id: ObjectId;
 	name: string;
 	airbyteWorkspaceId?: string;
 }
 
-type AccountOrg = {
+export type AccountOrg = {
 	id: ObjectId;
 	name: string;
 	teams: AccountTeam[];
@@ -103,6 +103,30 @@ export function changeAccountPassword(userId: db.IdOrStr, passwordHash: string):
 		$set: {
 			passwordHash,
 		}
+	});
+}
+
+export function pushAccountOrg(userId: db.IdOrStr, org: AccountOrg): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$push: {
+			orgs: org
+		}
+	});
+}
+
+export function pushAccountTeam(userId: db.IdOrStr, orgId: db.IdOrStr, team: AccountTeam): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$push: {
+			'orgs.$[org].teams': team
+		}
+	}, {
+		arrayFilters: [{
+			'org.id': toObjectId(orgId)
+		}]
 	});
 }
 

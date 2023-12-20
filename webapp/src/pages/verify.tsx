@@ -19,17 +19,20 @@ export default function Verify() {
 
 	const router = useRouter();
 	const [verified, setVerified] = useState(null);
+	const [newPassword, setNewPassword] = useState('');
 	const [error, setError] = useState();
-	const { token } = router.query;
+	const { token, newpassword } = router.query;
 
-	async function verifyToken() {
+	async function verifyToken(e) {
+		e && e.preventDefault();
 		await API.verifyToken({
 			token,
+			password: newPassword,
 		}, null, setError, router);
 	}
 
 	useEffect(() => {
-		if (verified === null && token) {
+		if (verified === null && token && !newpassword) {
 			verifyToken();
 		}
 	}, [token]);
@@ -50,7 +53,7 @@ export default function Verify() {
 						width={128}
 					/>
 					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900'>
-            			Email Sent
+            			{newpassword ? 'Accept Invitation' : (token ? 'Verifying...' : 'Email Sent')}
 					</h2>
 				</div>
 
@@ -66,6 +69,33 @@ export default function Verify() {
 								</div>
 								<p className='text-center'>Please check your email and click the link we just sent you.</p>
 							</>}
+
+						{newpassword && <form onSubmit={verifyToken}>
+							<div>
+								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+	                 					New Password
+								</label>
+								<div className='mt-2 mb-4'>
+									<input
+										id='password'
+										name='password'
+										type='password'
+										value={newPassword}
+										onChange={e => setNewPassword(e.target.value)}
+										required
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									/>
+								</div>
+								<div>
+									<button
+										type='submit'
+										className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									>
+	                  					Accept Invitation
+									</button>
+								</div>
+							</div>
+						</form>}
 					</div>
 
 					<p className='mt-10 text-center text-sm text-gray-500'>
