@@ -19,6 +19,7 @@ use crate::init::models::GlobalData;
 use actix_cors::Cors;
 use actix_web::rt::System;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
+use amiquip::Channel;
 use anyhow::Context;
 use env_logger::Env;
 use once_cell::sync::Lazy;
@@ -27,6 +28,7 @@ use tokio::signal::unix::{signal, SignalKind};
 use tokio::sync::{Mutex, RwLock};
 
 use crate::init::env_variables::set_all_env_vars;
+use crate::rabbitmq::client::connect_rabbitmq;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
@@ -93,16 +95,22 @@ async fn main() -> std::io::Result<()> {
         username: rabbitmq_username,
         password: rabbitmq_password,
     };
-    let rabbitmq_stream = tokio::spawn(async move {
-        let _ = subscribe_to_queue(
-            Arc::clone(&qdrant_connection_for_rabbitmq),
-            rabbitmq_connection_details,
-            rabbitmq_exchange.as_str(),
-            rabbitmq_stream.as_str(),
-            rabbitmq_routing_key.as_str(),
-        )
-        .await;
-    });
+    let mut connection = connect_rabbitmq(&rabbitmq_connection_details)
+        .await
+        .unwrap();
+    let channel: Channel = connection.open_channel(None).unwrap();
+    let channel_arc = Arc::new(RwLock::new(channel));
+    let channel_arc_clone = Arc::clone(&channel_arc);
+    let _ = subscribe_to_queue(
+        Arc::clone(&qdrant_connection_for_rabbitmq),
+        channel_arc_clone,
+        rabbitmq_exchange.as_str(),
+        rabbitmq_stream.as_str(),
+        rabbitmq_routing_key.as_str(),
+    )
+    .await
+    .unwrap();
+
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let web_task = tokio::spawn(async move {
         let server = HttpServer::new(move || {
@@ -122,6 +130,6 @@ async fn main() -> std::io::Result<()> {
         server.await.context("server error!")
     });
 
-    let _ = join!(web_task, rabbitmq_stream);
+    let _ = join!(web_task); // we can add new threads here so that they can run without blocking the main thread
     Ok(())
 }

@@ -1,49 +1,62 @@
 use crate::data::processing_incoming_messages::process_messages;
-use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
-use crate::rabbitmq::models::RabbitConnect;
-use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
+use amiquip::{
+    AmqpValue, Channel, ConsumerMessage, ConsumerOptions, ExchangeDeclareOptions, ExchangeType,
+    FieldTable, QueueDeclareOptions,
+};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 
 pub async fn subscribe_to_queue(
     app_data: Arc<Mutex<QdrantClient>>,
-    connection_details: RabbitConnect,
+    channel: Arc<RwLock<Channel>>,
     exchange_name: &str,
     queue_name: &str,
     routing_key: &str,
 ) -> Result<()> {
-    // loop {
-    let mut connection = connect_rabbitmq(&connection_details).await;
-    let mut channel = channel_rabbitmq(&connection).await;
-    bind_queue_to_exchange(
-        &mut connection,
-        &mut channel,
-        &connection_details,
+    let channel = channel.read().await;
+    let channel_qos = channel.qos(0, 1, false).unwrap();
+    let mut arguments = FieldTable::new();
+    arguments.insert(
+        "x-queue-type".to_string(),
+        AmqpValue::LongString("stream".to_string()),
+    );
+    // Declare the direct exchange we will bind to.
+    let options = QueueDeclareOptions {
+        durable: true,
+        arguments,
+        ..QueueDeclareOptions::default()
+    };
+    let exchange = channel.exchange_declare(
+        ExchangeType::Direct,
         exchange_name,
-        queue_name,
-        routing_key,
-    )
-    .await;
-    let args = BasicConsumeArguments::new(queue_name, "");
-    let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
-    while let Some(message) = messages_rx.recv().await {
-        println!("Hello");
-        if let Some(msg) = message.content {
-            let qdrant_conn = Arc::clone(&app_data);
-            if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
-                let _ = channel.basic_ack(args).await;
-                let _ = process_messages(qdrant_conn, message_string).await;
+        ExchangeDeclareOptions::default(),
+    )?;
+    // Declare the exclusive, server-named queue we will use to consume.
+    let queue = channel.queue_declare(queue_name, options)?;
+    println!("created exclusive queue {}", queue.name());
+
+    // Bind our queue to the logs exchange.
+    queue.bind(&exchange, "", FieldTable::new())?;
+    let consumer = queue.consume(ConsumerOptions {
+        no_ack: false,
+        ..ConsumerOptions::default()
+    })?;
+    for (_, message) in consumer.receiver().iter().enumerate() {
+        match message {
+            ConsumerMessage::Delivery(delivery) => {
+                let headers = delivery.properties.headers().as_ref().unwrap();
+                println!("{:?}", headers);
+                let body = String::from_utf8_lossy(&delivery.body);
+                let qdrant_conn = Arc::clone(&app_data);
+                let _ = process_messages(qdrant_conn, body.to_string()).await;
+            }
+            other => {
+                println!("Consumer ended: {:?}", other);
+                break;
             }
         }
     }
-
-    // this is what to do when we get an error
-    if let Err(e) = channel.basic_cancel(BasicCancelArguments::new(&ctag)).await {
-        println!("error {}", e.to_string());
-    };
     Ok(())
-    // }
 }

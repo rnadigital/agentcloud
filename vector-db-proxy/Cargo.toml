@@ -41,7 +41,7 @@ percent-encoding = "2.3.0"
 async-openai = "0.17.1"
 backoff = { version = "0.4.0", features = ["tokio"] }
 amqp_serde = "0.4.0"
-amqprs = "1.5.1"
+amiquip = "0.4.2"
 
 [[bin]]
 name = "vector-db"
