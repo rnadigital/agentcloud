@@ -1,9 +1,9 @@
 use crate::rabbitmq::models::RabbitConnect;
-use amqp_serde::types::FieldTable;
-use amqprs::channel::Channel;
+use amqp_serde::types::{FieldTable, FieldValue, ShortStr};
+use amqprs::channel::{Channel, ExchangeDeclareArguments};
 use amqprs::{
     callbacks::{DefaultChannelCallback, DefaultConnectionCallback},
-    channel::{QueueBindArguments, QueueDeclareArguments},
+    channel::{BasicQosArguments, QueueBindArguments, QueueDeclareArguments},
     connection::{Connection, OpenConnectionArguments},
 };
 use tokio::time::{sleep, Duration};
@@ -63,12 +63,27 @@ pub async fn bind_queue_to_exchange(
         *channel = channel_rabbitmq(&connection).await;
         println!("{}", connection);
     }
+    channel
+        .exchange_declare(ExchangeDeclareArguments::new(exchange, "direct"))
+        .await
+        .unwrap();
 
-    let args: FieldTable = Default::default();
+    channel
+        .basic_qos(BasicQosArguments {
+            prefetch_count: 1,
+            prefetch_size: 0,
+            global: false,
+        })
+        .await
+        .unwrap();
+    let mut args: FieldTable = FieldTable::new();
+    let queue_type_x: ShortStr = "x-queue-type".try_into().unwrap();
+    let queue_type_q: FieldValue = "stream".try_into().unwrap();
+    args.insert(queue_type_x, queue_type_q);
     let qparams = QueueDeclareArguments::default()
         .queue(queue.to_owned())
-        .auto_delete(true)
-        .durable(false)
+        .auto_delete(false)
+        .durable(true)
         .arguments(args)
         .finish();
 
@@ -76,7 +91,10 @@ pub async fn bind_queue_to_exchange(
 
     //check if the channel is open, if not then open it
     if !channel.is_open() {
-        println!("channel is not open, does exchange systemmonitor exist on rabbitMQ?");
+        println!(
+            "channel is not open, does exchange {} exist on rabbitMQ?",
+            exchange
+        );
         *channel = channel_rabbitmq(&connection).await;
     }
 
