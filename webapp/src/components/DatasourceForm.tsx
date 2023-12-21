@@ -101,7 +101,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		</div>}
 
 		{!files && <span className='flex'>
-			<div className='w-full sm:w-1/2 m-auto'>
+			<div className='w-full sm:w-1/2 md:w-2/3 m-auto'>
 				<Select
 					isClearable
 					isSearchable
@@ -144,7 +144,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 						<ButtonSpinner size={24} />
 					</div>
 					: spec?.schema && <>
-						<div className='sm:col-span-12 mt-3'>
+						<div className='sm:col-span-12 my-3'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasource Name<span className='text-red-700'> *</span>
 							</label>
@@ -164,7 +164,9 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 							schema={spec.schema.connectionSpecification}
 							validator={validator}
 							onSubmit={datasourcePost}
-							transformErrors={() => {return []; /*Disable internal validation for now*/}}
+							transformErrors={(errors) => {
+								return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
+							}}
 							noHtml5Validate
 						/>
 					</>}

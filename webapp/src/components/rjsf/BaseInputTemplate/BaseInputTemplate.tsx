@@ -67,7 +67,12 @@ export default function BaseInputTemplate<
 				list={schema.examples ? examplesId<T>(id) : undefined}
 				{...inputProps}
 				value={schema.const ? schema.const : (value || value === 0 ? value : '')}
-				onChange={onChangeOverride || _onChange}
+				onChange={(e) => {
+					// if (inputProps.type === 'datetime-local') {
+					// 	e.target.value = e?.target?.value?.replace('.000Z', 'Z'); //TODO: remove
+					// }
+					(onChangeOverride || _onChange)(e);
+				}}
 				onBlur={_onBlur}
 				onFocus={_onFocus}
 				aria-describedby={ariaDescribedByIds<T>(id, !!schema.examples)}

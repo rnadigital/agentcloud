@@ -12,13 +12,30 @@ import path from 'path';
 import { readFileSync } from 'fs';
 import toObjectId from 'misc/toobjectid';
 import { promisify } from 'util';
+import dotenv from 'dotenv';
 import { PDFExtract } from 'pdf.js-extract';
 import getConnectors from 'airbyte/getconnectors';
-const pdfExtract = new PDFExtract();
 import Ajv from 'ajv';
 const ajv = new Ajv({ strict: 'log' });
+function validateDateTimeFormat(dateTimeStr) {
+	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+	dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
+	return dateFormatRegex.test(dateTimeStr);
+}
+function updateDateStrings(obj) {
+	Object.keys(obj).forEach(key => {
+		if (typeof obj[key] === 'object') {
+			updateDateStrings(obj[key]);
+		} else if (typeof obj[key] === 'string') {
+			obj[key] = obj[key].replace(/\.000Z$/, 'Z');
+		}
+	});
+}
+ajv.addFormat('date-time', validateDateTimeFormat);
+
+
+const pdfExtract = new PDFExtract();
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
-import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
@@ -92,7 +109,7 @@ export async function addDatasourceApi(req, res, next) {
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-
+	
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
 	if (!submittedConnector) {
@@ -100,20 +117,24 @@ export async function addDatasourceApi(req, res, next) {
 	}
 	const newDatasourceId = new ObjectId();
 	const spec = submittedConnector.spec_oss.connectionSpecification;
+	console.log(JSON.stringify(spec, null, 2));
 	try {
 		const validate = ajv.compile(spec);
 		const validated = validate(req.body.sourceConfig);
-		if (!validated || validate?.errors?.length > 0 ) {
+		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
 			//TODO: forward the errors to frontend and display them
+			console.log('validate.errors', validate?.errors);
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	} catch(e) {
+		console.log(e);
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	// Create source in airbyte based on the validated form
 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
 	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
+	updateDateStrings(req.body.sourceConfig);
 	const sourceBody = {
 		configuration: {
 			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
