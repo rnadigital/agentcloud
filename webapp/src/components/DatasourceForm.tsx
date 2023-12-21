@@ -34,7 +34,6 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
-		await new Promise(res => setTimeout(res, 200)); //Note: remove, testing
 		API.getSpecification({
 			sourceDefinitionId,
 			resourceSlug,

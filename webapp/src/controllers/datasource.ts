@@ -98,12 +98,16 @@ export async function addDatasourceApi(req, res, next) {
 	if (!submittedConnector) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
 	}
-	const spec = submittedConnector.spec_oss.connectionSpecification;
-	const validate = ajv.compile(spec);
-	const validated = validate(req.body.sourceConfig);
 	const newDatasourceId = new ObjectId();
-	if (!validated || validate?.errors?.length > 0 ) {
-		//TODO: forward the errors to frontend and display them
+	const spec = submittedConnector.spec_oss.connectionSpecification;
+	try {
+		const validate = ajv.compile(spec);
+		const validated = validate(req.body.sourceConfig);
+		if (!validated || validate?.errors?.length > 0 ) {
+			//TODO: forward the errors to frontend and display them
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	} catch(e) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
