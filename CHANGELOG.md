@@ -1,3 +1,11 @@
+### 0.5.0
+ - Add RAG from file upload or connection to other data source via Airbyte
+ - Add vectordb proxy
+ - Change default team/org names on signup
+ - Add ability to create new teams
+ - Add ability to invite users to your team
+ - Improve performance and reliability of session chat chunk appending
+
 ### 0.4.0
  - Add modal (and support for nested) creation of credentials, agents and groups for a much improved flow of starting a session
  - Fix single agent mode to correctly display the name of the single agent instead of "User Proxy"
