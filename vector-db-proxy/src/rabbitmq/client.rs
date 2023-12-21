@@ -7,6 +7,7 @@ use amqprs::{
     connection::{Connection, OpenConnectionArguments},
 };
 use tokio::time::{sleep, Duration};
+use tracing::Instrument;
 
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     let mut res = Connection::open(
@@ -63,11 +64,12 @@ pub async fn bind_queue_to_exchange(
         *channel = channel_rabbitmq(&connection).await;
         println!("{}", connection);
     }
+    // Declaring the exchange on startup
     channel
         .exchange_declare(ExchangeDeclareArguments::new(exchange, "direct"))
         .await
         .unwrap();
-
+    // Setting up basic quality-of-service parameters for the channel to enable streaming queue
     channel
         .basic_qos(BasicQosArguments {
             prefetch_count: 1,
@@ -76,23 +78,29 @@ pub async fn bind_queue_to_exchange(
         })
         .await
         .unwrap();
+    // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
     let queue_type_x: ShortStr = "x-queue-type".try_into().unwrap();
     let queue_type_q: FieldValue = "stream".try_into().unwrap();
     args.insert(queue_type_x, queue_type_q);
-    let qparams = QueueDeclareArguments::default()
-        .queue(queue.to_owned())
-        .auto_delete(false)
-        .durable(true)
-        .arguments(args)
-        .finish();
 
-    let (queue, _, _) = channel.queue_declare(qparams).await.unwrap().unwrap();
+    let (queue, _, _) = channel
+        .queue_declare(
+            QueueDeclareArguments::default()
+                .queue(queue.to_owned())
+                .auto_delete(false)
+                .durable(true)
+                .arguments(args)
+                .finish(),
+        )
+        .await
+        .unwrap()
+        .unwrap();
 
     //check if the channel is open, if not then open it
     if !channel.is_open() {
         println!(
-            "channel is not open, does exchange {} exist on rabbitMQ?",
+            "Channel is not open, does exchange {} exist on rabbitMQ?",
             exchange
         );
         *channel = channel_rabbitmq(&connection).await;
