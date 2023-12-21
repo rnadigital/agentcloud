@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import * as API from '../../api';
 import { useAccountContext } from 'context/account';
+import getConnectors from 'airbyte/getconnectors';
 import DatasourceCards from 'components/DatasourceCards';
 import NewButtonSection from 'components/NewButtonSection';
 import { PlusIcon } from '@heroicons/react/20/solid';
@@ -22,14 +23,11 @@ export default function Datasources(props) {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
 	}
 
-	//TODO: move to add page
 	const [connectorList, setConnectorList] = useState([]);
 	useEffect(() => {
-		fetch('https://connectors.airbyte.com/files/generated_reports/connector_registry_report.json')
-			.then(res => res.json())
+		getConnectors()
 			.then(json => setConnectorList(json));
 	}, []);
-	console.log('datasources', datasources);
 
 	useEffect(() => {
 		fetchDatasources();

@@ -8,6 +8,7 @@ import { randomBytes } from 'crypto';
 export enum VerificationTypes {
 	VERIFY_EMAIL = 'email',
 	CHANGE_PASSWORD = 'change_password',
+	TEAM_INVITE = 'team_invite',
 }
 
 export type VerificationType = VerificationTypes; //TODO: add whatever types we need here
@@ -20,7 +21,7 @@ export type Verification = {
 }
 
 export function VerificationCollection() {
-	return db.db().collection('teams');
+	return db.db().collection('verifications');
 }
 
 export async function addVerification(accountId: db.IdOrStr, type: VerificationType): Promise<string> {

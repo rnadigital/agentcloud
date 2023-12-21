@@ -2,7 +2,7 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
+import { getAccountById, OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
 import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
@@ -99,12 +99,12 @@ export async function register(req, res) {
 		airbyteWorkspaceId = workspace.workspaceId;
 	}
 	const addedOrg = await addOrg({
-		name: 'My Org',
+		name: `${name}'s Org`,
 		teamIds: [],
 		members: [newAccountId],
 	});
 	const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
-		name: 'My Team',
+		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
 		airbyteWorkspaceId,
@@ -119,10 +119,10 @@ export async function register(req, res) {
 			passwordHash: passwordHash,
 			orgs: [{
 				id: orgId,
-				name: 'My Org',
+				name: `${name}'s Org`,
 				teams: [{
 					id: teamId,
-					name: 'My Team',
+					name: `${name}'s Team`,
 					airbyteWorkspaceId,
 				}]
 			}],
@@ -220,8 +220,21 @@ export async function verifyToken(req, res) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
 	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
+	console.log('deletedVerification', deletedVerification);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+	}
+	const foundAccount = await getAccountById(deletedVerification.accountId);
+	console.log('deletedVerification', deletedVerification);
+	console.log('foundAccount', foundAccount);
+	if (!foundAccount.passwordHash) {
+		const password = req.body.password;
+		if (!password || typeof password !== 'string' || password.length === 0) {
+			//Note: invite is invalidated at this point, but form is required so likelihood of legit issue is ~0
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+		const newPasswordHash = await bcrypt.hash(password, 12);
+		await changeAccountPassword(deletedVerification.accountId, newPasswordHash);
 	}
 	await verifyAccount(deletedVerification.accountId);
 	return dynamicResponse(req, res, 302, { redirect: '/login?verifysuccess=true' });

@@ -7,9 +7,15 @@ import { useRouter } from 'next/router';
 import * as API from '@api';
 import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
+import getConnectors from 'airbyte/getconnectors';
 import Select from 'react-tailwindcss-select';
+import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
+const TailwindForm = dynamic(() => import('components/rjsf'), {
+	ssr: false,
+});
+import validator from '@rjsf/validator-ajv8';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
@@ -23,6 +29,8 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
+	const [datasourceName, setDatasourceName] = useState('');
+	const [loading, setLoading] = useState(false);
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
@@ -34,40 +42,46 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
-	async function getConnectors() {
-		//TODO: change
-		fetch('https://connectors.airbyte.com/files/generated_reports/connector_registry_report.json')
-			.then(response => response.json())
-			.then(data => setConnectors(data))
-			.catch(e => {
-				setConnectors([]);
-				console.error(e);
-			});
-	}
 	useEffect(() => {
-		getConnectors();
+		getConnectors()
+			.then(json => setConnectors(json))
+			.catch(e => {
+				toast.error('Failed to fetch source connector list');
+				setConnectors([]);
+			});
 	}, []);
 	const connectorOptions = connectors ? Object.keys(connectors)
 		.filter(key => connectors[key]?.connector_type === 'source')
 		.map(key => ({
 		  value: connectors[key]?.definitionId,
 		  label: connectors[key]?.name_oss || 'test',
+		  icon: connectors[key]?.iconUrl_oss,
 		})) : [];
 
+	console.log(connector);
 	async function datasourcePost(e) {
-		e.preventDefault();
 		const body = {
-			_csrf: e.target._csrf.value,
+			sourceConfig: e.formData,
+			_csrf: csrf,
+			connectorId: connector.value,
+			connectorName: connector.label,
 			resourceSlug,
-			//TODO
+			datasourceName,
 		};
+
+		console.log(JSON.stringify(body, null, 2));
+
 		if (editing) {			
 			// await API.editAgent(agentState._id, body, () => {
 			// 	toast.success('Agent Updated');
 			// }, setError, null);
 		} else {
-			// const addedAgent: any = await API.addAgent(body, null, setError, compact ? null : router);
-			// callback && addedAgent && callback(addedAgent._id);
+			const addedDatasource: any = await API.addDatasource(body, () => {
+				toast.success('Added datasource');
+			}, (res) => {
+				toast.error(res);
+			}, compact ? null : router);
+			callback && addedDatasource && callback(addedDatasource._id);
 		}
 	}
 
@@ -96,7 +110,6 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					classNames={SelectClassNames}
 					value={connector}
 					onChange={(v: any) => {
-						console.log(v);
 						setConnector(v);
 						if (v) {
 							getSpecification(v.value);
@@ -105,7 +118,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 						}
 					}}
 					options={connectorOptions}
-					formatOptionLabel={data => {
+					formatOptionLabel={(data: any) => {
 						return (<li
 							className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 								data.isSelected
@@ -113,37 +126,44 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 									: 'dark:text-white'
 							}`}
 						>
-							{data.label}
+							<span>
+								{data.icon && <img
+									src={data.icon}
+									loading='lazy'
+									className='inline-flex me-2 w-4 h-4'
+								/>}
+								{data.label}
+							</span>
 						</li>);
 					}}
 				/>
 
-				{spec?.schema && <form onSubmit={datasourcePost} className='space-y-2'>
-					<input
-						type='hidden'
-						name='_csrf'
-						value={csrf}
-					/>
-			        
-					<DynamicForm
-						spec={spec.schema}
-					/>
-
-					<div className='mt-6 flex items-center justify-between gap-x-6'>
-						{!compact && <Link
-							className='text-sm font-semibold leading-6 text-gray-900'
-							href={`/${resourceSlug}/datasources`}
-						>
-							Back
-						</Link>}
-						<button
-							type='submit'
-							className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-						>
-								Save
-						</button>
+				{spec?.schema && <>
+					<div className='sm:col-span-12 mt-3'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Datasource Name<span className='text-red-700'> *</span>
+						</label>
+						<div className='mt-2'>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								onChange={(e) => setDatasourceName(e.target.value)}
+								value={datasourceName}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
+						</div>
 					</div>
-				</form>}
+					<TailwindForm
+						schema={spec.schema.connectionSpecification}
+						validator={validator}
+						onSubmit={datasourcePost}
+						transformErrors={() => {return []; /*Disable internal validation for now*/}}
+						noHtml5Validate
+					/>
+				</>}
+
 			</div>
 		</span>}
 

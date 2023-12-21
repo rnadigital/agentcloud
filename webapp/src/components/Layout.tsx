@@ -25,6 +25,7 @@ import {
 	KeyIcon,
 	WrenchScrewdriverIcon,
 	CircleStackIcon,
+	UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import {
 	ChevronDownIcon,
@@ -42,7 +43,7 @@ const noNavPages = [
 	'/redirect',
 ];
 
-const teamNavigation = [
+const agentNavigation = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
 	{ name: 'Sessions', href: '/sessions', icon: <ChatBubbleLeftIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Agents', href: '/agents', icon: <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -57,11 +58,9 @@ const teamNavigation = [
 	{ name: 'Data Sources', href: '/datasources', icon: <CircleStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
-const libraryNavigation = [/*
-	{ name: 'Trending', href: '/home', icon: ArrowTrendingUpIcon },
-	{ name: 'Agents', href: '/home', icon: HomeIcon },
-	{ name: 'Tools', href: '/home', icon: WrenchScrewdriverIcon },
-*/];
+const teamNavigation = [
+	{ name: 'Team Members', href: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+];
 
 const userNavigation = [
 	{ name: 'My Account', href: '/account' },
@@ -164,6 +163,7 @@ export default withRouter(function Layout(props) {
 											</span>
 										</div>
 										{resourceSlug && <nav className='flex flex-1 flex-col'>
+											<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>
 											<ul role='list' className='flex flex-1 flex-col gap-y-7'>
 												<li>
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
@@ -171,8 +171,9 @@ export default withRouter(function Layout(props) {
 													</ul>
 												</li>
 												<li>
+													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
-														{teamNavigation.map((item) => (
+														{agentNavigation.map((item) => (
 															<li key={item.name}>
 																<Link
 																	suppressHydrationWarning
@@ -191,33 +192,26 @@ export default withRouter(function Layout(props) {
 														))}
 													</ul>
 												</li>
-												<li>
-													{libraryNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Library</div>}
-													<ul role='list' className='-mx-2 space-y-1'>
-														{libraryNavigation.map((item) => (
+												<li className='mt-auto'>
+													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
+													<ul role='list' className='-mx-2 mt-2 space-y-1'>
+														{teamNavigation.map((item) => (
 															<li key={item.name}>
 																<Link
 																	suppressHydrationWarning
-																	href={`/library${item.href}`}
+																	href={`/${resourceSlug}${item.href}`}
 																	className={classNames(
-																		path === `/library${item.href}`
+																		path.endsWith(item.href)
 																			? 'bg-gray-800 text-white'
 																			: 'text-gray-400 hover:text-white hover:bg-gray-800',
 																		'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
 																	)}
 																>
-																	<item.icon
-																		className='h-6 w-6 shrink-0'
-																		aria-hidden='true'
-																	/>
+																	{item.icon}
 																	{item.name}
 																</Link>
 															</li>
 														))}
-													</ul>
-												</li>
-												<li className='mt-auto'>
-													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														<li>
 															<Link
 																href='/account'
@@ -293,6 +287,7 @@ export default withRouter(function Layout(props) {
 							</span>
 						</div>
 						{resourceSlug && <nav className='flex flex-1 flex-col'>
+							<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>
 							<ul role='list' className='flex flex-1 flex-col gap-y-7'>
 								<li>
 									<ul role='list' className='-mx-2 mt-2 space-y-1'>
@@ -300,8 +295,9 @@ export default withRouter(function Layout(props) {
 									</ul>
 								</li>
 								<li>
+									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
 									<ul role='list' className='-mx-2 space-y-1'>
-										{teamNavigation.map((item) => (
+										{agentNavigation.map((item) => (
 											<li key={item.name}>
 												<Link
 													suppressHydrationWarning
@@ -320,33 +316,26 @@ export default withRouter(function Layout(props) {
 										))}
 									</ul>
 								</li>
-								<li>
-									{libraryNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Library</div>}
-									<ul role='list' className='-mx-2 space-y-1'>
-										{libraryNavigation.map((item) => (
+								<li className='mt-auto'>
+									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
+									<ul role='list' className='-mx-2 mt-2 space-y-1'>
+										{teamNavigation.map((item) => (
 											<li key={item.name}>
 												<Link
 													suppressHydrationWarning
-													href={`/library${item.href}`}
+													href={`/${resourceSlug}${item.href}`}
 													className={classNames(
-														path === `/library${item.href}`
+														path.endsWith(item.href)
 															? 'bg-gray-800 text-white'
 															: 'text-gray-400 hover:text-white hover:bg-gray-800',
 														'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
 													)}
 												>
-													<item.icon
-														className='h-6 w-6 shrink-0'
-														aria-hidden='true'
-													/>
+													{item.icon}
 													{item.name}
 												</Link>
 											</li>
 										))}
-									</ul>
-								</li>
-								<li className='mt-auto'>
-									<ul role='list' className='-mx-2 mt-2 space-y-1'>
 										<li>
 											<Link
 												href='/account'

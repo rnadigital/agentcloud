@@ -12,8 +12,6 @@ import rehypeRaw from 'rehype-raw';
 
 export default function DynamicForm({ spec }) {
 
-	console.log('spec:', JSON.stringify(spec, null, '\t'));
-
 	const [formData, setFormData] = useState({});
 	const [arrayParams, setArrayParams] = useState([]);
 	const [showOptional, setShowOptional] = useState(false);
@@ -48,7 +46,9 @@ export default function DynamicForm({ spec }) {
 
 	const fieldTooltip = (field) => {
 		return field.description && <span className='tooltip'>
-			<span className='text-gray-400 hover:text-gray-600 cursor-pointer'><InformationCircleIcon className='ms-1 h-4 w-4' /></span>
+			<span className='text-gray-400 hover:text-gray-600 cursor-pointer'>
+				<InformationCircleIcon className='ms-1 h-4 w-4' />
+			</span>
 			<span className='tooltiptext'>
 				<Markdown
 					rehypePlugins={[rehypeRaw as any]}
@@ -62,12 +62,17 @@ export default function DynamicForm({ spec }) {
 
 	const renderOneOfOptions = (key, field) => {
 		return (
-			<select onChange={(e) => {
-				setOneOfState(oldoneOfState => ({
-					...oldoneOfState,
-					[key]: e.target.value,
-				}));
-			}} className='block w-full p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'>
+			<select
+				onChange={(e) => {
+					setOneOfState(oldoneOfState => ({
+						...oldoneOfState,
+						[key]: e.target.value,
+					}));
+				}}
+				required
+				name={key}
+				className='block w-full p-2 my-2 bg-white border border-gray-300 rounded-md shadow-sm'
+			>
 				<option value=''>Select an Option</option>
 				{field.oneOf.map((option, index) => (
 					<option key={index} value={index}>{option.title}</option>
@@ -110,6 +115,7 @@ export default function DynamicForm({ spec }) {
 					<input
 						key={key}
 						id={key}
+						name={key}
 						type='checkbox'
 						onChange={(e) => handleChange(e, key, index)}
 						className='p-2 mt-1 bg-white border border-gray-300 rounded-md shadow-sm'
@@ -123,6 +129,7 @@ export default function DynamicForm({ spec }) {
 					<InputComponent
 						key={key}
 						id={key}
+						name={key}
 						type={field.type === 'integer' ? 'number' : 'text'}
 						rows={field.examples?.length > 0 && field.examples[0].startsWith('{') ? 5 : 1}
 						required={required}
@@ -137,11 +144,12 @@ export default function DynamicForm({ spec }) {
 		const isFieldRequired = (fieldName) => {
 			return (requiredParent||spec?.connectionSpecification)?.required?.includes(fieldName);
 		};
+		const hasNestedFields = Object.keys(properties).some(k => !isFieldRequired(k));
 		return <div className={isNested ? 'p-5 border-l-4 border m-4 me-0 rounded' : ''}>
 			{properties && Object.keys(properties).map((key) => {
 				const field = properties[key];
 				if (!field.const //filter out consts
-					&& (isFieldRequired(key) || isNested)) { //only required
+					&& (isFieldRequired(key) || isNested)) { //required or nested
 					return (
 						<div key={key}>
 							<label htmlFor={key} className='select-none block text-sm font-medium text-gray-700'>
@@ -154,7 +162,7 @@ export default function DynamicForm({ spec }) {
 				}
 				return null;
 			})}
-			{!isNested && <div className='space-y-4'>
+			{!isNested && hasNestedFields && <div className='space-y-4'>
 				{!isArray && <button type='button' onClick={handleToggleOptionalFields} className='mt-4 mb-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					{showOptional ? 'Hide Optional Fields' : 'Show Optional Fields'}
 				</button>}

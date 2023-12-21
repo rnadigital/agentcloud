@@ -31,7 +31,7 @@ export default function AddDatasource(props) {
 	return (<>
 
 		<Head>
-			<title>{`New Agent - ${teamName}`}</title>
+			<title>{`New Datasource - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2'>

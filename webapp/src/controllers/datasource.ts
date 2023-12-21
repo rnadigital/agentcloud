@@ -13,7 +13,10 @@ import { readFileSync } from 'fs';
 import toObjectId from 'misc/toobjectid';
 import { promisify } from 'util';
 import { PDFExtract } from 'pdf.js-extract';
+import getConnectors from 'airbyte/getconnectors';
 const pdfExtract = new PDFExtract();
+import Ajv from 'ajv';
+const ajv = new Ajv({ strict: 'log' });
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
@@ -84,11 +87,91 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { name /* TODO */ }  = req.body;
+	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
 
-	//TODO: form validation
-	
-	//TODO: addDatasource
+	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const connectorList = await getConnectors();
+	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
+	if (!submittedConnector) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
+	}
+	const spec = submittedConnector.spec_oss.connectionSpecification;
+	const validate = ajv.compile(spec);
+	const validated = validate(req.body.sourceConfig);
+	const newDatasourceId = new ObjectId();
+	if (!validated || validate?.errors?.length > 0 ) {
+		//TODO: forward the errors to frontend and display them
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create source in airbyte based on the validated form
+	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
+	const sourceBody = {
+		configuration: {
+			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
+			sourceType,
+			...req.body.sourceConfig,
+		},
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
+		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
+	};
+	console.log('sourceBody', sourceBody);	
+	const createdSource = await sourcesApi
+		.createSource(null, sourceBody)
+		.then(res => res.data);
+	console.log('createdSource', createdSource);
+
+	// return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+
+	// Create a connection to our destination in airbyte
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionBody = {
+		schedule: {scheduleType: 'manual'},
+		dataResidency: 'auto',
+		namespaceDefinition: 'destination',
+		namespaceFormat: null,
+		nonBreakingSchemaUpdatesBehavior: 'ignore',
+		name: createdSource.sourceId,
+		sourceId: createdSource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+		status: 'active'
+	};
+	const createdConnection = await connectionsApi
+		.createConnection(null, connectionBody)
+		.then(res => res.data);
+	console.log('createdConnection', createdConnection);
+
+	// Create a job to trigger the connection to sync
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+	const jobBody = {
+		connectionId: createdConnection.connectionId,
+		jobType: 'sync',
+	};
+	const createdJob = await jobsApi
+		.createJob(null, jobBody)
+		.then(res => res.data);
+	console.log('createdJob', createdJob);
+
+	//Create the actual datasource in the db
+	await addDatasource({
+	    _id: newDatasourceId,
+	    orgId: toObjectId(res.locals.matchingOrg.id),
+	    teamId: toObjectId(req.params.resourceSlug),
+	    name: newDatasourceId.toString(),
+	    gcsFilename: null,
+	    originalName: datasourceName, //TODO?
+	    sourceId: createdSource.sourceId,
+	    connectionId: createdConnection.connectionId,
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+	    sourceType,
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace
+	});
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
@@ -233,7 +316,7 @@ export async function uploadFileApi(req, res, next) {
 			dataset_name: newDatasourceId.toString(),
 		},
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
-		name: newDatasourceId.toString()
+		name: `${uploadedFile.name} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 	};
 	const createdSource = await sourcesApi
 		.createSource(null, sourceBody)
@@ -248,7 +331,7 @@ export async function uploadFileApi(req, res, next) {
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: createdSource.sourceId,
+		name: `${createdSource.sourceId} - ${res.locals.account.name} (${res.locals.account._id})`,
 		sourceId: createdSource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
 		status: 'active'

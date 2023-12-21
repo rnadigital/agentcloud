@@ -139,6 +139,17 @@ export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) 
 	return ApiCall(`/${body.get('resourceSlug')}/forms/datasource/upload`, 'POST', body, dispatch, errorCallback, router);
 }
 
+//Team (invites/members/etc)
+export function getTeam(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/team.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function inviteToTeam(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/invite`, 'POST', body, dispatch, errorCallback, router);
+}
+export function addTeam(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/add`, 'POST', body, dispatch, errorCallback, router);
+}
+
 function buildOptions(_route, method, body) {
 
 	// Convert method uppercase

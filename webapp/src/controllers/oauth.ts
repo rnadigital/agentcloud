@@ -56,12 +56,12 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 			airbyteWorkspaceId = workspace.workspaceId;
 		}
 		const addedOrg = await addOrg({
-			name: 'My Org',
+			name: `${name}'s Org`,
 			teamIds: [],
 			members: [newAccountId],
 		});
 		const addedTeam = await addTeam({
-			name: 'My Team',
+			name: `${name}'s Team`,
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
 			airbyteWorkspaceId,
@@ -75,10 +75,10 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 			passwordHash: null,
 			orgs: [{
 				id: orgId,
-				name: 'My Org',
+				name: `${name}'s Org`,
 				teams: [{
 					id: teamId,
-					name: 'My Team',
+					name: `${name}'s Team`,
 					airbyteWorkspaceId,
 				}]
 			}],
@@ -121,12 +121,12 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 			airbyteWorkspaceId = workspace.workspaceId;
 		}
 		const addedOrg = await addOrg({
-			name: 'My Org',
+			name: `${name}'s Org`,
 			teamIds: [],
 			members: [newAccountId],
 		});
 		const addedTeam = await addTeam({
-			name: 'My Team',
+			name: `${name}'s Team`,
 			orgId: addedOrg.insertedId,
 			members: [newAccountId],
 			airbyteWorkspaceId,
@@ -140,10 +140,10 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 			passwordHash: null,
 			orgs: [{
 				id: orgId,
-				name: 'My Org',
+				name: `${name}'s Org`,
 				teams: [{
 					id: teamId,
-					name: 'My Team',
+					name: `${name}'s Team`,
 					airbyteWorkspaceId,
 				}]
 			}],
