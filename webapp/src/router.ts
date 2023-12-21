@@ -135,6 +135,7 @@ export default function router(server, app) {
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
+	teamRouter.post('/forms/team/add', teamController.addTeamApi);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 

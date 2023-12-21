@@ -191,9 +191,9 @@ export default withRouter(function Layout(props) {
 														))}
 													</ul>
 												</li>
-												<li>
-													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Team</div>}
-													<ul role='list' className='-mx-2 space-y-1'>
+												<li className='mt-auto'>
+													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
+													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
 																<Link
@@ -211,10 +211,6 @@ export default withRouter(function Layout(props) {
 																</Link>
 															</li>
 														))}
-													</ul>
-												</li>
-												<li className='mt-auto'>
-													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														<li>
 															<Link
 																href='/account'
@@ -290,6 +286,7 @@ export default withRouter(function Layout(props) {
 							</span>
 						</div>
 						{resourceSlug && <nav className='flex flex-1 flex-col'>
+							{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>}
 							<ul role='list' className='flex flex-1 flex-col gap-y-7'>
 								<li>
 									<ul role='list' className='-mx-2 mt-2 space-y-1'>
@@ -318,9 +315,9 @@ export default withRouter(function Layout(props) {
 										))}
 									</ul>
 								</li>
-								<li>
-									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Team</div>}
-									<ul role='list' className='-mx-2 space-y-1'>
+								<li className='mt-auto'>
+									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
+									<ul role='list' className='-mx-2 mt-2 space-y-1'>
 										{teamNavigation.map((item) => (
 											<li key={item.name}>
 												<Link
@@ -338,10 +335,6 @@ export default withRouter(function Layout(props) {
 												</Link>
 											</li>
 										))}
-									</ul>
-								</li>
-								<li className='mt-auto'>
-									<ul role='list' className='-mx-2 mt-2 space-y-1'>
 										<li>
 											<Link
 												href='/account'

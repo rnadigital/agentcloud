@@ -136,8 +136,42 @@ export async function inviteTeamMemberApi(req, res) {
 			await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 		}
 	}
-	//account is created
-	return dynamicResponse(req, res, 302, { redirect: '/account' });
+	//member invited
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/team` });
+}
+
+/**
+ * @api {post} /forms/team/add
+ * @apiName add
+ * @apiGroup Team
+ *
+ * @apiParam {String} teamName Name of new team
+ */
+export async function addTeamApi(req, res) {
+	const { teamName } = req.body;
+	if (!teamName || typeof teamName !== 'string' || teamName.length === 0) {
+		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
+	}
+	let airbyteWorkspaceId = null;
+	if (process.env.AIRBYTE_USERNAME) {
+		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+		const workspace = await workspaceApi.createWorkspace(null, {
+			name: res.locals.account._id.toString(), // account _id stringified as workspace nam
+		}).then(res => res.data);
+		airbyteWorkspaceId = workspace.workspaceId;
+	}
+	const addedTeam = await addTeam({
+		name: teamName,
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		members: [toObjectId(res.locals.account._id)],
+		airbyteWorkspaceId,
+	});
+	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
+	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
+		id: addedTeam.insertedId,
+		name: teamName,
+	});
+	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
 }
 
 //TODO: delete pending invite

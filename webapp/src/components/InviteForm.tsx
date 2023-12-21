@@ -40,7 +40,7 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 	}
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
 			<div className='space-y-4'>
 				<div>
 					<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
