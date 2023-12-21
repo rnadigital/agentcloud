@@ -1,6 +1,7 @@
 use crate::data::processing_incoming_messages::process_messages;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
+use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
@@ -29,14 +30,20 @@ pub async fn subscribe_to_queue(
     let args = BasicConsumeArguments::new(queue_name, "");
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
-        println!("Hello");
-        if let Some(msg) = message.content {
-            let qdrant_conn = Arc::clone(&app_data);
-            if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
-                let _ = channel.basic_ack(args).await;
-                let _ = process_messages(qdrant_conn, message_string).await;
+        let headers = message.basic_properties.unwrap().headers().unwrap().clone();
+        if let Some(stream_id) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+            if let Some(msg) = message.content {
+                let qdrant_conn = Arc::clone(&app_data);
+                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    let args =
+                        BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+                    let _ = channel.basic_ack(args).await;
+                    let _ =
+                        process_messages(qdrant_conn, message_string, stream_id.to_string()).await;
+                }
             }
+        } else {
+            println!("There was no stream_id in message... can not upload data!");
         }
     }
 

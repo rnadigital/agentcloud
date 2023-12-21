@@ -98,7 +98,7 @@ pub async fn embed_table_chunks_async(table_chunks: Vec<HashMap<String, HashMapV
     for row in table_chunks.iter() {
         futures.push(
             async move {
-                let embed_result = embed_custom_variable_row(row).await;
+                let embed_result = embed_payload(row).await;
                 return match embed_result {
                     Ok(point) => {
                         Ok::<PointStruct, anyhow::Error>(point)
@@ -169,7 +169,7 @@ pub async fn process_table_chunks_async(
 /// ```
 ///
 /// ```
-pub fn custom_variables_row_to_a_sentence(row: &HashMap<String, serde_json::Value>) -> Result<Vec<String>> {
+pub fn payload_to_sentence(row: &HashMap<String, serde_json::Value>) -> Result<Vec<String>> {
     let default_values = serde_json::Value::String("".to_string());
     let event_id = row.get("event_id").unwrap_or(&default_values);
     let user_id = row.get("user_id").unwrap_or(&default_values);
@@ -206,11 +206,11 @@ pub fn custom_variables_row_to_a_sentence(row: &HashMap<String, serde_json::Valu
 /// ```
 ///
 /// ```
-pub async fn embed_custom_variable_row(row: &HashMap<String, HashMapValues>) -> Result<PointStruct, anyhow::Error> {
+pub async fn embed_payload(row: &HashMap<String, HashMapValues>) -> Result<PointStruct, anyhow::Error> {
     if !row.is_empty() {
-        if let Some(_id) = row.get("event_id") {
+        if let Some(_id) = row.get("id") {
             let payload: HashMap<String, serde_json::Value> = hash_map_values_as_serde_values!(row);
-            let text = payload.get("message").unwrap().to_string();
+            let text = payload.get("text").unwrap().to_string();
             // Embedding sentences using OpenAI ADA2
             let llm_struct = LLM::new();
             let embedding_vec = llm_struct.embed_text(vec![text]).await?;
@@ -232,10 +232,10 @@ pub async fn embed_custom_variable_row(row: &HashMap<String, HashMapValues>) -> 
     return Err(anyhow!("Row is empty"));
 }
 
-pub async fn reverse_embed_variable_row(payload: &HashMap<String, Value>) -> Result<Vec<String>> {
+pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<Vec<String>> {
     if !payload.is_empty() {
         let payload: HashMap<String, serde_json::Value> = hash_map_values_as_serde_values!(payload);
-        let text = custom_variables_row_to_a_sentence(&payload);
+        let text = payload_to_sentence(&payload);
         text
     } else {
         Err(anyhow!("Payload is empty"))

@@ -21,7 +21,11 @@ pub async fn embed_insert(qdrant: &Qdrant, points: Vec<HashMap<String, HashMapVa
     return false;
 }
 
-pub async fn process_messages(qdrant_conn: Arc<Mutex<QdrantClient>>, message: String) {
+pub async fn process_messages(
+    qdrant_conn: Arc<Mutex<QdrantClient>>,
+    message: String,
+    stream_id: String,
+) {
     let mut message_data: Value = json!({});
     if let Ok(_json) = serde_json::from_str(message.as_str()) {
         message_data = _json;
@@ -29,13 +33,8 @@ pub async fn process_messages(qdrant_conn: Arc<Mutex<QdrantClient>>, message: St
     println!("Message Data {:?}", message_data);
     // Ensure that the data is being sent in the correct format. Array of ob
     if let Value::Array(data_array) = message_data {
-        let mut dataset_id = String::new();
         if data_array.len() > 0 {
-            if let Some(stream_id) = data_array[0].get("stream") {
-                dataset_id = String::from(stream_id.as_str().unwrap());
-            };
-            println!("{}", dataset_id);
-            let qdrant = Qdrant::new(qdrant_conn, dataset_id);
+            let qdrant = Qdrant::new(qdrant_conn, stream_id);
             let mut list_of_embedding_data: Vec<HashMap<String, HashMapValues>> = vec![];
             for message in data_array {
                 if let Value::Object(data_obj) = message {
@@ -57,21 +56,17 @@ pub async fn process_messages(qdrant_conn: Arc<Mutex<QdrantClient>>, message: St
     } else if let Value::Object(data_obj) = message_data {
         //     Handle the case where the data is being sent as an object rather than an array of objects
         println!("Data Object {:?}", data_obj);
-        if let Some(dataset_id) = data_obj.get("stream") {
-            let qdrant = Qdrant::new(qdrant_conn, dataset_id.to_string());
-            let embedding_data = convert_serde_value_to_hashmap_value(data_obj);
-            match embed_insert(&qdrant, vec![embedding_data]).await {
-                true => {
-                    log::info!("embedding and inserting points into vector db successful");
-                }
-                false => {
-                    log::info!("embedding and inserting points into vector db successful");
-                }
-            };
-        } else {
-            log::warn!("No stream ID found in payload...can not upload!")
-        }
+        let qdrant = Qdrant::new(qdrant_conn, stream_id);
+        let embedding_data = convert_serde_value_to_hashmap_value(data_obj);
+        match embed_insert(&qdrant, vec![embedding_data]).await {
+            true => {
+                log::info!("embedding and inserting points into vector db successful");
+            }
+            false => {
+                log::info!("embedding and inserting points into vector db successful");
+            }
+        };
     } else {
-        println!("Unknown data format");
+        log::warn!("No stream ID found in payload...can not upload!")
     }
 }

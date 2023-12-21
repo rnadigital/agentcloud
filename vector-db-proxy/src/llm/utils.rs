@@ -7,7 +7,7 @@ use async_openai::types::CreateEmbeddingRequestArgs;
 use crate::qdrant::utils::Qdrant;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use crate::routes::models::FilterConditions;
-use crate::qdrant::helpers::reverse_embed_variable_row;
+use crate::qdrant::helpers::reverse_embed_payload;
 
 pub struct LLM {}
 
@@ -84,7 +84,7 @@ impl LLM {
             ).await?;
         let mut list_of_system_prompts: Vec<Vec<String>> = vec![];
         for results in qdrant_search_results {
-            let system_prompts = reverse_embed_variable_row(&results.payload).await?;
+            let system_prompts = reverse_embed_payload(&results.payload).await?;
             list_of_system_prompts.push(system_prompts.to_owned());
         }
         // Data coming from external systems should be a system message

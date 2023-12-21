@@ -7,7 +7,6 @@ use amqprs::{
     connection::{Connection, OpenConnectionArguments},
 };
 use tokio::time::{sleep, Duration};
-use tracing::Instrument;
 
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     let mut res = Connection::open(
