@@ -34,10 +34,12 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
-		return API.getSpecification({
+		await new Promise(res => setTimeout(res, 200)); //Note: remove, testing
+		API.getSpecification({
 			sourceDefinitionId,
 			resourceSlug,
 		}, setSpec, setError, null);
+		setLoading(false);
 	}
 
 	const [connectors, setConnectors] = useState([]);
@@ -58,7 +60,6 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		  icon: connectors[key]?.iconUrl_oss,
 		})) : [];
 
-	console.log(connector);
 	async function datasourcePost(e) {
 		const body = {
 			sourceConfig: e.formData,
@@ -85,7 +86,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		}
 	}
 
-	return (<div className='xs:p-5 xs:my-10 sm:p-20 sm:my-20'>
+	return (<div className='xs:px-5 xs:my-10 sm:px-20 sm:my-20'>
 
 		{!spec?.schema && <>
 			<DropZone files={files} setFiles={setFiles} />
@@ -110,6 +111,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					classNames={SelectClassNames}
 					value={connector}
 					onChange={(v: any) => {
+						setLoading(v != null);
 						setConnector(v);
 						if (v) {
 							getSpecification(v.value);
@@ -138,31 +140,35 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					}}
 				/>
 
-				{spec?.schema && <>
-					<div className='sm:col-span-12 mt-3'>
-						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Datasource Name<span className='text-red-700'> *</span>
-						</label>
-						<div className='mt-2'>
-							<input
-								required
-								type='text'
-								name='name'
-								id='name'
-								onChange={(e) => setDatasourceName(e.target.value)}
-								value={datasourceName}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-							/>
-						</div>
+				{loading
+					? <div className='flex justify-center my-4'>
+						<ButtonSpinner size={24} />
 					</div>
-					<TailwindForm
-						schema={spec.schema.connectionSpecification}
-						validator={validator}
-						onSubmit={datasourcePost}
-						transformErrors={() => {return []; /*Disable internal validation for now*/}}
-						noHtml5Validate
-					/>
-				</>}
+					: spec?.schema && <>
+						<div className='sm:col-span-12 mt-3'>
+							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Datasource Name<span className='text-red-700'> *</span>
+							</label>
+							<div className='mt-2'>
+								<input
+									required
+									type='text'
+									name='name'
+									id='name'
+									onChange={(e) => setDatasourceName(e.target.value)}
+									value={datasourceName}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								/>
+							</div>
+						</div>
+						<TailwindForm
+							schema={spec.schema.connectionSpecification}
+							validator={validator}
+							onSubmit={datasourcePost}
+							transformErrors={() => {return []; /*Disable internal validation for now*/}}
+							noHtml5Validate
+						/>
+					</>}
 
 			</div>
 		</span>}
