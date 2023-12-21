@@ -80,7 +80,7 @@ impl LLM {
 
         let qdrant_search_results = qdrant
             .return_similar_results(
-                prompt_embedding[0].to_vec(), filters, limit,
+                prompt_embedding[0].to_vec(), filters, limit
             ).await?;
         let mut list_of_system_prompts: Vec<Vec<String>> = vec![];
         for results in qdrant_search_results {
@@ -92,12 +92,12 @@ impl LLM {
         let data = list_of_system_prompts[0].join(", ");
 
 
-        let step_1 = Step::for_prompt_template(prompt!(system: "I will provide you with data that you can use to answer my questions"));
+        let step_1 = Step::for_prompt_template(prompt!(system: "I will provide you with data that you can use to answer the user's questions"));
         let step_2 = Step::for_prompt_template(prompt!(system: data.as_str()));
         let step_3 = Step::for_prompt_template(prompt!(system: prompt[0].as_str()));
 
 
-        let mut chain = Chain::new(prompt!(system: "You are a marketing assistant that answers questions about users marketing data")).unwrap();
+        let mut chain = Chain::new(prompt!(system: "You are a helpful assistant that answers questions users questions using the data provided to you. If you do not know the answer or the data you have does not provide the information to answer the question say i do not know, do not try to make up an answer.")).unwrap();
 
         // Execute the conversation steps.
         let res_1 = chain.send_message(step_1, &parameters!(), &executor).await?;
