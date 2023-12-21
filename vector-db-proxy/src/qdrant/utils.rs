@@ -1,25 +1,25 @@
 use anyhow::{anyhow, Result};
 
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
+use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::{
-    CreateCollection, Filter, PointId, PointStruct,
-    RecommendPoints, ScoredPoint, VectorParams, VectorsConfig};
+    CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams,
+    VectorsConfig,
+};
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use crate::routes::models::FilterConditions;
-
+use tokio::sync::RwLock;
 
 pub struct Qdrant {
-    client: Arc<Mutex<QdrantClient>>,
+    client: Arc<RwLock<QdrantClient>>,
     collection_name: String,
 }
 
 impl Qdrant {
-    pub fn new(client: Arc<Mutex<QdrantClient>>, collection_name: String) -> Self {
+    pub fn new(client: Arc<RwLock<QdrantClient>>, collection_name: String) -> Self {
         Qdrant {
             client,
             collection_name,
@@ -28,7 +28,7 @@ impl Qdrant {
 
     pub async fn get_list_of_collections(&self) -> Result<Vec<String>> {
         println!("Getting list of collection from DB...");
-        let qdrant_conn = &self.client.lock().await;
+        let qdrant_conn = &self.client.read().await;
         let results = qdrant_conn.list_collections().await?;
         let list_of_collection: Vec<String> = results
             .collections
@@ -58,18 +58,24 @@ impl Qdrant {
         qdrant_client: &QdrantClient,
         create_disposition: CreateDisposition,
     ) -> Result<bool> {
-        println!("Checking if Collection: {} exists...", &self.collection_name);
+        println!(
+            "Checking if Collection: {} exists...",
+            &self.collection_name
+        );
         let results = qdrant_client.has_collection(&self.collection_name).await?;
         if results {
             println!("Collection: {} already exists", &self.collection_name);
             Ok(true)
         } else {
-            println!("Collection: {} does NOT exist...creating it now", &self.collection_name);
+            println!(
+                "Collection: {} does NOT exist...creating it now",
+                &self.collection_name
+            );
             println!("{}", (&self.collection_name).to_owned());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
-                    match qdrant_client.create_collection(
-                        &CreateCollection {
+                    match qdrant_client
+                        .create_collection(&CreateCollection {
                             collection_name: (&self.collection_name).to_owned(),
                             vectors_config: Some(VectorsConfig {
                                 config: Some(Config::Params(VectorParams {
@@ -79,23 +85,28 @@ impl Qdrant {
                                 })),
                             }),
                             ..Default::default()
-                        }
-                    ).await {
-                        Ok(result) => {
-                            match result.result {
-                                true => {
-                                    println!("Collection: {} created successfully!", &self.collection_name);
-                                    Ok(true)
-                                }
-                                false => {
-                                    println!("Collection: {} creation failed!", &self.collection_name);
-                                    Ok(false)
-                                }
+                        })
+                        .await
+                    {
+                        Ok(result) => match result.result {
+                            true => {
+                                println!(
+                                    "Collection: {} created successfully!",
+                                    &self.collection_name
+                                );
+                                Ok(true)
                             }
-                        }
+                            false => {
+                                println!("Collection: {} creation failed!", &self.collection_name);
+                                Ok(false)
+                            }
+                        },
                         Err(e) => {
                             println!("Err: {}", e);
-                            return Err(anyhow!("An error occurred while trying to create collection: {}", e));
+                            return Err(anyhow!(
+                                "An error occurred while trying to create collection: {}",
+                                e
+                            ));
                         }
                     }
                 }
@@ -120,34 +131,33 @@ impl Qdrant {
     /// ```
     ///
     /// ```
-    pub async fn upsert_data_point(
-        &self,
-        point: PointStruct,
-    ) -> Result<bool> {
-        println!("Uploading data point to collection: {}", &self.collection_name);
-        let qdrant_conn = &self.client.lock().await;
+    pub async fn upsert_data_point(&self, point: PointStruct) -> Result<bool> {
+        println!(
+            "Uploading data point to collection: {}",
+            &self.collection_name
+        );
+        let qdrant_conn = &self.client.read().await;
         let upsert_results = qdrant_conn
             .upsert_points_blocking(&self.collection_name, vec![point], None)
             .await?;
         match upsert_results.result.unwrap().status {
             2 => Ok(true),
-            _ => Ok(false)
+            _ => Ok(false),
         }
     }
 
-
-    pub async fn upsert_data_point_non_blocking(
-        &self,
-        point: PointStruct,
-    )-> Result<bool>{
-        println!("Uploading data point to collection: {}", &self.collection_name);
-        let qdrant_conn = &self.client.lock().await;
+    pub async fn upsert_data_point_non_blocking(&self, point: PointStruct) -> Result<bool> {
+        println!(
+            "Uploading data point to collection: {}",
+            &self.collection_name
+        );
+        let qdrant_conn = &self.client.read().await;
         let upsert_results = qdrant_conn
             .upsert_points(&self.collection_name, vec![point], None)
             .await?;
         match upsert_results.result.unwrap().status {
             2 => Ok(true),
-            _ => Ok(false)
+            _ => Ok(false),
         }
     }
 
@@ -164,22 +174,22 @@ impl Qdrant {
     /// ```
     ///
     /// ```
-    pub async fn bulk_upsert_data(
-        &self,
-        points: Vec<PointStruct>,
-    ) -> Result<bool> {
-        println!("Uploading bulk data points to collection: {}", &self.collection_name);
-        let qdrant_conn = &self.client.lock().await;
-        if self.check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded).await? {
-            let result = qdrant_conn.upsert_points_batch_blocking(
-                &self.collection_name,
-                points,
-                None,
-                100,
-            ).await?;
+    pub async fn bulk_upsert_data(&self, points: Vec<PointStruct>) -> Result<bool> {
+        println!(
+            "Uploading bulk data points to collection: {}",
+            &self.collection_name
+        );
+        let qdrant_conn = &self.client.read().await;
+        if self
+            .check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded)
+            .await?
+        {
+            let result = qdrant_conn
+                .upsert_points_batch_blocking(&self.collection_name, points, None, 100)
+                .await?;
             match result.result.unwrap().status {
                 2 => Ok(true),
-                _ => Ok(false)
+                _ => Ok(false),
             }
         } else {
             Err(anyhow!("Collection does not exist"))
@@ -207,11 +217,11 @@ impl Qdrant {
         filters: Option<FilterConditions>,
         limit: Option<u64>,
     ) -> Result<Vec<PointSearchResults>> {
-        let qdrant_conn = &self.client.lock().await;
+        let qdrant_conn = &self.client.read().await;
         let (must, must_not, should) = convert_hashmap_to_filters(&filters);
         let mut response_data: Vec<PointSearchResults> = vec![];
-        let search_result = qdrant_conn.search_points(
-            &SearchPoints {
+        let search_result = qdrant_conn
+            .search_points(&SearchPoints {
                 collection_name: self.collection_name.clone(),
                 vector: vector.to_owned(),
                 filter: Some(Filter {
@@ -222,16 +232,14 @@ impl Qdrant {
                 limit: limit.unwrap_or(5),
                 with_payload: Some(true.into()),
                 ..Default::default()
-            }
-        ).await?;
+            })
+            .await?;
         for result in &search_result.result {
-            let _ = response_data.push(
-                PointSearchResults {
-                    score: result.score,
-                    payload: result.payload.to_owned(),
-                }
-            );
-        };
+            let _ = response_data.push(PointSearchResults {
+                score: result.score,
+                payload: result.payload.to_owned(),
+            });
+        }
         Ok(response_data)
     }
 
@@ -258,11 +266,9 @@ impl Qdrant {
     ) -> Result<Vec<ScoredPoint>> {
         let (must, must_not, should) = convert_hashmap_to_filters(&filters);
         let point_id = PointId {
-            point_id_options: Some(
-                point_id::PointIdOptions::Uuid(id)
-            )
+            point_id_options: Some(point_id::PointIdOptions::Uuid(id)),
         };
-        let qdrant = &self.client.lock().await;
+        let qdrant = &self.client.read().await;
         let recommend = RecommendPoints {
             collection_name: self.collection_name.to_owned(),
             positive: vec![point_id],
@@ -277,7 +283,7 @@ impl Qdrant {
             ..Default::default()
         };
         match qdrant.recommend(&recommend).await {
-            Ok(result) => { Ok(result.result) }
+            Ok(result) => Ok(result.result),
             Err(e) => {
                 tracing::error!("Error occurred: {e}");
                 Err(anyhow!("Error occurred: {e}"))

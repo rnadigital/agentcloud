@@ -24,7 +24,7 @@ use env_logger::Env;
 use once_cell::sync::Lazy;
 use tokio::join;
 use tokio::signal::unix::{signal, SignalKind};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
@@ -85,7 +85,7 @@ async fn main() -> std::io::Result<()> {
             panic!("An error occurred while trying to connect to Qdrant DB {e}")
         }
     };
-    let app_qdrant_client = Arc::new(Mutex::new(qdrant_client));
+    let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
     let rabbitmq_connection_details = RabbitConnect {
         host: rabbitmq_host,

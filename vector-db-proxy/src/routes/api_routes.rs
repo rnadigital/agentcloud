@@ -27,7 +27,7 @@ use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{Prompt, ResponseBody, SearchRequest, Status};
 use serde_json::json;
 use std::vec;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use wherr::wherr;
 
 ///
@@ -53,7 +53,7 @@ pub async fn health_check() -> Result<impl Responder> {
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 ///
 /// returns: Result<impl Responder<Body=<unknown>>+Sized, MyError>
 ///
@@ -64,7 +64,7 @@ pub async fn health_check() -> Result<impl Responder> {
 /// ```
 #[wherr]
 #[get("/list-collections")]
-pub async fn list_collections(app_data: Data<Arc<Mutex<QdrantClient>>>) -> Result<impl Responder> {
+pub async fn list_collections(app_data: Data<Arc<RwLock<QdrantClient>>>) -> Result<impl Responder> {
     let qdrant_conn = app_data.get_ref().clone();
     let qdrant = Qdrant::new(qdrant_conn, String::from(""));
     let results = qdrant.get_list_of_collections().await?;
@@ -81,7 +81,7 @@ pub async fn list_collections(app_data: Data<Arc<Mutex<QdrantClient>>>) -> Resul
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(params)`:
 ///
 /// returns: Result<HttpResponse<BoxBody>, MyError>
@@ -94,12 +94,12 @@ pub async fn list_collections(app_data: Data<Arc<Mutex<QdrantClient>>>) -> Resul
 #[wherr]
 #[post("/create-collection/{collection_name}/{size}")]
 pub async fn create_collection(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(params): Path<(String, u64)>,
 ) -> Result<HttpResponse> {
     let (collection_name, size) = params;
     let qdrant_conn = app_data.get_ref().clone();
-    let qdrant_client = qdrant_conn.lock().await;
+    let qdrant_client = qdrant_conn.read().await;
     let collection_creation_result = qdrant_client
         .create_collection(&CreateCollection {
             collection_name: collection_name.into(),
@@ -130,7 +130,7 @@ pub async fn create_collection(
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(collection_name)`:
 /// * `data`:
 ///
@@ -144,7 +144,7 @@ pub async fn create_collection(
 #[wherr]
 #[post("/upsert-data-point/{collection_name}")]
 pub async fn upsert_data_point_to_collection(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(collection_name): Path<String>,
     data: web::Json<MyPoint>,
 ) -> Result<impl Responder> {
@@ -182,7 +182,7 @@ pub async fn upsert_data_point_to_collection(
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(collection_name)`:
 /// * `data`:
 ///
@@ -196,7 +196,7 @@ pub async fn upsert_data_point_to_collection(
 #[wherr]
 #[post("/bulk-upsert-data/{collection_name}")]
 pub async fn bulk_upsert_data_to_collection(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(collection_name): Path<String>,
     data: web::Json<Vec<MyPoint>>,
 ) -> Result<impl Responder> {
@@ -237,7 +237,7 @@ pub async fn bulk_upsert_data_to_collection(
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(collection_name)`:
 /// * `data`:
 ///
@@ -251,17 +251,12 @@ pub async fn bulk_upsert_data_to_collection(
 #[wherr]
 #[get("/lookup-data-point/{collection_name}")]
 pub async fn lookup_data_point(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(collection_name): Path<String>,
     data: web::Json<SearchRequest>,
 ) -> Result<impl Responder> {
     let qdrant_conn = app_data.get_ref().clone();
-    let qdrant_conn_lock = qdrant_conn
-        .try_lock()
-        .map_err(|err| {
-            println!("Mutex Guard was poisoned: {}", err);
-        })
-        .unwrap();
+    let qdrant_conn_lock = qdrant_conn.read().await;
     let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
     let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
     let search_result = qdrant_conn_lock
@@ -298,7 +293,7 @@ pub async fn lookup_data_point(
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(dataset_id)`:
 /// * `data`:
 ///
@@ -312,7 +307,7 @@ pub async fn lookup_data_point(
 #[wherr]
 #[post("/prompt/{dataset_id}")]
 pub async fn prompt(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(dataset_id): Path<String>,
     data: web::Json<Prompt>,
 ) -> Result<impl Responder> {
@@ -320,7 +315,7 @@ pub async fn prompt(
 
     let qdrant_conn = app_data.get_ref();
     let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-    let qdrant_client = qdrant_conn_clone.lock().await;
+    let qdrant_client = qdrant_conn_clone.read().await;
 
     let data_clone = data.clone();
     let prompt = data_clone.prompt.to_vec();
@@ -366,7 +361,7 @@ pub async fn prompt(
 ///
 /// # Arguments
 ///
-/// * `app_data`: Data<Arc<Mutex<QdrantClient>>>
+/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(dataset_id)`:
 /// * `data`: Query string parameters based on the `SearchRequest` struct
 ///
@@ -380,7 +375,7 @@ pub async fn prompt(
 #[wherr]
 #[get("/scroll/{dataset_id}")]
 pub async fn scroll_data(
-    app_data: Data<Arc<Mutex<QdrantClient>>>,
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(dataset_id): Path<String>,
     data: web::Query<SearchRequest>,
 ) -> Result<impl Responder> {
@@ -390,7 +385,7 @@ pub async fn scroll_data(
     // Create a hash map of all filters provided by the client
     let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
     if qdrant_conn
-        .lock()
+        .read()
         .await
         .has_collection(dataset_id.clone())
         .await?
@@ -447,7 +442,7 @@ pub async fn scroll_data(
                     });
                 }
             } else {
-                let result = qdrant_conn.lock().await.scroll(&scroll_points).await?;
+                let result = qdrant_conn.read().await.scroll(&scroll_points).await?;
                 response.extend(get_scroll_results(result)?);
             }
         }

@@ -1,11 +1,11 @@
-use actix_web_lab::__reexports::futures_util::StreamExt;
 use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
+use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 
-use crate::llm::utils::LLM;
-use crate::qdrant::utils::Qdrant;
 use crate::hash_map_values_as_serde_values;
-use crate::qdrant::models::{ScrollResults, HashMapValues};
+use crate::llm::utils::LLM;
+use crate::qdrant::models::{HashMapValues, ScrollResults};
+use crate::qdrant::utils::Qdrant;
 
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::{PointStruct, Value};
@@ -16,7 +16,7 @@ use qdrant_client::qdrant::{ScrollPoints, ScrollResponse};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
 ///
@@ -33,21 +33,17 @@ use uuid::Uuid;
 ///
 /// ```
 pub async fn get_next_page(
-    qdrant_conn: Arc<Mutex<QdrantClient>>,
+    qdrant_conn: Arc<RwLock<QdrantClient>>,
     scroll_point: &ScrollPoints,
 ) -> Result<(ScrollResponse, String)> {
-    let result = qdrant_conn
-        .lock()
-        .await
-        .scroll(&scroll_point)
-        .await?;
+    let result = qdrant_conn.read().await.scroll(&scroll_point).await?;
 
     let mut offset = String::from("Done");
     if let Some(point_id) = result.clone().next_page_offset {
         if let Some(point_id_option) = point_id.point_id_options {
             offset = match point_id_option {
-                PointIdOptions::Num(num) => { num.to_string() }
-                PointIdOptions::Uuid(uuid) => uuid
+                PointIdOptions::Num(num) => num.to_string(),
+                PointIdOptions::Uuid(uuid) => uuid,
             }
         }
     }
@@ -61,15 +57,17 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
         if let Some(point_id) = result.id {
             if let Some(id_option) = point_id.point_id_options {
                 id = match id_option {
-                    PointIdOptions::Num(num) => { num.to_string() }
-                    PointIdOptions::Uuid(uuid) => { uuid }
+                    PointIdOptions::Num(num) => num.to_string(),
+                    PointIdOptions::Uuid(uuid) => uuid,
                 };
             }
         }
         let vectors = result.vectors.unwrap().vectors_options.unwrap();
         let vector = match vectors {
-            VectorsOptions::Vector(v) => { v.data }
-            VectorsOptions::Vectors(_V) => { vec![] }
+            VectorsOptions::Vector(v) => v.data,
+            VectorsOptions::Vectors(_V) => {
+                vec![]
+            }
         };
         let mut new_payload = result.payload.clone();
 
@@ -83,7 +81,7 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
         }
         let res = ScrollResults {
             id,
-            payload: new_payload,  // Use the modified payload
+            payload: new_payload, // Use the modified payload
             vector,
         };
         response.push(res);
@@ -91,24 +89,20 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
     Ok(response)
 }
 
-pub async fn embed_table_chunks_async(table_chunks: Vec<HashMap<String, HashMapValues>>) -> Result<Vec<PointStruct>> {
+pub async fn embed_table_chunks_async(
+    table_chunks: Vec<HashMap<String, HashMapValues>>,
+) -> Result<Vec<PointStruct>> {
     let mut list_of_embeddings: Vec<PointStruct> = vec![];
     let mut futures = FuturesUnordered::new();
     // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
     for row in table_chunks.iter() {
-        futures.push(
-            async move {
-                let embed_result = embed_payload(row).await;
-                return match embed_result {
-                    Ok(point) => {
-                        Ok::<PointStruct, anyhow::Error>(point)
-                    }
-                    Err(e) => {
-                        Err(anyhow!("Embedding row failed: {}", e))
-                    }
-                };
-            }
-        );
+        futures.push(async move {
+            let embed_result = embed_payload(row).await;
+            return match embed_result {
+                Ok(point) => Ok::<PointStruct, anyhow::Error>(point),
+                Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
+            };
+        });
     }
     while let Some(result) = futures.next().await {
         match result {
@@ -136,7 +130,7 @@ pub async fn embed_table_chunks_async(table_chunks: Vec<HashMap<String, HashMapV
 /// ```
 // Each thread calls this function and passes it a table chunk
 pub async fn process_table_chunks_async(
-    qdrant_conn: Arc<Mutex<QdrantClient>>,
+    qdrant_conn: Arc<RwLock<QdrantClient>>,
     table_chunks: Vec<HashMap<String, HashMapValues>>,
     dataset_id: String,
 ) -> Result<bool> {
@@ -154,7 +148,6 @@ pub async fn process_table_chunks_async(
         }
     }
 }
-
 
 ///
 ///
@@ -184,11 +177,19 @@ pub fn payload_to_sentence(row: &HashMap<String, serde_json::Value>) -> Result<V
     let sentence = [format!(
         "event_id: {:?}, user_id: {:?}, container_id: {:?}, event_name: {:?}, vendor: {:?},
          pii_type: {:?}, key: {:?}, value: {:?}",
-        event_id.to_string().as_str(), user_id.to_string().as_str(),
-        container_id.to_string().as_str(), event.to_string().as_str(),
-        vendor.to_string().as_str(), pii_type.to_string().as_str(),
-        variable_name.to_string().as_str(), values)
-        .replace("\n", "").replace("\"", "").trim().to_lowercase()];
+        event_id.to_string().as_str(),
+        user_id.to_string().as_str(),
+        container_id.to_string().as_str(),
+        event.to_string().as_str(),
+        vendor.to_string().as_str(),
+        pii_type.to_string().as_str(),
+        variable_name.to_string().as_str(),
+        values
+    )
+    .replace("\n", "")
+    .replace("\"", "")
+    .trim()
+    .to_lowercase()];
 
     Ok(sentence.to_vec())
 }
@@ -206,27 +207,42 @@ pub fn payload_to_sentence(row: &HashMap<String, serde_json::Value>) -> Result<V
 /// ```
 ///
 /// ```
-pub async fn embed_payload(row: &HashMap<String, HashMapValues>) -> Result<PointStruct, anyhow::Error> {
+pub async fn embed_payload(
+    row: &HashMap<String, HashMapValues>,
+) -> Result<PointStruct, anyhow::Error> {
     if !row.is_empty() {
         if let Some(_id) = row.get("id") {
             let payload: HashMap<String, serde_json::Value> = hash_map_values_as_serde_values!(row);
-            let text = payload.get("text").unwrap().to_string();
-            // Embedding sentences using OpenAI ADA2
-            let llm_struct = LLM::new();
-            let embedding_vec = llm_struct.embed_text(vec![text]).await?;
-            // Construct PointStruct to insert into DB
-            if !embedding_vec.is_empty() {
-                for embedding in embedding_vec {
-                    let point = PointStruct::new(
-                        Uuid::new_v4().to_string(),
-                        embedding.to_owned(),
-                        json!(payload).try_into().unwrap(),
-                    );
-                    return Ok(point);
+            if let Ok(metadata) = json!(payload).try_into() {
+                if let Some(text) = payload.get("text") {
+                    let llm_struct = LLM::new();
+                    // Embedding sentences using OpenAI ADA2
+                    let embedding_vec = llm_struct.embed_text(vec![text.to_string()]).await?;
+                    // Construct PointStruct to insert into DB
+                    if !embedding_vec.is_empty() {
+                        for embedding in embedding_vec {
+                            let point = PointStruct::new(
+                                Uuid::new_v4().to_string(),
+                                embedding.to_owned(),
+                                metadata,
+                            );
+                            return Ok(point);
+                        }
+                    }
+                } else {
+                    return Err(anyhow!(
+                        "Could not find text field in payload. Aborting embedding!"
+                    ));
                 }
+            } else {
+                return Err(anyhow!(
+                    "Could not convert payload to JSON type. Aborting embedding!"
+                ));
             }
         } else {
-            return Err(anyhow!("Could not find an event ID for this payload. Aborting embedding!"));
+            return Err(anyhow!(
+                "Could not find an steam ID for this payload. Aborting embedding!"
+            ));
         }
     }
     return Err(anyhow!("Row is empty"));
@@ -234,12 +250,12 @@ pub async fn embed_payload(row: &HashMap<String, HashMapValues>) -> Result<Point
 
 pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<Vec<String>> {
     if !payload.is_empty() {
-        let payload: HashMap<String, serde_json::Value> = hash_map_values_as_serde_values!(payload);
-        let text = payload_to_sentence(&payload);
-        text
+        if let Some(text) = payload.get("text") {
+            Ok(vec![text.to_string()])
+        } else {
+            Err(anyhow!("Payload did not contain the text field. Aborting!"))
+        }
     } else {
         Err(anyhow!("Payload is empty"))
     }
 }
-
-

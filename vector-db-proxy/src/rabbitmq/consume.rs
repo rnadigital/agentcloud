@@ -6,10 +6,10 @@ use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArgum
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 pub async fn subscribe_to_queue(
-    app_data: Arc<Mutex<QdrantClient>>,
+    app_data: Arc<RwLock<QdrantClient>>,
     connection_details: RabbitConnect,
     exchange_name: &str,
     queue_name: &str,

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 use qdrant_client::client::QdrantClient;
 use serde_json::{json, Value};
@@ -22,7 +22,7 @@ pub async fn embed_insert(qdrant: &Qdrant, points: Vec<HashMap<String, HashMapVa
 }
 
 pub async fn process_messages(
-    qdrant_conn: Arc<Mutex<QdrantClient>>,
+    qdrant_conn: Arc<RwLock<QdrantClient>>,
     message: String,
     stream_id: String,
 ) {
@@ -30,7 +30,6 @@ pub async fn process_messages(
     if let Ok(_json) = serde_json::from_str(message.as_str()) {
         message_data = _json;
     }
-    println!("Message Data {:?}", message_data);
     // Ensure that the data is being sent in the correct format. Array of ob
     if let Value::Array(data_array) = message_data {
         if data_array.len() > 0 {
@@ -55,7 +54,6 @@ pub async fn process_messages(
         }
     } else if let Value::Object(data_obj) = message_data {
         //     Handle the case where the data is being sent as an object rather than an array of objects
-        println!("Data Object {:?}", data_obj);
         let qdrant = Qdrant::new(qdrant_conn, stream_id);
         let embedding_data = convert_serde_value_to_hashmap_value(data_obj);
         match embed_insert(&qdrant, vec![embedding_data]).await {
