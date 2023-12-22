@@ -26,6 +26,7 @@ services:
         - NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH=
         - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
         - POSTHOG_KEY=
+    network_mode: host
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -33,15 +34,15 @@ services:
       - docker_redis
     environment:
       - NODE_ENV=development
-      - DB_URL=mongodb://docker_mongo:27017/test
-      - REDIS_HOST=docker_redis
+      - DB_URL=mongodb://127.0.0.1:27017/test
+      - REDIS_HOST=127.0.0.1
       - REDIS_PASS=
       - JWT_SECRET=changeme
       - COOKIE_SECRET=changeme
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
       - PROJECT_ID=${PROJECT_ID}
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
-      - URL_APP=http://localhost:3000
+      - URL_APP=http://127.0.0.1:3000
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
@@ -51,8 +52,8 @@ services:
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
-      - AIRBYTE_WEB_URL=http://localhost:8000
-      - AIRBYTE_API_URL=http://localhost:8006
+      - AIRBYTE_WEB_URL=http://127.0.0.1:8000
+      - AIRBYTE_API_URL=http://127.0.0.1:8006
       - AIRBYTE_ADMIN_WORKSPACE_ID=${AIRBYTE_ADMIN_WORKSPACE_ID}
       - AIRBYTE_ADMIN_DESTINATION_ID=${AIRBYTE_ADMIN_DESTINATION_ID}
       - AIRBYTE_USERNAME=airbyte
