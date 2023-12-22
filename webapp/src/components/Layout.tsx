@@ -151,16 +151,13 @@ export default withRouter(function Layout(props) {
 									</Transition.Child>
 									{/* Sidebar component, swap this element with another sidebar if you like */}
 									{showNavs && <div className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 ring-1 ring-white/10'>
-										<div className='flex h-16 shrink-0 items-center'>
+										<div className='flex mt-4 h-16 shrink-0 items-center'>
 											<img
-												src='/images/favicon.ico'
+												src='/images/agentcloud-full-white-bg-trans.png'
 												alt='Your Company'
-												width={48}
-												height={48}
+												width={200}
+												height={150}
 											/>
-											<span className='ms-3 text-xl text-white'>
-												Agent Cloud
-											</span>
 										</div>
 										{resourceSlug && <nav className='flex flex-1 flex-col'>
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>
@@ -275,16 +272,13 @@ export default withRouter(function Layout(props) {
 				{showNavs && <div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
 					{/* Sidebar component, swap this element with another sidebar if you like */}
 					<div className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'>
-						<div className='flex h-16 shrink-0 items-center'>
+						<div className='flex mt-4 h-16 shrink-0 items-center'>
 							<img
-								src='/images/favicon.ico'
+								src='/images/agentcloud-full-white-bg-trans.png'
 								alt='Your Company'
-								width={48}
-								height={48}
+								width={200}
+								height={150}
 							/>
-							<span className='ms-3 text-xl text-white'>
-								Agent Cloud
-							</span>
 						</div>
 						{resourceSlug && <nav className='flex flex-1 flex-col'>
 							<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>

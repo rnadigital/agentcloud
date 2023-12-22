@@ -47,7 +47,7 @@ export default function Verify() {
 				<div className='sm:mx-auto sm:w-full sm:max-w-md'>
 					<img
 						className='mx-auto h-16 w-auto'
-						src='/images/favicon.ico'
+						src='/images/agentcloud-mark-black-bg-trans.png'
 						alt='Your Company'
 						height={128}
 						width={128}
