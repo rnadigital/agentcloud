@@ -322,7 +322,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						            value={datasourcesState}
 						            onChange={(v: any) => {
 						            	console.log(v);
-						            	setDatasourcesState(v);
+						            	setDatasourcesState(v ? [v[v.length-1]] : []);
 					            	}}
 						            options={datasources.map(t => ({ label: `${t.originalName || t.name} (${t.sourceType})`, value: t._id, ...t }))}
 						            formatOptionLabel={(data: any) => {
