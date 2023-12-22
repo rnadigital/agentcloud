@@ -17,7 +17,7 @@ export default function Index() {
 		router.push('/account');
 	}
 
-	return null; //TODO: a "homepage"?
+	return null;
 
 }
 

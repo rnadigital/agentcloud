@@ -10,6 +10,7 @@ import { Message } from '../../../../components/chat/message';
 import SessionChatbox from '../../../../components/SessionChatbox';
 import classNames from '../../../../components/ClassNames';
 import Blockies from 'react-blockies';
+import { SessionStatus } from 'struct/session';
 import {
 	StopIcon,
 } from '@heroicons/react/24/outline';
@@ -170,8 +171,7 @@ export default function Session(props) {
 	}
 	useEffect(() => {
 		if (session) {
-			setTerminated(session.status === 'terminated');
-			//todo: move enums out of db file (to exclude backend mongo import stuff), then use in frontend)
+			setTerminated(session.status === SessionStatus.TERMINATED);
 		}
 	}, [session]);
 	useEffect(() => {

@@ -84,7 +84,6 @@ export default function Account(props) {
 				</div>
 			</form>}
 
-			{/* TODO: change logic for showing yes/no */}
 			<p>Subscribed: {stripeCustomerId ? 'Yes' : 'No'}</p>
 			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
 			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}

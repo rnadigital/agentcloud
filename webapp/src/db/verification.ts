@@ -11,7 +11,7 @@ export enum VerificationTypes {
 	TEAM_INVITE = 'team_invite',
 }
 
-export type VerificationType = VerificationTypes; //TODO: add whatever types we need here
+export type VerificationType = VerificationTypes;
 
 export type Verification = {
 	_id?: ObjectId;
@@ -35,7 +35,8 @@ export async function addVerification(accountId: db.IdOrStr, type: VerificationT
 }
 
 export function getAndDeleteVerification(token: string, type: VerificationType): Promise<any> {
-	return VerificationCollection().findOneAndDelete({ //findOneAndDelete to be atomic, not allow double use
+	// Note: findOneAndDelete to be atomic, prevent double use
+	return VerificationCollection().findOneAndDelete({
 		token,
 		type,
 	});

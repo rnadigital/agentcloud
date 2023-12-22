@@ -14,7 +14,7 @@ export default function EditGroup(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	const [agents, setAgents] = useState(null); //TODO: take from prop
+	const [agents, setAgents] = useState(null);
 	const [error, setError] = useState();
 	const { groupData } = state;
 

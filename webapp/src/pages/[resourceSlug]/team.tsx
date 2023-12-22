@@ -16,7 +16,7 @@ export default function Team(props) {
 	const { team, invites } = state;
 
 	async function fetchTeam() {
-		await API.getTeam({ resourceSlug }, dispatch, setError, router); //TODO;
+		await API.getTeam({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -37,7 +37,7 @@ export default function Team(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Team Members</h3>
 		</div>
 
-		{/* TODO */}
+		{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
 		<pre>{JSON.stringify(team, null, 2)}</pre>
 
 		<div className='border-b pb-2 my-2'>
