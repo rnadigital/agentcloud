@@ -32,6 +32,8 @@ read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT
 cp $SERVICE_ACCOUNT_JSON_PATH webapp/keyfile.json
 read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
 export GCS_BUCKET_NAME
+read -p "Enter your OpenAI API key: " OPENAI_API_KEY
+export OPENAI_API_KEY
 
 # clone and install airbyte
 if [ ! -d "airbyte" ] ; then
