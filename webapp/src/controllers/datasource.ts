@@ -33,7 +33,6 @@ function updateDateStrings(obj) {
 }
 ajv.addFormat('date-time', validateDateTimeFormat);
 
-
 const pdfExtract = new PDFExtract();
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 dotenv.config({ path: '.env' });
@@ -149,8 +148,6 @@ export async function addDatasourceApi(req, res, next) {
 		.createSource(null, sourceBody)
 		.then(res => res.data);
 	console.log('createdSource', createdSource);
-
-	// return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);

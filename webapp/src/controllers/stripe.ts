@@ -162,7 +162,7 @@ export async function createPaymentLink(req, res, next) {
 	const paymentLink = await stripe.paymentLinks.create({
 		line_items: [
 			{
-				price: 'price_1OAMHSDxQ9GZKzvoBbDryhiZ', //TODO: put in env or a secret?
+				price: process.env.STRIPE_PRICE_ID,
 				quantity: 1,
 			},
 		],
