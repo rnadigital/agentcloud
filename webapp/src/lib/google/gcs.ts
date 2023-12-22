@@ -40,7 +40,7 @@ export async function uploadFile(filename: string, uploadedFile: any) { //TODO: 
 export async function deleteFile(filename: string) {
 	log('Deleting file %s', filename);
 	const file = initialiseCloudStorageClient()
-		.bucket('agentcloud-test') //TODO: env
+		.bucket(process.env.GCS_BUCKET_NAME)
 		.file(filename);
 	await file.delete({});
 }
