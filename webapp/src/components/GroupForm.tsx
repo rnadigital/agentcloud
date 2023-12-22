@@ -53,7 +53,6 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 	async function createAgentCallback() {
 		await fetchAgents && fetchAgents();
 		setModalOpen(false);
-		//TODO: anything else?
 	}
 
 	return (<>

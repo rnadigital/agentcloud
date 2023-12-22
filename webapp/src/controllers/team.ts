@@ -13,14 +13,11 @@ import toObjectId from 'misc/toobjectid';
 import * as ses from '../lib/email/ses';
 
 export async function teamData(req, res, _next) {
-	//TODO: get team members list and invites
 	const [team] = await Promise.all([
 		getTeamWithMembers(req.params.resourceSlug),
 	]);
-	let invites = [];//TODO
 	return {
 		team,
-		invites,
 		csrf: req.csrfToken(),
 	};
 };

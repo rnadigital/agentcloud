@@ -7,7 +7,7 @@ import { AgentType } from 'struct/agent';
 import { dynamicResponse } from '../util';
 
 export async function groupsData(req, res, _next) {
-	const groups = await getGroupsByTeam(req.params.resourceSlug); //TODO: change data fetched here to list of groups
+	const groups = await getGroupsByTeam(req.params.resourceSlug);
 	const teamAgents = await getAgentsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
@@ -50,7 +50,7 @@ export async function groupJson(req, res, next) {
  * group page json data
  */
 export async function groupsJson(req, res, next) {
-	const data = await groupsData(req, res, next);//TODO: change data used here
+	const data = await groupsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
 
@@ -73,10 +73,6 @@ export async function groupEditPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
-		// query: {
-		// 	resourceSlug: req.params.resourceSlug,
-		// 	groupId: req.params.groupId,
-		// }
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/group/${req.params.groupId}/edit`); 
 }

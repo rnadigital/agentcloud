@@ -32,7 +32,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [toolState, setToolState] = useState(tool); // TODO: remove?
+	const [toolState, setToolState] = useState(tool);
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = toolState?.data?.builtin === true;
 	const [importOpen, setImportOpen] = useState(false);

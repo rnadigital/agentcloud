@@ -121,7 +121,6 @@ export async function addDatasourceApi(req, res, next) {
 		const validate = ajv.compile(spec);
 		const validated = validate(req.body.sourceConfig);
 		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
-			//TODO: forward the errors to frontend and display them
 			console.log('validate.errors', validate?.errors);
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -140,7 +139,7 @@ export async function addDatasourceApi(req, res, next) {
 			sourceType,
 			...req.body.sourceConfig,
 		},
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 	};
 	console.log('sourceBody', sourceBody);	
@@ -159,7 +158,7 @@ export async function addDatasourceApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: createdSource.sourceId,
 		sourceId: createdSource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
 	const createdConnection = await connectionsApi
@@ -185,12 +184,12 @@ export async function addDatasourceApi(req, res, next) {
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: newDatasourceId.toString(),
 	    gcsFilename: null,
-	    originalName: datasourceName, //TODO?
+	    originalName: datasourceName,
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 	    sourceType,
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -279,8 +278,6 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: validation on filetype, etc
-
 	const uploadedFile = req.files.file;
 	let fileExtension = path.extname(uploadedFile.name);
 	//TODO: refactor this "special handling" to a separate module
@@ -337,7 +334,7 @@ export async function uploadFileApi(req, res, next) {
 			url: `gs://agentcloud-test/${filename}`,
 			dataset_name: newDatasourceId.toString(),
 		},
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace, and up above
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 		name: `${uploadedFile.name} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 	};
 	const createdSource = await sourcesApi
@@ -355,7 +352,7 @@ export async function uploadFileApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: `${createdSource.sourceId} - ${res.locals.account.name} (${res.locals.account._id})`,
 		sourceId: createdSource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
 	const createdConnection = await connectionsApi
@@ -384,9 +381,9 @@ export async function uploadFileApi(req, res, next) {
 	    originalName: uploadedFile.name,
 	    sourceId: createdSource.sourceId,
 	    connectionId: createdConnection.connectionId,
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID, //TODO: not hardcode, or one per team??
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 	    sourceType: 'file',
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID, //TODO: change to the user-specific workspace
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction

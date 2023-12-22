@@ -103,7 +103,7 @@ export async function register(req, res) {
 		teamIds: [],
 		members: [newAccountId],
 	});
-	const addedTeam = await addTeam({ //TODO: create with workspaceId of airbyte
+	const addedTeam = await addTeam({
 		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
