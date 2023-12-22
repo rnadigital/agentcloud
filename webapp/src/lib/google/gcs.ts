@@ -18,7 +18,7 @@ export async function uploadFile(filename: string, uploadedFile: any) { //TODO: 
 	log('Uploading file %s (%s)', uploadedFile.name, filename);
 	return new Promise((res, rej) => {
 		const file = initialiseCloudStorageClient()
-			.bucket('agentcloud-test') //TODO: env
+			.bucket(process.env.GCS_BUCKET_NAME) //TODO: env
 			.file(filename);
 		const stream = file.createWriteStream({
 			metadata: {
