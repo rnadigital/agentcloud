@@ -95,13 +95,24 @@ services:
       - HOST=0.0.0.0
       - PORT=8001
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - RABBITMQ_HOST=localhost
+      - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
       - RABBITMQ_EXCHANGE=agentcloud
       - RABBITMQ_ROUTING_KEY=key
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
+
+  qdrant:
+    ports:
+      - '127.0.0.1:6333:6333'
+      - '127.0.0.1:6334:6334'
+    image: qdrant/qdrant
+
+  rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:3
+    network_mode: host
 
 volumes:
   mongodb_data_container:
