@@ -1,10 +1,10 @@
 'use strict';
 
-import { getDatasourcesByTeam } from '../db/datasource';
+import { getDatasourcesByTeam, getDatasourcesById } from '../db/datasource';
 import { getAgentById, getAgentsByTeam, addAgent, updateAgent, deleteAgentById } from '../db/agent';
 import { AgentType } from 'struct/agent';
 import { removeAgentFromGroups } from '../db/group';
-import { getCredentialsByTeam } from '../db/credential';
+import { getCredentialsByTeam, getCredentialById } from '../db/credential';
 import { getToolsByTeam, getToolsById } from '../db/tool';
 import { dynamicResponse } from '../util';
 import toObjectId from '../lib/misc/toobjectid';
@@ -111,15 +111,27 @@ export async function addAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+    // Check for foundTools
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
-		//deleted toolIds or ones from another team
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
 	}
 
-	//TODO: fetch datasources by id and compare length like ^ to ensure valid
+	// Check for foundDatasources
+	if (datasourceIds && datasourceIds.length > 0) {
+		const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
+		if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
+		}
+	}
 
-	//TODO: fetch credential by credentialId and validate, also check if the `model` in body is valid else reject
+	// Check for foundCredentials
+	if (credentialId && credentialId.length > 0) {
+		const foundCredential = await getCredentialById(req.params.resourceSlug, credentialId);
+		if (!foundCredential) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
+		}
+	}
 
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
@@ -127,7 +139,7 @@ export async function addAgentApi(req, res, next) {
 	    name,
 	 	type: type === AgentType.EXECUTOR_AGENT
 	 		? AgentType.USER_PROXY_AGENT
-	 		: type as AgentType, //TODO: revise
+	 		: type as AgentType,
 		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
 			? { lastNMessages: 5, workDirectory: 'output' }
 			: null,

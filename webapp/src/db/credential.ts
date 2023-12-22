@@ -51,6 +51,19 @@ export function getCredentialsByTeam(teamId: db.IdOrStr): Promise<Credential> {
 	}).toArray();
 }
 
+export function getCredentialsById(teamId: db.IdOrStr, credentialIds: db.IdOrStr[]): Promise<Credential[]> {
+	return CredentialCollection().find({
+		_id: {
+			$in: credentialIds.map(toObjectId),
+		},
+		teamId: toObjectId(teamId),
+	}, {
+		projection: {
+			credentials: 0,
+		}
+	}).toArray();
+}
+
 export async function addCredential(credential: Credential): Promise<db.InsertResult> {
 	return CredentialCollection().insertOne(credential);
 }
