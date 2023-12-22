@@ -60,7 +60,7 @@ export default function Team(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
 		</div>
 
-		<InviteForm />
+		<InviteForm callback={fetchTeam} />
 
 	</>);
 
