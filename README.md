@@ -19,16 +19,12 @@ To run this project up locally, you'll need docker-compose. Follow the steps bel
 
 Mac & Linux:
 ```
-SHORT_COMMIT_HASH=$(git rev-parse --short HEAD) docker-compose up --build
+chmod +x install.sh && ./install.sh
 ```
 
 Windows:
-```
-$SHORT_COMMIT_HASH = $(git rev-parse --short HEAD)
-docker-compose up
-```
 
-This will start both the agent backend and the webapp.
+(Coming soon...)
 
 ## License
 
