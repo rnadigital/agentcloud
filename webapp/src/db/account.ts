@@ -17,14 +17,20 @@ export type AccountOrg = {
 	teams: AccountTeam[];
 }
 
-export type AccountOAuthId = string | number; // <- Proof that typescript is pointless busywork
-
+// OAuth data for account
+export type AccountOAuthId = string | number;
 export type AccountOAuthData = {
 	id: AccountOAuthId,
 	// potentially more stuff here later...
 }
-
 export type OAuthRecordType = Partial<Record<OAUTH_PROVIDER,AccountOAuthData>>;
+
+// Stripe data for account
+export type AccountStripeData = {
+	stripeCustomerId?: string;
+	stripeEndsAt?: number;
+	stripeCancelled?: boolean;
+}
 
 export type Account = {
 	_id?: ObjectId;
@@ -37,10 +43,7 @@ export type Account = {
 	emailVerified: boolean;
 	apiJwt?: string;
 	token?: string;
-	//TODO: move these stripe things to a "stripe" key
-	stripeCustomerId?: string;
-	stripeEndsAt?: number;
-	stripeCancelled?: boolean;
+	stripe?: AccountStripeData;
 	oauth?: OAuthRecordType,
 }
 
@@ -147,7 +150,7 @@ export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string
 		_id: toObjectId(userId)
 	}, {
 		$set: {
-			stripeCustomerId,
+			'stripe.stripeCustomerId': stripeCustomerId,
 		}
 	});
 }
@@ -158,9 +161,9 @@ export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: num
 		stripeCustomerId,
 	}, {
 		$set: {
-			stripeCustomerId: stripeCustomerId,
-			stripeEndsAt: stripeEndsAt,
-			stripeCancelled: stripeCancelled || false,
+			'stripe.stripeCustomerId': stripeCustomerId,
+			'stripe.stripeEndsAt': stripeEndsAt,
+			'stripe.stripeCancelled': stripeCancelled || false,
 		}
 	});
 }
@@ -170,8 +173,8 @@ export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
 		stripeCustomerId,
 	}, {
 		$unset: {
-			stripeCustomerId: '',
-			stripeEndsAt: '',
+			'stripe.stripeCustomerId': '',
+			'stripe.stripeEndsAt': '',
 		}
 	});
 }

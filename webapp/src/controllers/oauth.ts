@@ -185,9 +185,7 @@ export async function deserializeHandler(obj, done) {
 			currentOrg: account.currentOrg,
 			currentTeam: account.currentTeam,
 			token: account.token,
-			stripeCustomerId: account.stripeCustomerId,
-			stripeEndsAt: account.stripeEndsAt,
-			stripeCancelled: account.stripeCancelled,
+			stripe: account.stripe,
 			oauth: account.oauth,
 		};
 		return done(null, accountObj);

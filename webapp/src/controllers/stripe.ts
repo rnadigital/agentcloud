@@ -117,17 +117,17 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	if (!res.locals.account.stripeCustomerId) {
+	if (!res.locals.account?.stripe?.stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
 	}
 
-	const activeSub = await getFirstActiveSubscription(res.locals.account.stripeCustomerId);
+	const activeSub = await getFirstActiveSubscription(res.locals.account?.stripe?.stripeCustomerId);
 	if (!activeSub) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
 	}
 
 	const portalLink = await stripe.billingPortal.sessions.create({
-		customer: res.locals.account.stripeCustomerId,
+		customer: res.locals.account?.stripe?.stripeCustomerId,
 		return_url: `${process.env.URL_APP}/account`,
 		flow_data: {
 			type: 'subscription_cancel',
@@ -155,7 +155,7 @@ export async function createPaymentLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	if (res.locals.account.stripeCustomerId) {
+	if (res.locals.account?.stripe?.stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Already subscribed' });
 	}
 
