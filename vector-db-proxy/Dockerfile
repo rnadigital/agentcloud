@@ -1,7 +1,7 @@
 FROM rust:latest
 # Create working directory
-RUN mkdir -p /usr/local/src/vector-db
-ARG workdir=/usr/local/src/vector-db
+RUN mkdir -p /usr/local/src/vector-db-proxy
+ARG workdir=/usr/local/src/vector-db-proxy
 #Set working directory
 WORKDIR ${workdir}
 
@@ -24,4 +24,4 @@ RUN cargo build --release
 #Expose port
 EXPOSE 8001
 #Run app
-CMD ["target/release/vector-db"]
+CMD ["target/release/vector-db-proxy"]
