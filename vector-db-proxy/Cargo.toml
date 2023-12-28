@@ -44,5 +44,5 @@ amqp_serde = "0.4.0"
 amqprs = "1.5.1"
 
 [[bin]]
-name = "vector-db"
+name = "vector-db-proxy"
 path = "src/main.rs"
