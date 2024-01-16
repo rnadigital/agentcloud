@@ -1,7 +1,6 @@
 'use strict';
 
-//TODO: rename "CredentialType" or something?
-export enum CredentialPlatform {
+export enum CredentialType {
 	OPENAI = 'open_ai',
 	AZURE = 'azure',
 	LMSTUDIO = 'lmstudio',
@@ -10,4 +9,4 @@ export enum CredentialPlatform {
 	// More here...
 }
 
-export const CredentialPlatforms = Object.values(CredentialPlatform);
+export const CredentialTypes = Object.values(CredentialType);

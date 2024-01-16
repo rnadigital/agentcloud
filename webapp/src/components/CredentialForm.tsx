@@ -6,7 +6,7 @@ import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
 import * as API from '../api';
 import { toast } from 'react-toastify';
-import { CredentialPlatform } from 'struct/credential';
+import { CredentialType } from 'struct/credential';
 
 export default function CredentialForm({ credential = {}, editing, compact=false, callback }
 	: { credential?: any, editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any type
@@ -19,7 +19,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { name, platform, key, endpointURL } = credentialState;
+	const { name, type, key, endpointURL } = credentialState;
 
 	async function credentialPost(e) {
 		e.preventDefault();
@@ -27,7 +27,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
-			platform: e.target.platform.value,
+			type: e.target.type.value,
 			key: e.target?.key?.value,
 			endpointURL: e.target?.endpointURL?.value,
 		};
@@ -74,30 +74,30 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='platform' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Platform
+						<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Type
 						</label>
 						<div className='mt-2'>
 							<select
 								required
-								id='platform'
-								name='platform'
+								id='type'
+								name='type'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								value={platform}
+								value={type}
 								onChange={e => setCredential({
 									...credentialState,
-									platform: e.target.value,
+									type: e.target.value,
 								})}
 							>
-								<option disabled value=''>Select a platform...</option>
-								<option value={CredentialPlatform.OPENAI}>OpenAI</option>
-								<option value={CredentialPlatform.AZURE}>Azure</option>
-								<option value={CredentialPlatform.LMSTUDIO}>LMStudio</option>
+								<option disabled value=''>Select a type...</option>
+								<option value={CredentialType.OPENAI}>OpenAI</option>
+								<option value={CredentialType.AZURE}>Azure</option>
+								<option value={CredentialType.LMSTUDIO}>LMStudio</option>
 							</select>
 						</div>
 					</div>
 
-					{platform !== CredentialPlatform.LMSTUDIO && <div className='sm:col-span-12'>
+					{type !== CredentialType.LMSTUDIO && <div className='sm:col-span-12'>
 						<label htmlFor='key' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Key
 						</label>
@@ -112,7 +112,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 						</div>
 					</div>}
 
-					{platform !== CredentialPlatform.OPENAI && <div className='sm:col-span-12'>
+					{type !== CredentialType.OPENAI && <div className='sm:col-span-12'>
 						<label htmlFor='endpointURL' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Endpoint URL
 						</label>

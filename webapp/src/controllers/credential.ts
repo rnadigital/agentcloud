@@ -3,7 +3,7 @@
 import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
 import { removeAgentsCredential } from '../db/agent';
 import toObjectId from 'misc/toobjectid';
-import { CredentialPlatform, CredentialPlatforms } from 'struct/credential';
+import { CredentialType, CredentialTypes } from 'struct/credential';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {
@@ -70,12 +70,12 @@ export async function credentialJson(app, req, res, next) {
  */
 export async function addCredentialApi(req, res, next) {
 
-	const { name, platform, key, endpointURL }  = req.body;
+	const { name, type, key, endpointURL }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
-		|| !platform || typeof platform !== 'string' || platform.length === 0 || !CredentialPlatforms.includes(platform as CredentialPlatform)
-		|| (platform === CredentialPlatform.LMSTUDIO && (!endpointURL || typeof endpointURL !== 'string' || endpointURL.length === 0))
-		|| (platform !== CredentialPlatform.LMSTUDIO && (!key || typeof key !== 'string' || key.length === 0))) {
+		|| !type || typeof type !== 'string' || type.length === 0 || !CredentialTypes.includes(type as CredentialType)
+		|| (type === CredentialType.LMSTUDIO && (!endpointURL || typeof endpointURL !== 'string' || endpointURL.length === 0))
+		|| (type !== CredentialType.LMSTUDIO && (!key || typeof key !== 'string' || key.length === 0))) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -84,7 +84,7 @@ export async function addCredentialApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	    createdDate: new Date(),
-	    platform: platform as CredentialPlatform,
+	    type: type as CredentialType,
 	    credentials: {
 			key,
 		    endpointURL,

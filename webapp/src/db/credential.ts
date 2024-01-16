@@ -3,7 +3,7 @@
 import * as db from './index';
 import { ObjectId } from 'mongodb';
 import toObjectId from 'misc/toobjectid';
-import { CredentialPlatform } from 'struct/credential';
+import { CredentialType } from 'struct/credential';
 
 export type TokenExchangeMethod = 'post' | 'basic';
 
@@ -11,7 +11,7 @@ export type Credential = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	platform: CredentialPlatform;
+	type: CredentialType;
 	credentials: {
 		key?: string;
 		endpointURL?: string;
