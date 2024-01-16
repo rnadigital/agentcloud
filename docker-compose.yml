@@ -59,6 +59,7 @@ services:
       - AIRBYTE_USERNAME=airbyte
       - AIRBYTE_PASSWORD=password
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - GCS_BUCKET_LOCATION=${GCS_BUCKET_LOCATION}
 
   agent_backend:
     restart: always

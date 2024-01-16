@@ -1,6 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-BIG_LOGO="""
+# Get the width of the terminal
+terminal_width=$(tput cols)
+
+print_logo() {
+    clear
+    if [ "$terminal_width" -gt 120 ]; then
+        echo -e """
 \033[34m            ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 \033[34m           ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 \033[34m          ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -19,9 +25,30 @@ BIG_LOGO="""
 \033[34m ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 \033[34m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ \033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ 
 \033[34m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ \033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\033[0m
+$1
 """
+    else
+        echo """-= AgentCloud =-
+$1"""
+    fi
+}
 
-echo -e "$BIG_LOGO"
+docker_up() {
+    if [ $# -eq 1 ]; then
+        local service_name=$1
+        docker-compose up "$service_name" -d
+        if [ $? -ne 0 ]; then
+            echo "Couldn't start docker services, ensure the docker daemon is running then try again"
+            exit 1
+            # We could start the docke rservice but then we have to cater to multiple init systems
+            # docker_up $1
+		fi
+    else
+        echo "Usage: docker_up <service_name>"
+    fi
+}
+
+print_logo
 
 # get git hash of current repo for footer
 export SHORT_COMMIT_HASH=$(git rev-parse --short HEAD)
@@ -34,21 +61,19 @@ read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT
 cp $SERVICE_ACCOUNT_JSON_PATH webapp/keyfile.json
 read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
 export GCS_BUCKET_NAME
+read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+export GCS_BUCKET_LOCATION
 read -p "Enter your OpenAI API key: " OPENAI_API_KEY
 export OPENAI_API_KEY
 
-clear
-echo -e "$BIG_LOGO"
-echo "=> Starting rabbitmq, qdrant and vector_db_proxy"
+print_logo "=> Starting rabbitmq, qdrant and vector_db_proxy"
 
 # startup rqbbitmq, qdrant, and vector proxy in advance
-docker-compose up rabbitmq -d
-docker-compose up qdrant -d
-# docker-compose up vector_db_proxy -d
+docker_up rabbitmq
+docker_up qdrant
+docker_up vector_db_proxy
 
-clear
-echo -e "$BIG_LOGO"
-echo "=> Starting airbyte"
+print_logo "=> Starting airbyte"
 
 # clone and install airbyte
 if [ ! -d "airbyte" ] ; then
@@ -66,8 +91,6 @@ CREATED_DESTINATION=`curl 'http://localhost:8000/api/v1/destinations/create' --c
              --data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"7b1abeef-4c09-4cad-b23d-539bc236c597","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}'`
 export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATIO | jq -r '.destinationId'`
 
-clear
-echo -e "$BIG_LOGO"
-echo "=> Starting agentcloud backend..."
+print_logo "=> Starting agentcloud backend..."
 
 docker-compose up
