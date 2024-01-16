@@ -88,8 +88,8 @@ INSTANCE_CONFIGURATION=`curl 'http://localhost:8000/api/v1/instance_configuratio
 	--data-raw '{"email":"localhost@localhost.localdomain","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"localhost","initialSetupComplete":true,"displaySetupWizard":false}'`
 export AIRBYTE_ADMIN_WORKSPACE_ID=`echo $INSTANCE_CONFIGURATION | jq -r '.defaultWorkspaceId'`
 CREATED_DESTINATION=`curl 'http://localhost:8000/api/v1/destinations/create' --compressed -X POST -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0' -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: http://localhost:8000/workspaces/7b1abeef-4c09-4cad-b23d-539bc236c597/destination/new-destination/e06ad785-ad6f-4647-b2e8-3027a5c59454' -H 'content-type: application/json' -H 'x-airbyte-analytic-source: webapp' -H 'Origin: http://localhost:8000' -H 'DNT: 1' -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' -H 'Connection: keep-alive' \
-             --data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"7b1abeef-4c09-4cad-b23d-539bc236c597","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}'`
-export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATIO | jq -r '.destinationId'`
+             --data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}'`
+export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATION | jq -r '.destinationId'`
 
 print_logo "=> Starting agentcloud backend..."
 
