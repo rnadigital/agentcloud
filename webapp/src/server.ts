@@ -69,7 +69,7 @@ app.prepare()
 			return res.send('An error occurred. Please contact support with code: '+uuid);
 		});
 
-		rawHttpServer.listen(3000, '0.0.0.0', () => { //TODO: configurable
+		rawHttpServer.listen(parseInt(process.env.EXPRESS_PORT), process.env.EXPRESS_HOST, () => {
 			if (typeof process.send === 'function') {
 				log('SENT READY SIGNAL TO PM2');
 				process.send('ready');

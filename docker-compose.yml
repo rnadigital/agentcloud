@@ -33,6 +33,8 @@ services:
       - docker_mongo
       - docker_redis
     environment:
+      - EXPRESS_HOST=0.0.0.0
+      - EXPRESS_PORT=3000
       - NODE_ENV=development
       - DB_URL=mongodb://127.0.0.1:27017/test
       - REDIS_HOST=127.0.0.1
