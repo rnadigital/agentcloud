@@ -14,11 +14,24 @@ function initialiseCloudStorageClient() {
 	return cachedClient = new Storage();
 }
 
+export async function createBucket() {
+	// https://googleapis.dev/nodejs/storage/latest/global.html#CreateBucketRequest
+	await initialiseCloudStorageClient()
+		.createBucket(process.env.GCS_BUCKET_NAME, {
+			autoclass: {
+				enabled: true,
+				terminalStorageClass: 'NEARLINE',
+			},
+			location: process.env.GCS_BUCKET_LOCATION,
+		})
+		.catch(e => console.warn(e.message)); //warning only
+}
+
 export async function uploadFile(filename: string, uploadedFile: any) { //TODO: remove any type
 	log('Uploading file %s (%s)', uploadedFile.name, filename);
 	return new Promise((res, rej) => {
 		const file = initialiseCloudStorageClient()
-			.bucket(process.env.GCS_BUCKET_NAME) //TODO: env
+			.bucket(process.env.GCS_BUCKET_NAME)
 			.file(filename);
 		const stream = file.createWriteStream({
 			metadata: {

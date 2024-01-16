@@ -32,16 +32,19 @@ import { migrate } from './db/migrate';
 import router from './router';
 import { v4 as uuidv4 } from 'uuid';
 import * as ses from './lib/email/ses';
+import { createBucket } from 'lib/google/gcs';
 import debug from 'debug';
 const log = debug('webapp:server');
 
 app.prepare()
 	.then(async () => {
 
+		//do a bunch of tasks on initing the server
 		await db.connect();
 		await migrate();
 		await initGlobalTools();
 		await ses.init();
+		await createBucket();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);
