@@ -77,13 +77,13 @@ class MongoClientConnection(MongoConnection):
                 credential_id = agent.get("credentialId")
                 credential_obj = self._get_collection("credentials").find_one(
                     {"_id": credential_id},
-                    {"platform": 1, "credentials": 1})
+                    {"type": 1, "credentials": 1})
                 if credential_obj is not None and len(credential_obj) > 0:
                     creds = credential_obj.get("credentials")
                     # Construct Agent Config List
                     _config_list = ConfigList(
                         api_key=creds.get("key"),
-                        api_type=credential_obj.get("platform"),
+                        api_type=credential_obj.get("type"),
                         model=agent.get("model")
                     )
 
