@@ -259,6 +259,7 @@ pub async fn lookup_data_point(
     let qdrant_conn_lock = qdrant_conn.read().await;
     let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
     let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
+    let limit = data.limit.unwrap_or(3) as u64;
     let search_result = qdrant_conn_lock
         .search_points(&SearchPoints {
             collection_name,
@@ -268,7 +269,7 @@ pub async fn lookup_data_point(
                 must_not,
                 should,
             }),
-            limit: 3,
+            limit,
             with_payload: Some(true.into()),
             ..Default::default()
         })
@@ -411,23 +412,17 @@ pub async fn scroll_data(
             must_not,
             should,
         }),
+        limit: data.limit,
         with_vectors: Some(WithVectorsSelector {
             selector_options: Some(SelectorOptions::Enable(true)),
         }),
         ..Default::default()
     };
-    // Depending on whether the client provides a limit we update the scroll point limit
-    match data.limit {
-        Some(limit) => {
-            if limit != 0 {
-                scroll_points.limit = Some(limit);
-            }
-        }
-        None => {}
-    };
+
     // Depending on whether the client has requested to return all point or not
     match data.get_all_pages {
         Some(get_all_pages) => {
+            // Depending on whether the client provides a limit we update the scroll point limit
             if get_all_pages == true {
                 loop {
                     let qdrant_conn_clone = Arc::clone(&qdrant_conn);
