@@ -1,12 +1,13 @@
 import passport from 'passport';
 import * as oauthController from '../../controllers/oauth';
+import { OAuthStrategy } from 'struct/oauth';
 
 // Passport session setup
 passport.serializeUser(oauthController.serializeHandler);
 passport.deserializeUser(oauthController.deserializeHandler);
 
 // Setup all the oauth handlers
-oauthController.OAUTH_STRATEGIES.forEach((s: oauthController.Strategy) => {
+oauthController.OAUTH_STRATEGIES.forEach((s: OAuthStrategy) => {
 	if (!process.env[`OAUTH_${s.env}_CLIENT_ID`]) { return; }
 	passport.use(new s.strategy({
 		clientID: process.env[`OAUTH_${s.env}_CLIENT_ID`],

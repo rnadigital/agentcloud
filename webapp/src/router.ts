@@ -39,8 +39,16 @@ export default function router(server, app) {
 	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
 	oauthRouter.get('/github', useSession, useJWT, myPassport.authenticate('github'));
 	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', { scope: ['profile', 'email'] }));
+	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', {
+		scope: ['profile', 'email'],
+	}));
 	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	oauthRouter.get('/hubspot', useSession, useJWT, myPassport.authenticate('hubspot', {
+		scope: 'crm.objects.line_items.read content crm.schemas.deals.read crm.schemas.line_items.read crm.objects.owners.read forms tickets crm.objects.marketing_events.read sales-email-read crm.objects.companies.read crm.lists.read crm.objects.deals.read crm.schemas.contacts.read crm.objects.contacts.read crm.schemas.companies.read crm.objects.quotes.read',
+	}));
+	oauthRouter.get('/hubspot/callback', useSession, useJWT, myPassport.authenticate('hubspot', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	oauthRouter.get('/stripe', useSession, useJWT, myPassport.authenticate('stripe'));
+	oauthRouter.get('/stripe/callback', useSession, useJWT, myPassport.authenticate('stripe', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	server.use('/auth', useSession, myPassport.session(), oauthRouter);
 
 	// Body and query parsing middleware
