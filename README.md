@@ -22,6 +22,21 @@ Mac & Linux:
 chmod +x install.sh && ./install.sh
 ```
 
+The script will prompt for some details, or you can pass them as command line arguments:
+
+```
+~$ ./instal.sh --help
+Usage: ./install.sh [options]
+Options:
+    --project-id ID                  Specify the GCP project ID.
+    --service-account-json PATH      Specify the file path of your GCP service account json.
+    --gcs-bucket-name NAME           Specify the GCS bucket name to use.
+    --gcs-bucket-location LOCATION   Specify the GCS bucket location.
+    --openai-api-key KEY             Specify your OpenAI API key.
+    -h, --help                       Display this help message.
+```
+
+
 Windows:
 
 (Coming soon...)

@@ -33,6 +33,19 @@ $1"""
     fi
 }
 
+
+# Function to show usage
+usage() {
+    echo "Usage: $0 [options]"
+    echo "Options:"
+    echo "    --project-id ID                  Specify the GCP project ID."
+    echo "    --service-account-json PATH      Specify the file path of your GCP service account json."
+    echo "    --gcs-bucket-name NAME           Specify the GCS bucket name to use."
+    echo "    --gcs-bucket-location LOCATION   Specify the GCS bucket location."
+    echo "    --openai-api-key KEY             Specify your OpenAI API key."
+    echo "    -h, --help                       Display this help message."
+}
+
 docker_up() {
     if [ $# -eq 1 ]; then
         local service_name=$1
@@ -54,16 +67,52 @@ print_logo
 export SHORT_COMMIT_HASH=$(git rev-parse --short HEAD)
 echo "=> Welcome to Agentcloud! (rev-$SHORT_COMMIT_HASH)"
 
-# ask for CGP/GCS stuff
-read -p "Enter your GCP project ID: " PROJECT_ID
+# Initialize variables
+PROJECT_ID=""
+SERVICE_ACCOUNT_JSON_PATH=""
+GCS_BUCKET_NAME=""
+GCS_BUCKET_LOCATION=""
+OPENAI_API_KEY=""
+
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project-id) PROJECT_ID="$2"; shift ;;
+        --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
+        --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
+        --gcs-bucket-location) GCS_BUCKET_LOCATION="$2"; shift ;;
+        --openai-api-key) OPENAI_API_KEY="$2"; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "Unknown parameter passed: $1"; usage; exit 1 ;;
+    esac
+    shift
+done
+
+
+# Ask for input if not provided in arguments
+if [ -z "$PROJECT_ID" ]; then
+    read -p "Enter your GCP project ID: " PROJECT_ID
+fi
 export PROJECT_ID
-read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
-cp $SERVICE_ACCOUNT_JSON_PATH webapp/keyfile.json
-read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
+
+if [ -z "$SERVICE_ACCOUNT_JSON_PATH" ]; then
+    read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
+fi
+cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
+
+if [ -z "$GCS_BUCKET_NAME" ]; then
+    read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
+fi
 export GCS_BUCKET_NAME
-read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+
+if [ -z "$GCS_BUCKET_LOCATION" ]; then
+    read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+fi
 export GCS_BUCKET_LOCATION
-read -p "Enter your OpenAI API key: " OPENAI_API_KEY
+
+if [ -z "$OPENAI_API_KEY" ]; then
+    read -p "Enter your OpenAI API key: " OPENAI_API_KEY
+fi
 export OPENAI_API_KEY
 
 print_logo "=> Starting rabbitmq, qdrant and vector_db_proxy"

@@ -113,7 +113,7 @@ services:
       args:
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
-      - '127.0.0.1:8001:8001'
+      - '127.0.0.1:9001:8001'
     image: vector_db_proxy
     environment:
       - HOST=0.0.0.0
