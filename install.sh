@@ -69,7 +69,6 @@ export OPENAI_API_KEY
 print_logo "=> Starting rabbitmq, qdrant and vector_db_proxy"
 
 # startup rqbbitmq, qdrant, and vector proxy in advance
-docker_up rabbitmq
 docker_up qdrant
 docker_up vector_db_proxy
 
