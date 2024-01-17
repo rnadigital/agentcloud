@@ -11,18 +11,23 @@ let amazonSecretAccessKey;
 let sesClient;
 
 export async function init() {
-	amazonAccessID = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
-	amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);
-	log('amazonAccessID', amazonAccessID);
-	log('amazonSecretAccessKey', amazonSecretAccessKey);
-	if (!amazonAccessID) { return; }
-	sesClient = new SESClient({
-		region: 'us-east-1',
-		credentials: {
-			accessKeyId: amazonAccessID,
-			secretAccessKey: amazonSecretAccessKey,
-		}
-	});
+	try {
+		amazonAccessID = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
+		amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);
+		log('amazonAccessID', amazonAccessID);
+		log('amazonSecretAccessKey', amazonSecretAccessKey);
+		if (!amazonAccessID) { return; }
+		sesClient = new SESClient({
+			region: 'us-east-1',
+			credentials: {
+				accessKeyId: amazonAccessID,
+				secretAccessKey: amazonSecretAccessKey,
+			}
+		});
+	} catch (e) {
+		console.error(e);
+		log('No aws ses keys found in gcp secret manager, emails disabled');
+	}
 }
 
 export async function sendEmail(options) {
