@@ -7,7 +7,7 @@ authors= ["ragy abraham"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-cors = "0.6.4"
+actix-cors = "0.7.0"
 actix-web = "4.3.1"
 actix-web-lab = "0.20.1"
 anyhow = "1.0.75"
@@ -38,10 +38,11 @@ actix-service = "2.0.2"
 futures-util = "0.3.28"
 url = { version = "2.4.1", features = ["serde"] }
 percent-encoding = "2.3.0"
-async-openai = "0.17.1"
+async-openai = "0.18.0"
 backoff = { version = "0.4.0", features = ["tokio"] }
 amqp_serde = "0.4.0"
 amqprs = "1.5.1"
+google-cloud-storage = "0.15.0"
 
 [[bin]]
 name = "vector-db-proxy"

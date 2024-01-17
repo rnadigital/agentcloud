@@ -1,10 +1,12 @@
 use crate::data::processing_incoming_messages::process_messages;
+use crate::gcp::gcs::get_object_from_gcs;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
+use std::str;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -34,7 +36,9 @@ pub async fn subscribe_to_queue(
         if let Some(stream_id) = headers.get(&ShortStr::try_from("stream").unwrap()) {
             if let Some(msg) = message.content {
                 let qdrant_conn = Arc::clone(&app_data);
-                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                if let Ok(object) = String::from_utf8(msg.clone().to_vec()) {
+                    let message_bytes = get_object_from_gcs(stream_id.to_string(), object).await?;
+                    let message_string = str::from_utf8(&message_bytes).unwrap().to_string();
                     let args =
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = channel.basic_ack(args).await;

@@ -86,7 +86,7 @@ impl LLM {
             list_of_system_prompts.push(system_prompts.to_owned());
         }
         // Data coming from external systems should be a system message
-        let executor = executor!()?;
+        let executor = executor!(chatgpt)?;
         let data = list_of_system_prompts[0].join(", ");
 
         let step_1 = Step::for_prompt_template(

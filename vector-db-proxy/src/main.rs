@@ -11,6 +11,7 @@ mod qdrant;
 mod rabbitmq;
 mod routes;
 mod utils;
+mod gcp;
 
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::Arc;
