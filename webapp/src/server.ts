@@ -33,6 +33,7 @@ import router from './router';
 import { v4 as uuidv4 } from 'uuid';
 import * as ses from './lib/email/ses';
 import { createBucket } from 'lib/google/gcs';
+import { initRabbit } from 'lib/rabbitmq/send';
 import debug from 'debug';
 const log = debug('webapp:server');
 
@@ -45,6 +46,7 @@ app.prepare()
 		await initGlobalTools();
 		await ses.init();
 		await createBucket();
+		await initRabbit();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

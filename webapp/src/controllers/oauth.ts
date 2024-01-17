@@ -9,7 +9,6 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import debug from 'debug';
 const log = debug('webapp:oauth');
 
-
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';

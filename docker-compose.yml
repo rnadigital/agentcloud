@@ -1,6 +1,15 @@
 version: '3.7'
 services:
 
+  docker_rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
   docker_mongo:
     restart: always
     image: mongo:latest
@@ -33,6 +42,13 @@ services:
       - docker_mongo
       - docker_redis
     environment:
+      - RABBITMQ_HOST=docker_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_STREAM=streaming
+      - RABBITMQ_EXCHANGE=agentcloud
+      - RABBITMQ_ROUTING_KEY=key
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
       - EXPRESS_HOST=0.0.0.0
       - EXPRESS_PORT=3000
       - NODE_ENV=development

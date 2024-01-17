@@ -13,6 +13,7 @@ import { readFileSync } from 'fs';
 import toObjectId from 'misc/toobjectid';
 import { promisify } from 'util';
 import dotenv from 'dotenv';
+import { sendMessage } from 'lib/rabbitmq/send';
 import { PDFExtract } from 'pdf.js-extract';
 import getConnectors from 'airbyte/getconnectors';
 import Ajv from 'ajv';
@@ -280,38 +281,6 @@ export async function uploadFileApi(req, res, next) {
 
 	const uploadedFile = req.files.file;
 	let fileExtension = path.extname(uploadedFile.name);
-	//TODO: refactor this "special handling" to a separate module
-	switch (fileExtension) {
-		case '.txt': {
-			const convertedJsonl = convertStringToJsonl(uploadedFile.data.toString('utf-8'));
-			uploadedFile.data = Buffer.from(convertedJsonl, 'utf-8');
-			break;
-		}
-		case '.pdf': {
-			const pdfData: any = await pdfExtractPromisified(uploadedFile.data, {});
-			if (pdfData && pdfData.pages) {
-				const pdfJsonl = pdfData.pages
-					.reduce((acc, page) => {
-						const pageJsons = page.content.map(c => ({
-							...c,
-							page: page.pageInfo.num,
-							pageHeight: page.pageInfo.height,
-							pageWidth: page.pageInfo.width,
-						}));
-						acc = acc.concat(pageJsons);
-						return acc;
-					}, [])
-					.map(x => JSON.stringify(x))
-					.join('\n');
-				uploadedFile.data = Buffer.from(pdfJsonl, 'utf-8');
-			} else {
-				return dynamicResponse(req, res, 400, { error: 'Failed to extract text from PDF' });
-			}
-			break;
-		}
-		default:
-			break; //no special handling for other files
-	}
 	const fileFormat = getFileFormat(fileExtension);
 	if (!fileFormat) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
@@ -320,56 +289,7 @@ export async function uploadFileApi(req, res, next) {
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
 	await uploadFile(filename, uploadedFile);
-
-	// File is uploaded, create source in airbyte
-	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-	const sourceBody = {
-		configuration: {
-			sourceType: 'file',
-			format: fileFormat,
-			provider: {
-				storage: 'GCS',
-				service_account_json: JSON.stringify(JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, { encoding:'utf-8' }))),
-			},
-			url: `gs://agentcloud-test/${filename}`,
-			dataset_name: newDatasourceId.toString(),
-		},
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-		name: `${uploadedFile.name} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
-	};
-	const createdSource = await sourcesApi
-		.createSource(null, sourceBody)
-		.then(res => res.data);
-	console.log('createdSource', createdSource);
-
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
-	const connectionBody = {
-		schedule: {scheduleType: 'manual'},
-		dataResidency: 'auto',
-		namespaceDefinition: 'destination',
-		namespaceFormat: null,
-		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: `${createdSource.sourceId} - ${res.locals.account.name} (${res.locals.account._id})`,
-		sourceId: createdSource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		status: 'active'
-	};
-	const createdConnection = await connectionsApi
-		.createConnection(null, connectionBody)
-		.then(res => res.data);
-	console.log('createdConnection', createdConnection);
-
-	// Create a job to trigger the connection to sync
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: createdConnection.connectionId,
-		jobType: 'sync',
-	};
-	const createdJob = await jobsApi
-		.createJob(null, jobBody)
-		.then(res => res.data);
-	console.log('createdJob', createdJob);
+	await sendMessage(filename, { stream: newDatasourceId.toString() });
 
 	//Create the actual datasource in the db
 	await addDatasource({
@@ -379,11 +299,11 @@ export async function uploadFileApi(req, res, next) {
 	    name: newDatasourceId.toString(),
 	    gcsFilename: filename,
 	    originalName: uploadedFile.name,
-	    sourceId: createdSource.sourceId,
-	    connectionId: createdConnection.connectionId,
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+	    sourceId: null,
+	    connectionId: null,
+	    destinationId: null,
 	    sourceType: 'file',
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+	    workspaceId: null,
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
