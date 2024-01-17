@@ -3,12 +3,12 @@ services:
 
   docker_rabbitmq:
     image: rabbitmq:latest
-    ports:
-      - "127.0.0.1:5672:5672"
-      - "127.0.0.1:15672:15672"
+    network_mode: host
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "127.0.0.1:5672:5672"
 
   docker_mongo:
     restart: always
@@ -39,10 +39,11 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
+      - docker_rabbitmq
       - docker_mongo
       - docker_redis
     environment:
-      - RABBITMQ_HOST=docker_rabbitmq
+      - RABBITMQ_HOST=127.0.0.1
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -104,6 +105,9 @@ services:
 
   vector_db_proxy:
     restart: always
+    network_mode: host
+    depends_on:
+      - docker_rabbitmq
     build:
       context: vector-db-proxy/
       args:
@@ -115,7 +119,7 @@ services:
       - HOST=0.0.0.0
       - PORT=8001
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_HOST=127.0.0.1
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -128,11 +132,6 @@ services:
       - '127.0.0.1:6333:6333'
       - '127.0.0.1:6334:6334'
     image: qdrant/qdrant
-
-  rabbitmq:
-    hostname: rabbitmq
-    image: rabbitmq:3
-    network_mode: host
 
 volumes:
   mongodb_data_container:
