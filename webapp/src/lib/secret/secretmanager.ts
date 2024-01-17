@@ -25,11 +25,15 @@ export async function getSecret(key, bypassCache = false) {
 		return cache[key] = process.env[key];
 	}
 	if (secretClient) {
-		const [secretVal] = await secretClient.accessSecretVersion({
-			name: `projects/${process.env.PROJECT_ID}/secrets/${key}/versions/latest`,
-		});
-		const secretValue = Buffer.from(new TextDecoder().decode(<Uint8Array>(secretVal.payload.data)), 'utf-8').toString();
-		return cache[key] = secretValue; //set in cache and return
+		try {
+			const [secretVal] = await secretClient.accessSecretVersion({
+				name: `projects/${process.env.PROJECT_ID}/secrets/${key}/versions/latest`,
+			});
+			const secretValue = Buffer.from(new TextDecoder().decode(<Uint8Array>(secretVal.payload.data)), 'utf-8').toString();
+			return cache[key] = secretValue; //set in cache and return
+		} catch (e) {
+			console.warn(e);
+		}
 	}
 	return null;
 }
