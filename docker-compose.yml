@@ -113,11 +113,11 @@ services:
       args:
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
-      - '127.0.0.1:9001:8001'
+      - '127.0.0.1:9001:9001'
     image: vector_db_proxy
     environment:
       - HOST=0.0.0.0
-      - PORT=8001
+      - PORT=9001
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - RABBITMQ_HOST=127.0.0.1
       - RABBITMQ_PORT=5672

@@ -115,12 +115,6 @@ if [ -z "$OPENAI_API_KEY" ]; then
 fi
 export OPENAI_API_KEY
 
-print_logo "=> Starting rabbitmq, qdrant and vector_db_proxy"
-
-# startup rqbbitmq, qdrant, and vector proxy in advance
-docker_up qdrant
-docker_up vector_db_proxy
-
 print_logo "=> Starting airbyte"
 
 # clone and install airbyte
@@ -130,6 +124,11 @@ fi
 cd airbyte
 ./run-ab-platform.sh -b
 cd ..
+
+print_logo "=> Starting rabbitmq and vector_db_proxy"
+
+# startup rqbbitmq, qdrant, and vector proxy in advance
+docker_up vector_db_proxy
 
 # bypass airbyte setup sceeen
 INSTANCE_CONFIGURATION=`curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST -H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: http://localhost:8000/setup' -H 'content-type: application/json' -H 'x-airbyte-analytic-source: webapp' -H 'Origin: http://localhost:8000' -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' -H 'Connection: keep-alive' \
