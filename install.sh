@@ -140,4 +140,4 @@ export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATION | jq -r '.destina
 
 print_logo "=> Starting agentcloud backend..."
 
-docker-compose up
+docker-compose up -d

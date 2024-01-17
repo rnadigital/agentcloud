@@ -1,9 +1,9 @@
 version: '3.7'
+name: airbyte
 services:
 
   docker_rabbitmq:
     image: rabbitmq:latest
-    network_mode: host
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -35,7 +35,6 @@ services:
         - NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH=
         - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
         - POSTHOG_KEY=
-    network_mode: host
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -43,7 +42,7 @@ services:
       - docker_mongo
       - docker_redis
     environment:
-      - RABBITMQ_HOST=127.0.0.1
+      - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -53,8 +52,8 @@ services:
       - EXPRESS_HOST=0.0.0.0
       - EXPRESS_PORT=3000
       - NODE_ENV=development
-      - DB_URL=mongodb://127.0.0.1:27017/test
-      - REDIS_HOST=127.0.0.1
+      - DB_URL=mongodb://docker_mongo:27017/test
+      - REDIS_HOST=docker_redis
       - REDIS_PASS=
       - JWT_SECRET=changeme
       - COOKIE_SECRET=changeme
@@ -71,8 +70,8 @@ services:
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
-      - AIRBYTE_WEB_URL=http://127.0.0.1:8000
-      - AIRBYTE_API_URL=http://127.0.0.1:8006
+      - AIRBYTE_WEB_URL=http://airbyte-proxy:8000
+      - AIRBYTE_API_URL=http://airbyte-proxy:8006
       - AIRBYTE_ADMIN_WORKSPACE_ID=${AIRBYTE_ADMIN_WORKSPACE_ID}
       - AIRBYTE_ADMIN_DESTINATION_ID=${AIRBYTE_ADMIN_DESTINATION_ID}
       - AIRBYTE_USERNAME=airbyte
@@ -105,7 +104,6 @@ services:
 
   vector_db_proxy:
     restart: always
-    network_mode: host
     depends_on:
       - docker_rabbitmq
     build:
@@ -119,7 +117,7 @@ services:
       - HOST=0.0.0.0
       - PORT=9001
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - RABBITMQ_HOST=127.0.0.1
+      - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -136,3 +134,8 @@ services:
 volumes:
   mongodb_data_container:
   redis_data:
+
+networks: 
+  default: 
+    external: true
+    name: airbyte_airbyte_internal
