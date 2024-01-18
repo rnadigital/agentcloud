@@ -1,14 +1,17 @@
 name: Build
 
 on:
-  push:
-    branches: ['main']
-    paths:
-      - 'agent-backend/test/**'
-      - '.github/workflows/build.yml'
-      - 'agent-backend/src/pyproject.toml'
   pull_request:
-    branches: ['main']
+    branches:
+      - "*"
+  push:
+    branches:
+      - "develop"
+      - "main"
+      - "master"
+  schedule:
+    # Note that cronjobs run on master/main by default
+    - cron: "0 1 * * *"
   merge_group:
     types: [checks_requested]
 
