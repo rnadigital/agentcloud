@@ -1,8 +1,6 @@
-
 import pytest
 
 from init.mongo_session import start_mongo_session
-
 
 
 @pytest.mark.require_docker
