@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
@@ -9,7 +9,11 @@ use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 
-pub struct LLM {}
+pub enum EmbeddingModels {
+    OAI,
+}
+
+pub struct LLM;
 
 impl LLM {
     pub fn new() -> Self {
@@ -29,23 +33,31 @@ impl LLM {
     /// ```
     ///
     /// ```
-    pub async fn embed_text(&self, text: Vec<String>) -> Result<Vec<Vec<f32>>> {
-        println!("Embedding...");
-        let backoff = backoff::ExponentialBackoffBuilder::new()
-            .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-            .build();
-        let client = async_openai::Client::new().with_backoff(backoff);
-        let request = CreateEmbeddingRequestArgs::default()
-            .model("text-embedding-ada-002")
-            .input(text)
-            .build()?;
-        let response = client.embeddings().create(request).await?;
-        let embedding: Vec<Vec<f32>> = response
-            .data
-            .iter()
-            .map(|data| data.clone().embedding)
-            .collect();
-        Ok(embedding)
+    pub async fn embed_text(
+        &self,
+        text: Vec<String>,
+        model: EmbeddingModels,
+    ) -> Result<Vec<Vec<f32>>> {
+        match model {
+            EmbeddingModels::OAI => {
+                println!("Embedding...");
+                let backoff = backoff::ExponentialBackoffBuilder::new()
+                    .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                    .build();
+                let client = async_openai::Client::new().with_backoff(backoff);
+                let request = CreateEmbeddingRequestArgs::default()
+                    .model("text-embedding-ada-002")
+                    .input(text)
+                    .build()?;
+                let response = client.embeddings().create(request).await?;
+                let embedding: Vec<Vec<f32>> = response
+                    .data
+                    .iter()
+                    .map(|data| data.clone().embedding)
+                    .collect();
+                Ok(embedding)
+            }
+        }
     }
 
     ///
@@ -74,7 +86,9 @@ impl LLM {
         limit: Option<u64>,
     ) -> Result<String> {
         let prompt = text.to_vec();
-        let prompt_embedding = &self.embed_text(prompt.to_vec()).await?;
+        let prompt_embedding = &self
+            .embed_text(prompt.to_vec(), EmbeddingModels::OAI)
+            .await?;
         let qdrant = Qdrant::new(qdrant_conn, dataset_id);
 
         let qdrant_search_results = qdrant
