@@ -9,6 +9,7 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     ports:
       - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
 
   docker_mongo:
     restart: always
