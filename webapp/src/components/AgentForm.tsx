@@ -42,8 +42,6 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 	}).filter(t => t);
 	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
-	console.log(credentials[0])
-
 	useEffect(() => {
 		if (credentials && credentials.length > 0 && !credentialId) {
 			setAgent({
