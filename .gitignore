@@ -3,3 +3,6 @@
 */**/.DS_Store
 docker-compose.yml
 airbyte/
+
+# Personal vscode settings
+agent-backend/src/.vscode/
