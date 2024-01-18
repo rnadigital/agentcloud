@@ -1,4 +1,4 @@
-from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
+from init.env_variables import SOCKET_URL, BASE_PATH
 
 
 class TestEnvariables:
@@ -6,4 +6,3 @@ class TestEnvariables:
     def test_non_null_constants(self):
         assert len(SOCKET_URL) > 0
         assert len(BASE_PATH) > 0
-        assert len(AGENT_BACKEND_SOCKET_TOKEN) > 0
