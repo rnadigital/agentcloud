@@ -136,7 +136,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 				console.warn(e); //just a warning
 				//Try yaml parse (detect yaml schema)
 				try {
-			        loadedDocument = yaml.load(toolAPISchema) as Document;
+					loadedDocument = yaml.load(toolAPISchema) as Document;
 		        } catch(e2) {
 					console.warn(e2);
 		        }

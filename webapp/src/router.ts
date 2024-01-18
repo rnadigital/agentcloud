@@ -136,6 +136,7 @@ export default function router(server, app) {
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', datasourceController.datasourceEditPage.bind(null, app));
 	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
+	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 

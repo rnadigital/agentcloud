@@ -6,6 +6,7 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import { uploadFile, deleteFile } from 'lib/google/gcs';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import getAirbyteInternalApi from 'airbyte/internal';
 import getFileFormat from 'misc/getfileformat';
 import convertStringToJsonl from 'misc/converttojsonl';
 import path from 'path';
@@ -100,6 +101,68 @@ export async function datasourceAddPage(app, req, res, next) {
 	const data = await datasourceData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/datasource/add`);
+}
+
+export async function testDatasourceApi(req, res, next) {
+
+	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
+
+	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	
+	const connectorList = await getConnectors();
+	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
+	if (!submittedConnector) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
+	}
+	const newDatasourceId = new ObjectId();
+	const spec = submittedConnector.spec_oss.connectionSpecification;
+	console.log(JSON.stringify(spec, null, 2));
+	try {
+		const validate = ajv.compile(spec);
+		const validated = validate(req.body.sourceConfig);
+		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
+			console.log('validate.errors', validate?.errors);
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	} catch(e) {
+		console.log(e);
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create source in airbyte based on the validated form
+	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
+	updateDateStrings(req.body.sourceConfig);
+	const sourceBody = {
+		configuration: {
+			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
+			sourceType,
+			...req.body.sourceConfig,
+		},
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
+	};
+	console.log('sourceBody', sourceBody);	
+	const createdSource = await sourcesApi
+		.createSource(null, sourceBody)
+		.then(res => res.data);
+	console.log('createdSource', createdSource);
+
+	// Test connection to the source
+	const internalApi = await getAirbyteInternalApi();
+	const checkConnectionBody = {
+		sourceId: createdSource.sourceId,
+	};
+	console.log('checkConnectionBody', checkConnectionBody);
+	const connectionTest = await internalApi
+		.checkConnectionToSource(null, sourceBody)
+		.then(res => res.data);
+	console.log('connectionTest', connectionTest);
+
+	return dynamicResponse(req, res, 200, { }); //TODO: return the source api
+
 }
 
 export async function addDatasourceApi(req, res, next) {
@@ -288,10 +351,7 @@ export async function uploadFileApi(req, res, next) {
 
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	await uploadFile(filename, uploadedFile);
-	await sendMessage(filename, { stream: newDatasourceId.toString() });
-
-	//Create the actual datasource in the db
+	// Create the datasource in the db
 	await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
@@ -305,6 +365,10 @@ export async function uploadFileApi(req, res, next) {
 	    sourceType: 'file',
 	    workspaceId: null,
 	});
+	
+	// Send the gcs file path to rabbitmq
+	await uploadFile(filename, uploadedFile);
+	await sendMessage(filename, { stream: newDatasourceId.toString() });
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
