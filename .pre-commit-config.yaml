@@ -1,0 +1,37 @@
+default_language_version:
+  python: python3
+
+ci:
+  autofix_prs: true
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'
+  autoupdate_schedule: 'quarterly'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    - id: check-added-large-files
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-ast
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-yaml
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-toml
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-json
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-byte-order-marker
+      exclude: '.gitignore|iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: check-merge-conflict
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: detect-private-key
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: trailing-whitespace
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+    - id: end-of-file-fixer
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    - id: black
+      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
