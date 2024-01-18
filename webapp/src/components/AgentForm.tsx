@@ -42,12 +42,14 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 	}).filter(t => t);
 	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
+	console.log(credentials[0])
+
 	useEffect(() => {
 		if (credentials && credentials.length > 0 && !credentialId) {
 			setAgent({
 				...agentState,
 				credentialId: credentials[0]._id,
-				model: ModelList[credentials[0].platform][0],
+				model: ModelList[credentials[0].type][0],
 			});
 		}
 	}, []);
@@ -160,13 +162,13 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						                            : 'dark:text-white'
 						                    }`}
 						                >
-						                    {data.label} {optionCred ? `(${optionCred?.platform})` : null}
+						                    {data.label} {optionCred ? `(${optionCred?.type})` : null}
 						                </li>);
 						            }}
 						        />
 							</div>
 						</div>
-						{credentialId && foundCredential && ModelList[foundCredential.platform]?.length > 0 && <div className='sm:col-span-12'>
+						{credentialId && foundCredential && ModelList[foundCredential.type]?.length > 0 && <div className='sm:col-span-12'>
 							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Model
 							</label>
@@ -184,7 +186,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
    											};
    										});
 					            	}}
-						            options={ModelList && foundCredential && ModelList[foundCredential.platform] && ModelList[foundCredential.platform].map(m => ({ label: m, value: m }))}
+						            options={ModelList && foundCredential && ModelList[foundCredential.type] && ModelList[foundCredential.type].map(m => ({ label: m, value: m }))}
 						            formatOptionLabel={data => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${

@@ -11,6 +11,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import { dynamicResponse } from '../util';
 import toObjectId from 'misc/toobjectid';
 import * as ses from '../lib/email/ses';
+import createAccount from 'lib/account/create';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -57,64 +58,8 @@ export async function inviteTeamMemberApi(req, res) {
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const newAccountId = new ObjectId();
-		let airbyteWorkspaceId = null;
-		if (process.env.AIRBYTE_USERNAME) {
-			const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-			const workspace = await workspaceApi.createWorkspace(null, {
-				name: newAccountId.toString(), // account _id stringified as workspace nam
-			}).then(res => res.data);
-			airbyteWorkspaceId = workspace.workspaceId;
-		}
-		const addedOrg = await addOrg({
-			name: `${name}'s Org`,
-			teamIds: [],
-			members: [newAccountId],
-		});
-		const addedTeam = await addTeam({
-			name: `${name}'s Team`,
-			orgId: addedOrg.insertedId,
-			members: [newAccountId],
-			airbyteWorkspaceId,
-		});
-		const orgId = addedOrg.insertedId;
-		const teamId = addedTeam.insertedId;
-		const [addedAccount, verificationToken] = await Promise.all([
-			addAccount({
-				_id: newAccountId,
-				name,
-				email: email,
-				passwordHash: null, //Note: invited user will create password in verification page, w/backend check
-				orgs: [{
-					id: orgId,
-					name: `${name}'s Org`,
-					teams: [{
-						id: teamId,
-						name: `${name}'s Team`,
-						airbyteWorkspaceId,
-					}] //Note: adding the inviting team here
-				}, {
-					id: res.locals.matchingOrg.id.toString(),
-					name: res.locals.matchingOrg.name,
-					teams: [invitingTeam]
-				}],
-				currentOrg: orgId,
-				currentTeam: teamId,
-				emailVerified: false,
-				oauth: {} as OAuthRecordType,
-			}),
-			addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
-		]);
-		await addTeamMember(req.params.resourceSlug, newAccountId);
-		await ses.sendEmail({
-			from: process.env.FROM_EMAIL_ADDRESS,
-			bcc: null,
-			cc: null,
-			replyTo: null,
-			to: [email],
-			subject: 'You\'ve been invited to Agentcloud 🎉',
-			body: `Click here to accept the invitation: ${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
-		});
+		const { addedAccount } = await createAccount(email, name, null, true);
+		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);

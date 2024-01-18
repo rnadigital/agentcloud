@@ -39,7 +39,7 @@ export default function Account(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe;
+	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe || {};
 
 	return (
 		<>

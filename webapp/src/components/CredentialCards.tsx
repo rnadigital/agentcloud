@@ -8,6 +8,7 @@ import {
 import * as API from '../api';
 import { useRouter } from 'next/router';
 import { useAccountContext } from '../context/account';
+import { CredentialType } from 'struct/credential';
 import DeleteModal from './DeleteModal';
 import { toast } from 'react-toastify';
 function classNames(...classes) {
@@ -15,8 +16,8 @@ function classNames(...classes) {
 }
 
 //TODO: move to lib
-const platformIcons = {
-	'open_ai': <img height='24' width='24' className='invert' src='https://openai.com/favicon.ico' />
+const credentialIcons = {
+	[CredentialType.OPENAI]: <img height='24' width='24' className='invert' src='https://openai.com/favicon.ico' />,
 };
 
 export default function CredentialCards({ credentials, fetchCredentials }: { credentials: any[], fetchCredentials?: any }) {
@@ -52,13 +53,13 @@ export default function CredentialCards({ credentials, fetchCredentials }: { cre
 				setOpen(false);
 			}}
 			title={'Delete Credential'}
-			message={deletingCredential && `Are you sure you want to delete the ${deletingCredential?.platform} credential "${deletingCredential?.name}". This action cannot be undone.`}
+			message={deletingCredential && `Are you sure you want to delete the ${deletingCredential?.type} credential "${deletingCredential?.name}". This action cannot be undone.`}
 		/>
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
 			{credentials.map((credential) => (
 				<li key={credential._id} className='rounded-xl border border-gray-200 dark:border-gray-900 dark:border-slate-600 overflow-hidden'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-slate-800 bg-gray-50 p-6'>
-						{platformIcons[credential.platform] || <KeyIcon height='24' />}
+						{credentialIcons[credential.type] || <KeyIcon height='24' />}
 						<span
 							className='text-ellipsis overflow-hidden whitespace-nowrap'
 						>

@@ -6,6 +6,7 @@ import { addTeam } from '../db/team';
 import { addOrg } from '../db/org';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import createAccount from 'lib/account/create';
 import debug from 'debug';
 const log = debug('webapp:oauth');
 
@@ -88,49 +89,7 @@ export async function deserializeHandler(obj, done) {
 
 async function createUpdateAccountOauth(account, email, name, provider, profileId) {
 	if (!account) {
-		const newAccountId = new ObjectId();
-		let airbyteWorkspaceId = null;
-		if (process.env.AIRBYTE_USERNAME) {
-			const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-			const workspace = await workspaceApi.createWorkspace(null, {
-				name: newAccountId.toString(), // account _id stringified as workspace name
-			}).then(res => res.data);
-			airbyteWorkspaceId = workspace.workspaceId;
-		}
-		const addedOrg = await addOrg({
-			name: `${name}'s Org`,
-			teamIds: [],
-			members: [newAccountId],
-		});
-		const addedTeam = await addTeam({
-			name: `${name}'s Team`,
-			orgId: addedOrg.insertedId,
-			members: [newAccountId],
-			airbyteWorkspaceId,
-		});
-		const orgId = addedOrg.insertedId;
-		const teamId = addedTeam.insertedId;
-		await addAccount({
-			_id: newAccountId,
-			name: name || email,
-			email: email,
-			passwordHash: null,
-			orgs: [{
-				id: orgId,
-				name: `${name}'s Org`,
-				teams: [{
-					id: teamId,
-					name: `${name}'s Team`,
-					airbyteWorkspaceId,
-				}]
-			}],
-			currentOrg: orgId,
-			currentTeam: teamId,
-			emailVerified: true, //redundant in oauth?
-			oauth: {
-				[provider as OAUTH_PROVIDER]: { id: profileId },
-			},
-		});
+		await createAccount(email, name || email, null, false, provider as OAUTH_PROVIDER, profileId);
 	} else {
 		//existing account, check if it has the oauth ID else update it
 		if (!account.oauth || !account.oauth[provider]) {

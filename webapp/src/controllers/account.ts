@@ -2,17 +2,13 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { getAccountById, OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount, Account, verifyAccount } from '../db/account';
-import { addTeam } from '../db/team';
-import { addOrg } from '../db/org';
+import { getAccountById, setCurrentTeam, getAccountByEmail, changeAccountPassword, Account, verifyAccount } from '../db/account';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
 import { dynamicResponse } from '../util';
 import jwt from 'jsonwebtoken';
 import * as ses from '../lib/email/ses';
-import SecretKeys from '../lib/secret/secretkeys';
-import { getSecret } from '../lib/secret/secretmanager';
+import createAccount from 'lib/account/create';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import toObjectId from 'misc/toobjectid';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -48,19 +44,25 @@ export async function accountJson(req, res, next) {
  * @apiParam {String} password Password of account..
  */
 export async function login(req, res) {
+
 	const email = req.body.email.toLowerCase();
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
+
 	if (!account) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
+
 	const passwordMatch = await bcrypt.compare(password, account.passwordHash);
+
 	if (passwordMatch === true) {
 		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 		req.session.token = token; //jwt (cookie)
 		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/sessions`, token });
 	}
+
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
+
 }
 
 /**
@@ -84,68 +86,8 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const passwordHash = await bcrypt.hash(req.body.password, 12);
-
-	const amazonKey = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
-	const emailVerified = amazonKey == null;
-
-	const newAccountId = new ObjectId();
-	let airbyteWorkspaceId = null;
-	if (process.env.AIRBYTE_USERNAME) {
-		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-		const workspace = await workspaceApi.createWorkspace(null, {
-			name: newAccountId.toString(), // account _id stringified as workspace name
-		}).then(res => res.data);
-		airbyteWorkspaceId = workspace.workspaceId;
-	}
-	const addedOrg = await addOrg({
-		name: `${name}'s Org`,
-		teamIds: [],
-		members: [newAccountId],
-	});
-	const addedTeam = await addTeam({
-		name: `${name}'s Team`,
-		orgId: addedOrg.insertedId,
-		members: [newAccountId],
-		airbyteWorkspaceId,
-	});
-	const orgId = addedOrg.insertedId;
-	const teamId = addedTeam.insertedId;
-	const [addedAccount, verificationToken] = await Promise.all([
-		addAccount({
-			_id: newAccountId,
-			name,
-			email: email,
-			passwordHash: passwordHash,
-			orgs: [{
-				id: orgId,
-				name: `${name}'s Org`,
-				teams: [{
-					id: teamId,
-					name: `${name}'s Team`,
-					airbyteWorkspaceId,
-				}]
-			}],
-			currentOrg: orgId,
-			currentTeam: teamId,
-			emailVerified,
-			oauth: {} as OAuthRecordType,
-		}),
-		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
-	]);
-
-	if (!emailVerified) {
-		await ses.sendEmail({
-			from: process.env.FROM_EMAIL_ADDRESS,
-			bcc: null,
-			cc: null,
-			replyTo: null,
-			to: [email],
-			subject: 'Verify your email',
-			body: `Verify your email: ${process.env.URL_APP}/verify?token=${verificationToken}`,
-		});
-	}
-
+	const { emailVerified } = await createAccount(email, name, password);
+	
 	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 
 }
