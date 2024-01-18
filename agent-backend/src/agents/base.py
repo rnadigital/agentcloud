@@ -76,7 +76,7 @@ def rag_execution(
                 )
                 if stream:
                     openai_response = requests.post(
-                        "http://127.0.0.1:8000/v1/chat/completions",
+                        "localhost:9001/api/v1/prompt/",
                         request.model_dump_json(), stream=True
                     ).iter_lines(decode_unicode=True)
                     for chunk in openai_response:
@@ -105,6 +105,7 @@ def rag_execution(
                         )
                         output += text
                         first = False
+                        print(output)
                 else:
                     openai_response = requests.post(
                         "http://127.0.0.1:8000/v1/chat/completions",
@@ -229,4 +230,14 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
 
 
 if __name__ == "__main__":
-    rag_execution("gpt-4", [], "can you add up all the spend on R&D Expense")
+    message = "can you add up all the spend on R&D Expense"
+    # session_id 12-byte input or a 24-character hex string
+    session_id = "60a6d3c0e4b0c1a6e1b4a8f5"
+    model = "gpt-4"
+    stream = True
+    rag_execution(
+        message=message,
+        session_id=session_id,
+        model=model,
+        stream=stream
+    )
