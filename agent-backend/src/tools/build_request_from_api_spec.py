@@ -7,25 +7,25 @@ def load_spec(spec_file):
 
 
 def build_request(spec, endpoint_name, method, **params):
-    base_url = spec['servers'][0]['url']  # Assuming the first server listed
-    endpoint = spec['paths'][endpoint_name][method.lower()]
+    base_url = spec["servers"][0]["url"]  # Assuming the first server listed
+    endpoint = spec["paths"][endpoint_name][method.lower()]
 
     # Constructing the URL
     url = f"{base_url}{endpoint_name}"
 
     # Adding parameters based on parameter types (path, query, etc.)
-    if 'parameters' in endpoint:
-        for param in endpoint['parameters']:
-            if param['in'] == 'query':
+    if "parameters" in endpoint:
+        for param in endpoint["parameters"]:
+            if param["in"] == "query":
                 url += f"?{param['name']}={params[param['name']]}"
 
     return url, method.upper()
 
 
 def make_request(url, method):
-    if method == 'GET':
+    if method == "GET":
         response = requests.get(url)
-    elif method == 'POST':
+    elif method == "POST":
         response = requests.post(url)  # Add data for POST requests
     # Add other methods as needed
     return response

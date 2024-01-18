@@ -28,7 +28,7 @@ def task_execution(task: str, session_id: str):
             # Load team structure from DB
             session = mongo_client.get_session(session_id)
             group = mongo_client.get_group(session)
-            single_agent = session.get('agentId') is not None
+            single_agent = session.get("agentId") is not None
             build_chat = ChatBuilder(task, session_id, group, single_agent, {})
             build_chat.create_group()
             build_chat.attach_tools_to_agent()
@@ -43,16 +43,11 @@ def task_execution(task: str, session_id: str):
 
 
 def rag_execution(
-        message: str,
-        session_id: str,
-        model: str = "gpt-4",
-        stream: bool = True
+    message: str, session_id: str, model: str = "gpt-4", stream: bool = True
 ):
     try:
         socket = SimpleClient()
-        custom_headers = {
-            'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
-        }
+        custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
         socket.connect(url=SOCKET_URL, headers=custom_headers)
         socket.emit("join_room", f"_{session_id}")
         history = mongo_client.get_chat_history(session_id)
@@ -69,21 +64,21 @@ def rag_execution(
                 message_uuid = str(uuid4())
 
                 first = True
-                request = ChatRequest(
-                    model=model,
-                    messages=history,
-                    stream=stream
-                )
+                request = ChatRequest(model=model, messages=history, stream=stream)
                 if stream:
                     openai_response = requests.post(
                         "http://127.0.0.1:8000/v1/chat/completions",
-                        request.model_dump_json(), stream=True
+                        request.model_dump_json(),
+                        stream=True,
                     ).iter_lines(decode_unicode=True)
                     for chunk in openai_response:
                         if chunk.startswith("data: "):
                             chunk = chunk.strip("data: ")
                             chunk = json.loads(chunk)
-                            text = chunk.get("choices")[0].get("delta").get("content") or ""
+                            text = (
+                                chunk.get("choices")[0].get("delta").get("content")
+                                or ""
+                            )
                         else:
                             text = chunk
                         total_tokens += 1
@@ -98,19 +93,21 @@ def rag_execution(
                                     chunkId=message_uuid,
                                     tokens=total_tokens,
                                     first=first,
-                                    timestamp=datetime.now().timestamp() * 1000
-
-                                )
-                            )
+                                    timestamp=datetime.now().timestamp() * 1000,
+                                ),
+                            ),
                         )
                         output += text
                         first = False
                 else:
                     openai_response = requests.post(
                         "http://127.0.0.1:8000/v1/chat/completions",
-                        request.model_dump_json()
+                        request.model_dump_json(),
                     ).json()
-                    output = openai_response.get("choices")[0].get("message").get("content") or ""
+                    output = (
+                        openai_response.get("choices")[0].get("message").get("content")
+                        or ""
+                    )
                     send(
                         socket,
                         SocketEvents.MESSAGE,
@@ -123,10 +120,9 @@ def rag_execution(
                                 delta_tokens=count_token(history, model),
                                 single=True,
                                 first=first,
-                                timestamp=datetime.now().timestamp() * 1000
-
-                            )
-                        )
+                                timestamp=datetime.now().timestamp() * 1000,
+                            ),
+                        ),
                     )
             except (Exception,) as e:
                 err = e.body if isinstance(e, APIError) else str(e)
@@ -142,22 +138,26 @@ def rag_execution(
                         text=output,
                         chunkId=message_uuid,
                         deltaTokens=count_token(history, model),
-                        timestamp=datetime.now().timestamp() * 1000
-                    )
-                )
+                        timestamp=datetime.now().timestamp() * 1000,
+                    ),
+                ),
             )
-            send(socket, SocketEvents.MESSAGE, SocketMessage(
-                room=session_id,
-                authorName="System",
-                isFeedback=True,
-                message=Message(
-                    text="Rag agent is awaiting your feedback...",
-                    first=True,
-                    single=True,
-                    chunkId=str(uuid4()),
-                    timestamp=datetime.now().timestamp() * 1000
-                )
-            ))
+            send(
+                socket,
+                SocketEvents.MESSAGE,
+                SocketMessage(
+                    room=session_id,
+                    authorName="System",
+                    isFeedback=True,
+                    message=Message(
+                        text="Rag agent is awaiting your feedback...",
+                        first=True,
+                        single=True,
+                        chunkId=str(uuid4()),
+                        timestamp=datetime.now().timestamp() * 1000,
+                    ),
+                ),
+            )
     except Exception as e:
         logging.exception(e)
         raise e
@@ -166,21 +166,22 @@ def rag_execution(
 def init_socket_generate_group(task: str, session_id: str):
     with log_exception():
         socket = SimpleClient()
-        custom_headers = {
-            'x-agent-backend-socket-token': AGENT_BACKEND_SOCKET_TOKEN
-        }
+        custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
         socket.connect(url=SOCKET_URL, headers=custom_headers)
         socket.emit("join_room", f"_{session_id}")
 
-        with open(f"{BASE_PATH}/config/base.json", 'r') as f:
+        with open(f"{BASE_PATH}/config/base.json", "r") as f:
             group_generation = json.loads(f.read())
 
-        team_task = [f"""Given the following task, create the ideal team that will be best suited to complete the task:
+        team_task = [
+            f"""Given the following task, create the ideal team that will be best suited to complete the task:
 
 "{task}"
 
-Return the team in the below JSON structure:""", json.dumps(group_generation, indent=2),
-                     "There are no hard limits on the number or the combination of team members."]
+Return the team in the below JSON structure:""",
+            json.dumps(group_generation, indent=2),
+            "There are no hard limits on the number or the combination of team members.",
+        ]
 
         config_list = autogen.config_list_from_json(
             f"{BASE_PATH}/config/OAI_CONFIG_LIST.json",
@@ -188,7 +189,7 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
                 "model": {
                     "gpt-4",
                 }
-            }
+            },
         )
 
         gpt4_config = {
@@ -207,7 +208,7 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
             code_execution_config=False,
             use_sockets=True,
             socket_client=socket,
-            sid=session_id
+            sid=session_id,
         )
 
         team_designer = autogen.AssistantAgent(
@@ -218,14 +219,10 @@ Return the team in the below JSON structure:""", json.dumps(group_generation, in
             code_execution_config=False,
             use_sockets=True,
             socket_client=socket,
-            sid=session_id
+            sid=session_id,
         )
 
-        user_proxy.initiate_chat(
-            team_designer,
-            clear_history=True,
-            message=team_task
-        )
+        user_proxy.initiate_chat(team_designer, clear_history=True, message=team_task)
 
 
 if __name__ == "__main__":

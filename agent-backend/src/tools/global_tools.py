@@ -1,10 +1,9 @@
 def get_papers_from_arxiv(query: str) -> list:
     try:
         import arxiv
+
         search = arxiv.Search(
-            query=query,
-            max_results=10,
-            sort_by=arxiv.SortCriterion.SubmittedDate
+            query=query, max_results=10, sort_by=arxiv.SortCriterion.SubmittedDate
         )
         results = []
         for result in arxiv.Client().results(search):
@@ -17,6 +16,7 @@ def get_papers_from_arxiv(query: str) -> list:
 def openapi_request(**kwargs):
     try:
         import requests
+
         base_url = kwargs.get("__baseurl")
         endpoint = kwargs.get("__path")
         request_method = getattr(requests, kwargs.get("__method"))

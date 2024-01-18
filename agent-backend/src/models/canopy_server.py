@@ -59,7 +59,7 @@ class ChatDebugInfo(BaseModel):
     generated_tokens: Optional[int] = None
 
     def to_text(
-            self,
+        self,
     ):
         return self.model_dump()
 

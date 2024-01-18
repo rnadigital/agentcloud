@@ -20,7 +20,8 @@ class LockedThreadPoolExecutor(ThreadPoolExecutor):
         future = super().submit(fn, *args, **kwargs)
         # add_done_callback method is used to add a function that will be called when the task is done.
         future.add_done_callback(
-            lambda x: self.counter.release())  # This function releases the semaphore, increasing the counter.
+            lambda x: self.counter.release()
+        )  # This function releases the semaphore, increasing the counter.
         return future
 
     # This method is used to check if a new task can be submitted to the thread pool without blocking
@@ -46,7 +47,8 @@ class LockedProcessPoolExecutor(ProcessPoolExecutor):
         future = super().submit(fn, *args, **kwargs)
         # Add a function that will be called when the task is done.
         future.add_done_callback(
-            lambda x: self.counter.release())  # Release the semaphore (increment the counter).
+            lambda x: self.counter.release()
+        )  # Release the semaphore (increment the counter).
         return future
 
     def can_submit(self) -> bool:

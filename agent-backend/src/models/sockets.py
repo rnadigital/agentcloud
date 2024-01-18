@@ -37,5 +37,5 @@ class SocketMessage(BaseModel):
     def json(self, **kwargs):
         # Convert the model to a dictionary and replace enum with its value
         d = self.model_dump()
-        d['event'] = d['event'].value  # Convert Enum to string
+        d["event"] = d["event"].value  # Convert Enum to string
         return json.dumps(d, **kwargs)

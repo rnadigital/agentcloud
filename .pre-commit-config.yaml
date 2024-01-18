@@ -11,27 +11,27 @@ repos:
     rev: v4.4.0
     hooks:
     - id: check-added-large-files
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-ast
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-yaml
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-toml
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-json
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-byte-order-marker
-      exclude: '.gitignore|iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: check-merge-conflict
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: detect-private-key
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: trailing-whitespace
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
     - id: end-of-file-fixer
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
     - id: black
-      exclude: 'iqfeed.client/|csharp/|iqfeed.csharpapiclient.2.7.0/|.*\.yaml$'
+      exclude: '^(?!agent-backend/src/)'

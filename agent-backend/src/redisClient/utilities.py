@@ -22,8 +22,7 @@ class RedisClass(RedisConnection):
 
         """
         try:
-            redis_rule = self.redis_client.hlen(
-                hash_key)
+            redis_rule = self.redis_client.hlen(hash_key)
             if redis_rule:
                 return True
             else:
@@ -47,9 +46,7 @@ class RedisClass(RedisConnection):
 
         """
         try:
-            self.redis_client.hset(
-                hash_key,
-                key, json.dumps(data))
+            self.redis_client.hset(hash_key, key, json.dumps(data))
             return True
         except Exception as err:
             logging.exception(err.args[0])
@@ -57,5 +54,5 @@ class RedisClass(RedisConnection):
             return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(f"Running {__name__}")
