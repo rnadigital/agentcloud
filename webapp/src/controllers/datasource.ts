@@ -157,7 +157,7 @@ export async function testDatasourceApi(req, res, next) {
 	};
 	console.log('checkConnectionBody', checkConnectionBody);
 	const connectionTest = await internalApi
-		.checkConnectionToSource(null, sourceBody)
+		.checkConnectionToSource(null, checkConnectionBody)
 		.then(res => res.data);
 	console.log('connectionTest', connectionTest);
 
