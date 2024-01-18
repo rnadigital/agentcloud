@@ -10,7 +10,6 @@ on:
       - "main"
       - "master"
   schedule:
-    # Note that cronjobs run on master/main by default
     - cron: "0 1 * * *"
   merge_group:
     types: [checks_requested]
@@ -42,6 +41,8 @@ jobs:
         run: |
           poetry config virtualenvs.create false
           poetry install
+        working-directory: ./agent-backend
       - name: Test with pytest
         run: |
-          pytest agent-backend/test -k 'not require_docker'
+          pytest test -k 'not require_docker'
+        working-directory: ./agent-backend
