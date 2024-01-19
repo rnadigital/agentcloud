@@ -36,6 +36,17 @@ export async function addDatasource(datasource: Datasource): Promise<db.InsertRe
 	return DatasourceCollection().insertOne(datasource);
 }
 
+export async function setDatasourceConnectionId(teamId: db.IdOrStr, datasourceId: db.IdOrStr, connectionId: db.IdOrStr): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			connectionId: toObjectId(connectionId),
+		},
+	});
+}
+
 export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<db.InsertResult> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),

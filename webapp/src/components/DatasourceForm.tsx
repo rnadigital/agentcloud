@@ -80,7 +80,7 @@ const stepList = [
 export default function DatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
-	const [step, setStep] = useState(3);
+	const [step, setStep] = useState(0);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();

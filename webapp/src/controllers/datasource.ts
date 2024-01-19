@@ -1,6 +1,6 @@
 'use strict';
 
-import { getDatasourcesByTeam, addDatasource, getDatasourceById, deleteDatasourceById, editDatasource } from '../db/datasource';
+import { getDatasourcesByTeam, addDatasource, getDatasourceById, deleteDatasourceById, editDatasource, setDatasourceConnectionId } from '../db/datasource';
 import { dynamicResponse } from '../util';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
@@ -172,7 +172,7 @@ export async function testDatasourceApi(req, res, next) {
 	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
 
 	// Create the actual datasource in the db
-	await addDatasource({
+	const createdDatasource = await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
@@ -189,56 +189,16 @@ export async function testDatasourceApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		sourceId: createdSource.sourceId,
 		discoveredSchema,
+		datasourceId: createdDatasource.insertedId,
 	});
 
 }
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
+	const { datasourceId }  = req.body;
 
-	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-	
-	const connectorList = await getConnectors();
-	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
-	if (!submittedConnector) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
-	}
-	const newDatasourceId = new ObjectId();
-	const spec = submittedConnector.spec_oss.connectionSpecification;
-	console.log(JSON.stringify(spec, null, 2));
-	try {
-		const validate = ajv.compile(spec);
-		const validated = validate(req.body.sourceConfig);
-		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
-			console.log('validate.errors', validate?.errors);
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-		}
-	} catch(e) {
-		console.log(e);
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	// Create source in airbyte based on the validated form
-	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
-	updateDateStrings(req.body.sourceConfig);
-	const sourceBody = {
-		configuration: {
-			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
-			sourceType,
-			...req.body.sourceConfig,
-		},
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
-	};
-	console.log('sourceBody', sourceBody);	
-	const createdSource = await sourcesApi
-		.createSource(null, sourceBody)
-		.then(res => res.data);
-	console.log('createdSource', createdSource);
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -248,8 +208,8 @@ export async function addDatasourceApi(req, res, next) {
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: createdSource.sourceId,
-		sourceId: createdSource.sourceId,
+		name: datasource.sourceId,
+		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
@@ -269,20 +229,8 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdJob', createdJob);
 
-	//Create the actual datasource in the db
-	await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: newDatasourceId.toString(),
-	    gcsFilename: null,
-	    originalName: datasourceName,
-	    sourceId: createdSource.sourceId,
-	    connectionId: createdConnection.connectionId,
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-	    sourceType,
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-	});
+	// Update the datasource with the connetionId
+	await setDatasourceConnectionId(datasourceId, req.params.resourceSlug, createdConnection.connectionId);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
