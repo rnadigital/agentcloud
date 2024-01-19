@@ -54,18 +54,13 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 		_id: toObjectId(teamId),
 	}, {
 		$pullAll: {
-			members: toObjectId(accountId),
+			members: [toObjectId(accountId)],
 		},
 	});
 }
 
 export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 	return TeamCollection().aggregate([
-		{
-			$match: {
-				_id: toObjectId(teamId)
-			}
-		},
 		{
 			$lookup: {
 				from: 'accounts', // The collection to join.
@@ -74,6 +69,17 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				as: 'members' // The array field to hold the joined data.
 			}
 		},
+                {
+			$lookup: {
+				from: 'orgs', // The collection to join.
+				localField: 'orgId', // Field from the 'teams' collection.
+				foreignField: '_id', // Field from the 'accounts' collection.
+				as: 'orgs' // The array field to hold the joined data.
+			}
+		},
+			{
+				$unwind: "$orgs"
+			},
 		{
 			$project: {
 				_id: 1,
@@ -81,10 +87,20 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				airbyteWorkspaceId: 1,
 				name: 1,
 				members: {
-					_id: 1,
-					name: 1,
-					email: 1,
-					emailVerified: 1, //know if vreified or not (implies accepted invite)
+					$map: {
+						input: "$members",
+						as: "member",
+						in: {
+							_id: "$$member._id",
+							name: "$$member.name",
+							email: "$$member.email",
+							emailVerified: "$$member.emailVerified", //know if vreified or not (implies accepted invite)
+						memberId: "$$member._id",    
+						teamOwner: {
+								$in: ["$$member._id","$orgs.members"]
+							}
+						}
+					}
 				}
 			}
 		}

@@ -33,6 +33,8 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 				toast.error(res);
 			}, null);
 			toast.success('Invitation sent');
+			setName('');
+			setEmail('');
 			callback && callback();
 		} catch (err) {
 			toast.error('Error sending invitation');
