@@ -3,4 +3,3 @@
 */**/.DS_Store
 docker-compose.yml
 airbyte/
-!webapp/src/lib/airbyte

@@ -161,7 +161,35 @@ export async function testDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('connectionTest', connectionTest);
 
-	return dynamicResponse(req, res, 200, { }); //TODO: return the source api
+	// Discover the schema
+	const discoverSchemaBody = {
+		sourceId: createdSource.sourceId,
+	};
+	console.log('discoverSchemaBody', discoverSchemaBody);
+	const discoveredSchema = await internalApi
+		.discoverSchemaForSource(null, discoverSchemaBody)
+		.then(res => res.data);
+	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+
+	// Create the actual datasource in the db
+	await addDatasource({
+	    _id: newDatasourceId,
+	    orgId: toObjectId(res.locals.matchingOrg.id),
+	    teamId: toObjectId(req.params.resourceSlug),
+	    name: newDatasourceId.toString(),
+	    gcsFilename: null,
+	    originalName: datasourceName,
+	    sourceId: createdSource.sourceId,
+	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+	    sourceType,
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+	});
+
+	return dynamicResponse(req, res, 200, {
+		sourceId: createdSource.sourceId,
+		discoveredSchema,
+	});
 
 }
 
@@ -294,30 +322,32 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Run a reset job in airbyte
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: datasource.connectionId,
-		jobType: 'reset',
-	};
-	const resetJob = await jobsApi
-		.createJob(null, jobBody)
-		.then(res => res.data);
-	console.log('resetJob', resetJob);
+	if (datasource.connectionId) {
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'reset',
+		};
+		const resetJob = await jobsApi
+			.createJob(null, jobBody)
+			.then(res => res.data);
+		console.log('resetJob', resetJob);
+		
+		// Delete the connection in airbyte
+		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+		const connectionBody = {
+			connectionId: datasource.connectionId,
+		};
+		const deletedConnection = await connectionsApi
+			.deleteConnection(connectionBody, connectionBody)
+			.then(res => res.data);
+	}
 
 	// Delete the source file in GCS if this is a file
 	if (datasource.sourceType === 'file') { //TODO: make an enum?
 		await deleteFile(datasource.gcsFilename);
 	}
 
-	// Delete the connection in airbyte
-	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
-	const connectionBody = {
-		connectionId: datasource.connectionId,
-	};
-	const deletedConnection = await connectionsApi
-		.deleteConnection(connectionBody, connectionBody)
-		.then(res => res.data);
-	
 	// Delete the source in airbyte
 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
 	const sourceBody = {
@@ -349,9 +379,9 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
 	}
 
+	// Create the datasource in the db
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	// Create the datasource in the db
 	await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
