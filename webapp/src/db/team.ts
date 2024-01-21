@@ -69,7 +69,7 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				as: 'members' // The array field to hold the joined data.
 			}
 		},
-                {
+		{
 			$lookup: {
 				from: 'orgs', // The collection to join.
 				localField: 'orgId', // Field from the 'teams' collection.
@@ -77,9 +77,9 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				as: 'orgs' // The array field to hold the joined data.
 			}
 		},
-			{
-				$unwind: "$orgs"
-			},
+		{
+			$unwind: '$orgs'
+		},
 		{
 			$project: {
 				_id: 1,
@@ -88,16 +88,16 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				name: 1,
 				members: {
 					$map: {
-						input: "$members",
-						as: "member",
+						input: '$members',
+						as: 'member',
 						in: {
-							_id: "$$member._id",
-							name: "$$member.name",
-							email: "$$member.email",
-							emailVerified: "$$member.emailVerified", //know if vreified or not (implies accepted invite)
-						memberId: "$$member._id",    
-						teamOwner: {
-								$in: ["$$member._id","$orgs.members"]
+							_id: '$$member._id',
+							name: '$$member.name',
+							email: '$$member.email',
+							emailVerified: '$$member.emailVerified', //know if vreified or not (implies accepted invite)
+							memberId: '$$member._id',    
+							teamOwner: {
+								$in: ['$$member._id','$orgs.members']
 							}
 						}
 					}
