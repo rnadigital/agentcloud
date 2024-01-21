@@ -79,7 +79,7 @@ export async function inviteTeamMemberApi(req, res) {
 		}
 	}
 	//member invited
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/team` });
+	return dynamicResponse(req, res, 200, { });
 }
 
 /**
