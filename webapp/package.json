@@ -11,7 +11,7 @@
     "build": "npm run build:next && npm run build:server",
     "start": "NODE_ENV=production ts-node --project tsconfig.server.json -r tsconfig-paths/register dist/server.js",
     "lint:nextjs": "next lint",
-    "lint:all": "eslint ./"
+    "lint:all": "eslint src/"
   },
   "keywords": [],
   "author": "RNA DIGITAL PTY LTD",
