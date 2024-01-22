@@ -225,6 +225,7 @@ export async function addDatasourceApi(req, res, next) {
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
+		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
 		sourceId: datasource.sourceId,
@@ -248,7 +249,7 @@ export async function addDatasourceApi(req, res, next) {
 	console.log('createdJob', createdJob);
 
 	// Update the datasource with the connetionId
-	await setDatasourceConnectionId(datasourceId, req.params.resourceSlug, createdConnection.connectionId);
+	await setDatasourceConnectionId(req.params.resourceSlug, datasourceId, createdConnection.connectionId);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
