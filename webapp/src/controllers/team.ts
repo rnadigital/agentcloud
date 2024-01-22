@@ -95,7 +95,7 @@ export async function deleteTeamMemberApi(req, res) {
 	const memberAccount = await getAccountById(memberId);
 	if(memberAccount) {	
 		const foundTeam = await getTeamById(req.params.resourceSlug);
-		const org = res.locals.matchingOrg//await getOrgById(foundTeam.orgId);
+		const org = res.locals.matchingOrg;//await getOrgById(foundTeam.orgId);
 		if(!org) {
 			return dynamicResponse(req, res, 403, { error: 'User org not found' });
 		} else {
