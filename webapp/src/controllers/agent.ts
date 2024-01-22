@@ -3,12 +3,14 @@
 import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
-import { getCredentialById, getCredentialsByTeam } from '../db/credential';
+import { getCredentialById, getCredentialsById, getCredentialsByTeam } from '../db/credential';
 import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
 import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
 import { dynamicResponse } from '../util';
+import { PARENT_OBJECT_FIELD_NAME, chainValidations, validateField } from '../lib/utils/ValidationUtils';
+import { ModelList } from '../lib/struct/model';
 
 export async function agentsData(req, res, _next) {
 	const [agents, credentials, tools, datasources] = await Promise.all([
@@ -103,12 +105,21 @@ export async function addAgentApi(req, res, next) {
 
 	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0
-		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
-		|| !type || typeof type !== 'string' || type.length === 0
-		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
-		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
-		|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(d => d.length !== 24)))) {
+	const validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'type', validation: { notEmpty: true }},
+		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
+		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
+	], { name: 'Name', credentialId: 'Credential', systemMessage: 'Instructions', type: 'Type'});
+	// if (!name || typeof name !== 'string' || name.length === 0
+	// 	|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
+	// 	|| !type || typeof type !== 'string' || type.length === 0
+	// 	|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
+	// 	|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
+	// 	|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(d => d.length !== 24)))) {
+	if(validationError) {	
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -173,14 +184,29 @@ export async function editAgentApi(req, res, next) {
 
 	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0
-		|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
-		|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
-		|| !type || typeof type !== 'string' || type.length === 0
-		|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
-		|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
-		|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(t => t.length !== 24)))) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	// if (!name || typeof name !== 'string' || name.length === 0
+	// 	|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
+	// 	|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
+	// 	|| !type || typeof type !== 'string' || type.length === 0
+	// 	|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
+	// 	|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
+	// 	|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(t => t.length !== 24)))) {
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'type', validation: { notEmpty: true }},
+		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
+		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
+	], { name: 'Name', credentialId: 'Credential', systemMessage: 'Instructions', type: 'Type'});
+
+	if(validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+	validationError = res.locals.matchingOrg.teamIds.find(teamId => valdiateCredentialModel(teamId, credentialId, model));
+	
+	if(validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
@@ -213,6 +239,17 @@ export async function editAgentApi(req, res, next) {
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
 
+}
+
+async function valdiateCredentialModel(teamId, credentialId, model) {
+	const credential = await getCredentialById(teamId, credentialId);
+	if(credential) {
+		credential.type
+		const allowedModels = ModelList[credential.type];
+		return validateField(model, PARENT_OBJECT_FIELD_NAME, { inSet: allowedModels /* allows invalid types */, customError: `Model ${model} is not valid for provided credential` }, {});
+	} else {
+		return "Invalid credential";
+	}
 }
 
 /**
