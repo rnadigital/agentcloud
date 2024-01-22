@@ -1,10 +1,12 @@
 use crate::data::processing_incoming_messages::process_messages;
+use crate::gcp::gcs::get_object_from_gcs;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -37,7 +39,25 @@ pub async fn subscribe_to_queue(
             let datasource_id = stream_split.to_vec()[0];
             if let Some(msg) = message.content {
                 let qdrant_conn = Arc::clone(&app_data);
+                // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
+                        if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
+                            let message_data: Value = _json;
+                            if let Some(bucket_name) = message_data.get("") {
+                                if let Some(file_name) = message_data.get("") {
+                                    if let Ok(file) = get_object_from_gcs(
+                                        bucket_name.to_string(),
+                                        file_name.to_string(),
+                                    )
+                                    .await
+                                    {
+                                        println!("File: {:?}", file);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     let args =
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = channel.basic_ack(args).await;
