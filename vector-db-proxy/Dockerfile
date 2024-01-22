@@ -20,7 +20,8 @@ COPY . $workdir
 COPY Cargo.toml .
 #Install cmake
 # Build release application
-RUN cargo build --release
+RUN #cargo build --release
+RUN cargo build
 #Expose port
 EXPOSE 8001
 #Run app
