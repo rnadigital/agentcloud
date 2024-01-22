@@ -42,7 +42,7 @@ export async function setDatasourceConnectionId(teamId: db.IdOrStr, datasourceId
 		teamId: toObjectId(teamId),
 	}, {
 		$set: {
-			connectionId: toObjectId(connectionId),
+			connectionId: connectionId,
 		},
 	});
 }

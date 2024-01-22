@@ -196,14 +196,31 @@ export async function testDatasourceApi(req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { datasourceId }  = req.body;
+	const { datasourceId, streams }  = req.body;
+
+	if (!datasourceId || typeof datasourceId !== 'string'
+		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		schedule: {scheduleType: 'manual'},
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append', //TODO: handle other syncmodes
+			}))
+		},
+		schedule: {
+			scheduleType: 'manual'
+		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,

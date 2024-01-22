@@ -31,9 +31,9 @@ const StreamRow = ({ stream }) => {
 		<div className='border-b'>
 			<div className='flex justify-between items-center p-4'>
 				<div className='flex items-center'>
-					<button onClick={() => setIsExpanded(!isExpanded)}>
+					<span onClick={() => setIsExpanded(!isExpanded)} className='cursor-pointer'>
 						{isExpanded ? <ChevronDownIcon className='h-4 w-4' /> : <ChevronRightIcon className='h-4 w-4' />}
-					</button>
+					</span>
 					<span className='ml-2'>{stream.stream.name}</span>
 				</div>
 				<div>
@@ -88,7 +88,7 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
-	const [sourceId, setSourceId] = useState(null);
+	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
@@ -160,27 +160,28 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					}, (res) => {
 						toast.error(res);
 					}, compact ? null : router);
-					setSourceId(stagedDatasource.sourceId);
+					setDatasourceId(stagedDatasource.datasourceId);
 					setDiscoveredSchema(stagedDatasource.discoveredSchema);
 					setStep(3);
-					callback && addedDatasource && callback(addedDatasource._id);
+					// callback && addedDatasource && callback(addedDatasource._id);
 				} else {
 					//step 3, saving datasource
 					e.preventDefault();
-					console.log(e.target.elements);
+					const streams = Array.from(e.target.elements)
+						.filter(x => x.checked === true)
+						.map(x => x.name);
 					const body = {
 						_csrf: csrf,
-						sourceId: sourceId,
+						datasourceId: datasourceId,
 						resourceSlug,
-						streams: e.formData,
+						streams,
 					};
-
 					const addedDatasource: any = await API.addDatasource(body, () => {
 						toast.success('Added datasource');
 					}, (res) => {
 						toast.error(res);
 					}, compact ? null : router);
-					callback && addedDatasource && callback(addedDatasource._id);
+					// callback && addedDatasource && callback(addedDatasource._id);
 				}
 			}
 		} finally {
