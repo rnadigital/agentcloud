@@ -62,6 +62,11 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 	return TeamCollection().aggregate([
 		{
+			$match: {
+				_id: toObjectId(teamId)
+			}
+		},
+		{
 			$lookup: {
 				from: 'accounts', // The collection to join.
 				localField: 'members', // Field from the 'teams' collection.

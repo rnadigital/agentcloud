@@ -1,5 +1,5 @@
 version: '3.7'
-name: agentcloud
+name: airbyte
 services:
 
   docker_rabbitmq:
@@ -135,3 +135,8 @@ services:
 volumes:
   mongodb_data_container:
   redis_data:
+
+  networks: 
+  default: 
+    external: true
+    name: airbyte_airbyte_internal
