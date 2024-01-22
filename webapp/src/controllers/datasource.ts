@@ -17,7 +17,7 @@ import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import { promisify } from 'util';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionId } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -225,6 +225,7 @@ export async function addDatasourceApi(req, res, next) {
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
+		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
 		sourceId: datasource.sourceId,
@@ -248,7 +249,7 @@ export async function addDatasourceApi(req, res, next) {
 	console.log('createdJob', createdJob);
 
 	// Update the datasource with the connetionId
-	await setDatasourceConnectionId(datasourceId, req.params.resourceSlug, createdConnection.connectionId);
+	await setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -364,7 +365,7 @@ export async function uploadFileApi(req, res, next) {
 	
 	// Send the gcs file path to rabbitmq
 	await uploadFile(filename, uploadedFile);
-	await sendMessage(filename, { stream: newDatasourceId.toString() });
+	await sendMessage(filename, { stream: newDatasourceId.toString(), type: 'file' }); //TODO: make 'file' an num once there are more
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 

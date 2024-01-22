@@ -37,6 +37,9 @@ export function getSession(body, dispatch, errorCallback, router) {
 export function deleteSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/session/${body.sessionId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
+export function cancelSession(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/session/${body.sessionId}/cancel`, 'POST', body, dispatch, errorCallback, router);
+}
 export function addSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/session/add`, 'POST', body, dispatch, errorCallback, router);
 }

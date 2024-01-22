@@ -2,10 +2,28 @@
 
 import { ObjectId } from 'mongodb';
 
-type Stream = {
+export type DatasourceStream = {
     syncMode: string; //TODO: enum to match airbyte api
     name: string;
 };
+
+export type DatasourceConnectionSettings = {
+    configurations: {
+        streams: DatasourceStream[]
+    },
+    schedule: {
+        scheduleType: string; //TODO: allow scheduling
+    },
+    dataResidency: string;
+    namespaceDefinition: string;
+    namespaceFormat: string | null;
+    nonBreakingSchemaUpdatesBehavior: string;
+    prefix: string | null;
+    name: string;
+    sourceId: string;
+    destinationId: string;
+    status: string; //TODO: enum to match airbyte api, and allow creating in paused state
+}
 
 export type Datasource = {
     _id?: ObjectId;
@@ -19,20 +37,5 @@ export type Datasource = {
     destinationId: string; //airbyte
     workspaceId: string; //airbyte
     connectionId: string; //airbyte
-    connectionSettings?: {
-        configurations: {
-            streams: Stream[]
-        },
-        schedule: {
-            scheduleType: string; //TODO: allow scheduling
-        },
-        dataResidency: string;
-        namespaceDefinition: string;
-        namespaceFormat: string | null;
-        nonBreakingSchemaUpdatesBehavior: string;
-        name: string;
-        sourceId: string;
-        destinationId: string;
-        status: string; //TODO: enum to match airbyte api, and allow creating in paused state
-    }
+    connectionSettings?: DatasourceConnectionSettings;
 };

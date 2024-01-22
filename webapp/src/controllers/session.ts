@@ -1,14 +1,15 @@
 'use strict';
 
+import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
+import { addChatMessage, getChatMessagesBySession } from 'db/chat';
+import { getGroupById, getGroupsByTeam } from 'db/group';
+import { setSessionStatus } from 'db/session';
+import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { SessionStatus, SessionType } from 'struct/session';
 
-import { getAgentById, getAgentsById, getAgentsByTeam } from '../db/agent';
-import { addChatMessage, getChatMessagesBySession } from '../db/chat';
-import { getGroupById, getGroupsByTeam } from '../db/group';
-import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from '../db/session';
 import { dynamicResponse } from '../util';
 
 export async function sessionsData(req, res, _next) {
@@ -200,7 +201,36 @@ export async function deleteSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await deleteSessionById(req.params.resourceSlug, sessionId);
+	const deletedSession = await deleteSessionById(req.params.resourceSlug, sessionId);
+	if (!deletedSession || deletedSession.deletedCount < 1) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	client.set(`${sessionId}_stop`, '1');
+
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/sessions`*/ });
+
+}
+
+/**
+ * @api {post} /forms/session/[sessionId]/cancel
+ * @apiName cancel
+ * @apiGroup session
+ *
+ * @apiParam {String} sessionId the session id
+ */
+export async function cancelSessionApi(req, res, next) {
+
+	const { sessionId }  = req.body;
+
+	if (!sessionId || typeof sessionId !== 'string' || sessionId.length !== 24) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
+	if (!session) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+	await setSessionStatus(req.params.resourceSlug, sessionId, SessionStatus.TERMINATED);
 	client.set(`${sessionId}_stop`, '1');
 
 	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/sessions`*/ });
