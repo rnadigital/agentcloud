@@ -2,11 +2,11 @@
 
 import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
-import { addTeam, getTeamById, getTeamWithMembers, addTeamMember } from '../db/team';
+import { addTeam, getTeamById, getTeamWithMembers, addTeamMember, removeTeamMember } from '../db/team';
 import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
 import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount,
-	Account, verifyAccount, pushAccountOrg, pushAccountTeam } from '../db/account';
-import { addOrg } from '../db/org';
+	Account, verifyAccount, pushAccountOrg, pushAccountTeam, getAccountById } from '../db/account';
+import { addOrg, getOrgById } from '../db/org';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import { dynamicResponse } from '../util';
 import toObjectId from 'misc/toobjectid';
@@ -79,7 +79,41 @@ export async function inviteTeamMemberApi(req, res) {
 		}
 	}
 	//member invited
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/team` });
+	return dynamicResponse(req, res, 200, { });
+}
+
+/**
+ * @api {delete} /forms/team/invite
+ * @apiName invite
+ * @apiGroup Team
+ *
+ * @apiParam {String} email Email of person to invite
+ */
+export async function deleteTeamMemberApi(req, res) {
+	const { memberId } = req.body;
+	//account with that memberId
+	const memberAccount = await getAccountById(memberId);
+	if(memberAccount) {	
+		const foundTeam = await getTeamById(req.params.resourceSlug);
+		const org = res.locals.matchingOrg//await getOrgById(foundTeam.orgId);
+		if(!org) {
+			return dynamicResponse(req, res, 403, { error: 'User org not found' });
+		} else {
+			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
+				return dynamicResponse(req, res, 403, { error: 'Cannot remove org user' });
+			}
+		}
+		// if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
+		// 	return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
+		// }
+		const removeRes = await removeTeamMember(req.params.resourceSlug, memberId.toString());
+		if(removeRes?.modifiedCount < 1) {
+			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
+		}
+	} else {
+		return dynamicResponse(req, res, 403, { error: 'User not found' });
+	}
+	return dynamicResponse(req, res, 302, {  });
 }
 
 /**
