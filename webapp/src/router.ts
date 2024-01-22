@@ -90,6 +90,7 @@ export default function router(server, app) {
 	teamRouter.get('/sessions.json', sessionController.sessionsJson);
 	teamRouter.post('/forms/session/add', sessionController.addSessionApi);
 	teamRouter.delete('/forms/session/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/cancel', sessionController.cancelSessionApi);
 
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));

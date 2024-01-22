@@ -46,6 +46,19 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 		}, router);
 	}
 
+	async function cancelSession(sessionId) {
+		API.cancelSession({
+			_csrf: csrf,
+			resourceSlug,
+			sessionId,
+		}, () => {
+			fetchSessions();
+			toast('Cancelled session');
+		}, () => {
+			toast.error('Error cancelling session');
+		}, router);
+	}
+
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
 			{sessions.map((session) => (
@@ -94,6 +107,19 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 										)}
 									</Menu.Item>
 									{/* TODO: onclick cancel, cancel this session? */}
+									<Menu.Item>
+										{({ active }) => (
+											<button
+												onClick={() => cancelSession(session._id)}
+												className={classNames(
+													active ? 'bg-gray-50 dark:bg-slate-700' : '',
+													'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
+												)}
+											>
+											Cancel
+											</button>
+										)}
+									</Menu.Item>
 									<Menu.Item>
 										{({ active }) => (
 											<button
