@@ -20,16 +20,16 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 	const { resourceSlug } = router.query;
 
 	async function deleteDatasource(datasourceId) {
-		API.deleteDatasource({
+		await API.deleteDatasource({
 			_csrf: csrf,
 			resourceSlug,
 			datasourceId,
 		}, () => {
-			fetchDatasources();
-			toast('Deleted datasource');
+			toast.success('Deleted datasource');
 		}, () => {
 			toast.error('Error deleting datasource');
 		}, router);
+		fetchDatasources();
 	}
 
 	return (

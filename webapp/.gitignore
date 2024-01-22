@@ -6,3 +6,4 @@ dist/
 .env.local
 keyfile.json
 doc/
+!src/lib/airbyte
