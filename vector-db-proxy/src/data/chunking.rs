@@ -1,5 +1,4 @@
 use anyhow::Result;
-use crate::data::text_splitting
 
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,

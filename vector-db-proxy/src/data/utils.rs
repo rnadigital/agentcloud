@@ -1,12 +1,12 @@
 use ndarray::Array1;
-pub fn cosine_similarity(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
     let norm_a = a.dot(a).sqrt();
     let norm_b = b.dot(b).sqrt();
     dot_product / (norm_a * norm_b)
 }
 
-pub fn percentile(values: &[f64], percentile: usize) -> f64 {
+pub fn percentile(values: &Vec<f32>, percentile: usize) -> f32 {
     assert!(!values.is_empty(), "Values cannot be empty");
     assert!(percentile <= 100, "Percentile must be between 0 and 100");
 

@@ -40,11 +40,19 @@ fn combine_sentences(
 // Assuming `Sentence` is a struct or similar type that holds the embedding and other data
 #[derive(Clone)]
 struct Sentence {
-    combined_sentence_embedding: Array1<f64>,
-    distance_to_next: Option<f64>,
+    combined_sentence_embedding: Array1<f32>,
+    distance_to_next: Option<f32>,
+}
+impl Default for Sentence{
+    fn default() -> Self {
+        Sentence{
+            combined_sentence_embedding: Array1::from_vec(vec![]),
+            distance_to_next: None
+        }
+    }
 }
 
-fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f64> {
+fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
 
     for i in 0..sentences.len() - 1 {
@@ -97,6 +105,7 @@ impl SemanticChunker {
 
     async fn split_text(&self, text: &str) -> Vec<String> {
         let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
+        let mut sent: Sentence = Sentence::default();
         let mut sentences: Vec<HashMap<String, String>> = single_sentences_list
             .iter()
             .enumerate()
@@ -124,9 +133,13 @@ impl SemanticChunker {
                 "combined_sentence_embedding".to_string(),
                 format!("{:?}", embeddings[i]),
             );
+            sent = Sentence{
+                combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
+                distance_to_next: None
+            };
         }
 
-        let (distances, sentences) = calculate_cosine_distances(&mut sentences);
+        let distances = calculate_cosine_distances(&mut vec![sent]);
         let mut chunks = Vec::new();
         let breakpoint_percentile_threshold = 95;
         let breakpoint_distance_threshold = percentile(&distances, breakpoint_percentile_threshold);
@@ -179,10 +192,10 @@ impl SemanticChunker {
             let mut index: isize = -1;
             for chunk in self.split_text(&text).await {
                 let mut metadata = metadata[i].clone();
-                if self.add_start_index {
-                    index = text[index + 1..].find(&chunk).unwrap_or(-1) + index + 1;
-                    metadata.insert("start_index".to_string(), index.to_string());
-                }
+                // if self.add_start_index {
+                //     index = text[index + 1..].find(&chunk).unwrap_or(-1) + index + 1;
+                //     metadata.insert("start_index".to_string(), index.to_string());
+                // }
                 documents.push(Document::new(chunk, metadata));
             }
         }
