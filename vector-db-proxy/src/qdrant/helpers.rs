@@ -241,7 +241,7 @@ pub async fn embed_payload(
             }
         } else {
             return Err(anyhow!(
-                "Could not find an steam ID for this payload. Aborting embedding!"
+                "Could not find an stream ID for this payload. Aborting embedding!"
             ));
         }
     }

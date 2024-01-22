@@ -31,7 +31,10 @@ pub async fn subscribe_to_queue(
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-        if let Some(stream_id) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+        if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+            let stream_string: String = stream.to_string();
+            let stream_split: Vec<&str> = stream_string.split("_").collect();
+            let datasource_id = stream_split.to_vec()[0];
             if let Some(msg) = message.content {
                 let qdrant_conn = Arc::clone(&app_data);
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
@@ -39,7 +42,8 @@ pub async fn subscribe_to_queue(
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = channel.basic_ack(args).await;
                     let _ =
-                        process_messages(qdrant_conn, message_string, stream_id.to_string()).await;
+                        process_messages(qdrant_conn, message_string, datasource_id.to_string())
+                            .await;
                 }
             }
         } else {
