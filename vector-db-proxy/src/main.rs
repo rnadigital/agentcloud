@@ -30,7 +30,7 @@ use tokio::sync::RwLock;
 use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
-use data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
+use data::chunking::{Chunking, PdfChunker, ChunkingStrategy};
 use routes::api_routes::{
     bulk_upsert_data_to_collection, create_collection, health_check, list_collections,
     lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
