@@ -1,9 +1,10 @@
 'use strict';
 
+import { ObjectId } from 'mongodb';
+
+import toObjectId from '../lib/misc/toobjectid';
 import * as db from './index';
 import { addTeamToOrg } from './org';
-import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
 
 export type Team = {
 	_id?: ObjectId;

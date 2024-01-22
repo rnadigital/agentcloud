@@ -1,10 +1,10 @@
 'use strict';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
 import * as API from '@api';
-import { toast } from 'react-toastify';
 import { useAccountContext } from 'context/account';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function InviteToTeamForm({ callback }: { callback?: Function }) {
 

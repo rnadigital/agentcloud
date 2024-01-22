@@ -1,13 +1,14 @@
 'use strict';
 
-import { addAccount, getAccountByOAuthOrEmail, Account, setAccountOauth } from '../db/account';
-import { ObjectId } from 'mongodb';
-import { addTeam } from '../db/team';
-import { addOrg } from '../db/org';
-import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import createAccount from 'lib/account/create';
 import debug from 'debug';
+import createAccount from 'lib/account/create';
+import { ObjectId } from 'mongodb';
+import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
+
+import { Account, addAccount, getAccountByOAuthOrEmail, setAccountOauth } from '../db/account';
+import { addOrg } from '../db/org';
+import { addTeam } from '../db/team';
 const log = debug('webapp:oauth');
 
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service

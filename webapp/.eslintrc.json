@@ -9,7 +9,22 @@
 	"parserOptions": {
 		"ecmaVersion": "latest"
 	},
+	"plugins": [
+		"simple-import-sort"
+	],
 	"rules": {
+    	"block-spacing": [
+    		"error",
+    		"always"
+    	],
+    	"keyword-spacing": [
+    		"error",
+    		{ "before": true, "after": true }
+    	],
+    	"space-before-blocks": [
+    		"error",
+    		"always"
+    	],
 		"no-tabs": 0,
 		"brace-style": [
 			"error",
@@ -25,6 +40,7 @@
 			"error",
 			"prefer-single"
 		],
+		"simple-import-sort/imports": "error",
 		"quotes": [
 			"error",
 			"single",

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import React, { useEffect, useState } from 'react';
+
 import CredentialForm from '../../../components/CredentialForm';
 import { useAccountContext } from '../../../context/account';
 

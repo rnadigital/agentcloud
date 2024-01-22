@@ -1,14 +1,15 @@
 'use strict';
 
-import { getGroupsByTeam, getGroupById } from '../db/group';
-import { getSessionsByTeam, getSessionById, addSession, deleteSessionById } from '../db/session';
-import { SessionStatus, SessionType } from 'struct/session';
-import { getChatMessagesBySession, addChatMessage } from '../db/chat';
-import { getAgentsById, getAgentById, getAgentsByTeam } from '../db/agent';
 import toObjectId from 'misc/toobjectid';
-import { dynamicResponse } from '../util';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
+import { SessionStatus, SessionType } from 'struct/session';
+
+import { getAgentById, getAgentsById, getAgentsByTeam } from '../db/agent';
+import { addChatMessage, getChatMessagesBySession } from '../db/chat';
+import { getGroupById, getGroupsByTeam } from '../db/group';
+import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from '../db/session';
+import { dynamicResponse } from '../util';
 
 export async function sessionsData(req, res, _next) {
 	const [groups, sessions, agents] = await Promise.all([

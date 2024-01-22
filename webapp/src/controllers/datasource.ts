@@ -1,23 +1,24 @@
 'use strict';
 
-import { getDatasourcesByTeam, addDatasource, getDatasourceById, deleteDatasourceById, editDatasource, setDatasourceConnectionId } from '../db/datasource';
-import { dynamicResponse } from '../util';
+import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import getConnectors from 'airbyte/getconnectors';
+import getAirbyteInternalApi from 'airbyte/internal';
+import Ajv from 'ajv';
+import dotenv from 'dotenv';
+import { readFileSync } from 'fs';
+import { deleteFile, uploadFile } from 'lib/google/gcs';
+import { sendMessage } from 'lib/rabbitmq/send';
+import convertStringToJsonl from 'misc/converttojsonl';
+import getFileFormat from 'misc/getfileformat';
+import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
-import { uploadFile, deleteFile } from 'lib/google/gcs';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import getAirbyteInternalApi from 'airbyte/internal';
-import getFileFormat from 'misc/getfileformat';
-import convertStringToJsonl from 'misc/converttojsonl';
 import path from 'path';
-import { readFileSync } from 'fs';
-import toObjectId from 'misc/toobjectid';
-import { promisify } from 'util';
-import dotenv from 'dotenv';
-import { sendMessage } from 'lib/rabbitmq/send';
 import { PDFExtract } from 'pdf.js-extract';
-import getConnectors from 'airbyte/getconnectors';
-import Ajv from 'ajv';
+import { promisify } from 'util';
+
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionId } from '../db/datasource';
+import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -126,7 +127,7 @@ export async function testDatasourceApi(req, res, next) {
 			console.log('validate.errors', validate?.errors);
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-	} catch(e) {
+	} catch (e) {
 		console.log(e);
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}

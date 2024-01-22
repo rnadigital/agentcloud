@@ -1,13 +1,12 @@
+import * as API from '@api';
+import DatasourceForm from 'components/DatasourceForm';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-import * as API from '../../../api';
-import AgentForm from '../../../components/AgentForm';
-import { useAccountContext } from '../../../context/account';
-
-export default function AddAgent(props) {
+export default function EditDatasource(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -15,27 +14,31 @@ export default function AddAgent(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, credentials, tools, datasources } = state;
+	const { datasource } = state;
 
-	async function fetchAgentFormData() {
-		await API.getAgents({ resourceSlug }, dispatch, setError, router);
+	async function fetchDatasource() {
+		await API.getDatasource({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
-		fetchAgentFormData();
+		fetchDatasource();
 	}, [resourceSlug]);
 	
-	if (agents == null) {
+	if (datasource == null) {
 		return 'Loading...'; //TODO: loader
 	}
 
 	return (<>
 
 		<Head>
-			<title>{`New Agent - ${teamName}`}</title>
+			<title>{`Edit Datasource - ${teamName}`}</title>
 		</Head>
 
-		<AgentForm datasources={datasources} credentials={credentials} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+		<div className='border-b pb-2 my-2'>
+			<h3 className='pl-2 font-semibold text-gray-900'>Edit Datasource</h3>
+		</div>
+
+		<DatasourceForm />
 
 	</>);
 

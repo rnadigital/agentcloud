@@ -1,9 +1,10 @@
 'use strict';
 
-import { getCredentialById, getCredentialsByTeam, addCredential, deleteCredentialById, Credential } from '../db/credential';
-import { removeAgentsCredential } from '../db/agent';
 import toObjectId from 'misc/toobjectid';
 import { CredentialType, CredentialTypes } from 'struct/credential';
+
+import { removeAgentsCredential } from '../db/agent';
+import { addCredential, Credential, deleteCredentialById, getCredentialById, getCredentialsByTeam } from '../db/credential';
 import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {

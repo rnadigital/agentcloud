@@ -1,18 +1,19 @@
 'use strict';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAccountContext } from '../context/account';
-import { ToolType } from 'struct/tool';
-import { useRouter } from 'next/router';
-import * as API from '../api';
-import { toast } from 'react-toastify';
-import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
-import ParameterForm from '../components/ParameterForm';
-import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
-import FunctionCard from '../components/FunctionCard';
 import { dereferenceSync } from 'dereference-json-schema';
 import yaml from 'js-yaml';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { ToolType } from 'struct/tool';
+
+import * as API from '../api';
+import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
+import FunctionCard from '../components/FunctionCard';
+import ParameterForm from '../components/ParameterForm';
+import { useAccountContext } from '../context/account';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -132,12 +133,12 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			try {
 				//Try json parse (detect json schema)
 				loadedDocument = JSON.parse(toolAPISchema);
-			} catch(e) {
+			} catch (e) {
 				console.warn(e); //just a warning
 				//Try yaml parse (detect yaml schema)
 				try {
 					loadedDocument = yaml.load(toolAPISchema) as Document;
-		        } catch(e2) {
+		        } catch (e2) {
 					console.warn(e2);
 		        }
 			}
@@ -160,7 +161,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 		try {
 			api = new OpenAPIClientAxios(apiOptions);
 			client = await api.init();
-		} catch(e) {
+		} catch (e) {
 			console.warn(e);
 			setFunctionsList(null);
 			setInvalidFuns(0);

@@ -1,17 +1,17 @@
 'use strict';
 
-import { ObjectId } from 'mongodb';
-import { OAuthRecordType, addAccount } from 'db/account';
-import { addTeam } from 'db/team';
-import { addOrg } from 'db/org';
-import { VerificationTypes, addVerification } from 'db/verification';
-import * as ses from 'lib/email/ses';
-import bcrypt from 'bcrypt';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
-import { getSecret } from 'lib/secret/secretmanager';
-import SecretKeys from 'lib/secret/secretkeys';
+import bcrypt from 'bcrypt';
+import { addAccount,OAuthRecordType } from 'db/account';
 import { InsertResult } from 'db/index';
+import { addOrg } from 'db/org';
+import { addTeam } from 'db/team';
+import { addVerification,VerificationTypes } from 'db/verification';
+import * as ses from 'lib/email/ses';
+import SecretKeys from 'lib/secret/secretkeys';
+import { getSecret } from 'lib/secret/secretmanager';
+import { ObjectId } from 'mongodb';
+import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
 export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {

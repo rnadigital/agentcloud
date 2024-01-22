@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { SessionStatus, SessionType } from 'struct/session';
+
+import * as db from './index';
 
 export type Session = {
 	_id?: ObjectId;

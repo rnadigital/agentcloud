@@ -1,16 +1,17 @@
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
 import { Menu, Transition } from '@headlessui/react';
 import {
-	TrashIcon,
 	KeyIcon,
+	TrashIcon,
 } from '@heroicons/react/20/solid';
-import * as API from '../api';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../context/account';
-import { CredentialType } from 'struct/credential';
-import DeleteModal from './DeleteModal';
+import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
+import { CredentialType } from 'struct/credential';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
+import DeleteModal from './DeleteModal';
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }

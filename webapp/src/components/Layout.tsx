@@ -6,33 +6,32 @@ let ResolvedImage: any = Image;
 if ('default' in ResolvedImage) {
 	ResolvedImage = ResolvedImage.default;
 }
-import { withRouter } from 'next/router';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Fragment, useState } from 'react';
-import classNames from './ClassNames';
-import Blockies from 'react-blockies';
-import packageJson from '../../package.json';
-
 import { Dialog, Menu, Transition } from '@headlessui/react';
-import {
-	Bars3Icon,
-	UserIcon,
-	ChatBubbleLeftIcon,
-	XMarkIcon,
-	ArrowRightOnRectangleIcon,
-	CreditCardIcon,
-	KeyIcon,
-	WrenchScrewdriverIcon,
-	CircleStackIcon,
-	UserGroupIcon,
-} from '@heroicons/react/24/outline';
 import {
 	ChevronDownIcon,
 } from '@heroicons/react/20/solid';
-import { SessionStatus } from './SessionCards';
+import {
+	ArrowRightOnRectangleIcon,
+	Bars3Icon,
+	ChatBubbleLeftIcon,
+	CircleStackIcon,
+	CreditCardIcon,
+	KeyIcon,
+	UserGroupIcon,
+	UserIcon,
+	WrenchScrewdriverIcon,
+	XMarkIcon,
+} from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { withRouter } from 'next/router';
+import { Fragment, useState } from 'react';
+import Blockies from 'react-blockies';
 
+import packageJson from '../../package.json';
+import classNames from './ClassNames';
 import OrgSelector from './OrgSelector';
+import { SessionStatus } from './SessionCards';
 
 const noNavPages = [
 	'/login',
@@ -67,9 +66,9 @@ const userNavigation = [
 	{ name: 'Sign out', href: '#', logout: true },
 ];
 
+import * as API from '../api';
 import { useAccountContext } from '../context/account';
 import { useChatContext } from '../context/chat';
-import * as API from '../api';
 
 export default withRouter(function Layout(props) {
 

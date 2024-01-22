@@ -1,14 +1,15 @@
 'use strict';
 
-import bcrypt from 'bcrypt';
-import { ObjectId } from 'mongodb';
-import { getAccountById, setCurrentTeam, getAccountByEmail, changeAccountPassword, Account, verifyAccount } from '../db/account';
-import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
-import { dynamicResponse } from '../util';
-import jwt from 'jsonwebtoken';
-import * as ses from '../lib/email/ses';
-import createAccount from 'lib/account/create';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import createAccount from 'lib/account/create';
+import { ObjectId } from 'mongodb';
+
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
+import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
+import * as ses from '../lib/email/ses';
+import { dynamicResponse } from '../util';
 
 export async function accountData(req, res, _next) {
 	return {

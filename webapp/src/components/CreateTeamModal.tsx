@@ -1,8 +1,9 @@
-import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { useRouter } from 'next/router';
+import { Fragment, useEffect, useState } from 'react';
+
 import * as API from '../api';
 import TeamForm from './TeamForm';
-import { useRouter } from 'next/router';
 
 export default function CreateTeamModal({ open, setOpen, callback }) {
 

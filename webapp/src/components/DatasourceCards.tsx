@@ -1,16 +1,17 @@
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
 import { Menu, Transition } from '@headlessui/react';
 import {
-	EllipsisHorizontalIcon,
-	PlayIcon,
 	ArrowPathIcon,
 	DocumentIcon,
+	EllipsisHorizontalIcon,
+	PlayIcon,
 } from '@heroicons/react/20/solid';
-import * as API from '../api';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../context/account';
+import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
 
 export default function DatasourceCards({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 

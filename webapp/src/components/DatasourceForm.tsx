@@ -1,21 +1,22 @@
 'use strict';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAccountContext } from '../context/account';
-import { useRouter } from 'next/router';
 import * as API from '@api';
-import { toast } from 'react-toastify';
-import SelectClassNames from 'styles/SelectClassNames';
+import {
+	ChevronDownIcon,
+	ChevronRightIcon
+} from '@heroicons/react/24/outline';
 import getConnectors from 'airbyte/getconnectors';
-import Select from 'react-tailwindcss-select';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
-import {
-	ChevronRightIcon,
-	ChevronDownIcon
-} from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import Select from 'react-tailwindcss-select';
+import { toast } from 'react-toastify';
+import SelectClassNames from 'styles/SelectClassNames';
+
+import { useAccountContext } from '../context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
 	ssr: false,
 });
@@ -23,7 +24,7 @@ import validator from '@rjsf/validator-ajv8';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
-import { getSubmitButtonOptions, RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
+import { getSubmitButtonOptions,RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
 
 const StreamRow = ({ stream }) => {
 	const [isExpanded, setIsExpanded] = useState(false);

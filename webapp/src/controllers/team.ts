@@ -1,17 +1,18 @@
 'use strict';
 
-import bcrypt from 'bcrypt';
-import { ObjectId } from 'mongodb';
-import { addTeam, getTeamById, getTeamWithMembers, addTeamMember, removeTeamMember } from '../db/team';
-import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
-import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount,
-	Account, verifyAccount, pushAccountOrg, pushAccountTeam, getAccountById } from '../db/account';
-import { addOrg, getOrgById } from '../db/org';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import { dynamicResponse } from '../util';
-import toObjectId from 'misc/toobjectid';
-import * as ses from '../lib/email/ses';
+import bcrypt from 'bcrypt';
 import createAccount from 'lib/account/create';
+import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+
+import { Account, addAccount, changeAccountPassword, getAccountByEmail,
+	getAccountById, OAuthRecordType, pushAccountOrg, pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
+import { addOrg, getOrgById } from '../db/org';
+import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember } from '../db/team';
+import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
+import * as ses from '../lib/email/ses';
+import { dynamicResponse } from '../util';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -93,10 +94,10 @@ export async function deleteTeamMemberApi(req, res) {
 	const { memberId } = req.body;
 	//account with that memberId
 	const memberAccount = await getAccountById(memberId);
-	if(memberAccount) {	
+	if (memberAccount) {	
 		const foundTeam = await getTeamById(req.params.resourceSlug);
 		const org = res.locals.matchingOrg;//await getOrgById(foundTeam.orgId);
-		if(!org) {
+		if (!org) {
 			return dynamicResponse(req, res, 403, { error: 'User org not found' });
 		} else {
 			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
@@ -107,7 +108,7 @@ export async function deleteTeamMemberApi(req, res) {
 		// 	return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
 		// }
 		const removeRes = await removeTeamMember(req.params.resourceSlug, memberId.toString());
-		if(removeRes?.modifiedCount < 1) {
+		if (removeRes?.modifiedCount < 1) {
 			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
 		}
 	} else {

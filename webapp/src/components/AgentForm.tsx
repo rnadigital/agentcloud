@@ -1,16 +1,17 @@
 'use strict';
 
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
-import * as API from '../api';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
+import { toast } from 'react-toastify';
+import { AgentType } from 'struct/agent';
 import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
+
+import * as API from '../api';
 import CreateCredentialModal from '../components/CreateCredentialModal';
-import { AgentType } from 'struct/agent';
+import { useAccountContext } from '../context/account';
 
 export default function AgentForm({ agent = {}, credentials = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types

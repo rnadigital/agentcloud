@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { TrashIcon } from '@heroicons/react/20/solid';
 import * as API from '@api';
-import { toast } from 'react-toastify';
-import { useAccountContext } from '../../context/account';
-import { useRouter } from 'next/router';
+import { TrashIcon } from '@heroicons/react/20/solid';
 import InviteForm from 'components/InviteForm';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+
+import { useAccountContext } from '../../context/account';
 
 const MemberCard = ({ member, callback }) => {
 

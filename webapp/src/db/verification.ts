@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
 import { randomBytes } from 'crypto';
+import { ObjectId } from 'mongodb';
+
+import toObjectId from '../lib/misc/toobjectid';
+import * as db from './index';
 
 export enum VerificationTypes {
 	VERIFY_EMAIL = 'email',

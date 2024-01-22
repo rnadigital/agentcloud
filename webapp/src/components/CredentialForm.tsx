@@ -1,12 +1,13 @@
 'use strict';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
-import * as API from '../api';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { CredentialType } from 'struct/credential';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
 
 export default function CredentialForm({ credential = { type: CredentialType.OPENAI }, editing, compact=false, callback }
 	: { credential?: any, editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any type

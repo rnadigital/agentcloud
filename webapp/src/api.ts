@@ -203,7 +203,7 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 	let response;
 	try {
 		response = await fetch(route, requestOptions);
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	} finally {
 		if (finishProgress != null) {

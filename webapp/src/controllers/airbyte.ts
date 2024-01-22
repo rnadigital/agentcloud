@@ -1,8 +1,8 @@
 'use strict';
 
 import { getDatasourceById } from '../db/datasource';
-import { dynamicResponse } from '../util';
 import toObjectId from '../lib/misc/toobjectid';
+import { dynamicResponse } from '../util';
 
 export async function getSpecification(req, res, _next) {
 	const base64Credentials = Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64');

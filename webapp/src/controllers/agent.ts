@@ -1,13 +1,14 @@
 'use strict';
 
-import { getDatasourcesByTeam, getDatasourcesById } from '../db/datasource';
-import { getAgentById, getAgentsByTeam, addAgent, updateAgent, deleteAgentById } from '../db/agent';
 import { AgentType } from 'struct/agent';
+
+import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
+import { getCredentialById, getCredentialsByTeam } from '../db/credential';
+import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
 import { removeAgentFromGroups } from '../db/group';
-import { getCredentialsByTeam, getCredentialById } from '../db/credential';
-import { getToolsByTeam, getToolsById } from '../db/tool';
-import { dynamicResponse } from '../util';
+import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
+import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
 	const [agents, credentials, tools, datasources] = await Promise.all([

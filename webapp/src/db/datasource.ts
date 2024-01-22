@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
+import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { Datasource } from 'struct/datasource';
-import debug from 'debug';
+
+import * as db from './index';
 const log = debug('webapp:db:datasources');
 
 export function DatasourceCollection() {

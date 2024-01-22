@@ -85,6 +85,7 @@
     "@types/express": "^4.17.18",
     "@types/node": "^20.7.0",
     "@types/react": "^18.2.22",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
     "postcss": "^8.4.30",
     "tailwindcss": "^3.3.3",
     "ts-node": "^10.9.1",

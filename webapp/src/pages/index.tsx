@@ -1,7 +1,8 @@
-import React from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React from 'react';
+
 import { useAccountContext } from '../context/account';
 
 export default function Index() {

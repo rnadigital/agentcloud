@@ -1,4 +1,7 @@
 import {
+	InformationCircleIcon,
+} from '@heroicons/react/20/solid';
+import {
 	ariaDescribedByIds,
 	descriptionId,
 	FormContextType,
@@ -9,12 +12,8 @@ import {
 	StrictRJSFSchema,
 	WidgetProps,
 } from '@rjsf/utils';
-import { FocusEvent } from 'react';
-
-import {
-	InformationCircleIcon,
-} from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
+import { FocusEvent } from 'react';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
