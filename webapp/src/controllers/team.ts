@@ -99,7 +99,7 @@ export async function deleteTeamMemberApi(req, res) {
 		if(!org) {
 			return dynamicResponse(req, res, 403, { error: 'User org not found' });
 		} else {
-			if (foundTeam.members.some(m => m.equals(memberAccount._id))) {
+			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
 				return dynamicResponse(req, res, 403, { error: 'Cannot remove org user' });
 			}
 		}
