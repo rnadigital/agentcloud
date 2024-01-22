@@ -1,32 +1,32 @@
 'use strict';
 
+import bodyParser from 'body-parser';
 import express, { Router } from 'express';
+import fileUpload from 'express-fileupload';
 
+import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
+import checkSession from './lib/middleware/auth/checksession';
+import csrfMiddleware from './lib/middleware/auth/csrf';
+import fetchSession from './lib/middleware/auth/fetchsession';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
-import fetchSession from './lib/middleware/auth/fetchsession';
-import checkSession from './lib/middleware/auth/checksession';
-import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
-import renderStaticPage from './lib/middleware/render/staticpage';
-import csrfMiddleware from './lib/middleware/auth/csrf';
 import homeRedirect from './lib/middleware/homeredirect';
 import myPassport from './lib/middleware/mypassport';
-import bodyParser from 'body-parser';
-import fileUpload from 'express-fileupload';
+import renderStaticPage from './lib/middleware/render/staticpage';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
 import * as accountController from './controllers/account';
-import * as teamController from './controllers/team';
+import * as agentController from './controllers/agent';
+import * as airbyteProxyController from './controllers/airbyte';
+import * as credentialController from './controllers/credential';
+import * as datasourceController from './controllers/datasource';
 import * as groupController from './controllers/group';
 import * as sessionController from './controllers/session';
-import * as agentController from './controllers/agent';
-import * as credentialController from './controllers/credential';
 import * as stripeController from './controllers/stripe';
+import * as teamController from './controllers/team';
 import * as toolController from './controllers/tool';
-import * as datasourceController from './controllers/datasource';
-import * as airbyteProxyController from './controllers/airbyte';
 
 export default function router(server, app) {
 
@@ -90,6 +90,7 @@ export default function router(server, app) {
 	teamRouter.get('/sessions.json', sessionController.sessionsJson);
 	teamRouter.post('/forms/session/add', sessionController.addSessionApi);
 	teamRouter.delete('/forms/session/:sessionId([a-f0-9]{24})', sessionController.deleteSessionApi);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/cancel', sessionController.cancelSessionApi);
 
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
@@ -136,6 +137,7 @@ export default function router(server, app) {
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', datasourceController.datasourceEditPage.bind(null, app));
 	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
+	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 
@@ -143,6 +145,7 @@ export default function router(server, app) {
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
+	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);

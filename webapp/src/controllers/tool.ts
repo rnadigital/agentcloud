@@ -1,12 +1,13 @@
 'use strict';
 
-import { getToolsByTeam, addTool, getToolById, deleteToolById, editTool } from '../db/tool';
-import { getCredentialsByTeam } from '../db/credential';
-import { removeAgentsTool } from '../db/agent';
-import { dynamicResponse } from '../util';
 import toObjectId from 'misc/toobjectid';
-import { ToolType } from 'struct/tool';
 import toSnakeCase from 'misc/tosnakecase';
+import { ToolType } from 'struct/tool';
+
+import { removeAgentsTool } from '../db/agent';
+import { getCredentialsByTeam } from '../db/credential';
+import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from '../db/tool';
+import { dynamicResponse } from '../util';
 
 export async function toolsData(req, res, _next) {
 	const [tools, credentials] = await Promise.all([

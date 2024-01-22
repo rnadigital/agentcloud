@@ -123,9 +123,10 @@ async fn main() -> std::io::Result<()> {
         })
         .bind(format!("{}:{}", host, port))?
         .run();
+
         // Handle SIGINT to manually kick-off graceful shutdown
-        let mut stream = signal(SignalKind::interrupt()).unwrap();
         tokio::spawn(async move {
+            let mut stream = signal(SignalKind::interrupt()).unwrap();
             stream.recv().await;
             System::current().stop();
         });

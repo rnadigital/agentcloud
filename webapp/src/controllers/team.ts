@@ -1,16 +1,18 @@
 'use strict';
 
-import bcrypt from 'bcrypt';
-import { ObjectId } from 'mongodb';
-import { addTeam, getTeamById, getTeamWithMembers, addTeamMember } from '../db/team';
-import { VerificationTypes, addVerification, getAndDeleteVerification } from '../db/verification';
-import { OAuthRecordType, setCurrentTeam, getAccountByEmail, changeAccountPassword, addAccount,
-	Account, verifyAccount, pushAccountOrg, pushAccountTeam } from '../db/account';
-import { addOrg } from '../db/org';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import { dynamicResponse } from '../util';
+import bcrypt from 'bcrypt';
+import createAccount from 'lib/account/create';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+
+import { Account, addAccount, changeAccountPassword, getAccountByEmail,
+	getAccountById, OAuthRecordType, pushAccountOrg, pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
+import { addOrg, getOrgById } from '../db/org';
+import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember } from '../db/team';
+import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
+import { dynamicResponse } from '../util';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -57,64 +59,8 @@ export async function inviteTeamMemberApi(req, res) {
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const newAccountId = new ObjectId();
-		let airbyteWorkspaceId = null;
-		if (process.env.AIRBYTE_USERNAME) {
-			const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-			const workspace = await workspaceApi.createWorkspace(null, {
-				name: newAccountId.toString(), // account _id stringified as workspace nam
-			}).then(res => res.data);
-			airbyteWorkspaceId = workspace.workspaceId;
-		}
-		const addedOrg = await addOrg({
-			name: `${name}'s Org`,
-			teamIds: [],
-			members: [newAccountId],
-		});
-		const addedTeam = await addTeam({
-			name: `${name}'s Team`,
-			orgId: addedOrg.insertedId,
-			members: [newAccountId],
-			airbyteWorkspaceId,
-		});
-		const orgId = addedOrg.insertedId;
-		const teamId = addedTeam.insertedId;
-		const [addedAccount, verificationToken] = await Promise.all([
-			addAccount({
-				_id: newAccountId,
-				name,
-				email: email,
-				passwordHash: null, //Note: invited user will create password in verification page, w/backend check
-				orgs: [{
-					id: orgId,
-					name: `${name}'s Org`,
-					teams: [{
-						id: teamId,
-						name: `${name}'s Team`,
-						airbyteWorkspaceId,
-					}] //Note: adding the inviting team here
-				}, {
-					id: res.locals.matchingOrg.id.toString(),
-					name: res.locals.matchingOrg.name,
-					teams: [invitingTeam]
-				}],
-				currentOrg: orgId,
-				currentTeam: teamId,
-				emailVerified: false,
-				oauth: {} as OAuthRecordType,
-			}),
-			addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
-		]);
-		await addTeamMember(req.params.resourceSlug, newAccountId);
-		await ses.sendEmail({
-			from: process.env.FROM_EMAIL_ADDRESS,
-			bcc: null,
-			cc: null,
-			replyTo: null,
-			to: [email],
-			subject: 'You\'ve been invited to Agentcloud 🎉',
-			body: `Click here to accept the invitation: ${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
-		});
+		const { addedAccount } = await createAccount(email, name, null, true);
+		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
@@ -134,7 +80,41 @@ export async function inviteTeamMemberApi(req, res) {
 		}
 	}
 	//member invited
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/team` });
+	return dynamicResponse(req, res, 200, { });
+}
+
+/**
+ * @api {delete} /forms/team/invite
+ * @apiName invite
+ * @apiGroup Team
+ *
+ * @apiParam {String} email Email of person to invite
+ */
+export async function deleteTeamMemberApi(req, res) {
+	const { memberId } = req.body;
+	//account with that memberId
+	const memberAccount = await getAccountById(memberId);
+	if (memberAccount) {	
+		const foundTeam = await getTeamById(req.params.resourceSlug);
+		const org = res.locals.matchingOrg;//await getOrgById(foundTeam.orgId);
+		if (!org) {
+			return dynamicResponse(req, res, 403, { error: 'User org not found' });
+		} else {
+			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
+				return dynamicResponse(req, res, 403, { error: 'Cannot remove org user' });
+			}
+		}
+		// if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
+		// 	return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
+		// }
+		const removeRes = await removeTeamMember(req.params.resourceSlug, memberId.toString());
+		if (removeRes?.modifiedCount < 1) {
+			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
+		}
+	} else {
+		return dynamicResponse(req, res, 403, { error: 'User not found' });
+	}
+	return dynamicResponse(req, res, 302, {  });
 }
 
 /**

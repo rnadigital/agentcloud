@@ -1,7 +1,8 @@
 'use strict';
 
-import { getAccountById, Account, getAccountByOAuthOrEmail } from '../../../db/account';
 import debug from 'debug';
+
+import { Account, getAccountById, getAccountByOAuthOrEmail } from '../../../db/account';
 const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {

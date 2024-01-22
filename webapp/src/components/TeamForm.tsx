@@ -1,10 +1,10 @@
 'use strict';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useAccountContext } from 'context/account';
-import { useRouter } from 'next/router';
 import * as API from '@api';
+import { useAccountContext } from 'context/account';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function TeamForm({ teamName = '', editing, compact = false, callback }

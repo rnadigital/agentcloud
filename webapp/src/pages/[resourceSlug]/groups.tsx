@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { ExclamationTriangleIcon, HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import Head from 'next/head';
 import Link from 'next/link';
-import * as API from '../../api';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../../context/account';
+import React, { useEffect, useState } from 'react';
+
+import * as API from '../../api';
 import GroupCards from '../../components/GroupCards';
 import NewButtonSection from '../../components/NewButtonSection';
-import { ExclamationTriangleIcon, HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { useAccountContext } from '../../context/account';
 
 export default function Groups(props) {
 

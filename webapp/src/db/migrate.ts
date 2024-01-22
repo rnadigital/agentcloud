@@ -1,11 +1,12 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
-import semver from 'semver';
 import debug from 'debug';
-import { migrationVersions, migrationVersion } from '../migrations/index';
+import { ObjectId } from 'mongodb';
+import semver from 'semver';
+
+import toObjectId from '../lib/misc/toobjectid';
+import { migrationVersion, migrationVersions } from '../migrations/index';
+import * as db from './index';
 const log = debug('webapp:migration');
 
 export function VersionCollection() {

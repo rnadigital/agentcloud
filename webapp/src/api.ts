@@ -37,6 +37,9 @@ export function getSession(body, dispatch, errorCallback, router) {
 export function deleteSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/session/${body.sessionId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
+export function cancelSession(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/session/${body.sessionId}/cancel`, 'POST', body, dispatch, errorCallback, router);
+}
 export function addSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/session/add`, 'POST', body, dispatch, errorCallback, router);
 }
@@ -116,6 +119,9 @@ export function getDatasources(body, dispatch, errorCallback, router) {
 export function getDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/datasource/${body.datasourceId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function testDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/test`, 'POST', body, dispatch, errorCallback, router);
+}
 export function addDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/add`, 'POST', body, dispatch, errorCallback, router);
 }
@@ -145,6 +151,9 @@ export function getTeam(body, dispatch, errorCallback, router) {
 }
 export function inviteToTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/team/invite`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteFromTeam(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/invite`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function addTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/team/add`, 'POST', body, dispatch, errorCallback, router);
@@ -197,7 +206,7 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 	let response;
 	try {
 		response = await fetch(route, requestOptions);
-	} catch(e) {
+	} catch (e) {
 		console.error(e);
 	} finally {
 		if (finishProgress != null) {

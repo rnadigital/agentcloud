@@ -6,7 +6,7 @@ use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
-use std::str;
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -33,17 +33,37 @@ pub async fn subscribe_to_queue(
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-        if let Some(stream_id) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+        if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+            let stream_string: String = stream.to_string();
+            let stream_split: Vec<&str> = stream_string.split("_").collect();
+            let datasource_id = stream_split.to_vec()[0];
             if let Some(msg) = message.content {
                 let qdrant_conn = Arc::clone(&app_data);
-                if let Ok(object) = String::from_utf8(msg.clone().to_vec()) {
-                    let message_bytes = get_object_from_gcs(stream_id.to_string(), object).await?;
-                    let message_string = str::from_utf8(&message_bytes).unwrap().to_string();
+                // if the header 'type' is present then assume that it is a file upload. pull from gcs
+                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
+                        if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
+                            let message_data: Value = _json;
+                            if let Some(bucket_name) = message_data.get("") {
+                                if let Some(file_name) = message_data.get("") {
+                                    if let Ok(file) = get_object_from_gcs(
+                                        bucket_name.to_string(),
+                                        file_name.to_string(),
+                                    )
+                                    .await
+                                    {
+                                        println!("File: {:?}", file);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     let args =
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = channel.basic_ack(args).await;
                     let _ =
-                        process_messages(qdrant_conn, message_string, stream_id.to_string()).await;
+                        process_messages(qdrant_conn, message_string, datasource_id.to_string())
+                            .await;
                 }
             }
         } else {

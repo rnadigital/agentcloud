@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import DatasourceForm from 'components/DatasourceForm';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
-import * as API from '../../../api';
-import DatasourceForm from 'components/DatasourceForm';
 import { useRouter } from 'next/router';
-import { useAccountContext } from 'context/account';
+import React, { useEffect, useState } from 'react';
+
+import * as API from '../../../api';
 
 export default function AddDatasource(props) {
 
@@ -14,19 +15,6 @@ export default function AddDatasource(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, credentials, tools } = state;
-
-	async function fetchAgentFormData() {
-		await API.getAgents({ resourceSlug }, dispatch, setError, router);
-	}
-
-	useEffect(() => {
-		fetchAgentFormData();
-	}, [resourceSlug]);
-	
-	if (agents == null) {
-		return 'Loading...'; //TODO: loader
-	}
 
 	return (<>
 

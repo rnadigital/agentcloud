@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import Head from 'next/head';
 import Link from 'next/link';
-import * as API from '../../api';
 import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+
+import * as API from '../../api';
 import AgentList from '../../components/AgentList';
 import NewButtonSection from '../../components/NewButtonSection';
 import { useAccountContext } from '../../context/account';
-import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Agents(props) {
 

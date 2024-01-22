@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { CredentialType } from 'struct/credential';
+
+import * as db from './index';
 
 export type TokenExchangeMethod = 'post' | 'basic';
 

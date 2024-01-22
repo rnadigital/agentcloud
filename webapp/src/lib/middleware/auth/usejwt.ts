@@ -1,8 +1,9 @@
 'use strict';
 
-import jwt from 'jsonwebtoken';
-import { getAccountById, Account } from '../../../db/account';
 import debug from 'debug';
+import jwt from 'jsonwebtoken';
+
+import { Account, getAccountById } from '../../../db/account';
 const log = debug('webapp:middleware');
 
 export type JWTData = {

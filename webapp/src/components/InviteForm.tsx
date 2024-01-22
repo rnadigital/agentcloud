@@ -1,10 +1,10 @@
 'use strict';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
 import * as API from '@api';
-import { toast } from 'react-toastify';
 import { useAccountContext } from 'context/account';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function InviteToTeamForm({ callback }: { callback?: Function }) {
 
@@ -28,12 +28,13 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 				name,
 				resourceSlug,
 			}, () => {
-				toast.success('Ageant Updated');
+				toast.success('Invitation sent');
+				setName('');
+				setEmail('');
+				callback && callback();
 			}, (res) => {
 				toast.error(res);
 			}, null);
-			toast.success('Invitation sent');
-			callback && callback();
 		} catch (err) {
 			toast.error('Error sending invitation');
 		}

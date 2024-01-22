@@ -10,13 +10,13 @@ import { getShortCommitHash } from './lib/commit';
 if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
 	try {
 		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
-	} catch(e) {
+	} catch (e) {
 		console.warn('NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',  e);
 	}
 }
 
-import * as http from 'http';
 import express from 'express';
+import * as http from 'http';
 import next from 'next';
 const dev = process.env.NODE_ENV !== 'production'
 	, hostname = 'localhost'
@@ -24,17 +24,19 @@ const dev = process.env.NODE_ENV !== 'production'
 	, app = next({ dev, hostname, port })
 	, handle = app.getRequestHandler();
 
-import * as redis from './lib/redis/redis';
-import { initSocket } from './socketio';
-import * as db from './db';
-import { initGlobalTools } from './db/tool';
-import { migrate } from './db/migrate';
-import router from './router';
-import { v4 as uuidv4 } from 'uuid';
-import * as ses from './lib/email/ses';
+// import getAirbyteInternalApi from 'lib/airbyte/internal';
+import debug from 'debug';
 import { createBucket } from 'lib/google/gcs';
 import { initRabbit } from 'lib/rabbitmq/send';
-import debug from 'debug';
+import { v4 as uuidv4 } from 'uuid';
+
+import * as db from './db';
+import { migrate } from './db/migrate';
+import { initGlobalTools } from './db/tool';
+import * as ses from './lib/email/ses';
+import * as redis from './lib/redis/redis';
+import router from './router';
+import { initSocket } from './socketio';
 const log = debug('webapp:server');
 
 app.prepare()
@@ -47,6 +49,9 @@ app.prepare()
 		await ses.init();
 		await createBucket();
 		await initRabbit();
+
+		// const ia = await getAirbyteInternalApi();
+		// console.log(ia);
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

@@ -1,6 +1,6 @@
 'use strict';
 
-import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
+import { OpenAPIClientAxios } from 'openapi-client-axios';
 
 export enum AirbyteApiType {
 	WORKSPACES,

@@ -1,6 +1,7 @@
 import passport from 'passport';
-import * as oauthController from '../../controllers/oauth';
 import { OAuthStrategy } from 'struct/oauth';
+
+import * as oauthController from '../../controllers/oauth';
 
 // Passport session setup
 passport.serializeUser(oauthController.serializeHandler);

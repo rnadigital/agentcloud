@@ -1,11 +1,12 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
-import toObjectId from 'misc/toobjectid';
-import { ToolType } from 'struct/tool';
-import GlobalTools from 'struct/globaltools';
 import debug from 'debug';
+import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+import GlobalTools from 'struct/globaltools';
+import { ToolType } from 'struct/tool';
+
+import * as db from './index';
 const log = debug('webapp:db:tools');
 
 export type FunctionProperty = {

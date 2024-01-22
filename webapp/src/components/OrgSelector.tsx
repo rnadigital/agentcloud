@@ -1,13 +1,14 @@
-import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import {
 	ChevronDownIcon,
 	HomeIcon,
 } from '@heroicons/react/20/solid';
-import * as API from '../api';
-import { useRouter } from 'next/router';
-import { useAccountContext } from '../context/account';
 import CreateTeamModal from 'components/CreateTeamModal';
+import { useRouter } from 'next/router';
+import { Fragment, useState } from 'react';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');

@@ -3,12 +3,13 @@ name: airbyte
 services:
 
   docker_rabbitmq:
-    image: rabbitmq:latest
+    image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
       - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
 
   docker_mongo:
     restart: always
@@ -135,7 +136,7 @@ volumes:
   mongodb_data_container:
   redis_data:
 
-networks: 
-  default: 
+networks:
+  default:
     external: true
     name: airbyte_airbyte_internal

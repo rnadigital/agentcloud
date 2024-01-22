@@ -1,13 +1,14 @@
 'use strict';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import Select from 'react-tailwindcss-select';
+import { toast } from 'react-toastify';
+
 import * as API from '../api';
 import CreateAgentModal from '../components/CreateAgentModal';
-import { toast } from 'react-toastify';
-import Select from 'react-tailwindcss-select';
+import { useAccountContext } from '../context/account';
 
 export default function GroupForm({ agentChoices = [], group = {}, editing, compact=false, callback, fetchAgents }
 	: { agentChoices?: any[], group?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types

@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-// import { useParams } from 'next/navigation';
-import Head from 'next/head';
-import * as API from '../../../../api';
-import { useAccountContext } from '../../../../context/account';
-import { useSocketContext } from '../../../../context/socket';
-import { useChatContext } from '../../../../context/chat';
-import { useRouter } from 'next/router';
-import { Message } from '../../../../components/chat/message';
-import SessionChatbox from '../../../../components/SessionChatbox';
-import classNames from '../../../../components/ClassNames';
-import Blockies from 'react-blockies';
-import { SessionStatus } from 'struct/session';
 import {
 	StopIcon,
 } from '@heroicons/react/24/outline';
 import debug from 'debug';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React, { useEffect, useRef, useState } from 'react';
+import Blockies from 'react-blockies';
+import { SessionStatus } from 'struct/session';
+
+// import { useParams } from 'next/navigation';
+import * as API from '../../../../api';
+import { Message } from '../../../../components/chat/message';
+import classNames from '../../../../components/ClassNames';
+import SessionChatbox from '../../../../components/SessionChatbox';
+import { useAccountContext } from '../../../../context/account';
+import { useChatContext } from '../../../../context/chat';
+import { useSocketContext } from '../../../../context/socket';
 const log = debug('webapp:socket');
 
 export default function Session(props) {
@@ -72,7 +73,7 @@ export default function Session(props) {
 	// console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
 		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
-		if (!message) {return;}
+		if (!message) { return; }
 		if (isAtBottom) {
 			setLastSeenMessageId(message._id);
 		}
@@ -99,21 +100,21 @@ export default function Session(props) {
 	}
 	function handleSocketStatus(status) {
 		log('Received chat status %s', status);
-		if (!status) {return;}
+		if (!status) { return; }
 		setChatContext({
 			status,
 		});
 	}
 	function handleSocketType(type) {
 		log('Received chat type %s', type);
-		if (!type) {return;}
+		if (!type) { return; }
 		setChatContext({
 			type,
 		});
 	}
 	function handleSocketTokens(tokens) {
 		log('Received chat type %s', tokens);
-		if (!tokens) {return;}
+		if (!tokens) { return; }
 		setChatContext({
 			tokens,
 		});

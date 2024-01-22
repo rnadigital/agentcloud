@@ -1,22 +1,24 @@
 'use strict';
 
-import { getDatasourcesByTeam, addDatasource, getDatasourceById, deleteDatasourceById, editDatasource } from '../db/datasource';
-import { dynamicResponse } from '../util';
+import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import getConnectors from 'airbyte/getconnectors';
+import getAirbyteInternalApi from 'airbyte/internal';
+import Ajv from 'ajv';
+import dotenv from 'dotenv';
+import { readFileSync } from 'fs';
+import { deleteFile, uploadFile } from 'lib/google/gcs';
+import { sendMessage } from 'lib/rabbitmq/send';
+import convertStringToJsonl from 'misc/converttojsonl';
+import getFileFormat from 'misc/getfileformat';
+import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
-import { uploadFile, deleteFile } from 'lib/google/gcs';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import getFileFormat from 'misc/getfileformat';
-import convertStringToJsonl from 'misc/converttojsonl';
 import path from 'path';
-import { readFileSync } from 'fs';
-import toObjectId from 'misc/toobjectid';
-import { promisify } from 'util';
-import dotenv from 'dotenv';
-import { sendMessage } from 'lib/rabbitmq/send';
 import { PDFExtract } from 'pdf.js-extract';
-import getConnectors from 'airbyte/getconnectors';
-import Ajv from 'ajv';
+import { promisify } from 'util';
+
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection } from '../db/datasource';
+import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -102,7 +104,7 @@ export async function datasourceAddPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/datasource/add`);
 }
 
-export async function addDatasourceApi(req, res, next) {
+export async function testDatasourceApi(req, res, next) {
 
 	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
 
@@ -125,7 +127,7 @@ export async function addDatasourceApi(req, res, next) {
 			console.log('validate.errors', validate?.errors);
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-	} catch(e) {
+	} catch (e) {
 		console.log(e);
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -149,16 +151,84 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdSource', createdSource);
 
+	// Test connection to the source
+	const internalApi = await getAirbyteInternalApi();
+	const checkConnectionBody = {
+		sourceId: createdSource.sourceId,
+	};
+	console.log('checkConnectionBody', checkConnectionBody);
+	const connectionTest = await internalApi
+		.checkConnectionToSource(null, checkConnectionBody)
+		.then(res => res.data);
+	console.log('connectionTest', connectionTest);
+
+	// Discover the schema
+	const discoverSchemaBody = {
+		sourceId: createdSource.sourceId,
+	};
+	console.log('discoverSchemaBody', discoverSchemaBody);
+	const discoveredSchema = await internalApi
+		.discoverSchemaForSource(null, discoverSchemaBody)
+		.then(res => res.data);
+	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+
+	// Create the actual datasource in the db
+	const createdDatasource = await addDatasource({
+	    _id: newDatasourceId,
+	    orgId: toObjectId(res.locals.matchingOrg.id),
+	    teamId: toObjectId(req.params.resourceSlug),
+	    name: newDatasourceId.toString(),
+	    gcsFilename: null,
+	    originalName: datasourceName,
+	    sourceId: createdSource.sourceId,
+	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
+	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+	    sourceType,
+	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+	});
+
+	return dynamicResponse(req, res, 200, {
+		sourceId: createdSource.sourceId,
+		discoveredSchema,
+		datasourceId: createdDatasource.insertedId,
+	});
+
+}
+
+export async function addDatasourceApi(req, res, next) {
+
+	const { datasourceId, streams }  = req.body;
+
+	if (!datasourceId || typeof datasourceId !== 'string'
+		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		schedule: {scheduleType: 'manual'},
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append', //TODO: handle other syncmodes
+			}))
+		},
+		schedule: {
+			scheduleType: 'manual'
+		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
+		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: createdSource.sourceId,
-		sourceId: createdSource.sourceId,
+		name: datasource.sourceId,
+		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
@@ -178,20 +248,8 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdJob', createdJob);
 
-	//Create the actual datasource in the db
-	await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: newDatasourceId.toString(),
-	    gcsFilename: null,
-	    originalName: datasourceName,
-	    sourceId: createdSource.sourceId,
-	    connectionId: createdConnection.connectionId,
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-	    sourceType,
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-	});
+	// Update the datasource with the connetionId
+	await setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -231,30 +289,32 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Run a reset job in airbyte
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: datasource.connectionId,
-		jobType: 'reset',
-	};
-	const resetJob = await jobsApi
-		.createJob(null, jobBody)
-		.then(res => res.data);
-	console.log('resetJob', resetJob);
+	if (datasource.connectionId) {
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'reset',
+		};
+		const resetJob = await jobsApi
+			.createJob(null, jobBody)
+			.then(res => res.data);
+		console.log('resetJob', resetJob);
+		
+		// Delete the connection in airbyte
+		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+		const connectionBody = {
+			connectionId: datasource.connectionId,
+		};
+		const deletedConnection = await connectionsApi
+			.deleteConnection(connectionBody, connectionBody)
+			.then(res => res.data);
+	}
 
 	// Delete the source file in GCS if this is a file
 	if (datasource.sourceType === 'file') { //TODO: make an enum?
 		await deleteFile(datasource.gcsFilename);
 	}
 
-	// Delete the connection in airbyte
-	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
-	const connectionBody = {
-		connectionId: datasource.connectionId,
-	};
-	const deletedConnection = await connectionsApi
-		.deleteConnection(connectionBody, connectionBody)
-		.then(res => res.data);
-	
 	// Delete the source in airbyte
 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
 	const sourceBody = {
@@ -286,12 +346,9 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
 	}
 
+	// Create the datasource in the db
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	await uploadFile(filename, uploadedFile);
-	await sendMessage(filename, { stream: newDatasourceId.toString() });
-
-	//Create the actual datasource in the db
 	await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
@@ -305,6 +362,10 @@ export async function uploadFileApi(req, res, next) {
 	    sourceType: 'file',
 	    workspaceId: null,
 	});
+	
+	// Send the gcs file path to rabbitmq
+	await uploadFile(filename, uploadedFile);
+	await sendMessage(filename, { stream: newDatasourceId.toString(), type: 'file' }); //TODO: make 'file' an num once there are more
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
