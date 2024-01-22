@@ -53,7 +53,7 @@ const StreamRow = ({ stream }) => {
 					<div>Schema:</div>
 					{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
 						<div key={key} className='ml-4'>
-							<span className='font-semibold'>{key}:</span> {value.type}
+							<span className='font-semibold'>{key}:</span> {value['type']}
 						</div>
 					))}
 				</div>
@@ -169,8 +169,8 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					//step 3, saving datasource
 					e.preventDefault();
 					const streams = Array.from(e.target.elements)
-						.filter(x => x.checked === true)
-						.map(x => x.name);
+						.filter(x => x['checked'] === true)
+						.map(x => x['name']);
 					const body = {
 						_csrf: csrf,
 						datasourceId: datasourceId,

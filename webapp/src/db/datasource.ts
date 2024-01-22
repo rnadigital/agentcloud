@@ -2,7 +2,7 @@
 
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
-import { Datasource } from 'struct/datasource';
+import { Datasource, DatasourceConnectionSettings } from 'struct/datasource';
 
 import * as db from './index';
 const log = debug('webapp:db:datasources');
@@ -37,13 +37,14 @@ export async function addDatasource(datasource: Datasource): Promise<db.InsertRe
 	return DatasourceCollection().insertOne(datasource);
 }
 
-export async function setDatasourceConnectionId(teamId: db.IdOrStr, datasourceId: db.IdOrStr, connectionId: db.IdOrStr): Promise<any> {
+export async function setDatasourceConnection(teamId: db.IdOrStr, datasourceId: db.IdOrStr, connectionId: db.IdOrStr, connectionSettings: DatasourceConnectionSettings): Promise<any> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId),
 	}, {
 		$set: {
-			connectionId: connectionId,
+			connectionId,
+			connectionSettings,
 		},
 	});
 }

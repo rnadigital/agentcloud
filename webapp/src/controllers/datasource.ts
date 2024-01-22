@@ -17,7 +17,7 @@ import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import { promisify } from 'util';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionId } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -249,7 +249,7 @@ export async function addDatasourceApi(req, res, next) {
 	console.log('createdJob', createdJob);
 
 	// Update the datasource with the connetionId
-	await setDatasourceConnectionId(req.params.resourceSlug, datasourceId, createdConnection.connectionId);
+	await setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
