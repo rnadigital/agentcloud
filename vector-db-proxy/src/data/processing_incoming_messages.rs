@@ -46,7 +46,9 @@ pub async fn process_messages(
         //     Handle the case where the data is being sent as a single object rather than an array of objects
         list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
     }
-    if let Ok(point_structs) = embed_table_chunks_async(list_of_embedding_data, ds_clone).await {
+    if let Ok(point_structs) =
+        embed_table_chunks_async(list_of_embedding_data, message, ds_clone).await
+    {
         if let Ok(bulk_upload_result) = qdrant.bulk_upsert_data(point_structs.clone()).await {
             return bulk_upload_result;
         }
