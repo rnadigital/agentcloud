@@ -14,6 +14,7 @@ mod routes;
 mod utils;
 
 use qdrant::client::instantiate_qdrant_client;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::init::models::GlobalData;
@@ -30,7 +31,7 @@ use tokio::sync::RwLock;
 use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
-use data::chunking::{Chunking, PdfChunker, ChunkingStrategy};
+use data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
 use routes::api_routes::{
     bulk_upsert_data_to_collection, create_collection, health_check, list_collections,
     lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
@@ -88,13 +89,19 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let pdf = PdfChunker::new();
-    let documet_text = pdf
+    let pdf = PdfChunker::default();
+    let (document_text, metadata) = pdf
         .extract_text_from_pdf("/Users/ragy/Downloads/rdmp.pdf")
         .expect("TODO: panic message");
     let chunks = pdf
-        .chunk(documet_text, ChunkingStrategy::SEMANTIC_CHUNKING)
+        .chunk(
+            document_text,
+            Some(metadata),
+            ChunkingStrategy::SEMANTIC_CHUNKING,
+        )
+        .await
         .unwrap();
+    println!("{}", chunks);
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
     let rabbitmq_connection_details = RabbitConnect {

@@ -1,4 +1,4 @@
-use crate::data::processing_incoming_messages::process_messages;
+use crate::data::{processing_incoming_messages::process_messages, };
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;

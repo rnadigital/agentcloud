@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_openai::types::CreateEmbeddingRequestArgs;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
@@ -111,7 +111,7 @@ impl LLM {
         let mut chain = Chain::new(prompt!(system: "You are a helpful assistant that answers questions users questions using the data provided to you. If you do not know the answer or the data you have does not provide the information to answer the question say i do not know, do not try to make up an answer.")).unwrap();
 
         // Execute the conversation steps.
-        let res_1 = chain
+        let _ = chain
             .send_message(step_1, &parameters!(), &executor)
             .await?;
         let res = chain

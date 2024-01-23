@@ -1,8 +1,8 @@
+use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
 use crate::llm::utils::{EmbeddingModels, LLM};
 use ndarray::Array1;
 use std::collections::HashMap;
-use crate::data::models::Document;
 
 fn combine_sentences(
     sentences: Vec<HashMap<String, String>>,
@@ -37,17 +37,17 @@ fn combine_sentences(
     combined_sentences
 }
 
-// Assuming `Sentence` is a struct or similar type that holds the embedding and other data
-#[derive(Clone)]
+// `Sentence` is a struct that holds the embedding and other metadata
+#[derive(Clone, Debug)]
 struct Sentence {
     combined_sentence_embedding: Array1<f32>,
     distance_to_next: Option<f32>,
 }
-impl Default for Sentence{
+impl Default for Sentence {
     fn default() -> Self {
-        Sentence{
+        Sentence {
             combined_sentence_embedding: Array1::from_vec(vec![]),
-            distance_to_next: None
+            distance_to_next: None,
         }
     }
 }
@@ -78,7 +78,7 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
-struct Embeddings;
+pub struct Embeddings;
 
 impl Embeddings {
     async fn oai_embedding(&self, docs: Vec<String>) -> Vec<Vec<f32>> {
@@ -87,8 +87,6 @@ impl Embeddings {
         embedding
     }
 }
-
-
 
 pub struct SemanticChunker {
     embeddings: Embeddings,
@@ -102,10 +100,16 @@ impl SemanticChunker {
             add_start_index,
         }
     }
+    pub fn default() -> Self {
+        SemanticChunker {
+            embeddings: Embeddings,
+            add_start_index: true,
+        }
+    }
 
     async fn split_text(&self, text: &str) -> Vec<String> {
         let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
-        let mut sent: Sentence = Sentence::default();
+        let mut sent: Vec<Sentence> = vec![];
         let mut sentences: Vec<HashMap<String, String>> = single_sentences_list
             .iter()
             .enumerate()
@@ -133,13 +137,13 @@ impl SemanticChunker {
                 "combined_sentence_embedding".to_string(),
                 format!("{:?}", embeddings[i]),
             );
-            sent = Sentence{
+            sent.push(Sentence {
                 combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
-                distance_to_next: None
-            };
+                distance_to_next: None,
+            });
         }
 
-        let distances = calculate_cosine_distances(&mut vec![sent]);
+        let distances = calculate_cosine_distances(&mut sent);
         let mut chunks = Vec::new();
         let breakpoint_percentile_threshold = 95;
         let breakpoint_distance_threshold = percentile(&distances, breakpoint_percentile_threshold);
@@ -161,7 +165,7 @@ impl SemanticChunker {
             let group = &sentences[start_index..=index];
             let combined_text = group
                 .iter()
-                .map(|d| d["sentence"].as_str())
+                .map(|d| d["combined_sentence"].as_str())
                 .collect::<Vec<&str>>()
                 .join(" ");
             chunks.push(combined_text);
@@ -171,7 +175,7 @@ impl SemanticChunker {
         if start_index < sentences.len() {
             let combined_text = sentences[start_index..]
                 .iter()
-                .map(|d| d["sentence"].as_str())
+                .map(|d| d["combined_sentence"].as_str())
                 .collect::<Vec<&str>>()
                 .join(" ");
             chunks.push(combined_text);
@@ -183,37 +187,37 @@ impl SemanticChunker {
     async fn create_documents(
         &self,
         texts: Vec<String>,
-        metadata: Option<Vec<HashMap<String, String>>>,
+        metadata: Vec<Option<HashMap<String, String>>>,
     ) -> Vec<Document> {
-        let metadata = metadata.unwrap_or_else(|| vec![HashMap::new(); texts.len()]);
         let mut documents = Vec::new();
 
         for (i, text) in texts.into_iter().enumerate() {
-            let mut index: isize = -1;
+            let mut index: Option<usize> = None;
             for chunk in self.split_text(&text).await {
-                let mut metadata = metadata[i].clone();
-                // if self.add_start_index {
-                //     index = text[index + 1..].find(&chunk).unwrap_or(-1) + index + 1;
-                //     metadata.insert("start_index".to_string(), index.to_string());
-                // }
-                documents.push(Document::new(chunk, metadata));
+                let mut metadata = metadata[i].clone().unwrap();
+                if self.add_start_index {
+                    index = match index {
+                        Some(idx) => text[idx + 1..]
+                            .find(&chunk)
+                            .map(|found_idx| found_idx + idx + 1),
+                        None => text.find(&chunk),
+                    };
+                    if let Some(idx) = index {
+                        metadata.insert("start_index".to_string(), idx.to_string());
+                    }
+                }
+                documents.push(Document::new(chunk, Some(metadata)));
             }
         }
 
         documents
     }
 
-    async fn split_documents(&self, documents: Vec<Document>) -> Vec<Document> {
+    pub async fn split_documents(&self, documents: Vec<Document>) -> Vec<Document> {
         let (texts, metadata): (Vec<_>, Vec<_>) = documents
             .into_iter()
             .map(|doc| (doc.page_content, doc.metadata))
             .unzip();
-        self.create_documents(texts, Some(metadata)).await
-    }
-
-    async fn transform_documents(&self, documents: Vec<Document>) -> Vec<Document> {
-        self.split_documents(documents).await
+        self.create_documents(texts, metadata).await
     }
 }
-
-// Helper function to calculate percentile
