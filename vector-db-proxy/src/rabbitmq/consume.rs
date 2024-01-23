@@ -2,9 +2,9 @@ use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::hash_map_values_as_serde_values;
+use crate::qdrant::utils::Qdrant;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
-use crate::qdrant::utils::Qdrant;
 
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -50,8 +50,8 @@ pub async fn subscribe_to_queue(
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json;
-                            if let Some(bucket_name) = message_data.get("") {
-                                if let Some(file_name) = message_data.get("") {
+                            if let Some(bucket_name) = message_data.get("bucket") {
+                                if let Some(file_name) = message_data.get("filename") {
                                     if let Ok(file) = get_object_from_gcs(
                                         bucket_name.to_string(),
                                         file_name.to_string(),
@@ -86,7 +86,10 @@ pub async fn subscribe_to_queue(
                                                 json!(payload).try_into().unwrap(),
                                             );
                                             let app_data_clone = Arc::clone(&app_data);
-                                            let qdrant = Qdrant::new(app_data_clone, datasource_id.to_string());
+                                            let qdrant = Qdrant::new(
+                                                app_data_clone,
+                                                datasource_id.to_string(),
+                                            );
                                             qdrant.upsert_data_point(qdrant_point_struct).await?;
                                         }
                                     }
