@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-
+#[derive(Debug, Clone, Default)]
 pub struct Document {
     pub page_content: String,
     pub metadata: Option<HashMap<String, String>>,

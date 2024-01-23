@@ -47,6 +47,7 @@ pdf-extract = "0.7.4"
 lopdf = { version = "0.32.0", features = ["image"] }
 regex = "1.9.5"
 ndarray = "0.15.6"
+google-cloud-auth = "0.13.0"
 
 [[bin]]
 name = "vector-db-proxy"
