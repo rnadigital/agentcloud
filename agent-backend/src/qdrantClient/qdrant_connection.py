@@ -8,6 +8,7 @@ from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistant
 # a vector database instance
 from autogen.retrieve_utils import TEXT_FORMATS
 import qdrantClient.qdrant_connection as qdc
+import utils.class_checker as cch
 
 
 from typing import List, Optional, Union, Any, Type, Dict
@@ -39,12 +40,6 @@ def get_connection(host: str, port: int) -> QdrantClient:
     return client
 
 
-def check_instance_of_class(instance: Any, class_type: Type[Any]) -> Any:
-    if not isinstance(instance, class_type):
-        raise TypeError(
-            f"Expected instance of {class_type.__name__}, got {type(instance).__name__}"
-        )
-    return instance
 
 
 def populate_collection(
@@ -62,7 +57,7 @@ def populate_collection(
 
         @validator("client")
         def check_client(cls, v):
-            return check_instance_of_class(v, QdrantClient)
+            return cch.check_instance_of_class(v, QdrantClient)
 
     params = Params(client=client, collection_name=collection_name, docs_path=docs_path)
 
