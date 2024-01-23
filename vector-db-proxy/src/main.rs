@@ -14,7 +14,6 @@ mod routes;
 mod utils;
 
 use qdrant::client::instantiate_qdrant_client;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::init::models::GlobalData;
@@ -88,20 +87,6 @@ async fn main() -> std::io::Result<()> {
             panic!("An error occurred while trying to connect to Qdrant DB {e}")
         }
     };
-
-    let pdf = PdfChunker::default();
-    let (document_text, metadata) = pdf
-        .extract_text_from_pdf("/Users/ragy/Downloads/rdmp.pdf")
-        .expect("TODO: panic message");
-    let chunks = pdf
-        .chunk(
-            document_text,
-            Some(metadata),
-            ChunkingStrategy::SEMANTIC_CHUNKING,
-        )
-        .await
-        .unwrap();
-    println!("{}", chunks);
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
     let rabbitmq_connection_details = RabbitConnect {

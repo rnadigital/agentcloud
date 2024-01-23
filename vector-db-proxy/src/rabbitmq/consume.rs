@@ -9,6 +9,7 @@ use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
 
 pub async fn subscribe_to_queue(
     app_data: Arc<RwLock<QdrantClient>>,
@@ -52,7 +53,19 @@ pub async fn subscribe_to_queue(
                                     )
                                     .await
                                     {
-                                        println!("File: {:?}", file);
+                                        let pdf = PdfChunker::default();
+                                        let (document_text, metadata) = pdf
+                                            .extract_text_from_pdf(file)
+                                            .expect("TODO: panic message");
+                                        let chunks = pdf
+                                            .chunk(
+                                                document_text,
+                                                Some(metadata),
+                                                ChunkingStrategy::SEMANTIC_CHUNKING,
+                                            )
+                                            .await
+                                            .unwrap();
+                                        println!("{}", chunks);
                                     }
                                 }
                             }
