@@ -17,7 +17,7 @@ import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import { promisify } from 'util';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection, setDatasourceLastSynced } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -80,7 +80,7 @@ export async function datasourceData(req, res, _next) {
 * datasource json data
 */
 export async function datasourceJson(req, res, next) {
-	const data = await datasourcesData(req, res, next);
+	const data = await datasourceData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
 
@@ -185,6 +185,7 @@ export async function testDatasourceApi(req, res, next) {
 	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 	    sourceType,
 	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+	    lastSyncedDate: null,
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -249,7 +250,10 @@ export async function addDatasourceApi(req, res, next) {
 	console.log('createdJob', createdJob);
 
 	// Update the datasource with the connetionId
-	await setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody);
+	await Promise.all([
+		setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
+		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date())
+	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 

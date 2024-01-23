@@ -1,6 +1,7 @@
 import { Menu, Transition } from '@headlessui/react';
 import {
 	ArrowPathIcon,
+	Cog6ToothIcon,
 	DocumentIcon,
 	EllipsisHorizontalIcon,
 	PlayIcon,
@@ -34,63 +35,65 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 	}
 
 	return (
-		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
-			{datasources.map((datasource) => (
-				<li key={datasource._id} className='rounded-xl border border-gray-200 dark:border-slate-600'>
-					<div className='flex items-center gap-x-4 border-b border-gray-900/5 dark:bg-slate-800 bg-gray-50 p-6'>
-						<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6' />
-						<Link
-							href={`/${resourceSlug}/datasource/${datasource._id}/edit`}
-							className='cursor-pointer text-ellipsis overflow-hidden whitespace-nowrap'
-						>
-							{datasource.originalName}
-							<span className='ms-2 inline-flex items-center rounded-md bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-700/10'>
-								{datasource.sourceType}
-							</span>
-						</Link>
-						{/*<div className='text-sm font-medium leading-6 text-gray-900'></div>*/}
-						<Menu as='div' className='relative ml-auto'>
-							<Menu.Button className='-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500'>
-								<span className='sr-only'>Open options</span>
-								<EllipsisHorizontalIcon className='h-5 w-5' aria-hidden='true' />
-							</Menu.Button>
-							<Transition
-								as={Fragment}
-								enter='transition ease-out duration-100'
-								enterFrom='transform opacity-0 scale-95'
-								enterTo='transform opacity-100 scale-100'
-								leave='transition ease-in duration-75'
-								leaveFrom='transform opacity-100 scale-100'
-								leaveTo='transform opacity-0 scale-95'
-							>
-								<Menu.Items className='absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-									<Menu.Item>
-										{({ active }) => (
-											<a
-												href={`/${resourceSlug}/datasource/${datasource._id}/edit`}
-												className={`${active ? 'bg-gray-50 dark:bg-slate-700' : ''} block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white`}
-											>
-											Edit
-											</a>
-										)}
-									</Menu.Item>
-									{/* TODO: onclick cancel, cancel this session? */}
-									<Menu.Item>
-										{({ active }) => (
-											<button
-												onClick={() => deleteDatasource(datasource._id)}
-												className={`${active ? 'bg-gray-50 dark:bg-slate-700' : ''} block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left`}
-											>
-											Delete
-											</button>
-										)}
-									</Menu.Item>
-								</Menu.Items>
-							</Transition>
-						</Menu>
-					</div>
-				</li>
-			))}
-		</ul>
+
+		<div className='rounded-lg overflow-hidden shadow'>
+			<table className='min-w-full divide-y divide-gray-200'>
+				<thead className='bg-gray-50'>
+					<tr>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Name
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Source Type
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Last Synced
+						</th>
+						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Actions
+						</th>
+		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+		                    
+		                </th>
+					</tr>
+				</thead>
+				<tbody className='bg-white divide-y divide-gray-200'>
+					{datasources.map((datasource) => (
+						<tr key={datasource._id}>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<div className='flex items-center'>
+									<div className='ml-4'>
+										<div className='text-sm font-medium text-gray-900'>{datasource.originalName}</div>
+									</div>
+								</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+				                    <img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />
+									{datasource.sourceType}
+								</span>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? datasource.lastSyncedDate : 'Never'}</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+								<button 
+									onClick={() => { /*TODO: sync api call and spinner while syncing*/ }} 
+									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+								>
+									Sync Now
+								</button>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+		                        <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
+		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
+		                        </a>
+		                    </td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+
 	);
 }

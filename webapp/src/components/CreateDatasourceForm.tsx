@@ -1,10 +1,6 @@
 'use strict';
 
 import * as API from '@api';
-import {
-	ChevronDownIcon,
-	ChevronRightIcon
-} from '@heroicons/react/24/outline';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
@@ -25,52 +21,7 @@ const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
 import { getSubmitButtonOptions,RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
-
-const StreamRow = ({ stream }) => {
-	const [isExpanded, setIsExpanded] = useState(false);
-	return (
-		<div className='border-b'>
-			<div className='flex justify-between items-center p-4'>
-				<div className='flex items-center'>
-					<span onClick={() => setIsExpanded(!isExpanded)} className='cursor-pointer'>
-						{isExpanded ? <ChevronDownIcon className='h-4 w-4' /> : <ChevronRightIcon className='h-4 w-4' />}
-					</span>
-					<span className='ml-2'>{stream.stream.name}</span>
-				</div>
-				<div>
-					<label className='switch'>
-						<input
-							type='checkbox'
-							className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-							name={stream.stream.name}
-						/>
-						<span className='slider round'></span>
-					</label>
-				</div>
-			</div>
-			{isExpanded && (
-				<div className='p-4 bg-gray-100 rounded'>
-					<div>Schema:</div>
-					{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
-						<div key={key} className='ml-4'>
-							<span className='font-semibold'>{key}:</span> {value['type']}
-						</div>
-					))}
-				</div>
-			)}
-		</div>
-	);
-};
-
-const StreamsList = ({ streams }) => {
-	return (
-		<div className='my-4'>
-			{streams.map((stream, index) => (
-				<StreamRow key={index} stream={stream} />
-			))}
-		</div>
-	);
-};
+import { StreamsList } from 'components/DatasourceStream';
 
 const stepList = [
 	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -78,7 +29,7 @@ const stepList = [
 	{ id: 'Step 3', name: 'Sync configuration', href: '#', steps: [3] },
 ];
 
-export default function DatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+export default function CreateDatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
 	const [step, setStep] = useState(0);

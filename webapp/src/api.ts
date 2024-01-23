@@ -139,6 +139,18 @@ export function getSpecification(body, dispatch, errorCallback, router) {
 	}).toString();
 	return ApiCall(`/${body.resourceSlug}/airbyte/specification?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
+export function getJobsList(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		datasourceId: body.datasourceId,
+	}).toString();
+	return ApiCall(`/${body.resourceSlug}/airbyte/jobs?${queryString}`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getDatasourceSchema(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		datasourceId: body.datasourceId,
+	}).toString();
+	return ApiCall(`/${body.resourceSlug}/airbyte/schema?${queryString}`, 'GET', null, dispatch, errorCallback, router);
+}
 
 //Temp datasource stuff
 export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) {

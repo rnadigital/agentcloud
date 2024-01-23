@@ -23,7 +23,7 @@ export type DatasourceConnectionSettings = {
     sourceId: string;
     destinationId: string;
     status: string; //TODO: enum to match airbyte api, and allow creating in paused state
-}
+};
 
 export type Datasource = {
     _id?: ObjectId;
@@ -32,10 +32,11 @@ export type Datasource = {
     name: string;
     originalName: string;
     gcsFilename: string;
-    sourceType: string; //airbyte
-    sourceId: string; //airbyte
-    destinationId: string; //airbyte
-    workspaceId: string; //airbyte
-    connectionId: string; //airbyte
+    sourceType: string;
+    sourceId: string;
+    destinationId: string;
+    workspaceId: string;
+    connectionId: string;
     connectionSettings?: DatasourceConnectionSettings;
+    lastSyncedDate?: Date | null; //Note: null = never synced
 };

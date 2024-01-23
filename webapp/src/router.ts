@@ -80,7 +80,12 @@ export default function router(server, app) {
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
+
+	//airbyte proxy routes (NOTE: should it
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
+	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
+	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
+	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
 	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
