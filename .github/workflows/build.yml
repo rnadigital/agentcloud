@@ -45,5 +45,5 @@ jobs:
         working-directory: ./agent-backend
       - name: Test with pytest
         run: |
-          python -m pytest test/. -k 'not require_docker'
+          python -m pytest test/. -k 'not require_docker_compose_up'
         working-directory: ./agent-backend/src/
