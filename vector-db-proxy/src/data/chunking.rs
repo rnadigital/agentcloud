@@ -1,5 +1,5 @@
 use crate::data::{models::Document, text_splitting::SemanticChunker};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
 pub enum ChunkingStrategy {
@@ -65,21 +65,24 @@ impl Chunking for PdfChunker {
     }
 
     fn extract_text_from_pdf(&self, file: Vec<u8>) -> Result<(String, HashMap<String, String>)> {
-        let mut text = String::new(); // we will instantiate this so we always have something to return
         let mut metadata = HashMap::new();
+        let mut res = (String::new(), metadata);
         if let Ok(doc) = lopdf::Document::load_mem(&*file) {
-            // Change this to load from mem
             let pages = doc.get_pages();
             for (page_id, page) in pages {
-                let page_content = doc.get_page_content(page).unwrap();
-                let page_dict = doc.get_dictionary(page)?;
-                text = pdf_extract::extract_text_from_mem(&*page_content).unwrap();
-                metadata = self.dictionary_to_hashmap(page_dict);
-                metadata.insert("page_number".to_string(), page_id.to_string());
+                if let Ok(page_content) = doc.get_page_content(page) {
+                    return if let Ok(text) = pdf_extract::extract_text_from_mem(&*page_content) {
+                        let page_dict = doc.get_dictionary(page)?;
+                        metadata = self.dictionary_to_hashmap(page_dict);
+                        metadata.insert("page_number".to_string(), page_id.to_string());
+                        res = (text, metadata);
+                        Ok(res)
+                    } else {
+                        Err(anyhow!("An error occurred"))
+                    }
+                }
             }
         }
-        let res = (text, metadata);
-        // println!("Final Text: {}", text);
         Ok(res)
     }
 
