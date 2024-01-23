@@ -12,7 +12,7 @@ import qdrantClient.qdrant_connection as qdc
 
 if __name__ == "__main__":
     config_list = autogen.config_list_from_json(
-        #env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
+        # env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
         env_or_file="./OAI_CONFIG_LIST",
         filter_dict={
             "model": {
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     ragproxyagent.initiate_chat(assistant, problem=qa_problem)
 
     print(ragproxyagent.last_message())
-    assert '1961' in ragproxyagent.last_message()['content']
+    assert "1961" in ragproxyagent.last_message()["content"]

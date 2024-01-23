@@ -17,7 +17,6 @@ from autogen.agentchat import Agent
 
 
 def get_connection(host: str, port: int) -> QdrantClient:
-
     # Check inputs
     class QdrantConnection(BaseModel):
         host: constr(min_length=2)
@@ -40,37 +39,35 @@ def get_connection(host: str, port: int) -> QdrantClient:
     return client
 
 
-
 def check_instance_of_class(instance: Any, class_type: Type[Any]) -> Any:
     if not isinstance(instance, class_type):
-        raise TypeError(f"Expected instance of {class_type.__name__}, got {type(instance).__name__}")
+        raise TypeError(
+            f"Expected instance of {class_type.__name__}, got {type(instance).__name__}"
+        )
     return instance
 
 
+def populate_collection(
+    client: QdrantClient, collection_name: str, docs_path: Union[str, List[str]]
+) -> Dict[str, Agent]:
+    # collection_name = "devcollection_barack_obama"
+    # docs_path = "https://en.wikipedia.org/wiki/Barack_Obama"
+    # client = qdc.get_connection(host="localhost", port=6333)
 
-def populate_collection(client: QdrantClient, 
-                        collection_name: str, 
-                        docs_path: Union[str, List[str]]) -> Dict[str, Agent]:   
-    
-    #collection_name = "devcollection_barack_obama"
-    #docs_path = "https://en.wikipedia.org/wiki/Barack_Obama"
-    #client = qdc.get_connection(host="localhost", port=6333)
-    
     # Check inputs
     class Params(BaseModel):
         client: Any
         collection_name: constr(min_length=1)
         docs_path: Union[str, List[str]]
 
-        @validator('client')
+        @validator("client")
         def check_client(cls, v):
             return check_instance_of_class(v, QdrantClient)
-        
-        
+
     params = Params(client=client, collection_name=collection_name, docs_path=docs_path)
 
     config_list = autogen.config_list_from_json(
-        #env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
+        # env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
         env_or_file="./OAI_CONFIG_LIST",
         filter_dict={
             "model": {

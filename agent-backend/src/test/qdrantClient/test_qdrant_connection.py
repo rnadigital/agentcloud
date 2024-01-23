@@ -20,7 +20,7 @@ class TestQdrantConnection:
         # Test connection failure due to invalid port
         with pytest.raises(ValueError):
             qdc.get_connection(host="localhost", port=0)
-    
+
     @pytest.mark.require_openai_api
     def test_populate_collection_success(self):
         # Test the successful population of a collection
@@ -31,15 +31,19 @@ class TestQdrantConnection:
         agents = qdc.populate_collection(client, collection_name, docs_path)
         assert len(agents) > 0
 
-
         # reset the assistant. Always reset the assistant before starting a new conversation.
-        agents['llm_assistant_agent'].reset()
+        agents["llm_assistant_agent"].reset()
 
         qa_problem = "What is the exact date of Barack Obama birthday?"
-        agents['qdrant_retrieve_user_proxy_agent'].initiate_chat(agents['llm_assistant_agent'], problem=qa_problem)
+        agents["qdrant_retrieve_user_proxy_agent"].initiate_chat(
+            agents["llm_assistant_agent"], problem=qa_problem
+        )
 
-        print(agents['qdrant_retrieve_user_proxy_agent'].last_message())
-        assert '1961' in agents['qdrant_retrieve_user_proxy_agent'].last_message()['content']
+        print(agents["qdrant_retrieve_user_proxy_agent"].last_message())
+        assert (
+            "1961"
+            in agents["qdrant_retrieve_user_proxy_agent"].last_message()["content"]
+        )
 
         # Clean up
         client.delete_collection(collection_name)
