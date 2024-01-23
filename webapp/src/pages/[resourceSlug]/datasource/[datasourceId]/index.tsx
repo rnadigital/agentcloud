@@ -3,8 +3,8 @@
 import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
-import DatasourceTabs from 'components/DatasourceTabs';
 import { StreamsList } from 'components/DatasourceStream';
+import DatasourceTabs from 'components/DatasourceTabs';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -52,25 +52,30 @@ export default function Datasource(props) {
 		}
 	}
 
-	// async function datasourcePost(e) {
-	// 	setSubmitting(true);
-	// 	try {
-	// 		const body = {
-	// 			_csrf: csrf,
-	// 			resourceSlug,
-	// 			datasourceId: datasource._id,
-	// 		};
-	// 		//step 2, getting schema and testing connection
-	// 		const stagedDatasource: any = await API.testDatasource(body, () => {
-	// 			// nothing to toast here	
-	// 		}, (res) => {
-	// 			toast.error(res);
-	// 		}, compact ? null : router);
-	// 		setDiscoveredSchema(stagedDatasource.discoveredSchema);
-	// 	} finally {
-	// 		setSubmitting(false);
-	// 	}
-	// }
+	async function updateStreams(e, sync: boolean) {
+		setSubmitting(true);
+		try {
+			const streams = Array.from(e.target.form.elements)
+				.filter(x => x['checked'] === true)
+				.map(x => x['name']);
+			const body = {
+				_csrf: csrf,
+				resourceSlug,
+				datasourceId,
+				streams,
+				sync,
+			};
+			await API.updateDatasourceStreams(body, () => {
+				toast.success(`Updated streams${sync ? ' and triggered sync job' : ''}`);
+				setDiscoveredSchema(null);
+				fetchDatasource();
+			}, (res) => {
+				toast.error(res);
+			}, router);
+		} finally {
+			setSubmitting(false);
+		}
+	}
 
 	useEffect(() => {
 		fetchDatasource();
@@ -95,21 +100,37 @@ export default function Datasource(props) {
 
 		{tab === 0 && <>
 		
-			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); toast('TODO'); }}>
-				<StreamsList streams={discoveredSchema.discoveredSchema.catalog.streams} />
+			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
+				<StreamsList
+					streams={discoveredSchema.discoveredSchema.catalog.streams}
+					existingStreams={datasource.connectionSettings.configurations.streams.map(x => x.name)}
+				/>
 				<button
+					onClick={(e) => updateStreams(e)}
+					disabled={submitting}
+					type='submit'
+					className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'
+				>
+					{submitting && <ButtonSpinner />}
+					{submitting ? 'Saving...' : 'Save'}
+				</button>
+				<button
+					onClick={(e) => updateStreams(e, true)}
 					disabled={submitting}
 					type='submit'
 					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
 					{submitting && <ButtonSpinner />}
-					{submitting ? 'Saving...' : 'Save'}
+					{submitting ? 'Saving...' : 'Save and Sync'}
 				</button>
 			</form>}
 
 			{!discoveredSchema && <>
-				<StreamsList streams={datasource.connectionSettings.configurations.streams} />
-
+				<StreamsList
+					streams={datasource.connectionSettings.configurations.streams}
+					existingStreamsw={datasource.connectionSettings.configurations.streams.map(x => x.name)}
+					readonly={true}
+				/>
 				<span>
 					<button
 						disabled={submitting}
@@ -156,6 +177,8 @@ export default function Datasource(props) {
 				</table>
 			</div>
 		</>}
+
+		{tab === 2 && 'TODO'}
 
 	</>);
 

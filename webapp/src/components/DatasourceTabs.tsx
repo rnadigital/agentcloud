@@ -1,6 +1,6 @@
 'use strict';
 
-import { TableCellsIcon, ClockIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
+import { ClockIcon, Cog6ToothIcon,TableCellsIcon } from '@heroicons/react/20/solid';
 
 const tabs = [
 	{ name: 'Streams', href: '#', icon: TableCellsIcon },
@@ -32,14 +32,14 @@ export default function DatasourceTabs({ callback, current }) {
 				<div className='border-b border-gray-200'>
 					<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
 						{tabs.map((tab, ti) => (
-							<a
+							<span
 								key={tab.name}
 								onClick={() => callback(ti)}
 								className={classNames(
 									current === ti
 										? 'border-indigo-500 text-indigo-600'
 										: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-									'group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium'
+									'group inline-flex items-center border-b-2 py-4 px-1 text-sm font-medium cursor-pointer'
 								)}
 								aria-current={current === ti ? 'page' : undefined}
 							>
@@ -51,7 +51,7 @@ export default function DatasourceTabs({ callback, current }) {
 									aria-hidden='true'
 								/>
 								<span>{tab.name}</span>
-							</a>
+							</span>
 						))}
 					</nav>
 				</div>

@@ -249,7 +249,7 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdJob', createdJob);
 
-	// Update the datasource with the connetionId
+	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
 		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date())
@@ -261,15 +261,70 @@ export async function addDatasourceApi(req, res, next) {
 
 }
 
-export async function editDatasourceApi(req, res, next) {
+//Note: can be converted to a generic "edit" in future if necessary
+export async function updateDatasourceStreamsApi(req, res, next) {
 
-	const { name /* TODO */ }  = req.body;
+	const { datasourceId, streams, sync }  = req.body;
 
-	//TODO: form validation
-	
-	//TODO: editDatasource
+	if (!datasourceId || typeof datasourceId !== 'string'
+		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create a connection to our destination in airbyte
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionBody = {
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append', //TODO: handle other syncmodes
+			}))
+		},
+		schedule: {
+			scheduleType: 'manual'
+		},
+		dataResidency: 'auto',
+		namespaceDefinition: 'destination',
+		namespaceFormat: null,
+		prefix: `${datasource._id.toString()}_`,
+		nonBreakingSchemaUpdatesBehavior: 'ignore',
+		name: datasource.sourceId,
+		sourceId: datasource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		status: 'active'
+	};
+	const updatedConnection = await connectionsApi
+		.patchConnection(datasource.connectionId, connectionBody)
+		.then(res => res.data);
+
+	if (sync === true) {
+		// Create a job to trigger the connection to sync
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'sync',
+		};
+		const createdJob = await jobsApi
+			.createJob(null, jobBody)
+			.then(res => res.data);
+		console.log('createdJob', createdJob);
+	}
+
+	// Update the datasource with the connection settings and sync date
+	await Promise.all([
+		setDatasourceConnection(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
+		sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
+	]);
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	return dynamicResponse(req, res, 200, { });
 
 }
 

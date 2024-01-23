@@ -6,21 +6,22 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
-export function StreamRow({ stream }) {
+export function StreamRow({ stream, checked, readonly }) {
 	const [isExpanded, setIsExpanded] = useState(false);
 	return (
 		<div className='border-b'>
 			<div className='flex items-center p-4'>
-				<div className='me-4'>
+				{!readonly && <div className='me-4'>
 					<label className='switch'>
 						<input
 							type='checkbox'
 							className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
 							name={stream?.stream?.name || stream?.name}
+							defaultChecked={checked}
 						/>
 						<span className='slider round'></span>
 					</label>
-				</div>
+				</div>}
 				<div className='flex items-center cursor-pointer select-none' onClick={() => setIsExpanded(!isExpanded)}>
 					<span>
 						{isExpanded ? <ChevronDownIcon className='h-4 w-4' /> : <ChevronRightIcon className='h-4 w-4' />}
@@ -42,11 +43,16 @@ export function StreamRow({ stream }) {
 	);
 }
 
-export function StreamsList({ streams }) {
+export function StreamsList({ streams, existingStreams, readonly }) {
 	return (
 		<div className='my-4'>
 			{streams.map((stream, index) => (
-				<StreamRow key={index} stream={stream} />
+				<StreamRow
+					readonly={readonly}
+					key={index}
+					stream={stream}
+					checked={existingStreams && existingStreams.includes(stream?.stream?.name || stream?.name)}
+				/>
 			))}
 		</div>
 	);
