@@ -5,6 +5,7 @@ use tokio::sync::RwLock;
 use crate::mongo::client::start_mongo_connection;
 use qdrant_client::client::QdrantClient;
 use serde_json::{json, Value};
+use mongodb::bson::Bson;
 
 use crate::mongo::queries::get_team_id_for_datasource;
 use crate::qdrant::helpers::embed_table_chunks_async;
@@ -29,7 +30,9 @@ pub async fn process_messages(
     let mongodb_connection = start_mongo_connection().await.unwrap();
     if let Ok(doc) = get_team_id_for_datasource(mongodb_connection, datasource_id).await {
         if let Some(team_id_bson) = doc.get("teamId") {
-            team_id = team_id_bson.to_string();
+            if let Bson::ObjectId(oid) = team_id_bson {
+                team_id = oid.to_hex();
+            }
         }
     }
     let qdrant = Qdrant::new(qdrant_conn, team_id);
@@ -46,7 +49,9 @@ pub async fn process_messages(
         //     Handle the case where the data is being sent as a single object rather than an array of objects
         list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
     }
-    if let Ok(point_structs) = embed_table_chunks_async(list_of_embedding_data, ds_clone).await {
+    if let Ok(point_structs) =
+        embed_table_chunks_async(list_of_embedding_data, message, ds_clone).await
+    {
         if let Ok(bulk_upload_result) = qdrant.bulk_upsert_data(point_structs.clone()).await {
             return bulk_upload_result;
         }
