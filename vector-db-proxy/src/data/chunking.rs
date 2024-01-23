@@ -17,7 +17,7 @@ pub trait Chunking {
         data: String,
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
-    ) -> Result<String>;
+    ) -> Result<Vec<Document>>;
 }
 
 pub struct PdfChunker;
@@ -52,7 +52,8 @@ impl Chunking for PdfChunker {
                 Object::Dictionary(ref dict) => {
                     // Handling nested dictionary
                     let nested_dict = self.dictionary_to_hashmap(dict);
-                    serde_json::to_string(&nested_dict).unwrap_or_else(|_| "Invalid JSON".to_string())
+                    serde_json::to_string(&nested_dict)
+                        .unwrap_or_else(|_| "Invalid JSON".to_string())
                 }
                 Object::Stream(ref stream) => {
                     // Handling stream, customize as needed
@@ -81,7 +82,7 @@ impl Chunking for PdfChunker {
                         Ok(res)
                     } else {
                         Err(anyhow!("An error occurred"))
-                    }
+                    };
                 }
             }
         }
@@ -93,19 +94,17 @@ impl Chunking for PdfChunker {
         data: String,
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
-    ) -> Result<String> {
-        match strategy {
+    ) -> Result<Vec<Document>> {
+        return match strategy {
             ChunkingStrategy::SEMANTIC_CHUNKING => {
                 let chunker = SemanticChunker::default();
                 let doc = Document {
                     page_content: data,
                     metadata,
                 };
-                chunker.split_documents(vec![doc]).await;
+                return chunker.split_documents(vec![doc]).await;
             }
-            ChunkingStrategy::CODE_SPLIT => {}
-        }
-
-        Ok(String::new())
+            _ => Err(anyhow!("Type not yet supported!")),
+        };
     }
 }

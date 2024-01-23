@@ -65,7 +65,11 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
-                                        println!("{}", chunks);
+                                        for element in chunks.iter(){
+                                            let text = &element.page_content;
+                                            let metadata = &element.metadata;
+                                            
+                                        }
                                     }
                                 }
                             }

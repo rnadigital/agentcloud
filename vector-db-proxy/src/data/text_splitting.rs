@@ -3,6 +3,7 @@ use crate::data::utils::{cosine_similarity, percentile};
 use crate::llm::utils::{EmbeddingModels, LLM};
 use ndarray::Array1;
 use std::collections::HashMap;
+use anyhow::Result;
 
 fn combine_sentences(
     sentences: Vec<HashMap<String, String>>,
@@ -213,11 +214,11 @@ impl SemanticChunker {
         documents
     }
 
-    pub async fn split_documents(&self, documents: Vec<Document>) -> Vec<Document> {
+    pub async fn split_documents(&self, documents: Vec<Document>) -> Result<Vec<Document>> {
         let (texts, metadata): (Vec<_>, Vec<_>) = documents
             .into_iter()
             .map(|doc| (doc.page_content, doc.metadata))
             .unzip();
-        self.create_documents(texts, metadata).await
+        Ok(self.create_documents(texts, metadata).await)
     }
 }
