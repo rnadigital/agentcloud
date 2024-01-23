@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{ include = "agent-backend" }]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<3.12"
 
 autogen = { git = "https://github.com/rnadigital/autogen.git", tag = "v0.2.10" }
 fastapi = "^0.103.2"
@@ -24,6 +24,7 @@ websocket-client = "^1.6.4"
 bullmq = "^1.15.4"
 diskcache = "^5.6.3"
 sse-starlette = "^1.8.2"
+qdrant-client = "1.4.0"
 
 [build-system]
 requires = ["poetry-core==1.6.1"]
