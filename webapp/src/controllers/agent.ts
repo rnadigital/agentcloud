@@ -247,7 +247,6 @@ export async function editAgentApi(req, res, next) {
 async function valdiateCredentialModel(teamId, credentialId, model) {
 	const credential = await getCredentialById(teamId, credentialId);
 	if (credential) {
-		credential.type;
 		const allowedModels = ModelList[credential.type];
 		return validateField(model, PARENT_OBJECT_FIELD_NAME, { inSet: allowedModels ? new Set(allowedModels) : undefined /* allows invalid types */, customError: `Model ${model} is not valid for provided credential` }, {});
 	} else {
