@@ -1,4 +1,7 @@
 from qdrant_client import QdrantClient
+import pytest
+import qdrantClient.qdrant_connection as qdc
+
 
 import autogen
 from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import (
@@ -16,7 +19,7 @@ if __name__ == "__main__":
         env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
         filter_dict={
             "model": {
-                "dev-oai-gpt4",
+                "gpt-4",
             }
         },
     )
@@ -58,7 +61,8 @@ if __name__ == "__main__":
             "docs_path": "https://raw.githubusercontent.com/microsoft/autogen/main/README.md",  # change this to your own path, such as https://raw.githubusercontent.com/microsoft/autogen/main/README.md
             "chunk_token_size": 2000,
             "model": config_list[0]["model"],
-            "client": QdrantClient(":memory:"),
+            "client": qdc.get_connection(host="localhost", port=6333),
+            #"client": QdrantClient(":memory:"),
             "embedding_model": "BAAI/bge-small-en-v1.5",
         },
     )
