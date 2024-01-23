@@ -101,6 +101,7 @@ impl Chunking for PdfChunker {
                 let doc = Document {
                     page_content: data,
                     metadata,
+                    embedding_vector: None,
                 };
                 return chunker.split_documents(vec![doc]).await;
             }

@@ -1,15 +1,21 @@
-use crate::data::{processing_incoming_messages::process_messages, };
+use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
+use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
+use crate::hash_map_values_as_serde_values;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
+use crate::qdrant::utils::Qdrant;
+
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
-use serde_json::Value;
+use qdrant_client::prelude::PointStruct;
+use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
+use uuid::Uuid;
 
 pub async fn subscribe_to_queue(
     app_data: Arc<RwLock<QdrantClient>>,
@@ -39,7 +45,6 @@ pub async fn subscribe_to_queue(
             let stream_split: Vec<&str> = stream_string.split("_").collect();
             let datasource_id = stream_split.to_vec()[0];
             if let Some(msg) = message.content {
-                let qdrant_conn = Arc::clone(&app_data);
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
@@ -65,16 +70,31 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
-                                        for element in chunks.iter(){
-                                            let text = &element.page_content;
-                                            let metadata = &element.metadata;
-                                            
+                                        for element in chunks.iter() {
+                                            let mut metadata = element.metadata.clone().unwrap();
+                                            metadata.insert(
+                                                "text".to_string(),
+                                                element.page_content.to_string(),
+                                            );
+                                            let embedding_vector = &element.embedding_vector;
+
+                                            let payload: HashMap<String, Value> =
+                                                hash_map_values_as_serde_values!(metadata);
+                                            let qdrant_point_struct = PointStruct::new(
+                                                Uuid::new_v4().to_string(),
+                                                embedding_vector.to_owned().unwrap().to_owned(),
+                                                json!(payload).try_into().unwrap(),
+                                            );
+                                            let app_data_clone = Arc::clone(&app_data);
+                                            let qdrant = Qdrant::new(app_data_clone, datasource_id.to_string());
+                                            qdrant.upsert_data_point(qdrant_point_struct).await?;
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    let qdrant_conn = Arc::clone(&app_data);
                     let args =
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = channel.basic_ack(args).await;

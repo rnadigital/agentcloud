@@ -1,9 +1,9 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
 use crate::llm::utils::{EmbeddingModels, LLM};
+use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
-use anyhow::Result;
 
 fn combine_sentences(
     sentences: Vec<HashMap<String, String>>,
@@ -79,23 +79,23 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
-pub struct Embeddings;
+pub struct EmbeddingModel;
 
-impl Embeddings {
-    async fn oai_embedding(&self, docs: Vec<String>) -> Vec<Vec<f32>> {
+impl EmbeddingModel {
+    async fn oai_embedding(&self, text: Vec<String>) -> Vec<Vec<f32>> {
         let llm = LLM::new();
-        let embedding = llm.embed_text(docs, EmbeddingModels::OAI).await.unwrap();
+        let embedding = llm.embed_text(text, EmbeddingModels::OAI).await.unwrap();
         embedding
     }
 }
 
 pub struct SemanticChunker {
-    embeddings: Embeddings,
+    embeddings: EmbeddingModel,
     add_start_index: bool,
 }
 
 impl SemanticChunker {
-    pub fn new(embeddings: Embeddings, add_start_index: bool) -> Self {
+    pub fn new(embeddings: EmbeddingModel, add_start_index: bool) -> Self {
         SemanticChunker {
             embeddings,
             add_start_index,
@@ -103,12 +103,12 @@ impl SemanticChunker {
     }
     pub fn default() -> Self {
         SemanticChunker {
-            embeddings: Embeddings,
+            embeddings: EmbeddingModel,
             add_start_index: true,
         }
     }
 
-    async fn split_text(&self, text: &str) -> Vec<String> {
+    async fn split_text(&self, text: &str) -> Vec<Document> {
         let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
         let mut sent: Vec<Sentence> = vec![];
         let mut sentences: Vec<HashMap<String, String>> = single_sentences_list
@@ -141,6 +141,7 @@ impl SemanticChunker {
             sent.push(Sentence {
                 combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
                 distance_to_next: None,
+
             });
         }
 
@@ -169,7 +170,8 @@ impl SemanticChunker {
                 .map(|d| d["combined_sentence"].as_str())
                 .collect::<Vec<&str>>()
                 .join(" ");
-            chunks.push(combined_text);
+            let doc = Document::new(combined_text, None, Some(embeddings[index].to_owned()));
+            chunks.push(doc);
             start_index = index + 1;
         }
 
@@ -179,7 +181,8 @@ impl SemanticChunker {
                 .map(|d| d["combined_sentence"].as_str())
                 .collect::<Vec<&str>>()
                 .join(" ");
-            chunks.push(combined_text);
+            let doc = Document::new(combined_text, None, None);
+            chunks.push(doc);
         }
 
         chunks
@@ -191,26 +194,25 @@ impl SemanticChunker {
         metadata: Vec<Option<HashMap<String, String>>>,
     ) -> Vec<Document> {
         let mut documents = Vec::new();
-
         for (i, text) in texts.into_iter().enumerate() {
             let mut index: Option<usize> = None;
-            for chunk in self.split_text(&text).await {
+            for mut chunk in self.split_text(&text).await {
                 let mut metadata = metadata[i].clone().unwrap();
                 if self.add_start_index {
                     index = match index {
                         Some(idx) => text[idx + 1..]
-                            .find(&chunk)
+                            .find(&chunk.page_content)
                             .map(|found_idx| found_idx + idx + 1),
-                        None => text.find(&chunk),
+                        None => text.find(&chunk.page_content),
                     };
                     if let Some(idx) = index {
                         metadata.insert("start_index".to_string(), idx.to_string());
                     }
                 }
-                documents.push(Document::new(chunk, Some(metadata)));
+                chunk.metadata = Some(metadata);
+                documents.push(chunk);
             }
         }
-
         documents
     }
 
