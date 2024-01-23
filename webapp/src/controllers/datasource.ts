@@ -424,7 +424,13 @@ export async function uploadFileApi(req, res, next) {
 	
 	// Send the gcs file path to rabbitmq
 	await uploadFile(filename, uploadedFile);
-	await sendMessage(filename, { stream: newDatasourceId.toString(), type: 'file' }); //TODO: make 'file' an num once there are more
+	await sendMessage(JSON.stringify({
+		bucket: process.env.GCS_BUCKET_NAME,
+		filename,
+	}), { 
+		stream: newDatasourceId.toString(), 
+		type: 'file', //TODO: make 'file' an num once there are more
+	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
