@@ -3,3 +3,4 @@
 */**/.DS_Store
 docker-compose.yml
 airbyte/
+webapp/keyfile.json
