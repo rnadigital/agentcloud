@@ -1,6 +1,7 @@
 from pydantic import BaseModel, constr, conint
 from qdrant_client import QdrantClient
 
+
 def get_connection(host: str, port: int) -> QdrantClient:
     class QdrantConnection(BaseModel):
         host: constr(min_length=2)
@@ -22,6 +23,7 @@ def get_connection(host: str, port: int) -> QdrantClient:
 
     return client
 
+
 def main():
     # Example usage
     try:
@@ -29,6 +31,6 @@ def main():
     except ValueError as e:
         print(f"Connection error: {e}")
 
+
 if __name__ == "__main__":
     main()
-

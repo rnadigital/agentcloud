@@ -1,7 +1,9 @@
 from qdrant_client import QdrantClient
 
 import autogen
-from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import QdrantRetrieveUserProxyAgent
+from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import (
+    QdrantRetrieveUserProxyAgent,
+)
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 
 # Accepted file formats for that can be stored in
