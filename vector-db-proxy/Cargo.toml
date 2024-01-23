@@ -43,6 +43,10 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 amqp_serde = "0.4.0"
 amqprs = "1.5.1"
 google-cloud-storage = "0.15.0"
+pdf-extract = "0.7.4"
+lopdf = { version = "0.32.0", features = ["image"] }
+regex = "1.9.5"
+ndarray = "0.15.6"
 
 [[bin]]
 name = "vector-db-proxy"
