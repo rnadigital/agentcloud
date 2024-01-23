@@ -50,11 +50,13 @@ impl Chunking for PdfChunker {
                     )
                 }
                 Object::Dictionary(ref dict) => {
-                    // Handling dictionary, customize as needed
-                    "Nested Dictionary".to_string()
+                    // Handling nested dictionary
+                    let nested_dict = self.dictionary_to_hashmap(dict);
+                    serde_json::to_string(&nested_dict).unwrap_or_else(|_| "Invalid JSON".to_string())
                 }
                 Object::Stream(ref stream) => {
                     // Handling stream, customize as needed
+                    println!("Stream Data: {:?}", stream);
                     "Stream Data".to_string()
                 }
                 _ => "Unknown Type".to_string(),
