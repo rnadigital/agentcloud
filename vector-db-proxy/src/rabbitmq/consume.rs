@@ -58,10 +58,12 @@ pub async fn subscribe_to_queue(
                                     )
                                     .await
                                     {
+                                        println!("File: {:?}", file);
                                         let pdf = PdfChunker::default();
                                         let (document_text, metadata) = pdf
                                             .extract_text_from_pdf(file)
                                             .expect("TODO: panic message");
+                                        println!("Document Text: {:?}", document_text);
                                         let chunks = pdf
                                             .chunk(
                                                 document_text,
@@ -70,6 +72,7 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
+                                        println!("Chunks: {:?}", chunks);
                                         for element in chunks.iter() {
                                             let mut metadata = element.metadata.clone().unwrap();
                                             metadata.insert(
