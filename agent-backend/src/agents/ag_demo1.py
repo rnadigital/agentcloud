@@ -1,8 +1,3 @@
-from qdrant_client import QdrantClient
-import pytest
-import qdrantClient.qdrant_connection as qdc
-
-
 import autogen
 from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import (
     QdrantRetrieveUserProxyAgent,
@@ -12,11 +7,13 @@ from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistant
 # Accepted file formats for that can be stored in
 # a vector database instance
 from autogen.retrieve_utils import TEXT_FORMATS
+import qdrantClient.qdrant_connection as qdc
 
 
 if __name__ == "__main__":
     config_list = autogen.config_list_from_json(
-        env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
+        #env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
+        env_or_file="./OAI_CONFIG_LIST",
         filter_dict={
             "model": {
                 "gpt-4",
@@ -58,11 +55,11 @@ if __name__ == "__main__":
         max_consecutive_auto_reply=10,
         retrieve_config={
             "task": "code",
-            "docs_path": "https://raw.githubusercontent.com/microsoft/autogen/main/README.md",  # change this to your own path, such as https://raw.githubusercontent.com/microsoft/autogen/main/README.md
+            "collection_name": "devcollection_barack_obama",
+            "docs_path": "https://en.wikipedia.org/wiki/Barack_Obama",
             "chunk_token_size": 2000,
             "model": config_list[0]["model"],
             "client": qdc.get_connection(host="localhost", port=6333),
-            #"client": QdrantClient(":memory:"),
             "embedding_model": "BAAI/bge-small-en-v1.5",
         },
     )
@@ -70,5 +67,8 @@ if __name__ == "__main__":
     # reset the assistant. Always reset the assistant before starting a new conversation.
     assistant.reset()
 
-    qa_problem = "How many related papers are there?"
+    qa_problem = "What is the exact date of Barack Obama birthday?"
     ragproxyagent.initiate_chat(assistant, problem=qa_problem)
+
+    print(ragproxyagent.last_message())
+    assert '1961' in ragproxyagent.last_message()['content']
