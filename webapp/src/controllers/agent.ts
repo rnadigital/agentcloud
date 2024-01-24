@@ -203,8 +203,8 @@ export async function editAgentApi(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	validationError = res.locals.matchingOrg.teamIds.find(teamId => valdiateCredentialModel(teamId, credentialId, model));
-	
+
+	validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
