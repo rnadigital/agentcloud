@@ -11,7 +11,7 @@ pub trait Chunking {
     type Item;
     fn default() -> Self;
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
-    fn extract_text_from_pdf(&self, file: Vec<u8>) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)>;
     async fn chunk(
         &self,
         data: String,
@@ -41,13 +41,21 @@ impl Chunking for PdfChunker {
                 Object::Real(f) => f.to_string(),
                 Object::Boolean(b) => b.to_string(),
                 Object::Array(ref arr) => {
-                    // Handling array, customize as needed
-                    format!(
-                        "{:?}",
-                        arr.iter()
-                            .map(|obj| obj.as_string().unwrap().to_string())
-                            .collect::<Vec<String>>()
-                    )
+                    // Handling array elements individually
+                    let array_str = arr
+                        .iter()
+                        .map(|obj| match obj {
+                            Object::String(ref s, _) | Object::Name(ref s) => {
+                                String::from_utf8_lossy(s).into_owned()
+                            }
+                            Object::Integer(i) => i.to_string(),
+                            Object::Real(f) => f.to_string(),
+                            Object::Boolean(b) => b.to_string(),
+                            _ => "Unknown Type".to_string(),
+                        })
+                        .collect::<Vec<String>>()
+                        .join(", "); // Join elements with a delimiter if needed
+                    format!("[{}]", array_str)
                 }
                 Object::Dictionary(ref dict) => {
                     // Handling nested dictionary
@@ -67,23 +75,27 @@ impl Chunking for PdfChunker {
         map
     }
 
-    fn extract_text_from_pdf(&self, file: Vec<u8>) -> Result<(String, HashMap<String, String>)> {
+
+    fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)> {
+        let trimmed_path = path.trim_matches('"');
         let mut metadata = HashMap::new();
         let mut res = (String::new(), metadata);
-        if let Ok(doc) = lopdf::Document::load_mem(&*file) {
+        if let Ok(doc) = lopdf::Document::load(trimmed_path) {
             let pages = doc.get_pages();
             for (page_id, page) in pages {
-                if let Ok(page_content) = doc.get_page_content(page) {
-                    return if let Ok(text) = pdf_extract::extract_text_from_mem(&*page_content) {
+                return match pdf_extract::extract_text(trimmed_path) {
+                    Ok(text) => {
                         let page_dict = doc.get_dictionary(page)?;
                         metadata = self.dictionary_to_hashmap(page_dict);
                         metadata.insert("page_number".to_string(), page_id.to_string());
                         res = (text, metadata);
                         Ok(res)
-                    } else {
-                        Err(anyhow!("An error occurred"))
-                    };
-                }
+                    }
+                    Err(e) => Err(anyhow!(
+                        "An error occurred while trying to extract text from pdf. Error: {}",
+                        e
+                    )),
+                };
             }
         }
         Ok(res)

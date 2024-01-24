@@ -13,9 +13,19 @@ use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::Write;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
+
+fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
+    let file_path = file_name.trim_matches('"');
+    println!("File path : {}", file_path);
+    let mut file = File::create(file_path)?;
+    file.write_all(&*content)?; // handle errors
+    Ok(())
+}
 
 pub async fn subscribe_to_queue(
     app_data: Arc<RwLock<QdrantClient>>,
@@ -52,49 +62,56 @@ pub async fn subscribe_to_queue(
                             let message_data: Value = _json;
                             if let Some(bucket_name) = message_data.get("bucket") {
                                 if let Some(file_name) = message_data.get("filename") {
-                                    if let Ok(file) = get_object_from_gcs(
-                                        bucket_name.to_string(),
-                                        file_name.to_string(),
+                                    match get_object_from_gcs(
+                                        bucket_name.as_str().unwrap(),
+                                        file_name.as_str().unwrap(),
                                     )
                                     .await
                                     {
-                                        println!("File: {:?}", file);
-                                        let pdf = PdfChunker::default();
-                                        let (document_text, metadata) = pdf
-                                            .extract_text_from_pdf(file)
-                                            .expect("TODO: panic message");
-                                        println!("Document Text: {:?}", document_text);
-                                        let chunks = pdf
-                                            .chunk(
-                                                document_text,
-                                                Some(metadata),
-                                                ChunkingStrategy::SEMANTIC_CHUNKING,
-                                            )
-                                            .await
-                                            .unwrap();
-                                        println!("Chunks: {:?}", chunks);
-                                        for element in chunks.iter() {
-                                            let mut metadata = element.metadata.clone().unwrap();
-                                            metadata.insert(
-                                                "text".to_string(),
-                                                element.page_content.to_string(),
-                                            );
-                                            let embedding_vector = &element.embedding_vector;
+                                        Ok(file) => {
+                                            let file_path = format!("{}", file_name);
+                                            let pdf = PdfChunker::default();
+                                            save_file_to_disk(file, file_path.as_str())?;
+                                            let (document_text, metadata) = pdf
+                                                .extract_text_from_pdf(file_path.as_str())
+                                                .expect("TODO: panic message");
+                                            println!("Document Text: {:?}", document_text);
+                                            let chunks = pdf
+                                                .chunk(
+                                                    document_text,
+                                                    Some(metadata),
+                                                    ChunkingStrategy::SEMANTIC_CHUNKING,
+                                                )
+                                                .await
+                                                .unwrap();
+                                            println!("Chunks: {:?}", chunks);
+                                            for element in chunks.iter() {
+                                                let mut metadata =
+                                                    element.metadata.clone().unwrap();
+                                                metadata.insert(
+                                                    "text".to_string(),
+                                                    element.page_content.to_string(),
+                                                );
+                                                let embedding_vector = &element.embedding_vector;
 
-                                            let payload: HashMap<String, Value> =
-                                                hash_map_values_as_serde_values!(metadata);
-                                            let qdrant_point_struct = PointStruct::new(
-                                                Uuid::new_v4().to_string(),
-                                                embedding_vector.to_owned().unwrap().to_owned(),
-                                                json!(payload).try_into().unwrap(),
-                                            );
-                                            let app_data_clone = Arc::clone(&app_data);
-                                            let qdrant = Qdrant::new(
-                                                app_data_clone,
-                                                datasource_id.to_string(),
-                                            );
-                                            qdrant.upsert_data_point(qdrant_point_struct).await?;
+                                                let payload: HashMap<String, Value> =
+                                                    hash_map_values_as_serde_values!(metadata);
+                                                let qdrant_point_struct = PointStruct::new(
+                                                    Uuid::new_v4().to_string(),
+                                                    embedding_vector.to_owned().unwrap().to_owned(),
+                                                    json!(payload).try_into().unwrap(),
+                                                );
+                                                let app_data_clone = Arc::clone(&app_data);
+                                                let qdrant = Qdrant::new(
+                                                    app_data_clone,
+                                                    datasource_id.to_string(),
+                                                );
+                                                qdrant
+                                                    .upsert_data_point(qdrant_point_struct)
+                                                    .await?;
+                                            }
                                         }
+                                        Err(e) => println!("Error: {}", e),
                                     }
                                 }
                             }
