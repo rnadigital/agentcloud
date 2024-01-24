@@ -46,7 +46,7 @@ export default function Datasources(props) {
 
 		<div className='border-b pb-2 my-2 flex justify-between'>
 			<h3 className='pl-2 font-semibold text-gray-900'>Datasources</h3>
-			<Link href={`/${resourceSlug}/datasource/add`}>
+			{datasources.length !== 0 && <Link href={`/${resourceSlug}/datasource/add`}>
 				<button
 					type='button'
 					className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
@@ -54,8 +54,8 @@ export default function Datasources(props) {
 					<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />
 					Add Datasource
 				</button>
-			</Link>
-		</div>      
+			</Link>}
+		</div>
 
 		<DatasourceTable datasources={datasources} fetchDatasources={fetchDatasources} />
 
@@ -63,7 +63,7 @@ export default function Datasources(props) {
 			link={`/${resourceSlug}/datasource/add`}
 			emptyMessage={'No datasources'}
 			icon={<svg
-				className='mx-auto h-12 w-12 text-gray-400'
+				className='mx-auto mt-4 h-12 w-12 text-gray-400'
 				fill='none'
 				viewBox='0 0 24 24'
 				stroke='currentColor'

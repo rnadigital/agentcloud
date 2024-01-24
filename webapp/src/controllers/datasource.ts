@@ -328,6 +328,42 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 }
 
+export async function syncDatasourceApi(req, res, next) {
+
+	const { datasourceId } = req.params;
+	console.log(datasourceId);
+
+	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create a job to trigger the connection to sync
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+	const jobBody = {
+		connectionId: datasource.connectionId,
+		jobType: 'sync',
+	};
+	const createdJob = await jobsApi
+		.createJob(null, jobBody)
+		.then(res => res.data)
+		.catch(err => err.data);
+	console.log('createdJob', createdJob);
+
+	// Update the datasource with the connection settings and sync date
+	await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	return dynamicResponse(req, res, 200, { });
+
+}
+
 /**
 * @api {delete} /forms/datasource/[datasourceId] Delete a datasource
 * @apiName delete
@@ -358,7 +394,7 @@ export async function deleteDatasourceApi(req, res, next) {
 			.createJob(null, jobBody)
 			.then(res => res.data);
 		console.log('resetJob', resetJob);
-		
+
 		// Delete the connection in airbyte
 		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 		const connectionBody = {
@@ -371,24 +407,32 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Delete the source file in GCS if this is a file
 	if (datasource.sourceType === 'file') { //TODO: make an enum?
-		await deleteFile(datasource.gcsFilename);
+		try {
+			await deleteFile(datasource.gcsFilename);
+		} catch (err) {
+			//Ignoring when gcs file doesn't exist or was already deleted
+			if (err && err?.errors[0]?.reason !== 'notFound') {
+				console.log(err);
+				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
+			}
+		}
+	} else {
+		// Delete the source in airbyte
+		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+		const sourceBody = {
+			sourceId: datasource.sourceId,
+		};
+		const deletedSource = await sourcesApi
+			.deleteSource(sourceBody, sourceBody)
+			.then(res => res.data);
 	}
-
-	// Delete the source in airbyte
-	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-	const sourceBody = {
-		sourceId: datasource.sourceId,
-	};
-	const deletedSource = await sourcesApi
-		.deleteSource(sourceBody, sourceBody)
-		.then(res => res.data);
 
 	// Delete the datasourcein the db
 	await deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId);
 
-	//TODO: on any failures, revert the airbyte api calls like a transaction
-	
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
+	//TODO: on any failures, revert the airbyte api calls like a transaction	
+
+	return dynamicResponse(req, res, 200, { /**/ });
 
 }
 

@@ -1,16 +1,18 @@
 import { Menu, Transition } from '@headlessui/react';
+import ButtonSpinner from 'components/ButtonSpinner';
 import {
 	ArrowPathIcon,
 	Cog6ToothIcon,
 	DocumentIcon,
 	EllipsisHorizontalIcon,
 	PlayIcon,
+	TrashIcon,
 } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useReducer } from 'react';
 import { toast } from 'react-toastify';
-
+import submittingReducer from 'utils/submittingreducer';
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 
@@ -20,18 +22,43 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [syncing, setSyncing] = useReducer(submittingReducer, {});
+	const [deleting, setDeleting] = useReducer(submittingReducer, {});
 
 	async function deleteDatasource(datasourceId) {
-		await API.deleteDatasource({
-			_csrf: csrf,
-			resourceSlug,
-			datasourceId,
-		}, () => {
-			toast.success('Deleted datasource');
-		}, () => {
-			toast.error('Error deleting datasource');
-		}, router);
-		fetchDatasources();
+		setDeleting({ [datasourceId]: true });
+		try {
+			await API.deleteDatasource({
+				_csrf: csrf,
+				resourceSlug,
+				datasourceId,
+			}, () => {
+				toast.success('Deleted datasource');
+			}, () => {
+				toast.error('Error deleting datasource');
+			}, router);
+			await fetchDatasources();
+		} finally {
+			setDeleting({ [datasourceId]: false });
+		}
+	}
+
+	async function syncDatasource(datasourceId) {
+		setSyncing({ [datasourceId]: true });
+		try {
+			await API.syncDatasource({
+				_csrf: csrf,
+				resourceSlug,
+				datasourceId,
+			}, () => {
+				toast.success('Sync job triggered');
+			}, () => {
+				toast.error('Error syncinc');
+			}, router);
+			await fetchDatasources();
+		} finally {
+			setSyncing({ [datasourceId]: false });
+		}
 	}
 
 	return (
@@ -47,11 +74,17 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							Source Type
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							ID
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Last Synced
 						</th>
 						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Actions
 						</th>
+		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+		                    
+		                </th>
 		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 		                    
 		                </th>
@@ -74,20 +107,37 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? datasource.lastSyncedDate : 'Never'}</div>
+								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+									{datasource._id}
+								</span>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? datasource.lastSyncedDate : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-								<button 
-									onClick={() => { /*TODO: sync api call and spinner while syncing*/ }} 
+								{datasource.sourceType !== 'file' &&  <button 
+									onClick={() => syncDatasource(datasource._id)} 
+									disabled={syncing[datasource._id] || deleting[datasource._id]}
 									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
-									Sync Now
-								</button>
+								
+									{syncing[datasource._id] && <ButtonSpinner />}
+									{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
+								</button>}
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-		                        <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
+							<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
+		                        {datasource.sourceType !== 'file' && <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
-		                        </a>
+		                        </a>}
+		                    </td>
+							<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
+		                        <button
+		                        	onClick={() => deleteDatasource(datasource._id)}
+		                        	className='text-red-500 hover:text-red-700'
+		                        	disabled={deleting[datasource._id]}
+		                        >
+									{deleting[datasource._id] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5' aria-hidden='true' />}
+		                        </button>
 		                    </td>
 						</tr>
 					))}

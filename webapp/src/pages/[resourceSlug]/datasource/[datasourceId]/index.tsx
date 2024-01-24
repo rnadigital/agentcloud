@@ -10,6 +10,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState, useReducer } from 'react';
+import submittingReducer from 'utils/submittingreducer';
 import { toast } from 'react-toastify';
 
 export default function Datasource(props) {
@@ -25,14 +26,6 @@ export default function Datasource(props) {
 	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
 	const [error, setError] = useState();
 	const { datasource } = state;
-
-	function submittingReducer(state, action) {
-		return {
-			...state,
-			...action,
-		};
-		
-	}
 
 	async function fetchDatasource() {
 		await API.getDatasource({

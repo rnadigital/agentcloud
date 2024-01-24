@@ -134,6 +134,9 @@ export function deleteDatasource(body, dispatch, errorCallback, router) {
 export function editDatasource(datasourceId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${datasourceId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
+export function syncDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/sync`, 'POST', body, dispatch, errorCallback, router);
+}
 
 // Airbyte
 export function getSpecification(body, dispatch, errorCallback, router) {
