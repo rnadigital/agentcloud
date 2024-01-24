@@ -17,7 +17,7 @@ export default function DatasourceTabs({ callback, current }) {
 		<div>
 			<div className='sm:hidden'>
 				<select
-					onClick={(e) => callback(e.target.value)}
+					onClick={(e: any) => callback(e?.target?.value)}
 					id='tabs'
 					name='tabs'
 					className='block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'

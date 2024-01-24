@@ -6,7 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
-export function StreamRow({ stream, checked, readonly }) {
+export function StreamRow({ stream, checked, readonly }: { stream?: any, checked?: boolean, readonly?: boolean }) {
 	const [isExpanded, setIsExpanded] = useState(false);
 	return (
 		<div className='border-b'>
@@ -43,7 +43,7 @@ export function StreamRow({ stream, checked, readonly }) {
 	);
 }
 
-export function StreamsList({ streams, existingStreams, readonly }) {
+export function StreamsList({ streams, existingStreams, readonly }: { streams?: any, existingStreams?: any, readonly?: boolean }) {
 	return (
 		<div className='my-4'>
 			{streams.map((stream, index) => (

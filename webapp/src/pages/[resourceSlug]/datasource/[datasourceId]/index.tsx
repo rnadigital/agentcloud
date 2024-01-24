@@ -19,7 +19,7 @@ export default function Datasource(props) {
 	const router = useRouter();
 	const { resourceSlug, datasourceId } = router.query;
 	const [state, dispatch] = useState(props);
-	const [jobsList, setJobsList] = useState([]);
+	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [submitting, setSubmitting] = useState(false);
@@ -52,7 +52,7 @@ export default function Datasource(props) {
 		}
 	}
 
-	async function updateStreams(e, sync: boolean) {
+	async function updateStreams(e, sync?: boolean) {
 		setSubmitting(true);
 		try {
 			const streams = Array.from(e.target.form.elements)
@@ -128,7 +128,7 @@ export default function Datasource(props) {
 			{!discoveredSchema && <>
 				<StreamsList
 					streams={datasource.connectionSettings.configurations.streams}
-					existingStreamsw={datasource.connectionSettings.configurations.streams.map(x => x.name)}
+					existingStreams={datasource.connectionSettings.configurations.streams.map(x => x.name)}
 					readonly={true}
 				/>
 				<span>
