@@ -1,6 +1,6 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
-import DatasourceCards from 'components/DatasourceCards';
+import DatasourceTable from 'components/DatasourceTable';
 import NewButtonSection from 'components/NewButtonSection';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -57,7 +57,7 @@ export default function Datasources(props) {
 			</Link>
 		</div>      
 
-		<DatasourceCards datasources={datasources} fetchDatasources={fetchDatasources} />
+		<DatasourceTable datasources={datasources} fetchDatasources={fetchDatasources} />
 
 		{datasources.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/datasource/add`}

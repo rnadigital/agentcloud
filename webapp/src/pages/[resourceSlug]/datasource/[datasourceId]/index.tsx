@@ -9,7 +9,7 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useReducer } from 'react';
 import { toast } from 'react-toastify';
 
 export default function Datasource(props) {
@@ -22,9 +22,17 @@ export default function Datasource(props) {
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
-	const [submitting, setSubmitting] = useState(false);
+	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
 	const [error, setError] = useState();
 	const { datasource } = state;
+
+	function submittingReducer(state, action) {
+		return {
+			...state,
+			...action,
+		};
+		
+	}
 
 	async function fetchDatasource() {
 		await API.getDatasource({
@@ -41,19 +49,19 @@ export default function Datasource(props) {
 	}
 
 	async function fetchSchema() {
-		setSubmitting(true);
+		setSubmitting({ fetchSchema: true });
 		try {
 			await API.getDatasourceSchema({
 				resourceSlug,
 				datasourceId,
 			}, setDiscoveredSchema, setError, router);
 		} finally {
-			setSubmitting(false);
+			setSubmitting({ fetchSchema: false });
 		}
 	}
 
 	async function updateStreams(e, sync?: boolean) {
-		setSubmitting(true);
+		setSubmitting({ [`updateStreams${sync?'sync':''}`]: true });
 		try {
 			const streams = Array.from(e.target.form.elements)
 				.filter(x => x['checked'] === true)
@@ -73,7 +81,7 @@ export default function Datasource(props) {
 				toast.error(res);
 			}, router);
 		} finally {
-			setSubmitting(false);
+			setSubmitting({ [`updateStreams${sync?'sync':''}`]: false });
 		}
 	}
 
@@ -107,21 +115,21 @@ export default function Datasource(props) {
 				/>
 				<button
 					onClick={(e) => updateStreams(e)}
-					disabled={submitting}
+					disabled={submitting['updateStreams'] || submitting['updateStreamssync']}
 					type='submit'
 					className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'
 				>
-					{submitting && <ButtonSpinner />}
-					{submitting ? 'Saving...' : 'Save'}
+					{submitting['updateStreams'] && <ButtonSpinner />}
+					{submitting['updateStreams'] ? 'Saving...' : 'Save'}
 				</button>
 				<button
 					onClick={(e) => updateStreams(e, true)}
-					disabled={submitting}
+					disabled={submitting['updateStreamssync'] || submitting['updateStreams']}
 					type='submit'
 					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
-					{submitting && <ButtonSpinner />}
-					{submitting ? 'Saving...' : 'Save and Sync'}
+					{submitting['updateStreamssync'] && <ButtonSpinner />}
+					{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 				</button>
 			</form>}
 
@@ -133,12 +141,12 @@ export default function Datasource(props) {
 				/>
 				<span>
 					<button
-						disabled={submitting}
+						disabled={submitting['fetchSchema']}
 						onClick={() => fetchSchema()}
 						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
-						{submitting && <ButtonSpinner />}
-						{submitting ? 'Fetching Streams...' : 'Edit Streams'}
+						{submitting['fetchSchema'] && <ButtonSpinner />}
+						{submitting['fetchSchema'] ? 'Fetching Streams...' : 'Edit Streams'}
 					</button>
 				</span>
 			</>}
