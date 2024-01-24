@@ -35,11 +35,10 @@ import logging
 
 
 if __name__ == "__main__":
-
-    message =  "What is the exact date of Barack Obama birthday?"
+    message = "What is the exact date of Barack Obama birthday?"
     # session_id 12-byte input or a 24-character hex string
     session_id = "60a6d3c0e4b0c1a6e1b4a8f5"
-    room = 'dev_room'
+    room = "dev_room"
     model = "gpt-4"
     stream = True
 
@@ -48,18 +47,22 @@ if __name__ == "__main__":
 
     socket = SimpleClient()
     custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
-    
-    #socket.connect(url=SOCKET_URL, headers=custom_headers)
-    #socket.emit("join_room", f"_{session_id}")
-    socket_message = SocketMessage(room=room, authorName="system", message=Message(text=f"_{session_id}"))
-    sms.send(client=socket, event="join_room", message=socket_message, socket_logging="logging")
+
+    # socket.connect(url=SOCKET_URL, headers=custom_headers)
+    # socket.emit("join_room", f"_{session_id}")
+    socket_message = SocketMessage(
+        room=room, authorName="system", message=Message(text=f"_{session_id}")
+    )
+    sms.send(
+        client=socket,
+        event="join_room",
+        message=socket_message,
+        socket_logging="logging",
+    )
 
     history = mongo_client.get_chat_history(session_id)
     total_tokens = 0
     agent_name = "Retriever"
-
-
-    
 
     config_list = autogen.config_list_from_json(
         # env_or_file="/home/joshuak/Github/rnadigital/agentcloud/agent-backend/src/OAI_CONFIG_LIST",
