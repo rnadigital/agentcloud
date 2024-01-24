@@ -49,7 +49,7 @@ usage() {
 docker_up() {
     if [ $# -eq 1 ]; then
         local service_name=$1
-        docker-compose up "$service_name" -d
+        docker compose up "$service_name" -d
         if [ $? -ne 0 ]; then
             echo "Couldn't start docker services, ensure the docker daemon is running then try again"
             exit 1
@@ -140,6 +140,6 @@ export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATION | jq -r '.destina
 
 print_logo "=> Starting agentcloud backend..."
 
-docker-compose up -d
+docker compose up -d
 
 echo "AIRBYTE_ADMIN_DESTINATION_ID=$AIRBYTE_ADMIN_DESTINATION_ID"
