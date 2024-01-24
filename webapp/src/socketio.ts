@@ -1,26 +1,28 @@
 'use strict';
 
-import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { client } from './lib/redis/redis';
 import debug from 'debug';
+import { Server } from 'socket.io';
+
+import { client } from './lib/redis/redis';
 const log = debug('webapp:socket');
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 import { timingSafeEqual } from 'crypto';
 import { ObjectId } from 'mongodb';
-import { addChatMessage, unsafeGetTeamJsonMessage, getAgentMessageForSession, updateMessageWithChunkById, ChatChunk, updateCompletedMessage } from './db/chat';
-import { addAgents } from './db/agent';
 import { AgentType } from 'struct/agent';
+import { SessionStatus, SessionType } from 'struct/session';
+
+import { addAgents } from './db/agent';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage, updateMessageWithChunkById } from './db/chat';
 import { addGroup } from './db/group';
-import { unsafeGetSessionById, getSessionById, unsafeSetSessionGroupId, unsafeSetSessionStatus, setSessionStatus, unsafeSetSessionUpdatedDate, unsafeIncrementTokens } from './db/session';
-import { SessionType, SessionStatus } from 'struct/session';
-import { taskQueue } from './lib/queue/bull';
+import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
+import checkSession from './lib/middleware/auth/checksession';
+import fetchSession from './lib/middleware/auth/fetchsession';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
-import fetchSession from './lib/middleware/auth/fetchsession';
-import checkSession from './lib/middleware/auth/checksession';
+import { taskQueue } from './lib/queue/bull';
 
 export function initSocket(rawHttpServer) {
 
@@ -112,7 +114,7 @@ export function initSocket(rawHttpServer) {
 				};
 			}
 			let message;
-			switch(data.message.type) {
+			switch (data.message.type) {
 				case 'code':
 					if (data.message.language === 'json'
 						|| (typeof data.message.text === 'string'

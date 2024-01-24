@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
 import { ObjectId } from 'mongodb';
-import toObjectId from '../lib/misc/toobjectid';
 import { OAUTH_PROVIDER } from 'struct/oauth';
+
+import toObjectId from '../lib/misc/toobjectid';
+import * as db from './index';
 
 export type AccountTeam = {
 	id: ObjectId;

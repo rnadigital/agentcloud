@@ -1,9 +1,10 @@
-import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/router';
+import { Fragment, useState } from 'react';
+
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
-import { useRouter } from 'next/router';
 
 export default function SubscriptionModal({ open, setOpen }) {
 

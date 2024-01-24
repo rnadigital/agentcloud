@@ -1,18 +1,20 @@
-import { useEffect } from 'react';
-import Layout from '../components/Layout';
-import 'nprogress/nprogress.css';
-import NProgress from 'nprogress';
-import Router from 'next/router';
-import Head from 'next/head';
 import './globals.css';
-import { AccountWrapper } from '../context/account';
-import { SocketWrapper } from '../context/socket';
-import { ChatWrapper } from '../context/chat';
-import React, { useState } from 'react';
-import { ToastContainer } from 'react-toastify';
+import 'nprogress/nprogress.css';
 import 'react-toastify/dist/ReactToastify.css';
+
+import Head from 'next/head';
+import Router from 'next/router';
+import NProgress from 'nprogress';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
+import { useEffect } from 'react';
+import React, { useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+
+import Layout from '../components/Layout';
+import { AccountWrapper } from '../context/account';
+import { ChatWrapper } from '../context/chat';
+import { SocketWrapper } from '../context/socket';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {

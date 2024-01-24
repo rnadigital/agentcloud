@@ -1,6 +1,6 @@
 'use strict';
 
-import { connect, Connection, Channel } from 'amqplib';
+import { Channel, connect,Connection } from 'amqplib';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 

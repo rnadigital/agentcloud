@@ -5,6 +5,7 @@ dotenv.config({ path: '.env' });
 
 import RedisStore from 'connect-redis';
 import session from 'express-session';
+
 import { client as redisClient } from '../../redis/redis';
 const dev = process.env.NODE_ENV !== 'production';
 

@@ -4,7 +4,6 @@ import {
 	RJSFSchema,
 	StrictRJSFSchema,
 } from '@rjsf/utils';
-
 import dynamic from 'next/dynamic';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {

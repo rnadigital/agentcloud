@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+
 import * as API from '../../../../api';
 import AgentForm from '../../../../components/AgentForm';
-import { useRouter } from 'next/router';
 import { useAccountContext } from '../../../../context/account';
-import { PhotoIcon, UserCircleIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
 
 export default function EditAgent(props) {
 

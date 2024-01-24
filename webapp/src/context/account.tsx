@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import posthog from 'posthog-js';
-import * as API from '../api';
-import { useRouter } from 'next/router';
 import debug from 'debug';
+import { useRouter } from 'next/router';
+import posthog from 'posthog-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
+import * as API from '../api';
 const log = debug('webapp:context');
 
 const AccountContext = createContext({});

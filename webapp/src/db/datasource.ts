@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
-import toObjectId from 'misc/toobjectid';
-import { Datasource } from 'struct/datasource';
 import debug from 'debug';
+import toObjectId from 'misc/toobjectid';
+import { Datasource, DatasourceConnectionSettings } from 'struct/datasource';
+
+import * as db from './index';
 const log = debug('webapp:db:datasources');
 
 export function DatasourceCollection() {
@@ -34,6 +35,18 @@ export function getDatasourcesByTeam(teamId: db.IdOrStr): Promise<Datasource[]> 
 
 export async function addDatasource(datasource: Datasource): Promise<db.InsertResult> {
 	return DatasourceCollection().insertOne(datasource);
+}
+
+export async function setDatasourceConnection(teamId: db.IdOrStr, datasourceId: db.IdOrStr, connectionId: db.IdOrStr, connectionSettings: DatasourceConnectionSettings): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			connectionId,
+			connectionSettings,
+		},
+	});
 }
 
 export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<db.InsertResult> {

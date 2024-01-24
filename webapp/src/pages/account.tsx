@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import ErrorAlert from '../components/ErrorAlert';
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+
+import * as API from '../api';
+import ErrorAlert from '../components/ErrorAlert';
+import { useAccountContext } from '../context/account';
 
 export default function Account(props) {
 
@@ -39,7 +40,7 @@ export default function Account(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe;
+	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe || {};
 
 	return (
 		<>

@@ -1,4 +1,7 @@
 import {
+	InformationCircleIcon,
+} from '@heroicons/react/20/solid';
+import {
 	FieldTemplateProps,
 	FormContextType,
 	getTemplate,
@@ -6,10 +9,6 @@ import {
 	RJSFSchema,
 	StrictRJSFSchema,
 } from '@rjsf/utils';
-
-import {
-	InformationCircleIcon,
-} from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {

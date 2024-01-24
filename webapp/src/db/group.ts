@@ -1,9 +1,10 @@
 'use strict';
 
-import * as db from './index';
-import { ObjectId } from 'mongodb';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { Group } from 'struct/group';
+
+import * as db from './index';
 
 export function GroupCollection() {
 	return db.db().collection('groups');

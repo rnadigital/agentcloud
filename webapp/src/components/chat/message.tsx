@@ -1,18 +1,19 @@
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ClipboardDocumentIcon, ChatBubbleLeftIcon } from '@heroicons/react/20/solid';
-import { useChatContext } from '../../context/chat';
+import { ChatBubbleLeftIcon, ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FeedbackOption, SessionType } from 'struct/session';
+
+import { useChatContext } from '../../context/chat';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false,
 });
-import { toast } from 'react-toastify';
 import Blockies from 'react-blockies';
+import { toast } from 'react-toastify';
 
 const COLLAPSE_AFTER_LINES = 10
 	, feedbackLabels = {
@@ -107,7 +108,7 @@ function MessageBody({ message, messageType, messageLanguage, style, chunking })
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
 	return useMemo(() => {
-		switch(messageType) {
+		switch (messageType) {
 			case 'code':
 				return <CollapsingCodeBody
 					messageContent={messageContent}
@@ -186,7 +187,7 @@ export function Message({
 					.then(mod => setStyle(mod.default));
 			}
 		}, []);
-	} catch(e){
+	} catch (e) {
 		console.error(e);
 	}
 	
