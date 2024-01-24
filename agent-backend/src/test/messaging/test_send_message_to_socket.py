@@ -20,7 +20,7 @@ class TestSend:
 
     def test_send_with_invalid_socket_or_logging(self, mock_client, mock_event, mock_message):
         with pytest.raises(AssertionError) as excinfo:
-            sms.send(mock_client, mock_event, mock_message, socket_or_logging="invalid_value")
+            sms.send(mock_client, mock_event, mock_message, socket_logging="invalid_value")
         assert "socket_or_logging should be ['socket', 'logging', 'both']" in str(excinfo.value)
 
 
