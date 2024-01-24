@@ -184,13 +184,6 @@ export async function editAgentApi(req, res, next) {
 
 	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
-	// if (!name || typeof name !== 'string' || name.length === 0
-	// 	|| !model || typeof model !== 'string' || model.length === 0 // TODO: or is not one of models
-	// 	|| !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
-	// 	|| !type || typeof type !== 'string' || type.length === 0
-	// 	|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
-	// 	|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
-	// 	|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(t => t.length !== 24)))) {
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
 		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
@@ -211,11 +204,13 @@ export async function editAgentApi(req, res, next) {
 
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
-		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: fetch datasources by id and compare length like ^ to ensure valid
+	const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
+	if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
