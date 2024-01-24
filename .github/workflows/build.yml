@@ -42,10 +42,6 @@ jobs:
         run: |
           poetry config virtualenvs.create false
           poetry install
-      - name: Install other dependencies using Pip
-        continue-on-error: true
-        run: |
-          pip install autogen[retrievechat]
         working-directory: ./agent-backend
       - name: Test with pytest
         run: |
