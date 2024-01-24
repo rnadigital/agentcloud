@@ -8,9 +8,9 @@ import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
 import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
-import { dynamicResponse } from '../util';
-import { PARENT_OBJECT_FIELD_NAME, chainValidations, validateField } from '../lib/utils/ValidationUtils';
 import { ModelList } from '../lib/struct/model';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/ValidationUtils';
+import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
 	const [agents, credentials, tools, datasources] = await Promise.all([
@@ -119,7 +119,7 @@ export async function addAgentApi(req, res, next) {
 	// 	|| !systemMessage || typeof systemMessage !== 'string' || systemMessage.length === 0
 	// 	|| (toolIds && (!Array.isArray(toolIds) || toolIds.some(t => t.length !== 24)))
 	// 	|| (datasourceIds && (!Array.isArray(datasourceIds) || datasourceIds.some(d => d.length !== 24)))) {
-	if(validationError) {	
+	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -200,12 +200,12 @@ export async function editAgentApi(req, res, next) {
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
 	], { name: 'Name', credentialId: 'Credential', systemMessage: 'Instructions', type: 'Type'});
 
-	if(validationError) {
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	validationError = res.locals.matchingOrg.teamIds.find(teamId => valdiateCredentialModel(teamId, credentialId, model));
 	
-	if(validationError) {
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
@@ -243,12 +243,12 @@ export async function editAgentApi(req, res, next) {
 
 async function valdiateCredentialModel(teamId, credentialId, model) {
 	const credential = await getCredentialById(teamId, credentialId);
-	if(credential) {
-		credential.type
+	if (credential) {
+		credential.type;
 		const allowedModels = ModelList[credential.type];
 		return validateField(model, PARENT_OBJECT_FIELD_NAME, { inSet: allowedModels /* allows invalid types */, customError: `Model ${model} is not valid for provided credential` }, {});
 	} else {
-		return "Invalid credential";
+		return 'Invalid credential';
 	}
 }
 

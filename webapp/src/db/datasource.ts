@@ -49,6 +49,17 @@ export async function setDatasourceConnection(teamId: db.IdOrStr, datasourceId: 
 	});
 }
 
+export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: db.IdOrStr, lastSyncedDate: Date): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			lastSyncedDate,
+		},
+	});
+}
+
 export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<db.InsertResult> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),

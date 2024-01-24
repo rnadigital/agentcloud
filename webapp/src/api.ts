@@ -125,11 +125,17 @@ export function testDatasource(body, dispatch, errorCallback, router) {
 export function addDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/add`, 'POST', body, dispatch, errorCallback, router);
 }
+export function updateDatasourceStreams(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/streams`, 'PATCH', body, dispatch, errorCallback, router);
+}
 export function deleteDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function editDatasource(datasourceId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${datasourceId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function syncDatasource(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/sync`, 'POST', body, dispatch, errorCallback, router);
 }
 
 // Airbyte
@@ -138,6 +144,18 @@ export function getSpecification(body, dispatch, errorCallback, router) {
 		sourceDefinitionId: body.sourceDefinitionId,
 	}).toString();
 	return ApiCall(`/${body.resourceSlug}/airbyte/specification?${queryString}`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getJobsList(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		datasourceId: body.datasourceId,
+	}).toString();
+	return ApiCall(`/${body.resourceSlug}/airbyte/jobs?${queryString}`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getDatasourceSchema(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		datasourceId: body.datasourceId,
+	}).toString();
+	return ApiCall(`/${body.resourceSlug}/airbyte/schema?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
 
 //Temp datasource stuff
