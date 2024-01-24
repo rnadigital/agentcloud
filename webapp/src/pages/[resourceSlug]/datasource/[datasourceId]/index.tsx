@@ -9,9 +9,9 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState, useReducer } from 'react';
-import submittingReducer from 'utils/submittingreducer';
+import React, { useEffect, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
+import submittingReducer from 'utils/submittingreducer';
 
 export default function Datasource(props) {
 

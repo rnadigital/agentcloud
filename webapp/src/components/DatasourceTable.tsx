@@ -1,5 +1,4 @@
 import { Menu, Transition } from '@headlessui/react';
-import ButtonSpinner from 'components/ButtonSpinner';
 import {
 	ArrowPathIcon,
 	Cog6ToothIcon,
@@ -8,11 +7,13 @@ import {
 	PlayIcon,
 	TrashIcon,
 } from '@heroicons/react/20/solid';
+import ButtonSpinner from 'components/ButtonSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment, useState, useReducer } from 'react';
+import { Fragment, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
 import submittingReducer from 'utils/submittingreducer';
+
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 
