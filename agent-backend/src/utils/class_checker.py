@@ -1,5 +1,6 @@
 from typing import Any, Type
 
+
 def check_instance_of_class(instance: Any, class_type: Type[Any]) -> Any:
     if not isinstance(instance, class_type):
         raise TypeError(
