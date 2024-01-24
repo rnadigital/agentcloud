@@ -1,8 +1,9 @@
 'use strict';
 
-import * as db from './index';
+import { Agent, AgentType, CodeExecutionConfigType, HumanInputModeType } from 'struct/agent';
+
 import toObjectId from '../lib/misc/toobjectid';
-import { HumanInputModeType, CodeExecutionConfigType, Agent, AgentType } from 'struct/agent';
+import * as db from './index';
 
 export function AgentCollection() {
 	return db.db().collection('agents');

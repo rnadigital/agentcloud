@@ -1,9 +1,10 @@
-import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { useRouter } from 'next/router';
+import { Fragment, useEffect, useState } from 'react';
+
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 import AgentForm from './AgentForm';
-import { useRouter } from 'next/router';
 
 export default function CreateAgentModal({ open, setOpen, callback }) {
 

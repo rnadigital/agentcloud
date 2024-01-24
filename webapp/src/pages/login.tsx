@@ -1,7 +1,7 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 // TODO: Remove once https://github.com/vercel/next.js/issues/52216 is resolved.
 // `next/image` seems to be affected by a default + named export bundling bug.
 let ResolvedImage: any = Image;
@@ -12,11 +12,12 @@ import {
 	EyeIcon,
 	EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
-import SuccessAlert from '../components/SuccessAlert';
 import InfoAlert from '../components/InfoAlert';
-import { useState } from 'react';
+import SuccessAlert from '../components/SuccessAlert';
 
 export default function Login() {
 

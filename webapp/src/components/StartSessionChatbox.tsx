@@ -1,17 +1,18 @@
-import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import { useAccountContext } from '../context/account';
-import Select from 'react-tailwindcss-select';
 import {
 	PaperAirplaneIcon,
 } from '@heroicons/react/20/solid';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import Select from 'react-tailwindcss-select';
+import { toast } from 'react-toastify';
+
 import * as API from '../api';
-import SelectClassNames from '../lib/styles/SelectClassNames';
 import CreateAgentModal from '../components/CreateAgentModal';
 import CreateGroupModal from '../components/CreateGroupModal';
-import { toast } from 'react-toastify';
+import { useAccountContext } from '../context/account';
+import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
+import SelectClassNames from '../lib/styles/SelectClassNames';
 
 const sessionRadios = [
 	{ name: 'single', title: 'Single Agent' },

@@ -1,16 +1,17 @@
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
 import { Menu, Transition } from '@headlessui/react';
 import {
-	EllipsisHorizontalIcon,
-	PlayIcon,
 	ArrowPathIcon,
 	ChatBubbleLeftIcon,
+	EllipsisHorizontalIcon,
+	PlayIcon,
 } from '@heroicons/react/20/solid';
-import * as API from '../api';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../context/account';
+import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
@@ -42,6 +43,19 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 			toast('Deleted session');
 		}, () => {
 			toast.error('Error deleting session');
+		}, router);
+	}
+
+	async function cancelSession(sessionId) {
+		API.cancelSession({
+			_csrf: csrf,
+			resourceSlug,
+			sessionId,
+		}, () => {
+			fetchSessions();
+			toast('Cancelled session');
+		}, () => {
+			toast.error('Error cancelling session');
 		}, router);
 	}
 
@@ -93,6 +107,19 @@ export default function SessionCards({ sessions, fetchSessions }: { sessions: an
 										)}
 									</Menu.Item>
 									{/* TODO: onclick cancel, cancel this session? */}
+									<Menu.Item>
+										{({ active }) => (
+											<button
+												onClick={() => cancelSession(session._id)}
+												className={classNames(
+													active ? 'bg-gray-50 dark:bg-slate-700' : '',
+													'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
+												)}
+											>
+											Cancel
+											</button>
+										)}
+									</Menu.Item>
 									<Menu.Item>
 										{({ active }) => (
 											<button

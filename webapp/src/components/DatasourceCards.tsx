@@ -1,16 +1,17 @@
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
 import { Menu, Transition } from '@headlessui/react';
 import {
-	EllipsisHorizontalIcon,
-	PlayIcon,
 	ArrowPathIcon,
 	DocumentIcon,
+	EllipsisHorizontalIcon,
+	PlayIcon,
 } from '@heroicons/react/20/solid';
-import * as API from '../api';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useAccountContext } from '../context/account';
+import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
+
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
 
 export default function DatasourceCards({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 
@@ -20,16 +21,16 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 	const { resourceSlug } = router.query;
 
 	async function deleteDatasource(datasourceId) {
-		API.deleteDatasource({
+		await API.deleteDatasource({
 			_csrf: csrf,
 			resourceSlug,
 			datasourceId,
 		}, () => {
-			fetchDatasources();
-			toast('Deleted datasource');
+			toast.success('Deleted datasource');
 		}, () => {
 			toast.error('Error deleting datasource');
 		}, router);
+		fetchDatasources();
 	}
 
 	return (

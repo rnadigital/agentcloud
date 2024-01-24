@@ -4,6 +4,7 @@
 
 mod data;
 mod errors;
+mod gcp;
 mod init;
 mod llm;
 mod mongo;
@@ -11,7 +12,6 @@ mod qdrant;
 mod rabbitmq;
 mod routes;
 mod utils;
-mod gcp;
 
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::Arc;
@@ -114,9 +114,10 @@ async fn main() -> std::io::Result<()> {
         })
         .bind(format!("{}:{}", host, port))?
         .run();
+
         // Handle SIGINT to manually kick-off graceful shutdown
-        let mut stream = signal(SignalKind::interrupt()).unwrap();
         tokio::spawn(async move {
+            let mut stream = signal(SignalKind::interrupt()).unwrap();
             stream.recv().await;
             System::current().stop();
         });

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import {
 	InformationCircleIcon,
 } from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
+import React, { useState } from 'react';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,

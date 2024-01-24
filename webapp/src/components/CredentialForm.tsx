@@ -1,14 +1,15 @@
 'use strict';
 
-import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAccountContext } from '../context/account';
 import { useRouter } from 'next/router';
-import * as API from '../api';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { CredentialType } from 'struct/credential';
 
-export default function CredentialForm({ credential = {}, editing, compact=false, callback }
+import * as API from '../api';
+import { useAccountContext } from '../context/account';
+
+export default function CredentialForm({ credential = { type: CredentialType.OPENAI }, editing, compact=false, callback }
 	: { credential?: any, editing?: boolean, compact?: boolean, callback?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
@@ -58,6 +59,7 @@ export default function CredentialForm({ credential = {}, editing, compact=false
 				</div>}
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
 					<div className='sm:col-span-12'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Name

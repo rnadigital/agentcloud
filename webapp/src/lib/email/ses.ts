@@ -1,9 +1,9 @@
 'use strict';
 
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { getSecret } from 'secret/secretmanager';
-import SecretKeys from 'secret/secretkeys';
+import { SendEmailCommand,SESClient } from '@aws-sdk/client-ses';
 import debug from 'debug';
+import SecretKeys from 'secret/secretkeys';
+import { getSecret } from 'secret/secretmanager';
 const log = debug('webapp:email');
 
 let amazonAccessID;

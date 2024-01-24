@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import * as API from '../../api';
-import { useAccountContext } from '../../context/account';
-import StartSessionChatbox from '../../components/StartSessionChatbox';
-import SessionCards from '../../components/SessionCards';
-import SubscriptionModal from '../../components/SubscriptionModal';
 import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
 import { SessionStatus } from 'struct/session';
+
+import * as API from '../../api';
+import SessionCards from '../../components/SessionCards';
+import StartSessionChatbox from '../../components/StartSessionChatbox';
+import SubscriptionModal from '../../components/SubscriptionModal';
+import { useAccountContext } from '../../context/account';
 
 export default function Sessions(props) {
 

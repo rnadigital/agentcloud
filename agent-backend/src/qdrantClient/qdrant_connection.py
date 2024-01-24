@@ -40,8 +40,6 @@ def get_connection(host: str, port: int) -> QdrantClient:
     return client
 
 
-
-
 def populate_collection(
     client: QdrantClient, collection_name: str, docs_path: Union[str, List[str]]
 ) -> Dict[str, Agent]:

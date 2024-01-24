@@ -1,6 +1,7 @@
 import { FormProps, withTheme } from '@rjsf/core';
 import { FormContextType, RJSFSchema, StrictRJSFSchema } from '@rjsf/utils';
 import { ComponentType } from 'react';
+
 import { generateTheme } from '../Theme';
 
 export function generateForm<

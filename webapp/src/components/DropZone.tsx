@@ -1,12 +1,13 @@
+import ButtonSpinner from 'components/ButtonSpinner';
+import { useAccountContext } from 'context/account';
+import getFileFormat from 'misc/getfileformat';
+import { useRouter } from 'next/router';
+import path from 'path';
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import * as API from '../api';
-import { useRouter } from 'next/router';
-import { useAccountContext } from 'context/account';
-import ButtonSpinner from 'components/ButtonSpinner';
 import { toast } from 'react-toastify';
-import getFileFormat from 'misc/getfileformat';
-import path from 'path';
+
+import * as API from '../api';
 
 export default function DropZone({ setFiles, files }) {
 
