@@ -1,6 +1,9 @@
 'use strict';
 
 import * as API from '@api';
+import {
+	TrashIcon,
+} from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { StreamsList } from 'components/DatasourceStream';
@@ -50,6 +53,24 @@ export default function Datasource(props) {
 			}, setDiscoveredSchema, setError, router);
 		} finally {
 			setSubmitting({ fetchSchema: false });
+		}
+	}
+
+	async function deleteDatasource(datasourceId) {
+		setSubmitting({ deleteDatasource: true });
+		try {
+			await API.deleteDatasource({
+				_csrf: csrf,
+				resourceSlug,
+				datasourceId,
+			}, () => {
+				toast.success('Deleted datasource');
+				router.push(`/${resourceSlug}/datasources`);
+			}, () => {
+				toast.error('Error deleting datasource');
+			}, router);
+		} finally {
+			setSubmitting({ deleteDatasource: false });
 		}
 	}
 
@@ -179,7 +200,16 @@ export default function Datasource(props) {
 			</div>
 		</>}
 
-		{tab === 2 && 'TODO'}
+		{tab === 2 && <span className='my-4'>
+			<button
+				onClick={() => deleteDatasource(datasource._id)}
+				className='flex rounded-md disabled:bg-slate-400 bg-red-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'
+				disabled={submitting['deleteDatasource']}
+			>
+				{submitting['deleteDatasource'] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5 pe-1' aria-hidden='true' />}
+				Delete Datasource
+			</button>
+		</span>}
 
 	</>);
 
