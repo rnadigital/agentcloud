@@ -49,7 +49,7 @@ def populate_collection(
 
     # Check inputs
     class Params(BaseModel):
-        client: Any
+        client: Any # Checked QdrantClient below
         collection_name: constr(min_length=1)
         docs_path: Union[str, List[str]]
 
