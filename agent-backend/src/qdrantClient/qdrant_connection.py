@@ -77,6 +77,7 @@ def populate_collection(
     llm_assistant_agent = RetrieveAssistantAgent(
         name="llmAssistantAgent",
         system_message="You are a helpful assistant.",
+        description="You are a helpful assistant.",
         llm_config={
             "timeout": 600,
             "cache_seed": 42,
@@ -87,6 +88,7 @@ def populate_collection(
     # 2. create the QdrantRetrieveUserProxyAgent instance named "ragproxyagent"
     qdrant_retrieve_user_proxy_agent = QdrantRetrieveUserProxyAgent(
         name="qdrantRetrieveUserProxyAgent",
+        description="You can retrieve documents.",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
         retrieve_config={
@@ -98,6 +100,7 @@ def populate_collection(
             "client": params.client,
             "embedding_model": "BAAI/bge-small-en-v1.5",
         },
+        
     )
 
     agents_dict = {
