@@ -11,3 +11,4 @@ agent-backend/src/OAI_CONFIG_LIST
 # Local Cache
 agent-backend/src/local_cache/
 webapp/keyfile.json
+.aider*
