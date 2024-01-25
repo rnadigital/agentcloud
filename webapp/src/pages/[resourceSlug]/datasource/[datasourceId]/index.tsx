@@ -79,14 +79,24 @@ export default function Datasource(props) {
 		try {
 			const streams = Array.from(e.target.form.elements)
 				.filter(x => x['checked'] === true)
+				.filter(x => !x['dataset']['parent'])
 				.map(x => x['name']);
+			const selectedFieldsMap = Array.from(e.target.form.elements)
+				.filter(x => x['checked'] === true)
+				.filter(x => x['dataset']['parent'])
+				.reduce((acc, x) => {
+					acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+					return acc;
+				}, {});
 			const body = {
 				_csrf: csrf,
 				resourceSlug,
 				datasourceId,
 				streams,
 				sync,
+				selectedFieldsMap,
 			};
+			// console.log(body);
 			await API.updateDatasourceStreams(body, () => {
 				toast.success(`Updated streams${sync ? ' and triggered sync job' : ''}`);
 				setDiscoveredSchema(null);
@@ -108,6 +118,8 @@ export default function Datasource(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
+	datasource?.connectionSettings?.syncCatalog && console.log(datasource.connectionSettings.syncCatalog.streams.map(x => x.stream.name))
+
 	return (<>
 
 		<Head>
@@ -125,7 +137,7 @@ export default function Datasource(props) {
 			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
 				<StreamsList
 					streams={discoveredSchema.discoveredSchema.catalog.streams}
-					existingStreams={datasource.connectionSettings.configurations.streams.map(x => x.name)}
+					existingStreams={datasource.connectionSettings.syncCatalog.streams}
 				/>
 				<button
 					onClick={(e) => updateStreams(e)}
@@ -147,10 +159,10 @@ export default function Datasource(props) {
 				</button>
 			</form>}
 
-			{!discoveredSchema && <>
+			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <>
 				<StreamsList
-					streams={datasource.connectionSettings.configurations.streams}
-					existingStreams={datasource.connectionSettings.configurations.streams.map(x => x.name)}
+					streams={datasource.connectionSettings.syncCatalog.streams}
+					existingStreams={datasource.connectionSettings.syncCatalog.streams}
 					readonly={true}
 				/>
 				<span>

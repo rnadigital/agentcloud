@@ -198,12 +198,14 @@ export async function testDatasourceApi(req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { datasourceId, streams }  = req.body;
+	const { datasourceId, streams, selectedFieldsMap }  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	//TODO: validation for selectedFieldsMap
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
@@ -214,11 +216,24 @@ export async function addDatasourceApi(req, res, next) {
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append', //TODO: handle other syncmodes
-			}))
+		sourceId: datasource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		syncCatalog: {
+			streams: streams.map(s => {
+				const config = {
+					syncMode: 'full_refresh_append',
+				};
+				if (selectedFieldsMap[s] && selectedFieldsMap[s].length > 0) {
+					config['selectedFields'] = selectedFieldsMap[s]
+						.map(x => ({ fieldPath: x }));
+				}
+				return {
+					stream: {
+						name: s,
+					},
+					config,
+				};
+			})
 		},
 		schedule: {
 			scheduleType: 'manual'
@@ -229,8 +244,6 @@ export async function addDatasourceApi(req, res, next) {
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
-		sourceId: datasource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
 	const createdConnection = await connectionsApi
@@ -264,7 +277,7 @@ export async function addDatasourceApi(req, res, next) {
 //Note: can be converted to a generic "edit" in future if necessary
 export async function updateDatasourceStreamsApi(req, res, next) {
 
-	const { datasourceId, streams, sync }  = req.body;
+	const { datasourceId, streams, sync, selectedFieldsMap }  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
@@ -280,11 +293,24 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append', //TODO: handle other syncmodes
-			}))
+		sourceId: datasource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		syncCatalog: {
+			streams: streams.map(s => {
+				const config = {
+					syncMode: 'full_refresh_append',
+				};
+				if (selectedFieldsMap[s] && selectedFieldsMap[s].length > 0) {
+					config['selectedFields'] = selectedFieldsMap[s]
+						.map(x => ({ fieldPath: x }));
+				}
+				return {
+					stream: {
+						name: s,
+					},
+					config,
+				};
+			})
 		},
 		schedule: {
 			scheduleType: 'manual'
@@ -295,8 +321,6 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
-		sourceId: datasource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		status: 'active'
 	};
 	const updatedConnection = await connectionsApi

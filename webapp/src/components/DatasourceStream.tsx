@@ -6,7 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
-export function StreamRow({ stream, checked, readonly }: { stream?: any, checked?: boolean, readonly?: boolean }) {
+export function StreamRow({ stream, existingStream, readonly }: { stream?: any, existingStream?: any, readonly?: boolean }) {
 	const [isExpanded, setIsExpanded] = useState(false);
 	return (
 		<div className='border-b'>
@@ -17,7 +17,7 @@ export function StreamRow({ stream, checked, readonly }: { stream?: any, checked
 							type='checkbox'
 							className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
 							name={stream?.stream?.name || stream?.name}
-							defaultChecked={checked}
+							defaultChecked={existingStream}
 						/>
 						<span className='slider round'></span>
 					</label>
@@ -29,11 +29,21 @@ export function StreamRow({ stream, checked, readonly }: { stream?: any, checked
 					<span className='ml-2'>{stream?.stream?.name || stream?.name}</span>
 				</div>
 			</div>
-			{isExpanded && stream?.stream &&  (
+			{isExpanded && stream?.stream?.jsonSchema && (
 				<div className='p-4 bg-gray-100 rounded'>
 					<div>Schema:</div>
 					{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
 						<div key={key} className='ml-4'>
+							<label className='switch'>
+								<input
+									type='checkbox'
+									className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
+									name={key}
+									data-parent={stream?.stream?.name || stream?.name}
+									defaultChecked={existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'] === key)}
+								/>
+								<span className='slider round'></span>
+							</label>
 							<span className='font-semibold'>{key}:</span> {value['type']}
 						</div>
 					))}
@@ -51,7 +61,7 @@ export function StreamsList({ streams, existingStreams, readonly }: { streams?: 
 					readonly={readonly}
 					key={index}
 					stream={stream}
-					checked={existingStreams && existingStreams.includes(stream?.stream?.name || stream?.name)}
+					existingStream={existingStreams.find(es => es.stream.name === stream?.stream?.name)}
 				/>
 			))}
 		</div>

@@ -8,9 +8,7 @@ export type DatasourceStream = {
 };
 
 export type DatasourceConnectionSettings = {
-    configurations: {
-        streams: DatasourceStream[]
-    },
+    syncCatalog: any; //TODO
     schedule: {
         scheduleType: string; //TODO: allow scheduling
     },
