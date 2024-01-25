@@ -37,6 +37,9 @@
       "styles/*": [
         "lib/styles/*"
       ],
+      "utils/*": [
+        "lib/utils/*"
+      ],
       "lib/*": [
         "lib/*"
       ],

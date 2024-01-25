@@ -16,13 +16,13 @@ export default function FunctionCard({ name, description, parameters, onClickFun
 	return (
 		<div className={`p-4 overflow-hidden border rounded shadow-sm cursor-pointer ${highlighted ? 'bg-yellow-100 hover:bg-yellow-100' : 'hover:bg-yellow-50'}`} onClick={onClickFunction}>
 			<h3 className='text-lg font-semibold'>{name}</h3>
-			<p className='text-gray-600'>
+			<div className='text-gray-600'>
 				<Markdown
 					className={'markdown-content'}
 				>
 					{updatedDescription}
 				</Markdown>
-			</p>
+			</div>
 			{/*<ul>
 				{paramNames.map(param => (
 					<li key={param}>{param}</li>
