@@ -9,7 +9,7 @@ import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
 import { ModelList } from '../lib/struct/model';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/ValidationUtils';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/validationUtils';
 import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
