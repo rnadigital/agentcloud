@@ -75,7 +75,6 @@ pub async fn subscribe_to_queue(
                                             let (document_text, metadata) = pdf
                                                 .extract_text_from_pdf(file_path.as_str())
                                                 .expect("TODO: panic message");
-                                            println!("Document Text: {:?}", document_text);
                                             let chunks = pdf
                                                 .chunk(
                                                     document_text,
@@ -84,7 +83,7 @@ pub async fn subscribe_to_queue(
                                                 )
                                                 .await
                                                 .unwrap();
-                                            println!("Chunks: {:?}", chunks);
+                                            let mut points_to_upload: Vec<PointStruct> = vec![];
                                             for element in chunks.iter() {
                                                 let mut metadata =
                                                     element.metadata.clone().unwrap();
@@ -92,24 +91,29 @@ pub async fn subscribe_to_queue(
                                                     "text".to_string(),
                                                     element.page_content.to_string(),
                                                 );
-                                                let embedding_vector = &element.embedding_vector;
-
                                                 let payload: HashMap<String, Value> =
                                                     hash_map_values_as_serde_values!(metadata);
-                                                let qdrant_point_struct = PointStruct::new(
-                                                    Uuid::new_v4().to_string(),
-                                                    embedding_vector.to_owned().unwrap().to_owned(),
-                                                    json!(payload).try_into().unwrap(),
-                                                );
-                                                let app_data_clone = Arc::clone(&app_data);
-                                                let qdrant = Qdrant::new(
-                                                    app_data_clone,
-                                                    datasource_id.to_string(),
-                                                );
-                                                qdrant
-                                                    .upsert_data_point(qdrant_point_struct)
-                                                    .await?;
+                                                let embedding_vector = &element.embedding_vector;
+                                                match embedding_vector {
+                                                    Some(val) => {
+                                                        let qdrant_point_struct = PointStruct::new(
+                                                            Uuid::new_v4().to_string(),
+                                                            val.to_owned(),
+                                                            json!(payload).try_into().unwrap(),
+                                                        );
+                                                        points_to_upload.push(qdrant_point_struct);
+                                                    }
+                                                    None => {
+                                                        println!("Embedding vector was empty!")
+                                                    }
+                                                }
                                             }
+                                            let qdrant_conn_clone = Arc::clone(&app_data);
+                                            let qdrant = Qdrant::new(
+                                                qdrant_conn_clone,
+                                                datasource_id.to_string(),
+                                            );
+                                            qdrant.bulk_upsert_data(points_to_upload).await?;
                                         }
                                         Err(e) => println!("Error: {}", e),
                                     }
