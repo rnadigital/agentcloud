@@ -180,19 +180,42 @@ impl Qdrant {
             &self.collection_name
         );
         let qdrant_conn = &self.client.read().await;
-        if self
-            .check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded)
-            .await?
+        match qdrant_conn
+            .create_collection(&CreateCollection {
+                collection_name: (&self.collection_name).to_owned(),
+                vectors_config: Some(VectorsConfig {
+                    config: Some(Config::Params(VectorParams {
+                        size: 1536, // This is the number of dimensions in the collection (basically the number of columns)
+                        distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                        ..Default::default()
+                    })),
+                }),
+                ..Default::default()
+            })
+            .await
         {
-            let result = qdrant_conn
-                .upsert_points_batch_blocking(&self.collection_name, points, None, 100)
-                .await?;
-            match result.result.unwrap().status {
-                2 => Ok(true),
-                _ => Ok(false),
+            Ok(result) => match result.result {
+                true => {
+                    let result = qdrant_conn
+                        .upsert_points_batch_blocking(&self.collection_name, points, None, 100)
+                        .await?;
+                    match result.result.unwrap().status {
+                        2 => Ok(true),
+                        _ => Ok(false),
+                    }
+                }
+                false => {
+                    println!("Collection: {} creation failed!", &self.collection_name);
+                    Err(anyhow!("Collection does not exist"))
+                }
+            },
+            Err(e) => {
+                println!("Err: {}", e);
+                return Err(anyhow!(
+                                "An error occurred while trying to create collection: {}",
+                                e
+                            ));
             }
-        } else {
-            Err(anyhow!("Collection does not exist"))
         }
     }
 
