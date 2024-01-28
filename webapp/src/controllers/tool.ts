@@ -7,6 +7,7 @@ import { ToolType } from 'struct/tool';
 import { removeAgentsTool } from '../db/agent';
 import { getCredentialsByTeam } from '../db/credential';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from '../db/tool';
+import { chainValidations } from '../lib/utils/validationUtils';
 import { dynamicResponse } from '../util';
 
 export async function toolsData(req, res, _next) {
@@ -81,15 +82,37 @@ export async function toolAddPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/tool/add`);
 }
 
+function validateTool(tool) {
+	return chainValidations(tool, [
+		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set([ToolType.API_TOOL, ToolType.HOSTED_FUNCTION_TOOL])}},
+		{ field: 'data.description', validation: { notEmpty: true }},
+		{ field: 'data.parameters', validation: { notEmpty: true }},
+		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
+		{ field: 'naame', validation: { regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$','gm'),
+			customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed' },
+		validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
+		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
+		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.HOSTED_FUNCTION_TOOL }},
+	], { 
+		name: 'Name',
+		type: 'Type',
+		credentialId: 'Credential',
+		'data.builtin': 'Is built-in',
+		'data.description': 'Description',
+		'data.parameters': 'Parameters',
+		'data.parameters.properties': '',
+		'data.parameters.code': ''
+	});
+}
+
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, credentialId, schema }  = req.body;
+	const { name, type, data, schema }  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0
-		|| !type || typeof type !== 'string' || type.length === 0 // TODO: or is not one of valid types
-		// || !credentialId || typeof credentialId !== 'string' || credentialId.length !== 24
-		|| !data) { //TODO: validation
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	const validationError = validateTool(req.body);
+	if (validationError) {	
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	await addTool({
@@ -112,6 +135,11 @@ export async function addToolApi(req, res, next) {
 export async function editToolApi(req, res, next) {
 
 	const { name, type, data, toolId, schema }  = req.body;
+
+	const validationError = validateTool(req.body);
+	if (validationError) {	
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	await editTool(req.params.resourceSlug, toolId, {
 	    name,

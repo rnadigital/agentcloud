@@ -1,13 +1,15 @@
 const PARENT_OBJECT_FIELD_NAME = '';
 
-function chainValidations(object, validations: { field: string, validation: ValidationUtilOptions}[], fieldDescriptions) {
+function chainValidations(object, validations: { field: string, validation: ValidationUtilOptions, validateIf?: ValidationCondition, disallowDotSplit?: boolean }[], fieldDescriptions) {
 	if (object && validations && validations.length > 0) {
 		for (let v in validations) {
 			const validation = validations[v];
-			const result = validateField(object, validation.field, validation.validation, fieldDescriptions);
-			if (result) {
-				// Break validation loop
-				return result;
+			if (!validation.validateIf || validation.validateIf.condition(getField(object, validation.validateIf.field, !validation.disallowDotSplit))) {
+				const result = validateField(object, validation.field, validation.validation, fieldDescriptions);
+				if (result) {
+					// Break validation loop
+					return result;
+				}
 			}
 		}
 	} else {
@@ -15,9 +17,22 @@ function chainValidations(object, validations: { field: string, validation: Vali
 	}
 }
 
-function getField(object: any, fieldName: string) {
+function getField(object: any, fieldName: string, allowSplit = false) {
 	if (fieldName === PARENT_OBJECT_FIELD_NAME) {
 		return object;
+	} else if (allowSplit) {
+		const keys = fieldName.split('.');
+		let parentObject = object, value, lastIndex = keys.length - 1;
+		
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			value = parentObject[key];
+			parentObject = value;
+			if (i < lastIndex && typeof value != 'object') {
+				return undefined;
+			}
+		}
+		return value;
 	} else {
 		return object[fieldName];
 	}
@@ -40,10 +55,10 @@ function isNumber(par): boolean {
 	return par !== null && par !== undefined && Number(par) !== <any>NaN;
 }
 
-function validateField(object: any, fieldName: string, validations: ValidationUtilOptions, fieldDescriptions) {
+function validateField(object: any, fieldName: string, validations: ValidationUtilOptions, fieldDescriptions, disallowDotSplit?: boolean) {
 	let error;
 	if (object) {
-		const field = getField(object, fieldName);
+		const field = getField(object, fieldName, !disallowDotSplit);
 		const fieldDescription = getFieldDescription(fieldName, fieldDescriptions);
 		let values = validations.asArray === true && field != undefined && Array.isArray(field) ? field : [field];
 		for (let item of values) {
@@ -83,6 +98,15 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.regexMatchAll && item !== undefined && validations.regexMatchAll instanceof RegExp && (!Array.isArray(item) || item.length <= 0 || !item.every(x => validations.regexMatchAll.test(x)))) {
 				error = `${fieldDescription} does not match regular expression ${validations.regexMatchAll.toString()}`;
 			}
+			if (validations.startsWith && validations.startsWith.length > 0 && (item === undefined || !item.startsWith(validations.startsWith))) {
+				error = `${fieldDescription} does not start with ${validations.startsWith}`;
+			}
+			if (validations.endsWith && validations.endsWith.length > 0 && (item === undefined || !item.endsWith(validations.endsWith))) {
+				error = `${fieldDescription} does not end with ${validations.endsWith}`;
+			}
+			if (validations.contains && validations.contains.length > 0 && (item === undefined || !item.includes(validations.contains))) {
+				error = `${fieldDescription} does not contain ${validations.contains}`;
+			}
 			if (validations.objectHasKeys && item !== undefined && (item == null || typeof item !== 'object' || item.constructor.name !== 'Object' || Object.keys(item).length === 0)) {
 				error = `${fieldDescription} is empty`;
 			}
@@ -112,8 +136,16 @@ type ValidationUtilOptions = {
 	objectHasEitherKeys?: string[],
 	regexMatch?: RegExp,
 	regexMatchAll?: RegExp,
+	startsWith?: string,
+	endsWith?: string,
+	contains?: string,
 	customError?: string,
     asArray?: boolean
 };
+
+type ValidationCondition = {
+	field: string;
+	condition: (fieldValue: any) => boolean
+}
 
 export { chainValidations, validateField, PARENT_OBJECT_FIELD_NAME };

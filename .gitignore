@@ -3,4 +3,5 @@
 */**/.DS_Store
 docker-compose.yml
 airbyte/
+.vscode/
 webapp/keyfile.json

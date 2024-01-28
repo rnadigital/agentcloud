@@ -4,15 +4,10 @@ import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import GlobalTools from 'struct/globaltools';
-import { ToolType } from 'struct/tool';
+import { FunctionProperty, ToolType } from 'struct/tool';
 
 import * as db from './index';
 const log = debug('webapp:db:tools');
-
-export type FunctionProperty = {
-	type: string; // should probably be string | number | whatever
-	description: string;
-};
 
 export type Tool = {
 	_id?: ObjectId;
@@ -31,6 +26,7 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
+		openAPIMatchKey?: string;
 	},
 	credentialId?: ObjectId; //links to a credential 
 };
