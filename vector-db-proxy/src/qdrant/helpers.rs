@@ -3,7 +3,7 @@ use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 
 use crate::hash_map_values_as_serde_values;
-use crate::llm::utils::LLM;
+use crate::llm::utils::{EmbeddingModels, LLM};
 use crate::qdrant::models::{HashMapValues, ScrollResults};
 use crate::qdrant::utils::Qdrant;
 
@@ -226,7 +226,9 @@ pub async fn embed_payload(
             if let Ok(metadata) = json!(payload).try_into() {
                 let llm_struct = LLM::new();
                 // Embedding sentences using OpenAI ADA2
-                let embedding_vec = llm_struct.embed_text(vec![text]).await?;
+                let embedding_vec = llm_struct
+                    .embed_text(vec![text], EmbeddingModels::OAI)
+                    .await?;
                 // Construct PointStruct to insert into DB
                 if !embedding_vec.is_empty() {
                     for embedding in embedding_vec {

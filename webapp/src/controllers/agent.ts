@@ -214,11 +214,13 @@ export async function editAgentApi(req, res, next) {
 
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
-		//deleted toolIds or ones from another team
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: fetch datasources by id and compare length like ^ to ensure valid
+	const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
+	if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,

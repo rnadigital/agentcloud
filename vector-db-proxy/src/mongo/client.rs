@@ -1,10 +1,20 @@
 use crate::errors::types::CustomErrorType;
+use crate::init::models::GlobalData;
 use anyhow::{anyhow, Result};
 use mongodb::{options::ClientOptions, Client, Database};
+use once_cell::sync::Lazy;
+use tokio::sync::RwLock;
+
+pub static GLOBAL_DATA: Lazy<RwLock<GlobalData>> = Lazy::new(|| {
+    let data: GlobalData = GlobalData::new();
+    RwLock::new(data)
+});
 
 pub async fn start_mongo_connection() -> Result<Database, CustomErrorType> {
-    let mongo_url = String::from("mongodb://docker_mongo:27017");
-    let client_options = ClientOptions::parse(mongo_url.as_str()).await.unwrap();
+    let global_data = GLOBAL_DATA.read().await;
+    let client_options = ClientOptions::parse(global_data.mongo_uri.as_str())
+        .await
+        .unwrap();
     // Get a handle to the deployment.
     let client = match Client::with_options(client_options) {
         Ok(c) => c,

@@ -30,6 +30,9 @@
       "email/*": [
         "lib/email/*"
       ],
+      "utils/*": [
+        "lib/utils/*"
+      ],
       "middleware/*": [
         "lib/middleware/*"
       ],
