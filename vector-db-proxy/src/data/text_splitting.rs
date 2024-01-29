@@ -221,6 +221,7 @@ impl SemanticChunker {
             .into_iter()
             .map(|doc| (doc.page_content, doc.metadata))
             .unzip();
+        println!("Text: {:?}. Metadata: {:?}", texts, metadata);
         Ok(self.create_documents(texts, metadata).await)
     }
 }
