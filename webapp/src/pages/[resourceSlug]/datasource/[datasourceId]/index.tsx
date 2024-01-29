@@ -118,7 +118,7 @@ export default function Datasource(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
-	datasource?.connectionSettings?.syncCatalog && console.log(datasource.connectionSettings.syncCatalog.streams.map(x => x.stream.name))
+	datasource?.connectionSettings?.syncCatalog && console.log(datasource.connectionSettings.syncCatalog.streams.map(x => x.stream.name));
 
 	return (<>
 
@@ -127,11 +127,12 @@ export default function Datasource(props) {
 		</Head>
 
 		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Manage Datasource</h3>
+			<h3 className='pl-2 font-semibold text-gray-900'>Manage Datasource - {datasource?.originalName}</h3>
 		</div>
 
 		<DatasourceTabs callback={setTab} current={tab} />
 
+		{/*TODO: component that takes discoveredSchema and datasource*/}
 		{tab === 0 && <>
 		
 			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
@@ -179,6 +180,7 @@ export default function Datasource(props) {
 
 		</>}
 
+		{/*TODO: component that takes jobList*/}
 		{tab === 1 && <>
 			<div className='rounded-lg overflow-hidden shadow-lg mt-4'>
 				<table className='min-w-full divide-y divide-gray-200'>

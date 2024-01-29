@@ -121,11 +121,20 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 					e.preventDefault();
 					const streams = Array.from(e.target.elements)
 						.filter(x => x['checked'] === true)
+						.filter(x => !x['dataset']['parent'])
 						.map(x => x['name']);
+					const selectedFieldsMap = Array.from(e.target.elements)
+						.filter(x => x['checked'] === true)
+						.filter(x => x['dataset']['parent'])
+						.reduce((acc, x) => {
+							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+							return acc;
+						}, {});
 					const body = {
 						_csrf: csrf,
 						datasourceId: datasourceId,
 						resourceSlug,
+						selectedFieldsMap,
 						streams,
 					};
 					const addedDatasource: any = await API.addDatasource(body, () => {

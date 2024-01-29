@@ -45,13 +45,17 @@ export async function listJobsApi(req, res, next) {
 		jobType: 'sync',
 		limit: 20, //TODO: expose on frontend, pagination, etc
 	};
+	// console.log('jobBody', jobBody);
 	const jobsRes = await jobsApi
 		.listJobs(null, jobBody)
 		.then(res => res.data);
 	// console.log('listJobs', jobsRes);
 
 	return dynamicResponse(req, res, 200, {
-		jobs: jobsRes?.data || [],
+		// TODO: figure out why listJobs returns jobs from other connectionIds
+		// even though I pass the connectionId correctly see https://reference.airbyte.com/reference/listjobs
+		jobs: (jobsRes?.data || [])
+			.filter(x => x?.connectionId === datasource.connectionId),
 	});
 
 }

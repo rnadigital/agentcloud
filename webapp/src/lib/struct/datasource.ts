@@ -9,10 +9,7 @@ export type DatasourceStream = {
 
 export type DatasourceConnectionSettings = {
     syncCatalog: any; //TODO
-    schedule: {
-        scheduleType: string; //TODO: allow scheduling
-    },
-    dataResidency: string;
+    scheduleType: string; //TODO: allow scheduling
     namespaceDefinition: string;
     namespaceFormat: string | null;
     nonBreakingSchemaUpdatesBehavior: string;
@@ -37,4 +34,5 @@ export type Datasource = {
     connectionId: string;
     connectionSettings?: DatasourceConnectionSettings;
     lastSyncedDate?: Date | null; //Note: null = never synced
+    discoveredSchema?: any;
 };

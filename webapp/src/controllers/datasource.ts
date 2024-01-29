@@ -186,6 +186,7 @@ export async function testDatasourceApi(req, res, next) {
 	    sourceType,
 	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 	    lastSyncedDate: null,
+	    discoveredSchema,
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -214,42 +215,52 @@ export async function addDatasourceApi(req, res, next) {
 	}
 
 	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionsApi = await getAirbyteInternalApi();
 	const connectionBody = {
+		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		syncCatalog: {
 			streams: streams.map(s => {
+				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
 				const config = {
-					syncMode: 'full_refresh_append',
+					aliasName: s,
+					syncMode: 'full_refresh',
+					destinationSyncMode: 'append',
+					fieldSelectionEnabled,
+					selected: true,
 				};
-				if (selectedFieldsMap[s] && selectedFieldsMap[s].length > 0) {
+				if (fieldSelectionEnabled) {
 					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: x }));
+						.map(x => ({ fieldPath: [x] }));
 				}
 				return {
 					stream: {
 						name: s,
+						jsonSchema: datasource.discoveredSchema?.catalog?.streams
+							.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
+						supportedSyncModes: ['full_refresh'],
 					},
 					config,
 				};
 			})
 		},
-		schedule: {
-			scheduleType: 'manual'
-		},
-		dataResidency: 'auto',
+		scheduleType: 'manual',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
-		status: 'active'
+		status: 'active',
+		operations: [],
+		skipReset: false,
 	};
+	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
-		.then(res => res.data);
-	console.log('createdConnection', createdConnection);
+		.then(res => res.data)
+		.catch(err => console.error(JSON.stringify(err.response.data, null, 2)));
+	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -291,41 +302,54 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionsApi = await getAirbyteInternalApi();
 	const connectionBody = {
+		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		syncCatalog: {
 			streams: streams.map(s => {
+				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
 				const config = {
-					syncMode: 'full_refresh_append',
+					aliasName: s,
+					syncMode: 'full_refresh',
+					destinationSyncMode: 'append',
+					fieldSelectionEnabled,
+					selected: true,
 				};
-				if (selectedFieldsMap[s] && selectedFieldsMap[s].length > 0) {
+				if (fieldSelectionEnabled) {
 					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: x }));
+						.map(x => ({ fieldPath: [x] }));
 				}
 				return {
 					stream: {
 						name: s,
+						jsonSchema: datasource.discoveredSchema?.catalog?.streams
+							.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
+						supportedSyncModes: ['full_refresh'],
 					},
 					config,
 				};
 			})
 		},
-		schedule: {
-			scheduleType: 'manual'
-		},
-		dataResidency: 'auto',
+		scheduleType: 'manual',
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource.sourceId,
-		status: 'active'
+		status: 'active',
+		operations: [],
+		skipReset: false,
 	};
+	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
-		.patchConnection(datasource.connectionId, connectionBody)
-		.then(res => res.data);
+		.updateConnection(null, connectionBody)
+		.then(res => {
+			console.log(res)
+			return res.data
+		});
+	console.log('updatedConnection', updatedConnection);
 
 	if (sync === true) {
 		// Create a job to trigger the connection to sync
@@ -435,7 +459,7 @@ export async function deleteDatasourceApi(req, res, next) {
 			await deleteFile(datasource.gcsFilename);
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
-			if (err && err?.errors[0]?.reason !== 'notFound') {
+			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
 				console.log(err);
 				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
 			}
