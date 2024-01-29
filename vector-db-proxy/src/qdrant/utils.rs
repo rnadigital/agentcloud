@@ -62,7 +62,11 @@ impl Qdrant {
             "Checking if Collection: {} exists...",
             &self.collection_name
         );
-        let results = qdrant_client.has_collection(&self.collection_name).await?;
+        let list_of_collections = qdrant_client.list_collections().await?;
+        let results = list_of_collections
+            .collections
+            .into_iter()
+            .any(|c| c.name == self.collection_name);
         if results {
             println!("Collection: {} already exists", &self.collection_name);
             Ok(true)
@@ -180,21 +184,11 @@ impl Qdrant {
             &self.collection_name
         );
         let qdrant_conn = &self.client.read().await;
-        match qdrant_conn
-            .create_collection(&CreateCollection {
-                collection_name: (&self.collection_name).to_owned(),
-                vectors_config: Some(VectorsConfig {
-                    config: Some(Config::Params(VectorParams {
-                        size: 1536, // This is the number of dimensions in the collection (basically the number of columns)
-                        distance: Distance::Cosine.into(), // The distance metric we will use in this collection
-                        ..Default::default()
-                    })),
-                }),
-                ..Default::default()
-            })
+        match &self
+            .check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded)
             .await
         {
-            Ok(result) => match result.result {
+            Ok(result) => match result{
                 true => {
                     let result = qdrant_conn
                         .upsert_points_batch_blocking(&self.collection_name, points, None, 100)
@@ -212,9 +206,9 @@ impl Qdrant {
             Err(e) => {
                 println!("Err: {}", e);
                 return Err(anyhow!(
-                                "An error occurred while trying to create collection: {}",
-                                e
-                            ));
+                    "An error occurred while trying to create collection: {}",
+                    e
+                ));
             }
         }
     }
