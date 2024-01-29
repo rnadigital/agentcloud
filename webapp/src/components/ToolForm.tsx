@@ -55,6 +55,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	}, []);
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
+	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
 	const [selectedOpenAPIMatchKey, setSelectedOpenAPIMatchKey] = useState(null);
 	const [error, setError] = useState();
@@ -244,6 +245,19 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			openApiToParams();
 		}
 	}, [toolType]);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (functionsList && searchTerm && searchTerm.length > 0) {
+				setFilteredFunctionsList(functionsList.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm)));
+			} else if (functionsList) {
+				setFilteredFunctionsList(functionsList.map(item => item));
+			}
+		}, 5000);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [searchTerm, functionsList]);
 
 	return (<form onSubmit={toolPost}>
 		<input
@@ -586,8 +600,8 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						</div>
 					</div>
 					<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
-						{functionsList
-							.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
+						{filteredFunctionsList && filteredFunctionsList
+							// .filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
 							.map((item, index) => (
 								<FunctionCard
 									key={`functionList_${index}`}
