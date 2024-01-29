@@ -1,13 +1,14 @@
 'use strict';
 
+import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { Datasource, DatasourceConnectionSettings } from 'struct/datasource';
+import { InsertResult } from 'struct/db';
 
-import * as db from './index';
 const log = debug('webapp:db:datasources');
 
-export function DatasourceCollection() {
+export function DatasourceCollection(): any {
 	return db.db().collection('datasources');
 }
 
@@ -33,7 +34,7 @@ export function getDatasourcesByTeam(teamId: db.IdOrStr): Promise<Datasource[]> 
 	}).toArray();
 }
 
-export async function addDatasource(datasource: Datasource): Promise<db.InsertResult> {
+export async function addDatasource(datasource: Datasource): Promise<InsertResult> {
 	return DatasourceCollection().insertOne(datasource);
 }
 
@@ -60,7 +61,7 @@ export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: 
 	});
 }
 
-export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<db.InsertResult> {
+export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<InsertResult> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId),

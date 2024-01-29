@@ -1,9 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export type Org = {
 	_id?: ObjectId;
@@ -12,7 +13,7 @@ export type Org = {
 	name: string;
 }
 
-export function OrgCollection() {
+export function OrgCollection(): any {
 	return db.db().collection('orgs');
 }
 
@@ -22,7 +23,7 @@ export function getOrgById(orgId: db.IdOrStr): Promise<Org> {
 	});
 }
 
-export function addOrg(org: Org): Promise<db.InsertResult> {
+export function addOrg(org: Org): Promise<InsertResult> {
 	return OrgCollection().insertOne(org);
 }
 

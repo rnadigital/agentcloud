@@ -1,10 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { CredentialType } from 'struct/credential';
-
-import * as db from './index';
+import { InsertResult } from 'struct/db';
 
 export type TokenExchangeMethod = 'post' | 'basic';
 
@@ -27,7 +27,7 @@ export type Credential = {
     createdDate: Date;
 }
 
-export function CredentialCollection() {
+export function CredentialCollection(): any {
 	return db.db().collection('credentials');
 }
 
@@ -65,7 +65,7 @@ export function getCredentialsById(teamId: db.IdOrStr, credentialIds: db.IdOrStr
 	}).toArray();
 }
 
-export async function addCredential(credential: Credential): Promise<db.InsertResult> {
+export async function addCredential(credential: Credential): Promise<InsertResult> {
 	return CredentialCollection().insertOne(credential);
 }
 

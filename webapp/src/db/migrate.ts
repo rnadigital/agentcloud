@@ -1,15 +1,15 @@
 'use strict';
 
+import * as db from 'db/index';
 import debug from 'debug';
 import { ObjectId } from 'mongodb';
 import semver from 'semver';
 
 import toObjectId from '../lib/misc/toobjectid';
 import { migrationVersion, migrationVersions } from '../migrations/index';
-import * as db from './index';
 const log = debug('webapp:migration');
 
-export function VersionCollection() {
+export function VersionCollection(): any {
 	return db.db().collection('version');
 }
 

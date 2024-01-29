@@ -3,11 +3,7 @@
 import debug from 'debug';
 const log = debug('webapp:db');
 import { MongoClient, ObjectId } from 'mongodb';
-
-export type InsertResult = {
-	acknowledged?: boolean;
-	insertedId?: ObjectId;
-}
+import { InsertResult } from 'struct/db';
 
 export type IdOrStr = string | ObjectId;
 
@@ -24,5 +20,5 @@ export function client(): MongoClient {
 }
 
 export function db() {
-	return _client && _client.db();
+	return client() && client().db();
 }

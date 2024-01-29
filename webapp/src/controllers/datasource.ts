@@ -119,7 +119,7 @@ export async function testDatasourceApi(req, res, next) {
 	}
 	const newDatasourceId = new ObjectId();
 	const spec = submittedConnector.spec_oss.connectionSpecification;
-	console.log(JSON.stringify(spec, null, 2));
+	// console.log(JSON.stringify(spec, null, 2));
 	try {
 		const validate = ajv.compile(spec);
 		const validated = validate(req.body.sourceConfig);
@@ -255,12 +255,12 @@ export async function addDatasourceApi(req, res, next) {
 		operations: [],
 		skipReset: false,
 	};
-	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	// console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data)
 		.catch(err => console.error(JSON.stringify(err.response.data, null, 2)));
-	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
+	// console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -346,8 +346,8 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	const updatedConnection = await connectionsApi
 		.updateConnection(null, connectionBody)
 		.then(res => {
-			console.log(res)
-			return res.data
+			console.log(res);
+			return res.data;
 		});
 	console.log('updatedConnection', updatedConnection);
 
