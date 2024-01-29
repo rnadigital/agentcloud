@@ -83,7 +83,7 @@ impl Qdrant {
                             collection_name: (&self.collection_name).to_owned(),
                             vectors_config: Some(VectorsConfig {
                                 config: Some(Config::Params(VectorParams {
-                                    size: 1536, // This is the number of dimensions in the collection (basically the number of columns)
+                                    size: 1536, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
                                     distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                     ..Default::default()
                                 })),
@@ -188,7 +188,7 @@ impl Qdrant {
             .check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded)
             .await
         {
-            Ok(result) => match result{
+            Ok(result) => match result {
                 true => {
                     let result = qdrant_conn
                         .upsert_points_batch_blocking(&self.collection_name, points, None, 100)

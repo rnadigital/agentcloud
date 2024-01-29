@@ -139,14 +139,19 @@ pub async fn subscribe_to_queue(
                                 }
                             }
                         }
+                    } else {
+                        // This is where data is coming from airbyte rather than a direct file upload
+                        let qdrant_conn = Arc::clone(&app_data);
+                        let args =
+                            BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+                        let _ = channel.basic_ack(args).await;
+                        let _ = process_messages(
+                            qdrant_conn,
+                            message_string,
+                            datasource_id.to_string(),
+                        )
+                        .await;
                     }
-                    let qdrant_conn = Arc::clone(&app_data);
-                    let args =
-                        BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
-                    let _ = channel.basic_ack(args).await;
-                    let _ =
-                        process_messages(qdrant_conn, message_string, datasource_id.to_string())
-                            .await;
                 }
             }
         } else {
