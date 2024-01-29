@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 export function StreamRow({ stream, existingStream, readonly }
 	: { stream?: any, existingStream?: any, readonly?: boolean }) {
-	const [isExpanded, setIsExpanded] = useState(existingStream != null);
+	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 	return (
 		<div className='border-b'>
 			<div className='flex items-center p-4'>
@@ -39,9 +39,10 @@ export function StreamRow({ stream, existingStream, readonly }
 						<label className='switch'>
 							<input
 								type='checkbox'
-								className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+								className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
 								name={key}
 								data-parent={stream?.stream?.name || stream?.name}
+								disabled={readonly}
 								defaultChecked={existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'].includes(key))}
 							/>
 							<span className='slider round'></span>

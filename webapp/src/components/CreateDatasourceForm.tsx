@@ -257,7 +257,9 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 				</span>;
 			case 3:
 				return discoveredSchema && <form onSubmit={datasourcePost}>
-					<StreamsList streams={discoveredSchema.catalog.streams} />
+					<StreamsList
+						streams={discoveredSchema.catalog.streams}
+					/>
 					<button
 						disabled={submitting}
 						type='submit'
