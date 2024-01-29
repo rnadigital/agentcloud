@@ -75,7 +75,6 @@ impl Qdrant {
                 "Collection: {} does NOT exist...creating it now",
                 &self.collection_name
             );
-            println!("{}", (&self.collection_name).to_owned());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
                     match qdrant_client

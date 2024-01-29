@@ -70,6 +70,8 @@ pub async fn subscribe_to_queue(
                                         Ok(file) => {
                                             let file_path = format!("{}", file_name);
                                             let pdf = PdfChunker::default();
+                                            // The reason we are choosing to write the file to disk first is to create
+                                            // parity between running locally and running in cloud
                                             save_file_to_disk(file, file_path.as_str()).await?;
                                             let (document_text, metadata) = pdf
                                                 .extract_text_from_pdf(file_path.as_str())
