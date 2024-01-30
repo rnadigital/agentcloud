@@ -21,6 +21,7 @@ import {
 	UserIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon,
+	Square3Stack3DIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -55,6 +56,7 @@ const agentNavigation = [
 	{ name: 'Credentials', href: '/credentials', icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Tools', href: '/tools', icon: <WrenchScrewdriverIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Data Sources', href: '/datasources', icon: <CircleStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, indent: 4 },
 ];
 
 const teamNavigation = [
@@ -170,7 +172,7 @@ export default withRouter(function Layout(props) {
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => (
-															<li key={item.name}>
+															<li key={item.name} className={item.indent ? `ps-${item.indent}` : 'ps-4'}>
 																<Link
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
@@ -291,7 +293,7 @@ export default withRouter(function Layout(props) {
 									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
 									<ul role='list' className='-mx-2 space-y-1'>
 										{agentNavigation.map((item) => (
-											<li key={item.name}>
+											<li key={item.name} className={item.indent ? `ps-${item.indent}` : ''}>
 												<Link
 													suppressHydrationWarning
 													href={`/${resourceSlug}${item.href}`}
