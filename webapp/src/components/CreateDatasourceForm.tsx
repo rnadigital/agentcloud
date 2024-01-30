@@ -154,19 +154,28 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 		//TODO: make steps enum
 		switch (_step) {
 			case 0:
-				return <div className='flex justify-center space-x-4'>
-					<div 
-						className='flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						onClick={() => setStep(1)}
-					>
-						File Upload
+				return <div className='flex justify-evenly space-x-4 mt-20 w-2/3 mx-auto'>
+					<div className='flex flex-col items-center space-y-2'>
+						<button 
+							className='rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+							onClick={() => setStep(1)}
+						>
+							File Upload
+						</button>
+						<div className='text-sm'>
+							Upload a file from your computer.
+						</div>
 					</div>
-					
-					<div 
-						className='flex justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600'
-						onClick={() => setStep(2)}
-					>
-						Data Connection
+					<div className='flex flex-col items-center space-y-2'>
+						<button 
+							className='rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600'
+							onClick={() => setStep(2)}
+						>
+							Data Connection
+						</button>
+						<div className='text-sm'>
+							Sync data from external systems e.g. Google Sheets, Confluence.
+						</div>
 					</div>
 				</div>;			
 			case 1:

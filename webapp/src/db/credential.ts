@@ -37,7 +37,7 @@ export function getCredentialById(teamId: db.IdOrStr, credentialId: db.IdOrStr):
 		teamId: toObjectId(teamId),
 	}, {
 		projection: {
-			credentials: 0,
+			'credentials.key': 0,
 		}
 	});
 }
@@ -47,7 +47,7 @@ export function getCredentialsByTeam(teamId: db.IdOrStr): Promise<Credential> {
 		teamId: toObjectId(teamId),
 	}, {
 		projection: {
-			credentials: 0,
+			'credentials.key': 0,
 		}
 	}).toArray();
 }
@@ -60,7 +60,7 @@ export function getCredentialsById(teamId: db.IdOrStr, credentialIds: db.IdOrStr
 		teamId: toObjectId(teamId),
 	}, {
 		projection: {
-			credentials: 0,
+			'credentials.key': 0,
 		}
 	}).toArray();
 }
