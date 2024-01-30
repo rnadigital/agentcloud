@@ -75,7 +75,6 @@ impl Chunking for PdfChunker {
         map
     }
 
-
     fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)> {
         let trimmed_path = path.trim_matches('"');
         let mut metadata = HashMap::new();

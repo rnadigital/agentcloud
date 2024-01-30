@@ -40,7 +40,6 @@ impl LLM {
     ) -> Result<Vec<Vec<f32>>> {
         match model {
             EmbeddingModels::OAI => {
-                println!("Embedding...");
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                     .build();
