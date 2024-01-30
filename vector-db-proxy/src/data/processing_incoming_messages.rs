@@ -2,13 +2,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use qdrant_client::client::QdrantClient;
-use serde_json::{json, Value};
-
 use crate::qdrant::helpers::embed_table_chunks_async;
 use crate::qdrant::models::HashMapValues;
 use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_value;
+use qdrant_client::client::QdrantClient;
+use serde_json::{json, Value};
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,

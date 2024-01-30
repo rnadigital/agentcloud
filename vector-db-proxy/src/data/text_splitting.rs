@@ -1,9 +1,7 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
 use crate::llm::utils::{EmbeddingModels, LLM};
-use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
-use actix_web_lab::__reexports::futures_util::StreamExt;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
 
@@ -48,23 +46,13 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
-pub struct EmbeddingModel;
-
-impl EmbeddingModel {
-    async fn oai_embedding(&self, text: Vec<String>) -> Result<Vec<Vec<f32>>> {
-        let llm = LLM::new();
-        let embedding = llm.embed_text(text, EmbeddingModels::OAI).await.unwrap();
-        Ok(embedding)
-    }
-}
-
 pub struct SemanticChunker {
-    embeddings: EmbeddingModel,
+    embeddings: EmbeddingModels,
     add_start_index: bool,
 }
 
 impl SemanticChunker {
-    pub fn new(embeddings: EmbeddingModel, add_start_index: bool) -> Self {
+    pub fn new(embeddings: EmbeddingModels, add_start_index: bool) -> Self {
         SemanticChunker {
             embeddings,
             add_start_index,
@@ -72,41 +60,14 @@ impl SemanticChunker {
     }
     pub fn default() -> Self {
         SemanticChunker {
-            embeddings: EmbeddingModel,
+            embeddings: EmbeddingModels::OAI,
             add_start_index: true,
         }
     }
 
-    pub async fn embed_chunks_async(
-        &self,
-        table_chunks: &Vec<HashMap<String, String>>,
-    ) -> Vec<Vec<f32>> {
-        let mut list_of_embeddings: Vec<Vec<f32>> = vec![];
-        let mut futures = FuturesUnordered::new();
-        // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
-        for row in table_chunks.iter() {
-            futures.push(async move {
-                let embed_result = self
-                    .embeddings
-                    .oai_embedding(vec![row["sentence"].clone()])
-                    .await;
-                return match embed_result {
-                    Ok(point) => Ok(point[0].clone()),
-                    Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
-                };
-            });
-        }
-        while let Some(result) = futures.next().await {
-            match result {
-                Ok(point) => list_of_embeddings.push(point),
-                Err(err) => eprintln!("Err embedding text: {}", err),
-            }
-        }
-        list_of_embeddings
-    }
-
     async fn split_text(&self, text: &str) -> Vec<Document> {
         let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
+        let mut chunks = Vec::new();
         let mut sent: Vec<Sentence> = vec![];
         let mut sentences: Vec<HashMap<String, String>> = single_sentences_list
             .iter()
@@ -119,58 +80,72 @@ impl SemanticChunker {
             })
             .collect();
 
-        let embeddings = self.embed_chunks_async(&sentences).await;
-
-        for (i, sentence) in sentences.iter_mut().enumerate() {
-            sentence.insert(
-                "sentence_embedding".to_string(),
-                format!("{:?}", embeddings[i]),
-            );
-            sent.push(Sentence {
-                combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
-                distance_to_next: None,
-            });
-        }
-
-        let distances = calculate_cosine_distances(&mut sent);
-        let mut chunks = Vec::new();
-        let breakpoint_percentile_threshold = 95;
-        let breakpoint_distance_threshold = percentile(&distances, breakpoint_percentile_threshold);
-
-        let indices_above_thresh: Vec<usize> = distances
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &d)| {
-                if d > breakpoint_distance_threshold {
-                    Some(i)
-                } else {
-                    None
+        //
+        let llm = LLM::new();
+        let list_of_text: Vec<String> = sentences.iter().map(|s| s["sentence"].clone()).collect();
+        match llm
+            .embed_text_chunks_async(list_of_text, EmbeddingModels::OAI)
+            .await
+        {
+            Ok(embeddings) => {
+                for (i, sentence) in sentences.iter_mut().enumerate() {
+                    sentence.insert(
+                        "sentence_embedding".to_string(),
+                        format!("{:?}", embeddings[i]),
+                    );
+                    sent.push(Sentence {
+                        combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
+                        distance_to_next: None,
+                    });
                 }
-            })
-            .collect();
-        let mut start_index = 0;
-        for index in indices_above_thresh {
-            let group = &sentences[start_index..=index];
-            let combined_text = group
-                .iter()
-                .map(|d| d["sentence"].as_str())
-                .collect::<Vec<&str>>()
-                .join(". ");
-            let doc = Document::new(combined_text, None, Some(embeddings[index].to_owned()));
-            chunks.push(doc);
-            start_index = index + 1;
-        }
 
-        if start_index < sentences.len() {
-            let combined_text = sentences[start_index..]
-                .iter()
-                .map(|d| d["sentence"].as_str())
-                .collect::<Vec<&str>>()
-                .join(" ");
-            let doc = Document::new(combined_text, None, None);
-            chunks.push(doc);
-        }
+                let distances = calculate_cosine_distances(&mut sent);
+                let breakpoint_percentile_threshold = 95;
+                let breakpoint_distance_threshold =
+                    percentile(&distances, breakpoint_percentile_threshold);
 
+                let indices_above_thresh: Vec<usize> = distances
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, &d)| {
+                        if d > breakpoint_distance_threshold {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                let mut start_index = 0;
+                for index in indices_above_thresh {
+                    let group = &sentences[start_index..=index];
+                    let combined_text = group
+                        .iter()
+                        .map(|d| d["sentence"].as_str())
+                        .collect::<Vec<&str>>()
+                        .join(". ");
+                    let doc =
+                        Document::new(combined_text, None, Some(embeddings[index].to_owned()));
+                    chunks.push(doc);
+                    start_index = index + 1;
+                }
+
+                if start_index < sentences.len() {
+                    let combined_text = sentences[start_index..]
+                        .iter()
+                        .map(|d| d["sentence"].as_str())
+                        .collect::<Vec<&str>>()
+                        .join(" ");
+                    let doc = Document::new(combined_text, None, None);
+                    chunks.push(doc);
+                }
+            }
+            Err(e) => {
+                println!(
+                    "An error occurred while trying to embed text chunk. Error: {}",
+                    e
+                );
+            }
+        }
         chunks
     }
 
