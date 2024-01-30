@@ -72,6 +72,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							Name
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							№ Streams
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Source Type
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -103,6 +106,11 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '-'}
+								</span>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
 				                    <img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />
 									{datasource.sourceType}
 								</span>
@@ -113,7 +121,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? datasource.lastSyncedDate : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
+								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 								{datasource.sourceType !== 'file' &&  <button 
