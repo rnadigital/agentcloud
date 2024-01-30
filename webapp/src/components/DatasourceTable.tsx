@@ -72,6 +72,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							Name
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							№ Streams
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Source Type
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -100,6 +103,11 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 										<div className='text-sm font-medium text-gray-900'>{datasource.originalName}</div>
 									</div>
 								</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '-'}
+								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
