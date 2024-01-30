@@ -17,11 +17,11 @@ import {
 	CircleStackIcon,
 	CreditCardIcon,
 	KeyIcon,
+	Square3Stack3DIcon,
 	UserGroupIcon,
 	UserIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon,
-	Square3Stack3DIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
