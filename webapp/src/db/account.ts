@@ -1,10 +1,11 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export type AccountTeam = {
 	id: ObjectId;
@@ -48,7 +49,7 @@ export type Account = {
 	oauth?: OAuthRecordType,
 }
 
-export function AccountCollection() {
+export function AccountCollection(): any {
 	return db.db().collection('accounts');
 }
 
@@ -180,6 +181,6 @@ export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
 	});
 }
 
-export function addAccount(account: Account): Promise<db.InsertResult> {
+export function addAccount(account: Account): Promise<InsertResult> {
 	return AccountCollection().insertOne(account);
 }

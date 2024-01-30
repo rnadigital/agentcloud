@@ -15,7 +15,7 @@ export async function initRabbit() {
 
 export async function sendMessage(message: string, metadata: any) {
 	try {
-		channel.publish('streaming', 'key', Buffer.from(message), { headers: metadata });
+		await channel.publish('agentcloud', 'key', Buffer.from(message), { headers: metadata });
 	} catch (error) {
 		console.error('Error in sending message:', error);
 	}

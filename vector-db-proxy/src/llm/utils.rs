@@ -1,5 +1,7 @@
-use anyhow::Result;
+use actix_web_lab::__reexports::futures_util::StreamExt;
+use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
+use futures_util::stream::FuturesUnordered;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -9,6 +11,7 @@ use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 
+#[derive(Copy, Clone)]
 pub enum EmbeddingModels {
     OAI,
 }
@@ -35,12 +38,11 @@ impl LLM {
     /// ```
     pub async fn embed_text(
         &self,
-        text: Vec<String>,
-        model: EmbeddingModels,
+        text: Vec<&String>,
+        model: &EmbeddingModels,
     ) -> Result<Vec<Vec<f32>>> {
         match model {
             EmbeddingModels::OAI => {
-                println!("Embedding...");
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                     .build();
@@ -58,6 +60,33 @@ impl LLM {
                 Ok(embedding)
             }
         }
+    }
+
+    pub async fn embed_text_chunks_async(
+        &self,
+        table_chunks: Vec<String>,
+        model: EmbeddingModels,
+    ) -> Result<Vec<Vec<f32>>> {
+        let mut list_of_embeddings: Vec<Vec<f32>> = vec![];
+        let mut futures = FuturesUnordered::new();
+        // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
+        for text in table_chunks.iter() {
+            futures.push(async move {
+                // Embedding sentences using OpenAI ADA2
+                let embed_result = self.embed_text(vec![text], &model).await;
+                return match embed_result {
+                    Ok(point) => Ok(point[0].clone()),
+                    Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
+                };
+            });
+        }
+        while let Some(result) = futures.next().await {
+            match result {
+                Ok(point) => list_of_embeddings.push(point),
+                Err(err) => eprintln!("Err embedding text: {}", err),
+            }
+        }
+        Ok(list_of_embeddings)
     }
 
     ///
@@ -81,14 +110,12 @@ impl LLM {
         &self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         dataset_id: String,
-        text: Vec<String>,
+        text: Vec<&String>,
         filters: Option<FilterConditions>,
         limit: Option<u64>,
     ) -> Result<String> {
         let prompt = text.to_vec();
-        let prompt_embedding = &self
-            .embed_text(prompt.to_vec(), EmbeddingModels::OAI)
-            .await?;
+        let prompt_embedding = &self.embed_text(prompt, &EmbeddingModels::OAI).await?;
         let qdrant = Qdrant::new(qdrant_conn, dataset_id);
 
         let qdrant_search_results = qdrant

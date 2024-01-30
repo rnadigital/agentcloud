@@ -1,9 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export type CheckoutSession = {
 	_id?: ObjectId;
@@ -13,7 +14,7 @@ export type CheckoutSession = {
 	payload: any; //TODO: make this use stripe typings?
 };
 
-export function CheckoutSessionCollection() {
+export function CheckoutSessionCollection(): any {
 	return db.db().collection('checkoutsessions');
 }
 
@@ -36,7 +37,7 @@ export function getCheckoutSessionByAccountId(accountId: db.IdOrStr): Promise<Ch
 	});
 }
 
-export async function addCheckoutSession(checkoutSession: CheckoutSession): Promise<db.InsertResult> {
+export async function addCheckoutSession(checkoutSession: CheckoutSession): Promise<InsertResult> {
 	return CheckoutSessionCollection().insertOne(checkoutSession);
 }
 

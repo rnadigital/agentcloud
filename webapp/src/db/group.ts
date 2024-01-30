@@ -1,12 +1,12 @@
 'use strict';
 
+import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import { Group } from 'struct/group';
 
-import * as db from './index';
-
-export function GroupCollection() {
+export function GroupCollection(): any {
 	return db.db().collection('groups');
 }
 
@@ -33,11 +33,11 @@ export function getGroupsWithAgent(teamId: db.IdOrStr, agentId: db.IdOrStr): Pro
 	}).toArray();
 }
 
-export async function addGroup(group: Group): Promise<db.InsertResult> {
+export async function addGroup(group: Group): Promise<InsertResult> {
 	return GroupCollection().insertOne(group);
 }
 
-export async function updateGroup(teamId: db.IdOrStr, groupId: db.IdOrStr, group: Group): Promise<db.InsertResult> {
+export async function updateGroup(teamId: db.IdOrStr, groupId: db.IdOrStr, group: Group): Promise<InsertResult> {
 	return GroupCollection().updateOne({
 		_id: toObjectId(groupId),
 		teamId: toObjectId(teamId),

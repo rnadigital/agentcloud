@@ -25,16 +25,16 @@ const dev = process.env.NODE_ENV !== 'production'
 	, handle = app.getRequestHandler();
 
 // import getAirbyteInternalApi from 'lib/airbyte/internal';
+import * as db from 'db/index';
+import { migrate } from 'db/migrate';
+import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
+import * as ses from 'lib/email/ses';
 import { createBucket } from 'lib/google/gcs';
 import { initRabbit } from 'lib/rabbitmq/send';
+import * as redis from 'lib/redis/redis';
 import { v4 as uuidv4 } from 'uuid';
 
-import * as db from './db';
-import { migrate } from './db/migrate';
-import { initGlobalTools } from './db/tool';
-import * as ses from './lib/email/ses';
-import * as redis from './lib/redis/redis';
 import router from './router';
 import { initSocket } from './socketio';
 const log = debug('webapp:server');

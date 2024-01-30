@@ -1,9 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export type PaymentLink = {
 	_id?: ObjectId;
@@ -14,7 +15,7 @@ export type PaymentLink = {
 	payload: any; //TODO: make this use stripe typings?
 };
 
-export function PaymentLinkCollection() {
+export function PaymentLinkCollection(): any {
 	return db.db().collection('paymentlinks');
 }
 
@@ -31,7 +32,7 @@ export function unsafeGetPaymentLinkById(paymentLinkId: string): Promise<Payment
 	});
 }
 
-export async function addPaymentLink(paymentLink: PaymentLink): Promise<db.InsertResult> {
+export async function addPaymentLink(paymentLink: PaymentLink): Promise<InsertResult> {
 	return PaymentLinkCollection().insertOne(paymentLink);
 }
 

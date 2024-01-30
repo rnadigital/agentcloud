@@ -7,13 +7,14 @@ import { useRouter } from 'next/router';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { ToolType } from 'struct/tool';
+import { BaseOpenAPIParameters, ToolType } from 'struct/tool';
 
 import * as API from '../api';
 import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
 import FunctionCard from '../components/FunctionCard';
 import ParameterForm from '../components/ParameterForm';
 import { useAccountContext } from '../context/account';
+import { generateOpenAPIMatchKey } from '../lib/utils/toolsUtils';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -46,7 +47,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
-	const [searchTerm, setSearchTerm] = useState((tool?.name || '').toLowerCase());
+	const [searchTerm, setSearchTerm] = useState('');
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
@@ -54,8 +55,9 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 	}, []);
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [functionsList, setFunctionsList] = useState(null);
+	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
-	const [selectedFunction, setSelectedFunction] = useState(null);
+	const [selectedOpenAPIMatchKey, setSelectedOpenAPIMatchKey] = useState(null);
 	const [error, setError] = useState();
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 
@@ -89,6 +91,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 							};
 							return acc;
 						}, {}),
+						openAPIMatchKey: selectedOpenAPIMatchKey
 					},
 				};
 				break;
@@ -118,9 +121,9 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 				toolId: toolState._id,
 			}, () => {
 				toast.success('Tool Updated');
-			}, setError, null);
+			}, (err) => { toast.error(err); }, null);
 		} else {
-			API.addTool(body, null, setError, router);
+			API.addTool(body, null, (err) => { toast.error(err); }, router);
 		}
 	}
 
@@ -145,13 +148,13 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			if (!loadedDocument) {
 				setFunctionsList(null);
 				setInvalidFuns(0);
-				setSelectedFunction(null);
+				setSelectedOpenAPIMatchKey(null);
 				return toast.error('Failed to parse OpenAPI schema');
 			}
 		} else {
 			setFunctionsList(null);
 			setInvalidFuns(0);
-			setSelectedFunction(null);
+			setSelectedOpenAPIMatchKey(null);
 			return;
 		}
 		if (loadedDocument) {
@@ -165,7 +168,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			console.warn(e);
 			setFunctionsList(null);
 			setInvalidFuns(0);
-			setSelectedFunction(null);
+			setSelectedOpenAPIMatchKey(null);
 			return toast.error('Failed to parse OpenAPI schema');
 		}
 		const funs = [];
@@ -180,15 +183,15 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			})
 			.forEach(op => {
 				const baseParams = {
-					__baseurl: {
+					[BaseOpenAPIParameters.BASE_URL]: {
 						type: 'string',
 						description: 'The request path e.g. https://api.example.com',
 					},
-					__path: {
+					[BaseOpenAPIParameters.PATH]: {
 						type: 'string',
 						description: 'The request path e.g. /api/v3/whatever',
 					},
-					__method: {
+					[BaseOpenAPIParameters.METHOD]: {
 						type: 'string',
 						description: 'The request method, e.g. GET or POST',
 					}
@@ -199,20 +202,22 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						description: `${par.description||''}, e.g. ${par.schema.example}`,
 					};
 					return acc;
-				}, baseParams);
+				}, baseParams) || baseParams;
 				funs.push({
 					name: op.summary,
-					description: `${op.description ? (op.description+'.\n\n') : ''}The __path for this function is "${op.path}", the __method is "${op.method}", and the __baseurl is "${client.api.instance.defaults.baseURL}".`,
+					description: `${op.description ? (op.description+'.\n\n') : ''}The ${BaseOpenAPIParameters.PATH} for this function is "${op.path}",` +
+					` the ${BaseOpenAPIParameters.METHOD} is "${op.method}", and the ${BaseOpenAPIParameters.BASE_URL} is "${client.api.instance.defaults.baseURL}".`,
 					parameters: {
 						type: 'object',
 						properties: functionProps,
-						required: ['__baseurl', '__path', '__method'],
-					}
+						required: Object.keys(BaseOpenAPIParameters),
+					},
+					openAPIMatchKey: generateOpenAPIMatchKey(op)
 				});
 			});
-		console.log('openApi functions:', funs);
 		setInvalidFuns(newInvalidFuns);
 		setFunctionsList(funs);
+		setSelectedOpenAPIMatchKey(tool?.data?.parameters?.openAPIMatchKey);
 	}
 
 	useEffect(() => {
@@ -229,6 +234,30 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 			clearTimeout(handler);
 		};
 	}, [toolAPISchema]); // Only re-run the effect if inputValue changes
+
+	useEffect(() => {
+		if (toolType == ToolType.HOSTED_FUNCTION_TOOL) {
+			setSearchTerm('');
+			setFunctionsList(null);
+			setInvalidFuns(0);
+			setSelectedOpenAPIMatchKey('');
+		} else if (toolType === ToolType.API_TOOL) {
+			openApiToParams();
+		}
+	}, [toolType]);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			if (functionsList && searchTerm && searchTerm.length > 0) {
+				setFilteredFunctionsList(functionsList.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm)));
+			} else if (functionsList) {
+				setFilteredFunctionsList(functionsList.map(item => item));
+			}
+		}, 5000);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [searchTerm, functionsList]);
 
 	return (<form onSubmit={toolPost}>
 		<input
@@ -347,7 +376,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 											setImportValue('');
 											setFunctionsList(null);
 											setInvalidFuns(0);
-											setSelectedFunction(null);
+											setSelectedOpenAPIMatchKey(null);
 										}}
 									>Cancel</button>
 								</div>}
@@ -571,17 +600,16 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 						</div>
 					</div>
 					<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
-						{functionsList
-							.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
+						{filteredFunctionsList && filteredFunctionsList
+							// .filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
 							.map((item, index) => (
 								<FunctionCard
 									key={`functionList_${index}`}
 									{...item}
-									highlighted={selectedFunction?.name === item.name}
+									highlighted={selectedOpenAPIMatchKey === item.openAPIMatchKey}
 									onClickFunction={() => {
 										// setFunctionList(null);
-										setSearchTerm(item.name.toLowerCase());
-										setSelectedFunction(item);
+										setSelectedOpenAPIMatchKey(item.openAPIMatchKey);
 										setToolName(item?.name);
 										setToolDescription(item?.description);
 										const functionParameters = item.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {

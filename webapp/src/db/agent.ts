@@ -1,11 +1,12 @@
 'use strict';
 
+import * as db from 'db/index';
 import { Agent, AgentType, CodeExecutionConfigType, HumanInputModeType } from 'struct/agent';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
-export function AgentCollection() {
+export function AgentCollection(): any {
 	return db.db().collection('agents');
 }
 
@@ -52,15 +53,15 @@ export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 	]).toArray();
 }
 
-export async function addAgent(agent: Agent): Promise<db.InsertResult> {
+export async function addAgent(agent: Agent): Promise<InsertResult> {
 	return AgentCollection().insertOne(agent);
 }
 
-export async function addAgents(agents: Agent[]): Promise<db.InsertResult> {
+export async function addAgents(agents: Agent[]): Promise<InsertResult> {
 	return AgentCollection().insertMany(agents);
 }
 
-export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent: Agent): Promise<db.InsertResult> {
+export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent: Agent): Promise<InsertResult> {
 	return AgentCollection().updateOne({
 		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId),

@@ -1,9 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export type PortalLink = {
 	_id?: ObjectId;
@@ -14,7 +15,7 @@ export type PortalLink = {
 	payload: any;
 };
 
-export function PortalLinkCollection() {
+export function PortalLinkCollection(): any {
 	return db.db().collection('portallinks');
 }
 
@@ -31,7 +32,7 @@ export function unsafeGetPortalLinkById(portalLinkId: string): Promise<PortalLin
 	});
 }
 
-export async function addPortalLink(portalLink: PortalLink): Promise<db.InsertResult> {
+export async function addPortalLink(portalLink: PortalLink): Promise<InsertResult> {
 	return PortalLinkCollection().insertOne(portalLink);
 }
 

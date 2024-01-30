@@ -1,4 +1,4 @@
-import DatasourceForm from 'components/DatasourceForm';
+import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -22,11 +22,11 @@ export default function AddDatasource(props) {
 			<title>{`New Datasource - ${teamName}`}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2'>
+		<div className='pb-2 my-2'>
 			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
 		</div>
 
-		<DatasourceForm />
+		<CreateDatasourceForm />
 
 	</>);
 

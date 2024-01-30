@@ -1,9 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 import { addTeamToOrg } from './org';
 
 export type Team = {
@@ -14,7 +15,7 @@ export type Team = {
 	name: string;
 }
 
-export function TeamCollection() {
+export function TeamCollection(): any {
 	return db.db().collection('teams');
 }
 
@@ -24,7 +25,7 @@ export function getTeamById(teamId: db.IdOrStr): Promise<Team> {
 	});
 }
 
-export async function addTeam(team: Team): Promise<db.InsertResult> {
+export async function addTeam(team: Team): Promise<InsertResult> {
 	const insertedTeam = await TeamCollection().insertOne(team);
 	await addTeamToOrg(team.orgId, insertedTeam.insertedId);
 	return insertedTeam;

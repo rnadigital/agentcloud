@@ -8,6 +8,10 @@ WORKDIR ${workdir}
 RUN apt-get update && \
     apt-get install -y cmake
 
+ARG GOOGLE_KEYPATH
+COPY $GOOGLE_KEYPATH ${workdir}/keyfile.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=${workdir}/keyfile.json
+
 #Copy source code to image
 COPY . $workdir
 #COPY src/publish_to_pubsub.rs ${workdir}

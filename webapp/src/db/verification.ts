@@ -1,10 +1,10 @@
 'use strict';
 
 import { randomBytes } from 'crypto';
+import * as db from 'db/index';
 import { ObjectId } from 'mongodb';
 
 import toObjectId from '../lib/misc/toobjectid';
-import * as db from './index';
 
 export enum VerificationTypes {
 	VERIFY_EMAIL = 'email',
@@ -21,7 +21,7 @@ export type Verification = {
 	type: VerificationType;
 }
 
-export function VerificationCollection() {
+export function VerificationCollection(): any {
 	return db.db().collection('verifications');
 }
 

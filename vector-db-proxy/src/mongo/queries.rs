@@ -21,3 +21,19 @@ pub async fn get_team_id_for_datasource(
 
     Ok(team_id)
 }
+
+pub async fn get_embedding_length(db: Database, datasource_id: String) -> MongoResult<Document> {
+    let datasources_collection: Collection<Document> = db.collection("datasources");
+    let find_options = FindOneOptions::builder()
+        .sort(doc! {"embeddingLength": 1})
+        .build();
+    let embedding_length = datasources_collection
+        .find_one(
+            doc! {"_id": ObjectId::from_str(datasource_id.as_str()).unwrap()},
+            find_options,
+        )
+        .await?
+        .unwrap();
+
+    Ok(embedding_length)
+}
