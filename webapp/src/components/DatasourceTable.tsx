@@ -121,7 +121,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? datasource.lastSyncedDate : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
+								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 								{datasource.sourceType !== 'file' &&  <button 
