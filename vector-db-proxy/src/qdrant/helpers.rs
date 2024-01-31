@@ -11,13 +11,13 @@ use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use serde_json::json;
-use tokio::sync::RwLock;
-use uuid::Uuid;
 use crate::hash_map_values_as_serde_values;
 use crate::qdrant::utils::Qdrant;
+use serde_json::json;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use uuid::Uuid;
 
 ///
 ///
@@ -218,5 +218,22 @@ pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<V
         }
     } else {
         Err(anyhow!("Payload is empty"))
+    }
+}
+
+pub async fn construct_point_struct(
+    vector: &Vec<f32>,
+    payload: HashMap<String, String>,
+) -> Option<PointStruct> {
+    if !payload.is_empty() {
+        let qdrant_point_struct = PointStruct::new(
+            Uuid::new_v4().to_string(),
+            vector.to_owned(),
+            json!(payload).try_into().unwrap(),
+        );
+        Some(qdrant_point_struct)
+    } else {
+        println!("Metadata payload is empty!");
+        None
     }
 }

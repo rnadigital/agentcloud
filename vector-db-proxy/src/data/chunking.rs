@@ -1,7 +1,13 @@
 use crate::data::{models::Document, text_splitting::SemanticChunker};
 use anyhow::{anyhow, Result};
+
 use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
+use std::io::Read;
+
+extern crate dotext;
+
+use dotext::*;
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,
     CODE_SPLIT,
@@ -12,6 +18,7 @@ pub trait Chunking {
     fn default() -> Self;
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
     fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_docx(&self, path: &str) -> Result<(String, HashMap<String, String>)>;
     async fn chunk(
         &self,
         data: String,
@@ -20,13 +27,13 @@ pub trait Chunking {
     ) -> Result<Vec<Document>>;
 }
 
-pub struct PdfChunker;
+pub struct TextChunker;
 
-impl Chunking for PdfChunker {
+impl Chunking for TextChunker {
     type Item = u8;
 
     fn default() -> Self {
-        PdfChunker
+        TextChunker
     }
 
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String> {
@@ -98,6 +105,16 @@ impl Chunking for PdfChunker {
             }
         }
         Ok(res)
+    }
+    // this method covers docx, xlsx and pptx
+    fn extract_text_from_docx(&self, path: &str) -> Result<(String, HashMap<String, String>)> {
+        let metadata = HashMap::new();
+        let mut docx = String::new();
+        let mut file = Docx::open(path).expect("Cannot open file");
+        file.read_to_string(&mut docx).unwrap();
+
+        let results = (docx, metadata);
+        Ok(results)
     }
 
     async fn chunk(
