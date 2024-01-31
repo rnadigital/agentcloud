@@ -49,7 +49,7 @@ impl From<String> for FileType {
             "pdf" => Self::PDF,
             "txt" => Self::TXT,
             "doc" => Self::DOC,
-            "docx" => Self::DOCX,
+            "docx" | "pptx" | "xlsx" | "odt" | "ods" | "odp" => Self::DOCX,
             _ => Self::UNKNOWN,
         }
     }

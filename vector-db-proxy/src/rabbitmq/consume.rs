@@ -26,18 +26,20 @@ async fn extract_text_from_file(
 ) -> Option<(String, HashMap<String, String>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
+    let chunker = TextChunker::default();
     match file_type {
         FileType::PDF => {
-            let pdf = TextChunker::default();
-            (document_text, metadata) = pdf
+            (document_text, metadata) = chunker
                 .extract_text_from_pdf(file_path)
                 .expect("TODO: panic message");
         }
         FileType::TXT => {
             document_text = fs::read_to_string(file_path).unwrap();
         }
+        FileType::DOCX => {
+            (document_text, metadata) = chunker.extract_text_from_docx(file_path).unwrap();
+        }
         FileType::DOC => {}
-        FileType::DOCX => {}
         FileType::UNKNOWN => {}
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
