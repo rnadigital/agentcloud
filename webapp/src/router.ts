@@ -23,6 +23,7 @@ import * as airbyteProxyController from './controllers/airbyte';
 import * as credentialController from './controllers/credential';
 import * as datasourceController from './controllers/datasource';
 import * as groupController from './controllers/group';
+import * as modelController from './controllers/model';
 import * as sessionController from './controllers/session';
 import * as stripeController from './controllers/stripe';
 import * as teamController from './controllers/team';
@@ -134,6 +135,10 @@ export default function router(server, app) {
 	teamRouter.post('/forms/tool/add', toolController.addToolApi);
 	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
 	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
+
+	//models
+	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
+	teamRouter.get('/models.json', modelController.modelsJson);
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
