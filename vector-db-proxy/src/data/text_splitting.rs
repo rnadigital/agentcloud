@@ -46,6 +46,39 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
+pub struct CharacterChunker {
+    splitting_character: String,
+}
+
+impl CharacterChunker {
+    fn new(splitting_character: String) -> Self {
+        CharacterChunker {
+            splitting_character,
+        }
+    }
+
+    fn default() -> Self {
+        CharacterChunker {
+            splitting_character: String::from("."),
+        }
+    }
+    fn split_document(&self, doc: Vec<Document>) -> Vec<String> {
+        doc.iter()
+            .flat_map(|t| t.page_content.split(&self.splitting_character))
+            .map(|sentence| sentence.trim().to_string())
+            .filter(|sentence| !sentence.is_empty())
+            .collect()
+    }
+    async fn embed_text(text: Vec<String>) -> Vec<Vec<f32>> {
+        let llm = LLM::new();
+        llm.embed_text_chunks_async(text, EmbeddingModels::OAI)
+            .await
+            .unwrap()
+    }
+
+    // fn construct_document_model(text: Vec<String>, vector: V)
+}
+
 pub struct SemanticChunker {
     embeddings: EmbeddingModels,
     add_start_index: bool,
@@ -170,6 +203,7 @@ impl SemanticChunker {
                         metadata.insert("start_index".to_string(), idx.to_string());
                     }
                 }
+                metadata.insert("text".to_string(), chunk.page_content.to_string());
                 chunk.metadata = Some(metadata);
                 documents.push(chunk);
             }

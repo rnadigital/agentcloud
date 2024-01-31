@@ -23,7 +23,7 @@ use tokio::sync::RwLock;
 async fn extract_text_from_file(
     file_type: FileType,
     file_path: &str,
-) -> Option<(String, HashMap<String, String>)> {
+) -> Option<(String, Option<HashMap<String, String>>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
     let path = file_path.trim_matches('"').path().to_string();
@@ -55,41 +55,23 @@ async fn extract_text_from_file(
             file_path, e
         ),
     }
-    println!("File text: {:?}", document_text);
-    let results = (document_text, metadata);
+    let results = (document_text, Some(metadata));
     Some(results)
 }
 
 async fn apply_chunking_strategy_to_document(
-    file_type: FileType,
     document_text: String,
     metadata: Option<HashMap<String, String>>,
     chunking_strategy: ChunkingStrategy,
 ) -> Result<Vec<DocumentModel>> {
     let mut chunks: Vec<DocumentModel> = vec![];
     let chunker = TextChunker::default();
-    match file_type {
-        FileType::PDF => {
-            match chunker
-                .chunk(document_text, metadata, chunking_strategy)
-                .await
-            {
-                Ok(c) => chunks = c,
-                Err(e) => println!("An error occurred: {}", e),
-            }
-        }
-        FileType::TXT => {
-            match chunker
-                .chunk(document_text, metadata, chunking_strategy)
-                .await
-            {
-                Ok(c) => chunks = c,
-                Err(e) => println!("An error occurred: {}", e),
-            }
-        }
-        FileType::DOC => {}
-        FileType::DOCX => {}
-        FileType::UNKNOWN => {}
+    match chunker
+        .chunk(document_text, metadata, chunking_strategy)
+        .await
+    {
+        Ok(c) => chunks = c,
+        Err(e) => println!("An error occurred: {}", e),
     }
     Ok(chunks)
 }
@@ -162,9 +144,8 @@ pub async fn subscribe_to_queue(
                                             .await
                                             .unwrap();
                                             match apply_chunking_strategy_to_document(
-                                                file_type,
                                                 document_text,
-                                                Some(metadata),
+                                                metadata,
                                                 ChunkingStrategy::SEMANTIC_CHUNKING,
                                             )
                                             .await
@@ -173,19 +154,17 @@ pub async fn subscribe_to_queue(
                                                     let mut points_to_upload: Vec<PointStruct> =
                                                         vec![];
                                                     for element in chunks.iter() {
-                                                        let mut metadata =
-                                                            element.metadata.clone().unwrap();
-                                                        metadata.insert(
-                                                            "text".to_string(),
-                                                            element.page_content.to_string(),
-                                                        );
                                                         let embedding_vector =
                                                             &element.embedding_vector;
                                                         match embedding_vector {
                                                             Some(val) => {
                                                                 if let Some(point_struct) =
                                                                     construct_point_struct(
-                                                                        val, metadata,
+                                                                        val,
+                                                                        element
+                                                                            .metadata
+                                                                            .clone()
+                                                                            .unwrap(),
                                                                     )
                                                                     .await
                                                                 {
