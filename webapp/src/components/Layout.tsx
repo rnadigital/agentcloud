@@ -58,7 +58,7 @@ const agentNavigation = [
 	{ name: 'Models', href: '/models', icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Tools', href: '/tools', icon: <WrenchScrewdriverIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Data Sources', href: '/datasources', icon: <CircleStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
-	{ name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, indent: 4 },
+	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, indent: 4 },
 ];
 
 const teamNavigation = [
