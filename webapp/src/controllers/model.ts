@@ -32,3 +32,13 @@ export async function modelsJson(req, res, next) {
 	const data = await modelsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
+
+/**
+* GET /[resourceSlug]/model/add
+* models add page html
+*/
+export async function modelAddPage(app, req, res, next) {
+	const data = await modelsData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/model/add`);
+}

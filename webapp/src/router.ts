@@ -139,6 +139,7 @@ export default function router(server, app) {
 	//models
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
 	teamRouter.get('/models.json', modelController.modelsJson);
+	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
