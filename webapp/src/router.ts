@@ -140,6 +140,7 @@ export default function router(server, app) {
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
 	teamRouter.get('/models.json', modelController.modelsJson);
 	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
+	teamRouter.post('/forms/model/add', modelController.modelAddApi);
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
