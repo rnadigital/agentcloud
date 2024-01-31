@@ -1,7 +1,7 @@
 use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
-use futures_util::stream::FuturesUnordered;
+use futures_util::stream::FuturesOrdered;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -68,10 +68,10 @@ impl LLM {
         model: EmbeddingModels,
     ) -> Result<Vec<Vec<f32>>> {
         let mut list_of_embeddings: Vec<Vec<f32>> = vec![];
-        let mut futures = FuturesUnordered::new();
+        let mut futures = FuturesOrdered::new();
         // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
         for text in table_chunks.iter() {
-            futures.push(async move {
+            futures.push_back(async move {
                 // Embedding sentences using OpenAI ADA2
                 let embed_result = self.embed_text(vec![text], &model).await;
                 return match embed_result {
@@ -129,7 +129,7 @@ impl LLM {
         // Data coming from external systems should be a system message
         let executor = executor!(chatgpt)?;
         let data = list_of_system_prompts[0].join(", ");
-
+        println!("Data: {:?}", data);
         let step_1 = Step::for_prompt_template(
             prompt!(system: "I will provide you with data that you can use to answer the user's questions"),
         );
