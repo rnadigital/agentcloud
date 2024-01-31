@@ -26,30 +26,36 @@ async fn extract_text_from_file(
 ) -> Option<(String, HashMap<String, String>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
+    let path = file_path.trim_matches('"').path().to_string();
     let chunker = TextChunker::default();
     match file_type {
         FileType::PDF => {
+            let path_clone = path.clone();
             (document_text, metadata) = chunker
-                .extract_text_from_pdf(file_path)
+                .extract_text_from_pdf(path_clone)
                 .expect("TODO: panic message");
         }
         FileType::TXT => {
-            document_text = fs::read_to_string(file_path).unwrap();
+            let path_clone = path.clone();
+            document_text = fs::read_to_string(path_clone).unwrap();
         }
         FileType::DOCX => {
-            (document_text, metadata) = chunker.extract_text_from_docx(file_path).unwrap();
+            let path_clone = path.clone();
+            (document_text, metadata) = chunker.extract_text_from_docx(path_clone).unwrap();
         }
         FileType::DOC => {}
         FileType::UNKNOWN => {}
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
-    match fs::remove_file(file_path.trim_matches('"').path()) {
+    let path_clone = path.clone();
+    match fs::remove_file(path_clone) {
         Ok(_) => println!("File: {:?} successfully deleted", file_path),
         Err(e) => println!(
             "An error occurred while trying to delete file: {}. Error: {:?}",
             file_path, e
         ),
     }
+    println!("File text: {:?}", document_text);
     let results = (document_text, metadata);
     Some(results)
 }
@@ -141,8 +147,10 @@ pub async fn subscribe_to_queue(
                                             let file_path = format!("{}", file_name);
                                             let file_path_split: Vec<&str> =
                                                 file_path.split(".").collect();
-                                            let file_extension =
-                                                file_path_split.to_vec()[1].to_string();
+                                            let file_extension = file_path_split.to_vec()[1]
+                                                .to_string()
+                                                .trim_end_matches('"')
+                                                .to_string();
                                             let file_type = FileType::from(file_extension);
                                             // The reason we are choosing to write the file to disk first is to create
                                             // parity between running locally and running in cloud

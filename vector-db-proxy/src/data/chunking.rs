@@ -17,8 +17,8 @@ pub trait Chunking {
     type Item;
     fn default() -> Self;
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
-    fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)>;
-    fn extract_text_from_docx(&self, path: &str) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     async fn chunk(
         &self,
         data: String,
@@ -82,14 +82,13 @@ impl Chunking for TextChunker {
         map
     }
 
-    fn extract_text_from_pdf(&self, path: &str) -> Result<(String, HashMap<String, String>)> {
-        let trimmed_path = path.trim_matches('"');
+    fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         let mut metadata = HashMap::new();
         let mut res = (String::new(), metadata);
-        if let Ok(doc) = lopdf::Document::load(trimmed_path) {
+        if let Ok(doc) = lopdf::Document::load(path.as_str()) {
             let pages = doc.get_pages();
             for (page_id, page) in pages {
-                return match pdf_extract::extract_text(trimmed_path) {
+                return match pdf_extract::extract_text(path.as_str()) {
                     Ok(text) => {
                         let page_dict = doc.get_dictionary(page)?;
                         metadata = self.dictionary_to_hashmap(page_dict);
@@ -107,10 +106,10 @@ impl Chunking for TextChunker {
         Ok(res)
     }
     // this method covers docx, xlsx and pptx
-    fn extract_text_from_docx(&self, path: &str) -> Result<(String, HashMap<String, String>)> {
+    fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         let metadata = HashMap::new();
         let mut docx = String::new();
-        let mut file = Docx::open(path).expect("Cannot open file");
+        let mut file = Docx::open(path.as_str()).expect("Cannot open file");
         file.read_to_string(&mut docx).unwrap();
 
         let results = (docx, metadata);
