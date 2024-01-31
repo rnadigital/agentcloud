@@ -1,5 +1,5 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
-// import CredentialTable from 'components/CredentialTable';
+import ModelTable from 'components/ModelTable';
 import NewButtonSection from 'components/NewButtonSection';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -49,7 +49,7 @@ export default function Models(props) {
 			</Link>}
 		</div>}
 
-		{/*TODO: ModelTable <CredentialTable credentials={credentials} fetchCredentials={fetchCredentials} />*/}
+		<ModelTable models={models} fetchModels={fetchModels} />
 
 		{models.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/model/add`}
