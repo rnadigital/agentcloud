@@ -1,4 +1,7 @@
-import CreateDatasourceForm from 'components/CreateDatasourceForm';
+import dynamic from 'next/dynamic';
+const CreateDatasourceForm = dynamic(() => import('components/CreateDatasourceForm'), {
+	ssr: false,
+});
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';

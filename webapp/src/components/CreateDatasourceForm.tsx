@@ -10,7 +10,11 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { DatasourceScheduleType } from 'struct/schedule';
 import SelectClassNames from 'styles/SelectClassNames';
+import {
+	InformationCircleIcon,
+} from '@heroicons/react/20/solid';
 
 import { useAccountContext } from '../context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
@@ -28,6 +32,16 @@ const stepList = [
 	{ id: 'Step 2', name: 'Connect datasource', href: '#', steps: [1, 2] },
 	{ id: 'Step 3', name: 'Sync configuration', href: '#', steps: [3] },
 ];
+// @ts-ignore
+const Markdown = dynamic(() => import('react-markdown'), {
+	loading: () => <p className='markdown-content'>Loading...</p>,
+	ssr: false,
+});
+import rehypeRaw from 'rehype-raw';
+const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
+	loading: () => <p className='markdown-content'>Loading...</p>,
+	ssr: false,
+});
 
 export default function CreateDatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
@@ -40,6 +54,11 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
+	const [timeUnit, setTimeUnit] = useState('');
+	const [units, setUnits] = useState('');
+	const [cronExpression, setCronExpression] = useState('');
+	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -105,6 +124,11 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 						connectorName: connector.label,
 						resourceSlug,
 						datasourceName,
+						scheduleType,
+						timeUnit,
+						units,
+						cronExpression,
+						cronTimezone,
 					};
 					//step 2, getting schema and testing connection
 					const stagedDatasource: any = await API.testDatasource(body, () => {
@@ -136,6 +160,11 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 						resourceSlug,
 						selectedFieldsMap,
 						streams,
+						scheduleType,
+						timeUnit,
+						units,
+						cronExpression,
+						cronTimezone,
 					};
 					const addedDatasource: any = await API.addDatasource(body, () => {
 						toast.success('Added datasource');
@@ -226,10 +255,10 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 							</div>
 							: spec?.schema && <>
 								<div className='sm:col-span-12 my-3'>
-									<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 										Datasource Name<span className='text-red-700'> *</span>
 									</label>
-									<div className='mt-2'>
+									<div>
 										<input
 											required
 											type='text'
@@ -240,6 +269,18 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 										/>
 									</div>
+									<DatasourceScheduleForm
+										scheduleType={scheduleType}
+										setScheduleType={setScheduleType}
+										timeUnit={timeUnit}
+										setTimeUnit={setTimeUnit}
+										units={units}
+										setUnits={setUnits}
+										cronExpression={cronExpression}
+										setCronExpression={setCronExpression}
+										cronTimezone={cronTimezone}
+										setCronTimezone={setCronTimezone}
+									/>
 								</div>
 								<TailwindForm
 									schema={spec.schema.connectionSpecification}

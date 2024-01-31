@@ -78,7 +78,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							Source Type
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-							ID
+							Schedule Type
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Last Synced
@@ -105,7 +105,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
 									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '-'}
 								</span>
 							</td>
@@ -116,8 +116,8 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
-									{datasource._id}
+								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
+									{datasource?.connectionSettings?.scheduleType || '-'}
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>

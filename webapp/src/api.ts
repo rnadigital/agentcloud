@@ -128,6 +128,9 @@ export function addDatasource(body, dispatch, errorCallback, router) {
 export function updateDatasourceStreams(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/streams`, 'PATCH', body, dispatch, errorCallback, router);
 }
+export function updateDatasourceSchedule(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/schedule`, 'PATCH', body, dispatch, errorCallback, router);
+}
 export function deleteDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/${body.datasourceId}`, 'DELETE', body, dispatch, errorCallback, router);
 }

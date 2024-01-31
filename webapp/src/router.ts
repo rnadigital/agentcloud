@@ -145,6 +145,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', datasourceController.updateDatasourceStreamsApi);
+	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', datasourceController.updateDatasourceScheduleApi);
 	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', datasourceController.syncDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 

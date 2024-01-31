@@ -15,9 +15,10 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnection, setDatasourceLastSynced } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceLastSynced } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -199,14 +200,23 @@ export async function testDatasourceApi(req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { datasourceId, streams, selectedFieldsMap }  = req.body;
+	const { 
+		datasourceId,
+		streams,
+		selectedFieldsMap,
+		scheduleType,
+		timeUnit,
+		units,
+		cronExpression,
+		cronTimezone
+	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: validation for selectedFieldsMap
+	//TODO: validation for other fields
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
@@ -245,7 +255,7 @@ export async function addDatasourceApi(req, res, next) {
 				};
 			})
 		},
-		scheduleType: 'manual',
+		scheduleType: scheduleType,
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
@@ -255,6 +265,21 @@ export async function addDatasourceApi(req, res, next) {
 		operations: [],
 		skipReset: false,
 	};
+	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
+		connectionBody['scheduleData'] = {
+			basicSchedule: {
+				timeUnit,
+				units,
+			},
+		};
+	} else if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['scheduleData'] = {
+			cron: {
+				cronExpression,
+				cronTimezone,
+			},
+		};
+	}
 	// console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
@@ -275,7 +300,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
-		setDatasourceConnection(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
+		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
 		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date())
 	]);
 
@@ -285,15 +310,104 @@ export async function addDatasourceApi(req, res, next) {
 
 }
 
-//Note: can be converted to a generic "edit" in future if necessary
+export async function updateDatasourceScheduleApi(req, res, next) {
+
+	const { 
+		datasourceId,
+		scheduleType,
+		timeUnit,
+		units,
+		cronExpression,
+		cronTimezone
+	}  = req.body;
+
+	if (!datasourceId || typeof datasourceId !== 'string') {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	//TODO: validation for other fields
+
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create a connection to our destination in airbyte
+	const connectionsApi = await getAirbyteInternalApi();
+	const connectionBody = datasource.connectionSettings;
+	connectionBody['connectionId'] = datasource.connectionId;
+	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
+		connectionBody['scheduleData'] = {
+			basicSchedule: {
+				timeUnit,
+				units,
+			},
+		};
+	} else if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['scheduleData'] = {
+			cron: {
+				cronExpression,
+				cronTimezone,
+			},
+		};
+	}
+	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	const updatedConnection = await connectionsApi
+		.updateConnection(null, connectionBody)
+		.then(res => {
+			console.log(res?.response?.data);
+			return res.data;
+		})
+		.catch(err => {
+			console.log(err?.response?.data);
+		});
+	console.log('updatedConnection', updatedConnection);
+
+/*	if (sync === true) {
+		// Create a job to trigger the connection to sync
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'sync',
+		};
+		const createdJob = await jobsApi
+			.createJob(null, jobBody)
+			.then(res => res.data);
+		console.log('createdJob', createdJob);
+	}*/
+
+	// Update the datasource with the connection settings and sync date
+	await Promise.all([
+		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
+	]);
+
+	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	return dynamicResponse(req, res, 200, { });
+
+}
+
 export async function updateDatasourceStreamsApi(req, res, next) {
 
-	const { datasourceId, streams, sync, selectedFieldsMap }  = req.body;
+	const { 
+		datasourceId,
+		streams,
+		sync,
+		selectedFieldsMap,
+		scheduleType,
+		timeUnit,
+		units,
+		cronExpression,
+		cronTimezone
+	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	//TODO: validation for other fields
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
@@ -332,7 +446,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 				};
 			})
 		},
-		scheduleType: 'manual',
+		scheduleType,
 		namespaceDefinition: 'destination',
 		namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
@@ -342,6 +456,21 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		operations: [],
 		skipReset: false,
 	};
+	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
+		connectionBody['scheduleData'] = {
+			basicSchedule: {
+				timeUnit,
+				units,
+			},
+		};
+	} else if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['scheduleData'] = {
+			cron: {
+				cronExpression,
+				cronTimezone,
+			},
+		};
+	}
 	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
 		.updateConnection(null, connectionBody)
@@ -366,7 +495,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
-		setDatasourceConnection(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
+		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
 		sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
 	]);
 
