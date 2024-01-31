@@ -6,6 +6,8 @@ def add_tool(tool_dict: dict) -> None:
     """
     Add a tool to the mongo database.
     """
+    assert isinstance(tool_dict, dict)
+
     cnxn = MongoClient()
     mongo_client = cnxn["test"]
 

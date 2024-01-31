@@ -4,8 +4,10 @@ from pymongo import MongoClient
 
 def add_group(group_dict: dict) -> None:
     """
-    Add an agent to the mongo database.
+    Add a group to the mongo database.
     """
+    assert isinstance(group_dict, dict), "group_dict must be a dictionary."
+
     cnxn = MongoClient()
     mongo_client = cnxn["test"]
 
@@ -17,7 +19,7 @@ def add_group(group_dict: dict) -> None:
 
 def reset_default_groups() -> None:
     """
-    Delete agents present and reset the mongo database with default agents.
+    Delete groups present and reset the mongo database with default groups.
     """
     cnxn = MongoClient()
     mongo_client = cnxn["test"]

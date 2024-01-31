@@ -6,6 +6,8 @@ def add_agent(agent_dict: dict) -> None:
     """
     Add an agent to the mongo database.
     """
+    assert isinstance(agent_dict, dict), "agent_dict must be a dictionary."
+
     cnxn = MongoClient()
     mongo_client = cnxn["test"]
 
@@ -16,6 +18,8 @@ def add_agent(agent_dict: dict) -> None:
 
 
 def recreate_for_35(agent_dict: dict) -> None:
+    assert isinstance(agent_dict, dict), "agent_dict must be a dictionary."
+
     # Pop id, recreate for 3.5
     agent_dict.pop("_id", None)
     agent_dict["name"] = agent_dict["name"] + "3.5"
