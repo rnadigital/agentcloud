@@ -36,7 +36,6 @@ import logging
 
 
 if __name__ == "__main__":
-    
     # session_id 12-byte input or a 24-character hex string
     session_id = "60a6d3c0e4b0c1a6e1b4a8f5"
     room = "dev_room"
@@ -61,7 +60,6 @@ if __name__ == "__main__":
         socket_logging="logging",
     )
 
-    
     total_tokens = 0
     agent_name = "Retriever"
 
@@ -74,7 +72,7 @@ if __name__ == "__main__":
             }
         },
     )
-    
+
     assert len(config_list) > 0
 
     llm_config = {"config_list": config_list, "cache_seed": 42}
@@ -85,7 +83,7 @@ if __name__ == "__main__":
     assistant = RetrieveAssistantAgent(
         name="assistant",
         system_message="""
-                    You have two other assistants helping you. 
+                    You have two other assistants helping you.
                     Synthesize their answer and contrast the difference between Obama and Trump.
                     Once synthesized, end your response with (note the new line)
                     TERMINATE.""",
@@ -150,16 +148,20 @@ if __name__ == "__main__":
             "cache_seed": 42,
             "config_list": config_list,
         },
-        is_termination_msg=lambda msg: "TERMINATE" in msg["content"]
+        is_termination_msg=lambda msg: "TERMINATE" in msg["content"],
     )
 
     # reset the assistant. Always reset the assistant before starting a new conversation.
     assistant.reset()
 
-    groupchat = autogen.GroupChat(agents=[assistant, ragproxyagent_obama, ragproxyagent_donald, dummy_user_proxy], messages=[], max_round=6)
+    groupchat = autogen.GroupChat(
+        agents=[assistant, ragproxyagent_obama, ragproxyagent_donald, dummy_user_proxy],
+        messages=[],
+        max_round=6,
+    )
     manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
 
     qa_problem = "What are the main contributions of Barack Obama and Donald Trump during their presidency?"
-    
+
     # Kick off the groupd chat
     dummy_user_proxy.initiate_chat(manager, message=qa_problem)
