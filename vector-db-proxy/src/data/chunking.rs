@@ -20,13 +20,13 @@ pub trait Chunking {
     ) -> Result<Vec<Document>>;
 }
 
-pub struct PdfChunker;
+pub struct TextChunker;
 
-impl Chunking for PdfChunker {
+impl Chunking for TextChunker {
     type Item = u8;
 
     fn default() -> Self {
-        PdfChunker
+        TextChunker
     }
 
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String> {

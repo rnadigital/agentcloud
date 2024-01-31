@@ -1,5 +1,5 @@
-use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
-use crate::data::models::Document as ModelDocument;
+use crate::data::chunking::{Chunking, ChunkingStrategy, TextChunker};
+use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
@@ -28,12 +28,14 @@ async fn extract_text_from_file(
     let mut metadata = HashMap::new();
     match file_type {
         FileType::PDF => {
-            let pdf = PdfChunker::default();
+            let pdf = TextChunker::default();
             (document_text, metadata) = pdf
                 .extract_text_from_pdf(file_path)
                 .expect("TODO: panic message");
         }
-        FileType::TXT => {}
+        FileType::TXT => {
+            document_text = fs::read_to_string(file_path).unwrap();
+        }
         FileType::DOC => {}
         FileType::DOCX => {}
         FileType::UNKNOWN => {}
@@ -55,17 +57,28 @@ async fn apply_chunking_strategy_to_document(
     document_text: String,
     metadata: Option<HashMap<String, String>>,
     chunking_strategy: ChunkingStrategy,
-) -> Result<Vec<ModelDocument>> {
-    let mut chunks: Vec<ModelDocument> = vec![];
+) -> Result<Vec<DocumentModel>> {
+    let mut chunks: Vec<DocumentModel> = vec![];
+    let chunker = TextChunker::default();
     match file_type {
         FileType::PDF => {
-            let pdf = PdfChunker::default();
-            match pdf.chunk(document_text, metadata, chunking_strategy).await {
+            match chunker
+                .chunk(document_text, metadata, chunking_strategy)
+                .await
+            {
                 Ok(c) => chunks = c,
                 Err(e) => println!("An error occurred: {}", e),
             }
         }
-        FileType::TXT => {}
+        FileType::TXT => {
+            match chunker
+                .chunk(document_text, metadata, chunking_strategy)
+                .await
+            {
+                Ok(c) => chunks = c,
+                Err(e) => println!("An error occurred: {}", e),
+            }
+        }
         FileType::DOC => {}
         FileType::DOCX => {}
         FileType::UNKNOWN => {}
