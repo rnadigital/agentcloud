@@ -1,6 +1,9 @@
 'use strict';
 
 import * as API from '@api';
+import {
+	InformationCircleIcon,
+} from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
@@ -12,9 +15,6 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { DatasourceScheduleType } from 'struct/schedule';
 import SelectClassNames from 'styles/SelectClassNames';
-import {
-	InformationCircleIcon,
-} from '@heroicons/react/20/solid';
 
 import { useAccountContext } from '../context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
@@ -33,11 +33,6 @@ const stepList = [
 	{ id: 'Step 3', name: 'Sync configuration', href: '#', steps: [3] },
 ];
 // @ts-ignore
-const Markdown = dynamic(() => import('react-markdown'), {
-	loading: () => <p className='markdown-content'>Loading...</p>,
-	ssr: false,
-});
-import rehypeRaw from 'rehype-raw';
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false,

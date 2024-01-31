@@ -9,14 +9,15 @@ import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { StreamsList } from 'components/DatasourceStream';
 import DatasourceTabs from 'components/DatasourceTabs';
 import { useAccountContext } from 'context/account';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
-import submittingReducer from 'utils/submittingreducer';
 import { DatasourceScheduleType } from 'struct/schedule';
-import dynamic from 'next/dynamic';
+import submittingReducer from 'utils/submittingreducer';
+// @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false,
@@ -288,7 +289,7 @@ export default function Datasource(props) {
 					}}
 					disabled={submitting['updateStreams']}
 					type='submit'
-					className={`flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600`}
+					className={'flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 				>
 					{editingSchedule === true ? 'Save Schedule' : 'Edit Schedule'}
 				</button>
@@ -297,7 +298,7 @@ export default function Datasource(props) {
 						setEditingSchedule(false);
 					}}
 					type='submit'
-					className={`flex rounded-md disabled:bg-slate-400 bg-gray-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600`}
+					className={'flex rounded-md disabled:bg-slate-400 bg-gray-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'}
 				>
 					Cancel
 				</button>}

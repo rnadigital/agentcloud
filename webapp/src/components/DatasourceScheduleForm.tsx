@@ -1,11 +1,11 @@
 'use strict';
 
-import { DatasourceScheduleType } from 'struct/schedule';
 import {
 	InformationCircleIcon,
 } from '@heroicons/react/20/solid';
-// @ts-ignore
 import dynamic from 'next/dynamic';
+import { DatasourceScheduleType } from 'struct/schedule';
+// @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false,
@@ -78,7 +78,7 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 							rehypePlugins={[rehypeRaw as any]}
 							className={'markdown-content'}
 						>
-							{`Cron expression builder: <a target='_blank' href='http://crontab.guru/'>http://crontab.guru/</a>`}
+							{'Cron expression builder: <a target=\'_blank\' href=\'http://crontab.guru/\'>http://crontab.guru/</a>'}
 						</Markdown>
 					</span>
 				</span>
@@ -110,5 +110,5 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 				</select>
 			</div>
 		</>}
-	</>
+	</>;
 }
