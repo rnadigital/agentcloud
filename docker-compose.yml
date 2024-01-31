@@ -16,6 +16,8 @@ services:
     image: mongo:latest
     ports:
       - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data_container:/data/db
 
   docker_redis:
     restart: always
@@ -110,6 +112,7 @@ services:
     build:
       context: vector-db-proxy/
       args:
+        - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
     ports:
       - '127.0.0.1:9001:9001'

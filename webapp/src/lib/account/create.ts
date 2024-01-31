@@ -3,7 +3,6 @@
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import { addAccount,OAuthRecordType } from 'db/account';
-import { InsertResult } from 'db/index';
 import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification,VerificationTypes } from 'db/verification';
@@ -11,6 +10,7 @@ import * as ses from 'lib/email/ses';
 import SecretKeys from 'lib/secret/secretkeys';
 import { getSecret } from 'lib/secret/secretmanager';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
 export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number)

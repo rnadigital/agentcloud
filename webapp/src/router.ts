@@ -80,7 +80,12 @@ export default function router(server, app) {
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
+
+	//airbyte proxy routes (NOTE: should it
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
+	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
+	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
+	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
 	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
@@ -139,6 +144,8 @@ export default function router(server, app) {
 	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
 	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
+	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', datasourceController.updateDatasourceStreamsApi);
+	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', datasourceController.syncDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 
 	//team

@@ -16,6 +16,9 @@
       "email/*": [
         "lib/email/*"
       ],
+      "utils/*": [
+        "lib/utils/*"
+      ],
       "middleware/*": [
         "lib/middleware/*"
       ],
@@ -36,6 +39,9 @@
       ],
       "styles/*": [
         "lib/styles/*"
+      ],
+      "utils/*": [
+        "lib/utils/*"
       ],
       "lib/*": [
         "lib/*"

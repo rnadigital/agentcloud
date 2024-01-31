@@ -1,18 +1,14 @@
 'use strict';
 
+import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
-import { ToolType } from 'struct/tool';
+import { FunctionProperty, ToolType } from 'struct/tool';
 
-import * as db from './index';
 const log = debug('webapp:db:tools');
-
-export type FunctionProperty = {
-	type: string; // should probably be string | number | whatever
-	description: string;
-};
 
 export type Tool = {
 	_id?: ObjectId;
@@ -31,11 +27,12 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
+		openAPIMatchKey?: string;
 	},
 	credentialId?: ObjectId; //links to a credential 
 };
 
-export function ToolCollection() {
+export function ToolCollection(): any {
 	return db.db().collection('tools');
 }
 
@@ -85,11 +82,11 @@ export function getToolsByTeam(teamId: db.IdOrStr): Promise<Tool[]> {
 	}).toArray();
 }
 
-export async function addTool(tool: Tool): Promise<db.InsertResult> {
+export async function addTool(tool: Tool): Promise<InsertResult> {
 	return ToolCollection().insertOne(tool);
 }
 
-export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Tool): Promise<db.InsertResult> {
+export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Tool): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		_id: toObjectId(toolId),
 		teamId: toObjectId(teamId),

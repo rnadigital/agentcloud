@@ -1,10 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import { SessionType } from 'struct/session';
-
-import * as db from './index';
 
 export type ChatChunk = {
 	ts: number;
@@ -36,7 +36,7 @@ export type ChatMessage = {
 	completed?: boolean;
 }
 
-export function ChatCollection() {
+export function ChatCollection(): any {
 	return db.db().collection('chat');
 }
 
@@ -108,7 +108,7 @@ export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: str
 	}, update);
 }
 
-export async function addChatMessage(chatMessage: ChatMessage): Promise<db.InsertResult> {
+export async function addChatMessage(chatMessage: ChatMessage): Promise<InsertResult> {
 	return ChatCollection().insertOne(chatMessage);
 }
 

@@ -1,10 +1,10 @@
 'use strict';
 
+import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { InsertResult } from 'struct/db';
 import { SessionStatus, SessionType } from 'struct/session';
-
-import * as db from './index';
 
 export type Session = {
 	_id?: ObjectId;
@@ -21,7 +21,7 @@ export type Session = {
 	agentId?: ObjectId;
 }
 
-export function SessionCollection() {
+export function SessionCollection(): any {
 	return db.db().collection('sessions');
 }
 
@@ -99,7 +99,7 @@ export function unsafeSetSessionUpdatedDate(sessionId: db.IdOrStr): Promise<any>
 	});
 }
 
-export async function addSession(session: Session): Promise<db.InsertResult> {
+export async function addSession(session: Session): Promise<InsertResult> {
 	return SessionCollection().insertOne(session);
 }
 

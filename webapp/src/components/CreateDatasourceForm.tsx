@@ -1,10 +1,6 @@
 'use strict';
 
 import * as API from '@api';
-import {
-	ChevronDownIcon,
-	ChevronRightIcon
-} from '@heroicons/react/24/outline';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
@@ -25,52 +21,7 @@ const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
 import { getSubmitButtonOptions,RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
-
-const StreamRow = ({ stream }) => {
-	const [isExpanded, setIsExpanded] = useState(false);
-	return (
-		<div className='border-b'>
-			<div className='flex justify-between items-center p-4'>
-				<div className='flex items-center'>
-					<span onClick={() => setIsExpanded(!isExpanded)} className='cursor-pointer'>
-						{isExpanded ? <ChevronDownIcon className='h-4 w-4' /> : <ChevronRightIcon className='h-4 w-4' />}
-					</span>
-					<span className='ml-2'>{stream.stream.name}</span>
-				</div>
-				<div>
-					<label className='switch'>
-						<input
-							type='checkbox'
-							className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-							name={stream.stream.name}
-						/>
-						<span className='slider round'></span>
-					</label>
-				</div>
-			</div>
-			{isExpanded && (
-				<div className='p-4 bg-gray-100 rounded'>
-					<div>Schema:</div>
-					{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
-						<div key={key} className='ml-4'>
-							<span className='font-semibold'>{key}:</span> {value['type']}
-						</div>
-					))}
-				</div>
-			)}
-		</div>
-	);
-};
-
-const StreamsList = ({ streams }) => {
-	return (
-		<div className='my-4'>
-			{streams.map((stream, index) => (
-				<StreamRow key={index} stream={stream} />
-			))}
-		</div>
-	);
-};
+import { StreamsList } from 'components/DatasourceStream';
 
 const stepList = [
 	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -78,7 +29,7 @@ const stepList = [
 	{ id: 'Step 3', name: 'Sync configuration', href: '#', steps: [3] },
 ];
 
-export default function DatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+export default function CreateDatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
 	const [step, setStep] = useState(0);
@@ -170,11 +121,20 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 					e.preventDefault();
 					const streams = Array.from(e.target.elements)
 						.filter(x => x['checked'] === true)
+						.filter(x => !x['dataset']['parent'])
 						.map(x => x['name']);
+					const selectedFieldsMap = Array.from(e.target.elements)
+						.filter(x => x['checked'] === true)
+						.filter(x => x['dataset']['parent'])
+						.reduce((acc, x) => {
+							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+							return acc;
+						}, {});
 					const body = {
 						_csrf: csrf,
 						datasourceId: datasourceId,
 						resourceSlug,
+						selectedFieldsMap,
 						streams,
 					};
 					const addedDatasource: any = await API.addDatasource(body, () => {
@@ -194,19 +154,28 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 		//TODO: make steps enum
 		switch (_step) {
 			case 0:
-				return <div className='flex justify-center space-x-4'>
-					<div 
-						className='flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						onClick={() => setStep(1)}
-					>
-						File Upload
+				return <div className='flex justify-evenly space-x-4 mt-20 w-2/3 mx-auto'>
+					<div className='flex flex-col items-center space-y-2'>
+						<button 
+							className='rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+							onClick={() => setStep(1)}
+						>
+							File Upload
+						</button>
+						<div className='text-sm'>
+							Upload a file from your computer.
+						</div>
 					</div>
-					
-					<div 
-						className='flex justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600'
-						onClick={() => setStep(2)}
-					>
-						Data Connection
+					<div className='flex flex-col items-center space-y-2'>
+						<button 
+							className='rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600'
+							onClick={() => setStep(2)}
+						>
+							Data Connection
+						</button>
+						<div className='text-sm'>
+							Sync data from external systems e.g. Google Sheets, Confluence.
+						</div>
 					</div>
 				</div>;			
 			case 1:
@@ -297,14 +266,16 @@ export default function DatasourceForm({ agent = {}, credentials = [], tools=[],
 				</span>;
 			case 3:
 				return discoveredSchema && <form onSubmit={datasourcePost}>
-					<StreamsList streams={discoveredSchema.catalog.streams} />
+					<StreamsList
+						streams={discoveredSchema.catalog.streams}
+					/>
 					<button
 						disabled={submitting}
 						type='submit'
 						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
 						{submitting && <ButtonSpinner />}
-						{submitting ? 'Syncing...' : 'Submit'}
+						{submitting ? 'Saving...' : 'Submit'}
 					</button>
 				</form>;
 			default:

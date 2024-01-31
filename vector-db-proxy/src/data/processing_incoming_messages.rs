@@ -2,16 +2,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::mongo::client::start_mongo_connection;
-use qdrant_client::client::QdrantClient;
-use serde_json::{json, Value};
-use mongodb::bson::Bson;
-
-use crate::mongo::queries::get_team_id_for_datasource;
 use crate::qdrant::helpers::embed_table_chunks_async;
 use crate::qdrant::models::HashMapValues;
 use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_value;
+use qdrant_client::client::QdrantClient;
+use serde_json::{json, Value};
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
@@ -21,21 +17,13 @@ pub async fn process_messages(
     // initiate variables
     let mut message_data: Value = json!({});
     let mut list_of_embedding_data: Vec<HashMap<String, HashMapValues>> = vec![];
-    let mut team_id = String::new();
 
     if let Ok(_json) = serde_json::from_str(message.as_str()) {
         message_data = _json;
     }
-    let ds_clone = Some(datasource_id.clone());
-    let mongodb_connection = start_mongo_connection().await.unwrap();
-    if let Ok(doc) = get_team_id_for_datasource(mongodb_connection, datasource_id).await {
-        if let Some(team_id_bson) = doc.get("teamId") {
-            if let Bson::ObjectId(oid) = team_id_bson {
-                team_id = oid.to_hex();
-            }
-        }
-    }
-    let qdrant = Qdrant::new(qdrant_conn, team_id);
+
+    let ds_clone = datasource_id.clone();
+    let qdrant = Qdrant::new(qdrant_conn, datasource_id);
     if let Value::Array(data_array) = message_data {
         if data_array.len() > 0 {
             for message in data_array {
@@ -50,7 +38,7 @@ pub async fn process_messages(
         list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
     }
     if let Ok(point_structs) =
-        embed_table_chunks_async(list_of_embedding_data, message, ds_clone).await
+        embed_table_chunks_async(list_of_embedding_data, message, Some(ds_clone)).await
     {
         if let Ok(bulk_upload_result) = qdrant.bulk_upsert_data(point_structs.clone()).await {
             return bulk_upload_result;
