@@ -42,6 +42,7 @@ def reset_default_agents() -> None:
         org_id = org_team_id[0]
         team_id = org_team_id[1]
 
+        # User proxy agent
         user_proxy_dict = {
             "orgId" : ObjectId(org_id), 
             "teamId" : ObjectId(team_id),
@@ -58,6 +59,7 @@ def reset_default_agents() -> None:
 
         add_agent(agent_dict=user_proxy_dict)
 
+        # General agent
         general_agent_dict = {
         "_id" : ObjectId("65b8297d1c6b30efe9d750a0"),
         "orgId" : ObjectId(org_id), 
@@ -74,5 +76,28 @@ def reset_default_agents() -> None:
         }   
 
         add_agent(agent_dict=general_agent_dict)
+
+
+        # Primary agent
+        generate_images_id = str(mongo_client["tools"].find_one({"name": "Generate images"})['_id'])
+        find_papers_arxiv_id = str(mongo_client["tools"].find_one({"name": "Find papers on arXiv"})['_id'])
+
+        assert len(generate_images_id) * len(find_papers_arxiv_id) != 0, "Generate images or Find papers on arXiv tool not found."
+        
+        primary_assistant_dict = {
+        "orgId" : ObjectId(org_id), 
+        "teamId" : ObjectId(team_id),
+        "name" : "primary_assistant",
+        "type" : "AssistantAgent",
+        "codeExecutionConfig" : None,
+        "systemMessage" : "You are a helpful assistant that can use available functions when needed to solve problems. At each point, do your best to determine if the user's request has been addressed. IF THE REQUEST HAS NOT BEEN ADDRESSED, RESPOND WITH CODE TO ADDRESS IT. IF A FAILURE OCCURRED (e.g., due to a missing library) AND SOME ADDITIONAL CODE WAS WRITTEN (e.g. code to install the library), ENSURE THAT THE ORIGINAL CODE TO ADDRESS THE TASK STILL GETS EXECUTED. If the request HAS been addressed, respond with a summary of the result. The summary must be written as a coherent helpful response to the user request e.g. 'Sure, here is result to your request ' or 'The tallest mountain in Africa is ..' etc. The summary MUST end with the word TERMINATE. If the  user request is pleasantry or greeting, you should respond with a pleasantry or greeting and TERMINATE.",
+        "humanInputMode" : None,
+        "model" : "gpt-4",
+        "credentialId" : ObjectId("65b829521c6b30efe9d7509f"),
+        "toolIds" : [ObjectId(generate_images_id), ObjectId(find_papers_arxiv_id)],
+        "datasourceIds" : []
+        }   
+
+        add_agent(agent_dict=primary_assistant_dict)
 
         
