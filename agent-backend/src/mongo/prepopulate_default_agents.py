@@ -13,6 +13,12 @@ def add_agent(agent_dict:dict) -> None:
     # Disconnect from mongo
     cnxn.close()
 
+def recreate_for_35(agent_dict:dict) -> None:
+    # Pop id, recreate for 3.5
+    agent_dict.pop('_id', None)
+    agent_dict['name'] = agent_dict['name'] + '3.5'
+    agent_dict['model'] = 'gpt-3.5-turbo'
+    add_agent(agent_dict=agent_dict)
 
 def reset_default_agents() -> None:
     '''
@@ -46,7 +52,7 @@ def reset_default_agents() -> None:
         user_proxy_dict = {
             "orgId" : ObjectId(org_id), 
             "teamId" : ObjectId(team_id),
-            "name" : "userproxy",
+            "name" : "user_proxy",
             "type" : "UserProxyAgent",
             "codeExecutionConfig" : None,
             "systemMessage" : "A user proxy agent that executes code.",
@@ -58,13 +64,14 @@ def reset_default_agents() -> None:
         }
 
         add_agent(agent_dict=user_proxy_dict)
+        recreate_for_35(agent_dict=user_proxy_dict)
 
         # General agent
         general_agent_dict = {
         "_id" : ObjectId("65b8297d1c6b30efe9d750a0"),
         "orgId" : ObjectId(org_id), 
         "teamId" : ObjectId(team_id),
-        "name" : "GeneralAssistant",
+        "name" : "general_assistant",
         "type" : "AssistantAgent",
         "codeExecutionConfig" : None,
         "systemMessage" : "You are a general assistant.",
@@ -76,6 +83,8 @@ def reset_default_agents() -> None:
         }   
 
         add_agent(agent_dict=general_agent_dict)
+        recreate_for_35(agent_dict=general_agent_dict)
+
 
 
         # Primary agent
@@ -99,5 +108,6 @@ def reset_default_agents() -> None:
         }   
 
         add_agent(agent_dict=primary_assistant_dict)
+        recreate_for_35(agent_dict=primary_assistant_dict)
 
         
