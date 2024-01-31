@@ -1,22 +1,77 @@
 use crate::data::chunking::{Chunking, ChunkingStrategy, PdfChunker};
+use crate::data::models::Document as ModelDocument;
+use crate::data::models::FileType;
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
-use crate::qdrant::utils::Qdrant;
+use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
-use serde_json::{json, Value};
+use serde_json::Value;
+use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
 use std::{fs, fs::File};
 use tokio::sync::RwLock;
-use uuid::Uuid;
+
+async fn extract_text_from_file(
+    file_type: FileType,
+    file_path: &str,
+) -> Option<(String, HashMap<String, String>)> {
+    let mut document_text = String::new();
+    let mut metadata = HashMap::new();
+    match file_type {
+        FileType::PDF => {
+            let pdf = PdfChunker::default();
+            (document_text, metadata) = pdf
+                .extract_text_from_pdf(file_path)
+                .expect("TODO: panic message");
+        }
+        FileType::TXT => {}
+        FileType::DOC => {}
+        FileType::DOCX => {}
+        FileType::UNKNOWN => {}
+    }
+    // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
+    match fs::remove_file(file_path.trim_matches('"').path()) {
+        Ok(_) => println!("File: {:?} successfully deleted", file_path),
+        Err(e) => println!(
+            "An error occurred while trying to delete file: {}. Error: {:?}",
+            file_path, e
+        ),
+    }
+    let results = (document_text, metadata);
+    Some(results)
+}
+
+async fn apply_chunking_strategy_to_document(
+    file_type: FileType,
+    document_text: String,
+    metadata: Option<HashMap<String, String>>,
+    chunking_strategy: ChunkingStrategy,
+) -> Result<Vec<ModelDocument>> {
+    let mut chunks: Vec<ModelDocument> = vec![];
+    match file_type {
+        FileType::PDF => {
+            let pdf = PdfChunker::default();
+            match pdf.chunk(document_text, metadata, chunking_strategy).await {
+                Ok(c) => chunks = c,
+                Err(e) => println!("An error occurred: {}", e),
+            }
+        }
+        FileType::TXT => {}
+        FileType::DOC => {}
+        FileType::DOCX => {}
+        FileType::UNKNOWN => {}
+    }
+    Ok(chunks)
+}
 
 async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
     let file_path = file_name.trim_matches('"');
@@ -69,72 +124,70 @@ pub async fn subscribe_to_queue(
                                     {
                                         Ok(file) => {
                                             let file_path = format!("{}", file_name);
-                                            let pdf = PdfChunker::default();
+                                            let file_path_split: Vec<&str> =
+                                                file_path.split(".").collect();
+                                            let file_extension =
+                                                file_path_split.to_vec()[1].to_string();
+                                            let file_type = FileType::from(file_extension);
                                             // The reason we are choosing to write the file to disk first is to create
                                             // parity between running locally and running in cloud
                                             save_file_to_disk(file, file_path.as_str()).await?;
-                                            let (document_text, metadata) = pdf
-                                                .extract_text_from_pdf(file_path.as_str())
-                                                .expect("TODO: panic message");
-                                            match fs::remove_file(
-                                                file_path.as_str().trim_matches('"').path(),
-                                            ) {
-                                                Ok(_) => {
-                                                    println!(
-                                                        "File: {:?} successfully deleted",
-                                                        file_path
-                                                    );
-                                                }
-                                                Err(e) => {
-                                                    println!("An error occurred while trying to delete file: {}. Error: {:?}", file_path, e);
-                                                    return Err(anyhow!("An error occurred while trying to delete file: {}. Error: {:?}", file_path, e));
-                                                }
-                                            }
-                                            let chunks = pdf
-                                                .chunk(
-                                                    document_text,
-                                                    Some(metadata),
-                                                    ChunkingStrategy::SEMANTIC_CHUNKING,
-                                                )
-                                                .await
-                                                .unwrap();
-                                            let mut points_to_upload: Vec<PointStruct> = vec![];
-                                            for element in chunks.iter() {
-                                                let mut metadata =
-                                                    element.metadata.clone().unwrap();
-                                                metadata.insert(
-                                                    "text".to_string(),
-                                                    element.page_content.to_string(),
-                                                );
-                                                let embedding_vector = &element.embedding_vector;
-                                                match embedding_vector {
-                                                    Some(val) => {
-                                                        if !metadata.is_empty() {
-                                                            let qdrant_point_struct =
-                                                                PointStruct::new(
-                                                                    Uuid::new_v4().to_string(),
-                                                                    val.to_owned(),
-                                                                    json!(metadata)
-                                                                        .try_into()
-                                                                        .unwrap(),
-                                                                );
-                                                            points_to_upload
-                                                                .push(qdrant_point_struct);
-                                                        } else {
-                                                            println!("Metadata payload is empty!")
+                                            let (document_text, metadata) = extract_text_from_file(
+                                                file_type,
+                                                file_path.as_str(),
+                                            )
+                                            .await
+                                            .unwrap();
+                                            match apply_chunking_strategy_to_document(
+                                                file_type,
+                                                document_text,
+                                                Some(metadata),
+                                                ChunkingStrategy::SEMANTIC_CHUNKING,
+                                            )
+                                            .await
+                                            {
+                                                Ok(chunks) => {
+                                                    let mut points_to_upload: Vec<PointStruct> =
+                                                        vec![];
+                                                    for element in chunks.iter() {
+                                                        let mut metadata =
+                                                            element.metadata.clone().unwrap();
+                                                        metadata.insert(
+                                                            "text".to_string(),
+                                                            element.page_content.to_string(),
+                                                        );
+                                                        let embedding_vector =
+                                                            &element.embedding_vector;
+                                                        match embedding_vector {
+                                                            Some(val) => {
+                                                                if let Some(point_struct) =
+                                                                    construct_point_struct(
+                                                                        val, metadata,
+                                                                    )
+                                                                    .await
+                                                                {
+                                                                    points_to_upload
+                                                                        .push(point_struct)
+                                                                }
+                                                            }
+                                                            None => {
+                                                                println!(
+                                                                    "Embedding vector was empty!"
+                                                                )
+                                                            }
                                                         }
                                                     }
-                                                    None => {
-                                                        println!("Embedding vector was empty!")
-                                                    }
+                                                    let qdrant_conn_clone = Arc::clone(&app_data);
+                                                    let qdrant = Qdrant::new(
+                                                        qdrant_conn_clone,
+                                                        datasource_id.to_string(),
+                                                    );
+                                                    qdrant
+                                                        .bulk_upsert_data(points_to_upload)
+                                                        .await?;
                                                 }
+                                                Err(e) => println!("Error: {}", e),
                                             }
-                                            let qdrant_conn_clone = Arc::clone(&app_data);
-                                            let qdrant = Qdrant::new(
-                                                qdrant_conn_clone,
-                                                datasource_id.to_string(),
-                                            );
-                                            qdrant.bulk_upsert_data(points_to_upload).await?;
                                         }
                                         Err(e) => println!("Error: {}", e),
                                     }
@@ -167,5 +220,4 @@ pub async fn subscribe_to_queue(
     };
 
     Ok(())
-    // }
 }
