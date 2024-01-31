@@ -31,8 +31,8 @@ use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
-    bulk_upsert_data_to_collection, create_collection, health_check, list_collections,
-    lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
+    bulk_upsert_data_to_collection, create_collection, delete_collection, health_check,
+    list_collections, lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
 };
 
 pub fn init(config: &mut web::ServiceConfig) {
@@ -49,6 +49,7 @@ pub fn init(config: &mut web::ServiceConfig) {
             .wrap(cors)
             .service(health_check)
             .service(list_collections)
+            .service(delete_collection)
             .service(create_collection)
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
