@@ -1,22 +1,24 @@
 from bson import ObjectId
 from pymongo import MongoClient
 
-def add_group(group_dict:dict) -> None:
-    '''
+
+def add_group(group_dict: dict) -> None:
+    """
     Add an agent to the mongo database.
-    '''
+    """
     cnxn = MongoClient()
     mongo_client = cnxn["test"]
-    
+
     # Upload input_json to mongo
     mongo_client["groups"].insert_one(group_dict)
     # Disconnect from mongo
     cnxn.close()
 
+
 def reset_default_groups() -> None:
-    '''
+    """
     Delete agents present and reset the mongo database with default agents.
-    '''
+    """
     cnxn = MongoClient()
     mongo_client = cnxn["test"]
 
@@ -33,7 +35,9 @@ def reset_default_groups() -> None:
     ga = mongo_client["agents"].find_one({"name": "general_assistant3.5"})
     ga_id = str(ga["_id"])
 
-    assert len(user_proxy_id) * len(pri_assistant_id) * len(ga_id) != 0, "User proxy, primary assistant or general assistant not found."
+    assert (
+        len(user_proxy_id) * len(pri_assistant_id) * len(ga_id) != 0
+    ), "User proxy, primary assistant or general assistant not found."
 
     # Get all org and team id combinations as a list of tuples (org_id, team_id)
     # 1 org can have multiple teams in teamIds
@@ -43,7 +47,7 @@ def reset_default_groups() -> None:
         org_id = str(org["_id"])
         for team_id in org["teamIds"]:
             org_team_ids.append((org_id, str(team_id)))
-    
+
     # Iterate and print all org and team id seperated by a space
     for org_team_id in org_team_ids:
         org_id = org_team_id[0]
@@ -51,17 +55,12 @@ def reset_default_groups() -> None:
 
         # User proxy agent
         debate_grp_dict = {
-        "orgId" : ObjectId(org_id),
-        "teamId" : ObjectId(team_id),
-        "name" : "Demo debate group",
-        "agents" : [
-            ObjectId(pri_assistant_id),
-            ObjectId(ga_id)
-        ],
-        "adminAgent" : ObjectId(user_proxy_id),
-        "groupChat" : True
+            "orgId": ObjectId(org_id),
+            "teamId": ObjectId(team_id),
+            "name": "Demo debate group",
+            "agents": [ObjectId(pri_assistant_id), ObjectId(ga_id)],
+            "adminAgent": ObjectId(user_proxy_id),
+            "groupChat": True,
         }
 
-
         add_group(group_dict=debate_grp_dict)
-        
