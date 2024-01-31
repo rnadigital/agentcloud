@@ -8,14 +8,17 @@ use std::collections::HashMap;
 // `Sentence` is a struct that holds the embedding and other metadata
 #[derive(Clone, Debug)]
 struct Sentence {
-    combined_sentence_embedding: Array1<f32>,
+    sentence_embedding: Array1<f32>,
     distance_to_next: Option<f32>,
+    sentence: Option<String>,
 }
+// a sentence should also have the associated text
 impl Default for Sentence {
     fn default() -> Self {
         Sentence {
-            combined_sentence_embedding: Array1::from_vec(vec![]),
+            sentence_embedding: Array1::from_vec(vec![]),
             distance_to_next: None,
+            sentence: None,
         }
     }
 }
@@ -24,8 +27,8 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
 
     for i in 0..sentences.len() - 1 {
-        let embedding_current = &sentences[i].combined_sentence_embedding;
-        let embedding_next = &sentences[i + 1].combined_sentence_embedding;
+        let embedding_current = &sentences[i].sentence_embedding;
+        let embedding_next = &sentences[i + 1].sentence_embedding;
 
         // Calculate cosine similarity
         let similarity = cosine_similarity(embedding_current, embedding_next);
@@ -102,7 +105,7 @@ impl SemanticChunker {
         let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
         let mut chunks = Vec::new();
         let mut sent: Vec<Sentence> = vec![];
-        let mut sentences: Vec<HashMap<String, String>> = single_sentences_list
+        let sentences: Vec<HashMap<String, String>> = single_sentences_list
             .iter()
             .enumerate()
             .map(|(i, &sentence)| {
@@ -121,14 +124,11 @@ impl SemanticChunker {
             .await
         {
             Ok(embeddings) => {
-                for (i, sentence) in sentences.iter_mut().enumerate() {
-                    sentence.insert(
-                        "sentence_embedding".to_string(),
-                        format!("{:?}", embeddings[i]),
-                    );
+                for (i, sentence) in sentences.iter().enumerate() {
                     sent.push(Sentence {
-                        combined_sentence_embedding: Array1::from_vec(embeddings[i].clone()),
+                        sentence_embedding: Array1::from_vec(embeddings[i].clone()),
                         distance_to_next: None,
+                        sentence: Some(sentence["sentence"].clone()),
                     });
                 }
 
