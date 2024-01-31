@@ -38,6 +38,37 @@ impl Qdrant {
         Ok(list_of_collection)
     }
 
+    pub async fn delete_collection(&self) -> Result<()> {
+        let qdrant_conn = &self.client.read().await;
+        return match &self
+            .check_collection_exists(CreateDisposition::CreateNever)
+            .await
+        {
+            Ok(r) => match r {
+                true => match qdrant_conn.delete_collection(&self.collection_name).await {
+                    Ok(result) => match result.result {
+                        true => Ok(()),
+                        false => Err(anyhow!("Collection could not be deleted!")),
+                    },
+                    Err(e) => Err(anyhow!(
+                        "An error occurred while attempting to delete collection {}. Error: {}",
+                        &self.collection_name,
+                        e
+                    )),
+                },
+                false => Err(anyhow!(
+                    "Collection : {} does not exist",
+                    &self.collection_name
+                )),
+            },
+            Err(e) => Err(anyhow!(
+                "An error occurred while attempting to look up collection {}. Error: {}",
+                &self.collection_name,
+                e
+            )),
+        };
+    }
+
     ///
     ///
     /// # Arguments
@@ -55,13 +86,13 @@ impl Qdrant {
     /// ```
     pub async fn check_collection_exists(
         &self,
-        qdrant_client: &QdrantClient,
         create_disposition: CreateDisposition,
     ) -> Result<bool> {
         println!(
             "Checking if Collection: {} exists...",
             &self.collection_name
         );
+        let qdrant_client = &self.client.read().await;
         let list_of_collections = qdrant_client.list_collections().await?;
         let results = list_of_collections
             .collections
@@ -184,7 +215,7 @@ impl Qdrant {
         );
         let qdrant_conn = &self.client.read().await;
         match &self
-            .check_collection_exists(qdrant_conn, CreateDisposition::CreateIfNeeded)
+            .check_collection_exists(CreateDisposition::CreateIfNeeded)
             .await
         {
             Ok(result) => match result {

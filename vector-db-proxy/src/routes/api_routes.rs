@@ -313,10 +313,7 @@ pub async fn prompt(
     data: web::Json<Prompt>,
 ) -> Result<impl Responder> {
     let dataset_id_clone = dataset_id.clone();
-
     let qdrant_conn = app_data.get_ref();
-    let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-    let qdrant_client = qdrant_conn_clone.read().await;
 
     let data_clone = data.clone();
     let prompt = data_clone.prompt.to_vec();
@@ -325,7 +322,7 @@ pub async fn prompt(
 
     let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
     match qdrant
-        .check_collection_exists(&qdrant_client, CreateDisposition::CreateIfNeeded)
+        .check_collection_exists(CreateDisposition::CreateIfNeeded)
         .await?
     {
         true => {
@@ -452,4 +449,33 @@ pub async fn scroll_data(
             data: Some(json!({"points": response})),
             error_message: None
         })))
+}
+
+#[wherr]
+#[delete("/collection/{dataset_id}")]
+pub async fn delete_collection(
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    Path(dataset_id): Path<String>,
+) -> Result<impl Responder> {
+    let dataset_id_clone = dataset_id.clone();
+    let qdrant_conn = app_data.get_ref();
+    let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
+    match qdrant.delete_collection().await {
+        Ok(()) => Ok(HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Success,
+                data: None,
+                error_message: None
+            }))),
+        Err(e) => Ok(HttpResponse::InternalServerError()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' could not be delete due to error: '{}'", dataset_id, e)
+                    }))
+            }))),
+    }
 }
