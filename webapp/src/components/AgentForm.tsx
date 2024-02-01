@@ -265,17 +265,17 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 									<div className='flex items-center gap-x-3'>
 										<div className='flex h-6 items-center'>
 											<input
-												id='retriever-user-agent'
+												id='retrieve-assitant-agent'
 												name='type'
 												type='radio'
-												value={AgentType.RETRIEVER_USER_AGENT}
+												value={AgentType.RETRIEVER_ASSISTANT_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={!editing || type === AgentType.RETRIEVER_USER_AGENT}
+												defaultChecked={!editing || type === AgentType.RETRIEVER_ASSISTANT_AGENT}
 											/>
 										</div>
 										<div className='text-sm leading-6'>
-											<label htmlFor='assistant-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
-							                    Retriever Agent
+											<label htmlFor='retrieve-user-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
+							                    Retrieve Assitant Agent
 												<p className='font-medium text-gray-500'>Assistant agent, designed to assist users with retrieving data for augmentation.</p>
 												<p className='font-bold text-gray-500'>Select this if you are using RAG</p>
 											</label>
@@ -284,7 +284,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 									<div className='flex items-center gap-x-3'>
 										<div className='flex h-6 items-center'>
 											<input
-												id='qadrant-retriver-agent'
+												id='qdrant-retriver-agent'
 												name='type'
 												type='radio'
 												value={AgentType.QADRANT_RETRIEVER_USER_PROXY_AGENT}
@@ -293,7 +293,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 											/>
 										</div>
 										<div className='text-sm leading-6'>
-											<label htmlFor='assistant-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
+											<label htmlFor='qdrant-retriever-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
 							                    Qadrant (RAG DB) Retrieval Agent
 												<p className='font-medium text-gray-500'>Retriever agent, designed to retrieve relevant information form Qadrant.</p>
 												<p className='font-bold text-gray-500'>Select this if you are using RAG. Include data source</p>
