@@ -6,7 +6,7 @@ import { addModel, deleteModelById,getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import { ModelList } from 'struct/model';
+import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
 import { dynamicResponse } from '../util';
@@ -87,6 +87,7 @@ export async function modelAddApi(req, res, next) {
 		name,
 		credentialId: toObjectId(credentialId),
 		model,
+		embeddingLength: ModelEmbeddingLength[model] || 0,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });

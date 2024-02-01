@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AgentType } from 'struct/agent';
-import { ModelList } from 'struct/model';
+import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
@@ -147,7 +147,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
    											};
    										});
 					            	}}
-						            options={models.map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
 						            formatOptionLabel={data => {
    										const optionCred = models.find(oc => oc._id === data.value);
 						                return (<li

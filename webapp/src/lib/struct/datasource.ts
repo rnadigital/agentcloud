@@ -20,6 +20,8 @@ export type DatasourceConnectionSettings = {
     status: string; //TODO: enum to match airbyte api, and allow creating in paused state
 };
 
+export type DatasourceChunkStrategy = 'semantic' | 'character';
+
 export type Datasource = {
     _id?: ObjectId;
     orgId?: ObjectId;
@@ -35,4 +37,6 @@ export type Datasource = {
     connectionSettings?: DatasourceConnectionSettings;
     lastSyncedDate?: Date | null; //Note: null = never synced
     discoveredSchema?: any;
+    chunkStrategy?: DatasourceChunkStrategy;
+    chunkCharacter?: string | null;
 };

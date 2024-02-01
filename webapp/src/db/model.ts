@@ -12,6 +12,7 @@ export type Model = {
 	credentialId: ObjectId;
 	name: string;
 	model: string;
+	embeddingLength: number;
 }
 
 export function ModelCollection(): any {
