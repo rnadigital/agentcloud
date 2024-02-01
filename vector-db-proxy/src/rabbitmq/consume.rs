@@ -143,6 +143,7 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
+                                            //TODO: get chunking strategy from database!
                                             match apply_chunking_strategy_to_document(
                                                 document_text,
                                                 metadata,

@@ -10,6 +10,7 @@ extern crate dotext;
 use dotext::*;
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,
+    CHARACTER_CHUNKING,
     CODE_SPLIT,
 }
 
@@ -132,6 +133,7 @@ impl Chunking for TextChunker {
                 };
                 return chunker.split_documents(vec![doc]).await;
             }
+            // ChunkingStrategy::CHARACTER_CHUNKING => {}
             _ => Err(anyhow!("Type not yet supported!")),
         };
     }
