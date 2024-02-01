@@ -1,4 +1,5 @@
 import ButtonSpinner from 'components/ButtonSpinner';
+import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { useAccountContext } from 'context/account';
 import getFileFormat from 'misc/getfileformat';
 import { useRouter } from 'next/router';
@@ -17,11 +18,16 @@ export default function DropZone({ setFiles, files }) {
 	const { resourceSlug } = router.query;
 	const maxSize = 10*1024*1024;//10MB
 	const [loading, setLoading] = useState(false);
+	const [chunkStrategy, setChunkStrategy] = useState('semantic');
+	const [chunkCharacter, setChunkCharacter] = useState('');
 
-	const uploadFiles = async () => {
+	const uploadFiles = async (e) => {
+		e.preventDefault();
 		try {
 			setLoading(true);
 			const formData = new FormData();
+			formData.set('chunkStrategy', chunkStrategy as string);
+			formData.set('chunkCharacter', chunkCharacter as string);
 			formData.set('resourceSlug', resourceSlug as string);
 			formData.set('_csrf', csrf as string);
 			acceptedFiles.forEach(file => {
@@ -53,7 +59,7 @@ export default function DropZone({ setFiles, files }) {
 	const isFileTooLarge = rejectedFiles && rejectedFiles.length > 0 && rejectedFiles[0].size > maxSize;
   
 	return (<span className='flex'>
-		<div className='w-full sm:w-1/2 m-auto'>
+		<form onSubmit={uploadFiles} className='w-full sm:w-1/2 m-auto'>
 			<div className='text-center my-5 border-2 border-dashed p-4 rounded cursor-pointer'>
 				<div {...getRootProps()}>
 					<input {...getInputProps()} />
@@ -83,8 +89,15 @@ export default function DropZone({ setFiles, files }) {
 						</button>
 					</li>
 				))}
+
+				<DatasourceChunkingForm
+					chunkStrategy={chunkStrategy}
+					setChunkStrategy={setChunkStrategy}
+					chunkCharacter={chunkCharacter}
+					setChunkCharacter={setChunkCharacter}
+				/>
+				
 				<button
-					onClick={uploadFiles}
 					disabled={loading || !files}
 					type='submit'
 					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
@@ -93,6 +106,6 @@ export default function DropZone({ setFiles, files }) {
 					Upload
 				</button>
 			</ul>
-		</div>
+		</form>
 	</span>);
 }

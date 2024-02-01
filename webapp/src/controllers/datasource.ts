@@ -641,6 +641,8 @@ export async function uploadFileApi(req, res, next) {
 	    destinationId: null,
 	    sourceType: 'file',
 	    workspaceId: null,
+	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
+	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	});
 	
 	// Send the gcs file path to rabbitmq
