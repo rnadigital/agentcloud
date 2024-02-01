@@ -17,3 +17,7 @@ Cargo.lock
 *.pdb
 *.pdf
 *.json
+*.txt
+*.pptx
+*.docx
+*.xlsx

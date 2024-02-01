@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::errors::types::Result;
 use crate::qdrant::helpers::{get_next_page, get_scroll_results};
-use crate::qdrant::models::{MyPoint, PointSearchResults, ScrollResults};
+use crate::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
 use crate::qdrant::utils::Qdrant;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -20,6 +20,8 @@ use qdrant_client::qdrant::{
     WithVectorsSelector,
 };
 
+use crate::llm::utils::LLM;
+use crate::routes::models::Prompt;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
@@ -303,58 +305,56 @@ pub async fn lookup_data_point(
 /// ```
 ///
 /// ```
-// #[wherr]
-// #[post("/prompt/{dataset_id}")]
-// pub async fn prompt(
-//     app_data: Data<Arc<RwLock<QdrantClient>>>,
-//     Path(dataset_id): Path<String>,
-//     data: web::Json<Prompt>,
-// ) -> Result<impl Responder> {
-//     let dataset_id_clone = dataset_id.clone();
-//
-//     let qdrant_conn = app_data.get_ref();
-//     let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-//     let qdrant_client = qdrant_conn_clone.read().await;
-//
-//     let data_clone = data.clone();
-//     let prompt = data_clone.prompt.to_vec();
-//     let filters = data_clone.filters;
-//     let limit = data.limit;
-//
-//     let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
-//     match qdrant
-//         .check_collection_exists(&qdrant_client, CreateDisposition::CreateIfNeeded)
-//         .await?
-//     {
-//         true => {
-//             let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-//             let llm_model = LLM::new();
-//             let prompt_response = llm_model
-//                 .get_prompt_response(qdrant_conn_clone, dataset_id, prompt, filters, limit)
-//                 .await?;
-//
-//             Ok(HttpResponse::Ok()
-//                 .content_type(ContentType::json())
-//                 .json(json!(ResponseBody {
-//                     status: Status::Success,
-//                     data: Some(json!({"message":prompt_response})),
-//                     error_message: None
-//                 })))
-//         }
-//         false => {
-//             log::warn!("Collection: '{}' does not exist", dataset_id);
-//             Ok(HttpResponse::BadRequest()
-//                 .content_type(ContentType::json())
-//                 .json(json!(ResponseBody {
-//                     status: Status::Failure,
-//                     data: None,
-//                     error_message: Some(json!({
-//                         "errorMessage": format!("Collection: {} does not exists in BD", dataset_id)
-//                     }))
-//                 })))
-//         }
-//     }
-// }
+#[wherr]
+#[post("/prompt/{dataset_id}")]
+pub async fn prompt(
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    Path(dataset_id): Path<String>,
+    data: web::Json<Prompt>,
+) -> Result<impl Responder> {
+    let dataset_id_clone = dataset_id.clone();
+    let qdrant_conn = app_data.get_ref();
+
+    let data_clone = data.clone();
+    let prompt = data_clone.prompt.to_vec();
+    let filters = data_clone.filters;
+    let limit = data.limit;
+
+    let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
+    match qdrant
+        .check_collection_exists(CreateDisposition::CreateIfNeeded)
+        .await?
+    {
+        true => {
+            let qdrant_conn_clone = Arc::clone(&qdrant_conn);
+            let llm_model = LLM::new();
+            let pr = prompt.iter().map(|p| p).collect();
+            let prompt_response = llm_model
+                .get_prompt_response(qdrant_conn_clone, dataset_id, pr, filters, limit)
+                .await?;
+
+            Ok(HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Success,
+                    data: Some(json!({"message":prompt_response})),
+                    error_message: None
+                })))
+        }
+        false => {
+            log::warn!("Collection: '{}' does not exist", dataset_id);
+            Ok(HttpResponse::BadRequest()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("Collection: {} does not exists in BD", dataset_id)
+                    }))
+                })))
+        }
+    }
+}
 
 ///
 ///
@@ -449,4 +449,33 @@ pub async fn scroll_data(
             data: Some(json!({"points": response})),
             error_message: None
         })))
+}
+
+#[wherr]
+#[delete("/collection/{dataset_id}")]
+pub async fn delete_collection(
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    Path(dataset_id): Path<String>,
+) -> Result<impl Responder> {
+    let dataset_id_clone = dataset_id.clone();
+    let qdrant_conn = app_data.get_ref();
+    let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
+    match qdrant.delete_collection().await {
+        Ok(()) => Ok(HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Success,
+                data: None,
+                error_message: None
+            }))),
+        Err(e) => Ok(HttpResponse::InternalServerError()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' could not be delete due to error: '{}'", dataset_id, e)
+                    }))
+            }))),
+    }
 }

@@ -1,16 +1,12 @@
-import dynamic from 'next/dynamic';
-const CreateDatasourceForm = dynamic(() => import('components/CreateDatasourceForm'), {
-	ssr: false,
-});
+import * as API from '@api';
+import ModelForm from 'components/ModelForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-import * as API from '../../../api';
-
-export default function AddDatasource(props) {
+export default function AddModel(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -18,18 +14,27 @@ export default function AddDatasource(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
+	const { models, credentials } = state;
+
+	function fetchModels() {
+		API.getModels({ resourceSlug }, dispatch, setError, router);
+	}
+
+	useEffect(() => {
+		fetchModels();
+	}, [resourceSlug]);
+
+	if (!models) {
+		return 'Loading...'; //TODO: loader
+	}
 
 	return (<>
 
 		<Head>
-			<title>{`New Datasource - ${teamName}`}</title>
+			<title>{`New Model - ${teamName}`}</title>
 		</Head>
 
-		<div className='pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
-		</div>
-
-		<CreateDatasourceForm />
+		<ModelForm credentials={credentials} />
 
 	</>);
 

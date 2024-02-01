@@ -57,7 +57,7 @@ export function CopyButton<
 		<IconButton
 			title={translateString(TranslatableString.CopyButton)}
 			{...props}
-			icon={<ClipboardIcon />}
+			icon={<ClipboardIcon className='h-4' />}
 		/>
 	);
 }
@@ -72,9 +72,10 @@ export function MoveDownButton<
 	} = props;
 	return (
 		<IconButton
+			className='mx-1'
 			title={translateString(TranslatableString.MoveDownButton)}
 			{...props}
-			icon={<ArrowDownIcon />}
+			icon={<ArrowDownIcon className='h-4' />}
 		/>
 	);
 }
@@ -91,7 +92,7 @@ export function MoveUpButton<
 		<IconButton
 			title={translateString(TranslatableString.MoveUpButton)}
 			{...props}
-			icon={<ArrowUpIcon />}
+			icon={<ArrowUpIcon className='h-4' />}
 		/>
 	);
 }
@@ -110,7 +111,7 @@ export function RemoveButton<
 			{...props}
       // @ts-expect-error incomplete props from rjsf
 			variant='danger'
-			icon={<XMarkIcon />}
+			icon={<XMarkIcon className='h-4' />}
 		/>
 	);
 }
