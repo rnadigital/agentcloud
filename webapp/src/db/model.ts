@@ -9,8 +9,9 @@ export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
+	credentialId: ObjectId;
 	name: string;
-	//TODO: the rest of this
+	model: string;
 }
 
 export function ModelCollection(): any {

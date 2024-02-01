@@ -3,6 +3,7 @@
 import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
+import { getModelById } from 'db/model';
 import { getCredentialById, getCredentialsById, getCredentialsByTeam } from '../db/credential';
 import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
 import { removeAgentFromGroups } from '../db/group';
@@ -103,29 +104,23 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
+	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'type', validation: { notEmpty: true }},
 		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', credentialId: 'Credential', systemMessage: 'Instructions', type: 'Type'});
+	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	
-	for (let team of res.locals.matchingOrg.teams) {
-		validationError = await valdiateCredentialModel(team.id, credentialId, model);
-		if (validationError) {
-			return dynamicResponse(req, res, 400, { error: validationError });
-		}
-		const agents = await getAgentsByTeam(team.id);
-		if (agents.some(agent => agent.name === name)) {
-			return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
-		}
+	const agents = await getAgentsByTeam(req.params.resourceSlug);
+	if (agents.some(agent => agent.name === name)) {
+		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
 	}
 		
     // Check for foundTools
@@ -142,11 +137,11 @@ export async function addAgentApi(req, res, next) {
 		}
 	}
 
-	// Check for foundCredentials
-	if (credentialId && credentialId.length > 0) {
-		const foundCredential = await getCredentialById(req.params.resourceSlug, credentialId);
-		if (!foundCredential) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
+	// Check for model
+	if (modelId && modelId.length > 0) {
+		const foundModel = await getModelById(req.params.resourceSlug, modelId);
+		if (!foundModel) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
 		}
 	}
 
@@ -167,7 +162,7 @@ export async function addAgentApi(req, res, next) {
 				? 'ALWAYS'
 				: null,
 		model,
-		credentialId: toObjectId(credentialId),
+		modelId: toObjectId(modelId),
 		toolIds: foundTools.map(t => t._id),
 		datasourceIds: datasourceIds,
 	});
@@ -187,31 +182,26 @@ export async function addAgentApi(req, res, next) {
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, model, credentialId, type, systemMessage, toolIds, datasourceIds }  = req.body;
+	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 	
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'type', validation: { notEmpty: true }},
 		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', credentialId: 'Credential', systemMessage: 'Instructions', type: 'Type'});
+	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	for (let team of res.locals.matchingOrg.teams) {
-		validationError = await valdiateCredentialModel(team.id, credentialId, model);
-		if (validationError) {
-			return dynamicResponse(req, res, 400, { error: validationError });
-		}
-		const agents = await getAgentsByTeam(team.id);
-		if (agents.some(agent => agent.name === name && !agent._id.equals(req.params.agentId))) {
-			return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
-		}
-	}
 
+	const agents = await getAgentsByTeam(req.params.resourceSlug);
+	if (agents.some(agent => agent.name === name)) {
+		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
+	}
+	
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -237,23 +227,13 @@ export async function editAgentApi(req, res, next) {
 				? 'ALWAYS'
 				: null,
 		model,
-		credentialId: toObjectId(credentialId),
+		modelId: toObjectId(modelId),
 		toolIds: foundTools.map(t => t._id),
 		datasourceIds: datasourceIds,
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
 
-}
-
-async function valdiateCredentialModel(teamId, credentialId, model) {
-	const credential = await getCredentialById(teamId, credentialId);
-	if (credential) {
-		const allowedModels = ModelList[credential.type];
-		return validateField(model, PARENT_OBJECT_FIELD_NAME, { inSet: allowedModels ? new Set(allowedModels) : undefined /* allows invalid types */, customError: `Model ${model} is not valid for provided credential` }, {});
-	} else {
-		return 'Invalid credential';
-	}
 }
 
 /**

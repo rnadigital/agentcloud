@@ -18,7 +18,7 @@ export type Agent = {
 	codeExecutionConfig?: CodeExecutionConfigType;
 	systemMessage: string;
 	humanInputMode: HumanInputModeType;
-	credentialId: ObjectId;
+	modelId: ObjectId;
 	toolIds?: ObjectId[];
 	datasourceIds?: ObjectId[];
 	model: string;

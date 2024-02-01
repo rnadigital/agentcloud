@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
-import DeleteModal from './DeleteModal';
+import DeleteModal from 'components/DeleteModal';
 
 export default function CredentialTable({ credentials, fetchCredentials }: { credentials: any[], fetchCredentials?: any }) {
 

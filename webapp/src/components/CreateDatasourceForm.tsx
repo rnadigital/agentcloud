@@ -31,6 +31,7 @@ const stepList = [
 	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
 	{ id: 'Step 2', name: 'Connect datasource', href: '#', steps: [1, 2] },
 	{ id: 'Step 3', name: 'Sync configuration', href: '#', steps: [3] },
+	{ id: 'Step 4', name: 'Chunking & Embedding options', href: '#', steps: [4] },
 ];
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -301,10 +302,26 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 					</div>
 				</span>;
 			case 3:
-				return discoveredSchema && <form onSubmit={datasourcePost}>
+				return discoveredSchema && <div>
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}
 					/>
+					<button
+						onClick={() => setStep(4)}
+						disabled={submitting}
+						type='submit'
+						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
+						Continue
+					</button>
+				</div>;
+			case 4:
+				return discoveredSchema && <form onSubmit={datasourcePost}>
+					<div className='hidden'>
+						<StreamsList
+							streams={discoveredSchema.catalog.streams}
+						/>
+					</div>
 					<button
 						disabled={submitting}
 						type='submit'

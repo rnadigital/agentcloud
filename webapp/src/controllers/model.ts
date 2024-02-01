@@ -1,11 +1,14 @@
 'use strict';
 
-import { getModelsByTeam } from 'db/model';
+import { getModelsByTeam, addModel, deleteModelById } from 'db/model';
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
-import { getCredentialById, getCredentialsById, getCredentialsByTeam } from '../db/credential';
+import { getCredentialById, getCredentialsById, getCredentialsByTeam } from 'db/credential';
+import { removeAgentsModel } from 'db/agent';
+import { ModelList } from 'struct/model';
 import { dynamicResponse } from '../util';
 dotenv.config({ path: '.env' });
 
@@ -51,6 +54,75 @@ export async function modelAddPage(app, req, res, next) {
 }
 
 export async function modelAddApi(req, res, next) {
-	//TODO
-	return dynamicResponse(req, res, 200, { });
+
+	const { name, model, credentialId }  = req.body;
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'model', validation: { notEmpty: true }},
+	], { name: 'Name', credentialId: 'Credential', model: 'Model'});
+	if (validationError) {	
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	// Validate model
+	validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	// Check for foundCredentials
+	if (credentialId && credentialId.length > 0) {
+		const foundCredential = await getCredentialById(req.params.resourceSlug, credentialId);
+		if (!foundCredential) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
+		}
+	}
+
+	// Insert model to db
+	const addedModel = await addModel({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name,
+		credentialId: toObjectId(credentialId),
+		model,
+	});
+
+	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });
+
+}
+
+/**
+ * @api {delete} /forms/model/[modelId] Delete a model
+ * @apiName delete
+ * @apiGroup Model
+ *
+ * @apiParam {String} modelId Model id
+ */
+export async function deleteModelApi(req, res, next) {
+
+	const { modelId }  = req.body;
+
+	if (!modelId || typeof modelId !== 'string' || modelId.length !== 24) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	Promise.all([
+		removeAgentsModel(req.params.resourceSlug, modelId),
+		deleteModelById(req.params.resourceSlug, modelId)
+	]);
+
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });
+
+}
+
+async function valdiateCredentialModel(teamId, credentialId, model) {
+	const credential = await getCredentialById(teamId, credentialId);
+	if (credential) {
+		const allowedModels = ModelList[credential.type];
+		return validateField(model, PARENT_OBJECT_FIELD_NAME, { inSet: allowedModels ? new Set(allowedModels) : undefined /* allows invalid types */, customError: `Model ${model} is not valid for provided credential` }, {});
+	} else {
+		return 'Invalid credential';
+	}
 }

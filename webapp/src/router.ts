@@ -141,6 +141,7 @@ export default function router(server, app) {
 	teamRouter.get('/models.json', modelController.modelsJson);
 	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
 	teamRouter.post('/forms/model/add', modelController.modelAddApi);
+	teamRouter.delete('/forms/model/:modelId([a-f0-9]{24})', modelController.deleteModelApi);
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));

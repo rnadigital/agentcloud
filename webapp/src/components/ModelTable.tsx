@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
-// import DeleteModal from './DeleteModal';
+import DeleteModal from 'components/DeleteModal';
 
 export default function ModelTable({ models, fetchModels }: { models: any[], fetchModels?: any }) {
 	const [accountContext]: any = useAccountContext();
@@ -18,17 +18,17 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 	const [open, setOpen] = useState(false);
 
 	async function deleteModel() {
-		// await API.deleteModel({
-		// 	_csrf: csrf,
-		// 	modelId: deletingModel._id,
-		// 	resourceSlug,
-		// }, () => {
-		// 	fetchModels();
-		// 	toast('Deleted model');
-		// }, () => {
-		// 	toast.error('Error deleting model');
-		// }, router);
-		// setOpen(false);
+		await API.deleteModel({
+			_csrf: csrf,
+			modelId: deletingModel._id,
+			resourceSlug,
+		}, () => {
+			fetchModels();
+			toast('Deleted model');
+		}, () => {
+			toast.error('Error deleting model');
+		}, router);
+		setOpen(false);
 	}
 
 	useEffect(() => {
@@ -41,7 +41,7 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 
 	return (
 		<>
-			{/*<DeleteModal
+			<DeleteModal
 				open={open}
 				confirmFunction={deleteModel}
 				cancelFunction={() => {
@@ -49,7 +49,7 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 				}}
 				title={'Delete Model'}
 				message={deletingModel && `Are you sure you want to delete the model "${deletingModel?.name}". This action cannot be undone.`}
-			/>*/}
+			/>
 			<div className='rounded-lg overflow-hidden shadow'>
 				<table className='min-w-full divide-y divide-gray-200'>
 					<thead className='bg-gray-50'>
