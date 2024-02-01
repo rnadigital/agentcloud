@@ -1,12 +1,15 @@
-use crate::data::chunking::{Chunking, ChunkingStrategy, TextChunker};
+use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
+use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -94,6 +97,7 @@ pub async fn subscribe_to_queue(
     // loop {
     let mut connection = connect_rabbitmq(&connection_details).await;
     let mut channel = channel_rabbitmq(&connection).await;
+    let mongodb_connection = start_mongo_connection().await.unwrap();
     bind_queue_to_exchange(
         &mut connection,
         &mut channel,
@@ -114,6 +118,8 @@ pub async fn subscribe_to_queue(
             if let Some(msg) = message.content {
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    let model_parameters =
+                        get_embedding_model(&mongodb_connection, datasource_id).await?;
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
@@ -143,11 +149,15 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
-                                            //TODO: get chunking strategy from database!
+                                            // dynamically get user's chunking strategy of choice from the database
+                                            let chunking_method =
+                                                model_parameters.unwrap().chunkStrategy;
+                                            let chunking_strategy =
+                                                ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(
                                                 document_text,
                                                 metadata,
-                                                ChunkingStrategy::SEMANTIC_CHUNKING,
+                                                chunking_strategy,
                                             )
                                             .await
                                             {
@@ -180,13 +190,28 @@ pub async fn subscribe_to_queue(
                                                             }
                                                         }
                                                     }
+                                                    let mongodb_connection =
+                                                        start_mongo_connection().await.unwrap();
+                                                    let model_parameters: Model =
+                                                        get_embedding_model(
+                                                            &mongodb_connection,
+                                                            datasource_id,
+                                                        )
+                                                        .await
+                                                        .unwrap()
+                                                        .unwrap();
+                                                    let vector_length =
+                                                        model_parameters.embeddingLength as u64;
                                                     let qdrant_conn_clone = Arc::clone(&app_data);
                                                     let qdrant = Qdrant::new(
                                                         qdrant_conn_clone,
                                                         datasource_id.to_string(),
                                                     );
                                                     qdrant
-                                                        .bulk_upsert_data(points_to_upload)
+                                                        .bulk_upsert_data(
+                                                            points_to_upload,
+                                                            Some(vector_length),
+                                                        )
                                                         .await?;
                                                 }
                                                 Err(e) => println!("Error: {}", e),

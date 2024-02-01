@@ -1,4 +1,5 @@
 use crate::data::{models::Document, text_splitting::SemanticChunker};
+use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 
 use lopdf::{Dictionary, Object};
@@ -8,11 +9,6 @@ use std::io::Read;
 extern crate dotext;
 
 use dotext::*;
-pub enum ChunkingStrategy {
-    SEMANTIC_CHUNKING,
-    CHARACTER_CHUNKING,
-    CODE_SPLIT,
-}
 
 pub trait Chunking {
     type Item;
