@@ -10,11 +10,11 @@ import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
-import CreateCredentialModal from '../components/CreateCredentialModal';
+import CreateModelModal from '../components/CreateModelModal';
 import { useAccountContext } from '../context/account';
 
-export default function AgentForm({ agent = {}, credentials = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
-	: { agent?: any, credentials?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
+export default function AgentForm({ agent = {}, models = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+	: { agent?: any, models?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -25,8 +25,8 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, type, systemMessage, codeExecutionConfig, credentialId, model, toolIds, datasourceIds } = agentState;
-	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
+	const { _id, name, type, systemMessage, codeExecutionConfig, modelId, model, toolIds, datasourceIds } = agentState;
+	const foundModel = models && models.find(m => m._id === modelId);
 
 	const initialTools = agent.toolIds && agent.toolIds.map(tid => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -44,11 +44,10 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
 	useEffect(() => {
-		if (credentials && credentials.length > 0 && !credentialId) {
+		if (models && models.length > 0 && !modelId) {
 			setAgent({
 				...agentState,
-				credentialId: credentials[0]._id,
-				model: ModelList[credentials[0].type][0],
+				modelId: models[0]._id,
 			});
 		}
 	}, []);
@@ -60,8 +59,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 			resourceSlug,
 			name: e.target.name.value,
 			type: e.target.type.value,
-			model: model,
-			credentialId: credentialId,
+			modelId: modelId,
 			systemMessage: e.target.systemMessage.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
 			datasourceIds: datasourcesState ? datasourcesState.map(d => d.value) : [],
@@ -82,21 +80,20 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 		}
 	}
 
-	const credentialCallback = async (addedCredentialId) => {
+	const modelCallback = async (addedModelId) => {
 		await fetchAgentFormData && fetchAgentFormData();
 		setModalOpen(false);
-		console.log(addedCredentialId);
+		console.log(addedModelId);
 		setAgent(oldAgent => {
 			return {
 				...oldAgent,
-				credentialId: addedCredentialId,
-				model: '',
+				modelId: addedModelId,
 			};
 		});
 	};
 
 	return (<>
-		<CreateCredentialModal open={modalOpen} setOpen={setModalOpen} callback={credentialCallback} />
+		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
 		<form onSubmit={agentPost}>
 			<input
 				type='hidden'
@@ -108,7 +105,7 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
 					{!compact && <div>
 						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Agent Details</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, credentials and model to use for this agent.</p>
+						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, type and model to use for this agent.</p>
 					</div>}
 
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
@@ -129,15 +126,15 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						</div>
 
 						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Credentials
+							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Model
 							</label>
 							<div className='mt-2'>
 								<Select
 									isClearable
 						            primaryColor={'indigo'}
 						            classNames={SelectClassNames}
-						            value={foundCredential ? { label: foundCredential.name, value: foundCredential._id } : null}
+						            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
 						            onChange={(v: any) => {
 										if (v?.value === null) {
 											//Create new pressed
@@ -146,14 +143,13 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						            	setAgent(oldAgent => {
    											return {
    												...oldAgent,
-   												credentialId: v?.value,
-   												model: '',
+   												modelId: v?.value,
    											};
    										});
 					            	}}
-						            options={credentials.map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
+						            options={models.map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
 						            formatOptionLabel={data => {
-   										const optionCred = credentials.find(oc => oc._id === data.value);
+   										const optionCred = models.find(oc => oc._id === data.value);
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 						                        data.isSelected
@@ -161,45 +157,12 @@ export default function AgentForm({ agent = {}, credentials = [], tools=[], data
 						                            : 'dark:text-white'
 						                    }`}
 						                >
-						                    {data.label} {optionCred ? `(${optionCred?.type})` : null}
+						                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
 						                </li>);
 						            }}
 						        />
 							</div>
 						</div>
-						{credentialId && foundCredential && ModelList[foundCredential.type]?.length > 0 && <div className='sm:col-span-12'>
-							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={model ? { label: model, value: model } : null}
-						            onChange={(v: any) => {
-						            	setAgent(oldAgent => {
-   											return {
-   												...oldAgent,
-   												model: v?.value,
-   											};
-   										});
-					            	}}
-						            options={ModelList && foundCredential && ModelList[foundCredential.type] && ModelList[foundCredential.type].map(m => ({ label: m, value: m }))}
-						            formatOptionLabel={data => {
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>}
 
 						<div className='sm:col-span-12'>
 							<fieldset>

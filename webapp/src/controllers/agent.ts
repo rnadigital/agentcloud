@@ -1,10 +1,10 @@
 'use strict';
 
+import { getModelById } from 'db/model';
+import { getModelsByTeam } from 'db/model';
 import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
-import { getModelById } from 'db/model';
-import { getCredentialById, getCredentialsById, getCredentialsByTeam } from '../db/credential';
 import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
 import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
@@ -14,16 +14,16 @@ import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../li
 import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
-	const [agents, credentials, tools, datasources] = await Promise.all([
+	const [agents, models, tools, datasources] = await Promise.all([
 		getAgentsByTeam(req.params.resourceSlug),
-		getCredentialsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
-		credentials,
+		models,
 		tools,
 		datasources,
 	};
@@ -59,16 +59,16 @@ export async function agentAddPage(app, req, res, next) {
 }
 
 export async function agentData(req, res, _next) {
-	const [agent, credentials, tools, datasources] = await Promise.all([
+	const [agent, models, tools, datasources] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
-		getCredentialsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
-		credentials,
+		models,
 		tools,
 		datasources,
 	};
@@ -119,7 +119,7 @@ export async function addAgentApi(req, res, next) {
 	}
 	
 	const agents = await getAgentsByTeam(req.params.resourceSlug);
-	if (agents.some(agent => agent.name === name)) {
+	if (agents.some(agent => agent.name === name && agent._id.toString() !== req.params.agentId)) {
 		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
 	}
 		
@@ -198,7 +198,7 @@ export async function editAgentApi(req, res, next) {
 	}
 
 	const agents = await getAgentsByTeam(req.params.resourceSlug);
-	if (agents.some(agent => agent.name === name)) {
+	if (agents.some(agent => agent.name === name && agent._id.toString() !== req.params.agentId)) {
 		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
 	}
 	

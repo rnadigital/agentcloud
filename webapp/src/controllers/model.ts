@@ -1,14 +1,14 @@
 'use strict';
 
-import { getModelsByTeam, addModel, deleteModelById } from 'db/model';
+import { removeAgentsModel } from 'db/agent';
+import { getCredentialById, getCredentialsById, getCredentialsByTeam } from 'db/credential';
+import { addModel, deleteModelById,getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
-import { getCredentialById, getCredentialsById, getCredentialsByTeam } from 'db/credential';
-import { removeAgentsModel } from 'db/agent';
-import { ModelList } from 'struct/model';
 import { dynamicResponse } from '../util';
 dotenv.config({ path: '.env' });
 

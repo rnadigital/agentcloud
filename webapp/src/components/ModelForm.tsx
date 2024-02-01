@@ -46,7 +46,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 			}, (res) => {
 				toast.error(res);
 			}, compact ? null : router);
-			callback && addedAgent && callback(addedAgent._id);
+			callback && addedModel && callback(addedModel._id);
 		}
 	}
 
@@ -110,7 +110,6 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 						</label>
 						<div className='mt-2'>
 							<Select
-								id='credentialId'
 								isClearable
 					            primaryColor={'indigo'}
 					            classNames={SelectClassNames}
@@ -150,7 +149,6 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 						</label>
 						<div className='mt-2'>
 							<Select
-								id='model'
 								isClearable
 					            primaryColor={'indigo'}
 					            classNames={SelectClassNames}
