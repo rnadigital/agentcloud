@@ -18,6 +18,19 @@ export default function AddDatasource(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
+	const [models, setModels] = useState();
+
+	async function fetchDatasourceFormData() {
+		await API.getModels({ resourceSlug }, (res) => setModels(res?.models), setError, router);
+	}
+
+	useEffect(() => {
+		fetchDatasourceFormData();
+	}, [resourceSlug]);
+	
+	if (models == null) {
+		return 'Loading...'; //TODO: loader
+	}
 
 	return (<>
 
@@ -29,7 +42,7 @@ export default function AddDatasource(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
 		</div>
 
-		<CreateDatasourceForm />
+		<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasourceFormData} />
 
 	</>);
 

@@ -61,6 +61,17 @@ export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: 
 	});
 }
 
+export async function setDatasourceEmbeddingModel(teamId: db.IdOrStr, datasourceId: db.IdOrStr, modelId: db.IdOrStr): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			modelId: toObjectId(modelId),
+		},
+	});
+}
+
 export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<InsertResult> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),

@@ -6,7 +6,7 @@ import { addModel, deleteModelById,getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
 import { dynamicResponse } from '../util';

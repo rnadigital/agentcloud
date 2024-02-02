@@ -9,7 +9,7 @@ export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	credentialId: ObjectId;
+	credentialId: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
 	model: string;
 	embeddingLength: number;

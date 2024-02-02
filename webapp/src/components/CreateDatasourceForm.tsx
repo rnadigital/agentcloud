@@ -13,9 +13,11 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import SelectClassNames from 'styles/SelectClassNames';
 
+import CreateModelModal from '../components/CreateModelModal';
 import { useAccountContext } from '../context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
 	ssr: false,
@@ -31,6 +33,7 @@ const stepList = [
 	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
 	{ id: 'Step 2', name: 'Connect datasource', href: '#', steps: [1, 2] },
 	{ id: 'Step 3', name: 'Choose which data to sync', href: '#', steps: [3] },
+	{ id: 'Step 4', name: 'Pick an embedding model', href: '#', steps: [4] },
 ];
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -38,8 +41,8 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 	ssr: false,
 });
 
-export default function CreateDatasourceForm({ agent = {}, credentials = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
-	: { agent?: any, credentials?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
+export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData }
+	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function }) { //TODO: fix any types
 
 	const [step, setStep] = useState(0);
 	const [accountContext]: any = useAccountContext();
@@ -49,9 +52,12 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
+	const [modalOpen, setModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('');
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('');
+	const [modelId, setModelId] = useState('');
+	const foundModel = models && models.find(m => m._id === modelId);
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const [datasourceId, setDatasourceId] = useState(null);
@@ -103,71 +109,72 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 		  icon: connectors[key]?.iconUrl_oss,
 		})) : [];
 
+	const modelCallback = async (addedModelId) => {
+		await fetchDatasourceFormData && fetchDatasourceFormData();
+		setModalOpen(false);
+		setModelId(addedModelId);
+	};
+
 	async function datasourcePost(e) {
 		setSubmitting(true);
 		try {
-			if (editing) {
-				// await API.editAgent(agentState._id, body, () => {
-				// 	toast.success('Agent Updated');
-				// }, setError, null);
+			if (step === 2) {
+				const body = {
+					sourceConfig: e.formData,
+					_csrf: csrf,
+					connectorId: connector.value,
+					connectorName: connector.label,
+					resourceSlug,
+					datasourceName,
+					scheduleType,
+					timeUnit,
+					units,
+					cronExpression,
+					cronTimezone,
+				};
+				//step 2, getting schema and testing connection
+				const stagedDatasource: any = await API.testDatasource(body, () => {
+					// nothing to toast here	
+				}, (res) => {
+					toast.error(res);
+				}, compact ? null : router);
+				setDatasourceId(stagedDatasource.datasourceId);
+				setDiscoveredSchema(stagedDatasource.discoveredSchema);
+				setStep(3);
+				// callback && addedDatasource && callback(addedDatasource._id);
 			} else {
-				if (step === 2) {
-					const body = {
-						sourceConfig: e.formData,
-						_csrf: csrf,
-						connectorId: connector.value,
-						connectorName: connector.label,
-						resourceSlug,
-						datasourceName,
-						scheduleType,
-						timeUnit,
-						units,
-						cronExpression,
-						cronTimezone,
-					};
-					//step 2, getting schema and testing connection
-					const stagedDatasource: any = await API.testDatasource(body, () => {
-						// nothing to toast here	
-					}, (res) => {
-						toast.error(res);
-					}, compact ? null : router);
-					setDatasourceId(stagedDatasource.datasourceId);
-					setDiscoveredSchema(stagedDatasource.discoveredSchema);
-					setStep(3);
-					// callback && addedDatasource && callback(addedDatasource._id);
-				} else {
-					//step 4, saving datasource
-					e.preventDefault();
-					const streams = Array.from(e.target.elements)
-						.filter(x => x['checked'] === true)
-						.filter(x => !x['dataset']['parent'])
-						.map(x => x['name']);
-					const selectedFieldsMap = Array.from(e.target.elements)
-						.filter(x => x['checked'] === true)
-						.filter(x => x['dataset']['parent'])
-						.reduce((acc, x) => {
-							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
-							return acc;
-						}, {});
-					const body = {
-						_csrf: csrf,
-						datasourceId: datasourceId,
-						resourceSlug,
-						selectedFieldsMap,
-						streams,
-						scheduleType,
-						timeUnit,
-						units,
-						cronExpression,
-						cronTimezone,
-					};
-					const addedDatasource: any = await API.addDatasource(body, () => {
-						toast.success('Added datasource');
-					}, (res) => {
-						toast.error(res);
-					}, compact ? null : router);
-					// callback && addedDatasource && callback(addedDatasource._id);
-				}
+				//step 4, saving datasource
+				e.preventDefault();
+				const streams = Array.from(e.target.elements)
+					.filter(x => x['checked'] === true)
+					.filter(x => !x['dataset']['parent'])
+					.map(x => x['name']);
+				const selectedFieldsMap = Array.from(e.target.elements)
+					.filter(x => x['checked'] === true)
+					.filter(x => x['dataset']['parent'])
+					.reduce((acc, x) => {
+						acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+						return acc;
+					}, {});
+				const body = {
+					_csrf: csrf,
+					datasourceId: datasourceId,
+					resourceSlug,
+					selectedFieldsMap,
+					streams,
+					scheduleType,
+					timeUnit,
+					units,
+					modelId,
+					cronExpression,
+					cronTimezone,
+				};
+				const addedDatasource: any = await API.addDatasource(body, () => {
+					toast.success('Added datasource');
+				}, (res) => {
+					toast.error(res);
+				}, compact ? null : router);
+				// callback && addedDatasource && callback(addedDatasource._id);
 			}
 		} finally {
 			setSubmitting(false);
@@ -233,7 +240,7 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 									}`}
 								>
 									<span>
-										{data.icon && <img
+										{data?.icon && <img
 											src={data.icon}
 											loading='lazy'
 											className='inline-flex me-2 w-4 h-4'
@@ -301,7 +308,10 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 					</div>
 				</span>;
 			case 3:
-				return discoveredSchema && <form onSubmit={datasourcePost}>
+				return discoveredSchema && <form onSubmit={(e) => {
+					e.preventDefault();
+					setStep(4);
+				}}>
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}
 					/>
@@ -313,6 +323,58 @@ export default function CreateDatasourceForm({ agent = {}, credentials = [], too
 						Continue
 					</button>
 				</form>;
+			case 4:
+				return <>
+					<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
+					<form onSubmit={datasourcePost}>
+						<div className='hidden'>
+							{discoveredSchema && <StreamsList
+								streams={discoveredSchema.catalog.streams}
+							/>}
+						</div>
+						<div className='my-4'>
+							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Embedding Model
+							</label>
+							<div className='mt-2'>
+								<Select
+									isClearable
+						            primaryColor={'indigo'}
+						            classNames={SelectClassNames}
+						            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+						            onChange={(v: any) => {
+										if (v?.value === null) {
+											//Create new pressed
+											return setModalOpen(true);
+										}
+										setModelId(v?.value);
+					            	}}
+						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+						            formatOptionLabel={data => {
+						            	console.log('formatOptionLabel', data);
+										const m = models.find(m => m._id === data?.value);
+						                return (<li
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+						                        data.isSelected
+						                            ? 'bg-blue-100 text-blue-500'
+						                            : 'dark:text-white'
+						                    }`}
+						                >
+						                    {data.label} {m ? `(${m?.model})` : null}
+						                </li>);
+						            }}
+						        />
+							</div>
+						</div>
+						<button
+							disabled={submitting}
+							type='submit'
+							className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
+							Continue
+						</button>
+					</form>
+				</>;
 			default:
 				return null;
 		}
