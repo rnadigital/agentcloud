@@ -40,14 +40,16 @@ async fn extract_text_from_file(
         }
         FileType::TXT => {
             let path_clone = path.clone();
-            document_text = fs::read_to_string(path_clone).unwrap();
+            (document_text, metadata) = chunker
+                .extract_text_from_txt(path_clone)
+                .expect("TODO: panic message");
         }
         FileType::DOCX => {
             let path_clone = path.clone();
             (document_text, metadata) = chunker.extract_text_from_docx(path_clone).unwrap();
         }
-        FileType::DOC => {}
-        FileType::UNKNOWN => {}
+        FileType::DOC => return None,
+        FileType::UNKNOWN => return None,
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
     let path_clone = path.clone();

@@ -4,6 +4,7 @@ use anyhow::{anyhow, Result};
 
 use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
+use std::fs;
 use std::io::Read;
 
 extern crate dotext;
@@ -16,6 +17,7 @@ pub trait Chunking {
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     async fn chunk(
         &self,
         data: String,
@@ -110,6 +112,21 @@ impl Chunking for TextChunker {
         file.read_to_string(&mut docx).unwrap();
 
         let results = (docx, metadata);
+        Ok(results)
+    }
+
+    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        let metadata = HashMap::new();
+        let mut text = String::new();
+
+        match fs::read_to_string(path) {
+            Ok(t) => text = t,
+            Err(e) => {
+                return Err(anyhow!("Could  not read file. Error: {}", e));
+            }
+        }
+
+        let results = (text, metadata);
         Ok(results)
     }
 
