@@ -18,6 +18,7 @@ import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
+import deleteCollectionFromQdrant from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbeddingModel, setDatasourceLastSynced } from '../db/datasource';
 import { dynamicResponse } from '../util';
