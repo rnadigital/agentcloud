@@ -78,7 +78,8 @@ impl CharacterChunker {
             .await
             .unwrap()
     }
-
+    // the issue here is that you want to return the exact same format as the other chunking strategy.
+    // so we want to return a Result<Vec<Document>>
     // fn construct_document_model(text: Vec<String>, vector: V)
 }
 

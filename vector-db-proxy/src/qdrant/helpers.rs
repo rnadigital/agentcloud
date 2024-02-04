@@ -12,6 +12,9 @@ use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 
 use crate::hash_map_values_as_serde_values;
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_embedding_model;
 use crate::qdrant::utils::Qdrant;
 use serde_json::json;
 use std::collections::HashMap;
@@ -140,11 +143,20 @@ pub async fn process_table_chunks_async(
     dataset_id: String,
 ) -> Result<bool> {
     let ds_id_clone = dataset_id.clone();
+    let ds_id_clone_2 = ds_id_clone.clone();
     let text_clone = text.clone();
     let embeddings = embed_table_chunks_async(table_chunks, text_clone, Some(dataset_id)).await?;
     let qdrant = Qdrant::new(qdrant_conn, ds_id_clone);
     // Once embedding is returned successfully in the form of a PointStruct insert into DB
-    match qdrant.bulk_upsert_data(embeddings).await? {
+    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let model_parameters: Model = get_embedding_model(&mongodb_connection, ds_id_clone_2.as_str())
+        .await
+        .unwrap()
+        .unwrap();
+    match qdrant
+        .bulk_upsert_data(embeddings, Some(model_parameters.embeddingLength as u64))
+        .await?
+    {
         true => {
             println!("Upsert Successful!");
             Ok(true)
