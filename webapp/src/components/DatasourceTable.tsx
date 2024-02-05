@@ -89,6 +89,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 		                    
 		                </th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Date Uploaded
+						</th>
 		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 		                    
 		                </th>
@@ -106,7 +109,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
-									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '-'}
+									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '1'}
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
@@ -139,6 +142,11 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
 		                        </a>}
 		                    </td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
+									{new Date(datasource.createdDate).toLocaleString()}
+								</span>
+							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
 		                        <button
 		                        	onClick={() => deleteDatasource(datasource._id)}
