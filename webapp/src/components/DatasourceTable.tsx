@@ -124,10 +124,12 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
+								<div className='text-sm text-gray-900'>
+									{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}
+								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
+								<span className='text-sm text-gray-900'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>
