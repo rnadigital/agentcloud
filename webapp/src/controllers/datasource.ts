@@ -569,6 +569,9 @@ export async function deleteDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Delete the points in qdrant
+	await deleteCollectionFromQdrant(req.params.datasourceId);
+
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
