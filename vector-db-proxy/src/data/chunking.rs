@@ -146,7 +146,16 @@ impl Chunking for TextChunker {
                 };
                 return chunker.split_documents(vec![doc]).await;
             }
-            // ChunkingStrategy::CHARACTER_CHUNKING => {}
+            // ChunkingStrategy::CHARACTER_CHUNKING => {
+            // TODO: get character to split by from mongo. Ask @tom where to get it from
+            // let chunker = CharacterChunker::default();
+            // let doc = Document {
+            //     page_content: data,
+            //     metadata,
+            //     embedding_vector: None,
+            // };
+            // return chunker.split_document(vec![doc]).await;
+            // }
             _ => Err(anyhow!("Type not yet supported!")),
         };
     }

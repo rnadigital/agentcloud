@@ -120,8 +120,9 @@ pub async fn subscribe_to_queue(
             if let Some(msg) = message.content {
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                    let model_parameters =
-                        get_embedding_model(&mongodb_connection, datasource_id).await?;
+                    let model_parameters = get_embedding_model(&mongodb_connection, datasource_id)
+                        .await
+                        .unwrap();
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
