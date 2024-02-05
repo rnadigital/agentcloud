@@ -33,13 +33,16 @@ pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<O
 
     // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
-        .find_one(doc! {"_id": ObjectId::from_str(datasource_id).unwrap()}, None)
+        .find_one(
+            doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
+            None,
+        )
         .await
     {
         Ok(Some(datasource)) => {
             // If datasource is found, attempt to find the related model.
             match models_collection
-                .find_one(doc! {"_id": datasource.modelId}, None)
+                .find_one(doc! {"_id": datasource.modelId.unwrap()}, None)
                 .await
             {
                 Ok(model) => Ok(model), // Return the model if found (could be Some or None)

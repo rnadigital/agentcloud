@@ -47,9 +47,9 @@ pub enum ChunkingStrategy {
 impl From<String> for ChunkingStrategy {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "semanticChunking" => ChunkingStrategy::SEMANTIC_CHUNKING,
-            "characterChunking" => ChunkingStrategy::CHARACTER_CHUNKING,
-            "codeSplit" => ChunkingStrategy::CODE_SPLIT,
+            "semantic" => ChunkingStrategy::SEMANTIC_CHUNKING,
+            "character" => ChunkingStrategy::CHARACTER_CHUNKING,
+            "code" => ChunkingStrategy::CODE_SPLIT,
             _ => ChunkingStrategy::UNKNOWN,
         }
     }
