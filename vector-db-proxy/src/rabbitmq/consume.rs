@@ -69,11 +69,17 @@ async fn apply_chunking_strategy_to_document(
     document_text: String,
     metadata: Option<HashMap<String, String>>,
     chunking_strategy: ChunkingStrategy,
+    chunking_character: Option<String>,
 ) -> Result<Vec<DocumentModel>> {
     let mut chunks: Vec<DocumentModel> = vec![];
     let chunker = TextChunker::default();
     match chunker
-        .chunk(document_text, metadata, chunking_strategy)
+        .chunk(
+            document_text,
+            metadata,
+            chunking_strategy,
+            chunking_character,
+        )
         .await
     {
         Ok(c) => chunks = c,
@@ -86,7 +92,7 @@ async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
     let file_path = file_name.trim_matches('"');
     println!("File path : {}", file_path);
     let mut file = File::create(file_path)?;
-    file.write_all(&*content)?; // handle errors
+    file.write_all(&content)?; // handle errors
     Ok(())
 }
 
@@ -158,14 +164,18 @@ pub async fn subscribe_to_queue(
                                             .await
                                             .unwrap();
                                             // dynamically get user's chunking strategy of choice from the database
+                                            let datasources_clone = datasource.unwrap().clone();
+                                            let chunking_character =
+                                                datasources_clone.chunkCharacter;
                                             let chunking_method =
-                                                datasource.unwrap().chunkStrategy.unwrap();
+                                                datasources_clone.chunkStrategy.unwrap();
                                             let chunking_strategy =
                                                 ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(
                                                 document_text,
                                                 metadata,
                                                 chunking_strategy,
+                                                chunking_character,
                                             )
                                             .await
                                             {

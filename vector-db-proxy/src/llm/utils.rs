@@ -16,6 +16,8 @@ pub enum EmbeddingModels {
     OAI,
 }
 
+// todo: implement From for all the different embedding models here;
+
 pub struct LLM;
 
 impl LLM {

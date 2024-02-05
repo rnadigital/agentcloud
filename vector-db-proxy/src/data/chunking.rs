@@ -9,6 +9,7 @@ use std::io::Read;
 
 extern crate dotext;
 
+use crate::data::text_splitting::CharacterChunker;
 use dotext::*;
 
 pub trait Chunking {
@@ -23,6 +24,7 @@ pub trait Chunking {
         data: String,
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
+        chunking_character: Option<String>,
     ) -> Result<Vec<Document>>;
 }
 
@@ -86,7 +88,7 @@ impl Chunking for TextChunker {
         let mut res = (String::new(), metadata);
         if let Ok(doc) = lopdf::Document::load(path.as_str()) {
             let pages = doc.get_pages();
-            for (page_id, page) in pages {
+            if let Some((page_id, page)) = pages.into_iter().next() {
                 return match pdf_extract::extract_text(path.as_str()) {
                     Ok(text) => {
                         let page_dict = doc.get_dictionary(page)?;
@@ -135,8 +137,10 @@ impl Chunking for TextChunker {
         data: String,
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
+        chunking_character: Option<String>,
     ) -> Result<Vec<Document>> {
-        return match strategy {
+        // TODO: get embedding model from database!
+        match strategy {
             ChunkingStrategy::SEMANTIC_CHUNKING => {
                 let chunker = SemanticChunker::default();
                 let doc = Document {
@@ -144,19 +148,9 @@ impl Chunking for TextChunker {
                     metadata,
                     embedding_vector: None,
                 };
-                return chunker.split_documents(vec![doc]).await;
+                chunker.split_documents(vec![doc]).await
             }
-            // ChunkingStrategy::CHARACTER_CHUNKING => {
-            // TODO: get character to split by from mongo. Ask @tom where to get it from
-            // let chunker = CharacterChunker::default();
-            // let doc = Document {
-            //     page_content: data,
-            //     metadata,
-            //     embedding_vector: None,
-            // };
-            // return chunker.split_document(vec![doc]).await;
-            // }
             _ => Err(anyhow!("Type not yet supported!")),
-        };
+        }
     }
 }
