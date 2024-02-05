@@ -67,7 +67,7 @@ class MongoClientConnection(MongoConnection):
                     agent_data: Union[AgentData, None] = self._get_group_member(agent)
                     if agent_data:
                         agent_data.is_admin = (
-                            True if (group_id and agent == admin_agent) else False
+                            True if ((group_id and agent == admin_agent) or (agent_id is not None and agent_data.type == "QdrantRetrieveUserProxyAgent")) else False
                         )
                         list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
@@ -127,6 +127,7 @@ class MongoClientConnection(MongoConnection):
                     human_input_mode=agent.get("humanInputMode") or "NEVER",
                     llm_config=_llm_config,
                     code_execution_config=code_execution_config,
+                    datasource_ids=agent.get("datasourceIds")
                 )
 
                 # Construct Agent Data

@@ -82,8 +82,10 @@ class AgentConfig(BaseModel):
     use_sockets: Optional[bool] = True
     socket_client: Any = None
     sid: str = None
-    # datasourceIds: Optional[List[PyObjectId]] = Field(alias="_id", default=None)
+    datasource_ids: Optional[List[str]] = None
+    retrieve_config: Optional[Dict[str, Any]] = None
 
+AgentConfigArgs = tuple([k for k in AgentConfig.model_fields.keys()])
 
 class AgentTypes(str, Enum):
     AssistantAgent = "AssistantAgent"

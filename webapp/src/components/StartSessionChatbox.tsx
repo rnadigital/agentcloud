@@ -89,7 +89,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		}));
 
 	const ragAgentOptions = agents
-		.filter(a => a?.datasourceIds?.length > 0 && a.type === AgentType.QADRANT_RETRIEVER_USER_PROXY_AGENT)
+		.filter(a => a?.datasourceIds?.length > 0 && a.type === AgentType.RETRIEVER_ASSISTANT_AGENT)
 		.map(a => ({
 			label: a.name,
 			value: a._id,
