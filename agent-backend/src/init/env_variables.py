@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LOCAL = os.getenv("LOCAL", "True") == 'True'
+LOCAL = os.getenv("LOCAL", "True") == "True"
 
 # Get project ID and Local var from .env file
 BASE_PATH = os.getenv("BASE_PATH", "./src") if LOCAL else "."
@@ -25,7 +25,9 @@ def _set_max_threads() -> int:
         max_threads: int = int(os.getenv("MAX_THREADS", 50)) + initial_threads
         return max_threads
     except ValueError:
-        logging.warning("Max Threads could not be coerced to an integer. Falling back to default value of 50 workers")
+        logging.warning(
+            "Max Threads could not be coerced to an integer. Falling back to default value of 50 workers"
+        )
         return 50
 
 

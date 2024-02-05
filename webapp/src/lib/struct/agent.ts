@@ -28,4 +28,6 @@ export enum AgentType {
 	USER_PROXY_AGENT = 'UserProxyAgent',
 	ASSISTANT_AGENT = 'AssistantAgent',
 	EXECUTOR_AGENT = 'ExecutorAgent',
+	RETRIEVER_ASSISTANT_AGENT = 'RetrieveAssistantAgent',
+	QADRANT_RETRIEVER_USER_PROXY_AGENT = 'QdrantRetrieveUserProxyAgent',
 }

@@ -103,3 +103,11 @@ export async function discoverSchemaApi(req, res, next) {
 	});
 
 }
+
+export async function handleSuccessfulSyncWebhook(req, res, next) {
+
+	console.log(JSON.stringify(req.body, null, 2));
+
+	return dynamicResponse(req, res, 200, { });
+
+}

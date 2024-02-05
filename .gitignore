@@ -3,5 +3,14 @@
 */**/.DS_Store
 docker-compose.yml
 airbyte/
+
+# Personal vscode settings
+agent-backend/src/.vscode/
+agent-backend/src/OAI_CONFIG_LIST
+
+# Local Cache
+agent-backend/src/local_cache/
 .vscode/
 webapp/keyfile.json
+.aider*
+*.code-workspace

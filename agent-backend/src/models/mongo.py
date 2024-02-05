@@ -11,8 +11,8 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 
 
 class ToolType(str, Enum):
-    API_TOOL = 'api'
-    HOSTED_FUNCTION_TOOL = 'function'
+    API_TOOL = "api"
+    HOSTED_FUNCTION_TOOL = "function"
 
 
 class FunctionProperty(BaseModel):
@@ -35,8 +35,8 @@ class ToolData(BaseModel):
 
 
 class Platforms(str, Enum):
-    OpenAI = 'open_ai'
-    Azure = 'azure'
+    OpenAI = "open_ai"
+    Azure = "azure"
 
 
 class Models(str, Enum):
@@ -47,6 +47,7 @@ class Models(str, Enum):
 
 class ConfigList(BaseModel):
     """Data model for OpenAi Model Config"""
+
     api_key: Optional[str] = ""
     api_type: Optional[Platforms] = Platforms.OpenAI
     model: Optional[Models] = Models.GPT4
@@ -56,6 +57,7 @@ class ConfigList(BaseModel):
 
 class LLMConfig(BaseModel):
     """Data model for Autogen  LLMConfig"""
+
     seed: Optional[int] = randint(1, 100)
     config_list: List[ConfigList] = field(default_factory=list)
     temperature: Optional[float] = 0
@@ -67,14 +69,15 @@ class LLMConfig(BaseModel):
 
 class AgentConfig(BaseModel):
     """Data model for Autogen Agent Config"""
+
     name: str
     llm_config: LLMConfig
     human_input_mode: Optional[str] = "NEVER"
     system_message: Optional[str] = ""
     max_consecutive_auto_reply: Optional[int] = 10
-    is_termination_msg: Union[Callable, str] = lambda x: x.get("content", "") and x.get("content",
-                                                                                        "").rstrip().endswith(
-        "TERMINATE")
+    is_termination_msg: Union[Callable, str] = lambda x: x.get("content", "") and x.get(
+        "content", ""
+    ).rstrip().endswith("TERMINATE")
     code_execution_config: Optional[Union[bool, str, Dict[str, Any]]] = {}
     use_sockets: Optional[bool] = True
     socket_client: Any = None

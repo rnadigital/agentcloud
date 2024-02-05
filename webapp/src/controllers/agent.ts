@@ -107,7 +107,7 @@ export async function addAgentApi(req, res, next) {
 	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'type', validation: { notEmpty: true }},
 		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
@@ -185,7 +185,7 @@ export async function editAgentApi(req, res, next) {
 	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
 	
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'type', validation: { notEmpty: true }},
 		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},

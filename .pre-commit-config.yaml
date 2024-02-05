@@ -1,0 +1,37 @@
+default_language_version:
+  python: python3
+
+ci:
+  autofix_prs: true
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'
+  autoupdate_schedule: 'quarterly'
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    - id: check-added-large-files
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-ast
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-yaml
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-toml
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-json
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-byte-order-marker
+      exclude: '^(?!agent-backend/src/)'
+    - id: check-merge-conflict
+      exclude: '^(?!agent-backend/src/)'
+    - id: detect-private-key
+      exclude: '^(?!agent-backend/src/)'
+    - id: trailing-whitespace
+      exclude: '^(?!agent-backend/src/)'
+    - id: end-of-file-fixer
+      exclude: '^(?!agent-backend/src/)'
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    - id: black
+      exclude: '^(?!agent-backend/src/)'

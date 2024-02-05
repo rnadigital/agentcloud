@@ -190,6 +190,7 @@ export async function testDatasourceApi(req, res, next) {
 	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 	    lastSyncedDate: null,
 	    discoveredSchema,
+	    createdDate: new Date(),
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -664,6 +665,7 @@ export async function uploadFileApi(req, res, next) {
 	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
+	    createdDate: new Date(),
 	});
 	
 	// Send the gcs file path to rabbitmq

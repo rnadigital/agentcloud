@@ -35,6 +35,7 @@ export type Datasource = {
     workspaceId: string;
     connectionId: string;
     connectionSettings?: DatasourceConnectionSettings;
+    createdDate: Date;
     lastSyncedDate?: Date | null; //Note: null = never synced
     discoveredSchema?: any;
     chunkStrategy?: DatasourceChunkStrategy;

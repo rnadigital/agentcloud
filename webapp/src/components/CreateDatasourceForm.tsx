@@ -387,7 +387,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										}
 										setModelId(v?.value);
 					            	}}
-						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+						            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
 						            formatOptionLabel={data => {
 						            	console.log('formatOptionLabel', data);
 										const m = models.find(m => m._id === data?.value);
