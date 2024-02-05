@@ -126,7 +126,7 @@ def reset_default_agents() -> None:
             "orgId": ObjectId(org_id),
             "teamId": ObjectId(team_id),
             "name": "llava_agent",
-            "type": "agentchat.contrib.llava_agent.LLaVAAgent",
+            "type": "LLaVAAgent",
             "codeExecutionConfig": None,
             "systemMessage": "You are a image explainer.",
             "humanInputMode": "NEVER",

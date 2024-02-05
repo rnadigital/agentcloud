@@ -3,6 +3,7 @@ from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import (
     QdrantRetrieveUserProxyAgent,
 )
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
+from autogen.agentchat.contrib.llava_agent import LLaVAAgent
 
 from typing import NamedTuple
 
@@ -17,3 +18,4 @@ class AvailableAgents(NamedTuple):
     GroupChatManager = autogen.GroupChatManager
     RetrieveAssistantAgent = RetrieveAssistantAgent
     QdrantRetrieveUserProxyAgent = QdrantRetrieveUserProxyAgent
+    LLaVAAgent = LLaVAAgent
