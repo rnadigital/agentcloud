@@ -43,15 +43,8 @@ impl Qdrant {
 
     pub async fn delete_collection(&self) -> Result<()> {
         let qdrant_conn = &self.client.read().await;
-        let mongodb_connection = start_mongo_connection().await.unwrap();
-        let model_parameters: Model =
-            get_embedding_model(&mongodb_connection, &self.collection_name.as_str())
-                .await
-                .unwrap()
-                .unwrap();
-        let vector_length = model_parameters.embeddingLength as u64;
         return match &self
-            .check_collection_exists(CreateDisposition::CreateNever, Some(vector_length))
+            .check_collection_exists(CreateDisposition::CreateNever, None)
             .await
         {
             Ok(r) => match r {
