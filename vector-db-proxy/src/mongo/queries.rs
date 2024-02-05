@@ -1,23 +1,30 @@
 use anyhow::{anyhow, Result};
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
-use mongodb::error::Result as MongoResult;
 use mongodb::{Collection, Database};
 use std::str::FromStr;
 
 use crate::mongo::models::{DataSources, Model};
 
-pub async fn get_datasource(db: &Database, datasource_id: &str) -> MongoResult<DataSources> {
+pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
-    let datasource = datasources_collection
+    match datasources_collection
         .find_one(
             doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
             None,
         )
-        .await?
-        .unwrap();
-
-    Ok(datasource)
+        .await
+    {
+        Ok(datasource) => {
+            return Ok(match datasource {
+                Some(d) => return Ok(Some(d)),
+                None => None,
+            })
+        }
+        Err(e) => {
+            return Err(anyhow!("Some error: {}", e));
+        }
+    }
 }
 
 pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<Option<Model>> {

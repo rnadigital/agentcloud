@@ -1,9 +1,9 @@
 use chrono::Utc;
 use mongodb::bson::{doc, oid::ObjectId};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct DatasourceConnectionSettings {
     pub syncCatalog: Value,
     pub scheduleType: String,
@@ -17,12 +17,12 @@ pub struct DatasourceConnectionSettings {
     pub status: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct DataSources {
     pub _id: ObjectId,
     pub orgId: ObjectId,
     pub teamId: ObjectId,
-    pub modelId: ObjectId,
+    pub modelId: Option<ObjectId>,
     pub name: String,
     pub originalName: String,
     pub gcsFilename: String,
@@ -31,13 +31,13 @@ pub struct DataSources {
     pub destinationId: String,
     pub workspaceId: String,
     pub connectionId: String,
-    pub chunkStrategy: ChunkingStrategy,
+    pub chunkStrategy: Option<String>,
     pub chunkCharacter: Option<String>,
     pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<chrono::DateTime<Utc>>,
-    pub discoveredSchema: Value,
+    pub discoveredSchema: Option<Value>,
 }
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,
     CHARACTER_CHUNKING,
@@ -55,7 +55,7 @@ impl From<String> for ChunkingStrategy {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Model {
     pub _id: ObjectId,
     pub orgId: ObjectId,

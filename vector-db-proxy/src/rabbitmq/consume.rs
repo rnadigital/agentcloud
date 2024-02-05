@@ -154,7 +154,8 @@ pub async fn subscribe_to_queue(
                                             .await
                                             .unwrap();
                                             // dynamically get user's chunking strategy of choice from the database
-                                            let chunking_method = datasource.chunkStrategy;
+                                            let chunking_method =
+                                                datasource.unwrap().chunkStrategy.unwrap();
                                             let chunking_strategy =
                                                 ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(

@@ -49,6 +49,7 @@ regex = "1.9.5"
 ndarray = "0.15.6"
 google-cloud-auth = "0.13.0"
 dotext = "0.1.1"
+bson = "2.9.0"
 
 [[bin]]
 name = "vector-db-proxy"
