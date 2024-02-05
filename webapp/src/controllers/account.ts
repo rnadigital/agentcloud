@@ -42,7 +42,7 @@ export async function accountJson(req, res, next) {
  * @apiGroup Account
  *
  * @apiParam {String} username Username of account.
- * @apiParam {String} password Password of account..
+ * @apiParam {String} password Password of account.
  */
 export async function login(req, res) {
 

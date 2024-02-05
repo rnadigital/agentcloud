@@ -6,7 +6,7 @@ import autogen
 from typing import Optional, Union, List, Dict, Callable
 from models.mongo import AgentConfig
 from importlib import import_module
-
+from agents.agents_list import AvailableAgents
 
 # TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
 # tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
@@ -21,9 +21,9 @@ class ChatBuilder:
         single_agent: bool,
         history: Optional[dict],
     ):
-        self.user_proxy: Optional[autogen.UserProxyAgent] = None
+        self.user_proxy: Optional[Union[autogen.UserProxyAgent,autogen.QdrantRetrieveUserProxyAgent]] = None
         self.agents: Optional[
-            List[Union[autogen.AssistantAgent, autogen.UserProxyAgent]]
+            List[Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent]]
         ] = list()
         self.single_agent = single_agent
         self.group = group
@@ -100,19 +100,27 @@ class ChatBuilder:
             logging.exception(e)
 
     def process_role(self, role):
-        agent_type = getattr(autogen, role.get("type"))
+        agent_type = AvailableAgents[role.get("type")]
         agent_config = role.get("data")
         agent_config["name"] = (
             "admin" if role.get("is_admin") else agent_config.get("name")
         )
         agent_config["socket_client"] = self.socket
         agent_config["sid"] = self.session_id
-        agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent] = agent_type(
+        agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent] = agent_type(
             **AgentConfig(**agent_config).model_dump()
         )
         if agent.name == "admin":
             self.user_proxy: autogen.UserProxyAgent = agent
         self.agents.append(agent)
+
+    def set_user_proxy_by_type(self, agent: any, name: str):
+        self.user_proxy = agent(
+                name=name if name is not None else self.agents[0].name,
+                use_sockets=True,
+                socket_client=self.socket,
+                sid=self.session_id,
+            )
 
     def create_group(self):
         roles = self.group.get("roles")
@@ -122,12 +130,15 @@ class ChatBuilder:
     def run_chat(self):
         # single agent, make non-executing UserProxyAgent
         if self.single_agent:
-            user_proxy = autogen.UserProxyAgent(
-                name=self.agents[0].name,
-                use_sockets=True,
-                socket_client=self.socket,
-                sid=self.session_id,
-            )
+            if self.user_proxy is None:
+                user_proxy = autogen.UserProxyAgent(
+                    name=self.agents[0].name,
+                    use_sockets=True,
+                    socket_client=self.socket,
+                    sid=self.session_id,
+                )
+            else:
+                user_proxy = self.user_proxy
             return user_proxy.initiate_chat(
                 recipient=self.agents[0],
                 message=self.prompt,
