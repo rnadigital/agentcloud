@@ -60,6 +60,15 @@ export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: 
 		},
 	});
 }
+export async function setDatasourceLastSyncedWebhook(connectionId: string, lastSyncedDate: Date): Promise<any> {
+	return DatasourceCollection().updateOne({
+		connectionId,
+	}, {
+		$set: {
+			lastSyncedDate,
+		},
+	});
+}
 
 export async function setDatasourceEmbeddingModel(teamId: db.IdOrStr, datasourceId: db.IdOrStr, modelId: db.IdOrStr): Promise<any> {
 	return DatasourceCollection().updateOne({
