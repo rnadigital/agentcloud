@@ -1,11 +1,3 @@
-import Head from 'next/head';
-import Image from 'next/image';
-// TODO: Remove once https://github.com/vercel/next.js/issues/52216 is resolved.
-// `next/image` seems to be affected by a default + named export bundling bug.
-let ResolvedImage: any = Image;
-if ('default' in ResolvedImage) {
-	ResolvedImage = ResolvedImage.default;
-}
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import {
 	ChevronDownIcon,
@@ -24,6 +16,7 @@ import {
 	WrenchScrewdriverIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
+import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
