@@ -624,7 +624,10 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	if (!req.files || Object.keys(req.files).length === 0) {
+	const { modelId } = req.body;
+
+	if (!req.files || Object.keys(req.files).length === 0
+		|| !modelId || typeof modelId !== 'string') {	
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -633,6 +636,11 @@ export async function uploadFileApi(req, res, next) {
 	const fileFormat = getFileFormat(fileExtension);
 	if (!fileFormat) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
+	}
+
+	const model = await getModelById(req.params.resourceSlug, modelId);
+	if (!model) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	// Create the datasource in the db
@@ -652,6 +660,7 @@ export async function uploadFileApi(req, res, next) {
 	    workspaceId: null,
 	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
+	    modelId: toObjectId(modelId),
 	});
 	
 	// Send the gcs file path to rabbitmq

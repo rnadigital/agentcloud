@@ -210,7 +210,46 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					</div>
 				</div>;			
 			case 1:
-				return <DropZone files={files} setFiles={setFiles} />;
+				return <DropZone
+					files={files}
+					setFiles={setFiles}
+					modelId={modelId}
+				>
+					<div className='my-4'>
+						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Embedding Model
+						</label>
+						<div className='mt-2'>
+							<Select
+								isClearable
+					            primaryColor={'indigo'}
+					            classNames={SelectClassNames}
+					            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+					            onChange={(v: any) => {
+									if (v?.value === null) {
+										//Create new pressed
+										return setModalOpen(true);
+									}
+									setModelId(v?.value);
+				            	}}
+					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            formatOptionLabel={data => {
+					            	console.log('formatOptionLabel', data);
+									const m = models.find(m => m._id === data?.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : 'dark:text-white'
+					                    }`}
+					                >
+					                    {data.label} {m ? `(${m?.model})` : null}
+					                </li>);
+					            }}
+					        />
+						</div>
+					</div>
+				</DropZone>;
 			case 2:
 				return <span className='flex'>
 					<div className='w-full sm:w-1/3 m-auto'>
@@ -325,7 +364,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				</form>;
 			case 4:
 				return <>
-					<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
 					<form onSubmit={datasourcePost}>
 						<div className='hidden'>
 							{discoveredSchema && <StreamsList
@@ -381,7 +419,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	}
 
 	return (<div className='m-4'>
-
+		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
 		<nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (

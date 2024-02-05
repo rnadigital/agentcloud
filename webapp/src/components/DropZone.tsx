@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 
 import * as API from '../api';
 
-export default function DropZone({ setFiles, files }) {
+export default function DropZone({ children, setFiles, files, modelId }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -29,6 +29,7 @@ export default function DropZone({ setFiles, files }) {
 			formData.set('chunkStrategy', chunkStrategy as string);
 			formData.set('chunkCharacter', chunkCharacter as string);
 			formData.set('resourceSlug', resourceSlug as string);
+			formData.set('modelId', modelId as string);
 			formData.set('_csrf', csrf as string);
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);
@@ -96,6 +97,8 @@ export default function DropZone({ setFiles, files }) {
 					chunkCharacter={chunkCharacter}
 					setChunkCharacter={setChunkCharacter}
 				/>
+
+				{children}
 				
 				<button
 					disabled={loading || !files}
