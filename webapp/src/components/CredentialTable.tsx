@@ -33,11 +33,13 @@ export default function CredentialTable({ credentials, fetchCredentials }: { cre
 	}
 
 	useEffect(() => {
+		let timeout;
 		if (!open) {
-			setTimeout(() => {
+			timeout = setTimeout(() => {
 				setDeletingCredential(null);
 			}, 500);
 		}
+		return () => clearTimeout(timeout);
 	}, [open]);
 
 	return (
