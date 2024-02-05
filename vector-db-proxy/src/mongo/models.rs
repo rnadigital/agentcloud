@@ -31,7 +31,9 @@ pub struct DataSources {
     pub destinationId: String,
     pub workspaceId: String,
     pub connectionId: String,
-    pub connectionSettings: DatasourceConnectionSettings,
+    pub chunkStrategy: ChunkingStrategy,
+    pub chunkCharacter: Option<String>,
+    pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<chrono::DateTime<Utc>>,
     pub discoveredSchema: Value,
 }
@@ -59,7 +61,6 @@ pub struct Model {
     pub orgId: ObjectId,
     pub teamId: ObjectId,
     pub credentialId: ObjectId,
-    pub chunkStrategy: ChunkingStrategy,
     pub name: String,
     pub model: String,
     pub embeddingLength: i32,

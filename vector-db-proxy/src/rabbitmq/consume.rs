@@ -10,6 +10,7 @@ use crate::rabbitmq::models::RabbitConnect;
 
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
+use crate::mongo::queries::get_datasource;
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -120,7 +121,7 @@ pub async fn subscribe_to_queue(
             if let Some(msg) = message.content {
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                    let model_parameters = get_embedding_model(&mongodb_connection, datasource_id)
+                    let datasource = get_datasource(&mongodb_connection, datasource_id)
                         .await
                         .unwrap();
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
@@ -153,8 +154,7 @@ pub async fn subscribe_to_queue(
                                             .await
                                             .unwrap();
                                             // dynamically get user's chunking strategy of choice from the database
-                                            let chunking_method =
-                                                model_parameters.unwrap().chunkStrategy;
+                                            let chunking_method = datasource.chunkStrategy;
                                             let chunking_strategy =
                                                 ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(

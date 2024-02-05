@@ -1,28 +1,23 @@
 use anyhow::{anyhow, Result};
+use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
-use mongodb::bson::{doc, Document};
 use mongodb::error::Result as MongoResult;
-use mongodb::options::FindOneOptions;
 use mongodb::{Collection, Database};
 use std::str::FromStr;
 
 use crate::mongo::models::{DataSources, Model};
 
-pub async fn get_team_id_for_datasource(
-    db: Database,
-    datasource_id: String,
-) -> MongoResult<Document> {
-    let datasources_collection: Collection<Document> = db.collection("datasources");
-    let find_options = FindOneOptions::builder().sort(doc! {"teamId": 1}).build();
-    let team_id = datasources_collection
+pub async fn get_datasource(db: &Database, datasource_id: &str) -> MongoResult<DataSources> {
+    let datasources_collection: Collection<DataSources> = db.collection("datasources");
+    let datasource = datasources_collection
         .find_one(
-            doc! {"_id": ObjectId::from_str(datasource_id.as_str()).unwrap()},
-            find_options,
+            doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
+            None,
         )
         .await?
         .unwrap();
 
-    Ok(team_id)
+    Ok(datasource)
 }
 
 pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<Option<Model>> {
