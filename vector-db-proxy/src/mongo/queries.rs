@@ -29,11 +29,11 @@ pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option
 
 pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<Option<Model>> {
     let datasources_collection = db.collection::<DataSources>("datasources");
-    let models_collection = db.collection::<Model>("model");
+    let models_collection = db.collection::<Model>("models");
 
     // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
-        .find_one(doc! {"_id": &datasource_id}, None)
+        .find_one(doc! {"_id": ObjectId::from_str(datasource_id).unwrap()}, None)
         .await
     {
         Ok(Some(datasource)) => {
