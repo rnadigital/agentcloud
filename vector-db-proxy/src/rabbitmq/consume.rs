@@ -1,12 +1,16 @@
-use crate::data::chunking::{Chunking, ChunkingStrategy, TextChunker};
+use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
+use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_datasource;
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -37,14 +41,16 @@ async fn extract_text_from_file(
         }
         FileType::TXT => {
             let path_clone = path.clone();
-            document_text = fs::read_to_string(path_clone).unwrap();
+            (document_text, metadata) = chunker
+                .extract_text_from_txt(path_clone)
+                .expect("TODO: panic message");
         }
         FileType::DOCX => {
             let path_clone = path.clone();
             (document_text, metadata) = chunker.extract_text_from_docx(path_clone).unwrap();
         }
-        FileType::DOC => {}
-        FileType::UNKNOWN => {}
+        FileType::DOC => return None,
+        FileType::UNKNOWN => return None,
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
     let path_clone = path.clone();
@@ -94,6 +100,7 @@ pub async fn subscribe_to_queue(
     // loop {
     let mut connection = connect_rabbitmq(&connection_details).await;
     let mut channel = channel_rabbitmq(&connection).await;
+    let mongodb_connection = start_mongo_connection().await.unwrap();
     bind_queue_to_exchange(
         &mut connection,
         &mut channel,
@@ -114,6 +121,9 @@ pub async fn subscribe_to_queue(
             if let Some(msg) = message.content {
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    let datasource = get_datasource(&mongodb_connection, datasource_id)
+                        .await
+                        .unwrap();
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
@@ -143,10 +153,15 @@ pub async fn subscribe_to_queue(
                                             )
                                             .await
                                             .unwrap();
+                                            // dynamically get user's chunking strategy of choice from the database
+                                            let chunking_method =
+                                                datasource.unwrap().chunkStrategy.unwrap();
+                                            let chunking_strategy =
+                                                ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(
                                                 document_text,
                                                 metadata,
-                                                ChunkingStrategy::SEMANTIC_CHUNKING,
+                                                chunking_strategy,
                                             )
                                             .await
                                             {
@@ -179,13 +194,28 @@ pub async fn subscribe_to_queue(
                                                             }
                                                         }
                                                     }
+                                                    let mongodb_connection =
+                                                        start_mongo_connection().await.unwrap();
+                                                    let model_parameters: Model =
+                                                        get_embedding_model(
+                                                            &mongodb_connection,
+                                                            datasource_id,
+                                                        )
+                                                        .await
+                                                        .unwrap()
+                                                        .unwrap();
+                                                    let vector_length =
+                                                        model_parameters.embeddingLength as u64;
                                                     let qdrant_conn_clone = Arc::clone(&app_data);
                                                     let qdrant = Qdrant::new(
                                                         qdrant_conn_clone,
                                                         datasource_id.to_string(),
                                                     );
                                                     qdrant
-                                                        .bulk_upsert_data(points_to_upload)
+                                                        .bulk_upsert_data(
+                                                            points_to_upload,
+                                                            Some(vector_length),
+                                                        )
                                                         .await?;
                                                 }
                                                 Err(e) => println!("Error: {}", e),

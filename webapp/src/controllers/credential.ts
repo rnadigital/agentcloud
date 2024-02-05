@@ -3,7 +3,7 @@
 import toObjectId from 'misc/toobjectid';
 import { CredentialType, CredentialTypes } from 'struct/credential';
 
-import { removeAgentsCredential } from '../db/agent';
+import { removeAgentsModel } from '../db/agent';
 import { addCredential, Credential, deleteCredentialById, getCredentialById, getCredentialsByTeam } from '../db/credential';
 import { dynamicResponse } from '../util';
 
@@ -111,10 +111,7 @@ export async function deleteCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await Promise.all([
-		removeAgentsCredential(req.params.resourceSlug, credentialId),
-		deleteCredentialById(req.params.resourceSlug, credentialId),
-	]);
+	await deleteCredentialById(req.params.resourceSlug, credentialId);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });
 

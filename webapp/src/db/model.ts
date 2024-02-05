@@ -9,8 +9,10 @@ export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
+	credentialId: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
-	//TODO: the rest of this
+	model: string;
+	embeddingLength: number;
 }
 
 export function ModelCollection(): any {

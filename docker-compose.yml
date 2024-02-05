@@ -73,6 +73,7 @@ services:
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
+      - VECTOR_APP_URL=http://vector_db_proxy:9001
       - AIRBYTE_WEB_URL=http://airbyte-proxy:8000
       - AIRBYTE_API_URL=http://airbyte-proxy:8006
       - AIRBYTE_ADMIN_WORKSPACE_ID=${AIRBYTE_ADMIN_WORKSPACE_ID}
@@ -121,6 +122,7 @@ services:
       - HOST=0.0.0.0
       - PORT=9001
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MONGO_URI=mongodb://docker_mongo:27017
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming

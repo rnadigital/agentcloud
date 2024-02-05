@@ -1,13 +1,13 @@
 'use strict';
 
 import { TrashIcon } from '@heroicons/react/20/solid';
+import DeleteModal from 'components/DeleteModal';
 import { useRouter } from 'next/router';
 import { useEffect,useState } from 'react';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
-import DeleteModal from './DeleteModal';
 
 export default function CredentialTable({ credentials, fetchCredentials }: { credentials: any[], fetchCredentials?: any }) {
 

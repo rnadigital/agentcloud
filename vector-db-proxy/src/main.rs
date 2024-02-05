@@ -89,6 +89,7 @@ async fn main() -> std::io::Result<()> {
     };
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
+    // TODO: include mongo connection in app data to reduce number of connections made to mongo!
     let rabbitmq_connection_details = RabbitConnect {
         host: rabbitmq_host,
         port: rabbitmq_port,

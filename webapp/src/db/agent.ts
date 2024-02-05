@@ -70,13 +70,13 @@ export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent
 	});
 }
 
-export function removeAgentsCredential(teamId: db.IdOrStr, credentialId: db.IdOrStr): Promise<any> {
+export function removeAgentsModel(teamId: db.IdOrStr, modelId: db.IdOrStr): Promise<any> {
 	return AgentCollection().updateMany({
 		teamId: toObjectId(teamId),
-		credentialId: toObjectId(credentialId)
+		modelId: toObjectId(modelId)
 	}, {
 		$unset: {
-			credentialId: '',
+			modelId: '',
 		},
 	});
 }

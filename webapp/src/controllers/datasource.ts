@@ -4,6 +4,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
+import { getModelById } from 'db/model';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { deleteFile, uploadFile } from 'lib/google/gcs';
@@ -17,8 +18,9 @@ import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
+import deleteCollectionFromQdrant from 'vectordb/proxy';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceLastSynced } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbeddingModel, setDatasourceLastSynced } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -208,10 +210,12 @@ export async function addDatasourceApi(req, res, next) {
 		timeUnit,
 		units,
 		cronExpression,
-		cronTimezone
+		cronTimezone,
+		modelId,
 	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
+		|| !modelId || typeof modelId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -219,8 +223,12 @@ export async function addDatasourceApi(req, res, next) {
 	//TODO: validation for other fields
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-
 	if (!datasource) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const model = await getModelById(req.params.resourceSlug, modelId);
+	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -301,7 +309,8 @@ export async function addDatasourceApi(req, res, next) {
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
-		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date())
+		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()),
+		setDatasourceEmbeddingModel(req.params.resourceSlug, datasourceId, modelId)
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -560,6 +569,9 @@ export async function deleteDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Delete the points in qdrant
+	await deleteCollectionFromQdrant(req.params.datasourceId);
+
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -615,7 +627,10 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	if (!req.files || Object.keys(req.files).length === 0) {
+	const { modelId } = req.body;
+
+	if (!req.files || Object.keys(req.files).length === 0
+		|| !modelId || typeof modelId !== 'string') {	
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -624,6 +639,11 @@ export async function uploadFileApi(req, res, next) {
 	const fileFormat = getFileFormat(fileExtension);
 	if (!fileFormat) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
+	}
+
+	const model = await getModelById(req.params.resourceSlug, modelId);
+	if (!model) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	// Create the datasource in the db
@@ -641,6 +661,9 @@ export async function uploadFileApi(req, res, next) {
 	    destinationId: null,
 	    sourceType: 'file',
 	    workspaceId: null,
+	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
+	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
+	    modelId: toObjectId(modelId),
 	});
 	
 	// Send the gcs file path to rabbitmq

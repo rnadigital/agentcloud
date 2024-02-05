@@ -78,7 +78,8 @@ impl CharacterChunker {
             .await
             .unwrap()
     }
-
+    // the issue here is that you want to return the exact same format as the other chunking strategy.
+    // so we want to return a Result<Vec<Document>>
     // fn construct_document_model(text: Vec<String>, vector: V)
 }
 
@@ -119,6 +120,7 @@ impl SemanticChunker {
         //
         let llm = LLM::new();
         let list_of_text: Vec<String> = sentences.iter().map(|s| s["sentence"].clone()).collect();
+        // TODO: get embedding model from database!
         match llm
             .embed_text_chunks_async(list_of_text, EmbeddingModels::OAI)
             .await
