@@ -113,7 +113,12 @@ pub async fn subscribe_to_queue(
     let args = BasicConsumeArguments::new(queue_name, "");
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
+        let args =
+            BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+        let _ = channel.basic_ack(args).await;
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
+        println!("{}", headers);
+
         if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
             let stream_string: String = stream.to_string();
             let stream_split: Vec<&str> = stream_string.split("_").collect();
@@ -127,6 +132,7 @@ pub async fn subscribe_to_queue(
                     if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
+
                             if let Some(bucket_name) = message_data.get("bucket") {
                                 if let Some(file_name) = message_data.get("filename") {
                                     match get_object_from_gcs(
@@ -166,6 +172,7 @@ pub async fn subscribe_to_queue(
                                             .await
                                             {
                                                 Ok(chunks) => {
+                                                
                                                     let mut points_to_upload: Vec<PointStruct> =
                                                         vec![];
                                                     for element in chunks.iter() {
@@ -211,12 +218,12 @@ pub async fn subscribe_to_queue(
                                                         qdrant_conn_clone,
                                                         datasource_id.to_string(),
                                                     );
-                                                    qdrant
-                                                        .bulk_upsert_data(
-                                                            points_to_upload,
-                                                            Some(vector_length),
-                                                        )
-                                                        .await?;
+                                                    match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length)).await {
+                                                        Ok(_) => todo!(),
+                                                        Err(e) => {
+                                                            println!("Error: {:?}", e);
+                                                        },
+                                                    }
                                                 }
                                                 Err(e) => println!("Error: {}", e),
                                             }
@@ -225,13 +232,11 @@ pub async fn subscribe_to_queue(
                                     }
                                 }
                             }
+                            
                         }
                     } else {
                         // This is where data is coming from airbyte rather than a direct file upload
                         let qdrant_conn = Arc::clone(&app_data);
-                        let args =
-                            BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
-                        let _ = channel.basic_ack(args).await;
                         let _ = process_messages(
                             qdrant_conn,
                             message_string,
@@ -244,6 +249,8 @@ pub async fn subscribe_to_queue(
         } else {
             println!("There was no stream_id in message... can not upload data!");
         }
+
+
     }
 
     // this is what to do when we get an error
