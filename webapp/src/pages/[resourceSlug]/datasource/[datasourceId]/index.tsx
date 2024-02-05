@@ -9,12 +9,19 @@ import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { StreamsList } from 'components/DatasourceStream';
 import DatasourceTabs from 'components/DatasourceTabs';
 import { useAccountContext } from 'context/account';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
+import { DatasourceScheduleType } from 'struct/schedule';
 import submittingReducer from 'utils/submittingreducer';
+// @ts-ignore
+const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
+	loading: () => <p className='markdown-content'>Loading...</p>,
+	ssr: false,
+});
 
 export default function Datasource(props) {
 
@@ -26,7 +33,13 @@ export default function Datasource(props) {
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
+	const [timeUnit, setTimeUnit] = useState('minutes');
+	const [units, setUnits] = useState('');
+	const [cronExpression, setCronExpression] = useState('');
+	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
+	const [editingSchedule, setEditingSchedule] = useState(false);
 	const [error, setError] = useState();
 	const { datasource } = state;
 
@@ -77,11 +90,11 @@ export default function Datasource(props) {
 	async function updateStreams(e, sync?: boolean) {
 		setSubmitting({ [`updateStreams${sync?'sync':''}`]: true });
 		try {
-			const streams = Array.from(e.target.form.elements)
+			const streams = e?.target?.form && Array.from(e.target.form.elements)
 				.filter(x => x['checked'] === true)
 				.filter(x => !x['dataset']['parent'])
 				.map(x => x['name']);
-			const selectedFieldsMap = Array.from(e.target.form.elements)
+			const selectedFieldsMap = e?.target?.form && Array.from(e.target.form.elements)
 				.filter(x => x['checked'] === true)
 				.filter(x => x['dataset']['parent'])
 				.reduce((acc, x) => {
@@ -106,6 +119,31 @@ export default function Datasource(props) {
 			}, router);
 		} finally {
 			setSubmitting({ [`updateStreams${sync?'sync':''}`]: false });
+		}
+	}
+
+	async function updateSchedule(e) {
+		setSubmitting({ editSchedule: true });
+		try {
+			const body = {
+				_csrf: csrf,
+				resourceSlug,
+				datasourceId,
+				scheduleType,
+				timeUnit,
+				units,
+				cronExpression,
+				cronTimezone,
+			};
+			// console.log(body);
+			await API.updateDatasourceSchedule(body, () => {
+				toast.success('Edited datasource schedule');
+				fetchDatasource();
+			}, (res) => {
+				toast.error(res);
+			}, router);
+		} finally {
+			setSubmitting({ editSchedule: false });
 		}
 	}
 
@@ -214,7 +252,57 @@ export default function Datasource(props) {
 			</div>
 		</>}
 
-		{tab === 2 && <span className='my-4'>
+		{tab === 2 && <div className='space-y-3'>
+			{editingSchedule === false&& <div className='my-2'>
+				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
+				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
+					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
+					<p>Units: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.units}</strong></p>
+				</>}
+				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.CRON && <>
+					<p>Cron Express: <strong>{datasource.connectionSettings.scheduleData.cron.cronExpression}</strong></p>
+					<p>Timezone: <strong>{datasource.connectionSettings.scheduleData.cron.cronTimezone}</strong></p>
+				</>}
+			</div>}
+			{editingSchedule === true && <DatasourceScheduleForm
+				scheduleType={scheduleType}
+				setScheduleType={setScheduleType}
+				timeUnit={timeUnit}
+				setTimeUnit={setTimeUnit}
+				units={units}
+				setUnits={setUnits}
+				cronExpression={cronExpression}
+				setCronExpression={setCronExpression}
+				cronTimezone={cronTimezone}
+				setCronTimezone={setCronTimezone}
+			/>}
+			<div className='flex space-x-2'>
+				<button
+					onClick={async (e) => {
+						if (!editingSchedule) {
+							e.preventDefault();
+							setEditingSchedule(true);
+						} else {
+							await updateSchedule(e);
+							setEditingSchedule(false);
+						}
+					}}
+					disabled={submitting['updateStreams']}
+					type='submit'
+					className={'flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+				>
+					{editingSchedule === true ? 'Save Schedule' : 'Edit Schedule'}
+				</button>
+				{editingSchedule && <button
+					onClick={(e) => {
+						setEditingSchedule(false);
+					}}
+					type='submit'
+					className={'flex rounded-md disabled:bg-slate-400 bg-gray-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'}
+				>
+					Cancel
+				</button>}
+			</div>
 			<button
 				onClick={() => deleteDatasource(datasource._id)}
 				className='flex rounded-md disabled:bg-slate-400 bg-red-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'
@@ -223,7 +311,7 @@ export default function Datasource(props) {
 				{submitting['deleteDatasource'] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5 pe-1' aria-hidden='true' />}
 				Delete Datasource
 			</button>
-		</span>}
+		</div>}
 
 	</>);
 

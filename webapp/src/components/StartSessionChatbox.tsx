@@ -12,6 +12,7 @@ import CreateAgentModal from '../components/CreateAgentModal';
 import CreateGroupModal from '../components/CreateGroupModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
+import { AgentType } from '../lib/struct/agent';
 import SelectClassNames from '../lib/styles/SelectClassNames';
 
 const sessionRadios = [
@@ -88,7 +89,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		}));
 
 	const ragAgentOptions = agents
-		.filter(a => a?.datasourceIds?.length > 0)
+		.filter(a => a?.datasourceIds?.length > 0 && a.type === AgentType.QADRANT_RETRIEVER_USER_PROXY_AGENT)
 		.map(a => ({
 			label: a.name,
 			value: a._id,

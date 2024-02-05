@@ -23,6 +23,7 @@ import * as airbyteProxyController from './controllers/airbyte';
 import * as credentialController from './controllers/credential';
 import * as datasourceController from './controllers/datasource';
 import * as groupController from './controllers/group';
+import * as modelController from './controllers/model';
 import * as sessionController from './controllers/session';
 import * as stripeController from './controllers/stripe';
 import * as teamController from './controllers/team';
@@ -135,6 +136,12 @@ export default function router(server, app) {
 	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
 	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
 
+	//models
+	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
+	teamRouter.get('/models.json', modelController.modelsJson);
+	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
+	teamRouter.post('/forms/model/add', modelController.modelAddApi);
+
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
 	teamRouter.get('/datasources.json', datasourceController.datasourcesJson);
@@ -145,6 +152,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
 	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', datasourceController.updateDatasourceStreamsApi);
+	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', datasourceController.updateDatasourceScheduleApi);
 	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', datasourceController.syncDatasourceApi);
 	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
 

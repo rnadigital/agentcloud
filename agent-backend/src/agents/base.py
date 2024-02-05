@@ -5,6 +5,7 @@ from openai._exceptions import APIError
 import logging
 import random
 import autogen
+from .agents_list import AvailableAgents
 from utils.log_exception_context_manager import log_exception
 from init.mongo_session import start_mongo_session
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
@@ -41,6 +42,25 @@ def task_execution(task: str, session_id: str):
     except Exception as e:
         logging.exception(e)
 
+def new_rag_execution(task: str, session_id: str):
+    try:
+        try:
+            # Load team structure from DB
+            session = mongo_client.get_session(session_id)
+            group = mongo_client.get_group(session)
+            build_chat = ChatBuilder(task, session_id, None, True, {})
+            build_chat.agents = [AvailableAgents.RetrieveAssistantAgent]
+            # build_chat.create_group()
+            build_chat.set_user_proxy_by_type(AvailableAgents.QdrantRetrieveUserProxyAgent, group['roles'][0]['data']['name'])
+            build_chat.attach_tools_to_agent()
+            build_chat.run_chat()
+        except Exception as e:
+            logging.exception(e)
+    except DisconnectedError as de:
+        logging.warning("The socket connection was disconnected")
+        logging.exception(de)
+    except Exception as e:
+        logging.exception(e)
 
 def rag_execution(
     message: str, session_id: str, model: str = "gpt-4", stream: bool = True
