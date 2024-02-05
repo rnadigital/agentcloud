@@ -4,7 +4,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 
-import { getDatasourceById } from '../db/datasource';
+import { getDatasourceById, setDatasourceLastSyncedWebhook } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { dynamicResponse } from '../util';
 
@@ -101,5 +101,35 @@ export async function discoverSchemaApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		discoveredSchema,
 	});
+
+}
+
+export async function handleSuccessfulSyncWebhook(req, res, next) {
+
+	//TODO: validate some kind of webhook key
+
+	// TODO: TODO'nt
+	const regex = /Your connection ([\w-]+) from (\w+) to (\w+) succeeded.*sync started on (.*), running for (\d+ seconds).*logs here: (http:\/\/localhost:8000\/workspaces\/[\w-]+\/connections\/[\w-]+).*Job ID: (\d+)/s;
+
+	const match = req.body.text.match(regex);
+
+	if (match) {
+		const payload = {
+			connectionId: match[1],
+			source: match[2],
+			destination: match[3],
+			startTime: match[4],
+			duration: match[5],
+			logsUrl: match[6],
+			jobId: match[7]
+		};
+		if (payload?.connectionId) {
+			//TODO: revise
+			await setDatasourceLastSyncedWebhook(payload.connectionId, new Date());
+		}
+		console.log(payload);
+	}
+
+	return dynamicResponse(req, res, 200, { });
 
 }

@@ -21,6 +21,9 @@ use qdrant_client::qdrant::{
 };
 
 use crate::llm::utils::LLM;
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_embedding_model;
 use crate::routes::models::Prompt;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
@@ -210,8 +213,19 @@ pub async fn bulk_upsert_data_to_collection(
         );
         list_of_points.push(point);
     }
-    let qdrant = Qdrant::new(qdrant_conn, collection_name);
-    let bulk_upsert_results = qdrant.bulk_upsert_data(list_of_points).await?;
+    let collection_name_clone = collection_name.clone();
+    let qdrant = Qdrant::new(qdrant_conn, collection_name_clone);
+    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let collection_name_clone_2 = collection_name.clone();
+    let model_parameters: Model =
+        get_embedding_model(&mongodb_connection, collection_name_clone_2.as_str())
+            .await
+            .unwrap()
+            .unwrap();
+    let vector_length = model_parameters.embeddingLength as u64;
+    let bulk_upsert_results = qdrant
+        .bulk_upsert_data(list_of_points, Some(vector_length))
+        .await?;
     println!("{:?}", bulk_upsert_results.to_owned());
     match bulk_upsert_results {
         true => Ok(HttpResponse::Ok()
@@ -316,13 +330,20 @@ pub async fn prompt(
     let qdrant_conn = app_data.get_ref();
 
     let data_clone = data.clone();
+    let dataset_clone_2 = dataset_id.clone();
     let prompt = data_clone.prompt.to_vec();
     let filters = data_clone.filters;
     let limit = data.limit;
-
+    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let model_parameters: Model =
+        get_embedding_model(&mongodb_connection, dataset_clone_2.as_str())
+            .await
+            .unwrap()
+            .unwrap();
+    let vector_length = model_parameters.embeddingLength as u64;
     let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
     match qdrant
-        .check_collection_exists(CreateDisposition::CreateIfNeeded)
+        .check_collection_exists(CreateDisposition::CreateIfNeeded, Some(vector_length))
         .await?
     {
         true => {

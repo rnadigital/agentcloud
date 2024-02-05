@@ -1,15 +1,16 @@
 'use strict';
 
 import { TrashIcon } from '@heroicons/react/20/solid';
+import DeleteModal from 'components/DeleteModal';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
-// import DeleteModal from './DeleteModal';
 
-export default function ModelTable({ models, fetchModels }: { models: any[], fetchModels?: any }) {
+export default function ModelTable({ models, credentials, fetchModels }: { models: any[], credentials: any[], fetchModels?: any }) {
+
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
@@ -18,38 +19,40 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 	const [open, setOpen] = useState(false);
 
 	async function deleteModel() {
-		// await API.deleteModel({
-		// 	_csrf: csrf,
-		// 	modelId: deletingModel._id,
-		// 	resourceSlug,
-		// }, () => {
-		// 	fetchModels();
-		// 	toast('Deleted model');
-		// }, () => {
-		// 	toast.error('Error deleting model');
-		// }, router);
-		// setOpen(false);
+		await API.deleteModel({
+			_csrf: csrf,
+			modelId: deletingModel._id,
+			resourceSlug,
+		}, () => {
+			fetchModels();
+			toast('Deleted model');
+		}, () => {
+			toast.error('Error deleting model');
+		}, router);
+		setOpen(false);
 	}
 
 	useEffect(() => {
+		let timeout;
 		if (!open) {
-			setTimeout(() => {
+			timeout = setTimeout(() => {
 				setDeletingModel(null);
 			}, 500);
 		}
+		return () => clearTimeout(timeout);
 	}, [open]);
 
 	return (
 		<>
-			{/*<DeleteModal
+			<DeleteModal
 				open={open}
 				confirmFunction={deleteModel}
 				cancelFunction={() => {
 					setOpen(false);
 				}}
 				title={'Delete Model'}
-				message={deletingModel && `Are you sure you want to delete the model "${deletingModel?.name}". This action cannot be undone.`}
-			/>*/}
+				message={`Are you sure you want to delete the model "${deletingModel?.name}". This action cannot be undone.`}
+			/>
 			<div className='rounded-lg overflow-hidden shadow'>
 				<table className='min-w-full divide-y divide-gray-200'>
 					<thead className='bg-gray-50'>
@@ -62,7 +65,10 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 							</th>
 							{/* Add more columns as necessary */}
 							<th scope='col' className='w-min px-6 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								Credential ID
+								Embedding Length
+							</th>
+							<th scope='col' className='w-min px-6 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+								Credential Name
 							</th>
 							<th scope='col' className='w-min px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 								Actions
@@ -79,7 +85,10 @@ export default function ModelTable({ models, fetchModels }: { models: any[], fet
 									<div className='text-sm text-gray-900'>{model.model}</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap'>
-									<div className='text-sm text-gray-900'>{model.credentialId}</div>
+									<div className='text-sm text-gray-900'>{model.embeddingLength ? model.embeddingLength : '-'}</div>
+								</td>
+								<td className='px-6 py-4 whitespace-nowrap'>
+									<div className='text-sm text-gray-900'>{credentials.find(c => c._id === model.credentialId)?.name || '-'}</div>
 								</td>
 								{/* Add more columns as necessary */}
 								<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>

@@ -83,6 +83,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Last Synced
 						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+							Date Uploaded
+						</th>
 						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Actions
 						</th>
@@ -106,7 +109,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
-									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '-'}
+									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '1'}
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
@@ -121,7 +124,14 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}</div>
+								<div className='text-sm text-gray-900'>
+									{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}
+								</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='text-sm text-gray-900'>
+									{new Date(datasource.createdDate).toLocaleString()}
+								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 								{datasource.sourceType !== 'file' &&  <button 

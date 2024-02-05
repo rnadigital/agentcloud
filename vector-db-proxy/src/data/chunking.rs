@@ -1,17 +1,15 @@
 use crate::data::{models::Document, text_splitting::SemanticChunker};
+use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 
 use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
+use std::fs;
 use std::io::Read;
 
 extern crate dotext;
 
 use dotext::*;
-pub enum ChunkingStrategy {
-    SEMANTIC_CHUNKING,
-    CODE_SPLIT,
-}
 
 pub trait Chunking {
     type Item;
@@ -19,6 +17,7 @@ pub trait Chunking {
     fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     async fn chunk(
         &self,
         data: String,
@@ -116,6 +115,21 @@ impl Chunking for TextChunker {
         Ok(results)
     }
 
+    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        let metadata = HashMap::new();
+        let mut text = String::new();
+
+        match fs::read_to_string(path) {
+            Ok(t) => text = t,
+            Err(e) => {
+                return Err(anyhow!("Could  not read file. Error: {}", e));
+            }
+        }
+
+        let results = (text, metadata);
+        Ok(results)
+    }
+
     async fn chunk(
         &self,
         data: String,
@@ -132,6 +146,16 @@ impl Chunking for TextChunker {
                 };
                 return chunker.split_documents(vec![doc]).await;
             }
+            // ChunkingStrategy::CHARACTER_CHUNKING => {
+            // TODO: get character to split by from mongo. Ask @tom where to get it from
+            // let chunker = CharacterChunker::default();
+            // let doc = Document {
+            //     page_content: data,
+            //     metadata,
+            //     embedding_vector: None,
+            // };
+            // return chunker.split_document(vec![doc]).await;
+            // }
             _ => Err(anyhow!("Type not yet supported!")),
         };
     }

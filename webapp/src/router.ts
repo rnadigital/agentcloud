@@ -59,6 +59,11 @@ export default function router(server, app) {
 	// Default options for express-fileupload
 	server.use(fileUpload());
 
+	// Airbyte webhooks
+	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
+	webhookRouter.post('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	server.use('/webhook', webhookRouter);
+
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
@@ -141,6 +146,7 @@ export default function router(server, app) {
 	teamRouter.get('/models.json', modelController.modelsJson);
 	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
 	teamRouter.post('/forms/model/add', modelController.modelAddApi);
+	teamRouter.delete('/forms/model/:modelId([a-f0-9]{24})', modelController.deleteModelApi);
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));

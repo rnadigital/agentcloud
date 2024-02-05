@@ -126,7 +126,7 @@ export async function addSessionApi(req, res, next) {
 		groupId = group._id;
 	} else if (req.body.agent && typeof req.body.agent === 'string' && req.body.agent.length === 24) {
 		const agent = await getAgentById(req.params.resourceSlug, req.body.agent);
-		if (!agent || !agent.credentialId) {
+		if (!agent || !agent.modelId) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		agentId = agent._id;

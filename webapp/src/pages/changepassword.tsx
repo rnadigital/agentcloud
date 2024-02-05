@@ -1,17 +1,10 @@
-import Head from 'next/head';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-// TODO: Remove once https://github.com/vercel/next.js/issues/52216 is resolved.
-// `next/image` seems to be affected by a default + named export bundling bug.
-let ResolvedImage: any = Image;
-if ('default' in ResolvedImage) {
-	ResolvedImage = ResolvedImage.default;
-}
 import {
 	EyeIcon,
 	EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import * as API from '../api';

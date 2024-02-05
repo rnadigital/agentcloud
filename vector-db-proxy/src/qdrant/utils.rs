@@ -1,5 +1,8 @@
 use anyhow::{anyhow, Result};
 
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_embedding_model;
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -41,7 +44,7 @@ impl Qdrant {
     pub async fn delete_collection(&self) -> Result<()> {
         let qdrant_conn = &self.client.read().await;
         return match &self
-            .check_collection_exists(CreateDisposition::CreateNever)
+            .check_collection_exists(CreateDisposition::CreateNever, None)
             .await
         {
             Ok(r) => match r {
@@ -87,6 +90,7 @@ impl Qdrant {
     pub async fn check_collection_exists(
         &self,
         create_disposition: CreateDisposition,
+        vector_length: Option<u64>,
     ) -> Result<bool> {
         println!(
             "Checking if Collection: {} exists...",
@@ -106,6 +110,7 @@ impl Qdrant {
                 "Collection: {} does NOT exist...creating it now",
                 &self.collection_name
             );
+            let vector_size = vector_length.unwrap_or(1536); // Default to OAI embedding size if none is given;
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
                     match qdrant_client
@@ -113,7 +118,7 @@ impl Qdrant {
                             collection_name: (&self.collection_name).to_owned(),
                             vectors_config: Some(VectorsConfig {
                                 config: Some(Config::Params(VectorParams {
-                                    size: 1536, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
+                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
                                     distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                     ..Default::default()
                                 })),
@@ -208,14 +213,18 @@ impl Qdrant {
     /// ```
     ///
     /// ```
-    pub async fn bulk_upsert_data(&self, points: Vec<PointStruct>) -> Result<bool> {
+    pub async fn bulk_upsert_data(
+        &self,
+        points: Vec<PointStruct>,
+        vector_length: Option<u64>,
+    ) -> Result<bool> {
         println!(
             "Uploading bulk data points to collection: {}",
             &self.collection_name
         );
         let qdrant_conn = &self.client.read().await;
         match &self
-            .check_collection_exists(CreateDisposition::CreateIfNeeded)
+            .check_collection_exists(CreateDisposition::CreateIfNeeded, vector_length)
             .await
         {
             Ok(result) => match result {

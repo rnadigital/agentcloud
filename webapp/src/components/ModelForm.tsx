@@ -5,14 +5,14 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { ModelList } from 'struct/model';
+import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
 import CreateCredentialModal from '../components/CreateCredentialModal';
 import { useAccountContext } from '../context/account';
 
-export default function ModelForm({ _model = {}, credentials = [], editing, compact, fetchModelFormData }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function }) { //TODO: fix any type
+export default function ModelForm({ _model = {}, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -27,7 +27,27 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 	async function modelPost(e) {
 		e.preventDefault();
-		toast('modelPost');
+		const body = {
+			_csrf: e.target._csrf.value,
+			resourceSlug,
+			name: e.target.modelName.value,
+			model: modelState.model,
+			credentialId: modelState.credentialId,
+		};
+		if (editing) {			
+			// await API.editAgent(agentState._id, body, () => {
+			// 	toast.success('Agent Updated');
+			// }, (res) => {
+			// 	toast.error(res);
+			// }, null);
+		} else {
+			const addedModel: any = await API.addModel(body, () => {
+				toast.success('Added Model');
+			}, (res) => {
+				toast.error(res);
+			}, compact ? null : router);
+			callback && addedModel && callback(addedModel._id);
+		}
 	}
 
 	const credentialCallback = async (addedCredentialId) => {
@@ -68,11 +88,14 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Configure models to be used for agents and/or embedding data sources.</p>
 					</div>}
 					<div>
-						<label className='text-base font-semibold text-gray-900'>Name</label>
-						<div>
+						<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Name
+						</label>
+						<div className='mt-2'>
 							<input
 								type='text'
 								name='modelName'
+								id='modelName'
 								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 								onChange={e => setModelName(e.target.value)}
 								required

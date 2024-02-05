@@ -1,13 +1,6 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-// TODO: Remove once https://github.com/vercel/next.js/issues/52216 is resolved.
-// `next/image` seems to be affected by a default + named export bundling bug.
-let ResolvedImage: any = Image;
-if ('default' in ResolvedImage) {
-	ResolvedImage = ResolvedImage.default;
-}
 import { useState } from 'react';
 
 import * as API from '../api';

@@ -88,6 +88,12 @@ export function getGroups(body, dispatch, errorCallback, router) {
 export function getModels(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/models.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function addModel(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/model/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteModel(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/model/${body.modelId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
 
 // Credentials
 export function getCredentials(body, dispatch, errorCallback, router) {

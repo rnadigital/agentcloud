@@ -28,6 +28,9 @@
       "queue/*": [
         "lib/queue/*"
       ],
+      "vectordb/*": [
+        "lib/vectordb/*"
+      ],
       "redis/*": [
         "lib/redis/*"
       ],
