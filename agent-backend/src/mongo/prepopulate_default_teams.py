@@ -28,13 +28,13 @@ def reset_default_groups() -> None:
     mongo_client["groups"].delete_many({})
 
     # Get 3.5 agent id
-    user_proxy = mongo_client["agents"].find_one({"name": "userproxy3.5"})
+    user_proxy = mongo_client["agents"].find_one({"name": "user_proxy35"})
     user_proxy_id = str(user_proxy["_id"])
 
     pri_assistant = mongo_client["agents"].find_one({"name": "general_assistant"})
     pri_assistant_id = str(pri_assistant["_id"])
 
-    ga = mongo_client["agents"].find_one({"name": "general_assistant3.5"})
+    ga = mongo_client["agents"].find_one({"name": "general_assistant35"})
     ga_id = str(ga["_id"])
 
     assert (

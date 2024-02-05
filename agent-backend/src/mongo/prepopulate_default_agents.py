@@ -22,7 +22,7 @@ def recreate_for_35(agent_dict: dict) -> None:
 
     # Pop id, recreate for 3.5
     agent_dict.pop("_id", None)
-    agent_dict["name"] = agent_dict["name"] + "3.5"
+    agent_dict["name"] = agent_dict["name"] + "35"
     agent_dict["model"] = "gpt-3.5-turbo"
     add_agent(agent_dict=agent_dict)
 
@@ -77,7 +77,6 @@ def reset_default_agents() -> None:
 
         # General agent
         general_agent_dict = {
-            "_id": ObjectId("65b8297d1c6b30efe9d750a0"),
             "orgId": ObjectId(org_id),
             "teamId": ObjectId(team_id),
             "name": "general_assistant",
@@ -86,7 +85,7 @@ def reset_default_agents() -> None:
             "systemMessage": "You are a general assistant.",
             "humanInputMode": None,
             "model": "gpt-4",
-            "credentialId": ObjectId("65b829521c6b30efe9d7509f"),
+            "credentialId": ObjectId(default_credential_id),
             "toolIds": [],
             "datasourceIds": [],
         }
@@ -115,10 +114,26 @@ def reset_default_agents() -> None:
             "systemMessage": "You are a helpful assistant that can use available functions when needed to solve problems. At each point, do your best to determine if the user's request has been addressed. IF THE REQUEST HAS NOT BEEN ADDRESSED, RESPOND WITH CODE TO ADDRESS IT. IF A FAILURE OCCURRED (e.g., due to a missing library) AND SOME ADDITIONAL CODE WAS WRITTEN (e.g. code to install the library), ENSURE THAT THE ORIGINAL CODE TO ADDRESS THE TASK STILL GETS EXECUTED. If the request HAS been addressed, respond with a summary of the result. The summary must be written as a coherent helpful response to the user request e.g. 'Sure, here is result to your request ' or 'The tallest mountain in Africa is ..' etc. The summary MUST end with the word TERMINATE. If the  user request is pleasantry or greeting, you should respond with a pleasantry or greeting and TERMINATE.",
             "humanInputMode": None,
             "model": "gpt-4",
-            "credentialId": ObjectId("65b829521c6b30efe9d7509f"),
+            "credentialId": ObjectId(default_credential_id),
             "toolIds": [ObjectId(generate_images_id), ObjectId(find_papers_arxiv_id)],
             "datasourceIds": [],
         }
 
         add_agent(agent_dict=primary_assistant_dict)
         recreate_for_35(agent_dict=primary_assistant_dict)
+
+        llava_dict = {
+            "orgId": ObjectId(org_id),
+            "teamId": ObjectId(team_id),
+            "name": "llava_agent",
+            "type": "agentchat.contrib.llava_agent.LLaVAAgent",
+            "codeExecutionConfig": None,
+            "systemMessage": "You are a image explainer.",
+            "humanInputMode": "NEVER",
+            "model": "gpt-4",
+            "credentialId": ObjectId(default_credential_id),
+            "toolIds": [],
+            "datasourceIds": [],
+        }
+
+        add_agent(agent_dict=llava_dict)
