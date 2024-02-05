@@ -117,8 +117,6 @@ pub async fn subscribe_to_queue(
             BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
         let _ = channel.basic_ack(args).await;
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-        println!("{}", headers);
-
         if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
             let stream_string: String = stream.to_string();
             let stream_split: Vec<&str> = stream_string.split("_").collect();
@@ -172,7 +170,6 @@ pub async fn subscribe_to_queue(
                                             .await
                                             {
                                                 Ok(chunks) => {
-                                                
                                                     let mut points_to_upload: Vec<PointStruct> =
                                                         vec![];
                                                     for element in chunks.iter() {
@@ -232,7 +229,6 @@ pub async fn subscribe_to_queue(
                                     }
                                 }
                             }
-                            
                         }
                     } else {
                         // This is where data is coming from airbyte rather than a direct file upload
