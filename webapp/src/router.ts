@@ -59,6 +59,11 @@ export default function router(server, app) {
 	// Default options for express-fileupload
 	server.use(fileUpload());
 
+	// Airbyte webhooks
+	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
+	webhookRouter.post('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	server.use('/webhook', webhookRouter);
+
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
