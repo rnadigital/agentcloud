@@ -60,7 +60,7 @@ pub struct Model {
     pub _id: ObjectId,
     pub orgId: ObjectId,
     pub teamId: ObjectId,
-    pub credentialId: ObjectId,
+    pub credentialId: Option<ObjectId>,
     pub name: String,
     pub model: String,
     pub embeddingLength: i32,
