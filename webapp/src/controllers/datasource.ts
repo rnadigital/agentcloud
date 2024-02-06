@@ -345,7 +345,10 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteInternalApi();
-	const connectionBody = datasource.connectionSettings;
+	const connectionBody = {
+		...datasource.connectionSettings,
+		scheduleType: scheduleType,
+	};
 	connectionBody['connectionId'] = datasource.connectionId;
 	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
 		connectionBody['scheduleData'] = {
@@ -361,17 +364,13 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 				cronTimezone,
 			},
 		};
+	} else {
+		delete connectionBody['scheduleData'];
 	}
 	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
 		.updateConnection(null, connectionBody)
-		.then(res => {
-			console.log(res?.response?.data);
-			return res.data;
-		})
-		.catch(err => {
-			console.log(err?.response?.data);
-		});
+		.then(res => res.data);
 	console.log('updatedConnection', updatedConnection);
 
 /*	if (sync === true) {
