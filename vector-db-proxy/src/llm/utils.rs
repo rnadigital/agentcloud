@@ -8,7 +8,7 @@ use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::llm::models::EmbeddingModels;
+use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::qdrant::helpers::reverse_embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
@@ -39,79 +39,29 @@ impl LLM {
         model: &EmbeddingModels,
     ) -> Result<Vec<Vec<f32>>> {
         match model {
-            EmbeddingModels::UNKNOWN => todo!(),
-            EmbeddingModels::FASTEMBED => {
+            EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
+
+            // Group all fast embed models together
+            EmbeddingModels::BAAI_BGE_SMALL_EN
+            | EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5
+            | EmbeddingModels::BAAI_BGE_BASE_EN
+            | EmbeddingModels::BAAI_BGE_BASE_EN_V1_5
+            | EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5
+            | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
+            | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => {
+                println!("Model: {:?}", model.to_str().to_string());
+                let model = FastEmbedModels::from(model.to_str().to_string());
+                let fast_embed_translation: EmbeddingModel = FastEmbedModels::translate(&model);
                 let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGESmallENV15,
+                    model_name: fast_embed_translation,
                     show_download_message: true,
                     ..Default::default()
                 })?;
                 let embeddings = model.passage_embed(text, None)?;
                 Ok(embeddings)
             }
-            EmbeddingModels::BAAI_BGE_SMALL_EN => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGESmallEN,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5 => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGESmallENV15,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::BAAI_BGE_BASE_EN => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGEBaseEN,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::BAAI_BGE_BASE_EN_V1_5 => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGEBaseENV15,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5 => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::BGESmallZH,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2 => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::AllMiniLML6V2,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
-            EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => {
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: EmbeddingModel::MLE5Large,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
+
+            // Group all OAI models
             _ => {
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))

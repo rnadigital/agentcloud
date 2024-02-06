@@ -73,7 +73,7 @@ impl Chunker {
     }
     pub fn default() -> Self {
         Chunker {
-            embedding_model: EmbeddingModels::FASTEMBED,
+            embedding_model: EmbeddingModels::BAAI_BGE_SMALL_EN,
             add_start_index: true,
             chunking_strategy: Some(ChunkingStrategy::SEMANTIC_CHUNKING),
             chunking_character: Some(String::from(".")),
