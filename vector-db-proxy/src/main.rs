@@ -24,7 +24,10 @@ use anyhow::Context;
 use env_logger::Env;
 use once_cell::sync::Lazy;
 use tokio::join;
+#[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
+#[cfg(windows)]
+use tokio::signal::windows::ctrl_c;
 use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
@@ -120,7 +123,10 @@ async fn main() -> std::io::Result<()> {
 
         // Handle SIGINT to manually kick-off graceful shutdown
         tokio::spawn(async move {
+            #[cfg(unix)]
             let mut stream = signal(SignalKind::interrupt()).unwrap();
+            #[cfg(windows)]
+            let mut stream = ctrl_c().unwrap();
             stream.recv().await;
             System::current().stop();
         });
