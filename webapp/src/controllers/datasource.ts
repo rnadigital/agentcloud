@@ -293,7 +293,6 @@ export async function addDatasourceApi(req, res, next) {
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data)
-		.catch(err => console.error(JSON.stringify(err.response.data, null, 2)));
 	// console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Create a job to trigger the connection to sync
@@ -483,10 +482,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
 		.updateConnection(null, connectionBody)
-		.then(res => {
-			console.log(res);
-			return res.data;
-		});
+		.then(res => res.data);
 	console.log('updatedConnection', updatedConnection);
 
 	if (sync === true) {
