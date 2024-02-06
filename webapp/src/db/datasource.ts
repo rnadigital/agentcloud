@@ -19,6 +19,12 @@ export function getDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrStr):
 	});
 }
 
+export function getDatasourceByConnectionId(connectionId: string): Promise<Datasource> {
+	return DatasourceCollection().findOne({
+		connectionId,
+	});
+}
+
 export function getDatasourcesById(teamId: db.IdOrStr, datasourceIds: db.IdOrStr[]): Promise<Datasource[]> {
 	return DatasourceCollection().find({
 		_id: {
