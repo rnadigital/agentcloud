@@ -24,9 +24,10 @@ import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
 import { taskQueue } from './lib/queue/bull';
 
+export const io = new Server();
+
 export function initSocket(rawHttpServer) {
 
-	const io = new Server();
 	io.attach(rawHttpServer);
 	const pubClient = client.duplicate();
 	const subClient = client.duplicate();
@@ -74,6 +75,12 @@ export function initSocket(rawHttpServer) {
 		socket.on('join_room', async (room: string) => {
 			const socketRequest = socket.request as any;
 			log('socket.id "%s" join_room %s', socket.id, room);
+			if (socketRequest?.locals?.account?.orgs?
+				.some(o => o?.teams?.some(t => t.id.toString() === room))) {
+				// Room name is same as a team id
+				log('socket.id "%s" joined team notification room %s', socket.id, room);
+				return socket.join(room);
+			}
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(room.substring(1)) // removing _
 				: getSessionById(socketRequest?.locals?.account?.currentTeam, room));

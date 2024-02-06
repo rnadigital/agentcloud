@@ -4,8 +4,9 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 
-import { getDatasourceById, setDatasourceLastSyncedWebhook } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, setDatasourceLastSyncedWebhook } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
+import { io } from '../socketio';
 import { dynamicResponse } from '../util';
 
 /**
@@ -124,7 +125,8 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			jobId: match[7]
 		};
 		if (payload?.connectionId) {
-			//TODO: revise
+			const datasource = await getDatasourceByConnectionId(payload.connectionId);
+			io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
 			await setDatasourceLastSyncedWebhook(payload.connectionId, new Date());
 		}
 		console.log(payload);

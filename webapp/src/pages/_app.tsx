@@ -63,7 +63,7 @@ export default function App({ Component, pageProps }) {
 							bodyClassName='toast-body'
 							theme='colored'
 							position='top-right'
-							autoClose={4000}
+							autoClose={3000}
 							newestOnTop={true}
 							pauseOnFocusLoss={false}
 							pauseOnHover={false}
