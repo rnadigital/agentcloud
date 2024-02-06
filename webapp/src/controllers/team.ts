@@ -150,6 +150,3 @@ export async function addTeamApi(req, res) {
 	});
 	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
 }
-
-//TODO: delete pending invite
-//TODO: remove from team
