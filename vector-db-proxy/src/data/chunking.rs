@@ -9,7 +9,7 @@ use std::io::Read;
 
 extern crate dotext;
 
-use crate::llm::utils::EmbeddingModels;
+use crate::llm::models::EmbeddingModels;
 use dotext::*;
 
 pub trait Chunking {
@@ -25,6 +25,7 @@ pub trait Chunking {
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
         chunking_character: Option<String>,
+        embedding_model: EmbeddingModels,
     ) -> Result<Vec<Document>>;
 }
 
@@ -138,14 +139,10 @@ impl Chunking for TextChunker {
         metadata: Option<HashMap<String, String>>,
         strategy: ChunkingStrategy,
         chunking_character: Option<String>,
+        embedding_model: EmbeddingModels,
     ) -> Result<Vec<Document>> {
         // TODO: get embedding model from database!
-        let chunker = Chunker::new(
-            EmbeddingModels::OAI,
-            true,
-            Some(strategy),
-            chunking_character,
-        );
+        let chunker = Chunker::new(embedding_model, true, Some(strategy), chunking_character);
         let doc = Document {
             page_content: data,
             metadata,

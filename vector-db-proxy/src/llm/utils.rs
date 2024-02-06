@@ -2,21 +2,15 @@ use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
 use futures_util::stream::FuturesOrdered;
+use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+use crate::llm::models::EmbeddingModels;
 use crate::qdrant::helpers::reverse_embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
-use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
-
-#[derive(Copy, Clone)]
-pub enum EmbeddingModels {
-    OAI,
-}
-
-// todo: implement From for all the different embedding models here;
 
 pub struct LLM;
 
@@ -38,20 +32,20 @@ impl LLM {
     /// ```
     ///
     /// ```
-    // todo: get embedding model form database
     pub async fn embed_text(
         &self,
         text: Vec<&String>,
         model: &EmbeddingModels,
     ) -> Result<Vec<Vec<f32>>> {
         match model {
-            EmbeddingModels::OAI => {
+            EmbeddingModels::UNKNOWN => todo!(),
+            _ => {
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                     .build();
                 let client = async_openai::Client::new().with_backoff(backoff);
                 let request = CreateEmbeddingRequestArgs::default()
-                    .model("text-embedding-ada-002")
+                    .model(model.to_str())
                     .input(text)
                     .build()?;
                 let response = client.embeddings().create(request).await?;
@@ -118,7 +112,7 @@ impl LLM {
         limit: Option<u64>,
     ) -> Result<String> {
         let prompt = text.to_vec();
-        let prompt_embedding = &self.embed_text(prompt, &EmbeddingModels::OAI).await?;
+        let prompt_embedding = &self.embed_text(prompt, &EmbeddingModels::OAI_ADA).await?;
         let qdrant = Qdrant::new(qdrant_conn, dataset_id);
 
         let qdrant_search_results = qdrant

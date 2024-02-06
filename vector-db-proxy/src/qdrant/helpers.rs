@@ -2,25 +2,25 @@ use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
 use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 
-use crate::llm::utils::{EmbeddingModels, LLM};
-use crate::qdrant::models::{HashMapValues, ScrollResults};
-
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::Value;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 
-use crate::hash_map_values_as_serde_values;
-use crate::mongo::client::start_mongo_connection;
-use crate::mongo::models::Model;
-use crate::mongo::queries::get_embedding_model;
-use crate::qdrant::utils::Qdrant;
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
+
+use crate::hash_map_values_as_serde_values;
+use crate::llm::{models::EmbeddingModels, utils::LLM};
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_embedding_model;
+use crate::qdrant::models::{HashMapValues, ScrollResults};
+use crate::qdrant::utils::Qdrant;
 
 ///
 ///
@@ -96,6 +96,7 @@ pub async fn embed_table_chunks_async(
     table_chunks: Vec<HashMap<String, HashMapValues>>,
     text: String,
     dataset_id: Option<String>,
+    embedding_model: EmbeddingModels,
 ) -> Result<Vec<PointStruct>> {
     let mut list_of_embeddings: Vec<PointStruct> = vec![];
     let mut futures = FuturesUnordered::new();
@@ -104,7 +105,8 @@ pub async fn embed_table_chunks_async(
         let ds_id = dataset_id.clone();
         let text_clone = text.clone();
         futures.push(async move {
-            let embed_result = embed_payload(chunk, text_clone, ds_id.clone()).await;
+            let embed_result =
+                embed_payload(chunk, text_clone, ds_id.clone(), embedding_model).await;
             return match embed_result {
                 Ok(point) => Ok::<PointStruct, anyhow::Error>(point),
                 Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
@@ -141,11 +143,14 @@ pub async fn process_table_chunks_async(
     table_chunks: Vec<HashMap<String, HashMapValues>>,
     text: String,
     dataset_id: String,
+    embedding_model: EmbeddingModels,
 ) -> Result<bool> {
     let ds_id_clone = dataset_id.clone();
     let ds_id_clone_2 = ds_id_clone.clone();
     let text_clone = text.clone();
-    let embeddings = embed_table_chunks_async(table_chunks, text_clone, Some(dataset_id)).await?;
+    let embeddings =
+        embed_table_chunks_async(table_chunks, text_clone, Some(dataset_id), embedding_model)
+            .await?;
     let qdrant = Qdrant::new(qdrant_conn, ds_id_clone);
     // Once embedding is returned successfully in the form of a PointStruct insert into DB
     let mongodb_connection = start_mongo_connection().await.unwrap();
@@ -185,6 +190,7 @@ pub async fn embed_payload(
     data: &HashMap<String, HashMapValues>,
     text: String,
     datasource_id: Option<String>,
+    embedding_model: EmbeddingModels,
 ) -> Result<PointStruct, anyhow::Error> {
     if !data.is_empty() {
         if let Some(_id) = datasource_id {
@@ -193,9 +199,7 @@ pub async fn embed_payload(
             if let Ok(metadata) = json!(payload).try_into() {
                 let llm_struct = LLM::new();
                 // Embedding sentences using OpenAI ADA2
-                let embedding_vec = llm_struct
-                    .embed_text(vec![&text], &EmbeddingModels::OAI)
-                    .await?;
+                let embedding_vec = llm_struct.embed_text(vec![&text], &embedding_model).await?;
                 // Construct PointStruct to insert into DB
                 if !embedding_vec.is_empty() {
                     for embedding in embedding_vec {

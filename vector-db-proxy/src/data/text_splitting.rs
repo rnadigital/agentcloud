@@ -1,6 +1,6 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
-use crate::llm::utils::{EmbeddingModels, LLM};
+use crate::llm::{models::EmbeddingModels, utils::LLM};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::Result;
 use ndarray::Array1;
@@ -51,7 +51,7 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
 }
 
 pub struct Chunker {
-    embeddings: EmbeddingModels,
+    embedding_model: EmbeddingModels,
     add_start_index: bool,
     chunking_strategy: Option<ChunkingStrategy>,
     chunking_character: Option<String>,
@@ -59,13 +59,13 @@ pub struct Chunker {
 
 impl Chunker {
     pub fn new(
-        embeddings: EmbeddingModels,
+        embedding_model: EmbeddingModels,
         add_start_index: bool,
         chunking_strategy: Option<ChunkingStrategy>,
         chunking_character: Option<String>,
     ) -> Self {
         Chunker {
-            embeddings,
+            embedding_model,
             add_start_index,
             chunking_strategy,
             chunking_character,
@@ -73,7 +73,7 @@ impl Chunker {
     }
     pub fn default() -> Self {
         Chunker {
-            embeddings: EmbeddingModels::OAI,
+            embedding_model: EmbeddingModels::OAI_ADA,
             add_start_index: true,
             chunking_strategy: Some(ChunkingStrategy::SEMANTIC_CHUNKING),
             chunking_character: Some(String::from(".")),
@@ -118,7 +118,7 @@ impl Chunker {
         // we embed each of those sentences
         let llm = LLM::new();
         match llm
-            .embed_text_chunks_async(list_of_text, EmbeddingModels::OAI)
+            .embed_text_chunks_async(list_of_text, self.embedding_model)
             .await
         {
             Ok(embeddings) => {
