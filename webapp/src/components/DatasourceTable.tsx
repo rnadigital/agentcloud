@@ -86,15 +86,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Date Uploaded
 						</th>
-						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+						<th scope='col' colSpan='3' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Actions
 						</th>
-		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-		                    
-		                </th>
-		                <th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-		                    
-		                </th>
 					</tr>
 				</thead>
 				<tbody className='bg-white divide-y divide-gray-200'>

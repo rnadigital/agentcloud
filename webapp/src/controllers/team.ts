@@ -64,7 +64,7 @@ export async function inviteTeamMemberApi(req, res) {
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
-		if (foundTeam.members.includes(foundAccount._id)) {
+		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
 			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id);
