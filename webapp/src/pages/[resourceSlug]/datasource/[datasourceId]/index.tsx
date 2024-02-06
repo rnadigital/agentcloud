@@ -151,6 +151,13 @@ export default function Datasource(props) {
 		fetchDatasource();
 		fetchJobsList();
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		const matches = location?.hash.match(/tab-(\d+)/);
+		if (matches && matches.length > 0) {
+			setTab(parseInt(matches[1]));
+		}
+	}, []);
 	
 	if (datasource == null) {
 		return 'Loading...'; //TODO: loader
