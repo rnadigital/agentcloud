@@ -5,7 +5,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { CredentialType } from 'struct/credential';
+import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
@@ -22,6 +23,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const [modalOpen, setModalOpen] = useState(false);
+	const [type, setType] = useState(CredentialType.OPENAI);
 
 	const { _id, name, credentialId, model } = modelState;
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
@@ -105,8 +107,36 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 					</div>
 					{/* TODO: other form params here */}
 					<div className='sm:col-span-12'>
+						<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Type
+						</label>
+						<div className='mt-2'>
+							<select
+								required
+								id='type'
+								name='type'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								value={type}
+								onChange={e => {
+									setType(e.target.value);
+									setModelState(oldModel => ({
+										...oldModel,
+										credentialId: null,
+										model: '',
+									}));
+								}}
+							>
+								<option disabled value=''>Select a type...</option>
+								<option value={CredentialType.OPENAI}>OpenAI</option>
+								<option value={CredentialType.AZURE}>Azure</option>
+								<option value={CredentialType.LMSTUDIO}>LMStudio</option>
+								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
+							</select>
+						</div>
+					</div>
+					{type && type !== CredentialType.FASTEMBED && <div className='sm:col-span-12'>
 						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Credentials
+							Credential
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -119,6 +149,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 										//Create new pressed
 										return setModalOpen(true);
 									}
+									
 					            	setModelState(oldModel => {
 										return {
 											...oldModel,
@@ -127,7 +158,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 										};
 									});
 				            	}}
-					            options={credentials.map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
+					            options={credentials.filter(c => c.type === type).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
 					            formatOptionLabel={data => {
   										const optionCred = credentials.find(oc => oc._id === data.value);
 					                return (<li
@@ -142,8 +173,8 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 					            }}
 					        />
 						</div>
-					</div>
-					{credentialId && foundCredential && ModelList[foundCredential.type]?.length > 0 && <div className='sm:col-span-12'>
+					</div>}
+					{ModelList[type]?.length > 0 && <div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Model
 						</label>
@@ -161,7 +192,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
   											};
   										});
 				            	}}
-					            options={ModelList && foundCredential && ModelList[foundCredential.type] && ModelList[foundCredential.type].map(m => ({ label: m, value: m }))}
+					            options={ModelList && ModelList[type] && ModelList[type].map(m => ({ label: m, value: m }))}
 					            formatOptionLabel={data => {
 					                return (<li
 					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
