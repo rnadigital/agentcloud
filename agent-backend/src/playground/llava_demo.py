@@ -4,7 +4,6 @@ import random
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
-import matplotlib.pyplot as plt
 import requests
 from PIL import Image
 from termcolor import colored
@@ -18,7 +17,18 @@ from autogen.agentchat.contrib.llava_agent import LLaVAAgent, llava_call
 
 from dotenv import load_dotenv
 
+import base64
+
+def image_to_base64(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    return encoded_string
+
+
 if __name__ == '__main__':
+
+    # LIMITATION for AgentCloud, a URI is expected.
+    # We need to host LLAVA locally, upload the image to a host in the local network, and then call LLAVA with the local URI.
 
     load_dotenv()
     
@@ -29,6 +39,8 @@ if __name__ == '__main__':
             "base_url": "yorickvp/llava-13b:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591",
         }
     ]
+
+    
 
     # REPLICATE TEST
     output = replicate.run(
@@ -43,7 +55,9 @@ if __name__ == '__main__':
     for item in output:
         # https://replicate.com/yorickvp/llava-13b/api#output-schema
         print(item, end="")
-        
+    
+
+    image64 = image_to_base64("https://raw.githubusercontent.com/microsoft/autogen/main/website/static/img/autogen_agentchat.png")
 
 
 
@@ -80,4 +94,4 @@ if __name__ == '__main__':
     user_proxy.initiate_chat(
         image_agent,
         message="""What's the breed of this dog?
-    <img https://th.bing.com/th/id/R.422068ce8af4e15b0634fe2540adea7a?rik=y4OcXBE%2fqutDOw&pid=ImgRaw&r=0>.""")
+    <img https://th.bing.com/th/id/OIP.qzZEo11GRIop4CpN19SD5QHaEo?rs=1&pid=ImgDetMain>.""")
