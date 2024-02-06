@@ -95,6 +95,7 @@ export default function CredentialForm({ credential = { type: CredentialType.OPE
 								<option value={CredentialType.OPENAI}>OpenAI</option>
 								<option value={CredentialType.AZURE}>Azure</option>
 								<option value={CredentialType.LMSTUDIO}>LMStudio</option>
+								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
 							</select>
 						</div>
 					</div>

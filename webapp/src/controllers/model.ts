@@ -59,21 +59,20 @@ export async function modelAddApi(req, res, next) {
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		// { field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'model', validation: { notEmpty: true }},
 	], { name: 'Name', credentialId: 'Credential', model: 'Model'});
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	// Validate model
-	validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
-	if (validationError) {
-		return dynamicResponse(req, res, 400, { error: validationError });
-	}
-
-	// Check for foundCredentials
 	if (credentialId && credentialId.length > 0) {
+		// Validate model for credential is valid
+		validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
+		if (validationError) {
+			return dynamicResponse(req, res, 400, { error: validationError });
+		}
+		// Check for foundCredentials
 		const foundCredential = await getCredentialById(req.params.resourceSlug, credentialId);
 		if (!foundCredential) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
@@ -85,7 +84,7 @@ export async function modelAddApi(req, res, next) {
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
-		credentialId: toObjectId(credentialId),
+		credentialId: credentialId ? toObjectId(credentialId) : null,
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 	});

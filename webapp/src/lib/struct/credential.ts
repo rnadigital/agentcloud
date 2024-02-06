@@ -6,6 +6,7 @@ export enum CredentialType {
 	LMSTUDIO = 'lmstudio',
 	BEARER_TOKEN = 'bearer',
 	OAUTH = 'oauth',
+	FASTEMBED = 'fastembed',
 	// More here...
 }
 
