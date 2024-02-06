@@ -3,14 +3,15 @@ use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
 use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
+use crate::llm::models::EmbeddingModels;
+use crate::mongo::client::start_mongo_connection;
+use crate::mongo::models::Model;
+use crate::mongo::queries::get_datasource;
 use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
-use crate::mongo::client::start_mongo_connection;
-use crate::mongo::models::Model;
-use crate::mongo::queries::get_datasource;
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -69,11 +70,20 @@ async fn apply_chunking_strategy_to_document(
     document_text: String,
     metadata: Option<HashMap<String, String>>,
     chunking_strategy: ChunkingStrategy,
+    chunking_character: Option<String>,
+    embedding_models: Option<String>,
 ) -> Result<Vec<DocumentModel>> {
     let mut chunks: Vec<DocumentModel> = vec![];
     let chunker = TextChunker::default();
+    let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
     match chunker
-        .chunk(document_text, metadata, chunking_strategy)
+        .chunk(
+            document_text,
+            metadata,
+            chunking_strategy,
+            chunking_character,
+            embedding_model_choice
+        )
         .await
     {
         Ok(c) => chunks = c,
@@ -86,7 +96,7 @@ async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
     let file_path = file_name.trim_matches('"');
     println!("File path : {}", file_path);
     let mut file = File::create(file_path)?;
-    file.write_all(&*content)?; // handle errors
+    file.write_all(&content)?; // handle errors
     Ok(())
 }
 
@@ -113,8 +123,7 @@ pub async fn subscribe_to_queue(
     let args = BasicConsumeArguments::new(queue_name, "");
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
-        let args =
-            BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+        let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
         let _ = channel.basic_ack(args).await;
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
         if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
@@ -124,13 +133,18 @@ pub async fn subscribe_to_queue(
             if let Some(msg) = message.content {
                 // if the header 'type' is present then assume that it is a file upload. pull from gcs
                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                    // todo: need to handle both of these unwraps
                     let datasource = get_datasource(&mongodb_connection, datasource_id)
                         .await
                         .unwrap();
-                    if let Some(_) = headers.get(&ShortStr::try_from("type").unwrap()) {
+                    let model_parameters: Model =
+                        get_embedding_model(&mongodb_connection, datasource_id)
+                            .await
+                            .unwrap()
+                            .unwrap();
+                    if headers.get(&ShortStr::try_from("type").unwrap()).is_some() {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
-
                             if let Some(bucket_name) = message_data.get("bucket") {
                                 if let Some(file_name) = message_data.get("filename") {
                                     match get_object_from_gcs(
@@ -158,14 +172,19 @@ pub async fn subscribe_to_queue(
                                             .await
                                             .unwrap();
                                             // dynamically get user's chunking strategy of choice from the database
+                                            let datasources_clone = datasource.unwrap().clone();
+                                            let chunking_character =
+                                                datasources_clone.chunkCharacter;
                                             let chunking_method =
-                                                datasource.unwrap().chunkStrategy.unwrap();
+                                                datasources_clone.chunkStrategy.unwrap();
                                             let chunking_strategy =
                                                 ChunkingStrategy::from(chunking_method);
                                             match apply_chunking_strategy_to_document(
                                                 document_text,
                                                 metadata,
                                                 chunking_strategy,
+                                                chunking_character,
+                                                Some(model_parameters.model),
                                             )
                                             .await
                                             {
@@ -198,16 +217,6 @@ pub async fn subscribe_to_queue(
                                                             }
                                                         }
                                                     }
-                                                    let mongodb_connection =
-                                                        start_mongo_connection().await.unwrap();
-                                                    let model_parameters: Model =
-                                                        get_embedding_model(
-                                                            &mongodb_connection,
-                                                            datasource_id,
-                                                        )
-                                                        .await
-                                                        .unwrap()
-                                                        .unwrap();
                                                     let vector_length =
                                                         model_parameters.embeddingLength as u64;
                                                     let qdrant_conn_clone = Arc::clone(&app_data);
@@ -215,11 +224,19 @@ pub async fn subscribe_to_queue(
                                                         qdrant_conn_clone,
                                                         datasource_id.to_string(),
                                                     );
-                                                    match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length)).await {
-                                                        Ok(_) => todo!(),
+                                                    match qdrant
+                                                        .bulk_upsert_data(
+                                                            points_to_upload,
+                                                            Some(vector_length),
+                                                        )
+                                                        .await
+                                                    {
+                                                        Ok(_) => println!(
+                                                            "points uploaded successfully!"
+                                                        ),
                                                         Err(e) => {
-                                                            println!("Error: {:?}", e);
-                                                        },
+                                                            println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
+                                                        }
                                                     }
                                                 }
                                                 Err(e) => println!("Error: {}", e),
@@ -245,8 +262,6 @@ pub async fn subscribe_to_queue(
         } else {
             println!("There was no stream_id in message... can not upload data!");
         }
-
-
     }
 
     // this is what to do when we get an error

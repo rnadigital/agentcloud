@@ -9,6 +9,7 @@ use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_value;
 use qdrant_client::client::QdrantClient;
 use serde_json::{json, Value};
+use crate::llm::models::EmbeddingModels;
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
@@ -27,6 +28,7 @@ pub async fn process_messages(
         .unwrap()
         .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
+    let embedding_model = model_parameters.model;
     let ds_clone = datasource_id.clone();
     let qdrant = Qdrant::new(qdrant_conn, datasource_id);
     if let Value::Array(data_array) = message_data {
@@ -43,7 +45,7 @@ pub async fn process_messages(
         list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
     }
     if let Ok(point_structs) =
-        embed_table_chunks_async(list_of_embedding_data, message, Some(ds_clone)).await
+        embed_table_chunks_async(list_of_embedding_data, message, Some(ds_clone), EmbeddingModels::from(embedding_model)).await
     {
         if let Ok(bulk_upload_result) = qdrant
             .bulk_upsert_data(point_structs.clone(), Some(vector_length))
