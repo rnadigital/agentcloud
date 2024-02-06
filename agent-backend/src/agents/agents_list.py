@@ -4,6 +4,7 @@ from autogen.agentchat.contrib.qdrant_retrieve_user_proxy_agent import (
 )
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 from autogen.agentchat.contrib.llava_agent import LLaVAAgent
+from autogen.agentchat.contrib.web_surfer import WebSurferAgent
 
 from typing import NamedTuple
 
@@ -19,3 +20,4 @@ class AvailableAgents(NamedTuple):
     RetrieveAssistantAgent = RetrieveAssistantAgent
     QdrantRetrieveUserProxyAgent = QdrantRetrieveUserProxyAgent
     LLaVAAgent = LLaVAAgent
+    WebSurferAgent = WebSurferAgent

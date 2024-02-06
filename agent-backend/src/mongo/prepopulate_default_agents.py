@@ -137,3 +137,22 @@ def reset_default_agents() -> None:
         }
 
         add_agent(agent_dict=llava_dict)
+
+        web_surfer_dict = {
+            "orgId": ObjectId(org_id),
+            "teamId": ObjectId(team_id),
+            "name": "web_surfer",
+            "type": "WebSurferAgent",
+            "codeExecutionConfig": None,
+            "systemMessage": "You can browse the web.",
+            "humanInputMode": "NEVER",
+            "model": "gpt-4",
+            "credentialId": ObjectId(default_credential_id),
+            "toolIds": [],
+            "datasourceIds": [],
+        }
+
+        add_agent(agent_dict=web_surfer_dict)
+
+
+

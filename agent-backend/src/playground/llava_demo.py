@@ -27,7 +27,7 @@ def image_to_base64(image_path):
 
 if __name__ == '__main__':
 
-    # LIMITATION for AgentCloud, a URI is expected.
+    # LIMITATION for AgentCloud, a URI is expected. Tried using base64, it rejects it.
     # We need to host LLAVA locally, upload the image to a host in the local network, and then call LLAVA with the local URI.
 
     load_dotenv()
@@ -56,9 +56,7 @@ if __name__ == '__main__':
         # https://replicate.com/yorickvp/llava-13b/api#output-schema
         print(item, end="")
     
-
-    image64 = image_to_base64("https://raw.githubusercontent.com/microsoft/autogen/main/website/static/img/autogen_agentchat.png")
-
+    
 
 
         
