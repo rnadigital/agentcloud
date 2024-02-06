@@ -17,6 +17,7 @@ import {
 	WrenchScrewdriverIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
+import NotificationBell from 'components/NotificationBell';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -440,14 +441,9 @@ export default withRouter(function Layout(props) {
 								</span>}
 							</div>
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
-								<button
-									type='button'
-									className='-m-2.5 p-2.5 text-gray-400 hover:text-gray-500'
-								>
-									<span className='sr-only'>View notifications</span>
-									<BellIcon className='h-6 w-6' aria-hidden='true' />
-								</button>
-
+								{/* Notification Bell */}
+								<NotificationBell />
+								
 								{/* Separator */}
 								<div
 									className='hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10'

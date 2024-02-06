@@ -122,7 +122,8 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			startTime: match[4],
 			duration: match[5],
 			logsUrl: match[6],
-			jobId: match[7]
+			jobId: match[7],
+			text: req.body.text, //The input text
 		};
 		if (payload?.connectionId) {
 			const datasource = await getDatasourceByConnectionId(payload.connectionId);
