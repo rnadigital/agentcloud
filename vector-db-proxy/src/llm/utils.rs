@@ -42,7 +42,70 @@ impl LLM {
             EmbeddingModels::UNKNOWN => todo!(),
             EmbeddingModels::FASTEMBED => {
                 let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGESmallENV15,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::BAAI_BGE_SMALL_EN => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGESmallEN,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5 => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGESmallENV15,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::BAAI_BGE_BASE_EN => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                     model_name: EmbeddingModel::BGEBaseEN,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::BAAI_BGE_BASE_EN_V1_5 => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGEBaseENV15,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5 => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGESmallZH,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2 => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::AllMiniLML6V2,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
+            EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::MLE5Large,
                     show_download_message: true,
                     ..Default::default()
                 })?;
