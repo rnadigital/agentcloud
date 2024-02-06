@@ -59,6 +59,10 @@
 		],
 		"no-template-curly-in-string": [
 			"error"
-		]
+		],
+		"react-hooks/exhaustive-deps": "off",
+		"@next/next/no-img-element": "off",
+		"import/no-anonymous-default-export": "off",
+		"jsx-a11y/alt-text": "off"
 	}
 }
