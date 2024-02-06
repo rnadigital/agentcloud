@@ -33,21 +33,34 @@ export default function Datasource(props) {
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
-	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
-	const [timeUnit, setTimeUnit] = useState('minutes');
-	const [units, setUnits] = useState('');
-	const [cronExpression, setCronExpression] = useState('');
-	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
 	const [editingSchedule, setEditingSchedule] = useState(false);
 	const [error, setError] = useState();
 	const { datasource } = state;
+	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
+	const [timeUnit, setTimeUnit] = useState('minutes');
+	const [units, setUnits] = useState(0);
+	const [cronExpression, setCronExpression] = useState('');
+	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 
 	async function fetchDatasource() {
 		await API.getDatasource({
 			resourceSlug,
 			datasourceId,
-		}, dispatch, setError, router);
+		}, (res) => {
+			const datasource = res?.datasource;
+			if (datasource) {
+				setScheduleType(datasource?.connectionSettings?.scheduleType);
+				if (datasource?.connectionSettings?.scheduleData) {
+					const { basicSchedule, cron } = datasource.connectionSettings.scheduleData;
+					setTimeUnit(basicSchedule?.timeUnit);
+					setUnits(basicSchedule?.units);
+					setCronExpression(cron?.cronExpression);
+					setCronTimezone(cron?.cronTimezone);
+				}
+			}
+			dispatch(res);
+		}, setError, router);
 	}
 
 	async function fetchJobsList() {
@@ -163,16 +176,22 @@ export default function Datasource(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
-	datasource?.connectionSettings?.syncCatalog && console.log(datasource.connectionSettings.syncCatalog.streams.map(x => x.stream.name));
-
 	return (<>
 
 		<Head>
 			<title>{`Manage Datasource - ${teamName}`}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2'>
+		<div className='border-b pb-2 my-2 flex justify-between'>
 			<h3 className='pl-2 font-semibold text-gray-900'>Manage Datasource - {datasource?.originalName}</h3>
+			<button
+				onClick={() => deleteDatasource(datasource._id)}
+				className='inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+				disabled={submitting['deleteDatasource']}
+			>
+				{submitting['deleteDatasource'] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5 pe-1' aria-hidden='true' />}
+				Delete Datasource
+			</button>
 		</div>
 
 		<DatasourceTabs callback={setTab} current={tab} />
@@ -271,7 +290,7 @@ export default function Datasource(props) {
 					<p>Timezone: <strong>{datasource.connectionSettings.scheduleData.cron.cronTimezone}</strong></p>
 				</>}
 			</div>}
-			{editingSchedule === true && <DatasourceScheduleForm
+			{editingSchedule && <DatasourceScheduleForm
 				scheduleType={scheduleType}
 				setScheduleType={setScheduleType}
 				timeUnit={timeUnit}
@@ -310,14 +329,6 @@ export default function Datasource(props) {
 					Cancel
 				</button>}
 			</div>
-			<button
-				onClick={() => deleteDatasource(datasource._id)}
-				className='flex rounded-md disabled:bg-slate-400 bg-red-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'
-				disabled={submitting['deleteDatasource']}
-			>
-				{submitting['deleteDatasource'] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5 pe-1' aria-hidden='true' />}
-				Delete Datasource
-			</button>
 		</div>}
 
 	</>);

@@ -7,12 +7,14 @@ import {
 import { Fragment } from 'react';
 
 export default function NotificationBell() {
-	//TODO: fetch notifications, display notifications
-	
+	//TODO: fetch notifications, display notifications	
 	return <Menu as='div' className='relative'>
 		<Menu.Button className='-m-1.5 flex items-center'>
 			<span className='sr-only'>View notifications</span>
 			<BellIcon className='h-6 w-6' aria-hidden='true' />
+			<div className='relative -mt-4 -ms-1 inline-flex'>
+				<span className='bg-red-500 rounded-full w-2 h-2' />
+			</div>
 		</Menu.Button>
 		<Transition
 			as={Fragment}
