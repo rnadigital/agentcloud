@@ -64,6 +64,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {} });
+	console.log(streamState);
 	const SubmitButton = (props: SubmitButtonProps) => {
 		const { uiSchema } = props;
 		const { norender } = getSubmitButtonOptions(uiSchema);
@@ -145,29 +147,18 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			} else {
 				//step 4, saving datasource
 				e.preventDefault();
-				const streams = Array.from(e.target.elements)
-					.filter(x => x['checked'] === true)
-					.filter(x => !x['dataset']['parent'])
-					.map(x => x['name']);
-				const selectedFieldsMap = Array.from(e.target.elements)
-					.filter(x => x['checked'] === true)
-					.filter(x => x['dataset']['parent'])
-					.reduce((acc, x) => {
-						acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
-						return acc;
-					}, {});
 				const body = {
 					_csrf: csrf,
 					datasourceId: datasourceId,
 					resourceSlug,
-					selectedFieldsMap,
-					streams,
 					scheduleType,
 					timeUnit,
 					units,
 					modelId,
 					cronExpression,
 					cronTimezone,
+					streams: streamState.streams,
+					selectedFieldsMap: streamState.selectedFieldsMap,
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
 					toast.success('Added datasource');
@@ -234,7 +225,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				            	}}
 					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
 					            formatOptionLabel={data => {
-					            	console.log('formatOptionLabel', data);
 									const m = models.find(m => m._id === data?.value);
 					                return (<li
 					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
@@ -347,8 +337,21 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					</div>
 				</span>;
 			case 3:
-				return discoveredSchema && <form onSubmit={(e) => {
+				return discoveredSchema && <form onSubmit={(e: any) => {
 					e.preventDefault();
+					const streams = Array.from(e.target.elements)
+						.filter(x => x['checked'] === true)
+						.filter(x => !x['dataset']['parent'])
+						.map(x => x['name']);
+					const selectedFieldsMap = Array.from(e.target.elements)
+						.filter(x => x['checked'] === true)
+						.filter(x => x['dataset']['parent'])
+						.reduce((acc, x) => {
+							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+							return acc;
+						}, {});
+					console.log('updateStreams', { streams, selectedFieldsMap});
+					setStreamState({ streams, selectedFieldsMap});
 					setStep(4);
 				}}>
 					<StreamsList
@@ -365,11 +368,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 4:
 				return <>
 					<form onSubmit={datasourcePost}>
-						<div className='hidden'>
-							{discoveredSchema && <StreamsList
-								streams={discoveredSchema.catalog.streams}
-							/>}
-						</div>
 						<div className='my-4'>
 							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Embedding Model
@@ -389,7 +387,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					            	}}
 						            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
 						            formatOptionLabel={data => {
-						            	console.log('formatOptionLabel', data);
 										const m = models.find(m => m._id === data?.value);
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${

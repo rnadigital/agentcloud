@@ -3,7 +3,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DatasourceConnectionSettings {
     pub syncCatalog: Value,
     pub scheduleType: String,
@@ -17,7 +17,7 @@ pub struct DatasourceConnectionSettings {
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DataSources {
     pub _id: ObjectId,
     pub orgId: ObjectId,
@@ -55,7 +55,7 @@ impl From<String> for ChunkingStrategy {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Model {
     pub _id: ObjectId,
     pub orgId: ObjectId,

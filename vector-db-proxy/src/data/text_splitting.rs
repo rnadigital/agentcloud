@@ -1,6 +1,7 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
-use crate::llm::utils::{EmbeddingModels, LLM};
+use crate::llm::{models::EmbeddingModels, utils::LLM};
+use crate::mongo::models::ChunkingStrategy;
 use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
@@ -49,64 +50,50 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
-pub struct CharacterChunker {
-    splitting_character: String,
-}
-
-impl CharacterChunker {
-    fn new(splitting_character: String) -> Self {
-        CharacterChunker {
-            splitting_character,
-        }
-    }
-
-    fn default() -> Self {
-        CharacterChunker {
-            splitting_character: String::from("."),
-        }
-    }
-    fn split_document(&self, doc: Vec<Document>) -> Vec<String> {
-        doc.iter()
-            .flat_map(|t| t.page_content.split(&self.splitting_character))
-            .map(|sentence| sentence.trim().to_string())
-            .filter(|sentence| !sentence.is_empty())
-            .collect()
-    }
-    async fn embed_text(text: Vec<String>) -> Vec<Vec<f32>> {
-        let llm = LLM::new();
-        llm.embed_text_chunks_async(text, EmbeddingModels::OAI)
-            .await
-            .unwrap()
-    }
-    // the issue here is that you want to return the exact same format as the other chunking strategy.
-    // so we want to return a Result<Vec<Document>>
-    // fn construct_document_model(text: Vec<String>, vector: V)
-}
-
-pub struct SemanticChunker {
-    embeddings: EmbeddingModels,
+pub struct Chunker {
+    embedding_model: EmbeddingModels,
     add_start_index: bool,
+    chunking_strategy: Option<ChunkingStrategy>,
+    chunking_character: Option<String>,
 }
 
-impl SemanticChunker {
-    pub fn new(embeddings: EmbeddingModels, add_start_index: bool) -> Self {
-        SemanticChunker {
-            embeddings,
+impl Chunker {
+    pub fn new(
+        embedding_model: EmbeddingModels,
+        add_start_index: bool,
+        chunking_strategy: Option<ChunkingStrategy>,
+        chunking_character: Option<String>,
+    ) -> Self {
+        Chunker {
+            embedding_model,
             add_start_index,
+            chunking_strategy,
+            chunking_character,
         }
     }
     pub fn default() -> Self {
-        SemanticChunker {
-            embeddings: EmbeddingModels::OAI,
+        Chunker {
+            embedding_model: EmbeddingModels::OAI_ADA,
             add_start_index: true,
+            chunking_strategy: Some(ChunkingStrategy::SEMANTIC_CHUNKING),
+            chunking_character: Some(String::from(".")),
         }
     }
 
-    async fn split_text(&self, text: &str) -> Vec<Document> {
-        let single_sentences_list: Vec<&str> = text.split(&['.', '?', '!'][..]).collect();
-        let mut chunks = Vec::new();
-        let mut sent: Vec<Sentence> = vec![];
-        let sentences: Vec<HashMap<String, String>> = single_sentences_list
+    async fn form_sentences(&self, text: &str) -> Vec<HashMap<String, String>> {
+        let mut sentence_list: Vec<&str> = vec![];
+        match &self.chunking_strategy.as_ref().unwrap() {
+            ChunkingStrategy::SEMANTIC_CHUNKING => {
+                sentence_list = text.split(&['.', '?', '!'][..]).collect();
+            }
+            ChunkingStrategy::CHARACTER_CHUNKING => {
+                sentence_list = text
+                    .split(&self.chunking_character.as_ref().unwrap().as_str())
+                    .collect();
+            }
+            _ => {}
+        }
+        let sentences: Vec<HashMap<String, String>> = sentence_list
             .iter()
             .enumerate()
             .map(|(i, &sentence)| {
@@ -116,62 +103,90 @@ impl SemanticChunker {
                 sentence_map
             })
             .collect();
+        sentences
+    }
 
-        //
-        let llm = LLM::new();
+    async fn split_text(&self, text: &str) -> Vec<Document> {
+        // here we instantiate all the vectors that we will use later on
+        let mut chunks = Vec::new();
+        let mut vector_of_sentences: Vec<Sentence> = vec![];
+        // we slice our text into sentences based on the chunking strategy that we are using
+        let sentences = &self.form_sentences(text).await;
+        // from those sentence hashmaps we extract the text and form a vector of strings which contain each sentence.
         let list_of_text: Vec<String> = sentences.iter().map(|s| s["sentence"].clone()).collect();
-        // TODO: get embedding model from database!
+
+        // we embed each of those sentences
+        let llm = LLM::new();
         match llm
-            .embed_text_chunks_async(list_of_text, EmbeddingModels::OAI)
+            .embed_text_chunks_async(list_of_text, self.embedding_model)
             .await
         {
             Ok(embeddings) => {
+                // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                 for (i, sentence) in sentences.iter().enumerate() {
-                    sent.push(Sentence {
+                    vector_of_sentences.push(Sentence {
                         sentence_embedding: Array1::from_vec(embeddings[i].clone()),
                         distance_to_next: None,
                         sentence: Some(sentence["sentence"].clone()),
                     });
                 }
+                // here is where the divergence occurs depending on the chunking strategy chosen by the use
+                match &self.chunking_strategy.as_ref().unwrap() {
+                    ChunkingStrategy::SEMANTIC_CHUNKING => {
+                        // in the semantic chunking we iterate through each of the sentences and calculate their relative cosine similarity scores
+                        let distances = calculate_cosine_distances(&mut vector_of_sentences);
+                        let breakpoint_percentile_threshold = 95;
+                        let breakpoint_distance_threshold =
+                            percentile(&distances, breakpoint_percentile_threshold);
 
-                let distances = calculate_cosine_distances(&mut sent);
-                let breakpoint_percentile_threshold = 95;
-                let breakpoint_distance_threshold =
-                    percentile(&distances, breakpoint_percentile_threshold);
-
-                let indices_above_thresh: Vec<usize> = distances
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, &d)| {
-                        if d > breakpoint_distance_threshold {
-                            Some(i)
-                        } else {
-                            None
+                        let indices_above_thresh: Vec<usize> = distances
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(i, &d)| {
+                                if d > breakpoint_distance_threshold {
+                                    Some(i)
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        let mut start_index = 0;
+                        for index in indices_above_thresh {
+                            let group = &sentences[start_index..=index];
+                            let combined_text = group
+                                .iter()
+                                .map(|d| d["sentence"].as_str())
+                                .collect::<Vec<&str>>()
+                                .join(". ");
+                            let doc = Document::new(
+                                combined_text,
+                                None,
+                                Some(embeddings[index].to_owned()),
+                            );
+                            chunks.push(doc);
+                            start_index = index + 1;
                         }
-                    })
-                    .collect();
-                let mut start_index = 0;
-                for index in indices_above_thresh {
-                    let group = &sentences[start_index..=index];
-                    let combined_text = group
-                        .iter()
-                        .map(|d| d["sentence"].as_str())
-                        .collect::<Vec<&str>>()
-                        .join(". ");
-                    let doc =
-                        Document::new(combined_text, None, Some(embeddings[index].to_owned()));
-                    chunks.push(doc);
-                    start_index = index + 1;
-                }
 
-                if start_index < sentences.len() {
-                    let combined_text = sentences[start_index..]
-                        .iter()
-                        .map(|d| d["sentence"].as_str())
-                        .collect::<Vec<&str>>()
-                        .join(" ");
-                    let doc = Document::new(combined_text, None, None);
-                    chunks.push(doc);
+                        if start_index < sentences.len() {
+                            let combined_text = sentences[start_index..]
+                                .iter()
+                                .map(|d| d["sentence"].as_str())
+                                .collect::<Vec<&str>>()
+                                .join(" ");
+                            let doc = Document::new(combined_text, None, None);
+                            chunks.push(doc);
+                        }
+                    }
+                    ChunkingStrategy::CHARACTER_CHUNKING => {
+                        for sentence in vector_of_sentences {
+                            chunks.push(Document::new(
+                                sentence.sentence.unwrap(),
+                                None,
+                                Some(sentence.sentence_embedding.to_vec()),
+                            ))
+                        }
+                    }
+                    _ => {}
                 }
             }
             Err(e) => {

@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
 
-use crate::mongo::client::start_mongo_connection;
-use crate::mongo::models::Model;
-use crate::mongo::queries::get_embedding_model;
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -65,7 +62,7 @@ impl Qdrant {
                 )),
             },
             Err(e) => Err(anyhow!(
-                "An error occurred while attempting to look up collection {}. Error: {}",
+                "collection {} does not exist. Error: {}",
                 &self.collection_name,
                 e
             )),

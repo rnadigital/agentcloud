@@ -3,9 +3,9 @@
 import { ClockIcon, Cog6ToothIcon,TableCellsIcon } from '@heroicons/react/20/solid';
 
 const tabs = [
-	{ name: 'Streams', href: '#', icon: TableCellsIcon },
-	{ name: 'Job History', href: '#', icon: ClockIcon },
-	{ name: 'Settings', href: '#', icon: Cog6ToothIcon },
+	{ name: 'Streams', href: '#tab-0', icon: TableCellsIcon },
+	{ name: 'Job History', href: '#tab-1', icon: ClockIcon },
+	{ name: 'Settings', href: '#tab-2', icon: Cog6ToothIcon },
 ];
 
 function classNames(...classes) {
@@ -32,7 +32,8 @@ export default function DatasourceTabs({ callback, current }) {
 				<div className='border-b border-gray-200'>
 					<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
 						{tabs.map((tab, ti) => (
-							<span
+							<a
+								href={tab.href}
 								key={tab.name}
 								onClick={() => callback(ti)}
 								className={classNames(
@@ -51,7 +52,7 @@ export default function DatasourceTabs({ callback, current }) {
 									aria-hidden='true'
 								/>
 								<span>{tab.name}</span>
-							</span>
+							</a>
 						))}
 					</nav>
 				</div>

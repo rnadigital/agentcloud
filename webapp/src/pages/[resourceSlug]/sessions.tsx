@@ -48,7 +48,7 @@ export default function Sessions(props) {
 	
 		<StartSessionChatbox groups={groups} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 
-		<div className='w-64 pb-4'>
+		{sessions.length > 0 && <div className='w-64 pb-4'>
 			<label htmlFor='filter' className='block text-sm font-medium text-gray-900 dark:text-slate-400'>
 				Status
 			</label>
@@ -66,7 +66,7 @@ export default function Sessions(props) {
 					</option>
 				))}
 			</select>
-		</div>		
+		</div>}
 
 		<SessionCards sessions={sessions.filter(s => filter === 'all' || s.status === filter)} fetchSessions={fetchSessions} />
 
