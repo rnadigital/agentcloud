@@ -119,8 +119,7 @@ pub async fn subscribe_to_queue(
     let args = BasicConsumeArguments::new(queue_name, "");
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     while let Some(message) = messages_rx.recv().await {
-        let args =
-            BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+        let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
         let _ = channel.basic_ack(args).await;
         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
         if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
@@ -225,11 +224,19 @@ pub async fn subscribe_to_queue(
                                                         qdrant_conn_clone,
                                                         datasource_id.to_string(),
                                                     );
-                                                    match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length)).await {
-                                                        Ok(_) => todo!(),
+                                                    match qdrant
+                                                        .bulk_upsert_data(
+                                                            points_to_upload,
+                                                            Some(vector_length),
+                                                        )
+                                                        .await
+                                                    {
+                                                        Ok(_) => println!(
+                                                            "points uploaded successfully!"
+                                                        ),
                                                         Err(e) => {
-                                                            println!("Error: {:?}", e);
-                                                        },
+                                                            println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
+                                                        }
                                                     }
                                                 }
                                                 Err(e) => println!("Error: {}", e),
@@ -255,8 +262,6 @@ pub async fn subscribe_to_queue(
         } else {
             println!("There was no stream_id in message... can not upload data!");
         }
-
-
     }
 
     // this is what to do when we get an error

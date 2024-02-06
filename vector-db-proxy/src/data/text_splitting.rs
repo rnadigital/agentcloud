@@ -50,55 +50,21 @@ fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     distances
 }
 
-pub struct CharacterChunker {
-    splitting_character: String,
-}
-
-impl CharacterChunker {
-    pub fn new(splitting_character: String) -> Self {
-        CharacterChunker {
-            splitting_character,
-        }
-    }
-
-    fn default() -> Self {
-        CharacterChunker {
-            splitting_character: String::from("."),
-        }
-    }
-    fn split_document(&self, doc: Vec<Document>) -> Vec<String> {
-        doc.iter()
-            .flat_map(|t| t.page_content.split(&self.splitting_character))
-            .map(|sentence| sentence.trim().to_string())
-            .filter(|sentence| !sentence.is_empty())
-            .collect()
-    }
-    async fn embed_text(text: Vec<String>) -> Vec<Vec<f32>> {
-        let llm = LLM::new();
-        llm.embed_text_chunks_async(text, EmbeddingModels::OAI)
-            .await
-            .unwrap()
-    }
-    // the issue here is that you want to return the exact same format as the other chunking strategy.
-    // so we want to return a Result<Vec<Document>>
-    // fn construct_document_model(text: Vec<String>, vector: V)
-}
-
-pub struct SemanticChunker {
+pub struct Chunker {
     embeddings: EmbeddingModels,
     add_start_index: bool,
     chunking_strategy: Option<ChunkingStrategy>,
     chunking_character: Option<String>,
 }
 
-impl SemanticChunker {
+impl Chunker {
     pub fn new(
         embeddings: EmbeddingModels,
         add_start_index: bool,
         chunking_strategy: Option<ChunkingStrategy>,
         chunking_character: Option<String>,
     ) -> Self {
-        SemanticChunker {
+        Chunker {
             embeddings,
             add_start_index,
             chunking_strategy,
@@ -106,7 +72,7 @@ impl SemanticChunker {
         }
     }
     pub fn default() -> Self {
-        SemanticChunker {
+        Chunker {
             embeddings: EmbeddingModels::OAI,
             add_start_index: true,
             chunking_strategy: Some(ChunkingStrategy::SEMANTIC_CHUNKING),
@@ -141,29 +107,34 @@ impl SemanticChunker {
     }
 
     async fn split_text(&self, text: &str) -> Vec<Document> {
+        // here we instantiate all the vectors that we will use later on
         let mut chunks = Vec::new();
-        let mut sent: Vec<Sentence> = vec![];
+        let mut vector_of_sentences: Vec<Sentence> = vec![];
+        // we slice our text into sentences based on the chunking strategy that we are using
         let sentences = &self.form_sentences(text).await;
+        // from those sentence hashmaps we extract the text and form a vector of strings which contain each sentence.
         let list_of_text: Vec<String> = sentences.iter().map(|s| s["sentence"].clone()).collect();
 
-        //
+        // we embed each of those sentences
         let llm = LLM::new();
-
         match llm
             .embed_text_chunks_async(list_of_text, EmbeddingModels::OAI)
             .await
         {
             Ok(embeddings) => {
+                // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                 for (i, sentence) in sentences.iter().enumerate() {
-                    sent.push(Sentence {
+                    vector_of_sentences.push(Sentence {
                         sentence_embedding: Array1::from_vec(embeddings[i].clone()),
                         distance_to_next: None,
                         sentence: Some(sentence["sentence"].clone()),
                     });
                 }
-                match &self.chunking_strategy.unwrap() {
+                // here is where the divergence occurs depending on the chunking strategy chosen by the use
+                match &self.chunking_strategy.as_ref().unwrap() {
                     ChunkingStrategy::SEMANTIC_CHUNKING => {
-                        let distances = calculate_cosine_distances(&mut sent);
+                        // in the semantic chunking we iterate through each of the sentences and calculate their relative cosine similarity scores
+                        let distances = calculate_cosine_distances(&mut vector_of_sentences);
                         let breakpoint_percentile_threshold = 95;
                         let breakpoint_distance_threshold =
                             percentile(&distances, breakpoint_percentile_threshold);
@@ -207,10 +178,14 @@ impl SemanticChunker {
                         }
                     }
                     ChunkingStrategy::CHARACTER_CHUNKING => {
-                        for sent in sentences {
-                            chunks.push(Document::new(sent["sentence"].to_owned(), None, None))
+                        for sentence in vector_of_sentences {
+                            chunks.push(Document::new(
+                                sentence.sentence.unwrap(),
+                                None,
+                                Some(sentence.sentence_embedding.to_vec()),
+                            ))
                         }
-                    },
+                    }
                     _ => {}
                 }
             }

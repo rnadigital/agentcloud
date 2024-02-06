@@ -1,4 +1,4 @@
-use crate::data::{models::Document, text_splitting::SemanticChunker};
+use crate::data::{models::Document, text_splitting::Chunker};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 
@@ -9,7 +9,7 @@ use std::io::Read;
 
 extern crate dotext;
 
-use crate::data::text_splitting::CharacterChunker;
+use crate::llm::utils::EmbeddingModels;
 use dotext::*;
 
 pub trait Chunking {
@@ -140,17 +140,17 @@ impl Chunking for TextChunker {
         chunking_character: Option<String>,
     ) -> Result<Vec<Document>> {
         // TODO: get embedding model from database!
-        match strategy {
-            ChunkingStrategy::SEMANTIC_CHUNKING => {
-                let chunker = SemanticChunker::default();
-                let doc = Document {
-                    page_content: data,
-                    metadata,
-                    embedding_vector: None,
-                };
-                chunker.split_documents(vec![doc]).await
-            }
-            _ => Err(anyhow!("Type not yet supported!")),
-        }
+        let chunker = Chunker::new(
+            EmbeddingModels::OAI,
+            true,
+            Some(strategy),
+            chunking_character,
+        );
+        let doc = Document {
+            page_content: data,
+            metadata,
+            embedding_vector: None,
+        };
+        chunker.split_documents(vec![doc]).await
     }
 }

@@ -38,6 +38,7 @@ impl LLM {
     /// ```
     ///
     /// ```
+    // todo: get embedding model form database
     pub async fn embed_text(
         &self,
         text: Vec<&String>,
