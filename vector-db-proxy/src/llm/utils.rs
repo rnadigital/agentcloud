@@ -1,7 +1,7 @@
 use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
-use fastembed::{EmbeddingBase, EmbeddingModel, FlagEmbedding, InitOptions};
+use fastembed::{EmbeddingBase, FlagEmbedding, InitOptions};
 use futures_util::stream::FuturesOrdered;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use qdrant_client::client::QdrantClient;
@@ -48,37 +48,48 @@ impl LLM {
             | EmbeddingModels::BAAI_BGE_BASE_EN_V1_5
             | EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5
             | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
-            | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => {
-                println!("Model: {:?}", model.to_str().to_string());
-                let model = FastEmbedModels::from(model.to_str().to_string());
-                let fast_embed_translation: EmbeddingModel = FastEmbedModels::translate(&model);
-                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                    model_name: fast_embed_translation,
-                    show_download_message: true,
-                    ..Default::default()
-                })?;
-                let embeddings = model.passage_embed(text, None)?;
-                Ok(embeddings)
-            }
+            | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
+                Some(m) => {
+                    let model = FastEmbedModels::from(m.to_string());
+                    match FastEmbedModels::translate(&model) {
+                        Some(translation) => {
+                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                model_name: translation,
+                                show_download_message: true,
+                                ..Default::default()
+                            })?;
+                            let embeddings = model.passage_embed(text, None)?;
+                            Ok(embeddings)
+                        }
+                        None => Err(anyhow!(
+                            "Model does not match any known fast embed model variants"
+                        )),
+                    }
+                }
+                None => Err(anyhow!("Model type unknown")),
+            },
 
             // Group all OAI models
-            _ => {
-                let backoff = backoff::ExponentialBackoffBuilder::new()
-                    .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                    .build();
-                let client = async_openai::Client::new().with_backoff(backoff);
-                let request = CreateEmbeddingRequestArgs::default()
-                    .model(model.to_str())
-                    .input(text)
-                    .build()?;
-                let response = client.embeddings().create(request).await?;
-                let embedding: Vec<Vec<f32>> = response
-                    .data
-                    .iter()
-                    .map(|data| data.clone().embedding)
-                    .collect();
-                Ok(embedding)
-            }
+            _ => match model.to_str() {
+                Some(m) => {
+                    let backoff = backoff::ExponentialBackoffBuilder::new()
+                        .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                        .build();
+                    let client = async_openai::Client::new().with_backoff(backoff);
+                    let request = CreateEmbeddingRequestArgs::default()
+                        .model(m)
+                        .input(text)
+                        .build()?;
+                    let response = client.embeddings().create(request).await?;
+                    let embedding: Vec<Vec<f32>> = response
+                        .data
+                        .iter()
+                        .map(|data| data.clone().embedding)
+                        .collect();
+                    Ok(embedding)
+                }
+                None => Err(anyhow!("Model type is unknown")),
+            },
         }
     }
 

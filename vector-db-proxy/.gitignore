@@ -21,3 +21,4 @@ Cargo.lock
 *.pptx
 *.docx
 *.xlsx
+local_cache
