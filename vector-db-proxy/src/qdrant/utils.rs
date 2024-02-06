@@ -107,7 +107,7 @@ impl Qdrant {
                 "Collection: {} does NOT exist...creating it now",
                 &self.collection_name
             );
-            let vector_size = vector_length.unwrap_or(1536); // Default to OAI embedding size if none is given;
+            let vector_size = vector_length.unwrap_or(512); // Default to fastembed embedding size if none is given;
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
                     match qdrant_client

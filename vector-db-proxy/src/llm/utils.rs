@@ -1,6 +1,7 @@
 use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
+use fastembed::{EmbeddingBase, EmbeddingModel, FlagEmbedding, InitOptions};
 use futures_util::stream::FuturesOrdered;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use qdrant_client::client::QdrantClient;
@@ -39,6 +40,15 @@ impl LLM {
     ) -> Result<Vec<Vec<f32>>> {
         match model {
             EmbeddingModels::UNKNOWN => todo!(),
+            EmbeddingModels::FASTEMBED => {
+                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                    model_name: EmbeddingModel::BGEBaseEN,
+                    show_download_message: true,
+                    ..Default::default()
+                })?;
+                let embeddings = model.passage_embed(text, None)?;
+                Ok(embeddings)
+            }
             _ => {
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))

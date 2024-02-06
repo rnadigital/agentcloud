@@ -3,6 +3,7 @@ pub enum EmbeddingModels {
     OAI_ADA,
     OAI_SMALL,
     OAI_LARGE,
+    FASTEMBED,
     UNKNOWN,
 }
 impl From<String> for EmbeddingModels {
@@ -11,6 +12,7 @@ impl From<String> for EmbeddingModels {
             "text-embedding-ada-002" => EmbeddingModels::OAI_ADA,
             "text-embedding-3-small" => EmbeddingModels::OAI_SMALL,
             "text-embedding-3-large" => EmbeddingModels::OAI_LARGE,
+            "fastembed" => EmbeddingModels::FASTEMBED,
             _ => EmbeddingModels::UNKNOWN,
         }
     }
@@ -22,6 +24,7 @@ impl EmbeddingModels {
             EmbeddingModels::OAI_ADA => "text-embedding-ada-002",
             EmbeddingModels::OAI_SMALL => "text-embedding-3-small",
             EmbeddingModels::OAI_LARGE => "text-embedding-3-large",
+            EmbeddingModels::FASTEMBED => "fastembed",
             EmbeddingModels::UNKNOWN => "unknown",
         }
     }
