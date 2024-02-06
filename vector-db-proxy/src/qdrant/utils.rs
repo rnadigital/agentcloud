@@ -62,7 +62,7 @@ impl Qdrant {
                 )),
             },
             Err(e) => Err(anyhow!(
-                "An error occurred while attempting to look up collection {}. Error: {}",
+                "collection {} does not exist. Error: {}",
                 &self.collection_name,
                 e
             )),

@@ -39,7 +39,7 @@ pub async fn get_next_page(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     scroll_point: &ScrollPoints,
 ) -> Result<(ScrollResponse, String)> {
-    let result = qdrant_conn.read().await.scroll(&scroll_point).await?;
+    let result = qdrant_conn.read().await.scroll(scroll_point).await?;
 
     let mut offset = String::from("Done");
     if let Some(point_id) = result.clone().next_page_offset {
@@ -202,7 +202,7 @@ pub async fn embed_payload(
                 let embedding_vec = llm_struct.embed_text(vec![&text], &embedding_model).await?;
                 // Construct PointStruct to insert into DB
                 if !embedding_vec.is_empty() {
-                    for embedding in embedding_vec {
+                    if let Some(embedding) = embedding_vec.into_iter().next() {
                         let point = PointStruct::new(
                             Uuid::new_v4().to_string(),
                             embedding.to_owned(),
@@ -222,7 +222,7 @@ pub async fn embed_payload(
             ));
         }
     }
-    return Err(anyhow!("Row is empty"));
+    Err(anyhow!("Row is empty"))
 }
 
 pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<Vec<String>> {

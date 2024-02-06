@@ -439,28 +439,25 @@ pub async fn scroll_data(
     };
 
     // Depending on whether the client has requested to return all point or not
-    match data.get_all_pages {
-        Some(get_all_pages) => {
-            // Depending on whether the client provides a limit we update the scroll point limit
-            if get_all_pages == true {
-                loop {
-                    let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-                    let (result, offset) = get_next_page(qdrant_conn_clone, &scroll_points).await?;
-                    let res = get_scroll_results(result)?;
-                    response.extend(res);
-                    if offset == "Done" {
-                        break;
-                    }
-                    scroll_points.offset = Some(PointId {
-                        point_id_options: Some(PointIdOptions::Uuid(offset)),
-                    });
+    if let Some(get_all_pages) = data.get_all_pages {
+        // Depending on whether the client provides a limit we update the scroll point limit
+        if get_all_pages {
+            loop {
+                let qdrant_conn_clone = Arc::clone(&qdrant_conn);
+                let (result, offset) = get_next_page(qdrant_conn_clone, &scroll_points).await?;
+                let res = get_scroll_results(result)?;
+                response.extend(res);
+                if offset == "Done" {
+                    break;
                 }
-            } else {
-                let result = qdrant_conn.read().await.scroll(&scroll_points).await?;
-                response.extend(get_scroll_results(result)?);
+                scroll_points.offset = Some(PointId {
+                    point_id_options: Some(PointIdOptions::Uuid(offset)),
+                });
             }
+        } else {
+            let result = qdrant_conn.read().await.scroll(&scroll_points).await?;
+            response.extend(get_scroll_results(result)?);
         }
-        None => {}
     }
 
     Ok(HttpResponse::Ok()
@@ -480,7 +477,7 @@ pub async fn delete_collection(
 ) -> Result<impl Responder> {
     let dataset_id_clone = dataset_id.clone();
     let qdrant_conn = app_data.get_ref();
-    let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
+    let qdrant = Qdrant::new(Arc::clone(qdrant_conn), dataset_id_clone);
     match qdrant.delete_collection().await {
         Ok(()) => Ok(HttpResponse::Ok()
             .content_type(ContentType::json())
@@ -489,7 +486,7 @@ pub async fn delete_collection(
                 data: None,
                 error_message: None
             }))),
-        Err(e) => Ok(HttpResponse::InternalServerError()
+        Err(e) => Ok(HttpResponse::NotFound()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
