@@ -337,7 +337,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					</div>
 				</span>;
 			case 3:
-				return discoveredSchema && <form onSubmit={(e) => {
+				return discoveredSchema && <form onSubmit={(e: any) => {
 					e.preventDefault();
 					const streams = Array.from(e.target.elements)
 						.filter(x => x['checked'] === true)
