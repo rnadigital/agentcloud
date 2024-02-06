@@ -52,7 +52,8 @@ def new_rag_execution(task: str, session_id: str):
             build_chat = ChatBuilder(task, session_id, group, True, {})
             build_chat.create_group()
             build_chat.build_function_map()
-            build_chat.add_datasource_retrievers(group['roles'][0]['data']['llm_config'])
+            retriever_agent_data = group['roles'][0]['data']
+            build_chat.add_datasource_retrievers(retriever_agent_data)
             build_chat.remove_admin_agent()
             build_chat.attach_tools_to_agent()
             build_chat.run_chat()

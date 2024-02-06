@@ -115,11 +115,13 @@ class MongoClientConnection(MongoConnection):
                 if datasource_ids and len(datasource_ids) > 0:
                     for datasource_id in datasource_ids:
                         datasource = self._get_collection("datasources").aggregate(
-                            [{ "$match": { "_id": datasource_id }}, { "$lookup": { "from": "models", "localField": "modelId", "foreignField": "_id", "as": "model"} }, {"$unwind": "model"}, {"$project": {"model": "$model.model"}}]
+                            [{ "$match": { "_id": ObjectId(datasource_id) }}, { "$lookup": { "from": "models", "localField": "modelId", "foreignField": "_id", "as": "model"} }, {"$unwind": "$model"}, {"$project": {"model": "$model.model"}}]
                         )
-                        if datasource and len(datasource) > 0:
-                            datasource_data = DatasourceData(id=datasource_id,**datasource.get("data"))
-                            list_of_datasources.append(datasource_data)
+                        if datasource is not None:
+                            ds_list = list(datasource)
+                            if len(ds_list) > 0:
+                                datasource_data = DatasourceData(id=datasource_id,**ds_list[0])
+                                list_of_datasources.append(datasource_data)
                 
                 # Construct Agent Config
                 code_execution = agent.get("codeExecutionConfig")

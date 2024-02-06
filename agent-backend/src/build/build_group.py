@@ -99,29 +99,31 @@ class ChatBuilder:
         except Exception as e:
             logging.exception(e)
 
-    def add_datasource_retrievers(self, llm_config):
-        for role in self.group["roles"]:
-            agent_config = role.get("data")
-            if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
-                for datasource in agent_config["datasource_data"]:
-                    agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent,
-                            {"retrieve_config": {
-                                "task": "code",
-                                "collection_name": datasource.id,
-                                # "docs_path": "https://en.wikipedia.org/wiki/Barack_Obama",
-                                "chunk_token_size": 2000,
-                                "model": "gpt-3.5-turbo",
-                                "client": qdc.get_connection(host="localhost", port=6333),
-                                "embedding_model": datasource.model,
-                            },
-                            "name": "admin",
-                            "human_input_mode": "NEVER",
-                            "max_consecutive_auto_reply": 10,
-                            "llm_config": llm_config,
-                            "socket_client": self.socket,
-                            "sid": self.session_id})
-                    # self.agents.append(agent)
-                    self.user_proxy = agent
+    def add_datasource_retrievers(self, retriver_model_data):
+        # for role in self.group["roles"]:
+            # agent_config = role.get("data")
+        # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
+            # for datasource in agent_config["datasource_data"]:
+        datasource = retriver_model_data["datasource_data"][0]
+        agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent,
+                {"retrieve_config": {
+                    "task": "code",
+                    "collection_name": datasource["id"],
+                    # "docs_path": "https://en.wikipedia.org/wiki/Barack_Obama",
+                    "chunk_token_size": 2000,
+                    "model": "gpt-3.5-turbo",
+                    "client": qdc.get_connection(host="localhost", port=6333),
+                    "embedding_model": datasource["model"], #"fast-bge-small-en"
+                },
+                "name": "admin",
+                "human_input_mode": "NEVER",
+                "max_consecutive_auto_reply": 10,
+                "llm_config": retriver_model_data["llm_config"],
+                "use_sockets": True,
+                "socket_client": self.socket,
+                "sid": self.session_id})
+            # self.agents.append(agent)
+        self.user_proxy = agent
 
     def process_role(self, role):
         agent_type = getattr(AvailableAgents, role.get("type"))
@@ -158,10 +160,7 @@ class ChatBuilder:
                 if type(user_proxy) == AvailableAgents.QdrantRetrieveUserProxyAgent:        
                     return user_proxy.initiate_chat(
                         recipient=self.agents[0],
-                        problem=self.prompt,
-                        # use_sockets=True,
-                        # socket_client=self.socket,
-                        # sid=self.session_id,
+                        problem=self.prompt
                     )
             return user_proxy.initiate_chat(
                 recipient=self.agents[0],
