@@ -6,7 +6,7 @@ from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from init.env_variables import BASE_PATH
-from models.mongo import ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
+from models.mongo import DatasourceData, ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
 from typing import List, Dict, Union, Any, Optional
 
 
@@ -108,6 +108,19 @@ class MongoClientConnection(MongoConnection):
                 _llm_config = LLMConfig(
                     functions=list_of_agent_tools, config_list=[_config_list]
                 )
+                
+                #Construct datasources
+                list_of_datasources: List[DatasourceData] = list()
+                datasource_ids: List[ObjectId] = agent.get("datasourceIds")
+                if datasource_ids and len(datasource_ids) > 0:
+                    for datasource_id in datasource_ids:
+                        datasource = self._get_collection("datasources").aggregate(
+                            [{ "$match": { "_id": datasource_id }}, { "$lookup": { "from": "models", "localField": "modelId", "foreignField": "_id", "as": "model"} }, {"$unwind": "model"}, {"$project": {"model": "$model.model"}}]
+                        )
+                        if datasource and len(datasource) > 0:
+                            datasource_data = DatasourceData(id=datasource_id,**datasource.get("data"))
+                            list_of_datasources.append(datasource_data)
+                
                 # Construct Agent Config
                 code_execution = agent.get("codeExecutionConfig")
                 if code_execution and len(code_execution) > 0:
@@ -127,7 +140,7 @@ class MongoClientConnection(MongoConnection):
                     human_input_mode=agent.get("humanInputMode") or "NEVER",
                     llm_config=_llm_config,
                     code_execution_config=code_execution_config,
-                    datasource_ids=agent.get("datasourceIds")
+                    datasource_data=list_of_datasources
                 )
 
                 # Construct Agent Data

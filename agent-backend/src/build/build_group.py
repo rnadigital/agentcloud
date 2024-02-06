@@ -102,17 +102,17 @@ class ChatBuilder:
     def add_datasource_retrievers(self, llm_config):
         for role in self.group["roles"]:
             agent_config = role.get("data")
-            if "datasource_ids" in agent_config  and len(agent_config["datasource_ids"]) > 0:
-                for datasource_id in agent_config["datasource_ids"]:
+            if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
+                for datasource in agent_config["datasource_data"]:
                     agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent,
                             {"retrieve_config": {
                                 "task": "code",
-                                "collection_name": datasource_id,
+                                "collection_name": datasource.id,
                                 # "docs_path": "https://en.wikipedia.org/wiki/Barack_Obama",
                                 "chunk_token_size": 2000,
                                 "model": "gpt-3.5-turbo",
                                 "client": qdc.get_connection(host="localhost", port=6333),
-                                "embedding_model": "BAAI/bge-small-en-v1.5",
+                                "embedding_model": datasource.model,
                             },
                             "name": "admin",
                             "human_input_mode": "NEVER",

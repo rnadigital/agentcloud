@@ -33,6 +33,10 @@ class ToolData(BaseModel):
     code: str
     builtin: bool
 
+class DatasourceData(BaseModel):
+    id: str
+    model: str
+
 
 class Platforms(str, Enum):
     OpenAI = "open_ai"
@@ -82,6 +86,7 @@ class AgentConfig(BaseModel):
     use_sockets: Optional[bool] = True
     socket_client: Any = None
     sid: str = None
+    datasource_data: Optional[List[DatasourceData]] = None
     datasource_ids: Optional[List[str]] = None
     retrieve_config: Optional[Dict[str, Any]] = None
 
