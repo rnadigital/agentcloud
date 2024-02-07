@@ -220,7 +220,7 @@ impl Chunker {
                         metadata.insert("start_index".to_string(), idx.to_string());
                     }
                 }
-                metadata.insert("text".to_string(), chunk.page_content.to_string());
+                metadata.insert("document".to_string(), chunk.page_content.to_string());
                 chunk.metadata = Some(metadata);
                 documents.push(chunk);
             }
