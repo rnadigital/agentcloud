@@ -623,10 +623,11 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	const { modelId } = req.body;
+	const { modelId, name } = req.body;
 
 	if (!req.files || Object.keys(req.files).length === 0
-		|| !modelId || typeof modelId !== 'string') {	
+			|| !modelId || typeof modelId !== 'string'
+			|| !name || typeof name !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -649,7 +650,7 @@ export async function uploadFileApi(req, res, next) {
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
-	    name: newDatasourceId.toString(),
+	    name: name,
 	    gcsFilename: filename,
 	    originalName: uploadedFile.name,
 	    sourceId: null,

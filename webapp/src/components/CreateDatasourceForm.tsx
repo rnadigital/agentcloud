@@ -205,10 +205,26 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					files={files}
 					setFiles={setFiles}
 					modelId={modelId}
+					name={name}
 				>
 					<div className='my-4'>
-						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Embedding Model
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							{/* cba moving */}
+							Datasource Name<span className='text-red-700'> *</span>
+						</label>
+						<div>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								onChange={(e) => setDatasourceName(e.target.value)}
+								value={datasourceName}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
+						</div>
+						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'>
+							Embedding Model<span className='text-red-700'> *</span>
 						</label>
 						<div className='mt-2'>
 							<Select
@@ -238,6 +254,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					            }}
 					        />
 						</div>
+						
 					</div>
 				</DropZone>;
 			case 2:
