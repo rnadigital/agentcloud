@@ -244,7 +244,7 @@ pub async fn construct_point_struct(
     if !payload.is_empty() {
         let qdrant_point_struct = PointStruct::new(
             Uuid::new_v4().to_string(),
-            vector.to_owned(),
+            HashMap::from([(String::from(""), vector.to_owned())]),
             json!(payload).try_into().unwrap(),
         );
         Some(qdrant_point_struct)
