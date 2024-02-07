@@ -8,7 +8,7 @@ use qdrant_client::prelude::*;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::{
     CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams,
-    VectorsConfig,
+    VectorParamsMap, VectorsConfig,
 };
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -112,12 +112,18 @@ impl Qdrant {
                 CreateDisposition::CreateIfNeeded => {
                     match qdrant_client
                         .create_collection(&CreateCollection {
-                            collection_name: (&self.collection_name).to_owned(),
+                            collection_name: self.collection_name.to_owned(),
                             vectors_config: Some(VectorsConfig {
-                                config: Some(Config::Params(VectorParams {
-                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
-                                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
-                                    ..Default::default()
+                                config: Some(Config::ParamsMap(VectorParamsMap {
+                                    map: [(
+                                        String::from("text"),
+                                        VectorParams {
+                                            size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
+                                            distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                                            ..Default::default()
+                                        },
+                                    )]
+                                    .into(),
                                 })),
                             }),
                             ..Default::default()
@@ -139,10 +145,10 @@ impl Qdrant {
                         },
                         Err(e) => {
                             println!("Err: {}", e);
-                            return Err(anyhow!(
+                            Err(anyhow!(
                                 "An error occurred while trying to create collection: {}",
                                 e
-                            ));
+                            ))
                         }
                     }
                 }
@@ -174,7 +180,7 @@ impl Qdrant {
         );
         let qdrant_conn = &self.client.read().await;
         let upsert_results = qdrant_conn
-            .upsert_points_blocking(&self.collection_name, vec![point], None)
+            .upsert_points_blocking(&self.collection_name, None, vec![point], None)
             .await?;
         match upsert_results.result.unwrap().status {
             2 => Ok(true),
@@ -189,7 +195,7 @@ impl Qdrant {
         );
         let qdrant_conn = &self.client.read().await;
         let upsert_results = qdrant_conn
-            .upsert_points(&self.collection_name, vec![point], None)
+            .upsert_points(&self.collection_name, None, vec![point], None)
             .await?;
         match upsert_results.result.unwrap().status {
             2 => Ok(true),
@@ -227,7 +233,13 @@ impl Qdrant {
             Ok(result) => match result {
                 true => {
                     let result = qdrant_conn
-                        .upsert_points_batch_blocking(&self.collection_name, points, None, 100)
+                        .upsert_points_batch_blocking(
+                            &self.collection_name,
+                            None,
+                            points,
+                            None,
+                            100,
+                        )
                         .await?;
                     match result.result.unwrap().status {
                         2 => Ok(true),
@@ -241,10 +253,10 @@ impl Qdrant {
             },
             Err(e) => {
                 println!("Err: {}", e);
-                return Err(anyhow!(
+                Err(anyhow!(
                     "An error occurred while trying to create collection: {}",
                     e
-                ));
+                ))
             }
         }
     }
