@@ -159,7 +159,11 @@ pub async fn process_table_chunks_async(
         .unwrap()
         .unwrap();
     match qdrant
-        .bulk_upsert_data(embeddings, Some(model_parameters.embeddingLength as u64))
+        .bulk_upsert_data(
+            embeddings,
+            Some(model_parameters.embeddingLength as u64),
+            None,
+        )
         .await?
     {
         true => {

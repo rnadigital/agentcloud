@@ -170,6 +170,7 @@ pub async fn subscribe_to_queue(
                                                         .await
                                                         .unwrap();
                                                     // dynamically get user's chunking strategy of choice from the database
+                                                    let model_obj_clone = model_parameters.clone();
                                                     let datasources_clone =
                                                         datasource.unwrap().clone();
                                                     let chunking_character =
@@ -220,6 +221,7 @@ pub async fn subscribe_to_queue(
                                                             let vector_length = model_parameters
                                                                 .embeddingLength
                                                                 as u64;
+                                                            let model_name = model_obj_clone.model;
                                                             let qdrant_conn_clone =
                                                                 Arc::clone(&app_data);
                                                             let qdrant = Qdrant::new(
@@ -230,6 +232,7 @@ pub async fn subscribe_to_queue(
                                                                 .bulk_upsert_data(
                                                                     points_to_upload,
                                                                     Some(vector_length),
+                                                                    Some(model_name),
                                                                 )
                                                                 .await
                                                             {

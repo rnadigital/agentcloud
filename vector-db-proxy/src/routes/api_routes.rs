@@ -224,7 +224,7 @@ pub async fn bulk_upsert_data_to_collection(
             .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
     let bulk_upsert_results = qdrant
-        .bulk_upsert_data(list_of_points, Some(vector_length))
+        .bulk_upsert_data(list_of_points, Some(vector_length), None)
         .await?;
     println!("{:?}", bulk_upsert_results.to_owned());
     match bulk_upsert_results {
@@ -343,7 +343,7 @@ pub async fn prompt(
     let vector_length = model_parameters.embeddingLength as u64;
     let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
     match qdrant
-        .check_collection_exists(CreateDisposition::CreateIfNeeded, Some(vector_length))
+        .check_collection_exists(CreateDisposition::CreateIfNeeded, Some(vector_length), None)
         .await?
     {
         true => {

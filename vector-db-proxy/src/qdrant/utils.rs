@@ -41,7 +41,7 @@ impl Qdrant {
     pub async fn delete_collection(&self) -> Result<()> {
         let qdrant_conn = &self.client.read().await;
         return match &self
-            .check_collection_exists(CreateDisposition::CreateNever, None)
+            .check_collection_exists(CreateDisposition::CreateNever, None, None)
             .await
         {
             Ok(r) => match r {
@@ -88,6 +88,7 @@ impl Qdrant {
         &self,
         create_disposition: CreateDisposition,
         vector_length: Option<u64>,
+        vector_name: Option<String>,
     ) -> Result<bool> {
         println!(
             "Checking if Collection: {} exists...",
@@ -108,15 +109,16 @@ impl Qdrant {
                 &self.collection_name
             );
             let vector_size = vector_length.unwrap_or(512); // Default to fastembed embedding size if none is given;
+            let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
-                    match qdrant_client
-                        .create_collection(&CreateCollection {
-                            collection_name: self.collection_name.to_owned(),
-                            vectors_config: Some(VectorsConfig {
+                    match vector_name {
+                        Some(name) => {
+                            //case where we are using a named vector
+                            config = Some(VectorsConfig {
                                 config: Some(Config::ParamsMap(VectorParamsMap {
                                     map: [(
-                                        String::from("fast-bge-small-en"), //TODO: not hardcode
+                                        String::from(name.as_str()),
                                         VectorParams {
                                             size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection
@@ -125,7 +127,23 @@ impl Qdrant {
                                     )]
                                     .into(),
                                 })),
-                            }),
+                            })
+                        }
+                        None => {
+                            // case where we are NOT using named vectors
+                            config = Some(VectorsConfig {
+                                config: Some(Config::Params(VectorParams {
+                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
+                                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                                    ..Default::default()
+                                })),
+                            });
+                        }
+                    }
+                    match qdrant_client
+                        .create_collection(&CreateCollection {
+                            collection_name: self.collection_name.to_owned(),
+                            vectors_config: config,
                             ..Default::default()
                         })
                         .await
@@ -220,6 +238,7 @@ impl Qdrant {
         &self,
         points: Vec<PointStruct>,
         vector_length: Option<u64>,
+        vector_name: Option<String>,
     ) -> Result<bool> {
         println!(
             "Uploading bulk data points to collection: {}",
@@ -227,7 +246,7 @@ impl Qdrant {
         );
         let qdrant_conn = &self.client.read().await;
         match &self
-            .check_collection_exists(CreateDisposition::CreateIfNeeded, vector_length)
+            .check_collection_exists(CreateDisposition::CreateIfNeeded, vector_length, vector_name)
             .await
         {
             Ok(result) => match result {

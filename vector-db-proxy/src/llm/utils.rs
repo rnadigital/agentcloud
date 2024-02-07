@@ -1,7 +1,7 @@
 use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
-use fastembed::{EmbeddingBase, ExecutionProviderDispatch, FlagEmbedding, InitOptions};
+use fastembed::{EmbeddingBase, FlagEmbedding, InitOptions};
 use futures_util::stream::FuturesOrdered;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use qdrant_client::client::QdrantClient;

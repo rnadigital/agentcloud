@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+use crate::llm::models::EmbeddingModels;
 use crate::mongo::{client::start_mongo_connection, models::Model, queries::get_embedding_model};
 use crate::qdrant::helpers::embed_table_chunks_async;
 use crate::qdrant::models::HashMapValues;
@@ -9,7 +10,6 @@ use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_value;
 use qdrant_client::client::QdrantClient;
 use serde_json::{json, Value};
-use crate::llm::models::EmbeddingModels;
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
@@ -44,11 +44,16 @@ pub async fn process_messages(
         //     Handle the case where the data is being sent as a single object rather than an array of objects
         list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
     }
-    if let Ok(point_structs) =
-        embed_table_chunks_async(list_of_embedding_data, message, Some(ds_clone), EmbeddingModels::from(embedding_model)).await
+    if let Ok(point_structs) = embed_table_chunks_async(
+        list_of_embedding_data,
+        message,
+        Some(ds_clone),
+        EmbeddingModels::from(embedding_model),
+    )
+    .await
     {
         if let Ok(bulk_upload_result) = qdrant
-            .bulk_upsert_data(point_structs.clone(), Some(vector_length))
+            .bulk_upsert_data(point_structs.clone(), Some(vector_length), None)
             .await
         {
             return bulk_upload_result;
