@@ -8,7 +8,7 @@ packages = [{ include = "agent-backend" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-autogen = { git = "https://github.com/rnadigital/autogen.git", rev = "652d76ab0c5b584365f8d6039c2de5c844de0d69" }
+autogen = { git = "https://github.com/rnadigital/autogen.git" }
 fastapi = "^0.103.2"
 uvicorn = "^0.23.2"
 openai = "1.3.9"
@@ -29,6 +29,10 @@ chromadb = "^0.4.22"
 sentence-transformers = "^2.2.2"
 pypdf = "^4.0.0"
 ipython = "^8.20.0"
+replicate = "^0.23.1"
+markdownify = "^0.11.6"
+langchain = "^0.1.5"
+pyspark = "3.5.0"
 
 [build-system]
 requires = ["poetry-core==1.6.1"]
