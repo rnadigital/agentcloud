@@ -116,7 +116,7 @@ impl Qdrant {
                             vectors_config: Some(VectorsConfig {
                                 config: Some(Config::ParamsMap(VectorParamsMap {
                                     map: [(
-                                        String::from("text"),
+                                        String::from("fast-bge-small-en"), //TODO: not hardcode
                                         VectorParams {
                                             size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection

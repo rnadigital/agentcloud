@@ -80,17 +80,23 @@ class MongoClientConnection(MongoConnection):
             _config_list: ConfigList = ConfigList()
             # Get agent credentials
             if agent is not None:
-                credential_id = agent.get("credentialId")
+                model_id = agent.get("modelId")
+                model_obj = self._get_collection("models").find_one(
+                    {"_id": model_id}, {"credentialId": 1, "model": 1}
+                )
+                print(model_obj)
+                credential_id = model_obj.get("credentialId")
                 credential_obj = self._get_collection("credentials").find_one(
                     {"_id": credential_id}, {"type": 1, "credentials": 1}
                 )
+                print(credential_obj)
                 if credential_obj is not None and len(credential_obj) > 0:
                     creds = credential_obj.get("credentials")
                     # Construct Agent Config List
                     _config_list = ConfigList(
                         api_key=creds.get("key"),
                         api_type=credential_obj.get("type"),
-                        model=agent.get("model"),
+                        model=model_obj.get("model"),
                     )
 
                 # Construct LLMConfig

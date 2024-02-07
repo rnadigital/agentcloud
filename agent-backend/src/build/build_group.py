@@ -100,29 +100,34 @@ class ChatBuilder:
             logging.exception(e)
 
     def add_datasource_retrievers(self, retriver_model_data):
+        print(retriver_model_data)
         # for role in self.group["roles"]:
             # agent_config = role.get("data")
         # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
             # for datasource in agent_config["datasource_data"]:
         datasource = retriver_model_data["datasource_data"][0]
-        agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent,
-                {"retrieve_config": {
-                    "task": "code",
-                    "collection_name": datasource["id"],
-                    # "docs_path": "https://en.wikipedia.org/wiki/Barack_Obama",
-                    "chunk_token_size": 2000,
-                    "model": "gpt-3.5-turbo",
-                    "client": qdc.get_connection(host="localhost", port=6333),
-                    "embedding_model": datasource["model"], #"fast-bge-small-en"
-                },
-                "name": "admin",
-                "human_input_mode": "NEVER",
-                "max_consecutive_auto_reply": 10,
-                "llm_config": retriver_model_data["llm_config"],
-                "use_sockets": True,
-                "socket_client": self.socket,
-                "sid": self.session_id})
-            # self.agents.append(agent)
+        print(f"datasource: {datasource}")
+        agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent, {
+            "retrieve_config": {
+                "task": "default",
+                "collection_name": datasource["id"],
+                "chunk_token_size": 2000,
+                "client": qdc.get_connection(host="localhost", port=6333),
+                "embedding_model": "BAII/bge-small-en",
+                "model": "gpt-4",
+                "type": None,
+            },
+            "model": "gpt-4",
+            "type": None,
+            "name": "admin",
+            "human_input_mode": "NEVER",
+            "max_consecutive_auto_reply": 10,
+            "llm_config": retriver_model_data["llm_config"],
+            "use_sockets": True,
+            "socket_client": self.socket,
+            "sid": self.session_id
+        })
+        # self.agents.append(agent)
         self.user_proxy = agent
 
     def process_role(self, role):
