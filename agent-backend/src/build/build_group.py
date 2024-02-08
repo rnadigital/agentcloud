@@ -100,7 +100,7 @@ class ChatBuilder:
             logging.exception(e)
 
     def add_datasource_retrievers(self, retriver_model_data):
-        print(retriver_model_data)
+        # print(retriver_model_data)
         # for role in self.group["roles"]:
             # agent_config = role.get("data")
         # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
@@ -113,14 +113,15 @@ class ChatBuilder:
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
                 "client": qdc.get_connection(host="localhost", port=6333),
-                "embedding_model": "BAII/bge-small-en",
-                "model": "gpt-4",
-                "type": None,
+                # "embedding_model": "BAII/bge-small-en",
+                "embedding_model": datasource["model"],
+                "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
+                # "type": None,
             },
-            "model": "gpt-4",
-            "type": None,
+            # "model": "gpt-4",
+            # "type": None,
             "name": "admin",
-            "human_input_mode": "NEVER",
+            "human_input_mode": "ALWAYS",
             "max_consecutive_auto_reply": 10,
             "llm_config": retriver_model_data["llm_config"],
             "use_sockets": True,
