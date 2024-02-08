@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 
+use crate::llm::models::FastEmbedModels;
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -112,28 +113,45 @@ impl Qdrant {
             let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
+                    // check if vector name is a value or None
                     match vector_name {
                         Some(name) => {
-                            //case where we are using a named vector
-                            config = Some(VectorsConfig {
-                                config: Some(Config::ParamsMap(VectorParamsMap {
-                                    map: [(
-                                        String::from(name.as_str()),
-                                        VectorParams {
-                                            size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
+                            // if it's a value check that it's a known fast embed model variant. If it is treat it as a named vector. Otherwise go down the path of a normal upload.
+                            let model_name = name.clone();
+                            match FastEmbedModels::from(name) {
+                                // Case where the model name is not None however it is not a known Fast embed model variant
+                                FastEmbedModels::UNKNOWN => {
+                                    config = Some(VectorsConfig {
+                                        config: Some(Config::Params(VectorParams {
+                                            size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                             ..Default::default()
-                                        },
-                                    )]
-                                    .into(),
-                                })),
-                            })
+                                        })),
+                                    });
+                                }
+                                _ => {
+                                    //case where the model name is Not None AND it is a known Fast embed model variant
+                                    config = Some(VectorsConfig {
+                                        config: Some(Config::ParamsMap(VectorParamsMap {
+                                            map: [(
+                                                String::from(model_name.as_str()),
+                                                VectorParams {
+                                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
+                                                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                                                    ..Default::default()
+                                                },
+                                            )]
+                                            .into(),
+                                        })),
+                                    })
+                                }
+                            }
                         }
                         None => {
-                            // case where we are NOT using named vectors
+                            // case where we model name is None in which case use standard point upload method.
                             config = Some(VectorsConfig {
                                 config: Some(Config::Params(VectorParams {
-                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns) //TODO: Need to get this dynamically from database!
+                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                     distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                     ..Default::default()
                                 })),
@@ -246,7 +264,11 @@ impl Qdrant {
         );
         let qdrant_conn = &self.client.read().await;
         match &self
-            .check_collection_exists(CreateDisposition::CreateIfNeeded, vector_length, vector_name)
+            .check_collection_exists(
+                CreateDisposition::CreateIfNeeded,
+                vector_length,
+                vector_name,
+            )
             .await
         {
             Ok(result) => match result {

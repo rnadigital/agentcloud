@@ -32,7 +32,7 @@ pub async fn process_messages(
     let ds_clone = datasource_id.clone();
     let qdrant = Qdrant::new(qdrant_conn, datasource_id);
     if let Value::Array(data_array) = message_data {
-        if data_array.len() > 0 {
+        if !data_array.is_empty() {
             for message in data_array {
                 if let Value::Object(data_obj) = message {
                     let embedding_data = convert_serde_value_to_hashmap_value(data_obj);
