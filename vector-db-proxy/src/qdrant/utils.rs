@@ -41,7 +41,7 @@ impl Qdrant {
 
     pub async fn delete_collection(&self) -> Result<()> {
         let qdrant_conn = &self.client.read().await;
-        return match &self
+        match &self
             .check_collection_exists(CreateDisposition::CreateNever, None, None)
             .await
         {
@@ -67,7 +67,7 @@ impl Qdrant {
                 &self.collection_name,
                 e
             )),
-        };
+        }
     }
 
     ///
@@ -189,7 +189,7 @@ impl Qdrant {
                     }
                 }
                 CreateDisposition::CreateNever => {
-                    println!("Collection: {} has a Do Not Create disposition. Therefore will not attempt creations", &self.collection_name);
+                    println!("Collection: '{}' has a Do Not Create disposition. Therefore will not attempt creations", &self.collection_name);
                     Ok(false)
                 }
             }
@@ -341,7 +341,7 @@ impl Qdrant {
             })
             .await?;
         for result in &search_result.result {
-            let _ = response_data.push(PointSearchResults {
+            response_data.push(PointSearchResults {
                 score: result.score,
                 payload: result.payload.to_owned(),
             });
