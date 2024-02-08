@@ -178,6 +178,9 @@ export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) 
 }
 
 //Team (invites/members/etc)
+export function getNotifications(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/notifications.json`, 'GET', null, dispatch, errorCallback, router);
+}
 export function getTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/team.json`, 'GET', null, dispatch, errorCallback, router);
 }

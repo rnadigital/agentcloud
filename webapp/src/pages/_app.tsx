@@ -14,6 +14,7 @@ import { ToastContainer } from 'react-toastify';
 import Layout from '../components/Layout';
 import { AccountWrapper } from '../context/account';
 import { ChatWrapper } from '../context/chat';
+import { NotificationWrapper } from '../context/notifications';
 import { SocketWrapper } from '../context/socket';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
@@ -58,24 +59,26 @@ export default function App({ Component, pageProps }) {
 			<AccountWrapper pageProps={pagePropsState}>
 				<ChatWrapper>
 					<SocketWrapper>
-						<ToastContainer
-							progressClassName='toast-container'
-							bodyClassName='toast-body'
-							theme='colored'
-							position='top-right'
-							autoClose={3000}
-							newestOnTop={true}
-							pauseOnFocusLoss={false}
-							pauseOnHover={false}
-							hideProgressBar={true}
-							limit={3}
-						/>
-						<Layout {...pageProps}>
-							<style>
-								{''}
-							</style>
-							<Component {...pageProps} />
-						</Layout>
+						<NotificationWrapper>
+							<ToastContainer
+								progressClassName='toast-container'
+								bodyClassName='toast-body'
+								theme='colored'
+								position='top-right'
+								autoClose={3000}
+								newestOnTop={true}
+								pauseOnFocusLoss={false}
+								pauseOnHover={false}
+								hideProgressBar={true}
+								limit={3}
+							/>
+							<Layout {...pageProps}>
+								<style>
+									{''}
+								</style>
+								<Component {...pageProps} />
+							</Layout>
+						</NotificationWrapper>
 					</SocketWrapper>
 				</ChatWrapper>
 			</AccountWrapper>

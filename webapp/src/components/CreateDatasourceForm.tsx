@@ -65,7 +65,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {} });
-	console.log(streamState);
 	const SubmitButton = (props: SubmitButtonProps) => {
 		const { uiSchema } = props;
 		const { norender } = getSubmitButtonOptions(uiSchema);
@@ -205,7 +204,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					files={files}
 					setFiles={setFiles}
 					modelId={modelId}
-					name={name}
+					name={datasourceName}
 				>
 					<div className='my-4'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -367,7 +366,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
 							return acc;
 						}, {});
-					console.log('updateStreams', { streams, selectedFieldsMap});
 					setStreamState({ streams, selectedFieldsMap});
 					setStep(4);
 				}}>

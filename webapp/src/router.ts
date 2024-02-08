@@ -24,6 +24,7 @@ import * as credentialController from './controllers/credential';
 import * as datasourceController from './controllers/datasource';
 import * as groupController from './controllers/group';
 import * as modelController from './controllers/model';
+import * as notificationController from './controllers/notification';
 import * as sessionController from './controllers/session';
 import * as stripeController from './controllers/stripe';
 import * as teamController from './controllers/team';
@@ -168,6 +169,9 @@ export default function router(server, app) {
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);
+
+	//notifications
+	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 
