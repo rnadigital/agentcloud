@@ -19,6 +19,12 @@ export function getDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrStr):
 	});
 }
 
+export function getDatasourceByIdUnsafe(datasourceId: db.IdOrStr): Promise<Datasource> {
+	return DatasourceCollection().findOne({
+		_id: toObjectId(datasourceId),
+	});
+}
+
 export function getDatasourceByConnectionId(connectionId: string): Promise<Datasource> {
 	return DatasourceCollection().findOne({
 		connectionId,
@@ -60,15 +66,6 @@ export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: 
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId),
-	}, {
-		$set: {
-			lastSyncedDate,
-		},
-	});
-}
-export async function setDatasourceLastSyncedWebhook(connectionId: string, lastSyncedDate: Date): Promise<any> {
-	return DatasourceCollection().updateOne({
-		connectionId,
 	}, {
 		$set: {
 			lastSyncedDate,

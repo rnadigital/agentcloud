@@ -180,7 +180,7 @@ export async function testDatasourceApi(req, res, next) {
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
-	    name: newDatasourceId.toString(),
+	    name: datasourceName,
 	    gcsFilename: null,
 	    originalName: datasourceName,
 	    sourceId: createdSource.sourceId,
@@ -205,6 +205,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	const { 
 		datasourceId,
+		datasourceName,
 		streams,
 		selectedFieldsMap,
 		scheduleType,
@@ -213,6 +214,7 @@ export async function addDatasourceApi(req, res, next) {
 		cronExpression,
 		cronTimezone,
 		modelId,
+		name,
 	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
@@ -269,7 +271,7 @@ export async function addDatasourceApi(req, res, next) {
 		namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource.sourceId,
+		name: datasource._id.toString(),
 		status: 'active',
 		operations: [],
 		skipReset: false,
@@ -289,11 +291,11 @@ export async function addDatasourceApi(req, res, next) {
 			},
 		};
 	}
-	// console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
-	// console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
+	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);

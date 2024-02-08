@@ -17,12 +17,14 @@ export function SocketWrapper({ children }) {
 		if (!sharedSocket || !resourceSlug) { return; }
 		sharedSocket.emit('join_room', resourceSlug);
 		console.log('joined room');
-		sharedSocket.on('notification', console.log);
+		sharedSocket.on('notification', msg => {
+			console.log('notification', msg);
+		});
 		//TODO: handle notifications and use notificationContext/setnotificationContext
 	}
 
 	useEffect(() => {
-		// joinRoomAndListen();
+		joinRoomAndListen();
 		//TODO: handle leaving old room on changing resourceSlug
 		return () => {
 			sharedSocket?.off('notification');

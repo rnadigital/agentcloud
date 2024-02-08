@@ -4,7 +4,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 
-import { getDatasourceByConnectionId, getDatasourceById, setDatasourceLastSyncedWebhook } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
 import { dynamicResponse } from '../util';
@@ -107,6 +107,7 @@ export async function discoverSchemaApi(req, res, next) {
 
 export async function handleSuccessfulSyncWebhook(req, res, next) {
 
+	console.log('handleSuccessfulSyncWebhook\nhandleSuccessfulSyncWebhook\nhandleSuccessfulSyncWebhook\n')
 	//TODO: validate some kind of webhook key
 
 	// TODO: TODO'nt
@@ -116,7 +117,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 	if (match) {
 		const payload = {
-			connectionId: match[1],
+			datasourceId: match[1],
 			source: match[2],
 			destination: match[3],
 			startTime: match[4],
@@ -125,12 +126,15 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			jobId: match[7],
 			text: req.body.text, //The input text
 		};
-		if (payload?.connectionId) {
-			const datasource = await getDatasourceByConnectionId(payload.connectionId);
-			io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
-			await setDatasourceLastSyncedWebhook(payload.connectionId, new Date());
-		}
 		console.log(payload);
+		if (payload?.datasourceId) {
+			const datasource = await getDatasourceByIdUnsafe(payload.datasourceId);
+			if (datasource) {
+				console.log('datasource', datasource);
+				io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
+				await setDatasourceLastSynced(datasource.teamId, payload.datasourceId, new Date());
+			}
+		}
 	}
 
 	return dynamicResponse(req, res, 200, { });
