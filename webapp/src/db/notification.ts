@@ -28,6 +28,15 @@ export function getNotificationsByTeam(teamId: db.IdOrStr): Promise<Notification
 	}).toArray();
 }
 
+// Get all notifications for multiple teams
+export function getNotificationsByTeams(teamIds: db.IdOrStr[]): Promise<Notification[]> {
+	return NotificationsCollection().find({
+		teamId: {
+			$in: teamIds,
+		},
+	}).toArray();
+}
+
 // Add a new notification for a specific team
 export async function addNotification(notification: Notification): Promise<InsertResult> {
     // Assuming the notification object already contains a teamId property

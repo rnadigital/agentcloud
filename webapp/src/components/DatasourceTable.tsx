@@ -54,7 +54,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 			}, () => {
 				toast.success('Sync job triggered');
 			}, () => {
-				toast.error('Error syncinc');
+				toast.error('Error syncing');
 			}, router);
 			await fetchDatasources();
 		} finally {
@@ -113,7 +113,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
+								<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>
 									{datasource?.connectionSettings?.scheduleType || '-'}
 								</span>
 							</td>

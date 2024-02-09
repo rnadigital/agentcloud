@@ -311,7 +311,7 @@ export async function addDatasourceApi(req, res, next) {
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
-		setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()),
+		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
 		setDatasourceEmbeddingModel(req.params.resourceSlug, datasourceId, modelId)
 	]);
 
@@ -503,7 +503,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
-		sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
+		// sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -540,7 +540,7 @@ export async function syncDatasourceApi(req, res, next) {
 	console.log('createdJob', createdJob);
 
 	// Update the datasource with the connection settings and sync date
-	await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());
+	// await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
