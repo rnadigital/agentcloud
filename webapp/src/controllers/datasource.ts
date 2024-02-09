@@ -660,6 +660,7 @@ export async function uploadFileApi(req, res, next) {
 	    destinationId: null,
 	    sourceType: 'file',
 	    workspaceId: null,
+	    lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedbackl
 	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
