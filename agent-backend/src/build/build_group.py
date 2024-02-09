@@ -109,7 +109,7 @@ class ChatBuilder:
         print(f"datasource: {datasource}")
         agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent, {
             "retrieve_config": {
-                "task": "default",
+                "task": "qa",
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
                 "client": qdc.get_connection(host="localhost", port=6333),
@@ -126,7 +126,8 @@ class ChatBuilder:
             "llm_config": retriver_model_data["llm_config"],
             "use_sockets": True,
             "socket_client": self.socket,
-            "sid": self.session_id
+            "sid": self.session_id,
+            "code_execution_config": False
         })
         # self.agents.append(agent)
         self.user_proxy = agent
@@ -168,6 +169,7 @@ class ChatBuilder:
                         recipient=self.agents[0],
                         problem=self.prompt
                     )
+            self.agents[0].reset()
             return user_proxy.initiate_chat(
                 recipient=self.agents[0],
                 message=self.prompt,
