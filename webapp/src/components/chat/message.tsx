@@ -27,6 +27,11 @@ const COLLAPSE_AFTER_LINES = 10
 			[FeedbackOption.CONTINUE]: 'Continue',
 			[FeedbackOption.CANCEL]: 'End session',
 		},
+		[SessionType.RAG]: {
+			// [FeedbackOption.EXIT]: 'Continue',
+			[FeedbackOption.CONTINUE]: 'Continue',
+			[FeedbackOption.CANCEL]: 'End session',
+		},
 	}
 	, feedbackMessages = {
 		[SessionType.TEAM]: {
@@ -36,6 +41,11 @@ const COLLAPSE_AFTER_LINES = 10
 		},
 		[SessionType.TASK]: {
 			// [FeedbackOption.EXIT]: 'Looks good!',
+			[FeedbackOption.CONTINUE]: '',
+			[FeedbackOption.CANCEL]: 'TERMINATE',
+		},
+		[SessionType.RAG]: {
+			// [FeedbackOption.EXIT]: 'exit',
 			[FeedbackOption.CONTINUE]: '',
 			[FeedbackOption.CANCEL]: 'TERMINATE',
 		},

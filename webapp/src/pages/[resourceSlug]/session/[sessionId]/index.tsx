@@ -82,8 +82,9 @@ export default function Session(props) {
 			: message;
 		setMessages(oldMessages => {
 			// There are existing messages
-			const matchingMessage = oldMessages.find(m => m?.message?.chunkId === message?.message?.chunkId
+			const matchingMessage = oldMessages.find(m => m?.message?.chunkId != undefined && m?.message?.chunkId === message?.message?.chunkId
 				&& m?.authorName === message?.authorName);
+			console.log(message?.message?.chunkId, `'${newMessage.message.text}'`, 'matching', matchingMessage != undefined);
 			if (matchingMessage && message?.incoming !== true) {
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (matchingMessage?.chunks||[{ ts: 0, chunk: matchingMessage.message.text || '' }])
