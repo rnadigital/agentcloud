@@ -39,7 +39,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const initialDatasources = agent.datasourceIds && agent.datasourceIds.map(did => {
 		const foundSource = datasources.find(d => d._id === did);
 		if (!foundSource) { return null; }
-		return { label: foundSource.name, value: foundSource._id };
+		return { label: `${foundSource.name} (${foundSource.originalName})`, value: foundSource._id };
 	}).filter(t => t);
 	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
@@ -326,7 +326,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						            	console.log(v);
 						            	setDatasourcesState(v ? [v[v.length-1]] : []);
 					            	}}
-						            options={datasources.map(t => ({ label: `${t.originalName || t.name} (${t.sourceType})`, value: t._id, ...t }))}
+						            options={datasources.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
 						            formatOptionLabel={(data: any) => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
