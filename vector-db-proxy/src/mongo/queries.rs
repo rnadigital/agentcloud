@@ -15,15 +15,11 @@ pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option
         )
         .await
     {
-        Ok(datasource) => {
-            return Ok(match datasource {
-                Some(d) => return Ok(Some(d)),
-                None => None,
-            })
-        }
-        Err(e) => {
-            return Err(anyhow!("Some error: {}", e));
-        }
+        Ok(datasource) => Ok(match datasource {
+            Some(d) => return Ok(Some(d)),
+            None => None,
+        }),
+        Err(e) => Err(anyhow!("Some error: {}", e)),
     }
 }
 

@@ -1,3 +1,4 @@
+use bson::DateTime;
 use chrono::Utc;
 use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
@@ -34,8 +35,8 @@ pub struct DataSources {
     pub chunkStrategy: Option<String>,
     pub chunkCharacter: Option<String>,
     pub connectionSettings: Option<DatasourceConnectionSettings>,
-    pub lastSyncedDate: Option<chrono::DateTime<Utc>>,
-    pub discoveredSchema: Option<Value>,
+    pub lastSyncedDate: Option<DateTime>,
+    pub createdDate: Option<DateTime>,
 }
 #[derive(Serialize, Deserialize)]
 pub enum ChunkingStrategy {
