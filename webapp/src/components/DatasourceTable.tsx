@@ -94,40 +94,38 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 				<tbody className='bg-white divide-y divide-gray-200'>
 					{datasources.map((datasource) => (
 						<tr key={datasource._id}>
-							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
-				                    <img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />
-									{datasource.sourceType}
+							<td className='px-6 py-3 whitespace-nowrap flex items-center'>
+								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />								
+								<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
+				                    {datasource.sourceType}
 								</span>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap'>
 								<div className='flex items-center'>
-									<div className='ml-4'>
-										<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
-									</div>
+									<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
 								</div>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
 									{datasource.status || 'Unknown'}
 								</span>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>
 									{datasource?.connectionSettings?.scheduleType || '-'}
 								</span>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap'>
 								<div className='text-sm text-gray-900'>
 									{datasource.sourceType === 'file' ? 'N/A' : (datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : 'Never')}
 								</div>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className='text-sm text-gray-900'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-4 items-center'>
+							<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 								{datasource.sourceType !== 'file' && <button 
 									onClick={() => syncDatasource(datasource._id)} 
 									disabled={syncing[datasource._id] || deleting[datasource._id]}
