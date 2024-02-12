@@ -6,8 +6,12 @@ export type Notification = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
 	teamId?: ObjectId;
-	targetId: ObjectId;
-	targetCollection: string;
+	target: {
+		id: string;
+		collection: string;
+		property: string;
+		objectId: boolean;
+	};
 	title: string;
 	description: string;
 	date: Date;

@@ -17,7 +17,7 @@ import { toast } from 'react-toastify';
 import { datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 
-export default function DatasourceCards({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
+export default function DatasourceTable({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;

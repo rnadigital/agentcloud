@@ -18,3 +18,4 @@ export async function notificationsJson(req, res, next) {
 	const data = await notificationsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
+

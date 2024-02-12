@@ -13,20 +13,19 @@ export function NotificationWrapper({ children }) {
 	const [_chatContext, setChatContext]: any = useChatContext();
 
 	function refreshNotificationContext() {
+		console.log('refreshNotificationContext');
 		if (!resourceSlug) { return; }
 		API.getNotifications({
 			resourceSlug,
 		}, (data) => {
 			console.log('refreshNotificationContext', data);
-			setSharedState(data?.notifications);
+			setSharedState(data);
 		}, null, null);
 	}
 	
 	useEffect(() => {
-		if (!Array.isArray(sharedState)) {
-			refreshNotificationContext();
-		}
-	}, [router.asPath]);
+		refreshNotificationContext();
+	}, []); //TODO: what should be the variables?
 
 	return (
 		<NotificationContext.Provider value={sharedState}>
