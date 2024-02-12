@@ -147,6 +147,9 @@ impl Chunking for TextChunker {
             metadata,
             embedding_vector: None,
         };
-        chunker.split_documents(vec![doc]).await
+        let Ok(results) = chunker.split_documents(vec![doc]).await else {
+            return Err(anyhow!("Chunker returned an empty document!"));
+        };
+        Ok(results)
     }
 }

@@ -14,7 +14,7 @@ use crate::rabbitmq::models::RabbitConnect;
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
@@ -72,7 +72,6 @@ async fn apply_chunking_strategy_to_document(
     chunking_character: Option<String>,
     embedding_models: Option<String>,
 ) -> Result<Vec<DocumentModel>> {
-    let mut chunks: Vec<DocumentModel> = vec![];
     let chunker = TextChunker::default();
     let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
     match chunker
@@ -85,10 +84,9 @@ async fn apply_chunking_strategy_to_document(
         )
         .await
     {
-        Ok(c) => chunks = c,
-        Err(e) => println!("An error occurred: {}", e),
+        Ok(c) => Ok(c),
+        Err(e) => Err(anyhow!("An error occurred: {}", e)),
     }
-    Ok(chunks)
 }
 
 async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
