@@ -105,6 +105,11 @@ initialize_environment() {
 	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
 	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
 	[ -z "$OPENAI_API_KEY" ] && read -p "Enter your OpenAI API key: " OPENAI_API_KEY
+	export PROJECT_ID
+	export SERVICE_ACCOUNT_JSON_PATH
+	export GCS_BUCKET_LOCATION
+	export GCS_BUCKET_NAME
+	export OPENAI_API_KEY
 }
 
 initialize_environment

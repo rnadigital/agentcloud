@@ -130,6 +130,7 @@ services:
       - RABBITMQ_ROUTING_KEY=key
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
+      - QDRANT_URI=http://qdrant:6334
 
   qdrant:
     ports:
