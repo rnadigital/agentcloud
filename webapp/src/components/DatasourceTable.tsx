@@ -128,7 +128,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-4 items-center'>
-								{datasource.sourceType !== 'file' &&  <button 
+								{datasource.sourceType !== 'file' && <button 
 									onClick={() => syncDatasource(datasource._id)} 
 									disabled={syncing[datasource._id] || deleting[datasource._id]}
 									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
@@ -137,9 +137,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 									{syncing[datasource._id] && <ButtonSpinner />}
 									{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
 								</button>}
-		                        {datasource.sourceType !== 'file' && <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
+		                        <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
-		                        </a>}
+		                        </a>
 		                        <button
 		                        	onClick={() => deleteDatasource(datasource._id)}
 		                        	className='text-red-500 hover:text-red-700'

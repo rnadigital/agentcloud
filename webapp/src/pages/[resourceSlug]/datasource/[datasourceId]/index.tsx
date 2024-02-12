@@ -194,7 +194,7 @@ export default function Datasource(props) {
 			</button>
 		</div>
 
-		<DatasourceTabs callback={setTab} current={tab} />
+		<DatasourceTabs callback={setTab} current={tab} datasource={datasource} />
 
 		{/*TODO: component that takes discoveredSchema and datasource*/}
 		{tab === 0 && <>
@@ -202,7 +202,7 @@ export default function Datasource(props) {
 			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
 				<StreamsList
 					streams={discoveredSchema.discoveredSchema.catalog.streams}
-					existingStreams={datasource.connectionSettings.syncCatalog.streams}
+					existingStreams={datasource?.connectionSettings?.syncCatalog?.streams}
 				/>
 				<button
 					onClick={(e) => updateStreams(e)}
@@ -278,8 +278,8 @@ export default function Datasource(props) {
 			</div>
 		</>}
 
-		{tab === 2 && <div className='space-y-3'>
-			{editingSchedule === false&& <div className='my-2'>
+		{tab === 2 && datasource.sourceType === 'file' && <div className='space-y-3'>
+			{editingSchedule === false && <div className='my-2'>
 				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
 				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
@@ -329,6 +329,14 @@ export default function Datasource(props) {
 					Cancel
 				</button>}
 			</div>
+		</div>}
+		
+		{tab === 3 && <div className='space-y-3'>
+			Visualisation
+		</div>}
+		
+		{tab === 4 && <div className='space-y-3'>
+			Settings
 		</div>}
 
 	</>);

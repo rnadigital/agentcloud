@@ -3,8 +3,9 @@
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
+import { DatasourceStatus } from 'struct/datasource';
 
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
 import { dynamicResponse } from '../util';
@@ -126,7 +127,10 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			const datasource = await getDatasourceByIdUnsafe(payload.datasourceId);
 			if (datasource) {
 				io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
-				await setDatasourceLastSynced(datasource.teamId, payload.datasourceId, new Date());
+				await Promise.all([
+					setDatasourceLastSynced(datasource.teamId, payload.datasourceId, new Date()),
+					setDatasourceStatus(datasource.teamId, payload.datasourceId, DatasourceStatus.READY)
+				]);
 			}
 		}
 	}
