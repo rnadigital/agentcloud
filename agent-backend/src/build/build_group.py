@@ -112,7 +112,7 @@ class ChatBuilder:
                 "task": "qa",
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
-                "client": qdc.get_connection(host="localhost", port=6333),
+                "client": qdc.get_connection(host="qdrant", port=6333),
                 # "embedding_model": "BAII/bge-small-en",
                 "embedding_model": datasource["model"],
                 "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
