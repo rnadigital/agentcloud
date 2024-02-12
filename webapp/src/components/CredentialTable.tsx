@@ -53,7 +53,7 @@ export default function CredentialTable({ credentials, fetchCredentials }: { cre
 				title={'Delete Credential'}
 				message={deletingCredential && `Are you sure you want to delete the ${deletingCredential?.type} credential "${deletingCredential?.name}". This action cannot be undone.`}
 			/>
-			<div className='rounded-lg overflow-hidden shadow'>
+			<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 				<table className='min-w-full divide-y divide-gray-200'>
 					<thead className='bg-gray-50'>
 						<tr>

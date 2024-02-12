@@ -166,7 +166,7 @@ export default withRouter(function Layout(props) {
 													</ul>
 												</li>
 												<li>
-													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
+													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => (
 															<li key={item.name} className={item.indent ? `ps-${item.indent}` : 'ps-4'}>
@@ -287,7 +287,7 @@ export default withRouter(function Layout(props) {
 									</ul>
 								</li>
 								<li>
-									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Agents</div>}
+									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 									<ul role='list' className='-mx-2 space-y-1'>
 										{agentNavigation.map((item) => (
 											<li key={item.name} className={item.indent ? `ps-${item.indent}` : ''}>
@@ -309,7 +309,7 @@ export default withRouter(function Layout(props) {
 									</ul>
 								</li>
 								<li className='mt-auto'>
-									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
+									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
 									<ul role='list' className='-mx-2 mt-2 space-y-1'>
 										{teamNavigation.map((item) => (
 											<li key={item.name}>

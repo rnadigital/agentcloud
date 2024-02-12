@@ -64,7 +64,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 
 	return (
 
-		<div className='rounded-lg overflow-hidden shadow'>
+		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 			<table className='min-w-full divide-y divide-gray-200'>
 				<thead className='bg-gray-50'>
 					<tr>
