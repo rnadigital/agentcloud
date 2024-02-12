@@ -37,17 +37,19 @@ async fn extract_text_from_file(
             let path_clone = path.clone();
             (document_text, metadata) = chunker
                 .extract_text_from_pdf(path_clone)
-                .expect("TODO: panic message");
+                .expect("Could not extract text from PDF file");
         }
         FileType::TXT => {
             let path_clone = path.clone();
             (document_text, metadata) = chunker
                 .extract_text_from_txt(path_clone)
-                .expect("TODO: panic message");
+                .expect("Could not extract text from TXT file");
         }
         FileType::DOCX => {
             let path_clone = path.clone();
-            (document_text, metadata) = chunker.extract_text_from_docx(path_clone).unwrap();
+            (document_text, metadata) = chunker
+                .extract_text_from_docx(path_clone)
+                .expect("Could not extract text from DOCX file");
         }
         FileType::DOC => return None,
         FileType::UNKNOWN => return None,
@@ -172,6 +174,7 @@ pub async fn subscribe_to_queue(
                                                         // dynamically get user's chunking strategy of choice from the database
                                                         let model_obj_clone =
                                                             model_parameters.clone();
+                                                        let model_name = model_obj_clone.model;
                                                         let datasources_clone =
                                                             datasource.unwrap().clone();
                                                         let chunking_character =
@@ -199,6 +202,7 @@ pub async fn subscribe_to_queue(
                                                                         &element.embedding_vector;
                                                                     match embedding_vector {
                                                                         Some(val) => {
+                                                                            let model = EmbeddingModels::from(model_name.clone());
                                                                             if let Some(point_struct) =
                                                                                 construct_point_struct(
                                                                                     val,
@@ -206,6 +210,7 @@ pub async fn subscribe_to_queue(
                                                                                         .metadata
                                                                                         .clone()
                                                                                         .unwrap(),
+                                                                                    Some(model)
                                                                                 )
                                                                                 .await
                                                                             {
@@ -223,8 +228,6 @@ pub async fn subscribe_to_queue(
                                                                 let vector_length = model_parameters
                                                                     .embeddingLength
                                                                     as u64;
-                                                                let model_name =
-                                                                    model_obj_clone.model;
                                                                 let qdrant_conn_clone =
                                                                     Arc::clone(&app_data);
                                                                 let qdrant = Qdrant::new(

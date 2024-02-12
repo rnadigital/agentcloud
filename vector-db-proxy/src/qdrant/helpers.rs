@@ -244,16 +244,26 @@ pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<V
 pub async fn construct_point_struct(
     vector: &Vec<f32>,
     payload: HashMap<String, String>,
+    embedding_models: Option<EmbeddingModels>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
-        let qdrant_point_struct = PointStruct::new(
-            Uuid::new_v4().to_string(),
-            HashMap::from([(String::from("fast-bge-small-en"), vector.to_owned())]), //TODO: not hardcode
-            json!(payload).try_into().unwrap(),
-        );
-        Some(qdrant_point_struct)
-    } else {
-        println!("Metadata payload is empty!");
-        None
+        let test = embedding_models.unwrap().to_str().unwrap();
+        return if let Some(model_name) = embedding_models {
+            if let Some(model) = model_name.to_str() {
+                let qdrant_point_struct = PointStruct::new(
+                    Uuid::new_v4().to_string(),
+                    HashMap::from([(String::from(model), vector.to_owned())]), //TODO: not hardcode
+                    json!(payload).try_into().unwrap(),
+                );
+                Some(qdrant_point_struct)
+            } else {
+                eprintln!("Could not convert model to a string slice");
+                None
+            }
+        } else {
+            println!("Embedding Model name is None");
+            None
+        };
     }
+    None
 }
