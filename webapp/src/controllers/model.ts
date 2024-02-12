@@ -87,6 +87,7 @@ export async function modelAddApi(req, res, next) {
 		credentialId: credentialId ? toObjectId(credentialId) : null,
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
+		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });

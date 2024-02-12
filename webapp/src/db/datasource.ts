@@ -3,7 +3,7 @@
 import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
-import { Datasource, DatasourceConnectionSettings } from 'struct/datasource';
+import { Datasource, DatasourceConnectionSettings,DatasourceStatus } from 'struct/datasource';
 import { InsertResult } from 'struct/db';
 
 const log = debug('webapp:db:datasources');
@@ -69,6 +69,17 @@ export async function setDatasourceLastSynced(teamId: db.IdOrStr, datasourceId: 
 	}, {
 		$set: {
 			lastSyncedDate,
+		},
+	});
+}
+
+export async function setDatasourceStatus(teamId: db.IdOrStr, datasourceId: db.IdOrStr, status: DatasourceStatus): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			status,
 		},
 	});
 }

@@ -36,6 +36,7 @@ pub struct DataSources {
     pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<DateTime>,
     pub createdDate: Option<DateTime>,
+    pub status: String,
 }
 #[derive(Serialize, Deserialize)]
 pub enum ChunkingStrategy {
@@ -64,4 +65,5 @@ pub struct Model {
     pub name: String,
     pub model: String,
     pub embeddingLength: i32,
+    pub modelType: String
 }

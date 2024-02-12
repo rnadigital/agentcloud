@@ -3,6 +3,10 @@
 # Get the width of the terminal
 terminal_width=$(tput cols)
 
+command -v docker-compose >/dev/null 2>&1 || { echo >&2 "docker-compose is required but it's not installed. Aborting."; exit 1; }
+command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
+
 print_logo() {
     clear
     if [ "$terminal_width" -gt 120 ]; then
@@ -49,7 +53,7 @@ usage() {
 docker_up() {
     if [ $# -eq 1 ]; then
         local service_name=$1
-        docker compose up "$service_name" -d
+        docker compose up "$service_name" --build -d
         if [ $? -ne 0 ]; then
             echo "Couldn't start docker services, ensure the docker daemon is running then try again"
             exit 1
@@ -88,33 +92,22 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+initialize_environment() {
+	# Initialize variables with defaults or arguments
+	PROJECT_ID="${PROJECT_ID:-}"
+	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
+	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
+	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
+	OPENAI_API_KEY="${OPENAI_API_KEY:-}"
+	# Check and ask for missing variables
+	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
+	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
+	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
+	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+	[ -z "$OPENAI_API_KEY" ] && read -p "Enter your OpenAI API key: " OPENAI_API_KEY
+}
 
-# Ask for input if not provided in arguments
-if [ -z "$PROJECT_ID" ]; then
-    read -p "Enter your GCP project ID: " PROJECT_ID
-fi
-export PROJECT_ID
-
-if [ -z "$SERVICE_ACCOUNT_JSON_PATH" ]; then
-    read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
-fi
-cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
-
-if [ -z "$GCS_BUCKET_NAME" ]; then
-    read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
-fi
-export GCS_BUCKET_NAME
-
-if [ -z "$GCS_BUCKET_LOCATION" ]; then
-    read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
-fi
-export GCS_BUCKET_LOCATION
-
-if [ -z "$OPENAI_API_KEY" ]; then
-    read -p "Enter your OpenAI API key: " OPENAI_API_KEY
-fi
-export OPENAI_API_KEY
-
+initialize_environment
 print_logo "=> Starting airbyte"
 
 # clone and install airbyte
@@ -140,6 +133,4 @@ export AIRBYTE_ADMIN_DESTINATION_ID=`echo $CREATED_DESTINATION | jq -r '.destina
 
 print_logo "=> Starting agentcloud backend..."
 
-docker compose up -d
-
-echo "AIRBYTE_ADMIN_DESTINATION_ID=$AIRBYTE_ADMIN_DESTINATION_ID"
+docker compose up --build -d

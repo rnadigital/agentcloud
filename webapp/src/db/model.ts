@@ -12,6 +12,7 @@ export type Model = {
 	credentialId: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
 	model: string;
+	modelType: 'embedding' | 'llm';
 	embeddingLength: number;
 }
 

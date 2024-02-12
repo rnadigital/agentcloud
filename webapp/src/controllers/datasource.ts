@@ -16,6 +16,7 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
 import deleteCollectionFromQdrant from 'vectordb/proxy';
@@ -191,6 +192,7 @@ export async function testDatasourceApi(req, res, next) {
 	    lastSyncedDate: null,
 	    discoveredSchema,
 	    createdDate: new Date(),
+	    status: DatasourceStatus.DRAFT,
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -665,6 +667,7 @@ export async function uploadFileApi(req, res, next) {
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
 	    createdDate: new Date(),
+	    status: DatasourceStatus.READY, //TODO: have a feedback message when actually READY/set this from vector db proxy
 	});
 	
 	// Send the gcs file path to rabbitmq

@@ -26,7 +26,7 @@ import validator from '@rjsf/validator-ajv8';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
-import { getSubmitButtonOptions,RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
+import { getSubmitButtonOptions, RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
 import { StreamsList } from 'components/DatasourceStream';
 
 const stepList = [
@@ -238,7 +238,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									}
 									setModelId(v?.value);
 				            	}}
-					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new embedding model', value: null }])}
 					            formatOptionLabel={data => {
 									const m = models.find(m => m._id === data?.value);
 					                return (<li

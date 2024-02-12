@@ -246,7 +246,7 @@ export default function Datasource(props) {
 
 		{/*TODO: component that takes jobList*/}
 		{tab === 1 && <>
-			<div className='rounded-lg overflow-hidden shadow-lg mt-4'>
+			<div className='rounded-lg overflow-hidden shadow mt-4'>
 				<table className='min-w-full divide-y divide-gray-200'>
 					<thead className='bg-gray-50'>
 						<tr>

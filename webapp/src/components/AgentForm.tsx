@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AgentType } from 'struct/agent';
-import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
@@ -35,7 +35,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	}).filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
 
-	//TODO: improve
 	const initialDatasources = agent.datasourceIds && agent.datasourceIds.map(did => {
 		const foundSource = datasources.find(d => d._id === did);
 		if (!foundSource) { return null; }

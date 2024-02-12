@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { CredentialType } from 'struct/credential';
-import { ModelEmbeddingLength, ModelList } from 'struct/model';
+import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';

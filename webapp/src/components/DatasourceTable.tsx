@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
 import {
 	ArrowPathIcon,
@@ -8,14 +9,13 @@ import {
 	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
+import { datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
 
 export default function DatasourceCards({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 
@@ -68,14 +68,14 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 			<table className='min-w-full divide-y divide-gray-200'>
 				<thead className='bg-gray-50'>
 					<tr>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+							Type
+						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Name
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-							№ Streams
-						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-							Source Type
+							Status
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Schedule Type
@@ -86,7 +86,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Date Uploaded
 						</th>
-						<th scope='col' colSpan={3} className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 							Actions
 						</th>
 					</tr>
@@ -95,6 +95,12 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 					{datasources.map((datasource) => (
 						<tr key={datasource._id}>
 							<td className='px-6 py-4 whitespace-nowrap'>
+								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
+				                    <img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />
+									{datasource.sourceType}
+								</span>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
 								<div className='flex items-center'>
 									<div className='ml-4'>
 										<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
@@ -102,14 +108,8 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 rounded-full capitalize'>
-									{datasource?.connectionSettings?.syncCatalog?.streams?.length || '1'}
-								</span>
-							</td>
-							<td className='px-6 py-4 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize'>
-				                    <img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />
-									{datasource.sourceType}
+								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
+									{datasource.status || 'Unknown'}
 								</span>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
@@ -119,7 +119,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<div className='text-sm text-gray-900'>
-									{datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : (datasource.sourceType === 'file' ? 'N/A' : 'Never')}
+									{datasource.sourceType === 'file' ? 'N/A' : (datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : 'Never')}
 								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
@@ -127,7 +127,7 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>
-							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+							<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-4 items-center'>
 								{datasource.sourceType !== 'file' &&  <button 
 									onClick={() => syncDatasource(datasource._id)} 
 									disabled={syncing[datasource._id] || deleting[datasource._id]}
@@ -137,13 +137,9 @@ export default function DatasourceCards({ datasources, fetchDatasources }: { dat
 									{syncing[datasource._id] && <ButtonSpinner />}
 									{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
 								</button>}
-							</td>
-							<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
 		                        {datasource.sourceType !== 'file' && <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
 		                        </a>}
-		                    </td>
-							<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
 		                        <button
 		                        	onClick={() => deleteDatasource(datasource._id)}
 		                        	className='text-red-500 hover:text-red-700'
