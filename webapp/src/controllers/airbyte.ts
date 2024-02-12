@@ -110,7 +110,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	// TODO: TODO'nt
 	const regex = /Your connection ([\w-]+) from (\w+) to (\w+) succeeded.*sync started on (.*), running for (\d+ seconds).*logs here: (http:\/\/localhost:8000\/workspaces\/[\w-]+\/connections\/[\w-]+).*Job ID: (\d+)/s;
 
-	const match = req.body.text.match(regex);
+	const match = req?.body?.text?.match(regex);
 
 	if (match) {
 		const payload = {

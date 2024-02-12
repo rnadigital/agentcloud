@@ -60,11 +60,6 @@ export default function router(server, app) {
 	// Default options for express-fileupload
 	server.use(fileUpload());
 
-	// Airbyte webhooks
-	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
-	webhookRouter.post('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
-	server.use('/webhook', webhookRouter);
-
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
@@ -88,7 +83,7 @@ export default function router(server, app) {
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 
-	//airbyte proxy routes (NOTE: should it
+	//airbyte proxy routes
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
@@ -172,6 +167,11 @@ export default function router(server, app) {
 
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
+
+	// Airbyte webhooks
+	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
+	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	server.use('/webhook', webhookRouter);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
 

@@ -10,7 +10,7 @@ import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
@@ -171,6 +171,26 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}
 	}
 
+	const MemoizedRJSF = useMemo(() => spec && (<TailwindForm
+		schema={spec.schema.connectionSpecification}
+		templates={{ ButtonTemplates: { SubmitButton } }}
+		validator={validator}
+		onSubmit={datasourcePost}
+		transformErrors={(errors) => {
+			return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
+		}}
+		noHtml5Validate
+	>
+		<button
+			disabled={submitting}
+			type='submit'
+			className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+		>
+			{submitting && <ButtonSpinner />}
+			{submitting ? 'Testing connection...' : 'Submit'}
+		</button>
+	</TailwindForm>), [spec]);
+
 	function getStepSection(_step) {
 		//TODO: make steps enum
 		switch (_step) {
@@ -329,25 +349,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setCronTimezone={setCronTimezone}
 									/>
 								</div>
-								<TailwindForm
-									schema={spec.schema.connectionSpecification}
-									templates={{ ButtonTemplates: { SubmitButton } }}
-									validator={validator}
-									onSubmit={datasourcePost}
-									transformErrors={(errors) => {
-										return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
-									}}
-									noHtml5Validate
-								>
-									<button
-										disabled={submitting}
-										type='submit'
-										className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-									>
-										{submitting && <ButtonSpinner />}
-										{submitting ? 'Testing connection...' : 'Submit'}
-									</button>
-								</TailwindForm>
+								{MemoizedRJSF}
 							</>}
 		
 					</div>
@@ -377,6 +379,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						type='submit'
 						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
+						{submitting && <ButtonSpinner />}
 						Continue
 					</button>
 				</form>;
@@ -421,6 +424,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							type='submit'
 							className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 						>
+							{submitting && <ButtonSpinner />}
 							Continue
 						</button>
 					</form>
