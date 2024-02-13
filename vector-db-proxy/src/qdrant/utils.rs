@@ -273,7 +273,7 @@ impl Qdrant {
         {
             Ok(result) => match result {
                 true => {
-                    let result = qdrant_conn
+                    match qdrant_conn
                         .upsert_points_batch_blocking(
                             &self.collection_name,
                             None,
@@ -281,10 +281,22 @@ impl Qdrant {
                             None,
                             100,
                         )
-                        .await?;
-                    match result.result.unwrap().status {
-                        2 => Ok(true),
-                        _ => Ok(false),
+                        .await
+                    {
+                        Ok(res) => match res.result {
+                            Some(stat) => match stat.status {
+                                2 => {
+                                    println!("upload success");
+                                    Ok(true)
+                                }
+                                _ => {
+                                    println!("Upload failed");
+                                    Ok(false)
+                                }
+                            },
+                            None => Err(anyhow!("Results returned None")),
+                        },
+                        Err(e) => Err(anyhow!("There was an error upserting to qdrant: {}", e)),
                     }
                 }
                 false => {
