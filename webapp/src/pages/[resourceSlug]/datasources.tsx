@@ -14,7 +14,7 @@ import * as API from '../../api';
 export default function Datasources(props) {
 
 	const [accountContext]: any = useAccountContext();
-	const [x, y, notificationTrigger]: any = useSocketContext();
+	const [, notificationTrigger]: any = useSocketContext();
 	const { account, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;

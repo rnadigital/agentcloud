@@ -1,9 +1,8 @@
+import * as API from '@api';
 import debug from 'debug';
 import { useRouter } from 'next/router';
 import posthog from 'posthog-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-import * as API from '../api';
 const log = debug('webapp:context');
 
 const AccountContext = createContext({});
@@ -50,7 +49,7 @@ export function AccountWrapper({ children, pageProps }) {
 		}
 	}, [sharedState?.account?.name]);
 
-	log('AppWrapper sharedState %O', sharedState);
+	// log('AppWrapper sharedState %O', sharedState);
 
 	return (
 		<AccountContext.Provider value={[sharedState, refreshAccountContext]}>
