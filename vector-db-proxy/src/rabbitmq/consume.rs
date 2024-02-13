@@ -254,9 +254,12 @@ pub async fn subscribe_to_queue(
                                                                         )
                                                                         .await
                                                                     {
-                                                                        Ok(_) => println!(
-                                                                            "points uploaded successfully!"
-                                                                        ),
+                                                                        Ok(_) => {
+                                                                            // todo: @Tom make api call here to let webapp know that points have been uploaded to qdrant
+                                                                            println!(
+                                                                                "points uploaded successfully!"
+                                                                            )
+                                                                        },
                                                                         Err(e) => {
                                                                             println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
                                                                         }
