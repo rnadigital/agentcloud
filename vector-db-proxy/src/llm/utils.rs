@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
 use fastembed::{EmbeddingBase, FlagEmbedding, InitOptions};
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
+use ort::ExecutionProviderDispatch;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc as arc;
 use std::sync::Arc;
@@ -13,10 +14,10 @@ use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::qdrant::helpers::reverse_embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
+
 pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<Vec<Vec<f32>>> {
     match model {
         EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
-
         // Group all fast embed models together
         EmbeddingModels::BAAI_BGE_SMALL_EN
         | EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5
@@ -32,6 +33,9 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
                         let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                             model_name: translation,
                             show_download_message: true,
+                            execution_providers: vec![ExecutionProviderDispatch::CoreML(
+                                ort::CoreMLExecutionProvider::default(),
+                            )],
                             ..Default::default()
                         })?;
                         let embeddings = model.passage_embed(text, None)?;

@@ -76,7 +76,7 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
     let rabbitmq_host = global_data.rabbitmq_host.clone();
-    let rabbitmq_port = global_data.rabbitmq_port.clone();
+    let rabbitmq_port = global_data.rabbitmq_port;
     let rabbitmq_stream = global_data.rabbitmq_stream.clone();
     let rabbitmq_exchange = global_data.rabbitmq_exchange.clone();
     let rabbitmq_routing_key = global_data.rabbitmq_routing_key.clone();

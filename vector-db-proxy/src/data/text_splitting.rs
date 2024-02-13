@@ -1,5 +1,6 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
+use crate::llm::utils::embed_text;
 use crate::llm::{models::EmbeddingModels, utils::LLM};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
@@ -13,6 +14,7 @@ struct Sentence {
     distance_to_next: Option<f32>,
     sentence: Option<String>,
 }
+
 // a sentence should also have the associated text
 impl Default for Sentence {
     fn default() -> Self {
@@ -84,7 +86,7 @@ impl Chunker {
         let mut sentence_list: Vec<&str> = vec![];
         match &self.chunking_strategy.as_ref().unwrap() {
             ChunkingStrategy::SEMANTIC_CHUNKING => {
-                sentence_list = text.split(&['.', '?', '!'][..]).collect();
+                sentence_list = text.split(&['.', '?', '!']).collect();
             }
             ChunkingStrategy::CHARACTER_CHUNKING => {
                 sentence_list = text
@@ -143,41 +145,60 @@ impl Chunker {
                             let breakpoint_distance_threshold =
                                 percentile(&distances, breakpoint_percentile_threshold);
 
-                            let indices_above_thresh: Vec<usize> = distances
+                            // Initialize accumulators for indices above and below the threshold
+                            let (indices_above_thresh, indices_below_threshold): (
+                                Vec<usize>,
+                                Vec<usize>,
+                            ) = distances
                                 .iter()
                                 .enumerate()
-                                .filter_map(|(i, &d)| {
-                                    if d > breakpoint_distance_threshold {
-                                        Some(i)
-                                    } else {
-                                        None
+                                // Use fold to iterate once, separating indices based on the threshold
+                                .fold((vec![], vec![]), |(mut above, mut below), (i, &d)| {
+                                    if d >= breakpoint_distance_threshold {
+                                        above.push(i);
+                                    } else if d < breakpoint_distance_threshold {
+                                        below.push(i);
                                     }
-                                })
-                                .collect();
+                                    (above, below)
+                                });
+
+                            println!("Indices above threshold:  {:?}", &indices_above_thresh);
+
                             let mut start_index = 0;
-                            for index in indices_above_thresh {
-                                let group = &sentences[start_index..=index];
-                                let combined_text = group
-                                    .iter()
-                                    .map(|d| d["sentence"].as_str())
-                                    .collect::<Vec<&str>>()
-                                    .join(". ");
-                                let doc = Document::new(
-                                    combined_text,
-                                    None,
-                                    Some(embeddings[index].to_owned()),
-                                );
-                                chunks.push(doc);
-                                start_index = index + 1;
+                            for &index in &indices_above_thresh {
+                                // Ensure the current index has not already been processed
+                                if index >= start_index {
+                                    // Create a chunk from start_index up to the current index
+                                    let group = &sentences[start_index..=index];
+                                    let combined_text = group
+                                        .iter()
+                                        .map(|d| d["sentence"].as_str())
+                                        .collect::<Vec<&str>>()
+                                        .join(". ");
+                                    // embed the new combined text and insert into document
+                                    let new_embedding =
+                                        embed_text(vec![&combined_text], &self.embedding_model)
+                                            .await
+                                            .unwrap();
+                                    let doc = Document::new(
+                                        combined_text,
+                                        None,
+                                        Some(new_embedding[0].to_owned()),
+                                    );
+                                    chunks.push(doc);
+
+                                    // Update start_index to the next sentence after the current chunk
+                                    start_index = index + 1;
+                                }
                             }
 
-                            if start_index < sentences.len() {
-                                let combined_text = sentences[start_index..]
-                                    .iter()
-                                    .map(|d| d["sentence"].as_str())
-                                    .collect::<Vec<&str>>()
-                                    .join(" ");
-                                let doc = Document::new(combined_text, None, None);
+                            // Ensure any remaining sentences are captured in a final chunk
+                            for sent in indices_below_threshold {
+                                let doc = Document::new(
+                                    sentences[sent]["sentence"].to_string(),
+                                    None,
+                                    Some(embeddings[sent].to_owned()),
+                                );
                                 chunks.push(doc);
                             }
                         }
