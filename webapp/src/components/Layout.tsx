@@ -17,6 +17,7 @@ import {
 	WrenchScrewdriverIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
+import DebugLogs from 'components/DebugLogs';
 import NotificationBell from 'components/NotificationBell';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -443,6 +444,9 @@ export default withRouter(function Layout(props) {
 							<div className='flex items-center gap-x-4 lg:gap-x-6'>
 								{/* Notification Bell */}
 								<NotificationBell />
+
+								{/* debug logs */}
+								<DebugLogs />
 								
 								{/* Separator */}
 								<div

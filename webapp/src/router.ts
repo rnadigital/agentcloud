@@ -67,6 +67,10 @@ export default function router(server, app) {
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
+
+	//Remove: for debug/testing, docker logs
+	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
+
 	server.post('/stripe-paymentlink', authedMiddlewareChain, stripeController.createPaymentLink);
 	server.post('/stripe-portallink', authedMiddlewareChain, stripeController.createPortalLink);
 
