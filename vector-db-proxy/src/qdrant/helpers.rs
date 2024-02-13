@@ -15,7 +15,8 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::hash_map_values_as_serde_values;
-use crate::llm::{models::EmbeddingModels, utils::LLM};
+use crate::llm::utils::embed_text;
+use crate::llm::{models::EmbeddingModels};
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
 use crate::mongo::queries::get_embedding_model;
@@ -201,9 +202,8 @@ pub async fn embed_payload(
             let payload: HashMap<String, serde_json::Value> =
                 hash_map_values_as_serde_values!(data);
             if let Ok(metadata) = json!(payload).try_into() {
-                let llm_struct = LLM::new();
                 // Embedding sentences using OpenAI ADA2
-                let embedding_vec = llm_struct.embed_text(vec![&text], &embedding_model).await?;
+                let embedding_vec = embed_text(vec![&text], &embedding_model).await?;
                 // Construct PointStruct to insert into DB
                 if !embedding_vec.is_empty() {
                     if let Some(embedding) = embedding_vec.into_iter().next() {
@@ -247,7 +247,6 @@ pub async fn construct_point_struct(
     embedding_models: Option<EmbeddingModels>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
-        let test = embedding_models.unwrap().to_str().unwrap();
         return if let Some(model_name) = embedding_models {
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(

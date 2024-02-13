@@ -1,17 +1,73 @@
-use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
 use fastembed::{EmbeddingBase, FlagEmbedding, InitOptions};
-use futures_util::stream::FuturesOrdered;
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
 use qdrant_client::client::QdrantClient;
+use std::sync::Arc as arc;
 use std::sync::Arc;
+use tokio::sync::mpsc;
 use tokio::sync::RwLock;
+use tokio::task;
 
 use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::qdrant::helpers::reverse_embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
+pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<Vec<Vec<f32>>> {
+    match model {
+        EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
+
+        // Group all fast embed models together
+        EmbeddingModels::BAAI_BGE_SMALL_EN
+        | EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5
+        | EmbeddingModels::BAAI_BGE_BASE_EN
+        | EmbeddingModels::BAAI_BGE_BASE_EN_V1_5
+        | EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5
+        | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
+        | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
+            Some(m) => {
+                let model = FastEmbedModels::from(m.to_string());
+                match FastEmbedModels::translate(&model) {
+                    Some(translation) => {
+                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                            model_name: translation,
+                            show_download_message: true,
+                            ..Default::default()
+                        })?;
+                        let embeddings = model.passage_embed(text, None)?;
+                        Ok(embeddings)
+                    }
+                    None => Err(anyhow!(
+                        "Model does not match any known fast embed model variants"
+                    )),
+                }
+            }
+            None => Err(anyhow!("Model type unknown")),
+        },
+
+        // Group all OAI models
+        _ => match model.to_str() {
+            Some(m) => {
+                let backoff = backoff::ExponentialBackoffBuilder::new()
+                    .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                    .build();
+                let client = async_openai::Client::new().with_backoff(backoff);
+                let request = CreateEmbeddingRequestArgs::default()
+                    .model(m)
+                    .input(text)
+                    .build()?;
+                let response = client.embeddings().create(request).await?;
+                let embedding: Vec<Vec<f32>> = response
+                    .data
+                    .iter()
+                    .map(|data| data.clone().embedding)
+                    .collect();
+                Ok(embedding)
+            }
+            None => Err(anyhow!("Model type is unknown")),
+        },
+    }
+}
 
 pub struct LLM;
 
@@ -33,65 +89,6 @@ impl LLM {
     /// ```
     ///
     /// ```
-    pub async fn embed_text(
-        &self,
-        text: Vec<&String>,
-        model: &EmbeddingModels,
-    ) -> Result<Vec<Vec<f32>>> {
-        match model {
-            EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
-
-            // Group all fast embed models together
-            EmbeddingModels::BAAI_BGE_SMALL_EN
-            | EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5
-            | EmbeddingModels::BAAI_BGE_BASE_EN
-            | EmbeddingModels::BAAI_BGE_BASE_EN_V1_5
-            | EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5
-            | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
-            | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
-                Some(m) => {
-                    let model = FastEmbedModels::from(m.to_string());
-                    match FastEmbedModels::translate(&model) {
-                        Some(translation) => {
-                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                                model_name: translation,
-                                show_download_message: true,
-                                ..Default::default()
-                            })?;
-                            let embeddings = model.passage_embed(text, None)?;
-                            Ok(embeddings)
-                        }
-                        None => Err(anyhow!(
-                            "Model does not match any known fast embed model variants"
-                        )),
-                    }
-                }
-                None => Err(anyhow!("Model type unknown")),
-            },
-
-            // Group all OAI models
-            _ => match model.to_str() {
-                Some(m) => {
-                    let backoff = backoff::ExponentialBackoffBuilder::new()
-                        .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                        .build();
-                    let client = async_openai::Client::new().with_backoff(backoff);
-                    let request = CreateEmbeddingRequestArgs::default()
-                        .model(m)
-                        .input(text)
-                        .build()?;
-                    let response = client.embeddings().create(request).await?;
-                    let embedding: Vec<Vec<f32>> = response
-                        .data
-                        .iter()
-                        .map(|data| data.clone().embedding)
-                        .collect();
-                    Ok(embedding)
-                }
-                None => Err(anyhow!("Model type is unknown")),
-            },
-        }
-    }
 
     pub async fn embed_text_chunks_async(
         &self,
@@ -99,24 +96,31 @@ impl LLM {
         model: EmbeddingModels,
     ) -> Result<Vec<Vec<f32>>> {
         let mut list_of_embeddings: Vec<Vec<f32>> = vec![];
-        let mut futures = FuturesOrdered::new();
-        // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
-        for text in table_chunks.iter() {
-            futures.push_back(async move {
-                // Embedding sentences using OpenAI ADA2
-                let embed_result = self.embed_text(vec![text], &model).await;
-                return match embed_result {
-                    Ok(point) => Ok(point[0].clone()),
-                    Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
-                };
+
+        let (tx, mut rx) = mpsc::channel(table_chunks.len()); // Channel with enough capacity
+
+        for item in table_chunks {
+            let tx = tx.clone(); // Clone the transmitter for each task
+            let item = arc::new(item); // Use Arc to share ownership across tasks, avoiding cloning large data
+
+            task::spawn(async move {
+                let processed_item = embed_text(vec![&item], &model).await; // Process item asynchronously
+                tx.send(processed_item)
+                    .await
+                    .expect("Failed to send processed item"); // Send back the result
             });
         }
-        while let Some(result) = futures.next().await {
-            match result {
-                Ok(point) => list_of_embeddings.push(point),
-                Err(err) => eprintln!("Err embedding text: {}", err),
+
+        // Drop the original transmitter so the receiver knows when all tasks are done
+        drop(tx);
+
+        // Collect the results
+        while let Some(processed_item) = rx.recv().await {
+            if let Ok(embed) = processed_item {
+                list_of_embeddings.push(embed[0].clone())
             }
         }
+
         Ok(list_of_embeddings)
     }
 
@@ -146,7 +150,7 @@ impl LLM {
         limit: Option<u64>,
     ) -> Result<String> {
         let prompt = text.to_vec();
-        let prompt_embedding = &self.embed_text(prompt, &EmbeddingModels::OAI_ADA).await?;
+        let prompt_embedding = embed_text(prompt, &EmbeddingModels::OAI_ADA).await?;
         let qdrant = Qdrant::new(qdrant_conn, dataset_id);
 
         let qdrant_search_results = qdrant
