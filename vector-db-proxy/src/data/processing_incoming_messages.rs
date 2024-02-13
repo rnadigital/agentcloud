@@ -28,7 +28,7 @@ pub async fn process_messages(
         .unwrap()
         .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
-    let embedding_model = model_parameters.model;
+    let embedding_model_name = model_parameters.model;
     let ds_clone = datasource_id.clone();
     let qdrant = Qdrant::new(qdrant_conn, datasource_id);
     if let Value::Array(data_array) = message_data {
@@ -48,17 +48,21 @@ pub async fn process_messages(
         list_of_embedding_data,
         message,
         Some(ds_clone),
-        EmbeddingModels::from(embedding_model),
+        EmbeddingModels::from(embedding_model_name),
     )
     .await
     {
         if let Ok(bulk_upload_result) = qdrant
-            .bulk_upsert_data(point_structs.clone(), Some(vector_length), None)
+            .bulk_upsert_data(
+                point_structs.clone(),
+                Some(vector_length),
+                Some(model_parameters.name),
+            )
             .await
         {
             return bulk_upload_result;
         }
         return false;
     }
-    return false;
+    false
 }
