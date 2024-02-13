@@ -29,6 +29,7 @@ pub async fn process_messages(
         .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
     let embedding_model_name = model_parameters.model;
+    let embedding_model_name_clone = embedding_model_name.clone();
     let ds_clone = datasource_id.clone();
     let qdrant = Qdrant::new(qdrant_conn, datasource_id);
     if let Value::Array(data_array) = message_data {
@@ -56,7 +57,7 @@ pub async fn process_messages(
             .bulk_upsert_data(
                 point_structs.clone(),
                 Some(vector_length),
-                Some(model_parameters.name),
+                Some(embedding_model_name_clone),
             )
             .await
         {
