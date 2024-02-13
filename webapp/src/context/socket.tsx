@@ -1,4 +1,3 @@
-import { useNotificationContext } from 'context/notifications';
 import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
@@ -10,8 +9,8 @@ export function SocketWrapper({ children }) {
 
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [notificationContext, _setNotificationContext]: any = useNotificationContext();
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
+	const [notificationTrigger, setNotificationTrigger] = useState(false);
 
 	function joinRoomAndListen() {
 		if (!sharedSocket || !resourceSlug) { return; }
@@ -19,8 +18,8 @@ export function SocketWrapper({ children }) {
 		console.log('joined room');
 		sharedSocket.on('notification', msg => {
 			console.log('notification', msg);
+		    setNotificationTrigger(prevState => !prevState);
 		});
-		//TODO: handle notifications and use notificationContext/setnotificationContext
 	}
 
 	useEffect(() => {
@@ -32,7 +31,7 @@ export function SocketWrapper({ children }) {
 	}, [sharedSocket, resourceSlug]);
 
 	return (
-		<SocketContext.Provider value={sharedSocket}>
+		<SocketContext.Provider value={[sharedSocket, notificationTrigger] as any}>
 			{children}
 		</SocketContext.Provider>
 	);

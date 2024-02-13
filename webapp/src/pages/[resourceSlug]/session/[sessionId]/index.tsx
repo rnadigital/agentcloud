@@ -33,7 +33,7 @@ export default function Session(props) {
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 	const [_chatContext, setChatContext]: any = useChatContext();
-	const socketContext = useSocketContext();
+	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState(null);
 	const [terminated, setTerminated] = useState(null);
 	const [isAtBottom, setIsAtBottom] = useState(true);

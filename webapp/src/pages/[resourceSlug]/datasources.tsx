@@ -3,6 +3,7 @@ import getConnectors from 'airbyte/getconnectors';
 import DatasourceTable from 'components/DatasourceTable';
 import NewButtonSection from 'components/NewButtonSection';
 import { useAccountContext } from 'context/account';
+import { useSocketContext } from 'context/socket';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,6 +14,7 @@ import * as API from '../../api';
 export default function Datasources(props) {
 
 	const [accountContext]: any = useAccountContext();
+	const [x, y, notificationTrigger]: any = useSocketContext();
 	const { account, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -32,7 +34,7 @@ export default function Datasources(props) {
 
 	useEffect(() => {
 		fetchDatasources();
-	}, [resourceSlug]);
+	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {
 		return 'Loading...'; //TODO: loader

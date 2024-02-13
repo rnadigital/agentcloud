@@ -186,7 +186,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			{submitting && <ButtonSpinner />}
 			{submitting ? 'Testing connection...' : 'Submit'}
 		</button>
-	</TailwindForm>), [spec]);
+	</TailwindForm>), [spec, submitting]);
 
 	function getStepSection(_step) {
 		//TODO: make steps enum

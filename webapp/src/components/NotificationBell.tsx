@@ -10,7 +10,7 @@ import { Fragment } from 'react';
 
 export default function NotificationBell() {
 
-	const notificationContext: any = useNotificationContext();
+	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
 
 	return <Menu as='div' className='relative'>
 		<Menu.Button className='-m-1.5 flex items-center'>

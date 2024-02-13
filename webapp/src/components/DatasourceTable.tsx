@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import { useAccountContext } from 'context/account';
+import { useNotificationContext } from 'context/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useReducer,useState } from 'react';
@@ -19,6 +20,7 @@ import submittingReducer from 'utils/submittingreducer';
 
 export default function DatasourceTable({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 
+	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();

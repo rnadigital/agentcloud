@@ -104,6 +104,7 @@ export async function discoverSchemaApi(req, res, next) {
 }
 
 export async function handleSuccessfulSyncWebhook(req, res, next) {
+	console.log('handleSuccessfulSyncWebhook', req.body);
 
 	//TODO: validate some kind of webhook key
 
@@ -126,11 +127,11 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		if (payload?.datasourceId) {
 			const datasource = await getDatasourceByIdUnsafe(payload.datasourceId);
 			if (datasource) {
-				io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
 				await Promise.all([
 					setDatasourceLastSynced(datasource.teamId, payload.datasourceId, new Date()),
 					setDatasourceStatus(datasource.teamId, payload.datasourceId, DatasourceStatus.READY)
 				]);
+				io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting				
 			}
 		}
 	}
