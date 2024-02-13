@@ -55,7 +55,7 @@ pub async fn process_messages(
     {
         if let Ok(bulk_upload_result) = qdrant
             .bulk_upsert_data(
-                point_structs.clone(),
+                point_structs,
                 Some(vector_length),
                 Some(embedding_model_name_clone),
             )

@@ -15,8 +15,8 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::hash_map_values_as_serde_values;
+use crate::llm::models::EmbeddingModels;
 use crate::llm::utils::embed_text;
-use crate::llm::{models::EmbeddingModels};
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
 use crate::mongo::queries::get_embedding_model;
@@ -209,7 +209,10 @@ pub async fn embed_payload(
                     if let Some(embedding) = embedding_vec.into_iter().next() {
                         let point = PointStruct::new(
                             Uuid::new_v4().to_string(),
-                            embedding.to_owned(),
+                            HashMap::from([(
+                                String::from(embedding_model.to_str().unwrap()),
+                                embedding.to_owned(),
+                            )]), //TODO: not hardcode
                             metadata,
                         );
                         return Ok(point);
