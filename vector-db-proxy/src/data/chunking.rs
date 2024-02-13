@@ -11,6 +11,7 @@ extern crate dotext;
 
 use crate::llm::models::EmbeddingModels;
 use dotext::*;
+// use pdf_extract::PlainTextOutput;
 
 pub trait Chunking {
     type Item;
@@ -19,6 +20,7 @@ pub trait Chunking {
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
+    fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String>;
     async fn chunk(
         &self,
         data: String,
@@ -85,34 +87,39 @@ impl Chunking for TextChunker {
     }
 
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
-        let mut metadata = HashMap::new();
-        let mut res = (String::new(), metadata);
-        if let Ok(doc) = lopdf::Document::load(path.as_str()) {
-            let pages = doc.get_pages();
-            if let Some((page_id, page)) = pages.into_iter().next() {
-                return match pdf_extract::extract_text(path.as_str()) {
-                    Ok(text) => {
-                        let page_dict = doc.get_dictionary(page)?;
-                        metadata = self.dictionary_to_hashmap(page_dict);
-                        metadata.insert("page_number".to_string(), page_id.to_string());
-                        if !text.is_empty() {
+        match lopdf::Document::load(path.as_str()) {
+            Ok(doc) => {
+                let mut metadata = self.detect_pdf_fonts(&doc);
+                let mut res = (String::new(), metadata);
+                let pages = doc.get_pages();
+                if let Some((page_id, page)) = pages.into_iter().next() {
+                    return match pdf_extract::extract_text(path.as_str()) {
+                        Ok(text) => {
+                            let page_dict = doc.get_dictionary(page)?;
+                            metadata = self.dictionary_to_hashmap(page_dict);
+                            metadata.insert("page_number".to_string(), page_id.to_string());
+                            if text.is_empty() {
+                                return Err(anyhow!(
+                                    "Unable to extract text from PDF document: {}",
+                                    path
+                                ));
+                            }
                             res = (text, metadata);
                             Ok(res)
-                        } else {
-                            Err(anyhow!(
-                                "Was not able to extract text from PDF document: {}",
-                                path
-                            ))
                         }
-                    }
-                    Err(e) => Err(anyhow!(
-                        "An error occurred while trying to extract text from pdf. Error: {}",
-                        e
-                    )),
-                };
+                        Err(e) => Err(anyhow!(
+                            "An error occurred while trying to extract text from pdf. Error: {}",
+                            e
+                        )),
+                    };
+                }
+                Ok(res)
             }
+            Err(e) => Err(anyhow!(
+                "An error occurred while attempting to load PDF doc: {}",
+                e
+            )),
         }
-        Ok(res)
     }
     // this method covers docx, xlsx and pptx
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)> {
@@ -124,7 +131,6 @@ impl Chunking for TextChunker {
         let results = (docx, metadata);
         Ok(results)
     }
-
     fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         let metadata = HashMap::new();
         let mut text = String::new();
@@ -138,6 +144,32 @@ impl Chunking for TextChunker {
 
         let results = (text, metadata);
         Ok(results)
+    }
+
+    fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
+        let mut metadata = HashMap::new();
+        // Iterate over all pages
+        for page_id in doc.page_iter() {
+            let (resources, _) = doc.get_page_resources(page_id);
+            let fonts = resources.unwrap().get(b"Font").unwrap().as_dict().unwrap();
+
+            // Iterate over fonts in the resources
+            for (_, font_dict) in fonts {
+                let font_dict = font_dict.as_reference().unwrap();
+                let font_obj = doc.get_object(font_dict).unwrap();
+
+                if let Object::Dictionary(dict) = font_obj {
+                    // Extract font name and encoding
+                    let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
+                    let encoding = dict
+                        .get(b"Encoding")
+                        .map_or("Unknown", |e| e.as_name_str().unwrap());
+
+                    metadata.insert(base_font.to_string(), encoding.to_string());
+                }
+            }
+        }
+        metadata
     }
 
     async fn chunk(
