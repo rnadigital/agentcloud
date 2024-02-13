@@ -107,7 +107,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
-									{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) || 1 && <ButtonSpinner size={14} className='ms-2 -me-1' />}
+									{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) && <ButtonSpinner size={14} className='ms-2 -me-1' />}
 								</span>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
