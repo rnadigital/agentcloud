@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use async_openai::types::CreateEmbeddingRequestArgs;
 use fastembed::{EmbeddingBase, FlagEmbedding, InitOptions};
 use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step::Step};
-use ort::ExecutionProviderDispatch;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc as arc;
 use std::sync::Arc;
@@ -33,9 +32,6 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
                         let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                             model_name: translation,
                             show_download_message: true,
-                            execution_providers: vec![ExecutionProviderDispatch::CoreML(
-                                ort::CoreMLExecutionProvider::default(),
-                            )],
                             ..Default::default()
                         })?;
                         let embeddings = model.passage_embed(text, None)?;

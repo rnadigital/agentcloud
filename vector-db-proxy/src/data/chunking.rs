@@ -155,21 +155,27 @@ impl Chunking for TextChunker {
         // Iterate over all pages
         for page_id in doc.page_iter() {
             let (resources, _) = doc.get_page_resources(page_id);
-            let fonts = resources.unwrap().get(b"Font").unwrap().as_dict().unwrap();
+            match resources {
+                Some(r) => {
+                    let fonts = r.get(b"Font").unwrap().as_dict().unwrap();
+                    // Iterate over fonts in the resources
+                    for (_, font_dict) in fonts {
+                        let font_dict = font_dict.as_reference().unwrap();
+                        let font_obj = doc.get_object(font_dict).unwrap();
 
-            // Iterate over fonts in the resources
-            for (_, font_dict) in fonts {
-                let font_dict = font_dict.as_reference().unwrap();
-                let font_obj = doc.get_object(font_dict).unwrap();
+                        if let Object::Dictionary(dict) = font_obj {
+                            // Extract font name and encoding
+                            let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
+                            let encoding = dict
+                                .get(b"Encoding")
+                                .map_or("Unknown", |e| e.as_name_str().unwrap());
 
-                if let Object::Dictionary(dict) = font_obj {
-                    // Extract font name and encoding
-                    let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
-                    let encoding = dict
-                        .get(b"Encoding")
-                        .map_or("Unknown", |e| e.as_name_str().unwrap());
-
-                    metadata.insert(base_font.to_string(), encoding.to_string());
+                            metadata.insert(base_font.to_string(), encoding.to_string());
+                        }
+                    }
+                }
+                None => {
+                    println!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
                 }
             }
         }
