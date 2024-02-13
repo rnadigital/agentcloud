@@ -23,14 +23,16 @@ export type DatasourceConnectionSettings = {
 export type DatasourceChunkStrategy = 'semantic' | 'character';
 
 export enum DatasourceStatus {
-	DRAFT = 'draft',
-	PROCESSING = 'processing',
-	READY = 'ready',
+	DRAFT = 'draft', //connection test
+	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
+	EMBEDDING = 'embedding', //vector db proxy -> qdrant
+	READY = 'ready', //synced/embedded
 }
 
 export const datasourceStatusColors = {
-	[DatasourceStatus.DRAFT]: 'bg-orange-500',
-	[DatasourceStatus.PROCESSING]: 'bg-yellow-500',
+	[DatasourceStatus.DRAFT]: 'bg-yellow-500',
+	[DatasourceStatus.PROCESSING]: 'bg-orange-500',
+	[DatasourceStatus.EMBEDDING]: 'bg-orange-500',
 	[DatasourceStatus.READY]: 'bg-green-500',
 };
 

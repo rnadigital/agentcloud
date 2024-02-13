@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
-import { datasourceStatusColors } from 'struct/datasource';
+import { DatasourceStatus,datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 
 export default function DatasourceTable({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
@@ -107,7 +107,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
-									{datasource.status || 'Unknown'}
+									{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) || 1 && <ButtonSpinner size={14} className='ms-2 -me-1' />}
 								</span>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
@@ -128,11 +128,11 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 							<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 								{datasource.sourceType !== 'file' && <button 
 									onClick={() => syncDatasource(datasource._id)} 
-									disabled={syncing[datasource._id] || deleting[datasource._id]}
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									disabled={syncing[datasource._id] || deleting[datasource._id] || datasource.status !== DatasourceStatus.READY}
+									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
 								
-									{syncing[datasource._id] && <ButtonSpinner />}
+									{syncing[datasource._id] && <ButtonSpinner size={14} className='ms-2 -me-1' />}
 									{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
 								</button>}
 		                        <a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
@@ -143,7 +143,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 		                        	className='text-red-500 hover:text-red-700'
 		                        	disabled={deleting[datasource._id]}
 		                        >
-									{deleting[datasource._id] ? <ButtonSpinner /> : <TrashIcon className='h-5 w-5' aria-hidden='true' />}
+									{deleting[datasource._id] ? <ButtonSpinner size={14} /> : <TrashIcon className='h-5' aria-hidden='true' />}
 		                        </button>
 		                    </td>
 						</tr>
