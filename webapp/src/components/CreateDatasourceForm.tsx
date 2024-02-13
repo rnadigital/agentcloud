@@ -1,16 +1,13 @@
 'use strict';
 
 import * as API from '@api';
-import {
-	InformationCircleIcon,
-} from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DropZone from 'components/DropZone';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
