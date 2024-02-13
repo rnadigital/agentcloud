@@ -87,17 +87,17 @@ impl Chunking for TextChunker {
     }
 
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        // todo: need to add document name to metadata
         match lopdf::Document::load(path.as_str()) {
             Ok(doc) => {
                 let mut metadata = self.detect_pdf_fonts(&doc);
                 let mut res = (String::new(), metadata);
                 let pages = doc.get_pages();
-                if let Some((page_id, page)) = pages.into_iter().next() {
+                if let Some((_, page)) = pages.into_iter().next() {
                     return match pdf_extract::extract_text(path.as_str()) {
                         Ok(text) => {
                             let page_dict = doc.get_dictionary(page)?;
                             metadata = self.dictionary_to_hashmap(page_dict);
-                            metadata.insert("page_number".to_string(), page_id.to_string());
                             if text.is_empty() {
                                 return Err(anyhow!(
                                     "Unable to extract text from PDF document: {}",
