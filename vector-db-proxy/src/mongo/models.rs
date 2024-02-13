@@ -7,7 +7,7 @@ use serde_json::Value;
 pub struct DatasourceConnectionSettings {
     pub syncCatalog: Value,
     pub scheduleType: String,
-    pub namespaceDefinition: String,
+    pub namespaceDefinition: Option<String>,
     pub namespaceFormat: Option<String>,
     pub nonBreakingSchemaUpdatesBehavior: String,
     pub prefix: Option<String>,
@@ -25,7 +25,7 @@ pub struct DataSources {
     pub modelId: Option<ObjectId>,
     pub name: String,
     pub originalName: String,
-    pub gcsFilename: String,
+    pub gcsFilename: Option<String>,
     pub sourceType: String,
     pub sourceId: Option<String>,
     pub destinationId: Option<String>,

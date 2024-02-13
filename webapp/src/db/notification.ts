@@ -51,6 +51,14 @@ export async function markNotificationAsRead(teamId: db.IdOrStr, notificationId:
 	);
 }
 
+// Mark a specific notification as read by its ID and teamId
+export async function markNotificationsRead(teamId: db.IdOrStr, notificationIds: db.IdOrStr[]): Promise<any> {
+	return NotificationsCollection().updateMany(
+		{ _id: { $in: notificationIds }, teamId: toObjectId(teamId) },
+		{ $set: { read: true } }
+	);
+}
+
 // Delete a specific notification by its ID and teamId
 export async function deleteNotification(teamId: db.IdOrStr, notificationId: db.IdOrStr): Promise<any> {
 	return NotificationsCollection().deleteOne({

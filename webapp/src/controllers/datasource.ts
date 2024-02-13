@@ -21,7 +21,7 @@ import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
 import deleteCollectionFromQdrant from 'vectordb/proxy';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbeddingModel, setDatasourceLastSynced } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbeddingModel, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -239,6 +239,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteInternalApi();
+	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
 	const connectionBody = {
 		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
@@ -252,6 +253,8 @@ export async function addDatasourceApi(req, res, next) {
 					destinationSyncMode: 'append',
 					fieldSelectionEnabled,
 					selected: true,
+					primaryKey: [],
+					cursorField: [],
 				};
 				if (fieldSelectionEnabled) {
 					config['selectedFields'] = selectedFieldsMap[s]
@@ -260,9 +263,11 @@ export async function addDatasourceApi(req, res, next) {
 				return {
 					stream: {
 						name: s,
-						jsonSchema: datasource.discoveredSchema?.catalog?.streams
-							.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh'],
+						defaultCursorField: [],
+						sourceDefinedPrimaryKey: [],
+						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
+						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
+						supportedSyncModes: ['full_refresh', 'incremental'],
 					},
 					config,
 				};
@@ -270,7 +275,7 @@ export async function addDatasourceApi(req, res, next) {
 		},
 		scheduleType: scheduleType,
 		namespaceDefinition: 'destination',
-		namespaceFormat: null,
+		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		name: datasource._id.toString(),
@@ -314,7 +319,8 @@ export async function addDatasourceApi(req, res, next) {
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
 		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
-		setDatasourceEmbeddingModel(req.params.resourceSlug, datasourceId, modelId)
+		setDatasourceEmbeddingModel(req.params.resourceSlug, datasourceId, modelId),
+		setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING)
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -429,6 +435,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteInternalApi();
+	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
 	const connectionBody = {
 		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
@@ -442,6 +449,8 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 					destinationSyncMode: 'append',
 					fieldSelectionEnabled,
 					selected: true,
+					primaryKey: [],
+					cursorField: [],
 				};
 				if (fieldSelectionEnabled) {
 					config['selectedFields'] = selectedFieldsMap[s]
@@ -450,9 +459,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 				return {
 					stream: {
 						name: s,
-						jsonSchema: datasource.discoveredSchema?.catalog?.streams
-							.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh'],
+						defaultCursorField: [],
+						sourceDefinedPrimaryKey: [],
+						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
+						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
+						supportedSyncModes: ['full_refresh', 'incremental'],
 					},
 					config,
 				};
@@ -460,10 +471,10 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		},
 		scheduleType,
 		namespaceDefinition: 'destination',
-		namespaceFormat: null,
+		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource.sourceId,
+		name: datasource._id.toString(),
 		status: 'active',
 		operations: [],
 		skipReset: false,
@@ -517,7 +528,6 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 export async function syncDatasourceApi(req, res, next) {
 
 	const { datasourceId } = req.params;
-	console.log(datasourceId);
 
 	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -535,6 +545,7 @@ export async function syncDatasourceApi(req, res, next) {
 		connectionId: datasource.connectionId,
 		jobType: 'sync',
 	};
+	await setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.PROCESSING);
 	const createdJob = await jobsApi
 		.createJob(null, jobBody)
 		.then(res => res.data)

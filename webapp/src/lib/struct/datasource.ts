@@ -10,8 +10,8 @@ export type DatasourceStream = {
 export type DatasourceConnectionSettings = {
 	syncCatalog: any; //TODO
 	scheduleType: string; //TODO: allow scheduling
-	namespaceDefinition: string;
-	namespaceFormat: string | null;
+	namespaceDefinition?: string;
+	namespaceFormat?: string | null;
 	nonBreakingSchemaUpdatesBehavior: string;
 	prefix: string | null;
 	name: string;

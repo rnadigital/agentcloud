@@ -55,10 +55,10 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				datasourceId,
 			}, () => {
 				toast.success('Sync job triggered');
+				fetchDatasources();
 			}, () => {
 				toast.error('Error syncing');
 			}, router);
-			await fetchDatasources();
 		} finally {
 			setSyncing({ [datasourceId]: false });
 		}
@@ -97,7 +97,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 					{datasources.map((datasource) => (
 						<tr key={datasource._id}>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center'>
-								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 h-6 me-1.5' />								
+								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 me-1.5' />
 								<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
 				                    {datasource.sourceType}
 								</span>

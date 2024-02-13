@@ -3,13 +3,13 @@
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
+import { addNotification } from 'db/notification';
 import { DatasourceStatus } from 'struct/datasource';
 
 import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
 import { dynamicResponse } from '../util';
-
 /**
  * GET /airbyte/schema
  * get the specification for an airbyte source
@@ -114,25 +114,30 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	const match = req?.body?.text?.match(regex);
 
 	if (match) {
-		const payload = {
-			datasourceId: match[1],
-			source: match[2],
-			destination: match[3],
-			startTime: match[4],
-			duration: match[5],
-			logsUrl: match[6],
-			jobId: match[7],
-			text: req.body.text, //The input text
-		};
-		if (payload?.datasourceId) {
-			console.log('handleSuccessfulSyncWebhook payload', payload);
-			const datasource = await getDatasourceByIdUnsafe(payload.datasourceId);
+		const datasourceId = match[1];
+		if (datasourceId) {
+			const datasource = await getDatasourceByIdUnsafe(datasourceId);
 			if (datasource) {
+				// console.log(datasource)
 				await Promise.all([
-					setDatasourceLastSynced(datasource.teamId, payload.datasourceId, new Date()),
-					setDatasourceStatus(datasource.teamId, payload.datasourceId, DatasourceStatus.READY)
+					addNotification({
+					    orgId: toObjectId(datasource.orgId.toString()),
+					    teamId: toObjectId(datasource.teamId.toString()),
+					    target: {
+							id: datasourceId,
+							collection: 'notifications',
+							property: '_id',
+							objectId: true,
+					    },
+					    title: 'Sync Successful',
+					    description: req.body.text,
+					    date: new Date(),
+					    seen: false,
+					}),
+					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
+					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
 				]);
-				io.to(datasource.teamId.toString()).emit('notification', payload); //TODO: change to emit notification after inserting
+				io.to(datasource.teamId.toString()).emit('notification', datasourceId); //TODO: change to emit notification after inserting
 			}
 		}
 	}
@@ -140,3 +145,4 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	return dynamicResponse(req, res, 200, { });
 
 }
+
