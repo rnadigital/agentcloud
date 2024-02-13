@@ -52,7 +52,7 @@ async fn extract_text_from_file(
                 .extract_text_from_docx(path_clone)
                 .expect("Could not extract text from DOCX file");
         }
-        FileType::DOC => return None,
+        FileType::CSV => return None,
         FileType::UNKNOWN => return None,
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
@@ -64,7 +64,7 @@ async fn extract_text_from_file(
             file_path, e
         ),
     }
-    metadata.insert(String::from("document_name"), document_name);
+    metadata.insert(String::from("document name"), document_name);
     let results = (document_text, Some(metadata));
     Some(results)
 }
@@ -179,7 +179,7 @@ pub async fn subscribe_to_queue(
                                                                 extract_text_from_file(
                                                                     file_type,
                                                                     file_path.as_str(),
-                                                                    ds.originalName
+                                                                    ds.originalName,
                                                                 )
                                                                 .await
                                                                 .unwrap();

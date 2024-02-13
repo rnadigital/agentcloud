@@ -11,7 +11,6 @@ extern crate dotext;
 
 use crate::llm::models::EmbeddingModels;
 use dotext::*;
-// use pdf_extract::PlainTextOutput;
 
 pub trait Chunking {
     type Item;
@@ -20,6 +19,7 @@ pub trait Chunking {
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
+    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String>;
     async fn chunk(
         &self,
@@ -87,7 +87,6 @@ impl Chunking for TextChunker {
     }
 
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
-        // todo: need to add document name to metadata
         match lopdf::Document::load(path.as_str()) {
             Ok(doc) => {
                 let mut metadata = self.detect_pdf_fonts(&doc);
@@ -104,6 +103,7 @@ impl Chunking for TextChunker {
                                     path
                                 ));
                             }
+                            metadata.insert("character count".to_string(), text.len().to_string());
                             res = (text, metadata);
                             Ok(res)
                         }
@@ -144,6 +144,10 @@ impl Chunking for TextChunker {
 
         let results = (text, metadata);
         Ok(results)
+    }
+
+    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        todo!()
     }
 
     fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {

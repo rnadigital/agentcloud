@@ -125,8 +125,6 @@ impl Chunker {
             {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
-                    println!("len of sentences: {}", sentences.len());
-                    println!("len of embeddings: {}", embeddings.len());
                     for (i, sentence) in sentences.iter().enumerate() {
                         if !embeddings[i].is_empty() {
                             vector_of_sentences.push(Sentence {

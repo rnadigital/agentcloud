@@ -39,7 +39,7 @@ impl Hash for Document {
 pub enum FileType {
     PDF,
     TXT,
-    DOC,
+    CSV,
     DOCX,
     UNKNOWN,
 }
@@ -48,7 +48,7 @@ impl From<String> for FileType {
         match value.as_str() {
             "pdf" => Self::PDF,
             "txt" => Self::TXT,
-            "doc" => Self::DOC,
+            "csv" => Self::CSV,
             "docx" | "pptx" | "xlsx" | "odt" | "ods" | "odp" => Self::DOCX,
             _ => Self::UNKNOWN,
         }
