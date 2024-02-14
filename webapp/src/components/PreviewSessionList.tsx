@@ -30,13 +30,13 @@ export default function PreviewSessionList(props) {
 		</div>;
 	}
 
-	return sessions.slice(0, 3).map(s => (<li key={s._id} className='ps-4'>
+	return sessions.slice(0, 5).map(s => (<li key={s._id} className='ps-4'>
 		<Link
 			suppressHydrationWarning
 			href={`/${resourceSlug}/session/${s._id}`}
 			className='text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
 		>
-			{s.prompt}
+			<p className='overflow-hidden truncate text-ellipsis'>{s.prompt}</p>
 		</Link>
 	</li>));
 
