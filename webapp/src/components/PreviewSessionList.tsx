@@ -24,6 +24,10 @@ export default function PreviewSessionList(props) {
 		fetchSessions();
 	}, [resourceSlug, router.asPath]);
 
+	if (!resourceSlug) {
+		return null;
+	}
+
 	if (!sessions) {
 		return <div className='py-2 flex items-center justify-center'>
 			<ButtonSpinner />
