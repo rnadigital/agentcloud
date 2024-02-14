@@ -1,6 +1,7 @@
 use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
+use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::client::start_mongo_connection;
@@ -10,12 +11,11 @@ use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
-use crate::queue::queuing::{Control, MyQueue};
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::{anyhow, Result};
+use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
@@ -103,7 +103,8 @@ async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
 }
 
 pub async fn subscribe_to_queue(
-    app_data: Arc<RwLock<QdrantClient>>,
+    qdrant_clone: Arc<RwLock<QdrantClient>>,
+    mongo_client: Arc<RwLock<Database>>,
     connection_details: RabbitConnect,
     exchange_name: &str,
     queue_name: &str,
@@ -242,7 +243,7 @@ pub async fn subscribe_to_queue(
                                                                         .embeddingLength
                                                                         as u64;
                                                                     let qdrant_conn_clone =
-                                                                        Arc::clone(&app_data);
+                                                                        Arc::clone(&qdrant_clone);
                                                                     let qdrant = Qdrant::new(
                                                                         qdrant_conn_clone,
                                                                         datasource_id.to_string(),
@@ -276,12 +277,13 @@ pub async fn subscribe_to_queue(
                                         }
                                     } else {
                                         // This is where data is coming from airbyte rather than a direct file upload
-                                        let qdrant_conn = Arc::clone(&app_data);
-                                        let queue: MyQueue<String> = Control::default();
-                                        let _ = add_message_to_embedding_queue(
-                                            queue,
+                                        let qdrant_conn = Arc::clone(&qdrant_clone);
+                                        let mongo_conn = Arc::clone(&mongo_client);
+                                        let _ = process_messages(
                                             qdrant_conn,
-                                            (datasource_id.to_string(), message_string),
+                                            mongo_conn,
+                                            message_string,
+                                            datasource_id.to_string(),
                                         )
                                         .await;
                                     }

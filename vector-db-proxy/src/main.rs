@@ -10,7 +10,6 @@ mod init;
 mod llm;
 mod mongo;
 mod qdrant;
-mod queue;
 mod rabbitmq;
 mod routes;
 mod utils;
@@ -28,11 +27,10 @@ use once_cell::sync::Lazy;
 use tokio::join;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
-#[cfg(windows)]
-use tokio::signal::windows::ctrl_c;
 use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
+use crate::mongo::client::start_mongo_connection;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
@@ -92,9 +90,10 @@ async fn main() -> std::io::Result<()> {
             panic!("An error occurred while trying to connect to Qdrant DB {e}")
         }
     };
+    let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-    // TODO: include mongo connection in app data to reduce number of connections made to mongo!
+    let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
     let rabbitmq_connection_details = RabbitConnect {
         host: rabbitmq_host,
         port: rabbitmq_port,
@@ -104,6 +103,7 @@ async fn main() -> std::io::Result<()> {
     let rabbitmq_stream = tokio::spawn(async move {
         let _ = subscribe_to_queue(
             Arc::clone(&qdrant_connection_for_rabbitmq),
+            Arc::clone(&mongo_client_clone),
             rabbitmq_connection_details,
             rabbitmq_exchange.as_str(),
             rabbitmq_stream.as_str(),
