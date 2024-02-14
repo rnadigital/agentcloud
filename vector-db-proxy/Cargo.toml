@@ -53,6 +53,7 @@ bson = "2.9.0"
 fastembed = "2.0.1"
 ort = "^2.0.0-rc.0"
 csv = "1.3.0"
+threadpool = "1.8.1"
 
 [[bin]]
 name = "vector-db-proxy"

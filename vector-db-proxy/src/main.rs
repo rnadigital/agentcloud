@@ -10,6 +10,7 @@ mod init;
 mod llm;
 mod mongo;
 mod qdrant;
+mod queue;
 mod rabbitmq;
 mod routes;
 mod utils;

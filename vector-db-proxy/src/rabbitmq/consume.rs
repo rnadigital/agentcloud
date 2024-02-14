@@ -1,7 +1,6 @@
 use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
-use crate::data::processing_incoming_messages::process_messages;
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::client::start_mongo_connection;
@@ -11,6 +10,8 @@ use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 use crate::rabbitmq::models::RabbitConnect;
 
+use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
+use crate::queue::queuing::{Control, MyQueue};
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -259,7 +260,7 @@ pub async fn subscribe_to_queue(
                                                                             println!(
                                                                                 "points uploaded successfully!"
                                                                             )
-                                                                        },
+                                                                        }
                                                                         Err(e) => {
                                                                             println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
                                                                         }
@@ -276,10 +277,11 @@ pub async fn subscribe_to_queue(
                                     } else {
                                         // This is where data is coming from airbyte rather than a direct file upload
                                         let qdrant_conn = Arc::clone(&app_data);
-                                        let _ = process_messages(
+                                        let queue: MyQueue<String> = Control::default();
+                                        let _ = add_message_to_embedding_queue(
+                                            queue,
                                             qdrant_conn,
-                                            message_string,
-                                            datasource_id.to_string(),
+                                            (datasource_id.to_string(), message_string),
                                         )
                                         .await;
                                     }
