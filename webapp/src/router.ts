@@ -171,6 +171,7 @@ export default function router(server, app) {
 
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
+	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
 
 	// Airbyte webhooks
 	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });

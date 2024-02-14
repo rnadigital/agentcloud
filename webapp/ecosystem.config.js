@@ -3,6 +3,6 @@ module.exports = {
     script: "npm run dev",
     watch: true,
     // watch_delay: 1000,
-    ignore_watch : ["node_modules", "src/components", "src/pages", "\\.next", "\\.dist"],
+    ignore_watch : ["node_modules", "src/components", "src/pages", "src/context", "\\.next", "\\.dist"],
   }]
 }

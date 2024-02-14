@@ -24,7 +24,7 @@ export function NotificationWrapper({ children }) {
 			resourceSlug,
 		}, (data) => {
 			log('refreshNotificationContext', data);
-			setSharedState(data);
+			setSharedState(data?.notifications);
 		}, null, null);
 	}
 	

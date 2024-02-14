@@ -29,7 +29,7 @@ export default function Sessions(props) {
 	useEffect(() => {
 		fetchSessions();
 	}, [resourceSlug]);
-	console.log('resourceSlug', resourceSlug);
+	// console.log('resourceSlug', resourceSlug);
 
 	if (!sessions) {
 		return 'Loading...'; //TODO: loader
