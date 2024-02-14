@@ -16,7 +16,7 @@ mod routes;
 mod utils;
 
 use qdrant::client::instantiate_qdrant_client;
-use std::sync::Arc;
+use std::sync::{Arc};
 
 use crate::init::models::GlobalData;
 use actix_cors::Cors;
@@ -33,6 +33,7 @@ use tokio::signal::windows::ctrl_c;
 use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
+use crate::queue::queuing::{Control, MyQueue};
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
@@ -94,6 +95,7 @@ async fn main() -> std::io::Result<()> {
     };
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
+    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
     // TODO: include mongo connection in app data to reduce number of connections made to mongo!
     let rabbitmq_connection_details = RabbitConnect {
         host: rabbitmq_host,
@@ -104,6 +106,7 @@ async fn main() -> std::io::Result<()> {
     let rabbitmq_stream = tokio::spawn(async move {
         let _ = subscribe_to_queue(
             Arc::clone(&qdrant_connection_for_rabbitmq),
+            Arc::clone(&queue),
             rabbitmq_connection_details,
             rabbitmq_exchange.as_str(),
             rabbitmq_stream.as_str(),
