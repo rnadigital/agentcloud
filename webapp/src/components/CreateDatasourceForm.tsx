@@ -123,12 +123,12 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					connectorId: connector.value,
 					connectorName: connector.label,
 					resourceSlug,
-					datasourceName,
 					scheduleType,
 					timeUnit,
 					units,
 					cronExpression,
 					cronTimezone,
+					datasourceName,
 				};
 				//step 2, getting schema and testing connection
 				const stagedDatasource: any = await API.testDatasource(body, () => {
@@ -155,6 +155,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					cronTimezone,
 					streams: streamState.streams,
 					selectedFieldsMap: streamState.selectedFieldsMap,
+					datasourceName,
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
 					toast.success('Added datasource');
@@ -186,7 +187,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			{submitting && <ButtonSpinner />}
 			{submitting ? 'Testing connection...' : 'Submit'}
 		</button>
-	</TailwindForm>), [spec, submitting]);
+	</TailwindForm>), [spec, submitting, datasourcePost, datasourceName]);
 
 	function getStepSection(_step) {
 		//TODO: make steps enum
