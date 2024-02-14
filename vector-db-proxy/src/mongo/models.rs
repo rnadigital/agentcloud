@@ -35,9 +35,11 @@ pub struct DataSources {
     pub chunkCharacter: Option<String>,
     pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<DateTime>,
+    pub embeddingField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
 }
+
 #[derive(Serialize, Deserialize)]
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,
@@ -45,6 +47,7 @@ pub enum ChunkingStrategy {
     CODE_SPLIT,
     UNKNOWN,
 }
+
 impl From<String> for ChunkingStrategy {
     fn from(value: String) -> Self {
         match value.as_str() {
@@ -65,5 +68,5 @@ pub struct Model {
     pub name: String,
     pub model: String,
     pub embeddingLength: i32,
-    pub modelType: String
+    pub modelType: String,
 }

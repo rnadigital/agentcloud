@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::llm::models::EmbeddingModels;
-use crate::mongo::{models::Model, queries::get_embedding_model};
+use crate::mongo::queries::get_embedding_model;
 use crate::qdrant::helpers::embed_table_chunks_async;
 use crate::qdrant::models::HashMapValues;
 use crate::qdrant::utils::Qdrant;
@@ -25,47 +25,65 @@ pub async fn process_messages(
         message_data = _json;
     }
     let mongodb_connection = mongo_conn.read().await;
-    let model_parameters: Model = get_embedding_model(&mongodb_connection, datasource_id.as_str())
-        .await
-        .unwrap()
-        .unwrap();
-    let vector_length = model_parameters.embeddingLength as u64;
-    let embedding_model_name = model_parameters.model;
-    let embedding_model_name_clone = embedding_model_name.clone();
-    let ds_clone = datasource_id.clone();
-    let qdrant = Qdrant::new(qdrant_conn, datasource_id);
-    if let Value::Array(data_array) = message_data {
-        if !data_array.is_empty() {
-            for message in data_array {
-                if let Value::Object(data_obj) = message {
-                    let embedding_data = convert_serde_value_to_hashmap_value(data_obj);
-                    list_of_embedding_data.push(embedding_data)
+    match get_embedding_model(&mongodb_connection, datasource_id.as_str()).await {
+        Ok(model_parameter_result) => {
+            match model_parameter_result {
+                Some(model_parameters) => {
+                    let vector_length = model_parameters.embeddingLength as u64;
+                    let embedding_model_name = model_parameters.model;
+                    let embedding_model_name_clone = embedding_model_name.clone();
+                    let ds_clone = datasource_id.clone();
+                    let qdrant = Qdrant::new(qdrant_conn, datasource_id);
+                    let message_clone = message_data.clone();
+                    if let Value::Array(data_array) = message_data {
+                        if !data_array.is_empty() {
+                            for message in data_array {
+                                if let Value::Object(data_obj) = message {
+                                    let embedding_data =
+                                        convert_serde_value_to_hashmap_value(data_obj);
+                                    list_of_embedding_data.push(embedding_data)
+                                }
+                            }
+                        }
+                    } else if let Value::Object(data_obj) = message_data {
+                        //     Handle the case where the data is being sent as a single object rather than an array of objects
+                        list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
+                    }
+                    let text = message_clone
+                        .get("document")
+                        .unwrap_or(&Value::String("".to_string()))
+                        .to_string();
+                    if let Ok(point_structs) = embed_table_chunks_async(
+                        list_of_embedding_data,
+                        text.clone(),
+                        Some(ds_clone),
+                        EmbeddingModels::from(embedding_model_name),
+                    )
+                    .await
+                    {
+                        if let Ok(bulk_upload_result) = qdrant
+                            .bulk_upsert_data(
+                                point_structs,
+                                Some(vector_length),
+                                Some(embedding_model_name_clone),
+                            )
+                            .await
+                        {
+                            return bulk_upload_result;
+                        }
+                        return false;
+                    }
+                }
+                None => {
+                    eprintln!("Model mongo object returned None!");
+                    return false;
                 }
             }
         }
-    } else if let Value::Object(data_obj) = message_data {
-        //     Handle the case where the data is being sent as a single object rather than an array of objects
-        list_of_embedding_data.push(convert_serde_value_to_hashmap_value(data_obj));
-    }
-    if let Ok(point_structs) = embed_table_chunks_async(
-        list_of_embedding_data,
-        message,
-        Some(ds_clone),
-        EmbeddingModels::from(embedding_model_name),
-    )
-        .await
-    {
-        if let Ok(bulk_upload_result) = qdrant
-            .bulk_upsert_data(
-                point_structs,
-                Some(vector_length),
-                Some(embedding_model_name_clone),
-            )
-            .await
-        {
-            return bulk_upload_result;
+        Err(e) => {
+            println!("An error occurred: {}", e);
+            return false;
         }
-        return false;
     }
     false
 }
