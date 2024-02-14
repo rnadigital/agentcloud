@@ -29,7 +29,7 @@ export default function NotificationBell() {
 			leaveFrom='transform opacity-100 scale-100'
 			leaveTo='transform opacity-0 scale-95'
 		>
-			<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+			<Menu.Items className='absolute right-0 z-10 mt-2.5 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none max-h-[500px] overflow-y-auto overflow-x-hidden max-w-max'>
 				{notificationContext?.notifications && notificationContext.notifications.map((n, ni) => (
 					<Notification key={ni} {...n} />
 				))}
