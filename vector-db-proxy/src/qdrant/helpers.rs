@@ -1,5 +1,3 @@
-use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
-use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 
 use qdrant_client::client::QdrantClient;
@@ -7,7 +5,6 @@ use qdrant_client::prelude::Value;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
-
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -17,11 +14,7 @@ use uuid::Uuid;
 use crate::hash_map_values_as_serde_values;
 use crate::llm::models::EmbeddingModels;
 use crate::llm::utils::embed_text;
-use crate::mongo::client::start_mongo_connection;
-use crate::mongo::models::Model;
-use crate::mongo::queries::get_embedding_model;
-use crate::qdrant::models::{HashMapValues, ScrollResults};
-use crate::qdrant::utils::Qdrant;
+use crate::qdrant::models::ScrollResults;
 
 ///
 ///
@@ -93,91 +86,6 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
     Ok(response)
 }
 
-pub async fn embed_table_chunks_async(
-    table_chunks: Vec<HashMap<String, HashMapValues>>,
-    text: String,
-    dataset_id: Option<String>,
-    embedding_model: EmbeddingModels,
-) -> Result<Vec<PointStruct>> {
-    let mut list_of_embeddings: Vec<PointStruct> = vec![];
-    let mut futures = FuturesUnordered::new();
-    // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
-    for chunk in table_chunks.iter() {
-        let ds_id = dataset_id.clone();
-        let text_clone = text.clone();
-        futures.push(async move {
-            let embed_result =
-                embed_payload(chunk, text_clone, ds_id.clone(), embedding_model).await;
-            return match embed_result {
-                Ok(point) => Ok::<PointStruct, anyhow::Error>(point),
-                Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
-            };
-        });
-    }
-    while let Some(result) = futures.next().await {
-        match result {
-            Ok(point) => list_of_embeddings.push(point),
-            Err(err) => eprintln!("Err: {}", err),
-        }
-    }
-    Ok(list_of_embeddings)
-}
-
-///
-///
-/// # Arguments
-///
-/// * `qdrant_conn`:
-/// * `table_chunks`:
-/// * `dataset_id`:
-///
-/// returns: Result<bool, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
-// Each thread calls this function and passes it a table chunk
-pub async fn process_table_chunks_async(
-    qdrant_conn: Arc<RwLock<QdrantClient>>,
-    table_chunks: Vec<HashMap<String, HashMapValues>>,
-    text: String,
-    dataset_id: String,
-    embedding_model: EmbeddingModels,
-) -> Result<bool> {
-    let ds_id_clone = dataset_id.clone();
-    let ds_id_clone_2 = ds_id_clone.clone();
-    let text_clone = text.clone();
-    let embeddings =
-        embed_table_chunks_async(table_chunks, text_clone, Some(dataset_id), embedding_model)
-            .await?;
-    let qdrant = Qdrant::new(qdrant_conn, ds_id_clone);
-    // Once embedding is returned successfully in the form of a PointStruct insert into DB
-    let mongodb_connection = start_mongo_connection().await.unwrap();
-    let model_parameters: Model = get_embedding_model(&mongodb_connection, ds_id_clone_2.as_str())
-        .await
-        .unwrap()
-        .unwrap();
-    match qdrant
-        .bulk_upsert_data(
-            embeddings,
-            Some(model_parameters.embeddingLength as u64),
-            None,
-        )
-        .await?
-    {
-        true => {
-            println!("Upsert Successful!");
-            Ok(true)
-        }
-        false => {
-            println!("Upsert Failed!");
-            Ok(true)
-        }
-    }
-}
-
 ///
 ///
 /// # Arguments
@@ -192,7 +100,7 @@ pub async fn process_table_chunks_async(
 ///
 /// ```
 pub async fn embed_payload(
-    data: &HashMap<String, HashMapValues>,
+    data: &HashMap<String, String>,
     text: String,
     datasource_id: Option<String>,
     embedding_model: EmbeddingModels,
@@ -212,7 +120,7 @@ pub async fn embed_payload(
                             HashMap::from([(
                                 String::from(embedding_model.to_str().unwrap()),
                                 embedding.to_owned(),
-                            )]), //TODO: not hardcode
+                            )]),
                             metadata,
                         );
                         return Ok(point);
