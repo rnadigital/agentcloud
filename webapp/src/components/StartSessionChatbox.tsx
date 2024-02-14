@@ -102,10 +102,6 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 
 	return (<div className='flex flex-col mb-10'>
 
-		<div className='text-center my-3 dark:text-white'>
-			Start a new chat session:
-		</div>
-
 		{sessionRadio !== 'multi'
 			? <CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={callback} />
 			: <CreateGroupModal open={modalOpen} setOpen={setModalOpen} callback={callback} />}
@@ -115,7 +111,6 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<div>
-							<p className='text-sm'>Select your session type:</p>
 							<fieldset className='my-3'>
 								<legend className='sr-only'>Notification method</legend>
 								<div className='space-y-4'>

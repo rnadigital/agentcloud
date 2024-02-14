@@ -118,7 +118,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
-								<div className='text-sm text-gray-900'>
+								<div className='text-sm text-gray-900' suppressHydrationWarning>
 									{datasource.sourceType === 'file' ? 'N/A' : (datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : 'Never')}
 								</div>
 							</td>

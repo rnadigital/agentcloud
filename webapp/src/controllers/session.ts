@@ -36,7 +36,7 @@ export async function sessionsJson(req, res, next) {
 }
 
 /**
- * GET /[resourceSlug]/sessions
+ * GET /[resourceSlug]/playground
  * home page html
  */
 export async function sessionsPage(app, req, res, next) {
@@ -45,7 +45,7 @@ export async function sessionsPage(app, req, res, next) {
 		...data,
 		account: res.locals.account,
 	};
-	return app.render(req, res, `/${req.params.resourceSlug}/sessions`);
+	return app.render(req, res, `/${req.params.resourceSlug}/playground`);
 }
 
 export async function sessionData(req, res, _next) {
@@ -207,7 +207,7 @@ export async function deleteSessionApi(req, res, next) {
 	}
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/sessions`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/playground`*/ });
 
 }
 
@@ -233,6 +233,6 @@ export async function cancelSessionApi(req, res, next) {
 	await setSessionStatus(req.params.resourceSlug, sessionId, SessionStatus.TERMINATED);
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/sessions`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/playground`*/ });
 
 }

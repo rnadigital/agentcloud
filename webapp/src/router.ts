@@ -94,7 +94,7 @@ export default function router(server, app) {
 	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
-	teamRouter.get('/sessions', sessionController.sessionsPage.bind(null, app));
+	teamRouter.get('/playground', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));

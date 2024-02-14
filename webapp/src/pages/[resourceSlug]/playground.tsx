@@ -29,6 +29,7 @@ export default function Sessions(props) {
 	useEffect(() => {
 		fetchSessions();
 	}, [resourceSlug]);
+	console.log('resourceSlug', resourceSlug);
 
 	if (!sessions) {
 		return 'Loading...'; //TODO: loader
@@ -37,11 +38,11 @@ export default function Sessions(props) {
 	return (<>
 
 		<Head>
-			<title>{`Sessions - ${teamName}`}</title>
+			<title>{`Playground - ${teamName}`}</title>
 		</Head>
 
 		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Sessions</h3>
+			<h3 className='pl-2 font-semibold text-gray-900'>Playground</h3>
 		</div>
 
 		<SubscriptionModal open={open} setOpen={setOpen}/>

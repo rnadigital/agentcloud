@@ -216,7 +216,7 @@ export default function Session(props) {
 			}
 			setMessages(sortedMessages);
 		}, setError, router);
-	}, []);
+	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
 		if (ready) {
 			console.log('useEffect ready check handleSocketStart()');
