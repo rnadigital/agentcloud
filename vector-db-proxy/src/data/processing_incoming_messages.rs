@@ -1,9 +1,10 @@
+use mongodb::Database;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::llm::models::EmbeddingModels;
-use crate::mongo::{client::start_mongo_connection, models::Model, queries::get_embedding_model};
+use crate::mongo::{models::Model, queries::get_embedding_model};
 use crate::qdrant::helpers::embed_table_chunks_async;
 use crate::qdrant::models::HashMapValues;
 use crate::qdrant::utils::Qdrant;
@@ -13,6 +14,7 @@ use serde_json::{json, Value};
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
+    mongo_conn: Arc<RwLock<Database>>,
     message: String,
     datasource_id: String,
 ) -> bool {
@@ -22,7 +24,7 @@ pub async fn process_messages(
     if let Ok(_json) = serde_json::from_str(message.as_str()) {
         message_data = _json;
     }
-    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let mongodb_connection = mongo_conn.read().await;
     let model_parameters: Model = get_embedding_model(&mongodb_connection, datasource_id.as_str())
         .await
         .unwrap()

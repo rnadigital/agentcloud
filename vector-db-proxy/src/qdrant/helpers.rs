@@ -1,5 +1,5 @@
-use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
-use actix_web_lab::__reexports::futures_util::StreamExt;
+// use actix_web_lab::__reexports::futures_util::stream::FuturesUnordered;
+// use actix_web_lab::__reexports::futures_util::StreamExt;
 use anyhow::{anyhow, Result};
 
 use qdrant_client::client::QdrantClient;
@@ -99,27 +99,27 @@ pub async fn embed_table_chunks_async(
     dataset_id: Option<String>,
     embedding_model: EmbeddingModels,
 ) -> Result<Vec<PointStruct>> {
+    println!("embed table chunks async");
     let mut list_of_embeddings: Vec<PointStruct> = vec![];
-    let mut futures = FuturesUnordered::new();
+    // let mut futures = FuturesUnordered::new();
     // Within each thread each chunk is processed async by the function `embed_custom_variable_row`
     for chunk in table_chunks.iter() {
         let ds_id = dataset_id.clone();
         let text_clone = text.clone();
-        futures.push(async move {
-            let embed_result =
-                embed_payload(chunk, text_clone, ds_id.clone(), embedding_model).await;
-            return match embed_result {
-                Ok(point) => Ok::<PointStruct, anyhow::Error>(point),
-                Err(e) => Err(anyhow!("Embedding row failed: {}", e)),
-            };
-        });
-    }
-    while let Some(result) = futures.next().await {
-        match result {
+        // futures.push(async move {
+        let embed_result = embed_payload(chunk, text_clone, ds_id.clone(), embedding_model).await;
+        match embed_result {
             Ok(point) => list_of_embeddings.push(point),
             Err(err) => eprintln!("Err: {}", err),
         }
+        // });
     }
+    // while let Some(result) = futures.next().await {
+    //     match result {
+    //         Ok(point) => list_of_embeddings.push(point),
+    //         Err(err) => eprintln!("Err: {}", err),
+    //     }
+    // }
     Ok(list_of_embeddings)
 }
 
@@ -197,6 +197,7 @@ pub async fn embed_payload(
     datasource_id: Option<String>,
     embedding_model: EmbeddingModels,
 ) -> Result<PointStruct, anyhow::Error> {
+    println!("Embedding...");
     if !data.is_empty() {
         if let Some(_id) = datasource_id {
             let payload: HashMap<String, serde_json::Value> =

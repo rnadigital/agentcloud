@@ -3,7 +3,6 @@ use crate::data::models::Document as DocumentModel;
 use crate::data::models::FileType;
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::llm::models::EmbeddingModels;
-use crate::mongo::client::start_mongo_connection;
 use crate::mongo::queries::get_datasource;
 use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
@@ -16,6 +15,7 @@ use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
 use anyhow::{anyhow, Result};
+use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
@@ -103,8 +103,13 @@ async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> Result<()> {
 }
 
 pub async fn subscribe_to_queue(
+<<<<<<< Updated upstream
     qdrant_clone: Arc<RwLock<QdrantClient>>,
     queue: Arc<RwLock<MyQueue<String>>>,
+=======
+    qdrant_client: Arc<RwLock<QdrantClient>>,
+    mongo_client: Arc<RwLock<Database>>,
+>>>>>>> Stashed changes
     connection_details: RabbitConnect,
     exchange_name: &str,
     queue_name: &str,
@@ -113,7 +118,7 @@ pub async fn subscribe_to_queue(
     // loop {
     let mut connection = connect_rabbitmq(&connection_details).await;
     let mut channel = channel_rabbitmq(&connection).await;
-    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let mongodb_connection = mongo_client.read().await;
     bind_queue_to_exchange(
         &mut connection,
         &mut channel,
@@ -127,7 +132,10 @@ pub async fn subscribe_to_queue(
     let (ctag, mut messages_rx) = channel.basic_consume_rx(args.clone()).await.unwrap();
     loop {
         while let Some(message) = messages_rx.recv().await {
+<<<<<<< Updated upstream
             println!("message received!");
+=======
+>>>>>>> Stashed changes
             let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
             let _ = channel.basic_ack(args).await;
             let headers = message.basic_properties.unwrap().headers().unwrap().clone();
@@ -254,7 +262,11 @@ pub async fn subscribe_to_queue(
                                                                             .embeddingLength
                                                                             as u64;
                                                                         let qdrant_conn_clone =
+<<<<<<< Updated upstream
                                                                             Arc::clone(&qdrant_clone);
+=======
+                                                                            Arc::clone(&qdrant_client);
+>>>>>>> Stashed changes
                                                                         let qdrant = Qdrant::new(
                                                                             qdrant_conn_clone,
                                                                             datasource_id.to_string(),
@@ -288,11 +300,21 @@ pub async fn subscribe_to_queue(
                                             }
                                         } else {
                                             // This is where data is coming from airbyte rather than a direct file upload
+<<<<<<< Updated upstream
                                             let qdrant_conn = Arc::clone(&qdrant_clone);
                                             let q = Arc::clone(&queue);
                                             let _ = add_message_to_embedding_queue(
                                                 q,
                                                 qdrant_conn,
+=======
+                                            let qdrant_conn = Arc::clone(&qdrant_client);
+                                            let mongo_conn = Arc::clone(&mongo_client);
+                                            let queue: MyQueue<String> = Control::default();
+                                            let _ = add_message_to_embedding_queue(
+                                                queue,
+                                                qdrant_conn,
+                                                mongo_conn,
+>>>>>>> Stashed changes
                                                 (datasource_id.to_string(), message_string),
                                             )
                                             .await;

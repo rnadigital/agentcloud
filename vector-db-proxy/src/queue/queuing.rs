@@ -1,4 +1,5 @@
 //! This is queueing module that provides app wide capability to add tasks to a queue
+use mongodb::Database;
 use std::fmt::Debug;
 use std::marker::Send;
 use std::sync::Arc;
@@ -28,7 +29,12 @@ where
     fn new(pool_size: usize) -> Self;
     fn default() -> Self;
     fn enqueue(&mut self, task: T);
-    fn embed_message(&mut self, qdrant_conn: Arc<RwLock<QdrantClient>>, message: String) -> bool;
+    fn embed_message(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String,
+    ) -> bool;
 }
 
 // This defines implementations of each of the methods in the class
@@ -75,7 +81,12 @@ where
     /// The closure now has ownership of the cloned Arcs, which guarantees their existence for the entire lifetime of the closure.
     /// The original Arcs are still owned by the app_data object and will be dropped when app_data goes out of scope, but this won't affect the cloned Arcs.
 
-    fn embed_message(&mut self, qdrant_conn: Arc<RwLock<QdrantClient>>, message: String) -> bool {
+    fn embed_message(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String,
+    ) -> bool {
         println!("Received table embedding task...");
         while self.q.size() > 0 {
             let task = match self.q.remove() {
@@ -89,10 +100,11 @@ where
             };
             let data = message.clone();
             let qdrant_client = Arc::clone(&qdrant_conn);
+            let mongo_client = Arc::clone(&mongo_conn);
             self.pool.execute(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    let _ = process_messages(qdrant_client, data, id).await;
+                    let _ = process_messages(qdrant_client, mongo_client, data, id).await;
                 })
             });
         }
