@@ -1,4 +1,5 @@
 'use strict';
+
 import * as API from '@api';
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import {
@@ -7,7 +8,7 @@ import {
 import { Notification } from 'components/Notification';
 import { useNotificationContext } from 'context/notifications';
 import { useRouter } from 'next/router';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 
 import { useAccountContext } from '../context/account';
 
@@ -18,6 +19,7 @@ export default function NotificationBell() {
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
+	const [more, setMore] = useState(false);
 	async function markSeen(notificationId) {
 		await API.markNotificationsSeen({ //TODO: batch multiple
 			_csrf: csrf,
@@ -46,10 +48,12 @@ export default function NotificationBell() {
 			leaveFrom='transform opacity-100 scale-100'
 			leaveTo='transform opacity-0 scale-95'
 		>
-			<Menu.Items className='absolute right-0 z-10 mt-2.5 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none max-h-[500px] overflow-y-auto overflow-x-hidden max-w-max'>
-				{notificationContext && notificationContext.map((n, ni) => (
-					<Notification markSeen={markSeen} key={n._id} {...n} />
-				))}
+			<Menu.Items className='absolute right-0 z-10 mt-2.5 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none max-h-[500px] overflow-y-auto overflow-x-hidden min-w-[290px]'>
+				{notificationContext?.length > 0
+					?  notificationContext
+						.slice(0, more ? null : 3)
+						.map((n, ni) => (<Notification markSeen={markSeen} key={n._id} {...n} />))
+					: <p className='text-center'>No notifications.</p>}
 			</Menu.Items>
 		</Transition>
 	</Menu>;

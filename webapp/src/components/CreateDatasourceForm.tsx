@@ -49,6 +49,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [error, setError] = useState();
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
+	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('');
 	const [units, setUnits] = useState('');
@@ -129,6 +130,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					cronExpression,
 					cronTimezone,
 					datasourceName,
+					embeddingField,
 				};
 				//step 2, getting schema and testing connection
 				const stagedDatasource: any = await API.testDatasource(body, () => {
@@ -156,6 +158,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					streams: streamState.streams,
 					selectedFieldsMap: streamState.selectedFieldsMap,
 					datasourceName,
+					embeddingField,
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
 					toast.success('Added datasource');
@@ -384,47 +387,74 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 4:
 				return <>
 					<form onSubmit={datasourcePost}>
-						<div className='my-4'>
-							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Embedding Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
-						            onChange={(v: any) => {
-										if (v?.value === null) {
-											//Create new pressed
-											return setModalOpen(true);
-										}
-										setModelId(v?.value);
-					            	}}
-						            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
-						            formatOptionLabel={data => {
-										const m = models.find(m => m._id === data?.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label} {m ? `(${m?.model})` : null}
-						                </li>);
-						            }}
-						        />
+						<div className='space-y-4'>
+							<div>
+								<label htmlFor='embeddingField' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Field To Embed<span className='text-red-700'> *</span>
+								</label>
+								<div>
+									<select
+										required
+										name='embeddingField'
+										id='embeddingField'
+										onChange={(e) => setEmbeddingField(e.target.value)}
+										value={embeddingField}
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									>
+										{streamState?.streams?.map((stream, ei) => {
+											const foundStreamSchema = discoveredSchema?.catalog?.streams?.find(st => st?.stream?.name === stream);
+											const foundSchemaKeys = streamState?.selectedFieldsMap[stream]
+												|| Object.keys(foundStreamSchema?.stream?.jsonSchema?.properties);
+											return <optgroup label={stream} key={`embeddingField_optgroup_${ei}`}>
+												{foundSchemaKeys
+													.map((sk, ski) => (<option key={`embeddingField_option_${ski}`} value={sk}>{sk}</option>))}
+											</optgroup>;
+										})}
+									</select>
+								</div>
 							</div>
+							<div>
+								<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Embedding Model
+								</label>
+								<div className='mt-2'>
+									<Select
+										isClearable
+							            primaryColor={'indigo'}
+							            classNames={SelectClassNames}
+							            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+							            onChange={(v: any) => {
+											if (v?.value === null) {
+												//Create new pressed
+												return setModalOpen(true);
+											}
+											setModelId(v?.value);
+						            	}}
+							            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+							            formatOptionLabel={data => {
+											const m = models.find(m => m._id === data?.value);
+							                return (<li
+							                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+							                        data.isSelected
+							                            ? 'bg-blue-100 text-blue-500'
+							                            : 'dark:text-white'
+							                    }`}
+							                >
+							                    {data.label} {m ? `(${m?.model})` : null}
+							                </li>);
+							            }}
+							        />
+								</div>
+							</div>
+							<button
+								disabled={submitting}
+								type='submit'
+								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+							>
+								{submitting && <ButtonSpinner />}
+								Continue
+							</button>
 						</div>
-						<button
-							disabled={submitting}
-							type='submit'
-							className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						>
-							{submitting && <ButtonSpinner />}
-							Continue
-						</button>
 					</form>
 				</>;
 			default:

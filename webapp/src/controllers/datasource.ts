@@ -21,7 +21,7 @@ import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
 import deleteCollectionFromQdrant from 'vectordb/proxy';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbeddingModel, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
@@ -217,6 +217,7 @@ export async function addDatasourceApi(req, res, next) {
 		cronTimezone,
 		modelId,
 		name,
+		embeddingField,
 	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
@@ -319,8 +320,8 @@ export async function addDatasourceApi(req, res, next) {
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
 		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
-		setDatasourceEmbeddingModel(req.params.resourceSlug, datasourceId, modelId),
-		setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING)
+		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField),
+		setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING),
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
