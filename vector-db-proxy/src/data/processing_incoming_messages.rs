@@ -24,7 +24,7 @@ pub async fn process_messages(
         Ok(_json) => {
             message_data = _json;
             match get_embedding_model(&mongodb_connection, datasource_id.as_str()).await {
-                Ok(model_parameter_result) => match model_parameter_result {
+                Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
                     Some(model_parameters) => {
                         let vector_length = model_parameters.embeddingLength as u64;
                         let embedding_model_name = model_parameters.model;
@@ -32,40 +32,41 @@ pub async fn process_messages(
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         let message_clone = message_data.clone();
-                        let mut metadata: HashMap<String, String> = HashMap::new();
                         if let Value::Object(data_obj) = message_data {
-                            metadata = convert_serde_value_to_hashmap_string(data_obj);
-                        }
-
-                        let text = message_clone
-                            .get("document")
-                            .unwrap_or(&Value::String("".to_string()))
-                            .to_string();
-
-                        match embed_payload(
-                            &metadata,
-                            text,
-                            Some(ds_clone),
-                            EmbeddingModels::from(embedding_model_name),
-                        )
-                        .await
-                        {
-                            Ok(point_struct) => {
-                                if let Ok(bulk_upload_result) = qdrant
-                                    .bulk_upsert_data(
-                                        vec![point_struct],
-                                        Some(vector_length),
-                                        Some(embedding_model_name_clone),
-                                    )
-                                    .await
+                            let metadata = convert_serde_value_to_hashmap_string(data_obj);
+                            if let Some(text_field) = embedding_field {
+                                let text = message_clone
+                                    .get(text_field)
+                                    .unwrap_or(&Value::String("".to_string()))
+                                    .to_string();
+                                match embed_payload(
+                                    &metadata,
+                                    text,
+                                    Some(ds_clone),
+                                    EmbeddingModels::from(embedding_model_name),
+                                )
+                                .await
                                 {
-                                    return bulk_upload_result;
+                                    Ok(point_struct) => {
+                                        if let Ok(bulk_upload_result) = qdrant
+                                            .bulk_upsert_data(
+                                                vec![point_struct],
+                                                Some(vector_length),
+                                                Some(embedding_model_name_clone),
+                                            )
+                                            .await
+                                        {
+                                            return bulk_upload_result;
+                                        }
+                                    }
+                                    Err(e) => {
+                                        eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
+                                        return false;
+                                    }
                                 }
                             }
-                            Err(e) => {
-                                eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
-                                return false;
-                            }
+                        } else {
+                            return false;
                         }
                     }
                     None => {
@@ -85,7 +86,7 @@ pub async fn process_messages(
                 "An error occurred while attempting to convert message to JSON: {}",
                 e
             );
-            return false;
+            false
         }
     }
 }

@@ -23,7 +23,10 @@ pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option
     }
 }
 
-pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<Option<Model>> {
+pub async fn get_embedding_model(
+    db: &Database,
+    datasource_id: &str,
+) -> Result<(Option<Model>, Option<String>)> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
 
@@ -41,14 +44,14 @@ pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<O
                 .find_one(doc! {"_id": datasource.modelId}, None)
                 .await
             {
-                Ok(model) => Ok(model), // Return the model if found (could be Some or None)
+                Ok(model) => Ok((model, datasource.embeddingField)), // Return the model if found (could be Some or None)
                 Err(e) => {
                     println!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))
                 }
             }
         }
-        Ok(None) => Ok(None), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
+        Ok(None) => Ok((None, None)), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
             println!("Error: {}", e);
             Err(anyhow!("Failed to find datasource: {}", e))
