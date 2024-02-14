@@ -28,16 +28,11 @@ use once_cell::sync::Lazy;
 use tokio::join;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
-#[cfg(windows)]
-use tokio::signal::windows::ctrl_c;
 use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
-<<<<<<< Updated upstream
 use crate::queue::queuing::{Control, MyQueue};
-=======
 use crate::mongo::client::start_mongo_connection;
->>>>>>> Stashed changes
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
@@ -100,12 +95,9 @@ async fn main() -> std::io::Result<()> {
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-<<<<<<< Updated upstream
     let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
     // TODO: include mongo connection in app data to reduce number of connections made to mongo!
-=======
     let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
->>>>>>> Stashed changes
     let rabbitmq_connection_details = RabbitConnect {
         host: rabbitmq_host,
         port: rabbitmq_port,
@@ -115,17 +107,14 @@ async fn main() -> std::io::Result<()> {
     let rabbitmq_stream = tokio::spawn(async move {
         let _ = subscribe_to_queue(
             Arc::clone(&qdrant_connection_for_rabbitmq),
-<<<<<<< Updated upstream
             Arc::clone(&queue),
-=======
             Arc::clone(&mongo_client_clone),
->>>>>>> Stashed changes
             rabbitmq_connection_details,
             rabbitmq_exchange.as_str(),
             rabbitmq_stream.as_str(),
             rabbitmq_routing_key.as_str(),
         )
-        .await;
+            .await;
     });
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let web_task = tokio::spawn(async move {
@@ -136,15 +125,15 @@ async fn main() -> std::io::Result<()> {
                 .app_data(Data::new(Arc::clone(&app_qdrant_client)))
                 .configure(init)
         })
-        .bind(format!("{}:{}", host, port))?
-        .run();
+            .bind(format!("{}:{}", host, port))?
+            .run();
 
         // Handle SIGINT to manually kick-off graceful shutdown
         tokio::spawn(async move {
             #[cfg(unix)]
-            let mut stream = signal(SignalKind::interrupt()).unwrap();
+                let mut stream = signal(SignalKind::interrupt()).unwrap();
             #[cfg(windows)]
-            let mut stream = ctrl_c().unwrap();
+                let mut stream = ctrl_c().unwrap();
             stream.recv().await;
             System::current().stop();
         });
