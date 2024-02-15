@@ -1,0 +1,10 @@
+{
+    "fastembed_model_mapping": {
+        "fast-bge-small-en": "BAAI/bge-small-en",
+		"fast-bge-small-en-v1.5": "BAAI/bge-small-en-v1.5",
+		"fast-bge-base-en": "BAAI/bge-base-en",
+		"fast-bge-base-en-v1.5": "BAAI/bge-base-en-v1.5",
+		"fast-all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+		"fast-multilingual-e5-large": "intfloat/multilingual-e5-large"
+    }
+}

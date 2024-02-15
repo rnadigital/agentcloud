@@ -8,6 +8,7 @@ from models.mongo import AgentConfig, AgentConfigArgs
 from importlib import import_module
 from agents.agents_list import AvailableAgents
 import qdrantClient.qdrant_connection as qdc
+from agents.qdrant_retrieval import map_fastembed_query_model_name
 # TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
 # tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
 
@@ -112,9 +113,9 @@ class ChatBuilder:
                 "task": "qa",
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
-                "client": qdc.get_connection(host="qdrant", port=6333),
+                "client": qdc.get_connection(host="localhost", port=6333),
                 # "embedding_model": "BAII/bge-small-en",
-                "embedding_model": datasource["model"],
+                "embedding_model": map_fastembed_query_model_name(datasource["model"]),
                 "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
                 # "type": None,
             },
