@@ -142,6 +142,9 @@ class ChatBuilder:
         )
         agent_config["socket_client"] = self.socket
         agent_config["sid"] = self.session_id
+        if "retrieve_config" in agent_config and agent_config["retrieve_config"] is not None:
+            agent_config["retrieve_config"]["client"] = qdc.get_connection(host="localhost", port=6333)
+            agent_config["debug_docs"] = LOCAL #will print retrieved dos and context verbose
         agent = apply_agent_config(agent_type, agent_config)
         if agent.name == "admin":
             self.user_proxy: autogen.UserProxyAgent = agent
@@ -151,6 +154,30 @@ class ChatBuilder:
         roles = self.group.get("roles")
         for i, role in enumerate(roles):
             self.process_role(role)
+    
+    def add_retrieve_assistant_if_required(self):
+        # for agent in self.agents:
+        remove_index = -1
+        for i in range(0, len(self.agents)):
+            agent = self.agents[i]
+            if type(agent) is AvailableAgents.QdrantRetrieveUserProxyAgent:
+                assistant_agent = apply_agent_config(AvailableAgents.RetrieveAssistantAgent, {
+                    "name": "retrieve_assistant_agent",
+                    "system_message": "You are a helpful assistant who can answer user questions based on the context provided",
+                    "llm_config": agent.llm_config,
+                    "use_sockets": True,
+                    "socket_client": self.socket,
+                    "sid": self.session_id,
+                    "code_execution_config": False
+                })
+                assistant_agent.reset()
+                self.agents.append(assistant_agent)
+                if self.single_agent:
+                    remove_index = i
+        if remove_index >= 0:
+            del self.agents[remove_index]
+
+
     def remove_admin_agent(self):
         self.agents = [agent for agent in self.agents if agent.name != "admin"]
 

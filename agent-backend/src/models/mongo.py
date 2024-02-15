@@ -70,7 +70,13 @@ class LLMConfig(BaseModel):
     stream: Optional[bool] = True
     functions: Optional[List[ToolData]] = None
 
-
+class RetrieverData(BaseModel):
+    task: str = "qa"
+    collection_name: str
+    chunk_token_size: int = 2000
+    embedding_model: str
+    model: str
+    client: Optional[object] = None
 class AgentConfig(BaseModel):
     """Data model for Autogen Agent Config"""
 
@@ -88,7 +94,8 @@ class AgentConfig(BaseModel):
     sid: str = None
     datasource_data: Optional[List[DatasourceData]] = None
     datasource_ids: Optional[List[str]] = None
-    retrieve_config: Optional[Dict[str, Any]] = None
+    # retrieve_config: Optional[Dict[str, Any]] = None
+    retrieve_config: Optional[RetrieverData] = None
     debug_docs: Optional[bool] = False
 
 

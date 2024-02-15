@@ -6,8 +6,9 @@ from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from init.env_variables import BASE_PATH
-from models.mongo import DatasourceData, ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
-from typing import List, Dict, Union, Any, Optional
+from models.mongo import DatasourceData, RetrieverData, ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
+from typing import List, Dict, Union, Any, Optional, Final
+from agents.qdrant_retrieval import map_fastembed_query_model_name
 
 
 class MongoClientConnection(MongoConnection):
@@ -67,7 +68,7 @@ class MongoClientConnection(MongoConnection):
                     agent_data: Union[AgentData, None] = self._get_group_member(agent)
                     if agent_data:
                         agent_data.is_admin = (
-                            True if ((group_id and agent == admin_agent) or (agent_id is not None and agent_data.type == "QdrantRetrieveUserProxyAgent")) else False
+                            True if ((group_id and agent == admin_agent) or (group_id is None and agent_id is not None and agent_data.type  == "QdrantRetrieveUserProxyAgent")) else False
                         )
                         list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
@@ -117,6 +118,7 @@ class MongoClientConnection(MongoConnection):
                 
                 #Construct datasources
                 list_of_datasources: List[DatasourceData] = list()
+                retrieve_config = None
                 datasource_ids: List[ObjectId] = agent.get("datasourceIds")
                 if datasource_ids and len(datasource_ids) > 0:
                     for datasource_id in datasource_ids:
@@ -126,6 +128,8 @@ class MongoClientConnection(MongoConnection):
                         if datasource is not None:
                             ds_list = list(datasource)
                             if len(ds_list) > 0:
+                                #TODO: allow for multi-source
+                                retrieve_config = RetrieverData(collection_name=datasource_id, embedding_model=map_fastembed_query_model_name(ds_list[0]["model"]), model=_config_list.model)
                                 datasource_data = DatasourceData(id=datasource_id,**ds_list[0])
                                 list_of_datasources.append(datasource_data)
                 
@@ -142,13 +146,14 @@ class MongoClientConnection(MongoConnection):
                     }
                 else:
                     code_execution_config = {}
-                _agent_config = AgentConfig(
+                    _agent_config = AgentConfig(
                     name=agent.get("name"),
                     system_message=agent.get("systemMessage"),
                     human_input_mode=agent.get("humanInputMode") or "NEVER",
                     llm_config=_llm_config,
                     code_execution_config=code_execution_config,
-                    datasource_data=list_of_datasources
+                    datasource_data=list_of_datasources,
+                    retrieve_config=retrieve_config
                 )
 
                 # Construct Agent Data

@@ -158,7 +158,7 @@ export async function addAgentApi(req, res, next) {
 		systemMessage,
 		humanInputMode: type === AgentType.EXECUTOR_AGENT
 			? 'TERMINAL'
-			: type === AgentType.USER_PROXY_AGENT
+			: [AgentType.USER_PROXY_AGENT, AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT].indexOf(type) >= 0
 				? 'ALWAYS'
 				: null,
 		model,
@@ -223,7 +223,7 @@ export async function editAgentApi(req, res, next) {
 		systemMessage,
 		humanInputMode: type === AgentType.EXECUTOR_AGENT
 			? 'TERMINAL'
-			: type === AgentType.USER_PROXY_AGENT
+			: [AgentType.USER_PROXY_AGENT, AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT].indexOf(type) >= 0
 				? 'ALWAYS'
 				: null,
 		model,

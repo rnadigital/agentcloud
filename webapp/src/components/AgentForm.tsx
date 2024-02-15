@@ -53,7 +53,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 
 	async function agentPost(e) {
 		e.preventDefault();
-		const body = {
+		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
@@ -230,9 +230,9 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 												id='retriver-assistant-agent'
 												name='type'
 												type='radio'
-												value={AgentType.RETRIEVER_ASSISTANT_AGENT}
+												value={AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT}
 												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={!editing || type === AgentType.RETRIEVER_ASSISTANT_AGENT}
+												defaultChecked={!editing || type === AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT}
 											/>
 										</div>
 										<div className='text-sm leading-6'>

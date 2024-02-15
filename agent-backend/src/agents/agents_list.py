@@ -18,4 +18,4 @@ class AvailableAgents(NamedTuple):
     GroupChatManager = autogen.GroupChatManager
     RetrieveAssistantAgent = RetrieveAssistantAgent
     QdrantRetrieveUserProxyAgent = QdrantRetrieveUserProxyAgent
-    LLaVAAgent =LLaVAAgent
+    LLaVAAgent = LLaVAAgent

@@ -33,6 +33,7 @@ def task_execution(task: str, session_id: str):
             single_agent = session.get("agentId") is not None
             build_chat = ChatBuilder(task, session_id, group, single_agent, {})
             build_chat.create_group()
+            build_chat.add_retrieve_assistant_if_required()
             build_chat.attach_tools_to_agent()
             build_chat.run_chat()
         except Exception as e:
