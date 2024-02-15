@@ -11,7 +11,6 @@ export const ModelList = {
 		'fast-bge-small-en-v1.5',
 		'fast-bge-base-en',
 		'fast-bge-base-en-v1.5',
-		'fast-bge-small-zh-v1.5',
 		'fast-all-MiniLM-L6-v2',
 		'fast-multilingual-e5-large']
 };

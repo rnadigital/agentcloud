@@ -64,7 +64,7 @@ export default function App({ Component, pageProps }) {
 								progressClassName='toast-container'
 								bodyClassName='toast-body'
 								theme='colored'
-								position='top-right'
+								position='bottom-right'
 								autoClose={3000}
 								newestOnTop={true}
 								pauseOnFocusLoss={false}

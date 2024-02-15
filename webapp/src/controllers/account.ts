@@ -59,7 +59,7 @@ export async function login(req, res) {
 	if (passwordMatch === true) {
 		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/sessions`, token });
+		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/playground`, token });
 	}
 
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
@@ -204,7 +204,7 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	return res.json({ redirect: redirect || `/${teamId}/sessions` });
+	return res.json({ redirect: redirect || `/${teamId}/playground` });
 
 }
 

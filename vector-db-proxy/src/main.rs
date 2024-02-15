@@ -16,7 +16,7 @@ mod routes;
 mod utils;
 
 use qdrant::client::instantiate_qdrant_client;
-use std::sync::{Arc};
+use std::sync::Arc;
 
 use crate::init::models::GlobalData;
 use actix_cors::Cors;
@@ -28,17 +28,19 @@ use once_cell::sync::Lazy;
 use tokio::join;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
+#[cfg(windows)]
+use tokio::signal::windows::ctrl_c;
 use tokio::sync::RwLock;
 
 use crate::init::env_variables::set_all_env_vars;
-use crate::queue::queuing::{Control, MyQueue};
-use crate::mongo::client::start_mongo_connection;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, create_collection, delete_collection, health_check,
     list_collections, lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
 };
+use crate::mongo::client::start_mongo_connection;
+use crate::queue::queuing::{Control, MyQueue};
 
 pub fn init(config: &mut web::ServiceConfig) {
     let webapp_url =
@@ -114,7 +116,7 @@ async fn main() -> std::io::Result<()> {
             rabbitmq_stream.as_str(),
             rabbitmq_routing_key.as_str(),
         )
-            .await;
+        .await;
     });
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let web_task = tokio::spawn(async move {
@@ -125,15 +127,15 @@ async fn main() -> std::io::Result<()> {
                 .app_data(Data::new(Arc::clone(&app_qdrant_client)))
                 .configure(init)
         })
-            .bind(format!("{}:{}", host, port))?
-            .run();
+        .bind(format!("{}:{}", host, port))?
+        .run();
 
         // Handle SIGINT to manually kick-off graceful shutdown
         tokio::spawn(async move {
             #[cfg(unix)]
-                let mut stream = signal(SignalKind::interrupt()).unwrap();
+            let mut stream = signal(SignalKind::interrupt()).unwrap();
             #[cfg(windows)]
-                let mut stream = ctrl_c().unwrap();
+            let mut stream = ctrl_c().unwrap();
             stream.recv().await;
             System::current().stop();
         });

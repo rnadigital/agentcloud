@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 
 let socketio = io({ /* transports: ["websocket"] */ });
@@ -18,6 +19,7 @@ export function SocketWrapper({ children }) {
 		console.log('joined room');
 		sharedSocket.on('notification', msg => {
 			console.log('notification', msg);
+			toast('New Notification!');
 		    setNotificationTrigger(prevState => !prevState);
 		});
 	}

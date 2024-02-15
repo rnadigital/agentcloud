@@ -22,9 +22,21 @@ export function getNotificationById(teamId: db.IdOrStr, notificationId: db.IdOrS
 }
 
 // Get all notifications for a specific team
+export function getAllNotificationsByTeam(teamId: db.IdOrStr): Promise<Notification[]> {
+	return NotificationsCollection().find({
+		teamId: toObjectId(teamId),
+	}).sort({
+		_id: -1,
+	}).toArray();
+}
+
+// Get all notifications for a specific team
 export function getNotificationsByTeam(teamId: db.IdOrStr): Promise<Notification[]> {
 	return NotificationsCollection().find({
 		teamId: toObjectId(teamId),
+		seen: false,
+	}).sort({
+		_id: -1,
 	}).toArray();
 }
 
@@ -34,6 +46,8 @@ export function getNotificationsByTeams(teamIds: db.IdOrStr[]): Promise<Notifica
 		teamId: {
 			$in: teamIds,
 		},
+	}).sort({
+		_id: -1,
 	}).toArray();
 }
 
@@ -43,19 +57,11 @@ export async function addNotification(notification: Notification): Promise<Inser
 	return NotificationsCollection().insertOne(notification);
 }
 
-// Mark a specific notification as read by its ID and teamId
-export async function markNotificationAsRead(teamId: db.IdOrStr, notificationId: db.IdOrStr): Promise<any> {
-	return NotificationsCollection().updateOne(
-		{ _id: toObjectId(notificationId), teamId: toObjectId(teamId) },
-		{ $set: { read: true } }
-	);
-}
-
-// Mark a specific notification as read by its ID and teamId
-export async function markNotificationsRead(teamId: db.IdOrStr, notificationIds: db.IdOrStr[]): Promise<any> {
+// Mark a specific notification as seen by its ID and teamId
+export async function markNotificationsSeen(teamId: db.IdOrStr, notificationIds: db.IdOrStr[]): Promise<any> {
 	return NotificationsCollection().updateMany(
 		{ _id: { $in: notificationIds }, teamId: toObjectId(teamId) },
-		{ $set: { read: true } }
+		{ $set: { seen: true } }
 	);
 }
 

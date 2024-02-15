@@ -10,7 +10,7 @@ use tokio::time::{sleep, Duration};
 
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     let mut res = Connection::open(
-        &OpenConnectionArguments::new(
+        OpenConnectionArguments::new(
             &connection_details.host,
             connection_details.port,
             &connection_details.username,
@@ -46,7 +46,7 @@ pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
         .register_callback(DefaultChannelCallback)
         .await
         .unwrap();
-    return channel;
+    channel
 }
 
 pub async fn bind_queue_to_exchange(
@@ -60,7 +60,7 @@ pub async fn bind_queue_to_exchange(
     if !connection.is_open() {
         println!("Connection not open");
         *connection = connect_rabbitmq(connection_details).await;
-        *channel = channel_rabbitmq(&connection).await;
+        *channel = channel_rabbitmq(connection).await;
         println!("{}", connection);
     }
     // Declaring the exchange on startup
@@ -80,7 +80,7 @@ pub async fn bind_queue_to_exchange(
     // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
     let queue_type_x: ShortStr = "x-queue-type".try_into().unwrap();
-    let queue_type_q: FieldValue = "stream".try_into().unwrap();
+    let queue_type_q: FieldValue = "stream".into();
     args.insert(queue_type_x, queue_type_q);
 
     let (queue, _, _) = channel
@@ -102,7 +102,7 @@ pub async fn bind_queue_to_exchange(
             "Channel is not open, does exchange {} exist on rabbitMQ?",
             exchange
         );
-        *channel = channel_rabbitmq(&connection).await;
+        *channel = channel_rabbitmq(connection).await;
     }
 
     // bind the queue to the exchange using this channel

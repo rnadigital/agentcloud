@@ -184,6 +184,9 @@ export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) 
 export function getNotifications(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/notifications.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function markNotificationsSeen(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/notification/seen`, 'PATCH', body, dispatch, errorCallback, router);
+}
 export function getTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/team.json`, 'GET', null, dispatch, errorCallback, router);
 }
@@ -281,7 +284,7 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 			errorCallback && errorCallback(response.error);
 			return;
 		}
-		dispatch(response);
+		dispatch && dispatch(response);
 		return response;
 	} else {
 		errorCallback && errorCallback('An error occurred');

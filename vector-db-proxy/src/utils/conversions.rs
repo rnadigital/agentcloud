@@ -1,18 +1,21 @@
-use std::collections::HashMap;
-use serde_json::{Map, Value};
-use qdrant_client::qdrant::Condition;
 use crate::routes::models::FilterConditions;
-use crate::qdrant::models::HashMapValues;
+use qdrant_client::qdrant::Condition;
+use serde_json::{Map, Value};
+use std::collections::HashMap;
 
-pub fn convert_serde_value_to_hashmap_value(serde_value: Map<String, Value>) -> HashMap<String, HashMapValues> {
-    let hashmap_serde: HashMap<String, HashMapValues> = serde_value.iter()
-        .map(|(k, v)|
-            (k.clone(), HashMapValues::Serde(v.to_owned())))
+pub fn convert_serde_value_to_hashmap_string(
+    serde_value: Map<String, Value>,
+) -> HashMap<String, String> {
+    let hashmap_serde: HashMap<String, String> = serde_value
+        .iter()
+        .map(|(k, v)| (k.clone(), v.to_owned().to_string()))
         .collect();
     return hashmap_serde;
 }
 
-pub fn convert_hashmap_to_filters(filters: &Option<FilterConditions>) -> (Vec<Condition>, Vec<Condition>, Vec<Condition>) {
+pub fn convert_hashmap_to_filters(
+    filters: &Option<FilterConditions>,
+) -> (Vec<Condition>, Vec<Condition>, Vec<Condition>) {
     let mut must_vec: Vec<Condition> = vec![];
     let mut must_not_vec: Vec<Condition> = vec![];
     let mut should_vec: Vec<Condition> = vec![];

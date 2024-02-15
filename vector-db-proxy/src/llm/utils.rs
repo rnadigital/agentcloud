@@ -22,7 +22,6 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
         | EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5
         | EmbeddingModels::BAAI_BGE_BASE_EN
         | EmbeddingModels::BAAI_BGE_BASE_EN_V1_5
-        | EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5
         | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
         | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
             Some(m) => {

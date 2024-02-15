@@ -8,7 +8,6 @@ pub enum EmbeddingModels {
     BAAI_BGE_SMALL_EN_V1_5,
     BAAI_BGE_BASE_EN,
     BAAI_BGE_BASE_EN_V1_5,
-    BAAI_FAST_BGE_SMALL_ZH_V1_5,
     ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2,
     XENOVA_FAST_MULTILINGUAL_E5_LARGE,
     UNKNOWN,
@@ -23,7 +22,6 @@ impl From<String> for EmbeddingModels {
             "fast-bge-small-en-v1.5" => EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5,
             "fast-bge-base-en" => EmbeddingModels::BAAI_BGE_BASE_EN,
             "fast-bge-base-en-v1.5" => EmbeddingModels::BAAI_BGE_BASE_EN_V1_5,
-            "fast-bge-small-zh-v1.5" => EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5,
             "fast-all-MiniLM-L6-v2" => EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2,
             "fast-multilingual-e5-large" => EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE,
             _ => EmbeddingModels::UNKNOWN,
@@ -41,7 +39,6 @@ impl EmbeddingModels {
             EmbeddingModels::BAAI_BGE_SMALL_EN_V1_5 => Some("fast-bge-small-en-v1.5"),
             EmbeddingModels::BAAI_BGE_BASE_EN => Some("fast-bge-base-en"),
             EmbeddingModels::BAAI_BGE_BASE_EN_V1_5 => Some("fast-bge-base-en-v1.5"),
-            EmbeddingModels::BAAI_FAST_BGE_SMALL_ZH_V1_5 => Some("fast-bge-small-zh-v1.5"),
             EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2 => Some("fast-all-MiniLM-L6-v2"),
             EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => {
                 Some("fast-multilingual-e5-large")
@@ -56,7 +53,6 @@ pub enum FastEmbedModels {
     BAAI_BGE_SMALL_EN_V1_5,
     BAAI_BGE_BASE_EN,
     BAAI_BGE_BASE_EN_V1_5,
-    BAAI_FAST_BGE_SMALL_ZH_V1_5,
     ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2,
     XENOVA_FAST_MULTILINGUAL_E5_LARGE,
     UNKNOWN,
@@ -69,7 +65,6 @@ impl From<String> for FastEmbedModels {
             "fast-bge-small-en-v1.5" => FastEmbedModels::BAAI_BGE_SMALL_EN_V1_5,
             "fast-bge-base-en" => FastEmbedModels::BAAI_BGE_BASE_EN,
             "fast-bge-base-en-v1.5" => FastEmbedModels::BAAI_BGE_BASE_EN_V1_5,
-            "fast-bge-small-zh-v1.5" => FastEmbedModels::BAAI_FAST_BGE_SMALL_ZH_V1_5,
             "fast-all-MiniLM-L6-v2" => FastEmbedModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2,
             "fast-multilingual-e5-large" => FastEmbedModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE,
             _ => FastEmbedModels::UNKNOWN,
@@ -84,7 +79,6 @@ impl FastEmbedModels {
             FastEmbedModels::BAAI_BGE_BASE_EN => Some(EmbeddingModel::BGEBaseEN),
             FastEmbedModels::BAAI_BGE_SMALL_EN_V1_5 => Some(EmbeddingModel::BGESmallENV15),
             FastEmbedModels::BAAI_BGE_BASE_EN_V1_5 => Some(EmbeddingModel::BGEBaseENV15),
-            FastEmbedModels::BAAI_FAST_BGE_SMALL_ZH_V1_5 => Some(EmbeddingModel::BGESmallZH),
             FastEmbedModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2 => {
                 Some(EmbeddingModel::AllMiniLML6V2)
             }
