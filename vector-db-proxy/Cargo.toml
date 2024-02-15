@@ -44,13 +44,13 @@ amqp_serde = "0.4.0"
 amqprs = "1.5.1"
 google-cloud-storage = "0.15.0"
 pdf-extract = "0.7.4"
-lopdf = {version = "0.30", default-features = false, features = ["nom_parser"]}
+lopdf = { version = "0.30", default-features = false, features = ["nom_parser"] }
 regex = "1.9.5"
 ndarray = "0.15.6"
 google-cloud-auth = "0.13.0"
 dotext = "0.1.1"
 bson = "2.9.0"
-fastembed = "2.0.1"
+fastembed = { git = "https://github.com/pykeio/fastembed-rs", rev = "a316d9c12f5cbea5c9beb69b81c279c610fe6fa2" }
 ort = "^2.0.0-rc.0"
 csv = "1.3.0"
 threadpool = "1.8.1"
