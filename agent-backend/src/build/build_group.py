@@ -1,7 +1,7 @@
 import logging
 import inspect
 from socketio.simple_client import SimpleClient
-from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
+from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL
 import autogen
 from typing import Optional, Union, List, Dict, Callable
 from models.mongo import AgentConfig, AgentConfigArgs
@@ -128,7 +128,8 @@ class ChatBuilder:
             "use_sockets": True,
             "socket_client": self.socket,
             "sid": self.session_id,
-            "code_execution_config": False
+            "code_execution_config": False,
+            "debug_docs": LOCAL
         })
         # self.agents.append(agent)
         self.user_proxy = agent

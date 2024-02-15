@@ -89,6 +89,8 @@ class AgentConfig(BaseModel):
     datasource_data: Optional[List[DatasourceData]] = None
     datasource_ids: Optional[List[str]] = None
     retrieve_config: Optional[Dict[str, Any]] = None
+    debug_docs: Optional[bool] = False
+
 
 AgentConfigArgs = tuple([k for k in AgentConfig.model_fields.keys()])
 
