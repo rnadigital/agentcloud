@@ -5,6 +5,7 @@ use tokio::sync::RwLock;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::queries::get_embedding_model_and_embedding_key;
 use crate::qdrant::helpers::embed_payload;
+use crate::utils::webhook::send_webapp_embed_ready;
 use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 use qdrant_client::client::QdrantClient;
@@ -28,6 +29,7 @@ pub async fn process_messages(
                         let vector_length = model_parameters.embeddingLength as u64;
                         let embedding_model_name = model_parameters.model;
                         let embedding_model_name_clone = embedding_model_name.clone();
+                        let datasource_id_str = datasource_id.clone();
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         if let Value::Object(data_obj) = message_data {
@@ -52,6 +54,11 @@ pub async fn process_messages(
                                             )
                                             .await
                                         {
+                                            if let Err(e) = send_webapp_embed_ready(&datasource_id_str).await {
+                                                println!("Error notifying webapp: {}", e);
+                                            } else {
+                                                println!("Webapp notified successfully!");
+                                            }
                                             return bulk_upload_result;
                                         }
                                     }

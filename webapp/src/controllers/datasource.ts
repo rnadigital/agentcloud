@@ -679,7 +679,7 @@ export async function uploadFileApi(req, res, next) {
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
 	    createdDate: new Date(),
-	    status: DatasourceStatus.READY, //TODO: have a feedback message when actually READY/set this from vector db proxy
+	    status: DatasourceStatus.EMBEDDING, //TODO: have a feedback message when actually READY/set this from vector db proxy
 	});
 	
 	// Send the gcs file path to rabbitmq

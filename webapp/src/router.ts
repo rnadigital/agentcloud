@@ -176,6 +176,7 @@ export default function router(server, app) {
 	// Airbyte webhooks
 	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
 	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
 	server.use('/webhook', webhookRouter);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);

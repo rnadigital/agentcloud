@@ -118,7 +118,6 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		if (datasourceId) {
 			const datasource = await getDatasourceByIdUnsafe(datasourceId);
 			if (datasource) {
-				// console.log(datasource)
 				await Promise.all([
 					addNotification({
 					    orgId: toObjectId(datasource.orgId.toString()),
@@ -135,9 +134,8 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					    seen: false,
 					}),
 					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING)
 				]);
-				io.to(datasource.teamId.toString()).emit('notification', datasourceId); //TODO: change to emit notification after inserting
 			}
 		}
 	}
@@ -146,3 +144,38 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 }
 
+export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
+	console.log('handleSuccessfulEmbeddingWebhook body', req.body);
+
+	//TODO: validate some kind of webhook key
+
+	// TODO: body validation
+	const { datasourceId } = req.body;
+
+	const datasource = await getDatasourceByIdUnsafe(datasourceId);
+	if (datasource) {
+		setTimeout(async () => {
+			await Promise.all([
+				addNotification({
+				    orgId: toObjectId(datasource.orgId.toString()),
+				    teamId: toObjectId(datasource.teamId.toString()),
+				    target: {
+						id: datasourceId,
+						collection: 'notifications',
+						property: '_id',
+						objectId: true,
+				    },
+				    title: 'Embedding Successful',
+				    description: `Embedding completed for datasource "${datasource.name}".`,
+				    date: new Date(),
+				    seen: false,
+				}),
+				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+			]);
+			io.to(datasource.teamId.toString()).emit('notification', datasourceId);
+		}, 5000); //TODO: remove hardcoded timeout and fix fo real
+	}
+
+	return dynamicResponse(req, res, 200, { });
+
+}

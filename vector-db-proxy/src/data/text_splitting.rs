@@ -255,7 +255,6 @@ impl Chunker {
                 }
             }
         }
-        // todo: @Tom make api call here to let webapp know tha embedding is done!
         documents
     }
 

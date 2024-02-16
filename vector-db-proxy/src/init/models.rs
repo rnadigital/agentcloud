@@ -13,6 +13,7 @@ pub struct GlobalData {
     pub rabbitmq_password: String,
     pub mongo_uri: String,
     pub qdrant_uri: String,
+    pub webapp_host: String,
 }
 
 impl GlobalData {
@@ -32,6 +33,7 @@ impl GlobalData {
             rabbitmq_password: dotenv::var("RABBITMQ_PASSWORD").unwrap_or("guest".to_string()),
             mongo_uri: dotenv::var("MONGO_URI").unwrap_or("localhost".to_string()),
             qdrant_uri: dotenv::var("QDRANT_URI").unwrap_or("localhost".to_string()),
+            webapp_host: dotenv::var("WEBAPP_HOST").unwrap_or("localhost".to_string()),
         }
     }
 }

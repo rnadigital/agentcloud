@@ -4,6 +4,7 @@ use crate::data::models::FileType;
 use crate::gcp::gcs::get_object_from_gcs;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::queries::get_datasource;
+use crate::utils::webhook::send_webapp_embed_ready;
 use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
@@ -11,6 +12,7 @@ use crate::rabbitmq::models::RabbitConnect;
 
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 use crate::queue::queuing::MyQueue;
+
 use actix_web::dev::ResourcePath;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments};
@@ -22,7 +24,8 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
-use std::{fs, fs::File};
+use std::fs;
+use std::fs::{File};
 use tokio::sync::RwLock;
 
 async fn extract_text_from_file(
@@ -269,10 +272,14 @@ pub async fn subscribe_to_queue(
                                                                                     .await
                                                                                 {
                                                                                     Ok(_) => {
-                                                                                        // todo: @Tom make api call here to let webapp know that points have been uploaded to qdrant
                                                                                         println!(
                                                                                             "points uploaded successfully!"
-                                                                                        )
+                                                                                        );
+                                                                                        if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
+                                                                                            println!("Error notifying webapp: {}", e);
+                                                                                        } else {
+                                                                                            println!("Webapp notified successfully!");
+                                                                                        }
                                                                                     }
                                                                                     Err(e) => {
                                                                                         println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
