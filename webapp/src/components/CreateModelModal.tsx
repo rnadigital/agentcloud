@@ -58,7 +58,7 @@ export default function CreateModelModal({ open, setOpen, callback }) {
 										</Dialog.Title>
 									</div>
 								</div>
-								<ModelForm compact={true} callback={callback} credentials={credentials} />
+								<ModelForm compact={true} callback={callback} credentials={credentials} fetchModelFormData={fetchModelFormData} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>
