@@ -15,6 +15,7 @@ MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "test")
 AGENT_BACKEND_SOCKET_TOKEN = os.getenv("AGENT_BACKEND_SOCKET_TOKEN")
 DB_URL = os.getenv("DB_URL")
 MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 

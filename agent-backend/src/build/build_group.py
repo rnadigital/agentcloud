@@ -1,7 +1,7 @@
 import logging
 import inspect
 from socketio.simple_client import SimpleClient
-from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL
+from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
 import autogen
 from typing import Optional, Union, List, Dict, Callable
 from models.mongo import AgentConfig, AgentConfigArgs
@@ -113,7 +113,7 @@ class ChatBuilder:
                 "task": "qa",
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
-                "client": qdc.get_connection(host="localhost", port=6333),
+                "client": qdc.get_connection(host=QDRANT_HOST, port=6333),
                 # "embedding_model": "BAII/bge-small-en",
                 "embedding_model": map_fastembed_query_model_name(datasource["model"]),
                 "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
@@ -143,7 +143,7 @@ class ChatBuilder:
         agent_config["socket_client"] = self.socket
         agent_config["sid"] = self.session_id
         if "retrieve_config" in agent_config and agent_config["retrieve_config"] is not None:
-            agent_config["retrieve_config"]["client"] = qdc.get_connection(host="localhost", port=6333)
+            agent_config["retrieve_config"]["client"] = qdc.get_connection(host=QDRANT_HOST, port=6333)
             agent_config["debug_docs"] = LOCAL #will print retrieved dos and context verbose
         agent = apply_agent_config(agent_type, agent_config)
         if agent.name == "admin":
