@@ -119,6 +119,10 @@ initialize_environment() {
 }
 
 initialize_environment
+cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
+cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
+cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
+
 print_logo "=> Starting airbyte"
 
 # clone and install airbyte
