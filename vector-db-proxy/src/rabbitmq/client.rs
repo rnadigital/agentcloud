@@ -16,9 +16,9 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
             &connection_details.username,
             &connection_details.password,
         )
-        .virtual_host("/"),
+            .virtual_host("/"),
     )
-    .await;
+        .await;
 
     while res.is_err() {
         println!("trying to connect after error");
@@ -29,7 +29,7 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
             &connection_details.username,
             &connection_details.password,
         ))
-        .await;
+            .await;
     }
 
     let connection = res.unwrap();
@@ -69,21 +69,23 @@ pub async fn bind_queue_to_exchange(
         .await
         .unwrap();
     // Setting up basic quality-of-service parameters for the channel to enable streaming queue
-    channel
+    match channel
         .basic_qos(BasicQosArguments {
             prefetch_count: 1,
             prefetch_size: 0,
             global: false,
         })
-        .await
-        .unwrap();
+        .await {
+        Ok(_) => {}
+        Err(e) => { println!("An error occurred while setting up the channel:{}", e) }
+    }
     // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
     let queue_type_x: ShortStr = "x-queue-type".try_into().unwrap();
     let queue_type_q: FieldValue = "stream".into();
     args.insert(queue_type_x, queue_type_q);
 
-    let (queue, _, _) = channel
+    match channel
         .queue_declare(
             QueueDeclareArguments::default()
                 .queue(queue.to_owned())
@@ -92,22 +94,30 @@ pub async fn bind_queue_to_exchange(
                 .arguments(args)
                 .finish(),
         )
-        .await
-        .unwrap()
-        .unwrap();
+        .await {
+        Ok(queue_option) => {
+            match queue_option {
+                Some((queue, _, _)) => {
+                    //check if the channel is open, if not then open it
+                    if !channel.is_open() {
+                        println!(
+                            "Channel is not open, does exchange {} exist on rabbitMQ?",
+                            exchange
+                        );
+                        *channel = channel_rabbitmq(connection).await;
+                    }
 
-    //check if the channel is open, if not then open it
-    if !channel.is_open() {
-        println!(
-            "Channel is not open, does exchange {} exist on rabbitMQ?",
-            exchange
-        );
-        *channel = channel_rabbitmq(connection).await;
+                    // bind the queue to the exchange using this channel
+                    channel
+                        .queue_bind(QueueBindArguments::new(&queue, exchange, routing_key))
+                        .await
+                        .unwrap();
+                }
+                None => {}
+            }
+        }
+        Err(e) => {
+            println!("An error occurred while setting up the queue: {}", e)
+        }
     }
-
-    // bind the queue to the exchange using this channel
-    channel
-        .queue_bind(QueueBindArguments::new(&queue, exchange, routing_key))
-        .await
-        .unwrap();
 }
