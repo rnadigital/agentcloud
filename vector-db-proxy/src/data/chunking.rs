@@ -146,7 +146,7 @@ impl Chunking for TextChunker {
         Ok(results)
     }
 
-    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+    fn extract_text_from_csv(&self, _path: String) -> Result<(String, HashMap<String, String>)> {
         todo!()
     }
 
