@@ -278,7 +278,7 @@ export default function Datasource(props) {
 			</div>
 		</>}
 
-		{tab === 2 && datasource.sourceType === 'file' && <div className='space-y-3'>
+		{tab === 2 && datasource.sourceType !== 'file' && <div className='space-y-3'>
 			{editingSchedule === false && <div className='my-2'>
 				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
 				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
