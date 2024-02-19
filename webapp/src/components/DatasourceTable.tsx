@@ -36,7 +36,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				resourceSlug,
 				datasourceId,
 			}, () => {
-				toast.success('Deleted datasource');
+				// toast.success();
 			}, () => {
 				toast.error('Error deleting datasource');
 			}, router);
@@ -54,7 +54,6 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				resourceSlug,
 				datasourceId,
 			}, () => {
-				toast.success('Sync job triggered');
 				fetchDatasources();
 			}, () => {
 				toast.error('Error syncing');
