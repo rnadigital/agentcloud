@@ -131,7 +131,7 @@ pub async fn subscribe_to_queue(
     mongo_client: Arc<RwLock<Database>>,
 ) -> Result<()> {
     // loop {
-
+    let message_count = 10;
     let environment = Environment::builder()
         .host("localhost")
         .port(5552)
