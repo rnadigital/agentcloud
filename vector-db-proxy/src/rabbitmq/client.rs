@@ -71,7 +71,7 @@ pub async fn bind_queue_to_exchange(
     // Setting up basic quality-of-service parameters for the channel to enable streaming queue
     match channel
         .basic_qos(BasicQosArguments {
-            prefetch_count: 1000,
+            prefetch_count: 10000,
             prefetch_size: 0,
             global: false,
         })

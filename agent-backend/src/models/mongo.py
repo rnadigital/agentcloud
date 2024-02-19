@@ -33,6 +33,7 @@ class ToolData(BaseModel):
     code: str
     builtin: bool
 
+
 class DatasourceData(BaseModel):
     id: str
     model: str
@@ -70,6 +71,7 @@ class LLMConfig(BaseModel):
     stream: Optional[bool] = True
     functions: Optional[List[ToolData]] = None
 
+
 class RetrieverData(BaseModel):
     task: str = "qa"
     collection_name: str
@@ -77,6 +79,8 @@ class RetrieverData(BaseModel):
     embedding_model: str
     model: str
     client: Optional[object] = None
+
+
 class AgentConfig(BaseModel):
     """Data model for Autogen Agent Config"""
 
@@ -100,6 +104,7 @@ class AgentConfig(BaseModel):
 
 
 AgentConfigArgs = tuple([k for k in AgentConfig.model_fields.keys()])
+
 
 class AgentTypes(str, Enum):
     AssistantAgent = "AssistantAgent"
