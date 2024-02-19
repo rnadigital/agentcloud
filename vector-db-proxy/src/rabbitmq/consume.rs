@@ -27,6 +27,7 @@ use rabbitmq_stream_client::types::{ByteCapacity, Message, OffsetSpecification};
 use tokio::sync::RwLock;
 use rabbitmq_stream_client::{Client, ClientOptions, Environment};
 use futures::StreamExt;
+use llm_chain::options::Opt::TokenBias;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -155,25 +156,16 @@ pub async fn subscribe_to_queue(
         .await
         .unwrap();
 
-    for _ in 0..message_count {
-        let delivery = consumer.next().await.unwrap()?;
-        info!(
-            "Got message : {:?} with offset {}",
-            delivery
-                .message()
-                .data()
-                .map(|data| String::from_utf8(data.to_vec())),
-            delivery.offset()
-        );
+    while let Some(Ok(delivery)) = consumer.next().await {
+        delivery
+            .message()
+            .data()
+            .map(|data| String::from_utf8(data.to_vec()));
+        delivery.offset();
     }
 
-    consumer.handle().close().await.unwrap();
-
-    environment.delete_stream("test").await?;
     Ok(())
 
-    // loop {
-    // let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
     // if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
     //     let stream_string: String = stream.to_string();
     //     let stream_split: Vec<&str> = stream_string.split('_').collect();
@@ -357,8 +349,8 @@ pub async fn subscribe_to_queue(
     //         }
     //     }
     // } else {
+    //     consumer.handle().close().await.unwrap();
     //     println!("There was no stream_id in message... can not upload data!");
     // }
-// }
 }
-// }
+
