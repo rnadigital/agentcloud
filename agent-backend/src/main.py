@@ -1,14 +1,11 @@
 import threading
 import time
-from typing import Union
 
 from pydantic import BaseModel
 
 from messaging.client import consume_tasks
 from init.env_variables import MAX_THREADS
 from fastapi import FastAPI, responses
-from models.canopy_server import ChatRequest
-from agents.base import rag_execution
 
 app = FastAPI()
 

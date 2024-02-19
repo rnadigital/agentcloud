@@ -9,22 +9,25 @@ from importlib import import_module
 from agents.agents_list import AvailableAgents
 import qdrantClient.qdrant_connection as qdc
 from agents.qdrant_retrieval import map_fastembed_query_model_name
+
+
 # TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
 # tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
 
 
 class ChatBuilder:
     def __init__(
-        self,
-        prompt,
-        session_id: str,
-        group: dict,
-        single_agent: bool,
-        history: Optional[dict],
+            self,
+            prompt,
+            session_id: str,
+            group: dict,
+            single_agent: bool,
+            history: Optional[dict],
     ):
-        self.user_proxy: Optional[Union[autogen.UserProxyAgent,autogen.QdrantRetrieveUserProxyAgent]] = None
+        self.user_proxy: Optional[Union[autogen.UserProxyAgent, autogen.QdrantRetrieveUserProxyAgent]] = None
         self.agents: Optional[
-            List[Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent]]
+            List[Union[
+                autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent]]
         ] = list()
         self.single_agent = single_agent
         self.group = group
@@ -76,8 +79,8 @@ class ChatBuilder:
                             func_name: str = f"{function.get('name')}"
                             module_path = "tools.global_tools"
                             if (
-                                not function.get("builtin")
-                                and len(function.get("code", "")) > 0
+                                    not function.get("builtin")
+                                    and len(function.get("code", "")) > 0
                             ):
                                 module_path = f"tools.{self.session_id}"
                             try:
@@ -103,9 +106,9 @@ class ChatBuilder:
     def add_datasource_retrievers(self, retriver_model_data):
         # print(retriver_model_data)
         # for role in self.group["roles"]:
-            # agent_config = role.get("data")
+        # agent_config = role.get("data")
         # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
-            # for datasource in agent_config["datasource_data"]:
+        # for datasource in agent_config["datasource_data"]:
         datasource = retriver_model_data["datasource_data"][0]
         print(f"datasource: {datasource}")
         agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent, {
@@ -144,7 +147,7 @@ class ChatBuilder:
         agent_config["sid"] = self.session_id
         if "retrieve_config" in agent_config and agent_config["retrieve_config"] is not None:
             agent_config["retrieve_config"]["client"] = qdc.get_connection(host=QDRANT_HOST, port=6333)
-            agent_config["debug_docs"] = LOCAL #will print retrieved dos and context verbose
+            agent_config["debug_docs"] = LOCAL  # will print retrieved dos and context verbose
         agent = apply_agent_config(agent_type, agent_config)
         if agent.name == "admin":
             self.user_proxy: autogen.UserProxyAgent = agent
@@ -154,7 +157,7 @@ class ChatBuilder:
         roles = self.group.get("roles")
         for i, role in enumerate(roles):
             self.process_role(role)
-    
+
     def add_retrieve_assistant_if_required(self):
         # for agent in self.agents:
         remove_index = -1
@@ -177,7 +180,6 @@ class ChatBuilder:
         if remove_index >= 0:
             del self.agents[remove_index]
 
-
     def remove_admin_agent(self):
         self.agents = [agent for agent in self.agents if agent.name != "admin"]
 
@@ -193,7 +195,7 @@ class ChatBuilder:
                 )
             else:
                 user_proxy = self.user_proxy
-                if type(user_proxy) == AvailableAgents.QdrantRetrieveUserProxyAgent:        
+                if type(user_proxy) == AvailableAgents.QdrantRetrieveUserProxyAgent:
                     return user_proxy.initiate_chat(
                         recipient=self.agents[0],
                         problem=self.prompt
@@ -233,13 +235,17 @@ class ChatBuilder:
             recipient = [agent for agent in self.agents if agent.name != "admin"]
             self.user_proxy.initiate_chat(recipient=recipient[0], message=self.prompt)
 
+
 def apply_agent_config(agent_class, config_map):
     agent_config_args = AgentConfig(**config_map).model_dump()
-    model_keys = list(set(sum([[k for k,v in inspect.signature(a).parameters.items() if "'inspect._empty'" not in str(v.annotation)] for a in inspect.getmro(agent_class)], [])))
+    model_keys = list(set(sum(
+        [[k for k, v in inspect.signature(a).parameters.items() if "'inspect._empty'" not in str(v.annotation)] for a in
+         inspect.getmro(agent_class)], [])))
     for attribute in AgentConfigArgs:
         if attribute not in model_keys:
             del agent_config_args[attribute]
-    agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent] = agent_class(
+    agent: Union[
+        autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent] = agent_class(
         **agent_config_args
     )
     return agent
