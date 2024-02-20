@@ -1,5 +1,5 @@
 version: '3.7'
-name: airbyte
+name: agentcloud
 services:
 
   docker_rabbitmq:

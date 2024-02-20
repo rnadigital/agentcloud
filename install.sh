@@ -44,14 +44,17 @@ $1"""
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [options]"
-    echo "Options:"
-    echo "    --project-id ID                  Specify the GCP project ID."
-    echo "    --service-account-json PATH      Specify the file path of your GCP service account json."
-    echo "    --gcs-bucket-name NAME           Specify the GCS bucket name to use."
-    echo "    --gcs-bucket-location LOCATION   Specify the GCS bucket location."
-    echo "    --openai-api-key KEY             Specify your OpenAI API key."
-    echo "    -h, --help                       Display this help message."
+    echo """Usage: $0 [options]
+Options:
+--kill-webapp-next               Kill webapp after startup (for developers)
+--kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
+--kill-agent-backend             Kill agent-backend after startup (for developers)
+--project-id ID                  Specify the GCP project ID.
+--service-account-json PATH      Specify the file path of your GCP service account json.
+--gcs-bucket-name NAME           Specify the GCS bucket name to use.
+--gcs-bucket-location LOCATION   Specify the GCS bucket location.
+--openai-api-key KEY             Specify your OpenAI API key.
+-h, --help                       Display this help message."""
 }
 
 docker_up() {
@@ -71,7 +74,6 @@ docker_up() {
 
 print_logo
 
-usage
 echo
 # get git hash of current repo for footer
 export SHORT_COMMIT_HASH=$(git rev-parse --short HEAD)
@@ -84,9 +86,34 @@ GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
 OPENAI_API_KEY=""
 
+# Initialize variables to indicate whether to kill specific containers
+KILL_WEBAPP_NEXT=0
+KILL_VECTOR_DB_PROXY=0
+KILL_AGENT_BACKEND=0
+
+# Function to kill a Docker container by service name (remains the same)
+kill_container_by_service_name() {
+    local service_name=$1
+    local container_id=$(docker ps -q -f name="$service_name")
+    if [ -n "$container_id" ]; then
+        echo "Killing container $container_id of service $service_name..."
+        docker kill "$container_id"
+        if [ $? -eq 0 ]; then
+            echo "$service_name container killed successfully."
+        else
+            echo "Failed to kill $service_name container."
+        fi
+    else
+        echo "No running container found for service $service_name."
+    fi
+}
+
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
+        --kill-webapp-next) KILL_WEBAPP_NEXT=1 ;;
+        --kill-vector-db-proxy) KILL_VECTOR_DB_PROXY=1 ;;
+        --kill-agent-backend) KILL_AGENT_BACKEND=1 ;;
         --project-id) PROJECT_ID="$2"; shift ;;
         --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
         --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
@@ -185,3 +212,14 @@ UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --c
 print_logo "=> Starting agentcloud backend..."
 
 docker compose up --build -d
+
+# At the end of the script, check the variables and kill containers if requested
+if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then
+    kill_container_by_service_name "webapp_next"
+fi
+if [ "$KILL_VECTOR_DB_PROXY" -eq 1 ]; then
+    kill_container_by_service_name "vector_db_proxy"
+fi
+if [ "$KILL_AGENT_BACKEND" -eq 1 ]; then
+    kill_container_by_service_name "agent_backend"
+fi

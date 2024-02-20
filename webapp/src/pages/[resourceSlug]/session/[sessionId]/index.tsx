@@ -1,4 +1,3 @@
-// import { useParams } from 'next/navigation';
 import * as API from '@api';
 import {
 	StopIcon,
@@ -6,7 +5,7 @@ import {
 import { Message } from 'components/chat/message';
 import classNames from 'components/ClassNames';
 import SessionChatbox from 'components/SessionChatbox';
-import StartSessionChatbox from 'components/StartSessionChatbox';
+// import StartSessionChatbox from 'components/StartSessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
@@ -66,7 +65,9 @@ export default function Session(props) {
 		await API.getSessions({ resourceSlug }, setSessionData, setError, router);
 	}
 	async function joinSessionRoom() {
+		// setTimeout(() => {
 		socketContext.emit('join_room', sessionId);
+		// }, 1000);
 	}
 	async function leaveSessionRoom() {
 		socketContext.emit('leave_room', sessionId);
@@ -101,6 +102,12 @@ export default function Session(props) {
 			}
 			return oldMessages
 				.concat([newMessage])
+				.map(mx => {
+					if (mx.chunks) {
+						mx.chunks = mx.chunks.sort((ma, mb) => ma.ts - mb.ts);
+					}
+					return mx;
+				})
 				.sort((ma, mb) => ma.ts - mb.ts);
 		});
 	}
@@ -152,6 +159,7 @@ export default function Session(props) {
 	}
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
+		updateChat();
 		scrollToBottom();
 	}
 	function handleSocketStart() {
@@ -181,8 +189,8 @@ export default function Session(props) {
 			setTerminated(session.status === SessionStatus.TERMINATED);
 		}
 	}, [session]);
-	useEffect(() => {
-		fetchSessions();
+	async function updateChat() {
+		// fetchSessions();
 		API.getSession({
 			resourceSlug,
 			sessionId,
@@ -222,6 +230,9 @@ export default function Session(props) {
 			}
 			setMessages(sortedMessages);
 		}, setError, router);
+	}
+	useEffect(() => {
+		updateChat();
 	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
 		if (ready) {

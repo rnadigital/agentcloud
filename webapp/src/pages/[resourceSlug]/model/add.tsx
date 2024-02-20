@@ -34,7 +34,7 @@ export default function AddModel(props) {
 			<title>{`New Model - ${teamName}`}</title>
 		</Head>
 
-		<ModelForm credentials={credentials} />
+		<ModelForm credentials={credentials} fetchModelFormData={fetchModels} />
 
 	</>);
 

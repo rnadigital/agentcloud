@@ -44,7 +44,7 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 			_csrf: target._csrf.value,
 			resourceSlug,
 			prompt: target.prompt.value,
-			selected: selected?.value,
+			id: selected?.value,
 		}, null, setError, router);
 	}
 
