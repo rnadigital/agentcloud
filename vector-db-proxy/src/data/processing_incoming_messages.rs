@@ -1,15 +1,15 @@
 use mongodb::Database;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use qdrant_client::client::QdrantClient;
+use serde_json::Value;
 
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::queries::get_embedding_model_and_embedding_key;
 use crate::qdrant::helpers::embed_payload;
-use crate::utils::webhook::send_webapp_embed_ready;
 use crate::qdrant::utils::Qdrant;
+use crate::redis_rs::client::RedisConnection;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
-use qdrant_client::client::QdrantClient;
-use serde_json::Value;
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
@@ -19,6 +19,7 @@ pub async fn process_messages(
 ) -> bool {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
+    let redis_connection = RedisConnection::new(None).await.unwrap();
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
@@ -29,7 +30,6 @@ pub async fn process_messages(
                         let vector_length = model_parameters.embeddingLength as u64;
                         let embedding_model_name = model_parameters.model;
                         let embedding_model_name_clone = embedding_model_name.clone();
-                        let datasource_id_str = datasource_id.clone();
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         if let Value::Object(data_obj) = message_data {
@@ -43,7 +43,7 @@ pub async fn process_messages(
                                     Some(ds_clone),
                                     EmbeddingModels::from(embedding_model_name),
                                 )
-                                .await
+                                    .await
                                 {
                                     Ok(point_struct) => {
                                         if let Ok(bulk_upload_result) = qdrant
@@ -54,11 +54,7 @@ pub async fn process_messages(
                                             )
                                             .await
                                         {
-                                            if let Err(e) = send_webapp_embed_ready(&datasource_id_str).await {
-                                                println!("Error notifying webapp: {}", e);
-                                            } else {
-                                                println!("Webapp notified successfully!");
-                                            }
+                                            let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
                                             return bulk_upload_result;
                                         }
                                     }

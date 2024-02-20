@@ -14,17 +14,17 @@ mod queue;
 mod rabbitmq;
 mod routes;
 mod utils;
+mod redis_rs;
 
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::Arc;
 
-use crate::init::models::GlobalData;
+use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
 use actix_web::rt::System;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use env_logger::Env;
-use once_cell::sync::Lazy;
 use tokio::join;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
@@ -65,11 +65,6 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(scroll_data),
     );
 }
-
-pub static GLOBAL_DATA: Lazy<RwLock<GlobalData>> = Lazy::new(|| {
-    let data: GlobalData = GlobalData::new();
-    RwLock::new(data)
-});
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -116,7 +111,7 @@ async fn main() -> std::io::Result<()> {
             rabbitmq_stream.as_str(),
             rabbitmq_routing_key.as_str(),
         )
-        .await;
+            .await;
     });
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let web_task = tokio::spawn(async move {
@@ -127,15 +122,15 @@ async fn main() -> std::io::Result<()> {
                 .app_data(Data::new(Arc::clone(&app_qdrant_client)))
                 .configure(init)
         })
-        .bind(format!("{}:{}", host, port))?
-        .run();
+            .bind(format!("{}:{}", host, port))?
+            .run();
 
         // Handle SIGINT to manually kick-off graceful shutdown
         tokio::spawn(async move {
             #[cfg(unix)]
-            let mut stream = signal(SignalKind::interrupt()).unwrap();
+                let mut stream = signal(SignalKind::interrupt()).unwrap();
             #[cfg(windows)]
-            let mut stream = ctrl_c().unwrap();
+                let mut stream = ctrl_c().unwrap();
             stream.recv().await;
             System::current().stop();
         });
