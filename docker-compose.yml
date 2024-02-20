@@ -134,6 +134,7 @@ services:
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
       - QDRANT_URI=http://qdrant:6334
+      - WEBAPP_HOST=webapp_next:3000
 
   qdrant:
     ports:
