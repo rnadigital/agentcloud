@@ -1,9 +1,11 @@
 import logging
 import inspect
+
+from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
 import autogen
-from typing import Optional, Union, List, Dict, Callable
+from typing import Optional, Union, List, Dict, Callable, Literal
 from models.mongo import AgentConfig, AgentConfigArgs
 from importlib import import_module
 from agents.agents_list import AvailableAgents
@@ -35,17 +37,21 @@ class ChatBuilder:
         self.history: Optional[dict] = history
         self.group_chat: bool = group.get("group_chat") if group else False
         self.function_map = dict()
-
-        # Initialize the socket client and connect
-        self.socket = SimpleClient()
-        self.session_id = session_id
-        custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
-        self.socket.connect(url=SOCKET_URL, headers=custom_headers)
-        self.socket.emit("join_room", f"_{session_id}")
+        try:
+            # Initialize the socket client and connect
+            self.socket = SimpleClient()
+            self.session_id = session_id
+            custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
+            print(f"Socker URL:   {SOCKET_URL}")
+            self.socket.connect(url=SOCKET_URL, headers=custom_headers)
+            self.socket.emit("join_room", f"_{session_id}")
+        except ConnError as ce:
+            logging.error(f"Connection error occurred: {ce}")
+            raise
 
     def build_function_map(self):
         for agent in self.agents:
-            agent_config: Dict = agent.llm_config
+            agent_config: Dict | Literal[False] = agent.llm_config
             if agent_config and len(agent_config) > 0:
                 functions: List[Dict] = agent_config.get("functions")
                 if functions and len(functions) > 0:
@@ -71,7 +77,7 @@ class ChatBuilder:
         try:
             self.build_function_map()
             for i, agent in enumerate(self.agents):
-                agent_config: Dict = agent.llm_config
+                agent_config: Dict | Literal[False] = agent.llm_config
                 if agent_config and len(agent_config) > 0:
                     functions: List[Dict] = agent_config.get("functions")
                     if functions and len(functions) > 0:
@@ -104,11 +110,6 @@ class ChatBuilder:
             logging.exception(e)
 
     def add_datasource_retrievers(self, retriver_model_data):
-        # print(retriver_model_data)
-        # for role in self.group["roles"]:
-        # agent_config = role.get("data")
-        # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
-        # for datasource in agent_config["datasource_data"]:
         datasource = retriver_model_data["datasource_data"][0]
         print(f"datasource: {datasource}")
         agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent, {
@@ -117,13 +118,9 @@ class ChatBuilder:
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
                 "client": qdc.get_connection(host=QDRANT_HOST, port=6333),
-                # "embedding_model": "BAII/bge-small-en",
                 "embedding_model": map_fastembed_query_model_name(datasource["model"]),
                 "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
-                # "type": None,
             },
-            # "model": "gpt-4",
-            # "type": None,
             "name": "admin",
             "human_input_mode": "ALWAYS",
             "max_consecutive_auto_reply": 10,

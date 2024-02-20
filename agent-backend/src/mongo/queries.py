@@ -68,7 +68,8 @@ class MongoClientConnection(MongoConnection):
                     agent_data: Union[AgentData, None] = self._get_group_member(agent)
                     if agent_data:
                         agent_data.is_admin = (
-                            True if ((group_id and agent == admin_agent) or (group_id is None and agent_id is not None and agent_data.type  == "QdrantRetrieveUserProxyAgent")) else False
+                            True if ((group_id and agent == admin_agent) or (
+                                        group_id is None and agent_id is not None and agent_data.type == "QdrantRetrieveUserProxyAgent")) else False
                         )
                         list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
@@ -85,12 +86,12 @@ class MongoClientConnection(MongoConnection):
                 model_obj = self._get_collection("models").find_one(
                     {"_id": model_id}, {"credentialId": 1, "model": 1}
                 )
-                print(model_obj)
+                # print(model_obj)
                 credential_id = model_obj.get("credentialId")
                 credential_obj = self._get_collection("credentials").find_one(
                     {"_id": credential_id}, {"type": 1, "credentials": 1}
                 )
-                print(credential_obj)
+                # print(credential_obj)
                 if credential_obj is not None and len(credential_obj) > 0:
                     creds = credential_obj.get("credentials")
                     # Construct Agent Config List
@@ -115,24 +116,29 @@ class MongoClientConnection(MongoConnection):
                 _llm_config = LLMConfig(
                     functions=list_of_agent_tools, config_list=[_config_list]
                 )
-                
-                #Construct datasources
+
+                # Construct datasources
                 list_of_datasources: List[DatasourceData] = list()
                 retrieve_config = None
                 datasource_ids: List[ObjectId] = agent.get("datasourceIds")
                 if datasource_ids and len(datasource_ids) > 0:
                     for datasource_id in datasource_ids:
                         datasource = self._get_collection("datasources").aggregate(
-                            [{ "$match": { "_id": ObjectId(datasource_id) }}, { "$lookup": { "from": "models", "localField": "modelId", "foreignField": "_id", "as": "model"} }, {"$unwind": "$model"}, {"$project": {"model": "$model.model"}}]
+                            [{"$match": {"_id": ObjectId(datasource_id)}}, {
+                                "$lookup": {"from": "models", "localField": "modelId", "foreignField": "_id",
+                                            "as": "model"}}, {"$unwind": "$model"},
+                             {"$project": {"model": "$model.model"}}]
                         )
                         if datasource is not None:
                             ds_list = list(datasource)
                             if len(ds_list) > 0:
-                                #TODO: allow for multi-source
-                                retrieve_config = RetrieverData(collection_name=datasource_id, embedding_model=map_fastembed_query_model_name(ds_list[0]["model"]), model=_config_list.model)
-                                datasource_data = DatasourceData(id=datasource_id,**ds_list[0])
+                                # TODO: allow for multi-source
+                                retrieve_config = RetrieverData(collection_name=datasource_id,
+                                                                embedding_model=map_fastembed_query_model_name(
+                                                                    ds_list[0]["model"]), model=_config_list.model)
+                                datasource_data = DatasourceData(id=datasource_id, **ds_list[0])
                                 list_of_datasources.append(datasource_data)
-                
+
                 # Construct Agent Config
                 code_execution = agent.get("codeExecutionConfig")
                 if code_execution and len(code_execution) > 0:
@@ -147,14 +153,14 @@ class MongoClientConnection(MongoConnection):
                 else:
                     code_execution_config = {}
                     _agent_config = AgentConfig(
-                    name=agent.get("name"),
-                    system_message=agent.get("systemMessage"),
-                    human_input_mode=agent.get("humanInputMode") or "NEVER",
-                    llm_config=_llm_config,
-                    code_execution_config=code_execution_config,
-                    datasource_data=list_of_datasources,
-                    retrieve_config=retrieve_config
-                )
+                        name=agent.get("name"),
+                        system_message=agent.get("systemMessage"),
+                        human_input_mode=agent.get("humanInputMode") or "NEVER",
+                        llm_config=_llm_config,
+                        code_execution_config=code_execution_config,
+                        datasource_data=list_of_datasources,
+                        retrieve_config=retrieve_config
+                    )
 
                 # Construct Agent Data
                 _agent_data = AgentData(
@@ -168,7 +174,7 @@ class MongoClientConnection(MongoConnection):
 
     # TODO we need to store chat history in the correct format to align with LLM return
     def get_chat_history(
-        self, session_id: str
+            self, session_id: str
     ) -> Optional[List[dict[str, Union[str, Any]]]]:
         self.db = self._get_db
         chat_collection: collection.Collection = self._get_collection("chat")
