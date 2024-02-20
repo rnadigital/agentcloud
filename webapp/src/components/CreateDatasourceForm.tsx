@@ -106,6 +106,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		  value: connectors[key]?.definitionId,
 		  label: connectors[key]?.name_oss || 'test',
 		  icon: connectors[key]?.iconUrl_oss,
+		  supportLevel: connectors[key]?.supportLevel_oss,
 		})) : [];
 
 	const modelCallback = async (addedModelId) => {
@@ -305,13 +306,18 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											: 'dark:text-white'
 									}`}
 								>
-									<span>
-										{data?.icon && <img
-											src={data.icon}
-											loading='lazy'
-											className='inline-flex me-2 w-4 h-4'
-										/>}
-										{data.label}
+									<span className='flex justify-between'>
+										<span>
+											{data?.icon && <img
+												src={data.icon}
+												loading='lazy'
+												className='inline-flex me-2 w-4 h-4'
+											/>}
+											{data.label}
+										</span>
+										<span className={`px-1 rounded-full bg-${data.supportLevel==='certified'?'green':'gray'}-100 text-${data.supportLevel==='certified'?'green':'gray'}-700`}>
+											{data.supportLevel}
+										</span>
 									</span>
 								</li>);
 							}}
