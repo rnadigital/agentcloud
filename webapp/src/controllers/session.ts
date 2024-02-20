@@ -106,7 +106,7 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { rag, prompt }  = req.body;
+	let { rag, prompt, id }  = req.body;
 
 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -114,27 +114,25 @@ export async function addSessionApi(req, res, next) {
 
 	let groupId = null
 		, agentId = null;
-	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
-		const group = await getGroupById(req.params.resourceSlug, req.body.group);
-		if (!group || !group.adminAgent || group.agents.length === 0) {
-			return dynamicResponse(req, res, 400, { error: 'Group missing member(s)' });
-		}
+	const [group, agent] = await Promise.all([
+		getGroupById(req.params.resourceSlug, req.body.id),
+		getAgentById(req.params.resourceSlug, req.body.id),
+	]);
+	if (group) {
 		const agents = await getAgentsById(req.params.resourceSlug, [group.adminAgent, ...group.agents]);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		groupId = group._id;
-	} else if (req.body.agent && typeof req.body.agent === 'string' && req.body.agent.length === 24) {
-		const agent = await getAgentById(req.params.resourceSlug, req.body.agent);
-		if (!agent || !agent.modelId) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-		}
+	} else if (agent) {
 		agentId = agent._id;
+	} else {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	prompt = `${prompt}\n`;
 
-	const sessionType = rag == true ? SessionType.RAG : SessionType.TASK;
+	const sessionType = agent && agent.datasourceIds.length > 0 ? SessionType.RAG : SessionType.TASK; //TODO: allow for groups? new sessionType?
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
