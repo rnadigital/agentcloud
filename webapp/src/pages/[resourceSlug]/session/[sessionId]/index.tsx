@@ -1,21 +1,20 @@
+import * as API from '@api';
 import {
 	StopIcon,
 } from '@heroicons/react/24/outline';
+import { Message } from 'components/chat/message';
+import classNames from 'components/ClassNames';
+import SessionChatbox from 'components/SessionChatbox';
+// import StartSessionChatbox from 'components/StartSessionChatbox';
+import { useAccountContext } from 'context/account';
+import { useChatContext } from 'context/chat';
+import { useSocketContext } from 'context/socket';
 import debug from 'debug';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import Blockies from 'react-blockies';
 import { SessionStatus } from 'struct/session';
-
-// import { useParams } from 'next/navigation';
-import * as API from '../../../../api';
-import { Message } from '../../../../components/chat/message';
-import classNames from '../../../../components/ClassNames';
-import SessionChatbox from '../../../../components/SessionChatbox';
-import { useAccountContext } from '../../../../context/account';
-import { useChatContext } from '../../../../context/chat';
-import { useSocketContext } from '../../../../context/socket';
 const log = debug('webapp:socket');
 
 export default function Session(props) {
@@ -32,6 +31,8 @@ export default function Session(props) {
 	const { sessionId } = router.query && router.query.sessionId.startsWith('[') ? props.query : router.query;
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
+	const [sessionsData, setSessionData] = useState(null);
+	const { sessions, groups, agents } = (sessionsData||{});
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState(null);
@@ -60,8 +61,13 @@ export default function Session(props) {
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
 	const chatBusyState = sentLastMessage || !lastMessageFeedback;
+	async function fetchSessions() {
+		await API.getSessions({ resourceSlug }, setSessionData, setError, router);
+	}
 	async function joinSessionRoom() {
+		// setTimeout(() => {
 		socketContext.emit('join_room', sessionId);
+		// }, 1000);
 	}
 	async function leaveSessionRoom() {
 		socketContext.emit('leave_room', sessionId);
@@ -96,6 +102,12 @@ export default function Session(props) {
 			}
 			return oldMessages
 				.concat([newMessage])
+				.map(mx => {
+					if (mx.chunks) {
+						mx.chunks = mx.chunks.sort((ma, mb) => ma.ts - mb.ts);
+					}
+					return mx;
+				})
 				.sort((ma, mb) => ma.ts - mb.ts);
 		});
 	}
@@ -147,6 +159,7 @@ export default function Session(props) {
 	}
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
+		updateChat();
 		scrollToBottom();
 	}
 	function handleSocketStart() {
@@ -176,7 +189,8 @@ export default function Session(props) {
 			setTerminated(session.status === SessionStatus.TERMINATED);
 		}
 	}, [session]);
-	useEffect(() => {
+	async function updateChat() {
+		// fetchSessions();
 		API.getSession({
 			resourceSlug,
 			sessionId,
@@ -216,6 +230,9 @@ export default function Session(props) {
 			}
 			setMessages(sortedMessages);
 		}, setError, router);
+	}
+	useEffect(() => {
+		updateChat();
 	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
 		if (ready) {
@@ -258,9 +275,9 @@ export default function Session(props) {
 		return true;
 	}
 
-	if (!session || messages == null) {
-		return 'Loading...'; //TODO: loader
-	}
+	// if (!session || messages == null) {
+	// 	return 'Loading...'; //TODO: loader
+	// }
 
 	return (
 		<>
@@ -292,7 +309,7 @@ export default function Session(props) {
 							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 						/>;
 					})}
-					{chatBusyState && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+					{chatBusyState && messages?.length > 0 && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
 						<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
@@ -301,7 +318,7 @@ export default function Session(props) {
 
 				<div className='flex flex-col mt-auto'>
 					<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
-						{chatBusyState && !terminated && <div className='flex items-end basis-1/2'>
+						{chatBusyState && !terminated && messages &&  <div className='flex items-end basis-1/2'>
 							<button
 								onClick={() => stopGenerating()}
 								type='submit'
@@ -314,7 +331,7 @@ export default function Session(props) {
 					</div>
 					<div className='flex flex-row justify-center pb-3'>
 						<div className='flex items-start space-x-4 basis-1/2'>
-							{!terminated && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+							{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
 								<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
 									<Blockies seed={account.name} />
 								</span>
@@ -326,7 +343,8 @@ export default function Session(props) {
 										scrollToBottom={scrollToBottom}
 										lastMessageFeedback={lastMessageFeedback}
 										chatBusyState={chatBusyState}
-										onSubmit={sendMessage} />}
+										onSubmit={sendMessage}
+									/>}
 							</div>
 						</div>
 					</div>
