@@ -90,11 +90,18 @@ pub async fn subscribe_to_queue(
                                                                             file_path.as_str(),
                                                                         )
                                                                             .await.unwrap();
+                                                                        let q = Arc::clone(&queue);
+                                                                        let qdrant_conn = Arc::clone(&qdrant_clone);
+                                                                        let mongo_conn = Arc::clone(&mongo_client);
                                                                         let (document_text, metadata) =
                                                                             extract_text_from_file(
                                                                                 file_type,
                                                                                 file_path.as_str(),
                                                                                 ds.originalName,
+                                                                                datasource_id.to_string(),
+                                                                                q,
+                                                                                qdrant_conn,
+                                                                                mongo_conn,
                                                                             )
                                                                                 .await
                                                                                 .unwrap();

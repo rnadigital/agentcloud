@@ -1,12 +1,17 @@
 use ndarray::Array1;
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 use actix_web::dev::ResourcePath;
 use anyhow::anyhow;
+use mongodb::Database;
+use qdrant_client::client::QdrantClient;
+use tokio::sync::RwLock;
 use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::{Document as DocumentModel, FileType};
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
+use crate::queue::queuing::MyQueue;
 
 pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
@@ -30,6 +35,10 @@ pub async fn extract_text_from_file(
     file_type: FileType,
     file_path: &str,
     document_name: String,
+    datasource_id: String,
+    queue: Arc<RwLock<MyQueue<String>>>,
+    qdrant_conn: Arc<RwLock<QdrantClient>>,
+    mongo_conn: Arc<RwLock<Database>>,
 ) -> Option<(String, Option<HashMap<String, String>>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
@@ -54,7 +63,17 @@ pub async fn extract_text_from_file(
                 .extract_text_from_docx(path_clone)
                 .expect("Could not extract text from DOCX file");
         }
-        FileType::CSV => return None,
+        FileType::CSV => return {
+            let path_clone = path.clone();
+            _ = chunker.extract_text_from_csv(
+                path_clone,
+                datasource_id,
+                queue,
+                qdrant_conn,
+                mongo_conn,
+            );
+            None
+        },
         FileType::UNKNOWN => return None,
     }
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk

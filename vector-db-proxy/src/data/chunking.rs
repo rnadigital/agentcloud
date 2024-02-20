@@ -6,11 +6,17 @@ use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
+use std::sync::Arc;
 
 extern crate dotext;
 
 use crate::llm::models::EmbeddingModels;
 use dotext::*;
+use mongodb::Database;
+use qdrant_client::client::QdrantClient;
+use tokio::sync::RwLock;
+use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
+use crate::queue::queuing::MyQueue;
 
 pub trait Chunking {
     type Item;
@@ -19,8 +25,15 @@ pub trait Chunking {
     fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
-    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)>;
     fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String>;
+    async fn extract_text_from_csv(
+        &self,
+        path: String,
+        datasource_id: String,
+        queue: Arc<RwLock<MyQueue<String>>>,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+    );
     async fn chunk(
         &self,
         data: String,
@@ -146,20 +159,6 @@ impl Chunking for TextChunker {
         Ok(results)
     }
 
-    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)> {
-        // match csv::Reader::from_path(path) {
-        //     Ok(mut rdr) => {
-        //         for row in rdr.records() {
-        //             let record = row?;
-        //         }
-        //     }
-        //     Err(e) => {
-        //         Err(anyhow!("An error occurred: {}", e));
-        //     }
-        // }
-        todo!()
-    }
-
     fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         // Iterate over all pages
@@ -191,6 +190,42 @@ impl Chunking for TextChunker {
         }
         metadata
     }
+    async fn extract_text_from_csv(
+        &self,
+        path: String,
+        datasource_id: String,
+        queue: Arc<RwLock<MyQueue<String>>>,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+    ) {
+        match csv::Reader::from_path(path) {
+            Ok(mut rdr) => {
+                for row in rdr.records() {
+                    match row {
+                        Ok(record) => {
+                            let string_record = record.iter().collect::<Vec<&str>>().join(", ");
+                            let queue = Arc::clone(&queue);
+                            let qdrant_conn = Arc::clone(&qdrant_conn);
+                            let mongo_conn = Arc::clone(&mongo_conn);
+                            let ds_clone = datasource_id.clone();
+                            add_message_to_embedding_queue(
+                                queue,
+                                qdrant_conn,
+                                mongo_conn,
+                                (ds_clone,
+                                 string_record),
+                            ).await;
+                        }
+                        Err(e) => { println!("An error occurred {}", e); }
+                    }
+                }
+            }
+            Err(e) => {
+                println!("An error occurred: {} ", e);
+            }
+        }
+    }
+
 
     async fn chunk(
         &self,
