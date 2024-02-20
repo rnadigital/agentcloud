@@ -168,20 +168,19 @@ class ChatBuilder:
                     "use_sockets": True,
                     "socket_client": self.socket,
                     "sid": self.session_id,
-                    "code_execution_config": False
+                    "code_execution_config": False,
+                    "human_input_mode": "ALWAYS" if self.group_chat else "NEVER"
                 })
-                assistant_agent.reset()
                 self.agents.append(assistant_agent)
                 if self.single_agent:
                     remove_index = i
+                break
         if remove_index >= 0:
             del self.agents[remove_index]
 
-
-    def remove_admin_agent(self):
-        self.agents = [agent for agent in self.agents if agent.name != "admin"]
-
     def run_chat(self):
+        print("*Agents Count:", len(self.agents))
+        for agent in self.agents: print_with_Props(agent)
         # single agent, make non-executing UserProxyAgent
         if self.single_agent:
             if self.user_proxy is None:
@@ -243,3 +242,12 @@ def apply_agent_config(agent_class, config_map):
         **agent_config_args
     )
     return agent
+
+def print_with_Props(obj):
+    object_type = type(obj)
+    model_keys = list(set(sum([[k for k,v in inspect.signature(a).parameters.items() if "'inspect._empty'" not in str(v.annotation)] for a in inspect.getmro(object_type)], [])))
+    printable_data = {}
+    for key in model_keys:
+        if hasattr(obj, key):
+            printable_data[key] = getattr(obj, key)
+    print("***{}***".format(object_type), printable_data)

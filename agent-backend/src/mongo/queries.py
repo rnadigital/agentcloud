@@ -70,7 +70,9 @@ class MongoClientConnection(MongoConnection):
                         agent_data.is_admin = (
                             True if ((group_id and agent == admin_agent) or (group_id is None and agent_id is not None and agent_data.type  == "QdrantRetrieveUserProxyAgent")) else False
                         )
-                        list_of_agents.append(agent_data.model_dump())
+                    if group_id is not None:
+                        agent_data.data.human_input_mode = "NEVER" #override default
+                    list_of_agents.append(agent_data.model_dump())
             team["roles"] = list_of_agents
             return team
 
