@@ -1,17 +1,17 @@
 'use strict';
 
+import * as API from '@api';
+import CreateModelModal from 'components/CreateModelModal';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AgentType } from 'struct/agent';
+import { DatasourceStatus } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
-
-import * as API from '../api';
-import CreateModelModal from '../components/CreateModelModal';
-import { useAccountContext } from '../context/account';
 
 export default function AgentForm({ agent = {}, models = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, models?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
@@ -28,18 +28,22 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const { _id, name, type, systemMessage, codeExecutionConfig, modelId, model, toolIds, datasourceIds } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 
-	const initialTools = agent.toolIds && agent.toolIds.map(tid => {
-		const foundTool = tools.find(t => t._id === tid);
-		if (!foundTool) { return null; }
-		return { label: foundTool.name, value: foundTool._id };
-	}).filter(t => t);
+	const initialTools = agent.toolIds && agent.toolIds
+		.map(tid => {
+			const foundTool = tools.find(t => t._id === tid);
+			if (!foundTool) { return null; }
+			return { label: foundTool.name, value: foundTool._id };
+		})
+		.filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
 
-	const initialDatasources = agent.datasourceIds && agent.datasourceIds.map(did => {
-		const foundSource = datasources.find(d => d._id === did);
-		if (!foundSource) { return null; }
-		return { label: `${foundSource.name} (${foundSource.originalName})`, value: foundSource._id };
-	}).filter(t => t);
+	const initialDatasources = agent.datasourceIds && agent.datasourceIds
+		.map(did => {
+			const foundSource = datasources.find(d => d._id === did);
+			if (!foundSource) { return null; }
+			return { label: `${foundSource.name} (${foundSource.originalName})`, value: foundSource._id, ...foundSource };
+		})
+		.filter(t => t);
 	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
 	useEffect(() => {
@@ -306,7 +310,9 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						            	console.log(v);
 						            	setDatasourcesState(v ? [v[v.length-1]] : []);
 					            	}}
-						            options={datasources.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
+						            options={datasources
+						            	.filter(t => t?.status === DatasourceStatus.READY)
+						            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
 						            formatOptionLabel={(data: any) => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
