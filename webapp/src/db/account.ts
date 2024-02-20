@@ -10,7 +10,6 @@ import toObjectId from '../lib/misc/toobjectid';
 export type AccountTeam = {
 	id: ObjectId;
 	name: string;
-	airbyteWorkspaceId?: string;
 }
 
 export type AccountOrg = {

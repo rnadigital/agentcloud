@@ -11,7 +11,6 @@ export type Team = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	members: ObjectId[],
-	airbyteWorkspaceId?: string;
 	name: string;
 }
 
@@ -91,7 +90,6 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 			$project: {
 				_id: 1,
 				orgId: 1,
-				airbyteWorkspaceId: 1,
 				name: 1,
 				members: {
 					$map: {

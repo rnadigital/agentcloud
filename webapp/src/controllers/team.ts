@@ -129,19 +129,10 @@ export async function addTeamApi(req, res) {
 	if (!teamName || typeof teamName !== 'string' || teamName.length === 0) {
 		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
 	}
-	let airbyteWorkspaceId = null;
-	if (process.env.AIRBYTE_USERNAME) {
-		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-		const workspace = await workspaceApi.createWorkspace(null, {
-			name: res.locals.account._id.toString(), // account _id stringified as workspace nam
-		}).then(res => res.data);
-		airbyteWorkspaceId = workspace.workspaceId;
-	}
 	const addedTeam = await addTeam({
 		name: teamName,
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		members: [toObjectId(res.locals.account._id)],
-		airbyteWorkspaceId,
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
 	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
