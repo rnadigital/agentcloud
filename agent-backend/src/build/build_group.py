@@ -1,30 +1,35 @@
 import logging
 import inspect
+
+from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
 import autogen
-from typing import Optional, Union, List, Dict, Callable
+from typing import Optional, Union, List, Dict, Callable, Literal
 from models.mongo import AgentConfig, AgentConfigArgs
 from importlib import import_module
 from agents.agents_list import AvailableAgents
 import qdrantClient.qdrant_connection as qdc
 from agents.qdrant_retrieval import map_fastembed_query_model_name
+
+
 # TODO: Need to make this more modular so that a team can be constructed that included an agent that has an LLMConfig of
 # tha function definition and another agent that has no LLMConfig but has the function registered in their func_map
 
 
 class ChatBuilder:
     def __init__(
-        self,
-        prompt,
-        session_id: str,
-        group: dict,
-        single_agent: bool,
-        history: Optional[dict],
+            self,
+            prompt,
+            session_id: str,
+            group: dict,
+            single_agent: bool,
+            history: Optional[dict],
     ):
-        self.user_proxy: Optional[Union[autogen.UserProxyAgent,autogen.QdrantRetrieveUserProxyAgent]] = None
+        self.user_proxy: Optional[Union[autogen.UserProxyAgent, autogen.QdrantRetrieveUserProxyAgent]] = None
         self.agents: Optional[
-            List[Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent]]
+            List[Union[
+                autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent]]
         ] = list()
         self.single_agent = single_agent
         self.group = group
@@ -32,17 +37,21 @@ class ChatBuilder:
         self.history: Optional[dict] = history
         self.group_chat: bool = group.get("group_chat") if group else False
         self.function_map = dict()
-
-        # Initialize the socket client and connect
-        self.socket = SimpleClient()
-        self.session_id = session_id
-        custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
-        self.socket.connect(url=SOCKET_URL, headers=custom_headers)
-        self.socket.emit("join_room", f"_{session_id}")
+        try:
+            # Initialize the socket client and connect
+            self.socket = SimpleClient()
+            self.session_id = session_id
+            custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
+            print(f"Socker URL:   {SOCKET_URL}")
+            self.socket.connect(url=SOCKET_URL, headers=custom_headers)
+            self.socket.emit("join_room", f"_{session_id}")
+        except ConnError as ce:
+            logging.error(f"Connection error occurred: {ce}")
+            raise
 
     def build_function_map(self):
         for agent in self.agents:
-            agent_config: Dict = agent.llm_config
+            agent_config: Dict | Literal[False] = agent.llm_config
             if agent_config and len(agent_config) > 0:
                 functions: List[Dict] = agent_config.get("functions")
                 if functions and len(functions) > 0:
@@ -68,7 +77,7 @@ class ChatBuilder:
         try:
             self.build_function_map()
             for i, agent in enumerate(self.agents):
-                agent_config: Dict = agent.llm_config
+                agent_config: Dict | Literal[False] = agent.llm_config
                 if agent_config and len(agent_config) > 0:
                     functions: List[Dict] = agent_config.get("functions")
                     if functions and len(functions) > 0:
@@ -76,8 +85,8 @@ class ChatBuilder:
                             func_name: str = f"{function.get('name')}"
                             module_path = "tools.global_tools"
                             if (
-                                not function.get("builtin")
-                                and len(function.get("code", "")) > 0
+                                    not function.get("builtin")
+                                    and len(function.get("code", "")) > 0
                             ):
                                 module_path = f"tools.{self.session_id}"
                             try:
@@ -101,11 +110,6 @@ class ChatBuilder:
             logging.exception(e)
 
     def add_datasource_retrievers(self, retriver_model_data):
-        # print(retriver_model_data)
-        # for role in self.group["roles"]:
-            # agent_config = role.get("data")
-        # if "datasource_data" in agent_config  and len(agent_config["datasource_data"]) > 0:
-            # for datasource in agent_config["datasource_data"]:
         datasource = retriver_model_data["datasource_data"][0]
         print(f"datasource: {datasource}")
         agent = apply_agent_config(AvailableAgents.QdrantRetrieveUserProxyAgent, {
@@ -114,13 +118,9 @@ class ChatBuilder:
                 "collection_name": datasource["id"],
                 "chunk_token_size": 2000,
                 "client": qdc.get_connection(host=QDRANT_HOST, port=6333),
-                # "embedding_model": "BAII/bge-small-en",
                 "embedding_model": map_fastembed_query_model_name(datasource["model"]),
                 "model": retriver_model_data["llm_config"]["config_list"][0]["model"].value,
-                # "type": None,
             },
-            # "model": "gpt-4",
-            # "type": None,
             "name": "admin",
             "human_input_mode": "ALWAYS",
             "max_consecutive_auto_reply": 10,
@@ -144,7 +144,7 @@ class ChatBuilder:
         agent_config["sid"] = self.session_id
         if "retrieve_config" in agent_config and agent_config["retrieve_config"] is not None:
             agent_config["retrieve_config"]["client"] = qdc.get_connection(host=QDRANT_HOST, port=6333)
-            agent_config["debug_docs"] = LOCAL #will print retrieved dos and context verbose
+            agent_config["debug_docs"] = LOCAL  # will print retrieved dos and context verbose
         agent = apply_agent_config(agent_type, agent_config)
         if agent.name == "admin":
             self.user_proxy: autogen.UserProxyAgent = agent
@@ -154,7 +154,7 @@ class ChatBuilder:
         roles = self.group.get("roles")
         for i, role in enumerate(roles):
             self.process_role(role)
-    
+
     def add_retrieve_assistant_if_required(self):
         # for agent in self.agents:
         remove_index = -1
@@ -192,7 +192,7 @@ class ChatBuilder:
                 )
             else:
                 user_proxy = self.user_proxy
-                if type(user_proxy) == AvailableAgents.QdrantRetrieveUserProxyAgent:        
+                if type(user_proxy) == AvailableAgents.QdrantRetrieveUserProxyAgent:
                     return user_proxy.initiate_chat(
                         recipient=self.agents[0],
                         problem=self.prompt
@@ -232,13 +232,17 @@ class ChatBuilder:
             recipient = [agent for agent in self.agents if agent.name != "admin"]
             self.user_proxy.initiate_chat(recipient=recipient[0], message=self.prompt)
 
+
 def apply_agent_config(agent_class, config_map):
     agent_config_args = AgentConfig(**config_map).model_dump()
-    model_keys = list(set(sum([[k for k,v in inspect.signature(a).parameters.items() if "'inspect._empty'" not in str(v.annotation)] for a in inspect.getmro(agent_class)], [])))
+    model_keys = list(set(sum(
+        [[k for k, v in inspect.signature(a).parameters.items() if "'inspect._empty'" not in str(v.annotation)] for a in
+         inspect.getmro(agent_class)], [])))
     for attribute in AgentConfigArgs:
         if attribute not in model_keys:
             del agent_config_args[attribute]
-    agent: Union[autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent] = agent_class(
+    agent: Union[
+        autogen.AssistantAgent, autogen.UserProxyAgent, autogen.RetrieveAssistantAgent, autogen.QdrantRetrieveUserProxyAgent] = agent_class(
         **agent_config_args
     )
     return agent
