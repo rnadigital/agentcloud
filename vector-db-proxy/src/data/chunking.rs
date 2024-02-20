@@ -146,7 +146,17 @@ impl Chunking for TextChunker {
         Ok(results)
     }
 
-    fn extract_text_from_csv(&self, _path: String) -> Result<(String, HashMap<String, String>)> {
+    fn extract_text_from_csv(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        // match csv::Reader::from_path(path) {
+        //     Ok(mut rdr) => {
+        //         for row in rdr.records() {
+        //             let record = row?;
+        //         }
+        //     }
+        //     Err(e) => {
+        //         Err(anyhow!("An error occurred: {}", e));
+        //     }
+        // }
         todo!()
     }
 

@@ -41,6 +41,7 @@ use routes::api_routes::{
 };
 use crate::mongo::client::start_mongo_connection;
 use crate::queue::queuing::{Control, MyQueue};
+use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 
 pub fn init(config: &mut web::ServiceConfig) {
     let webapp_url =
@@ -73,15 +74,7 @@ async fn main() -> std::io::Result<()> {
     let _ = set_all_env_vars().await;
     let host = global_data.host.clone();
     let port = global_data.port.clone();
-    let rabbitmq_host = global_data.rabbitmq_host.clone();
-    let rabbitmq_port = global_data.rabbitmq_port;
-    let rabbitmq_stream = global_data.rabbitmq_stream.clone();
-    let rabbitmq_exchange = global_data.rabbitmq_exchange.clone();
-    let rabbitmq_routing_key = global_data.rabbitmq_routing_key.clone();
-    let rabbitmq_username = global_data.rabbitmq_username.clone();
-    let rabbitmq_password = global_data.rabbitmq_password.clone();
     // Set the default logging level
-    println!("Rabbit MQ Streaming Queue: {}", rabbitmq_stream);
     let qdrant_client = match instantiate_qdrant_client().await {
         Ok(client) => client,
         Err(e) => {
@@ -93,23 +86,31 @@ async fn main() -> std::io::Result<()> {
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
     let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
-    // TODO: include mongo connection in app data to reduce number of connections made to mongo!
     let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
     let rabbitmq_connection_details = RabbitConnect {
-        host: rabbitmq_host,
-        port: rabbitmq_port,
-        username: rabbitmq_username,
-        password: rabbitmq_password,
+        host: global_data.rabbitmq_host.clone(),
+        port: global_data.rabbitmq_port.clone(),
+        username: global_data.rabbitmq_username.clone(),
+        password: global_data.rabbitmq_password.clone(),
     };
+    let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await;
+    let mut channel = channel_rabbitmq(&connection).await;
+    bind_queue_to_exchange(
+        &mut connection,
+        &mut channel,
+        &rabbitmq_connection_details,
+        &global_data.rabbitmq_exchange,
+        &global_data.rabbitmq_stream,
+        &global_data.rabbitmq_routing_key,
+    )
+        .await;
     let rabbitmq_stream = tokio::spawn(async move {
         let _ = subscribe_to_queue(
             Arc::clone(&qdrant_connection_for_rabbitmq),
             Arc::clone(&queue),
             Arc::clone(&mongo_client_clone),
-            rabbitmq_connection_details,
-            rabbitmq_exchange.as_str(),
-            rabbitmq_stream.as_str(),
-            rabbitmq_routing_key.as_str(),
+            &channel,
+            &global_data.rabbitmq_stream,
         )
             .await;
     });

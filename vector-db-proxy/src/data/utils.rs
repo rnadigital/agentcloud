@@ -1,4 +1,13 @@
 use ndarray::Array1;
+use std::collections::HashMap;
+use std::fs;
+use actix_web::dev::ResourcePath;
+use anyhow::anyhow;
+use crate::data::chunking::{Chunking, TextChunker};
+use crate::data::models::{Document as DocumentModel, FileType};
+use crate::llm::models::EmbeddingModels;
+use crate::mongo::models::ChunkingStrategy;
+
 pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
     let norm_a = a.dot(a).sqrt();
@@ -15,4 +24,73 @@ pub fn percentile(values: &Vec<f32>, percentile: usize) -> f32 {
 
     let k = (percentile as f64 / 100.0 * (values.len() as f64 - 1.0)).round() as usize;
     sorted_values[k]
+}
+
+pub async fn extract_text_from_file(
+    file_type: FileType,
+    file_path: &str,
+    document_name: String,
+) -> Option<(String, Option<HashMap<String, String>>)> {
+    let mut document_text = String::new();
+    let mut metadata = HashMap::new();
+    let path = file_path.trim_matches('"').path().to_string();
+    let chunker = TextChunker::default();
+    match file_type {
+        FileType::PDF => {
+            let path_clone = path.clone();
+            (document_text, metadata) = chunker
+                .extract_text_from_pdf(path_clone)
+                .expect("Could not extract text from PDF file");
+        }
+        FileType::TXT => {
+            let path_clone = path.clone();
+            (document_text, metadata) = chunker
+                .extract_text_from_txt(path_clone)
+                .expect("Could not extract text from TXT file");
+        }
+        FileType::DOCX => {
+            let path_clone = path.clone();
+            (document_text, metadata) = chunker
+                .extract_text_from_docx(path_clone)
+                .expect("Could not extract text from DOCX file");
+        }
+        FileType::CSV => return None,
+        FileType::UNKNOWN => return None,
+    }
+    // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
+    let path_clone = path.clone();
+    match fs::remove_file(path_clone) {
+        Ok(_) => println!("File: {:?} successfully deleted", file_path),
+        Err(e) => println!(
+            "An error occurred while trying to delete file: {}. Error: {:?}",
+            file_path, e
+        ),
+    }
+    metadata.insert(String::from("document name"), document_name);
+    let results = (document_text, Some(metadata));
+    Some(results)
+}
+
+pub async fn apply_chunking_strategy_to_document(
+    document_text: String,
+    metadata: Option<HashMap<String, String>>,
+    chunking_strategy: ChunkingStrategy,
+    chunking_character: Option<String>,
+    embedding_models: Option<String>,
+) -> anyhow::Result<Vec<DocumentModel>> {
+    let chunker = TextChunker::default();
+    let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
+    match chunker
+        .chunk(
+            document_text,
+            metadata,
+            chunking_strategy,
+            chunking_character,
+            embedding_model_choice,
+        )
+        .await
+    {
+        Ok(c) => Ok(c),
+        Err(e) => Err(anyhow!("An error occurred: {}", e)),
+    }
 }
