@@ -145,7 +145,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					}),
 					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
 					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
-					jobData ? setDatasourceSyncedCount(datasource.teamId, datasourceId, jobData.rowsSynced) : void 0,
+					jobData ? setDatasourceSyncedCount(datasource.teamId, datasourceId, parseInt(jobData?.rowsSynced||0)) : void 0,
 				]);
 			}
 		}
