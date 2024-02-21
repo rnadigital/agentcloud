@@ -7,7 +7,7 @@ import {
 	StrictRJSFSchema,
 	WidgetProps,
 } from '@rjsf/utils';
-import { ChangeEvent, FocusEvent } from 'react';
+import { ChangeEvent, FocusEvent, useEffect, useState } from 'react';
 
 export default function SelectWidget<
   T = any,
@@ -49,6 +49,18 @@ export default function SelectWidget<
 		multiple,
 	);
 
+	const [readOnlyWhitelist, setReadOnlyWhitelist] = useState(false);
+	useEffect(() => {
+		const eoIndex = enumOptions.findIndex(eo => eo?.label?.includes('Document File Type Format')); //TODO: white whitelist system
+		if (eoIndex !== -1) {
+			setTimeout(() => {
+				const newValue = getValue({ target: { value: String(eoIndex) }}, false);
+				onChange(enumOptionsValueForIndex<S>(newValue, enumOptions, optEmptyValue));
+				setReadOnlyWhitelist(true);
+			}, 0);
+		}
+	}, []);
+
 	return (
 		<select
 			id={id}
@@ -58,7 +70,7 @@ export default function SelectWidget<
 			}
 			required={required}
 			multiple={multiple}
-			disabled={disabled || readonly}
+			disabled={disabled || readonly || readOnlyWhitelist}
 			autoFocus={autofocus}
 			className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white
       ${rawErrors.length > 0 ? 'border-red-500' : 'border-muted'}
