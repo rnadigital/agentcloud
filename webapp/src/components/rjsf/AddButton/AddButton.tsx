@@ -15,10 +15,10 @@ export default function AddButton<
 	return (
 		<button
 			{...props}
-			className={`flex items-center rounded bg-blue-600 p-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${props.className}`}
+			className={`flex items-center rounded bg-indigo-600 py-1 px-2.5 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${props.className}`}
 			title={translateString(TranslatableString.AddItemButton)}
 		>
-      +
++
 		</button>
 	);
 }

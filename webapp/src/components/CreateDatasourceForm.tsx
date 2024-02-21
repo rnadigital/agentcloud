@@ -63,6 +63,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {} });
+	const [formData, setFormData] = useState(null);
 	const SubmitButton = (props: SubmitButtonProps) => {
 		const { uiSchema } = props;
 		const { norender } = getSubmitButtonOptions(uiSchema);
@@ -173,8 +174,12 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}
 	}
 
+	spec && console.log(JSON.stringify(spec.schema.connectionSpecification, null, 4));
+
 	const MemoizedRJSF = useMemo(() => spec && (<TailwindForm
 		schema={spec.schema.connectionSpecification}
+		formData={formData}
+		onChange={(e) => setFormData(e.formData)}
 		templates={{ ButtonTemplates: { SubmitButton } }}
 		validator={validator}
 		onSubmit={datasourcePost}
@@ -280,7 +285,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				</DropZone>;
 			case 2:
 				return <span className='flex'>
-					<div className='w-full sm:w-1/3 m-auto'>
+					<div className='w-full md:w-2/3 xl:w-1/2 m-auto'>
 						<Select
 							isClearable
 							isSearchable
