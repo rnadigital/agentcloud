@@ -19,7 +19,7 @@ import { PDFExtract } from 'pdf.js-extract';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
-import deleteCollectionFromQdrant from 'vectordb/proxy';
+import { deleteCollectionFromQdrant, getDatasourceVectors } from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 import { dynamicResponse } from '../util';
@@ -696,4 +696,9 @@ export async function uploadFileApi(req, res, next) {
 
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
+}
+
+export async function getDatasourceVectorsApi(req, res, next) {
+	const vectors = await void 0; //TODO;
+	return dynamicResponse(req, res, 200, { /**/ });	
 }

@@ -8,6 +8,7 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { StreamsList } from 'components/DatasourceStream';
 import DatasourceTabs from 'components/DatasourceTabs';
+import ScatterGLRenderer from 'components/ScatterGLRenderer';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
@@ -331,8 +332,9 @@ export default function Datasource(props) {
 			</div>
 		</div>}
 		
-		{tab === 3 && <div className='space-y-3'>
+		{tab === 3 && <div className='space-y-3 h-full'>
 			Visualisation
+			<ScatterGLRenderer />
 		</div>}
 		
 		{tab === 4 && <div className='space-y-3'>

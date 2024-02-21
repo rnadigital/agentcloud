@@ -134,14 +134,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					embeddingField,
 				};
 				//step 2, getting schema and testing connection
-				const stagedDatasource: any = await API.testDatasource(body, () => {
-					// nothing to toast here	
+				const stagedDatasource: any = await API.testDatasource(body, (res) => {
+					// nothing to toast here
+					setStep(3);
 				}, (res) => {
 					toast.error(res);
 				}, compact ? null : router);
-				setDatasourceId(stagedDatasource.datasourceId);
-				setDiscoveredSchema(stagedDatasource.discoveredSchema);
-				setStep(3);
+				if (stagedDatasource?.datasourceId) {
+					setDatasourceId(stagedDatasource.datasourceId);
+					setDiscoveredSchema(stagedDatasource.discoveredSchema);
+				}
 				// callback && addedDatasource && callback(addedDatasource._id);
 			} else {
 				//step 4, saving datasource

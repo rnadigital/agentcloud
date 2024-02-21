@@ -133,6 +133,9 @@ export function getDatasources(body, dispatch, errorCallback, router) {
 export function getDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/datasource/${body.datasourceId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function getDatasourceVectors(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/datasource/${body.datasourceId}/vectors.json`, 'GET', null, dispatch, errorCallback, router);
+}
 export function testDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/datasource/test`, 'POST', body, dispatch, errorCallback, router);
 }
