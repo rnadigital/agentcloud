@@ -12,11 +12,11 @@ pub async fn add_message_to_embedding_queue(
     params: (String, String),
 ) {
     println!("Received task to be executed");
-    let (dataset_id, table_name) = params;
+    let (dataset_id, message) = params;
     // Instantiate a new instance of the MyQueue
     let mut q_guard = queue.write().await;
     // Add task to queue
     q_guard.enqueue(dataset_id);
     // Call associated function to being processing tasks in the queue
-    q_guard.embed_message(qdrant_conn, mongo_conn, table_name);
+    q_guard.embed_message(qdrant_conn, mongo_conn, message);
 }
