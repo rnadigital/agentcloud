@@ -209,7 +209,7 @@ export default withRouter(function Layout(props) {
 																</Link>
 															</li>
 														))}
-														<li>
+														<li key='account'>
 															<Link
 																href='/account'
 																className={classNames(
@@ -243,7 +243,7 @@ export default withRouter(function Layout(props) {
 																Settings
 															</Link>
 														</li>*/}
-														<li>
+														<li key='logout'>
 															<form action='/forms/account/logout' method='POST'>
 																<input type='hidden' name='_csrf' value={csrf} />
 																<button
