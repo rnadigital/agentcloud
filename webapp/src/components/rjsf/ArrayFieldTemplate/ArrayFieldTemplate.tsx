@@ -49,7 +49,8 @@ export default function ArrayFieldTemplate<
 		ButtonTemplates: { AddButton },
 	} = registry.templates;
 
-	const topArray = schema?.type === 'array' && schema?.items?.type === 'object'; //may not be 100%
+	const anySchema = schema as any;
+	const topArray = anySchema?.type === 'array' && anySchema?.items?.type === 'object'; //may not be 100%
 
 	return (
 		<div className={`${topArray ? 'pe-32 border p-4 shadow-sm rounded' : ''}`}>

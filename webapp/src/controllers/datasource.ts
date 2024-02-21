@@ -383,19 +383,6 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 		.then(res => res.data);
 	console.log('updatedConnection', updatedConnection);
 
-/*	if (sync === true) {
-		// Create a job to trigger the connection to sync
-		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-		const jobBody = {
-			connectionId: datasource.connectionId,
-			jobType: 'sync',
-		};
-		const createdJob = await jobsApi
-			.createJob(null, jobBody)
-			.then(res => res.data);
-		console.log('createdJob', createdJob);
-	}*/
-
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),

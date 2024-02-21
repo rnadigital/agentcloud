@@ -48,6 +48,8 @@ export type Datasource = {
 	destinationId: string;
 	workspaceId: string;
 	connectionId: string;
+	syncedCount?: number;
+	embeddedCount?: number;
 	connectionSettings?: DatasourceConnectionSettings;
 	createdDate: Date;
 	lastSyncedDate?: Date | null; //Note: null = never synced

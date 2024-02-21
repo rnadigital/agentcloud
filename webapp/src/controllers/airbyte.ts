@@ -6,7 +6,7 @@ import getAirbyteInternalApi from 'airbyte/internal';
 import { addNotification } from 'db/notification';
 import { DatasourceStatus } from 'struct/datasource';
 
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus,setDatasourceSyncedCount } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
 import { dynamicResponse } from '../util';
@@ -118,6 +118,16 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		if (datasourceId) {
 			const datasource = await getDatasourceByIdUnsafe(datasourceId);
 			if (datasource) {
+				//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
+				const jobId = match[7];
+				const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+				const jobBody = {
+					jobId,
+				};
+				const jobData = await jobsApi
+					.getJob(jobBody)
+					.then(res => res.data)
+					.catch(res => {});
 				await Promise.all([
 					addNotification({
 					    orgId: toObjectId(datasource.orgId.toString()),
@@ -134,7 +144,8 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					    seen: false,
 					}),
 					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING)
+					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
+					jobData ? setDatasourceSyncedCount(datasource.teamId, datasourceId, jobData.rowsSynced) : void 0,
 				]);
 			}
 		}
@@ -179,3 +190,4 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	return dynamicResponse(req, res, 200, { });
 
 }
+
