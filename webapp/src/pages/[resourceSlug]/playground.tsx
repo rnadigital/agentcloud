@@ -42,15 +42,11 @@ export default function Sessions(props) {
 			<title>{`Playground - ${teamName}`}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Playground</h3>
-		</div>
-
 		<SubscriptionModal open={open} setOpen={setOpen}/>
 
 		<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
 			<div className='overflow-y-auto' />
-			<div className='flex flex-col mt-auto'>
+			<div className='flex flex-col'>
 				<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600' />
 				<div className='flex flex-row justify-center pb-3'>
 					<div className='flex items-start space-x-4 basis-1/2'>
@@ -62,11 +58,34 @@ export default function Sessions(props) {
 						<div className='min-w-0 flex-1 h-full'>
 							<StartSessionChatbox groups={groups} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 						</div>
+
 					</div>
 				</div>
 			</div>
 
 		</div>
+
+		{sessions.length > 0 && <div className='w-64 pb-4'>
+			<label htmlFor='filter' className='block text-sm font-medium text-gray-900 dark:text-slate-400'>
+				Status
+			</label>
+			<select
+				id='filter'
+				name='filter'
+				value={filter}
+				onChange={(e) => setFilter(e.target.value)}
+				className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-slate-800 dark:border-gray-600'
+			>
+				<option value={'all'}>All</option>
+				{filterOptions.map((option) => (
+					<option key={option} value={option} className='capitalize'>
+						{option}
+					</option>
+				))}
+			</select>
+		</div>}
+
+		<SessionCards sessions={sessions.filter(s => filter === 'all' || s.status === filter)} fetchSessions={fetchSessions} />
 
 	</>);
 
