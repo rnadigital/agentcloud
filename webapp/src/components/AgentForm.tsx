@@ -50,7 +50,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 		if (models && models.length > 0 && !modelId) {
 			setAgent({
 				...agentState,
-				modelId: models[0]._id,
+				modelId: models.find(m => !ModelEmbeddingLength[m.model])?._id,
 			});
 		}
 	}, []);
