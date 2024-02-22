@@ -11,3 +11,18 @@ export type Group = {
 	agents: ObjectId[];
 	groupChat?: boolean;
 };
+
+export enum ProcessImpl {
+	SEQUENTIAL = 'sequential',
+	HEIRARCHICAL = 'heirarchical',
+}
+
+export type Crew = {	
+	_id?: ObjectId;
+	orgId?: ObjectId;
+	teamId?: ObjectId;
+	name: string;
+	tasks: ObjectId[];
+	agents: ObjectId[];
+	process: ProcessImpl;
+};	
