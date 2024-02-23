@@ -100,7 +100,6 @@ def populate_collection(
             "client": params.client,
             "embedding_model": "BAAI/bge-small-en-v1.5",
         },
-        
     )
 
     agents_dict = {
