@@ -2,7 +2,7 @@
 
 import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
-import { getGroupById, getGroupsByTeam } from 'db/group';
+import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
@@ -13,14 +13,14 @@ import { SessionStatus, SessionType } from 'struct/session';
 import { dynamicResponse } from '../util';
 
 export async function sessionsData(req, res, _next) {
-	const [groups, sessions, agents] = await Promise.all([
-		getGroupsByTeam(req.params.resourceSlug),
+	const [crews, sessions, agents] = await Promise.all([
+		getCrewsByTeam(req.params.resourceSlug),
 		getSessionsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
-		groups,
+		crews,
 		sessions,
 		agents,
 	};
@@ -112,18 +112,18 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	let groupId = null
+	let crewId = null
 		, agentId = null;
-	const [group, agent] = await Promise.all([
-		getGroupById(req.params.resourceSlug, req.body.id),
+	const [crew, agent] = await Promise.all([
+		getCrewById(req.params.resourceSlug, req.body.id),
 		getAgentById(req.params.resourceSlug, req.body.id),
 	]);
-	if (group) {
-		const agents = await getAgentsById(req.params.resourceSlug, [group.adminAgent, ...group.agents]);
+	if (crew) {
+		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		groupId = group._id;
+		crewId = crew._id;
 	} else if (agent) {
 		agentId = agent._id;
 	} else {
@@ -143,7 +143,7 @@ export async function addSessionApi(req, res, next) {
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		groupId,
+		crewId,
 		agentId,
 	});
 

@@ -5,8 +5,8 @@ import { getModelsByTeam } from 'db/model';
 import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
+import { removeAgentFromCrews } from '../db/crew';
 import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
-import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
 import { ModelList } from '../lib/struct/model';
@@ -251,7 +251,7 @@ export async function deleteAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await removeAgentFromGroups(req.params.resourceSlug, agentId);
+	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	await deleteAgentById(req.params.resourceSlug, agentId);
 

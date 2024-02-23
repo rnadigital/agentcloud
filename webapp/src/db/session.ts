@@ -17,7 +17,7 @@ export type Session = {
     tokensUsed: number;
 	status: SessionStatus;
 	type: SessionType;
-	groupId?: ObjectId;
+	crewId?: ObjectId;
 	agentId?: ObjectId;
 }
 

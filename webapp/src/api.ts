@@ -84,7 +84,7 @@ export function deleteGroup(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/group/${body.groupId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 export function getGroups(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/groups.json`, 'GET', null, dispatch, errorCallback, router);
+	return ApiCall(`/${body.resourceSlug}/crews.json`, 'GET', null, dispatch, errorCallback, router);
 }
 
 // Models

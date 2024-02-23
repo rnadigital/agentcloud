@@ -21,8 +21,8 @@ import * as accountController from './controllers/account';
 import * as agentController from './controllers/agent';
 import * as airbyteProxyController from './controllers/airbyte';
 import * as credentialController from './controllers/credential';
+import * as crewController from './controllers/crew';
 import * as datasourceController from './controllers/datasource';
-import * as groupController from './controllers/group';
 import * as modelController from './controllers/model';
 import * as notificationController from './controllers/notification';
 import * as sessionController from './controllers/session';
@@ -113,15 +113,15 @@ export default function router(server, app) {
 	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
 	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
 
-	//groups
-	teamRouter.get('/groups', groupController.groupsPage.bind(null, app));
-	teamRouter.get('/groups.json', groupController.groupsJson);
-	teamRouter.get('/group/add', groupController.groupAddPage.bind(null, app));
-	teamRouter.get('/group/:groupId([a-f0-9]{24}).json', groupController.groupJson);
-	teamRouter.get('/group/:groupId([a-f0-9]{24})/edit', groupController.groupEditPage.bind(null, app));
-	teamRouter.post('/forms/group/add', groupController.addGroupApi);
-	teamRouter.post('/forms/group/:groupId([a-f0-9]{24})/edit', groupController.editGroupApi);
-	teamRouter.delete('/forms/group/:groupId([a-f0-9]{24})', groupController.deleteGroupApi);
+	//crews
+	teamRouter.get('/crews', crewController.crewsPage.bind(null, app));
+	teamRouter.get('/crews.json', crewController.crewsJson);
+	teamRouter.get('/crew/add', crewController.crewAddPage.bind(null, app));
+	teamRouter.get('/crew/:crewId([a-f0-9]{24}).json', crewController.crewJson);
+	teamRouter.get('/crew/:crewId([a-f0-9]{24})/edit', crewController.crewEditPage.bind(null, app));
+	teamRouter.post('/forms/crew/add', crewController.addCrewApi);
+	teamRouter.post('/forms/crew/:crewId([a-f0-9]{24})/edit', crewController.editCrewApi);
+	teamRouter.delete('/forms/crew/:crewId([a-f0-9]{24})', crewController.deleteCrewApi);
 
 	//credentials
 	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));

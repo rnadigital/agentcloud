@@ -10,19 +10,18 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 import { timingSafeEqual } from 'crypto';
+import { addAgents } from 'db/agent';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage, updateMessageWithChunkById } from 'db/chat';
+import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
+import { taskQueue } from 'queue/bull';
 import { AgentType } from 'struct/agent';
 import { SessionStatus, SessionType } from 'struct/session';
 
-import { addAgents } from './db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage, updateMessageWithChunkById } from './db/chat';
-import { addGroup } from './db/group';
-import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
 import checkSession from './lib/middleware/auth/checksession';
 import fetchSession from './lib/middleware/auth/fetchsession';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
-import { taskQueue } from './lib/queue/bull';
 
 export const io = new Server();
 
