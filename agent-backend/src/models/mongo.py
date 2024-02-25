@@ -26,7 +26,7 @@ class ToolParameters(BaseModel):
     required: List[str]
 
 
-class ToolData(BaseModel):
+class Tool(BaseModel):
     description: str
     parameters: ToolParameters
     name: str
@@ -44,35 +44,27 @@ class Platforms(str, Enum):
     Azure = "azure"
 
 
-class Models(str, Enum):
+class ModelType(str, Enum):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     GPT4 = "gpt-4"
     GPT4TURBO = "gpt-4-1106-preview"
     GPT3TURBO = "gpt-3.5-turbo"
 
 
-class ConfigList(BaseModel):
-    """Data model for OpenAi Model Config"""
-
-    api_key: Optional[str] = ""
-    api_type: Optional[Platforms] = Platforms.OpenAI
-    model: Optional[Models] = Models.GPT4
-    timeout: Optional[int] = 300
-    max_retries: Optional[int] = 10
-
-
-class LLMConfig(BaseModel):
+class Models(BaseModel):
     """Data model for Autogen  LLMConfig"""
 
     seed: Optional[int] = randint(1, 100)
-    config_list: List[ConfigList] = field(default_factory=list)
+    api_key: Optional[str] = ""
+    api_type: Optional[Platforms] = Platforms.OpenAI
+    model: Optional[ModelType] = ModelType.GPT4
     temperature: Optional[float] = 0
     timeout: Optional[int] = 300
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
-    functions: Optional[List[ToolData]] = None
 
 
-class RetrieverData(BaseModel):
+class Data(BaseModel):
     task: str = "qa"
     collection_name: str
     chunk_token_size: int = 2000
@@ -81,43 +73,33 @@ class RetrieverData(BaseModel):
     client: Optional[object] = None
 
 
-class AgentConfig(BaseModel):
+class Agent(BaseModel):
     """Data model for Autogen Agent Config"""
-
-    name: str
-    llm_config: LLMConfig
-    human_input_mode: Optional[str] = "NEVER"
-    system_message: Optional[str] = ""
-    max_consecutive_auto_reply: Optional[int] = 10
-    is_termination_msg: Union[Callable, str] = lambda x: x.get("content", "") and x.get(
-        "content", ""
-    ).rstrip().endswith("TERMINATE")
-    code_execution_config: Optional[Union[bool, str, Dict[str, Any]]] = {}
-    use_sockets: Optional[bool] = True
-    socket_client: Any = None
-    sid: str = None
-    datasource_data: Optional[List[DatasourceData]] = None
-    datasource_ids: Optional[List[str]] = None
-    # retrieve_config: Optional[Dict[str, Any]] = None
-    retrieve_config: Optional[RetrieverData] = None
-    debug_docs: Optional[bool] = False
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    Role: str
+    Goal: str
+    Backstory: str
+    LLM: Optional[Models] = Models.GPT4
+    Tools: Optional[List[Tool]]
+    functionCallingLLM: Optional[Models] = Models.GPT4
+    maxIter: Optional[int]
+    maxRpm: Optional[int]
+    verbose: Optional[bool]
+    allowDelegation: Optional[bool]
+    stepCallback: Optional[Callable]
 
 
-AgentConfigArgs = tuple([k for k in AgentConfig.model_fields.keys()])
-
-
-class AgentTypes(str, Enum):
-    AssistantAgent = "AssistantAgent"
-    UserProxyAgent = "UserProxyAgent"
-    RetrieverUserProxyAgent = "RetrieverUserProxyAgent"
-    RetrieverAssistantProxyAgent = "RetrieverAssistantProxyAgent"
-    TeachableAgent = "TeachableAgent"
-
-
-class AgentData(BaseModel):
-    data: AgentConfig
-    type: str
-    is_admin: Optional[bool] = False
+class Task(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    description: str
+    expectedOutput: Optional[str]
+    Tools: Optional[Tool]
+    asyncExecution: Optional[bool]
+    context: Optional[str]
+    outputJSON: Optional[BaseModel]
+    outputPydantic: Optional[BaseModel]
+    outputFile: Optional[str]
+    callback: Optional[Callable]
 
 
 class Datasource(BaseModel):
