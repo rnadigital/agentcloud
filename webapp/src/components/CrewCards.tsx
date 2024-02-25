@@ -14,33 +14,33 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-export default function GroupCards({ groups, fetchGroups }: { groups: any[], fetchGroups?: any }) {
+export default function CrewCards({ crews, fetchCrews }: { crews: any[], fetchCrews?: any }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 
-	async function deleteGroup(groupId) {
-		API.deleteGroup({
+	async function deleteCrew(crewId) {
+		API.deleteCrew({
 			_csrf: csrf,
 			resourceSlug,
-			groupId,
+			crewId,
 		}, () => {
-			fetchGroups();
-			toast('Deleted group');
+			fetchCrews();
+			toast('Deleted crew');
 		}, () => {
-			toast.error('Error deleting group');
+			toast.error('Error deleting crew');
 		}, router);
 	}
 
 	return (
 		<ul role='list' className='grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8 my-4'>
-			{groups.map((group) => (
-				<li key={group._id} className='rounded-xl border border-gray-200 dark:border-slate-600'>
+			{crews.map((crew) => (
+				<li key={crew._id} className='rounded-xl border border-gray-200 dark:border-slate-600'>
 					<div className='flex items-center gap-x-4 border-b border-gray-900/5 bg-gray-50 dark:bg-slate-800 p-6 rounded-t-xl'>
 						<UserGroupIcon className='w-6 h-6' />
-						<div className='text-sm font-medium leading-6 text-gray-900 dark:text-white'>{group.name}</div>
+						<div className='text-sm font-medium leading-6 text-gray-900 dark:text-white'>{crew.name}</div>
 						<Menu as='div' className='relative ml-auto'>
 							<Menu.Button className='-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500'>
 								<span className='sr-only'>Open options</span>
@@ -59,7 +59,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 									<Menu.Item>
 										{({ active }) => (
 											<a
-												href={`/${resourceSlug}/group/${group._id}/edit`}
+												href={`/${resourceSlug}/crew/${crew._id}/edit`}
 												className={classNames(
 													active ? 'bg-gray-50 dark:bg-slate-700' : '',
 													'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
@@ -72,7 +72,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 									<Menu.Item>
 										{({ active }) => (
 											<button
-												onClick={() => deleteGroup(group._id)}
+												onClick={() => deleteCrew(crew._id)}
 												className={classNames(
 													active ? 'bg-gray-50 dark:bg-slate-700' : '',
 													'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
@@ -90,7 +90,7 @@ export default function GroupCards({ groups, fetchGroups }: { groups: any[], fet
 						<div className='flex justify-between gap-x-4 py-2'>
 							<dt className='text-gray-500 dark:text-white'>Members</dt>
 							<dd className='text-gray-700 dark:text-white'>
-								<div>{group?.agents?.length+1}</div>
+								<div>{crew?.agents?.length+1}</div>
 							</dd>
 						</div>
 						{/* TODO: what else here?? */}

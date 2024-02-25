@@ -63,7 +63,7 @@ export async function crewsJson(req, res, next) {
 export async function crewAddPage(app, req, res, next) {
 	const data = await crewsData(req, res, next); //needed? also see agents controller
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${req.params.resourceSlug}/crews/add`);
+	return app.render(req, res, `/${req.params.resourceSlug}/crew/add`);
 }
 
 /**

@@ -9,7 +9,7 @@ import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import CreateAgentModal from '../components/CreateAgentModal';
-import CreateGroupModal from '../components/CreateGroupModal';
+import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { AgentType } from '../lib/struct/agent';
@@ -92,7 +92,7 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 	return (<div className='flex flex-col'>
 
 		{modalOpen === 'group'
-			? <CreateGroupModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />
+			? <CreateCrewModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />
 			: <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />}
 
 		<div className='flex flex-row justify-center'>

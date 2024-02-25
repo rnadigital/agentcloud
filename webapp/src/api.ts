@@ -70,20 +70,20 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/agent/${body.agentId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
-// Groups
-export function getGroup(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/group/${body.groupId}.json`, 'GET', null, dispatch, errorCallback, router);
+// Crews
+export function getCrew(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/crew/${body.crewId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
-export function addGroup(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/group/add`, 'POST', body, dispatch, errorCallback, router);
+export function addCrew(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/crew/add`, 'POST', body, dispatch, errorCallback, router);
 }
-export function editGroup(groupId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/group/${groupId}/edit`, 'POST', body, dispatch, errorCallback, router);
+export function editCrew(crewId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/crew/${crewId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
-export function deleteGroup(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/group/${body.groupId}`, 'DELETE', body, dispatch, errorCallback, router);
+export function deleteCrew(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/crew/${body.crewId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
-export function getGroups(body, dispatch, errorCallback, router) {
+export function getCrews(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/crews.json`, 'GET', null, dispatch, errorCallback, router);
 }
 

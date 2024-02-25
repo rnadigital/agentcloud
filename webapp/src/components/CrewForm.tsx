@@ -10,44 +10,38 @@ import * as API from '../api';
 import CreateAgentModal from '../components/CreateAgentModal';
 import { useAccountContext } from '../context/account';
 
-export default function GroupForm({ agentChoices = [], group = {}, editing, compact=false, callback, fetchAgents }
-	: { agentChoices?: any[], group?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types
+export default function CrewForm({ agentChoices = [], crew = {}, editing, compact=false, callback, fetchAgents }
+	: { agentChoices?: any[], crew?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen] = useState(false);
-	const [groupState, setGroup] = useState(group);
+	const [crewState, setCrew] = useState(crew);
 	const [error, setError] = useState();
 
-	const initialAdminAgent = group.adminAgent && agentChoices.find(ai => ai._id === group.adminAgent);
-	const [adminAgentState, setAdminAgentState] = useState(initialAdminAgent ? { label: initialAdminAgent.name, value: initialAdminAgent._id } : null);
-
-	const initialAgents = group.agents && group.agents.map(a => {
+	const initialAgents = crew.agents && crew.agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
 		return { label: oa.name, value: a };
 	});
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
-	const [groupChatState, setGroupChatState] = useState(group?.groupChat || false);
-	const { _id, name, agents } = groupState;
+	const { _id, name, agents } = crewState;
 
-	async function groupPost(e) {
+	async function crewPost(e) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
-			adminAgent: adminAgentState?.value,
 			agents: agentsState.map(a => a.value),
-			groupChat: e.target.groupChat.checked,
 		};
 		if (editing) {
-			await API.editGroup(groupState._id, body, null, setError, null);
-			toast.success('Group Updated');
+			await API.editCrew(crewState._id, body, null, setError, null);
+			toast.success('Crew Updated');
 		} else {
-			const addedGroup: any = await API.addGroup(body, null, toast.error, compact ? null : router);
-			callback && addedGroup && callback(addedGroup._id);
+			const addedCrew: any = await API.addCrew(body, null, toast.error, compact ? null : router);
+			callback && addedCrew && callback(addedCrew._id);
 		}
 	}
 
@@ -58,7 +52,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 
 	return (<>
 		<CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={createAgentCallback} />
-		<form onSubmit={groupPost}>
+		<form onSubmit={crewPost}>
 			<input
 				type='hidden'
 				name='_csrf'
@@ -69,14 +63,14 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
 					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Group Details</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name and team members to use for this group.</p>
+						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Crew Details</h2>
+						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name and team members to use for this crew.</p>
 					</div>}
 
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Group Name
+									Crew Name
 							</label>
 							<div className='mt-2'>
 								<input
@@ -89,67 +83,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 								/>
 							</div>
 						</div>
-						
-						<div className='sm:col-span-12'>
-							<label className='flex items-center space-x-2'>
-								<input
-									type='checkbox'
-									name='groupChat'
-									checked={groupChatState}
-									onChange={(e) => {
-										if (groupChatState && agentsState.length > 0) {
-											setAgentsState([agentsState[0]]);
-										}
-										setGroupChatState(e.target.checked);
-									}}
-									className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-								/>
-								<span>Group Chat</span>
-							</label>
-						</div>
-
-						<div className='sm:col-span-12'>
-							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Admin Agent
-							</label>
-							<div className='mt-2'>
-								<Select
-									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={adminAgentState}
-						            onChange={(v: any) => {
-						            	if (!v?.value) {
-											return setModalOpen(true);
-						            	}
-						            	setAdminAgentState(v);
-					            	}}
-						            options={agentChoices
-						            	.filter(a => a.type === 'UserProxyAgent') // filter to non-admins
-						            	.map(a => ({ label: a.name, value: a._id })) // map to options
-						            	.concat([{ label: '+ Create new agent', value: null }])} // append "add new"
-						            formatOptionLabel={data => {
-										const optionAgent = agentChoices.find(ac => ac._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}{optionAgent ? ` - ${optionAgent.systemMessage}` : null}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
-											
+		
 						<div className='sm:col-span-12'>
 						
 							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -172,10 +106,9 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 										if (v && v.length > 0 && v[v.length-1]?.value == null) {
 											return setModalOpen(true);
 										}
-										setAgentsState(groupChatState ? (v||[]) : v.length > 0 ? [v[v.length-1]] : []);
+										setAgentsState(v||[]);
         						   	}}
 						            options={agentChoices
-						            	.filter(a => a._id !== adminAgentState?.value) // filter to non-admins
 						            	.map(a => ({ label: a.name, value: a._id })) // map to options
 						            	.concat([{ label: '+ Create new agent', value: null }])} // append "add new"
 						            formatOptionLabel={data => {
@@ -207,7 +140,7 @@ export default function GroupForm({ agentChoices = [], group = {}, editing, comp
 						if (window.history.length > 1) {
 							router.back();
 						} else {
-							router.push(`/${resourceSlug}/groups`);
+							router.push(`/${resourceSlug}/crews`);
 						}
 					}}
 				>

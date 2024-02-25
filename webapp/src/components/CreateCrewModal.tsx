@@ -1,12 +1,11 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
+import CrewForm from 'components/CrewForm';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import GroupForm from './GroupForm';
-
-export default function CreateGroupModal({ open, setOpen, callback }) {
+export default function CreateCrewModal({ open, setOpen, callback }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -55,11 +54,11 @@ export default function CreateGroupModal({ open, setOpen, callback }) {
 								<div>
 									<div className=''>
 										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
-											Create a group
+											Create a crew
 										</Dialog.Title>
 									</div>
 								</div>
-								<GroupForm agentChoices={agents} compact={true} callback={callback} fetchAgents={fetchAgents} />
+								<CrewForm agentChoices={agents} compact={true} callback={callback} fetchAgents={fetchAgents} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>
