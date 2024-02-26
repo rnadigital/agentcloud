@@ -3,6 +3,7 @@ import { CheckIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { Fragment } from 'react';
+import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';

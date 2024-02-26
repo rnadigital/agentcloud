@@ -86,8 +86,17 @@ export async function addTaskApi(req, res, next) {
 
 	const { name, description, expectedOutput, toolIds, asyncExecution }  = req.body;
 
-	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
-	if (!task) {
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, lengthMin: 1, customError: 'Name must not be empty.' }},
+		{ field: 'description', validation: { notEmpty: true, lengthMin: 1, customError: 'Description must not be empty.' }},
+		// Include other fields as necessary
+	], { name: 'Name', description: 'Description', expectedOutput: 'Expected Output', toolIds: 'Tool IDs' });
+
+	if (validationError ) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	if (toolIds && !Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -118,7 +127,7 @@ export async function editTaskApi(req, res, next) {
 		name,
 		description,
 		expectedOutput,
-		toolIds: toolIds.map(toObjectId),
+		toolIds: toolIds ? toolIds.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
 	});
 

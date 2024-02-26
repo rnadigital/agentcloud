@@ -20,7 +20,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState(task);
 
-	const { _id, description, expectedOutput, toolIds } = taskState;
+	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
 	const initialTools = task.toolIds && task.toolIds
 		.map(tid => {
@@ -42,7 +42,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 			name: e.target.name.value,
 			description: e.target.description.value,
 			expectedOutput: e.target.expectedOutput.value,
-			toolIds: taskState?.toolIds,
+			toolIds: taskState?.toolIds || [],
 			asyncExecution: e.target.asyncExecution.checked,
 		};
 		if (editing) {
@@ -82,8 +82,21 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 					value={csrf}
 				/>
 				<div className={`space-y-${compact ? '6' : '12'}`}>
-					{/* Task description and expected output fields */}
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
+						<div className='col-span-full'>
+							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Name
+							</label>
+							<input
+								required
+								type='text'
+								id='name'
+								name='name'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								defaultValue={name}
+							/>
+						</div>
+
 						<div className='col-span-full'>
 							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Task Description
@@ -103,7 +116,6 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 								Expected Output
 							</label>
 							<textarea
-								required
 								id='expectedOutput'
 								name='expectedOutput'
 								rows={4}
