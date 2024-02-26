@@ -26,10 +26,7 @@ export function getCrewsByTeam(teamId: db.IdOrStr): Promise<Crew[]> {
 export function getCrewsWithAgent(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Crew[]> {
 	return CrewCollection().find({
 		teamId: toObjectId(teamId),
-		$or: [
-			{ agents: toObjectId(agentId) },
-			{ adminAgent: toObjectId(agentId) },
-		],
+		agents: toObjectId(agentId),
 	}).toArray();
 }
 
@@ -47,34 +44,14 @@ export async function updateCrew(teamId: db.IdOrStr, crewId: db.IdOrStr, crew: C
 }
 
 export function removeAgentFromCrews(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<any> {
-	return CrewCollection().bulkWrite([
-		{
-			updateMany: {
-				filter: {
-					adminAgent: toObjectId(agentId),
-					teamId: toObjectId(teamId),
-				},
-				update: {
-					$unset: {
-						adminAgent: '',
-					}
-				},
-			}
-		},
-		{
-			updateMany: {
-				filter: {
-					agents: toObjectId(agentId),
-					teamId: toObjectId(teamId),
-				},
-				update: {
-					$pull: {
-						agents: toObjectId(agentId),
-					}
-				},
-			}
+	return CrewCollection().updateMany({
+		agents: toObjectId(agentId),
+		teamId: toObjectId(teamId),
+	}, {
+		$pull: {
+			agents: toObjectId(agentId),
 		}
-	]);
+	});
 }
 
 export function deleteCrewById(teamId: db.IdOrStr, crewId: db.IdOrStr): Promise<any> {

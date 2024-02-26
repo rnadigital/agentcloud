@@ -17,18 +17,19 @@ import renderStaticPage from './lib/middleware/render/staticpage';
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
-import * as accountController from './controllers/account';
-import * as agentController from './controllers/agent';
-import * as airbyteProxyController from './controllers/airbyte';
-import * as credentialController from './controllers/credential';
-import * as crewController from './controllers/crew';
-import * as datasourceController from './controllers/datasource';
-import * as modelController from './controllers/model';
-import * as notificationController from './controllers/notification';
-import * as sessionController from './controllers/session';
-import * as stripeController from './controllers/stripe';
-import * as teamController from './controllers/team';
-import * as toolController from './controllers/tool';
+import * as accountController from 'controllers/account';
+import * as agentController from 'controllers/agent';
+import * as airbyteProxyController from 'controllers/airbyte';
+import * as credentialController from 'controllers/credential';
+import * as crewController from 'controllers/crew';
+import * as datasourceController from 'controllers/datasource';
+import * as modelController from 'controllers/model';
+import * as notificationController from 'controllers/notification';
+import * as sessionController from 'controllers/session';
+import * as stripeController from 'controllers/stripe';
+import * as taskController from 'controllers/task';
+import * as teamController from 'controllers/team';
+import * as toolController from 'controllers/tool';
 
 export default function router(server, app) {
 
@@ -122,6 +123,16 @@ export default function router(server, app) {
 	teamRouter.post('/forms/crew/add', crewController.addCrewApi);
 	teamRouter.post('/forms/crew/:crewId([a-f0-9]{24})/edit', crewController.editCrewApi);
 	teamRouter.delete('/forms/crew/:crewId([a-f0-9]{24})', crewController.deleteCrewApi);
+
+	//tasks
+	teamRouter.get('/tasks', taskController.tasksPage.bind(null, app));
+	teamRouter.get('/tasks.json', taskController.taskJson);
+	// teamRouter.get('/task/add', taskController.crewAddPage.bind(null, app));
+	// teamRouter.get('/task/:crewId([a-f0-9]{24}).json', taskController.crewJson);
+	// teamRouter.get('/task/:crewId([a-f0-9]{24})/edit', taskController.crewEditPage.bind(null, app));
+	// teamRouter.post('/forms/task/add', taskController.addCrewApi);
+	// teamRouter.post('/forms/task/:crewId([a-f0-9]{24})/edit', taskController.editCrewApi);
+	// teamRouter.delete('/forms/task/:crewId([a-f0-9]{24})', taskController.deleteCrewApi);
 
 	//credentials
 	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));

@@ -39,12 +39,6 @@ export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 				isGroupSet: { $cond: { if: { $gt: [{ $size: '$group' }, 0] }, then: true, else: false } },
 			}
 		}, {
-			$lookup: { from: 'groups', as: 'tempGroup', localField: '_id', foreignField: 'adminAgent' }
-		},  {
-			$addFields: {
-				group: { $cond: { if: '$isGroupSet', then: '$group', else: '$tempGroup' } },
-			}
-		}, {
 			$project: {
 				isGroupSet: 0,
 				tempGroup: 0,

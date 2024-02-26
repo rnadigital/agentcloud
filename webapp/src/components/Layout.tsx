@@ -12,12 +12,12 @@ import {
 	CreditCardIcon,
 	KeyIcon,
 	PencilSquareIcon,
+	PuzzlePieceIcon,
 	Square3Stack3DIcon,
 	UserGroupIcon,
 	UserIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon,
-	PuzzlePieceIcon,
 } from '@heroicons/react/24/outline';
 import DebugLogs from 'components/DebugLogs';
 import NotificationBell from 'components/NotificationBell';
