@@ -6,19 +6,19 @@ import toSnakeCase from 'misc/tosnakecase';
 import { Task } from 'struct/task';
 
 import { removeAgentsModel } from '../db/agent';
-import { getCredentialsByTeam } from '../db/credential';
+import { getToolsByTeam } from '../db/tool';
 import { chainValidations } from '../lib/utils/validationUtils';
 import { dynamicResponse } from '../util';
 
 export async function tasksData(req, res, _next) {
-	const [tasks, credentials] = await Promise.all([
+	const [tasks, tools] = await Promise.all([
 		getTasksByTeam(req.params.resourceSlug),
-		getCredentialsByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
+		tools,
 		tasks,
-		credentials,
 	};
 }
 
@@ -42,14 +42,14 @@ export async function tasksJson(req, res, next) {
 }
 
 export async function taskData(req, res, _next) {
-	const [task, credentials] = await Promise.all([
+	const [task, tools] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
-		getCredentialsByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
+		tools,
 		task,
-		credentials,
 	};
 }
 

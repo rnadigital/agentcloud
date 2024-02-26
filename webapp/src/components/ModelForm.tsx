@@ -160,7 +160,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 				            	}}
 					            options={credentials.filter(c => c.type === type).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
 					            formatOptionLabel={data => {
-  										const optionCred = credentials.find(oc => oc._id === data.value);
+									const optionCred = credentials.find(oc => oc._id === data.value);
 					                return (<li
 					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 					                        data.isSelected

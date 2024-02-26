@@ -1,4 +1,3 @@
-
 import NProgress from 'nprogress';
 
 // Account
@@ -70,6 +69,40 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/agent/${body.agentId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
+// Tasks
+export function getTasks(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/tasks.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getTask(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/task/${body.taskId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function addTask(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/task/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteTask(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/task/${body.taskId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+export function editTask(taskId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/task/${taskId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
+// Tools
+export function getTools(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/tools.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/tool/${body.toolId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function addTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/tool/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+export function editTool(toolId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
 // Crews
 export function getCrew(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/crew/${body.crewId}.json`, 'GET', null, dispatch, errorCallback, router);
@@ -108,24 +141,7 @@ export function deleteCredential(body, dispatch, errorCallback, router) {
 export function addCredential(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/credential/add`, 'POST', body, dispatch, errorCallback, router);
 }
-
-// Tools
-export function getTools(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/tools.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function getTool(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/tool/${body.toolId}.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function addTool(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/add`, 'POST', body, dispatch, errorCallback, router);
-}
-export function deleteTool(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
-}
-export function editTool(toolId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
-}
-
+1;
 // Datasources
 export function getDatasources(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/datasources.json`, 'GET', null, dispatch, errorCallback, router);

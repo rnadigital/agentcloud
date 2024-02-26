@@ -28,7 +28,7 @@ const authorizationMethods = [
 	{ label: 'Custom', value: 'custom' },
 ];
 
-export default function ToolForm({ tool = {}, credentials = [], editing }: { tool?: any, credentials?: any[], editing?: boolean }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, credentials = [], editing, callback, compact }: { tool?: any, credentials?: any[], editing?: boolean, callback?: Function, compact?: boolean }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -123,7 +123,9 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 				toast.success('Tool Updated');
 			}, (err) => { toast.error(err); }, null);
 		} else {
-			API.addTool(body, null, (err) => { toast.error(err); }, router);
+			const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
+			console.log('addedTool', addedTool);
+			callback && addedTool && callback(addedTool._id);
 		}
 	}
 
@@ -272,6 +274,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 					<label className='text-base font-semibold text-gray-900'>Name</label>
 					<div>
 						<input
+							required
 							readOnly={isBuiltin}
 							type='text'
 							name='toolName'
@@ -609,10 +612,10 @@ export default function ToolForm({ tool = {}, credentials = [], editing }: { too
 									highlighted={selectedOpenAPIMatchKey === item.openAPIMatchKey}
 									onClickFunction={() => {
 										// setFunctionList(null);
-										setSelectedOpenAPIMatchKey(item.openAPIMatchKey);
+										setSelectedOpenAPIMatchKey(item?.openAPIMatchKey);
 										setToolName(item?.name);
 										setToolDescription(item?.description);
-										const functionParameters = item.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
+										const functionParameters = item?.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
 											const [parname, par]: any = entry;
 											acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
 											return acc;
