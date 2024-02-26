@@ -69,7 +69,7 @@ export async function taskJson(req, res, next) {
 export async function taskEditPage(app, req, res, next) {
 	const data = await taskData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${req.params.resourceSlug}/task/${data.task._id}/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/task/${req.params.taskId}/edit`);
 }
  
 /**

@@ -13,7 +13,7 @@ export function TaskCollection(): any {
 export function getTaskById(orgId: db.IdOrStr, taskId: db.IdOrStr): Promise<Task> {
 	return TaskCollection().findOne({
 		_id: toObjectId(taskId),
-		orgId: toObjectId(orgId),
+		teamId: toObjectId(orgId),
 	});
 }
 

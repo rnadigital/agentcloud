@@ -127,9 +127,9 @@ export default function router(server, app) {
 	//tasks
 	teamRouter.get('/tasks', taskController.tasksPage.bind(null, app));
 	teamRouter.get('/tasks.json', taskController.tasksJson);
-	// teamRouter.get('/task/add', taskController.crewAddPage.bind(null, app));
-	// teamRouter.get('/task/:crewId([a-f0-9]{24}).json', taskController.crewJson);
-	// teamRouter.get('/task/:crewId([a-f0-9]{24})/edit', taskController.crewEditPage.bind(null, app));
+	teamRouter.get('/task/add', taskController.taskAddPage.bind(null, app));
+	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
+	teamRouter.get('/task/:taskId([a-f0-9]{24})/edit', taskController.taskEditPage.bind(null, app));
 	// teamRouter.post('/forms/task/add', taskController.addCrewApi);
 	// teamRouter.post('/forms/task/:crewId([a-f0-9]{24})/edit', taskController.editCrewApi);
 	// teamRouter.delete('/forms/task/:crewId([a-f0-9]{24})', taskController.deleteCrewApi);

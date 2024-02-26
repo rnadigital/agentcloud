@@ -13,7 +13,7 @@ export default function TaskCards({ tasks }: { tasks: any[] }) {
 				<div key={task._id} className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm'>
 					<div className='flex items-center justify-between'>
 						<h3 className='text-sm font-medium truncate'>
-							<Link href={`/${resourceSlug}/task/${task._id}`}>
+							<Link href={`/${resourceSlug}/task/${task._id}/edit`}>
 								&quot;<em>{task.description}</em>&quot;
 							</Link>
 						</h3>
