@@ -85,7 +85,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
 						<div className='col-span-full'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Name
+								Name<span className='text-red-700'> *</span>
 							</label>
 							<input
 								required
@@ -99,12 +99,13 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 
 						<div className='col-span-full'>
 							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Task Description
+								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
 								required
 								id='description'
 								name='description'
+								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={description}
@@ -118,6 +119,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 							<textarea
 								id='expectedOutput'
 								name='expectedOutput'
+								placeholder='Clear and detailed definition of expected output for the task.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={expectedOutput}
@@ -127,7 +129,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 						{/* Tool selection */}
 						<div className='col-span-full'>
 							<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Tools (Optional)
+								Tools
 							</label>
 							<Select
 								isSearchable
