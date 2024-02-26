@@ -10,13 +10,16 @@ export default function EditTask(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const { resourceSlug, taskId } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { task, tools } = state; // Assuming tasks need tools
 
 	async function fetchTaskFormData() {
-		await API.getTask({ resourceSlug }, dispatch, setError, router);
+		await API.getTask({
+			resourceSlug,
+			taskId,
+		}, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -32,6 +35,10 @@ export default function EditTask(props) {
 			<Head>
 				<title>{`Edit Task - ${teamName}`}</title>
 			</Head>
+
+			<div className='border-b pb-2 my-2 mb-6'>
+				<h3 className='font-semibold text-gray-900'>Edit Task</h3>
+			</div>
 
 			<TaskForm task={task} tools={tools} fetchTaskFormData={fetchTaskFormData} editing={true} />
 

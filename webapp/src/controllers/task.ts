@@ -143,7 +143,7 @@ export async function deleteTaskApi(req, res, next) {
 
 	await Promise.all([
 		deleteTaskById(req.params.resourceSlug, taskId),
-//TODO: reference handling?
+		//TODO: reference handling?
 	]);
 
 	return dynamicResponse(req, res, 302, { });

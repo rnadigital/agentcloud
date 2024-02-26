@@ -40,29 +40,9 @@ export default function Crews(props) {
 			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Crews</h3>
 		</div>
 
-		{!hasAgents && <div className='rounded-md bg-yellow-50 p-4'>
-			<div className='flex'>
-				<div className='flex-shrink-0'>
-					<ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' aria-hidden='true' />
-				</div>
-				<div className='ml-3'>
-					<h3 className='text-sm font-medium text-yellow-800'>Attention needed</h3>
-					<div className='mt-2 text-sm text-yellow-700'>
-						<p>
-							You have no agents. You need at least 3 agents to create a crew.{' '}
-							<Link href={`/${resourceSlug}/agent/add`} className='font-medium text-yellow-700 underline hover:text-yellow-600'>
-								Create agents
-							</Link>
-							.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>}
-
 		<CrewCards crews={crews} fetchCrews={fetchCrews} />
 
-		{hasAgents && (crews.length === 0
+		{crews.length === 0
 			? <NewButtonSection
 				link={`/${resourceSlug}/crew/add`}
 				emptyMessage={'No crews'}
@@ -80,7 +60,6 @@ export default function Crews(props) {
 				message={'Get started by creating a new crew.'}
 				buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 				buttonMessage={'New Crew'}
-				disabled={!hasAgents}
 			/>
 			: <Link href={`/${resourceSlug}/crew/add`}>
 				<button
@@ -91,7 +70,7 @@ export default function Crews(props) {
 					New Crew
 				</button>
 			</Link>
-		)}
+		}
 
 	</>);
 }

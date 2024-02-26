@@ -39,9 +39,11 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
+			name: e.target.name.value,
 			description: e.target.description.value,
 			expectedOutput: e.target.expectedOutput.value,
 			toolIds: taskState?.toolIds,
+			asyncExecution: e.target.asyncExecution.checked,
 		};
 		if (editing) {
 			await API.editTask(taskState._id, body, () => {
@@ -148,8 +150,34 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 					            }}
 							/>
 						</div>
-					</div>
 
+						{/* Async execution checkbox */}
+						<div className='col-span-full'>
+							<div className='mt-2'>
+								<div className='sm:col-span-12'>
+									<label htmlFor='asyncExecution' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										<input
+											type='checkbox'
+											id='asyncExecution'
+											name='asyncExecution'
+											checked={taskState?.asyncExecution === true}
+											onChange={e => {
+												setTask(oldTask => {
+													return {
+														...oldTask,
+														asyncExecution: e.target.checked,
+													};
+												});
+											}}
+											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										/>
+										Async Execution
+									</label>
+								</div>
+							</div>
+						</div>
+
+					</div>
 				</div>
 
 				<div className='mt-6 flex items-center justify-between gap-x-6'>
