@@ -61,7 +61,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[], fetchTa
 									<Menu.Item>
 										{({ active }) => (
 											<a
-												href={`/${resourceSlug}/task/${task._id}`}
+												href={`/${resourceSlug}/task/${task._id}/edit`}
 												className={classNames(
 													active ? 'bg-gray-50 dark:bg-slate-700' : '',
 													'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
