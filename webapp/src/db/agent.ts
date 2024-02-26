@@ -1,7 +1,7 @@
 'use strict';
 
 import * as db from 'db/index';
-import { Agent, AgentType, CodeExecutionConfigType, HumanInputModeType } from 'struct/agent';
+import { Agent, CodeExecutionConfigType } from 'struct/agent';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';

@@ -1,7 +1,6 @@
 'use strict';
 
 import toObjectId from 'misc/toobjectid';
-import { AgentType } from 'struct/agent';
 import { ProcessImpl } from 'struct/crew';
 
 import { getAgentById, getAgentsById, getAgentsByTeam } from '../db/agent';

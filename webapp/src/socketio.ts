@@ -15,7 +15,6 @@ import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJson
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
-import { AgentType } from 'struct/agent';
 import { SessionStatus, SessionType } from 'struct/session';
 
 import checkSession from './lib/middleware/auth/checksession';

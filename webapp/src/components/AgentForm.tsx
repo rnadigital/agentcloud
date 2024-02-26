@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AgentType } from 'struct/agent';
 import { DatasourceStatus } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -21,12 +20,15 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen] = useState(false);
+	const [callbackKey, setCallbackKey] = useState(null);
+	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || false);
 	const [agentState, setAgent] = useState(agent);
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, type, systemMessage, codeExecutionConfig, modelId, model, toolIds, datasourceIds } = agentState;
+	const { _id, name, modelId, functionModelId, toolIds, datasourceIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
+	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 
 	const initialTools = agent.toolIds && agent.toolIds
 		.map(tid => {
@@ -61,8 +63,8 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
-			type: e.target.type.value,
-			modelId: modelId,
+			modelId,
+			allowDelegation,
 			systemMessage: e.target.systemMessage.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
 			datasourceIds: datasourcesState ? datasourcesState.map(d => d.value) : [],
@@ -86,13 +88,13 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const modelCallback = async (addedModelId) => {
 		await fetchAgentFormData && fetchAgentFormData();
 		setModalOpen(false);
-		console.log(addedModelId);
 		setAgent(oldAgent => {
 			return {
 				...oldAgent,
-				modelId: addedModelId,
+				[callbackKey as any]: addedModelId,
 			};
 		});
+		setCallbackKey(null);
 	};
 
 	return (<>
@@ -105,7 +107,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			/>
 			<div className={`space-y-${compact ? '6' : '12'}`}>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-6 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
 					{!compact && <div>
 						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Agent Details</h2>
 						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, type and model to use for this agent.</p>
@@ -140,8 +142,8 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
 						            onChange={(v: any) => {
 										if (v?.value === null) {
-											//Create new pressed
-											return setModalOpen(true);
+											setModalOpen(true);
+											return setCallbackKey('modelId');
 										}
 						            	setAgent(oldAgent => {
    											return {
@@ -168,87 +170,42 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						</div>
 
 						<div className='sm:col-span-12'>
-							<fieldset>
-								<legend className='mb-2 text-sm font-semibold leading-6 text-gray-900'>Type</legend>
-								<div className='space-y-6'>
-									<div className='flex items-center gap-x-3'>
-										<div className='flex h-6 items-center'>
-											<input
-												required
-												id='executor-agent'
-												name='type'
-												type='radio'
-												value={AgentType.EXECUTOR_AGENT}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={codeExecutionConfig != null}
-											/>
-										</div>
-										<div className='text-sm leading-6'>
-											<label htmlFor='executor-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
-							                    Executor Agent
-												<p className='font-medium text-gray-500'>An agent that executes code.</p>
-											</label>
-										</div>
-									</div>
-									<div className='flex items-center gap-x-3'>
-										<div className='flex h-6 items-center'>
-											<input
-												required
-												id='user-proxy-agent'
-												name='type'
-												type='radio'
-												value={AgentType.USER_PROXY_AGENT}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={type === AgentType.USER_PROXY_AGENT && !codeExecutionConfig}
-											/>
-										</div>
-										<div className='text-sm leading-6'>
-											<label htmlFor='user-proxy-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
-		                    					User Proxy Agent
-												<p className='font-medium text-gray-500'>A proxy agent for the user, that can execute code and provide feedback to the other agents.</p>
-											</label>
-										</div>
-									</div>
-									<div className='flex items-center gap-x-3'>
-										<div className='flex h-6 items-center'>
-											<input
-												id='assistant-agent'
-												name='type'
-												type='radio'
-												value={AgentType.ASSISTANT_AGENT}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={!editing || type === AgentType.ASSISTANT_AGENT}
-											/>
-										</div>
-										<div className='text-sm leading-6'>
-											<label htmlFor='assistant-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
-							                    Assistant Agent
-												<p className='font-medium text-gray-500'>Assistant agent, designed to solve a task with LLM.</p>
-												<p className='font-bold text-gray-500'>Select this if you are running a single agent session.</p>
-											</label>
-										</div>
-									</div>
-									<div className='flex items-center gap-x-3'>
-										<div className='flex h-6 items-center'>
-											<input
-												id='retriver-assistant-agent'
-												name='type'
-												type='radio'
-												value={AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-												defaultChecked={!editing || type === AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT}
-											/>
-										</div>
-										<div className='text-sm leading-6'>
-											<label htmlFor='qdrant-retriever-agent' className='block text-sm font-semibold leading-6 text-gray-900 dark:text-slate-400'>
-							                    Retrieval Assitant Agent (RAG)
-												<p className='font-medium text-gray-500'>Retrieverassitant  agent, designed to help retrieve relevant information form database.</p>
-												<p className='font-bold text-gray-500'>Select this if you are using RAG. Include data source</p>
-											</label>
-										</div>
-									</div>
-								</div>
-							</fieldset>
+							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Function Calling Model
+							</label>
+							<div className='mt-2'>
+								<Select
+									isClearable
+						            primaryColor={'indigo'}
+						            classNames={SelectClassNames}
+						            value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
+						            onChange={(v: any) => {
+										if (v?.value === null) {
+											setModalOpen(true);
+											return setCallbackKey('functionModelId');
+										}
+						            	setAgent(oldAgent => {
+   											return {
+   												...oldAgent,
+   												functionModelId: v?.value,
+   											};
+   										});
+					            	}}
+						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+						            formatOptionLabel={data => {
+   										const optionCred = models.find(oc => oc._id === data.value);
+						                return (<li
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+						                        data.isSelected
+						                            ? 'bg-blue-100 text-blue-500'
+						                            : 'dark:text-white'
+						                    }`}
+						                >
+						                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
+						                </li>);
+						            }}
+						        />
+							</div>
 						</div>
 
 						<div className='sm:col-span-12'>
@@ -308,7 +265,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						            value={datasourcesState}
 						            onChange={(v: any) => {
 						            	console.log(v);
-						            	setDatasourcesState(v ? [v[v.length-1]] : []);
+						            	setDatasourcesState(v);
 					            	}}
 						            options={datasources
 						            	.filter(t => t?.status === DatasourceStatus.READY)
@@ -334,44 +291,124 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						        />
 							</div>
 						</div>
-						
+
 					</div>
 
 				</div>
-				
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-6 md:grid-cols-${compact ? '1' : '3'}`}>
+
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 md:grid-cols-${compact ? '1' : '3'}`}>
 					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Instructions</h2>
+						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Role</h2>
 						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							Provide instructions for your agent. Here are some questions to answer for some example custom instructions:
+							Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.
 						</p>
-						<ol className='pl-5 list-disc mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							<li>What skills does the agent have?</li>
-							<li>What should the agent do?</li>
-							<li>What inputs and/or outputs should this agent process?</li>
-							<li>Who should this agent interact with?</li>
-							<li>How formal or casual should your agent be?</li>
-							<li>How long or short should responses generally be?</li>
-						</ol>
 					</div>}
 
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 
 						<div className='col-span-full'>
 							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Instructions
+								Role
+							</label>
+							<div className='mt-2'>
+								<textarea
+									required
+									id='role'
+									name='role'
+									rows={5}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									defaultValue={role}
+								/>
+							</div>
+							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+						</div>
+					</div>
+				</div>
+
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
+					{!compact && <div>
+						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Goal</h2>
+						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
+							The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.
+						</p>
+					</div>}
+
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+						<div className='col-span-full'>
+							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Goal
 							</label>
 							<div className='mt-2'>
 								<textarea
 									required
 									id='definition'
-									name='systemMessage'
-									rows={8}
+									name='goal'
+									rows={5}
 									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									defaultValue={systemMessage}
+									defaultValue={goal}
 								/>
 							</div>
 							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+						</div>
+					</div>
+				</div>
+
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
+					{!compact && <div>
+						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Backstory</h2>
+						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
+							Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.
+						</p>
+					</div>}
+
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+						<div className='col-span-full'>
+							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Backstory
+							</label>
+							<div className='mt-2'>
+								<textarea
+									required
+									id='definition'
+									name='goal'
+									rows={5}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									defaultValue={goal}
+								/>
+							</div>
+							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+						</div>
+					</div>
+				</div>
+
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
+					{!compact && <div>
+						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Allow Delegation</h2>
+						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
+Allow this agent to be assigned appropriate tasks automatically.
+						</p>
+					</div>}
+
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+						<div className='col-span-full'>
+							<div className='mt-2'>
+								<div className='sm:col-span-12'>
+									<label htmlFor='allowDelegation' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										<input
+											type='checkbox'
+											id='allowDelegation'
+											name='allowDelegation'
+											checked={allowDelegation}
+											onChange={e => setAllowDelegation(e.target.checked)}
+											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										/>
+Allow Delegation
+									</label>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

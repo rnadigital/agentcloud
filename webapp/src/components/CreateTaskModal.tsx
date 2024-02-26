@@ -4,7 +4,8 @@ import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import TaskForm from 'components/TaskForm';
 import { useAccountContext } from 'context/account';
-import { Fragment } from 'react';
+import { useRouter } from 'next/router';
+import { Fragment, useEffect,useState } from 'react';
 
 export default function CreateTaskModal({ open, setOpen, callback }) {
 

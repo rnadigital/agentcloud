@@ -2,7 +2,6 @@
 
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
-import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
 import { removeAgentFromCrews } from '../db/crew';
@@ -104,7 +103,20 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
+	const {
+		toolIds,
+		datasourceIds,
+		name,
+	    role,
+	    goal,
+	    backstory,
+		modelId,
+		functionModelId,
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
+	 }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
@@ -114,6 +126,7 @@ export async function addAgentApi(req, res, next) {
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
 	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
+	//TODO: finish validation
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -149,20 +162,15 @@ export async function addAgentApi(req, res, next) {
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
-	 	type: type === AgentType.EXECUTOR_AGENT
-	 		? AgentType.USER_PROXY_AGENT
-	 		: type as AgentType,
-		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
-			? { lastNMessages: 5, workDirectory: 'output' }
-			: null,
-		systemMessage,
-		humanInputMode: type === AgentType.EXECUTOR_AGENT
-			? 'TERMINAL'
-			: [AgentType.USER_PROXY_AGENT, AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT].indexOf(type) >= 0
-				? 'ALWAYS'
-				: null,
-		model,
+	    role,
+	    goal,
+	    backstory,
 		modelId: toObjectId(modelId),
+		functionModelId: toObjectId(functionModelId),
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
 		toolIds: foundTools.map(t => t._id),
 		datasourceIds: datasourceIds,
 	});
@@ -182,7 +190,20 @@ export async function addAgentApi(req, res, next) {
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
+	const {
+		toolIds,
+		datasourceIds,
+		name,
+	    role,
+	    goal,
+	    backstory,
+		modelId,
+		functionModelId,
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
+	 }  = req.body;
 	
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
@@ -214,20 +235,15 @@ export async function editAgentApi(req, res, next) {
 
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
-	 	type: type === AgentType.EXECUTOR_AGENT
-	 		? AgentType.USER_PROXY_AGENT
-	 		: type as AgentType, //TODO: revise
-		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT
-			? { lastNMessages: 5, workDirectory: 'output' }
-			: null,
-		systemMessage,
-		humanInputMode: type === AgentType.EXECUTOR_AGENT
-			? 'TERMINAL'
-			: [AgentType.USER_PROXY_AGENT, AgentType.QDRANT_RETRIEVER_USER_PROXY_AGENT].indexOf(type) >= 0
-				? 'ALWAYS'
-				: null,
-		model,
+	    role,
+	    goal,
+	    backstory,
 		modelId: toObjectId(modelId),
+		functionModelId: toObjectId(functionModelId),
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
 		toolIds: foundTools.map(t => t._id),
 		datasourceIds: datasourceIds,
 	});

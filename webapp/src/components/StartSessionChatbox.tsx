@@ -12,7 +12,6 @@ import CreateAgentModal from '../components/CreateAgentModal';
 import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import { AgentType } from '../lib/struct/agent';
 import SelectClassNames from '../lib/styles/SelectClassNames';
 
 export default function StartSessionForm({ agents = [], groups = [], setOpen, fetchSessions }) {
