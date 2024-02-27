@@ -79,7 +79,7 @@ export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
+	const { account, csrf, switching } = accountContext as any;
 	const { children, router } = props as any;
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const showNavs = !noNavPages.includes(router.pathname);
@@ -99,7 +99,6 @@ export default withRouter(function Layout(props) {
 				<meta name='viewport' content='width=device-width initial-scale=1' />
 				<link rel='shortcut icon' href='/images/favicon.ico' />
 			</Head>
-
 			<div className='flex flex-col flex-1 bg-white dark:bg-slate-900'>
 				<Transition.Root show={sidebarOpen} as={Fragment}>
 					<Dialog
@@ -536,42 +535,6 @@ export default withRouter(function Layout(props) {
 						</div>
 						
 					</div>}
-
-					{/*<nav className="flex border-b border-gray-200 bg-white" aria-label="Breadcrumb">
-      <ol role="list" className="mx-auto flex w-full max-w-screen-xl space-x-4 px-4 sm:px-6 lg:px-8">
-        <li className="flex">
-          <div className="flex items-center">
-            <a href="#" className="text-gray-400 hover:text-gray-500">
-              <HomeIcon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-              <span className="sr-only">Home</span>
-            </a>
-          </div>
-        </li>
-        {pages.map((page) => (
-          <li key={page.name} className="flex">
-            <div className="flex items-center">
-              <svg
-                className="h-full w-6 flex-shrink-0 text-gray-200"
-                viewBox="0 0 24 44"
-                preserveAspectRatio="none"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
-              </svg>
-              <a
-                href={page.href}
-                className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-                aria-current={page.current ? 'page' : undefined}
-              >
-                {page.name}
-              </a>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </nav>*/}
-
 					<main className='py-10 flex flex-col flex-1'>
 						<div className='px-4 sm:px-6 lg:px-8 flex flex-col flex-1'>
 
@@ -581,9 +544,10 @@ export default withRouter(function Layout(props) {
 					</main>
 				</div>
 			</div>
-
+			{/*<div className={`transition-all duration-100 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
+			<div className={`transition-all duration-100 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />*/}
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
-				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
+				{switching && 'switchibg'}<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
 			</footer>
 		</>
 	);

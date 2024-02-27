@@ -16,7 +16,7 @@ function classNames(...classes) {
 
 export default function OrgSelector({ orgs }) {
 
-	const [accountContext, refreshAccountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
@@ -38,13 +38,23 @@ export default function OrgSelector({ orgs }) {
 				redirect = `/${teamId}/${splitLocation[0]}s`;
 			}
 		}
-		await API.switchTeam({
-			orgId,
-			teamId,
-			_csrf: csrf,
-			redirect,
-		}, dispatch, setError, router);
-		refreshAccountContext();
+		const start = Date.now();
+		try {
+			setSwitchingContext(true);
+			await API.switchTeam({
+				orgId,
+				teamId,
+				_csrf: csrf,
+				redirect,
+			}, (res) => {
+				dispatch(res);
+			}, setError, router);
+			refreshAccountContext();
+		} finally {
+			setTimeout(() => {
+				setSwitchingContext(false);
+			}, 300+(Date.now()-start));
+		}
 	}
 
 	async function callback(newTeamId, newOrgId) {

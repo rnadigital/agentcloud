@@ -20,6 +20,7 @@ export function AccountWrapper({ children, pageProps }) {
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),
+		switching: false,
 	});
 
 	function refreshAccountContext() {
@@ -30,6 +31,14 @@ export function AccountWrapper({ children, pageProps }) {
 				...getTeamAndOrgName(data),
 			});
 		}, null, null);
+	}
+
+	function setSwitchingContext(switching: boolean) {
+		setSharedState({
+			...sharedState,
+			...getTeamAndOrgName(sharedState),
+			switching,
+		});
 	}
 	
 	useEffect(() => {
@@ -52,7 +61,7 @@ export function AccountWrapper({ children, pageProps }) {
 	// log('AppWrapper sharedState %O', sharedState);
 
 	return (
-		<AccountContext.Provider value={[sharedState, refreshAccountContext]}>
+		<AccountContext.Provider value={[sharedState, refreshAccountContext, setSwitchingContext]}>
 			{children}
 		</AccountContext.Provider>
 	);
