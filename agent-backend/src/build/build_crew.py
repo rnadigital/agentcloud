@@ -14,21 +14,23 @@ class CrewBuilder:
             prompt: str,
             session_id: str,
             crew: Crew,
-            agents: Agent,
-            tasks: Task,
-            tools: Tool,
-            model: Model,
-            creds: Credentials,
+            crew_tasks: List[Task],
+            agents: List[Agent],
+            agent_tasks: List[Task],
+            tools: List[Tool],
+            model: List[Model],
+            creds: List[Credentials],
             history: Optional[dict],
     ):
-        self.crew = crew
         self.prompt: str = prompt
-        self.history: Optional[dict] = history
+        self.crew = crew
+        self.crew_tasks = crew_tasks
         self.agents = agents
-        self.tasks = tasks
+        self.agent_tasks = agent_tasks
         self.tools = tools
         self.model = model
         self.creds = creds
+        self.history: Optional[dict] = history
         try:
             # Initialize the socket client and connect
             self.socket = SimpleClient()
