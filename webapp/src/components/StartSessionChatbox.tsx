@@ -14,7 +14,7 @@ import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
 
-export default function StartSessionForm({ agents = [], groups = [], setOpen, fetchSessions }) {
+export default function StartSessionForm({ agents = [], crews = [], setOpen, fetchSessions }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -35,7 +35,7 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 			return null;
 		}
 		if (!selected?.value && !selected?.value) {
-			toast.error('Please select an agent or group from the dropdown');
+			toast.error('Please select an agent or crew from the dropdown');
 			return null;
 		}
 		const target = e.target.form ? e.target.form : e.target;
@@ -52,28 +52,26 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 		await fetchSessions();
 	}
 
-	//When agents or groups change set the selected group from the callback
+	//When agents or crews change set the selected crew from the callback
 	useEffect(() => {
 		if (!addedId) { return; }
 		const foundAgent = agents.find(a => a._id === addedId);
 		foundAgent && setSelected({ label: foundAgent.name, value: foundAgent._id, tools: foundAgent.toolIds?.length > 0, rag: foundAgent.datasourceIds?.length > 0 });
-		const foundGroup = groups.find(g => g._id === addedId);
-		foundGroup && setSelected({ label: foundGroup.name, value: foundGroup._id });
+		const foundCrew = crews.find(g => g._id === addedId);
+		foundCrew && setSelected({ label: foundCrew.name, value: foundCrew._id });
 		setAddedId(null);
 		setModalOpen(false);
-	}, [agents, groups]);
+	}, [agents, crews]);
 
-	const groupOptions: any[] = groups
-		.filter(g => {
-			return g.adminAgent && g.agents.length > 0;
-		}).map(g => ({
+	const crewOptions: any[] = crews
+		.map(g => ({
 			label: g.name,
 			value: g._id,
 			//TODO: rag true/false capability
 		})).concat([{
-			label: '+ New group',
+			label: '+ New crew',
 			value: null,
-			group: true,
+			crew: true,
 		} as any]);
 
 	const agentOptions: any[] = agents
@@ -85,12 +83,12 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 		} as any)).concat([{
 			label: '+ New agent',
 			value: null,
-			group: false,
+			crew: false,
 		} as any]);
 
 	return (<div className='flex flex-col'>
 
-		{modalOpen === 'group'
+		{modalOpen === 'crew'
 			? <CreateCrewModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />
 			: <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />}
 
@@ -100,14 +98,14 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
 						<input type='hidden' name='_csrf' value={csrf} />
 						<Select
-							isSearchable={groupOptions.length > 5}
+							isSearchable={crewOptions.length > 5}
 							isClearable
 							primaryColor={'indigo'}
 							value={selected}
 							classNames={SelectClassNamesInverted}
 							onChange={(e: any) => {
 								if (e?.value === null) {
-									return setModalOpen(e.group ? 'group' : 'single');
+									return setModalOpen(e.crew ? 'crew' : 'single');
 								}
 								setSelected(e);
 							}}
@@ -115,8 +113,8 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 								label: 'Single Agent',
 								options: agentOptions,
 							}, {
-								label: 'Group',
-								options: groupOptions,
+								label: 'Crew',
+								options: crewOptions,
 							}]}
 							formatOptionLabel={(data: any) => (
 				                <li

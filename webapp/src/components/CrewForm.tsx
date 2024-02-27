@@ -1,5 +1,7 @@
 'use strict';
-
+import {
+	HandRaisedIcon,
+} from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -23,7 +25,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 
 	const initialAgents = crew.agents && crew.agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
-		return { label: oa.name, value: a };
+		return { label: oa.name, value: a, allowDelegation: oa.allowDelegation };
 	});
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
 	const { _id, name, agents } = crewState;
@@ -109,18 +111,26 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 										setAgentsState(v||[]);
         						   	}}
 						            options={agentChoices
-						            	.map(a => ({ label: a.name, value: a._id })) // map to options
-						            	.concat([{ label: '+ Create new agent', value: null }])} // append "add new"
-						            formatOptionLabel={data => {
+						            	.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
+						            	.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+						            formatOptionLabel={(data: any) => {
 						            	const optionAgent = agentChoices.find(ac => ac._id === data.value);
 						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 						                        data.isSelected
 						                            ? 'bg-blue-100 text-blue-500'
 						                            : 'dark:text-white'
 						                    }`}
 						                >
-						                    {data.label}{optionAgent ? ` - ${optionAgent.systemMessage}` : null}
+						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
+								            {data.allowDelegation && <span className='tooltip z-100'>
+									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
+       												<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
+       											</span>
+							        			<span className='tooltiptext'>
+													This agent allows automatic task delegation.
+												</span>
+											</span>}
 						                </li>);
 						            }}
 						        />

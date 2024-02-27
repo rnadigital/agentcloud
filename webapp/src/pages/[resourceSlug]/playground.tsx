@@ -21,7 +21,7 @@ export default function Sessions(props) {
 	const [filter, setFilter] = useState<string>('all');
 	const [open, setOpen] = useState(false);
 	const filterOptions = Object.values(SessionStatus);
-	const { sessions, groups, agents } = state;
+	const { sessions, crews, agents } = state;
 
 	async function fetchSessions() {
 		await API.getSessions({ resourceSlug }, dispatch, setError, router);
@@ -78,7 +78,7 @@ export default function Sessions(props) {
 							</span>
 						</div>}
 						<div className='min-w-0 flex-1 h-full'>
-							<StartSessionChatbox groups={groups} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
+							<StartSessionChatbox crews={crews} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 						</div>
 					</div>
 				</div>
