@@ -255,3 +255,6 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
+.invert-menu {
+  transform: translateY(calc(-100% - 50px));
+}

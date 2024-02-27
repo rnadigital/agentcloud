@@ -12,7 +12,7 @@ import CreateAgentModal from '../components/CreateAgentModal';
 import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import SelectClassNames from '../lib/styles/SelectClassNames';
+import { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
 
 export default function StartSessionForm({ agents = [], groups = [], setOpen, fetchSessions }) {
 
@@ -104,7 +104,7 @@ export default function StartSessionForm({ agents = [], groups = [], setOpen, fe
 							isClearable
 							primaryColor={'indigo'}
 							value={selected}
-							classNames={SelectClassNames}
+							classNames={SelectClassNamesInverted}
 							onChange={(e: any) => {
 								if (e?.value === null) {
 									return setModalOpen(e.group ? 'group' : 'single');
