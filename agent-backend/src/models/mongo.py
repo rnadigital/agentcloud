@@ -99,10 +99,10 @@ class Agent(BaseModel):
     role: str
     goal: str
     backstory: str
-    llm: Optional[Model] = Model.GPT4
+    llm: Optional[Model] = ModelType.GPT4
     tools: Optional[List[Tool]]
     tasks: Optional[List[Task]]
-    functionCallingLLM: Optional[Model] = Model.GPT4
+    functionCallingLLM: Optional[Model] = ModelType.GPT4
     maxIter: Optional[int]
     maxRPM: Optional[int]
     verbose: Optional[bool]
