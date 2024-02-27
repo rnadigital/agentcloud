@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Blockies from 'react-blockies';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
+import ContentLoader from 'react-content-loader';
 
 export default function Session(props) {
 
@@ -36,7 +37,7 @@ export default function Session(props) {
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState(null);
-	const [terminated, setTerminated] = useState(null);
+	const [terminated, setTerminated] = useState(state?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
@@ -275,10 +276,6 @@ export default function Session(props) {
 		return true;
 	}
 
-	// if (!session || messages == null) {
-	// 	return 'Loading...'; //TODO: loader
-	// }
-
 	return (
 		<>
 
@@ -337,14 +334,25 @@ export default function Session(props) {
 								</span>
 							</div>}
 							<div className='min-w-0 flex-1 h-full'>
-								{terminated 
-									? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
-									: <SessionChatbox
-										scrollToBottom={scrollToBottom}
-										lastMessageFeedback={lastMessageFeedback}
-										chatBusyState={chatBusyState}
-										onSubmit={sendMessage}
-									/>}
+								{messages
+									? terminated
+										? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
+										: <SessionChatbox
+											scrollToBottom={scrollToBottom}
+											lastMessageFeedback={lastMessageFeedback}
+											chatBusyState={chatBusyState}
+											onSubmit={sendMessage}
+										/>
+									: <ContentLoader
+										speed={2}
+										width={'100%'}
+										height={30}
+										viewBox='0 0 100% 10'
+										backgroundColor='#e5e5e5'
+										foregroundColor='#ffffff'
+									>
+										<rect x='0' y='10' rx='5' width='100%' height='10' />
+									</ContentLoader>}
 							</div>
 						</div>
 					</div>
