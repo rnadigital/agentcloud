@@ -13,10 +13,9 @@ export default function AddTask(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tasks, tools } = state; // Assuming tasks need tools
+	const { tasks, tools, agents } = state;
 
 	async function fetchTaskFormData() {
-// Assuming you have a similar API endpoint for fetching task form data
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
 	}
 
@@ -35,7 +34,7 @@ export default function AddTask(props) {
 			</Head>
 
 			{/* Adjusted to pass relevant props to TaskForm */}
-			<TaskForm tools={tools} fetchTaskFormData={fetchTaskFormData} />
+			<TaskForm tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
 		</>
 	);
 }

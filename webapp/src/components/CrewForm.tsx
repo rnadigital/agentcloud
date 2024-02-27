@@ -87,8 +87,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 						</div>
 		
 						<div className='sm:col-span-12'>
-						
-							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Members
 							</label>
 							<div className='mt-2'>

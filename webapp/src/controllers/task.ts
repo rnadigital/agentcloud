@@ -1,24 +1,26 @@
 'use strict';
 
+import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
+import { getToolsByTeam } from 'db/tool';
+import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { Task } from 'struct/task';
 
-import { removeAgentsModel } from '../db/agent';
-import { getToolsByTeam } from '../db/tool';
-import { chainValidations } from '../lib/utils/validationUtils';
 import { dynamicResponse } from '../util';
 
 export async function tasksData(req, res, _next) {
-	const [tasks, tools] = await Promise.all([
+	const [tasks, tools, agents] = await Promise.all([
 		getTasksByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		tasks,
+		agents,
 	};
 }
 
@@ -42,14 +44,16 @@ export async function tasksJson(req, res, next) {
 }
 
 export async function taskData(req, res, _next) {
-	const [task, tools] = await Promise.all([
+	const [task, tools, agents] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		task,
+		agents,
 	};
 }
 
@@ -84,7 +88,7 @@ export async function taskAddPage(app, req, res, next) {
 
 export async function addTaskApi(req, res, next) {
 
-	const { name, description, expectedOutput, toolIds, asyncExecution }  = req.body;
+	const { name, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 1, customError: 'Name must not be empty.' }},
@@ -100,6 +104,11 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
+	if (!foundAgent) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -107,6 +116,7 @@ export async function addTaskApi(req, res, next) {
 		description,
 		expectedOutput,
 		toolIds: toolIds.map(toObjectId),
+		agentId: toObjectId(agentId),
 		asyncExecution: asyncExecution === true,
 	});
 

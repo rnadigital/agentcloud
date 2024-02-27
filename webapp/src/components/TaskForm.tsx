@@ -1,6 +1,10 @@
 'use strict';
 
 import * as API from '@api';
+import {
+	HandRaisedIcon,
+} from '@heroicons/react/20/solid';
+import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
@@ -10,13 +14,13 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function TaskForm({ task = {}, tools = [], editing, compact = false, callback, fetchTaskFormData }
-  : { task?: any, tools?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
+export default function TaskForm({ task = {}, tools = [], agents = [], editing, compact = false, callback, fetchTaskFormData }
+	: { task?: any, tools?: any[], agents?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState(task);
 
@@ -29,6 +33,9 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 			return { label: foundTool.name, value: foundTool._id };
 		})
 		.filter(t => t);
+
+	const preferredAgent = agents
+		.find(a => a?._id === taskState?.agentId);
 
 	useEffect(() => {
 	    // Placeholder for any initial setup or effects
@@ -43,6 +50,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 			description: e.target.description.value,
 			expectedOutput: e.target.expectedOutput.value,
 			toolIds: taskState?.toolIds || [],
+			agentId: taskState?.agentId || null,
 			asyncExecution: e.target.asyncExecution.checked,
 		};
 		if (editing) {
@@ -72,9 +80,22 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 		});
 	};
 
+	const agentCallback = async (addedAgentId) => {
+		await fetchTaskFormData && fetchTaskFormData();
+		setModalOpen(false);
+		setTask(oldTask => {
+			return {
+				...oldTask,
+				agentId: addedAgentId,
+			};
+		});
+	};
+
 	return (
 		<>
-			<CreateToolModal open={modalOpen} setOpen={setModalOpen} callback={toolCallback} />
+			{modalOpen === 'agent'
+				? <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={agentCallback} />
+				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
 			<form onSubmit={taskPost}>
 				<input
 					type='hidden'
@@ -133,6 +154,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 							</label>
 							<Select
 								isSearchable
+								isClearable
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
@@ -140,7 +162,7 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 								onChange={(v: any) => {
 									if (v?.some(vals => vals.value === null)) {
 										//Create new pressed
-										return setModalOpen(true);
+										return setModalOpen('tool');
 									}
 									setTask(oldTask => {
 										return {
@@ -165,6 +187,61 @@ export default function TaskForm({ task = {}, tools = [], editing, compact = fal
 							/>
 						</div>
 
+						{/* Preferred agent */}
+						<div className='col-span-full'>
+							<label htmlFor='preferredAgent' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Preferred Agent
+							</label>
+							<div className='mt-2'>
+								<Select
+									isSearchable
+						            primaryColor={'indigo'}
+						            classNames={{
+										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+						            }}
+						            value={preferredAgent ? { label: preferredAgent.name, value: preferredAgent._id } : null}
+						            onChange={(v: any) => {
+										if (v?.value == null) {
+											return setModalOpen('agent');
+										}
+										setTask(oldTask => {
+											return {
+												...oldTask,
+												agentId: v?.value,
+											};
+										});
+        						   	}}
+						            options={agents
+						            	.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
+						            	.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+						            formatOptionLabel={(data: any) => {
+						            	const optionAgent = agents.find(ac => ac._id === data.value);
+						                return (<li
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+						                        data.isSelected
+						                            ? 'bg-blue-100 text-blue-500'
+						                            : 'dark:text-white'
+						                    }`}
+						                >
+						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
+								            {data.allowDelegation && <span className='tooltip z-100'>
+									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
+       												<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
+       											</span>
+							        			<span className='tooltiptext'>
+													This agent allows automatic task delegation.
+												</span>
+											</span>}
+						                </li>);
+						            }}
+						        />
+							</div>
+						</div>
+						
 						{/* Async execution checkbox */}
 						<div className='col-span-full'>
 							<div className='mt-2'>

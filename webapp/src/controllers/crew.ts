@@ -3,7 +3,7 @@
 import toObjectId from 'misc/toobjectid';
 import { ProcessImpl } from 'struct/crew';
 
-import { getAgentById, getAgentsById, getAgentsByTeam } from '../db/agent';
+import { getAgentsById, getAgentsByTeam } from '../db/agent';
 import { addCrew, deleteCrewById, getCrewById, getCrewsByTeam, updateCrew } from '../db/crew';
 import { dynamicResponse } from '../util';
 

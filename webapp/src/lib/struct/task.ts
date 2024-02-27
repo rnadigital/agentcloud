@@ -8,6 +8,7 @@ export type Task = {
 	teamId?: ObjectId;
 	name: string;
 	description: string;
+	agentId?: ObjectId;
 	expectedOutput?: string;
 	toolIds?: ObjectId[];
 	asyncExecution?: boolean;
