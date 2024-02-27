@@ -1,8 +1,11 @@
 import logging
 import random
+from typing import Optional
+
 import autogen
 from utils.log_exception_context_manager import log_exception
 from init.mongo_session import start_mongo_session
+from models.mongo import Session, Crew
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 from socketio.simple_client import SimpleClient
 from socketio.exceptions import DisconnectedError
@@ -54,6 +57,16 @@ def new_rag_execution(task: str, session_id: str):
         logging.exception(de)
     except Exception as e:
         logging.exception(e)
+
+
+def construct_crew(session_id: str, task: Optional[str]):
+    session: Session = mongo_client.get_session(session_id)
+    the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
+    agent_tools = [mongo_client.get_agent_tools(agent.tools) for agent in crew_agents]
+    agent_tasks = [mongo_client.get_agent_tools(agent.tools) for agent in crew_agents]
+
+
+#     todo: agent_tasks, agent_tools
 
 
 def init_socket_generate_group(task: str, session_id: str):
