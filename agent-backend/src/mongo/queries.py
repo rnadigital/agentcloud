@@ -11,31 +11,6 @@ from models.mongo import Credentials, Data, Tool, Agent, Model, Crew, Session, T
 from typing import List, Dict, Union, Any, Optional
 
 
-# # Construct datasources
-# list_of_datasources = list()
-# retrieve_config = None
-# datasource_ids: List[ObjectId] = agent.get("datasourceIds")
-# if datasource_ids and len(datasource_ids) > 0:
-#     for datasource_id in datasource_ids:
-#         datasource = self._get_collection("datasources").aggregate(
-#             [{"$match": {"_id": ObjectId(datasource_id)}}, {
-#                 "$lookup": {"from": "models", "localField": "modelId", "foreignField": "_id",
-#                             "as": "model"}}, {"$unwind": "$model"},
-#              {"$project": {"model": "$model.model"}}]
-#         )
-#         if datasource is not None:
-#             ds_list = list(datasource)
-#             if len(ds_list) > 0:
-#                 # TODO: allow for multi-source
-#                 retrieve_config = Data(
-#                     collection_name=datasource_id,
-#                     embedding_model=map_fastembed_query_model_name(
-#                         ds_list[0]["model"]),
-#                     model=_config_list.model)
-#                 datasource_data = DatasourceData(id=datasource_id, **ds_list[0])
-#                 list_of_datasources.append(datasource_data)
-
-
 class MongoClientConnection(MongoConnection):
     def __init__(self):
         super().__init__()
@@ -62,7 +37,7 @@ class MongoClientConnection(MongoConnection):
             assert session_query_results
             return session_query_results
         except Exception as e:
-            logging.error(f"an error has occurred while retrieving sessin from the database: {e}")
+            logging.error(f"an error has occurred while retrieving session from the database: {e}")
 
     def get_crew(self, session: Session):
         try:
@@ -99,6 +74,15 @@ class MongoClientConnection(MongoConnection):
 
     def get_agent_tasks(self, agent: Agent):
         return [task for task in self._get_collection("tasks").find(({"_id": {"$in": agent.tasks}}))]
+
+    def get_agent_model(self, agent: Agent):
+        return self._get_collection("models").find_one(({"_id": agent.llm}))
+
+    def get_model_credentials(self, model: Model):
+        return self._get_collection("credentials").find_one(({"_id": model.credentials}))
+
+    def get_agent_datasources(self, agent: Agent):
+        pass
 
     # TODO we need to store chat history in the correct format to align with LLM return
     def get_chat_history(

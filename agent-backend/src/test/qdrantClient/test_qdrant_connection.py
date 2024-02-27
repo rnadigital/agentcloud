@@ -1,6 +1,6 @@
 # test_qdrant_connection.py
 import pytest
-import qdrantClient.qdrant_connection as qdc
+import qdrant.qdrant_connection as qdc
 
 
 @pytest.mark.require_docker_compose_up
