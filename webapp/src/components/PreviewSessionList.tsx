@@ -76,7 +76,7 @@ export default function PreviewSessionList(props) {
 			suppressHydrationWarning
 			className='text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
 			href={`/${resourceSlug}/session/${s._id}`}
-			onClick={e=> e.target.tagName === 'svg' && e.preventDefault()}
+			onClick={(e: any) => e.target.tagName === 'svg' && e.preventDefault()}
 		>
 			<p className='overflow-hidden truncate text-ellipsis'>{s.prompt}</p>
 			<Menu as='div' className='relative ml-auto p-0 m-0 h-full'>
