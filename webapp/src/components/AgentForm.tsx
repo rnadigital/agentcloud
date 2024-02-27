@@ -53,6 +53,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			setAgent({
 				...agentState,
 				modelId: models.find(m => !ModelEmbeddingLength[m.model])?._id,
+				functionModelId: models.find(m => !ModelEmbeddingLength[m.model])?._id,
 			});
 		}
 	}, []);
@@ -64,8 +65,11 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			resourceSlug,
 			name: e.target.name.value,
 			modelId,
-			allowDelegation,
-			systemMessage: e.target.systemMessage.value,
+			functionModelId,
+			allowDelegation: allowDelegation === true,
+			role: e.target.role.value,
+			goal: e.target.goal.value,
+			backstory: e.target.backstory.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
 			datasourceIds: datasourcesState ? datasourcesState.map(d => d.value) : [],
 		};
@@ -107,308 +111,268 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			/>
 			<div className={`space-y-${compact ? '6' : '12'}`}>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 border-b border-gray-900/10 pb-6 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Agent Details</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name, type and model to use for this agent.</p>
-					</div>}
-
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-						<div className='sm:col-span-12'>
-							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Agent Name
-							</label>
-							<div className='mt-2'>
-								<input
-									required
-									type='text'
-									name='name'
-									id='name'
-									defaultValue={name}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								/>
-							</div>
-						</div>
-
-						<div className='sm:col-span-12'>
-							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
-						            onChange={(v: any) => {
-										if (v?.value === null) {
-											setModalOpen(true);
-											return setCallbackKey('modelId');
-										}
-						            	setAgent(oldAgent => {
-   											return {
-   												...oldAgent,
-   												modelId: v?.value,
-   											};
-   										});
-					            	}}
-						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
-						            formatOptionLabel={data => {
-   										const optionCred = models.find(oc => oc._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
-
-						<div className='sm:col-span-12'>
-							<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Function Calling Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
-						            onChange={(v: any) => {
-										if (v?.value === null) {
-											setModalOpen(true);
-											return setCallbackKey('functionModelId');
-										}
-						            	setAgent(oldAgent => {
-   											return {
-   												...oldAgent,
-   												functionModelId: v?.value,
-   											};
-   										});
-					            	}}
-						            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
-						            formatOptionLabel={data => {
-   										const optionCred = models.find(oc => oc._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
-
-						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Tools (Optional)
-							</label>
-							<div className='mt-2'>
-								<Select
-									isSearchable
-									isMultiple
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={toolState}
-						            onChange={(v: any) => {
-						            	console.log(v);
-						            	setToolState(v);
-					            	}}
-						            options={tools.map(t => ({ label: t.name, value: t._id }))}
-						            formatOptionLabel={data => {
-										const optionTool = tools.find(ac => ac._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}{` - ${optionTool.data.description}`}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
-
-						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Datasources (Optional)
-							</label>
-							<div className='mt-2'>
-								<Select
-									isSearchable
-									isMultiple
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={datasourcesState}
-						            onChange={(v: any) => {
-						            	console.log(v);
-						            	setDatasourcesState(v);
-					            	}}
-						            options={datasources
-						            	.filter(t => t?.status === DatasourceStatus.READY)
-						            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
-						            formatOptionLabel={(data: any) => {
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    <span>
-												<img
-													src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${data.sourceType}/latest/icon.svg`}
-													loading='lazy'
-													className='inline-flex me-2 w-4 h-4'
-												/>
-												{data.label}
-											</span>
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
-
-					</div>
-
-				</div>
-
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Role</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.
-						</p>
-					</div>}
-
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
-						<div className='col-span-full'>
-							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Role
-							</label>
-							<div className='mt-2'>
-								<textarea
-									required
-									id='role'
-									name='role'
-									rows={5}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									defaultValue={role}
-								/>
-							</div>
-							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Name
+						</label>
+						<div className='mt-2'>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								defaultValue={name}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
 						</div>
 					</div>
 				</div>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Goal</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.
-						</p>
-					</div>}
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='col-span-full'>
+						<label htmlFor='role' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Role
+						</label>
+						<div className='mt-2'>
+							<textarea
+								required
+								id='role'
+								name='role'
+								placeholder='Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.'
+								rows={5}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								defaultValue={role}
+							/>
+						</div>
+						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+					</div>
+				</div>
 
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 
-						<div className='col-span-full'>
-							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Goal
-							</label>
-							<div className='mt-2'>
-								<textarea
-									required
-									id='definition'
-									name='goal'
-									rows={5}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									defaultValue={goal}
-								/>
+					<div className='col-span-full'>
+						<label htmlFor='goal' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Goal
+						</label>
+						<div className='mt-2'>
+							<textarea
+								required
+								id='goal'
+								name='goal'
+								placeholder='The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.'
+								rows={5}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								defaultValue={goal}
+							/>
+						</div>
+						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+					</div>
+				</div>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+					<div className='col-span-full'>
+						<label htmlFor='backstory' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Backstory
+						</label>
+						<div className='mt-2'>
+							<textarea
+								required
+								id='backstory'
+								name='backstory'
+								placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
+								rows={5}
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								defaultValue={goal}
+							/>
+						</div>
+						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+					</div>
+				</div>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+					<div className='col-span-full'>
+						<div className='mt-2'>
+							<div className='sm:col-span-12'>
+								<label htmlFor='allowDelegation' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<input
+										type='checkbox'
+										id='allowDelegation'
+										name='allowDelegation'
+										checked={allowDelegation}
+										onChange={e => setAllowDelegation(e.target.checked)}
+										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+									/>
+									Allow Delegation
+								</label>
+								<p className='mt-3 text-sm leading-6 text-gray-600'>Allow this agent to be assigned appropriate tasks automatically.</p>
 							</div>
-							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
 						</div>
 					</div>
 				</div>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Backstory</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-							Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.
-						</p>
-					</div>}
-
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
-						<div className='col-span-full'>
-							<label htmlFor='definition' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Backstory
-							</label>
-							<div className='mt-2'>
-								<textarea
-									required
-									id='definition'
-									name='goal'
-									rows={5}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									defaultValue={goal}
-								/>
-							</div>
-							{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Model
+						</label>
+						<div className='mt-2'>
+							<Select
+								isClearable
+					            primaryColor={'indigo'}
+					            classNames={SelectClassNames}
+					            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+					            onChange={(v: any) => {
+									if (v?.value === null) {
+										setModalOpen(true);
+										return setCallbackKey('modelId');
+									}
+					            	setAgent(oldAgent => {
+  											return {
+  												...oldAgent,
+  												modelId: v?.value,
+  											};
+  										});
+				            	}}
+					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            formatOptionLabel={data => {
+  										const optionCred = models.find(oc => oc._id === data.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : 'dark:text-white'
+					                    }`}
+					                >
+					                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
+					                </li>);
+					            }}
+					        />
 						</div>
 					</div>
-				</div>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-4 md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Allow Delegation</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
-Allow this agent to be assigned appropriate tasks automatically.
-						</p>
-					</div>}
+					<div className='sm:col-span-12'>
+						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Function Calling Model
+						</label>
+						<div className='mt-2'>
+							<Select
+								isClearable
+					            primaryColor={'indigo'}
+					            classNames={SelectClassNames}
+					            value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
+					            onChange={(v: any) => {
+									if (v?.value === null) {
+										setModalOpen(true);
+										return setCallbackKey('functionModelId');
+									}
+					            	setAgent(oldAgent => {
+  											return {
+  												...oldAgent,
+  												functionModelId: v?.value,
+  											};
+  										});
+				            	}}
+					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            formatOptionLabel={data => {
+  										const optionCred = models.find(oc => oc._id === data.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : 'dark:text-white'
+					                    }`}
+					                >
+					                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
+					                </li>);
+					            }}
+					        />
+						</div>
+					</div>
 
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Tools (Optional)
+						</label>
+						<div className='mt-2'>
+							<Select
+								isSearchable
+								isMultiple
+					            primaryColor={'indigo'}
+					            classNames={{
+									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+									list: 'dark:bg-slate-700',
+									listGroupLabel: 'dark:bg-slate-700',
+									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+					            }}
+					            value={toolState}
+					            onChange={(v: any) => {
+					            	console.log(v);
+					            	setToolState(v);
+				            	}}
+					            options={tools.map(t => ({ label: t.name, value: t._id }))}
+					            formatOptionLabel={data => {
+									const optionTool = tools.find(ac => ac._id === data.value);
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : 'dark:text-white'
+					                    }`}
+					                >
+					                    {data.label}{` - ${optionTool.data.description}`}
+					                </li>);
+					            }}
+					        />
+						</div>
+					</div>
 
-						<div className='col-span-full'>
-							<div className='mt-2'>
-								<div className='sm:col-span-12'>
-									<label htmlFor='allowDelegation' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-										<input
-											type='checkbox'
-											id='allowDelegation'
-											name='allowDelegation'
-											checked={allowDelegation}
-											onChange={e => setAllowDelegation(e.target.checked)}
-											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-										/>
-Allow Delegation
-									</label>
-								</div>
-							</div>
+					<div className='sm:col-span-12'>
+						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Datasources (Optional)
+						</label>
+						<div className='mt-2'>
+							<Select
+								isSearchable
+								isMultiple
+					            primaryColor={'indigo'}
+					            classNames={{
+									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+									list: 'dark:bg-slate-700',
+									listGroupLabel: 'dark:bg-slate-700',
+									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+					            }}
+					            value={datasourcesState}
+					            onChange={(v: any) => {
+					            	console.log(v);
+					            	setDatasourcesState(v);
+				            	}}
+					            options={datasources
+					            	.filter(t => t?.status === DatasourceStatus.READY)
+					            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
+					            formatOptionLabel={(data: any) => {
+					                return (<li
+					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                        data.isSelected
+					                            ? 'bg-blue-100 text-blue-500'
+					                            : 'dark:text-white'
+					                    }`}
+					                >
+					                    <span>
+											<img
+												src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${data.sourceType}/latest/icon.svg`}
+												loading='lazy'
+												className='inline-flex me-2 w-4 h-4'
+											/>
+											{data.label}
+										</span>
+					                </li>);
+					            }}
+					        />
 						</div>
 					</div>
 				</div>

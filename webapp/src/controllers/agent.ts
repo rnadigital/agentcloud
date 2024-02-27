@@ -116,18 +116,19 @@ export async function addAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-	 }  = req.body;
+	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
+		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		{ field: 'type', validation: { notEmpty: true }},
-		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'functionModelId', validation: { hasLength: 24 }},
+		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
-	//TODO: finish validation
-	if (validationError) {	
+	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	
@@ -155,6 +156,14 @@ export async function addAgentApi(req, res, next) {
 		const foundModel = await getModelById(req.params.resourceSlug, modelId);
 		if (!foundModel) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+		}
+	}
+
+	// Check for function calling model
+	if (functionModelId && functionModelId.length > 0) {
+		const foundModel = await getModelById(req.params.resourceSlug, functionModelId);
+		if (!foundModel) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid function calling model ID' });
 		}
 	}
 
@@ -203,17 +212,18 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-	 }  = req.body;
-	
+	 } = req.body;
+
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
+		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		{ field: 'type', validation: { notEmpty: true }},
-		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'functionModelId', validation: { hasLength: 24 }},
+		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
-
+	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
