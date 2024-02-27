@@ -583,7 +583,7 @@ export default withRouter(function Layout(props) {
 			</div>
 
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
-				<div className='py-3'>© 2023 RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
+				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
 			</footer>
 		</>
 	);
