@@ -72,12 +72,12 @@ export default function Sessions(props) {
 				<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600' />
 				<div className='flex flex-row justify-center pb-3'>
 					<div className='flex items-start space-x-4 basis-1/2'>
-						{account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+						{account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none mt-auto mb-6'>
 							<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
 								<Blockies seed={account.name} />
 							</span>
 						</div>}
-						<div className='min-w-0 flex-1 h-full'>
+						<div className='min-w-0 flex-1 h-full mb-[6px]'>
 							<StartSessionChatbox crews={crews} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 						</div>
 					</div>
