@@ -21,7 +21,8 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen] = useState(false);
 	const [callbackKey, setCallbackKey] = useState(null);
-	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || false);
+	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || true);
+	const [verbose, setVerbose] = useState(agent.verbose || false);
 	const [agentState, setAgent] = useState(agent);
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
@@ -67,6 +68,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			modelId,
 			functionModelId,
 			allowDelegation: allowDelegation === true,
+			verbose: verbose === true,
 			role: e.target.role.value,
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
@@ -208,6 +210,28 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 									Allow Delegation
 								</label>
 								<p className='mt-3 text-sm leading-6 text-gray-600'>Allow this agent to be assigned appropriate tasks automatically.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+					<div className='col-span-full'>
+						<div className='mt-2'>
+							<div className='sm:col-span-12'>
+								<label htmlFor='verbose' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<input
+										type='checkbox'
+										id='verbose'
+										name='verbose'
+										checked={verbose}
+										onChange={e => setVerbose(e.target.checked)}
+										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+									/>
+									Verbose
+								</label>
+								<p className='mt-3 text-sm leading-6 text-gray-600'>Enables detailed logging of the agent&apos;s execution for debugging or monitoring purposes when enabled.</p>
 							</div>
 						</div>
 					</div>

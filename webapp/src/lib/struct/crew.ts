@@ -17,7 +17,7 @@ export enum ProcessImpl {
 	HEIRARCHICAL = 'heirarchical',
 }
 
-export type Crew = {	
+export type Crew = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
 	teamId?: ObjectId;
