@@ -84,7 +84,7 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
-    def build_langchain_tools(self) -> List[langchain.tools.Tool]:
+    def attach_tools_to_agents(self) -> List[langchain.tools.Tool]:
         pass
 
     def build_crew(self):
@@ -92,7 +92,9 @@ class CrewAIBuilder:
             agents: List[crewai.Agent] = self.build_crewai_agents()
             agents_with_models: List[crewai.Agent] = self.attach_model_to_agent(agents)
             tasks: List[crewai.Task] = self.attach_agents_to_tasks(agents_with_models)
+            # todo: attach tools to agents
             # tools: List[langchain.tools.Tool] = self.build_langchain_tools()
+
             # Instantiate CrewAI Crew and attache agents and tasks
             crew = crewai.Crew(agents=agents, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
                 exclude_none=True,
