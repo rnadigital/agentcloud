@@ -68,7 +68,7 @@ class Model(BaseModel):
     name: str
     model: Optional[ModelType] = ModelType.GPT4
     credentials: Credentials
-    embeddingLength: int
+    embeddingLength: Optional[int] = 384
     seed: Optional[int] = randint(1, 100)
     temperature: Optional[float] = 0
     timeout: Optional[int] = 300
@@ -90,48 +90,48 @@ class Task(BaseModel):
     model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     description: str
-    expectedOutput: Optional[str]
-    tools: Optional[Tool]
-    asyncExecution: Optional[bool]
-    context: Optional[str]
-    outputJSON: Optional[BaseModel]
-    outputPydantic: Optional[BaseModel]
-    outputFile: Optional[str]
-    callback: Optional[Callable]
+    expectedOutput: Optional[str] = None
+    tools: Optional[Tool] = None
+    asyncExecution: Optional[bool] = False
+    context: Optional[str] = None
+    outputJSON: Optional[BaseModel] = None
+    outputPydantic: Optional[BaseModel] = None
+    outputFile: Optional[str] = None
+    callback: Optional[Callable] = None
 
 
 class Agent(BaseModel):
     model_config = ConfigDict(extra='ignore')
     """Data model for Autogen Agent Config"""
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    # id: Optional[PyObjectId] = Field(alias="_id", default=None)
     role: str
     goal: str
     backstory: str
     llm: Optional[Model] = ModelType.GPT4
-    tools: Optional[List[Tool]]
-    tasks: Optional[List[Task]]
+    tools: Optional[List[Tool]] = None
+    tasks: Optional[List[Task]] = None
     functionCallingLLM: Optional[Model] = ModelType.GPT4
-    maxIter: Optional[int]
-    maxRPM: Optional[int]
-    verbose: Optional[bool]
-    allowDelegation: Optional[bool]
-    stepCallback: Optional[Callable]
+    maxIter: Optional[int] = 10
+    maxRPM: Optional[int] = 100
+    verbose: Optional[bool] = False
+    allowDelegation: Optional[bool] = True
+    stepCallback: Optional[Callable] = None
 
 
 class Crew(BaseModel):
     model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    tasks: Optional[List[Task]]
-    agents: Optional[List[Agent]]
+    tasks: Optional[List[Task]] = None
+    agents: Optional[List[Agent]] = None
     process: Optional[Process] = Process.Sequential
-    managerLLM: Optional[Model]
-    functionCallingLLM: Optional[Callable]
+    managerLLM: Optional[Model] = None
+    functionCallingLLM: Optional[Callable] = None
     verbose: Optional[bool] = False
-    config: Optional[Dict]
-    maxRPM: Optional[int]
-    language: Optional[str]
+    config: Optional[Dict] = None
+    maxRPM: Optional[int] = None
+    language: Optional[str] = "en"
     fullOutput: Optional[bool] = False
-    stepCallback: Optional[Callable]
+    stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
 
 

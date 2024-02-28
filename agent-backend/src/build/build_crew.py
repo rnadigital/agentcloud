@@ -1,12 +1,17 @@
 import logging
 
 import crewai.agent
+import langchain.tools
 from bson import ObjectId
 from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
+
+import models.mongo
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
 from typing import Optional, Union, List, Dict, Callable, Literal
 from models.mongo import Crew, Agent, Tool, Task, Model, Credentials, Process
+from langchain_openai import ChatOpenAI
+from langchain_community.chat_models import *
 
 
 class CrewBuilder:
@@ -44,21 +49,31 @@ class CrewBuilder:
             logging.error(f"Connection error occurred: {ce}")
             raise
 
-    @staticmethod
-    def build_crewai_task(task: str, agent: Optional[Agent]):
-        return crewai.task.Task(
-            description=task,
-            agent=agent
-        )
+    def build_crewai_agent_tasks(self) -> List[crewai.Task]:
+        return [crewai.task.Task(
+            **models.mongo.Task(**task).model_dump(exclude_none=True, exclude_unset=True)
+        ) for task in self.agent_tasks]
 
-    def build_crewai_agent(self):
-        for agent in self.agents:
-            crewai.agent.Agent(
+    def build_crewai_agents(self) -> List[crewai.Agent]:
+        try:
+            return [crewai.Agent(
+                **models.mongo.Agent(**agent).model_dump(exclude_none=True, exclude_unset=True)
+            ) for agent in self.agents]
+        except Exception as e:
+            logging.exception(e)
 
-            )
-
-    def build_crew(self):
+    def build_langchain_tools(self) -> List[langchain.tools.Tool]:
         pass
 
-    def run_crew(self):
+    def build_crew(self):
+        try:
+            # todo: Agents requires a model when instantiating. Need to configure model before we initialise Agent object
+            agents: List[crewai.Agent] = self.build_crewai_agents()
+            tasks: List[crewai.Task] = self.build_crewai_agent_tasks()
+            tools: List[langchain.tools.Tool] = self.build_langchain_tools()
+            return agents, tasks
+        except Exception as e:
+            logging.exception(e)
+
+    def run_crew(self, agents: List[crewai.Agent], tasks: List[crewai.Task]):
         pass

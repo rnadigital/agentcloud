@@ -6,7 +6,7 @@ from models.mongo import Session
 from build.build_crew import CrewBuilder
 
 # from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
-# from socketio.exceptions import DisconnectedError
+
 
 mongo_client = start_mongo_session()
 
@@ -35,8 +35,8 @@ def construct_crew(session_id: str, task: Optional[str]):
             model_credentials,
             chat_history
         )
-        crew_builder.build_crew()
-        crew_builder.run_crew()
+        agents, tasks = crew_builder.build_crew()
+        crew_builder.run_crew(agents, tasks)
 
     except Exception as e:
         logging.error(f"{e}")

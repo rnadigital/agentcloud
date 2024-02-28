@@ -1,13 +1,10 @@
 import logging
 
-from pymongo.cursor import Cursor
-
 from mongo.client import MongoConnection
 from pymongo import collection, database
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from init.env_variables import BASE_PATH
-from models.mongo import Credentials, Data, Tool, Agent, Model, Crew, Session, Task
+from models.mongo import Session
 from typing import List, Dict, Union, Any, Optional
 
 
