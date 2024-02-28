@@ -96,7 +96,7 @@ class CrewAIBuilder:
             # tools: List[langchain.tools.Tool] = self.build_langchain_tools()
 
             # Instantiate CrewAI Crew and attache agents and tasks
-            crew = crewai.Crew(agents=agents, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
+            crew = crewai.Crew(agents=agents_with_models, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
                 exclude_none=True,
                 exclude={"agents", "tasks"}
             ))
