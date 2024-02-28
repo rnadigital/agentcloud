@@ -90,7 +90,7 @@ export default function CrewCards({ crews, fetchCrews }: { crews: any[], fetchCr
 						<div className='flex justify-between gap-x-4 py-2'>
 							<dt className='text-gray-500 dark:text-white'>Members</dt>
 							<dd className='text-gray-700 dark:text-white'>
-								<div>{crew?.agents?.length+1}</div>
+								<div>{crew?.agents?.length}</div>
 							</dd>
 						</div>
 						{/* TODO: what else here?? */}
