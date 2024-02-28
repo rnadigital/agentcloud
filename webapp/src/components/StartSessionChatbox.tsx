@@ -12,7 +12,7 @@ import * as API from '../api';
 // import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
+import SelectClassNames from '../lib/styles/SelectClassNames';
 
 export default function StartSessionForm({ agents = [], crews = [], setOpen, fetchSessions }) {
 
@@ -102,7 +102,7 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 							isClearable
 							primaryColor={'indigo'}
 							value={selected}
-							classNames={SelectClassNamesInverted}
+							classNames={SelectClassNames}
 							onChange={(e: any) => {
 								if (e?.value === null) {
 									return setModalOpen(e.crew ? 'crew' : 'single');

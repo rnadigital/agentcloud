@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 import * as API from '../../api';
+import StartSessionChatbox from '../../components/StartSessionChatbox';
 import { useAccountContext } from '../../context/account';
 
 export default function Playground(props) {
@@ -13,7 +14,8 @@ export default function Playground(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { sessions } = state;
+	const { sessions, crews, agents } = state;
+	const [open, setOpen] = useState(false);
 
 	async function fetchSessions() {
 		await API.getSessions({ resourceSlug }, dispatch, setError, router);
@@ -34,6 +36,8 @@ export default function Playground(props) {
 		</Head>
 
 		Under construction...
+
+		<StartSessionChatbox crews={crews} agents={agents} setOpen={setOpen} fetchSessions={fetchSessions} />
 
 	</>);
 
