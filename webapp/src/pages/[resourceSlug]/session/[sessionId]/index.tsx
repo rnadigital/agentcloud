@@ -276,92 +276,84 @@ export default function Session(props) {
 		return true;
 	}
 
-	return (
-		<>
-
-			<Head>
-				<title>Session - {sessionId}</title>
-			</Head>
-
-			<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
-
-				<div className='overflow-y-auto' ref={scrollContainerRef}>
-					{messages && messages.map((m, mi, marr) => {
-						return <Message
-							key={`message_${mi}`}
-							prevMessage={mi > 0 ? marr[mi-1] : null}
-							message={m?.message?.text}
-							messageType={m?.message?.type}
-							messageLanguage={m?.message?.language}
-							authorName={m?.authorName}
-							feedbackOptions={m?.options}
-							incoming={m?.incoming}
-							ts={m?.ts}
-							isFeedback={m?.isFeedback}
-							isLastMessage={mi === marr.length-1}
-							isLastSeen={false /*lastSeenMessageId && lastSeenMessageId === m?._id*/}
-							sendMessage={sendFeedbackMessage}
-							displayMessage={m?.displayMessage || m?.message?.displayMessage}
-							tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
-							chunking={m?.chunks?.length > 0 && mi === marr.length-1}
-						/>;
-					})}
-					{chatBusyState && messages?.length > 0 && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
-						<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
-						<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
-						<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+	return (<>
+		<Head>
+			<title>Session - {sessionId}</title>
+		</Head>
+		<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
+			<div className='overflow-y-auto' ref={scrollContainerRef}>
+				{messages && messages.map((m, mi, marr) => {
+					return <Message
+						key={`message_${mi}`}
+						prevMessage={mi > 0 ? marr[mi-1] : null}
+						message={m?.message?.text}
+						messageType={m?.message?.type}
+						messageLanguage={m?.message?.language}
+						authorName={m?.authorName}
+						feedbackOptions={m?.options}
+						incoming={m?.incoming}
+						ts={m?.ts}
+						isFeedback={m?.isFeedback}
+						isLastMessage={mi === marr.length-1}
+						isLastSeen={false /*lastSeenMessageId && lastSeenMessageId === m?._id*/}
+						sendMessage={sendFeedbackMessage}
+						displayMessage={m?.displayMessage || m?.message?.displayMessage}
+						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
+						chunking={m?.chunks?.length > 0 && mi === marr.length-1}
+					/>;
+				})}
+				{chatBusyState && messages?.length > 0 && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+					<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+					<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+				</div>}
+			</div>
+			<div className='flex flex-col mt-auto'>
+				<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
+					{chatBusyState && !terminated && messages &&  <div className='flex items-end basis-1/2'>
+						<button
+							onClick={() => stopGenerating()}
+							type='submit'
+							className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+						>
+							<StopIcon className={'w-5 me-1'} />
+							<span>Cancel</span>
+						</button>
 					</div>}
 				</div>
-
-				<div className='flex flex-col mt-auto'>
-					<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
-						{chatBusyState && !terminated && messages &&  <div className='flex items-end basis-1/2'>
-							<button
-								onClick={() => stopGenerating()}
-								type='submit'
-								className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
-							>
-								<StopIcon className={'w-5 me-1'} />
-								<span>Cancel</span>
-							</button>
+				<div className='flex flex-row justify-center pb-3'>
+					<div className='flex items-start space-x-4 basis-1/2'>
+						{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
+							<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
+								<Blockies seed={account.name} />
+							</span>
 						</div>}
-					</div>
-					<div className='flex flex-row justify-center pb-3'>
-						<div className='flex items-start space-x-4 basis-1/2'>
-							{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
-								<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
-									<Blockies seed={account.name} />
-								</span>
-							</div>}
-							<div className='min-w-0 flex-1 h-full'>
-								{messages
-									? terminated
-										? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
-										: <SessionChatbox
-											scrollToBottom={scrollToBottom}
-											lastMessageFeedback={lastMessageFeedback}
-											chatBusyState={chatBusyState}
-											onSubmit={sendMessage}
-										/>
-									: <ContentLoader
-										speed={2}
-										width={'100%'}
-										height={30}
-										viewBox='0 0 100% 10'
-										backgroundColor='#e5e5e5'
-										foregroundColor='#ffffff'
-									>
-										<rect x='0' y='10' rx='5' width='100%' height='10' />
-									</ContentLoader>}
-							</div>
+						<div className='min-w-0 flex-1 h-full'>
+							{messages
+								? terminated
+									? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
+									: <SessionChatbox
+										scrollToBottom={scrollToBottom}
+										lastMessageFeedback={lastMessageFeedback}
+										chatBusyState={chatBusyState}
+										onSubmit={sendMessage}
+									/>
+								: <ContentLoader
+									speed={2}
+									width={'100%'}
+									height={30}
+									viewBox='0 0 100% 10'
+									backgroundColor='#e5e5e5'
+									foregroundColor='#ffffff'
+								>
+									<rect x='0' y='10' rx='5' width='100%' height='10' />
+								</ContentLoader>}
 						</div>
 					</div>
 				</div>
-
 			</div>
-
-		</>
-	);
+		</div>
+	</>);
 
 };
 

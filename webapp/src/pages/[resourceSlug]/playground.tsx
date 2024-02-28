@@ -43,6 +43,7 @@ export default function Sessions(props) {
 		</Head>
 
 		<SubscriptionModal open={open} setOpen={setOpen}/>
+
 		<details>
 			<summary>debug:</summary>
 			{sessions.length > 0 && <div className='w-64 pb-4'>
