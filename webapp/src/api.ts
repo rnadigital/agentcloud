@@ -32,6 +32,23 @@ export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
 
+// Apps
+export function getApps(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/apps.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function getApp(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/app/${body.appId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function editApp(appId, body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/app/${appId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function addApp(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/app/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteApp(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/app/${body.appId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+
 // Sessions
 export function getSession(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}.json`, 'GET', null, dispatch, errorCallback, router);
@@ -103,23 +120,6 @@ export function editTool(toolId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
-// Crews
-export function getCrew(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/crew/${body.crewId}.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function addCrew(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/crew/add`, 'POST', body, dispatch, errorCallback, router);
-}
-export function editCrew(crewId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/crew/${crewId}/edit`, 'POST', body, dispatch, errorCallback, router);
-}
-export function deleteCrew(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/crew/${body.crewId}`, 'DELETE', body, dispatch, errorCallback, router);
-}
-export function getCrews(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/crews.json`, 'GET', null, dispatch, errorCallback, router);
-}
-
 // Models
 export function getModels(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/models.json`, 'GET', null, dispatch, errorCallback, router);
@@ -141,7 +141,7 @@ export function deleteCredential(body, dispatch, errorCallback, router) {
 export function addCredential(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/credential/add`, 'POST', body, dispatch, errorCallback, router);
 }
-1;
+
 // Datasources
 export function getDatasources(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/datasources.json`, 'GET', null, dispatch, errorCallback, router);

@@ -1,7 +1,10 @@
 'use strict';
+import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
+import CreateAgentModal from 'components/CreateAgentModal';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -9,12 +12,8 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ProcessImpl } from 'struct/crew';
 
-import * as API from '../api';
-import CreateAgentModal from '../components/CreateAgentModal';
-import { useAccountContext } from '../context/account';
-
-export default function CrewForm({ agentChoices = [], crew = {}, editing, compact=false, callback, fetchAgents }
-	: { agentChoices?: any[], crew?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types
+export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}, app = {}, editing, compact=false, callback, fetchAgents }
+	: { agentChoices?: any[], taskChoices?: any[], crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -23,6 +22,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 	const [modalOpen, setModalOpen] = useState(false);
 	const [processState, setProcessState] = useState(crew.process || ProcessImpl.SEQUENTIAL);
 	const [crewState, setCrew] = useState(crew);
+	const [appState, setApp] = useState(app);
 	const [error, setError] = useState();
 
 	const initialAgents = crew.agents && crew.agents.map(a => {
@@ -30,23 +30,26 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 		return { label: oa.name, value: a, allowDelegation: oa.allowDelegation };
 	});
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
-	const { _id, name, agents } = crewState;
+	const { _id, name, agents, description, tags, process } = crewState;
+	// const { _id, name, agents, description, tags, process } = appState; //TODO: make it take correct stuff from appstate
 
-	async function crewPost(e) {
+	async function appPost(e) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
+			description: e.target.description.value,
 			agents: agentsState.map(a => a.value),
 			process: processState,
 		};
 		if (editing) {
-			await API.editCrew(crewState._id, body, null, setError, null);
-			toast.success('Crew Updated');
+			await API.editApp(appState._id, body, () => {
+				toast.success('App Updated');
+			}, setError, null);
 		} else {
-			const addedCrew: any = await API.addCrew(body, null, toast.error, compact ? null : router);
-			callback && addedCrew && callback(addedCrew._id);
+			const addedApp: any = await API.addApp(body, null, toast.error, compact ? null : router);
+			callback && addedApp && callback(addedApp._id);
 		}
 	}
 
@@ -57,41 +60,45 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 
 	return (<>
 		<CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={createAgentCallback} />
-		<form onSubmit={crewPost}>
+		<form onSubmit={appPost}>
 			<input
 				type='hidden'
 				name='_csrf'
 				value={csrf}
 			/>
 
-			<div className={`space-y-${compact ? '6' : '12'}`}>
+			<div className='space-y-4'>
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'} md:grid-cols-${compact ? '1' : '3'}`}>
-					{!compact && <div>
-						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Crew Details</h2>
-						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Choose the name and team members to use for this crew.</p>
-					</div>}
-
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Crew Name
+									App Name
 							</label>
-							<div className='mt-2'>
-								<input
-									required
-									type='text'
-									name='name'
-									id='name'
-									defaultValue={name}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								/>
-							</div>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								defaultValue={name}
+								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
 						</div>
-		
+						<div className='sm:col-span-12'>
+							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Description
+							</label>
+							<textarea
+								name='description'
+								id='description'
+								defaultValue={description}
+								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								rows={5}
+							/>
+						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Members
+									Agents
 							</label>
 							<div className='mt-2'>
 								<Select
@@ -180,7 +187,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 						if (window.history.length > 1) {
 							router.back();
 						} else {
-							router.push(`/${resourceSlug}/crews`);
+							router.push(`/${resourceSlug}/apps`);
 						}
 					}}
 				>

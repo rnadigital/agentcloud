@@ -20,8 +20,8 @@ const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMid
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
+import * as appController from 'controllers/app';
 import * as credentialController from 'controllers/credential';
-import * as crewController from 'controllers/crew';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
@@ -114,16 +114,6 @@ export default function router(server, app) {
 	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
 	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
 
-	//crews
-	teamRouter.get('/crews', crewController.crewsPage.bind(null, app));
-	teamRouter.get('/crews.json', crewController.crewsJson);
-	teamRouter.get('/crew/add', crewController.crewAddPage.bind(null, app));
-	teamRouter.get('/crew/:crewId([a-f0-9]{24}).json', crewController.crewJson);
-	teamRouter.get('/crew/:crewId([a-f0-9]{24})/edit', crewController.crewEditPage.bind(null, app));
-	teamRouter.post('/forms/crew/add', crewController.addCrewApi);
-	teamRouter.post('/forms/crew/:crewId([a-f0-9]{24})/edit', crewController.editCrewApi);
-	teamRouter.delete('/forms/crew/:crewId([a-f0-9]{24})', crewController.deleteCrewApi);
-
 	//tasks
 	teamRouter.get('/tasks', taskController.tasksPage.bind(null, app));
 	teamRouter.get('/tasks.json', taskController.tasksJson);
@@ -133,6 +123,16 @@ export default function router(server, app) {
 	teamRouter.post('/forms/task/add', taskController.addTaskApi);
 	teamRouter.post('/forms/task/:taskId([a-f0-9]{24})/edit', taskController.editTaskApi);
 	teamRouter.delete('/forms/task/:taskId([a-f0-9]{24})', taskController.deleteTaskApi);
+
+	//apps
+	teamRouter.get('/apps', appController.appsPage.bind(null, app));
+	teamRouter.get('/apps.json', appController.appsJson);
+	// teamRouter.get('/app/add', appController.appAddPage.bind(null, app));
+	// teamRouter.get('/app/:appId([a-f0-9]{24}).json', appController.appJson);
+	// teamRouter.get('/app/:appId([a-f0-9]{24})/edit', alppController.appEditPage.bind(null, app));
+	// teamRouter.post('/forms/app/add', appController.addAppApi);
+	// teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', appController.editAppApi);
+	// teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', appController.deleteAppApi);
 
 	//credentials
 	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));

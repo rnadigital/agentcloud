@@ -8,8 +8,8 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
-import CreateAgentModal from '../components/CreateAgentModal';
-import CreateCrewModal from '../components/CreateCrewModal';
+// import CreateAgentModal from '../components/CreateAgentModal';
+// import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
@@ -88,9 +88,9 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 
 	return (<div className='flex flex-col'>
 
-		{modalOpen === 'crew'
+		{/*modalOpen === 'crew'
 			? <CreateCrewModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />
-			: <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />}
+			: <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />*/}
 
 		<div className='flex flex-row justify-center'>
 			<div className='flex items-start space-x-4 w-full'>
