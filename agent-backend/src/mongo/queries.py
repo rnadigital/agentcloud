@@ -32,7 +32,7 @@ class MongoClientConnection(MongoConnection):
                 "sessions"
             )
             session_query_results = sessions_collection.find_one(
-                {"_id": ObjectId(session_id)}, {"groupId": 1, "agentId": 1}
+                {"_id": ObjectId(session_id)}, {"crewId": 1}
             )
             assert session_query_results
             return session_query_results
@@ -43,6 +43,7 @@ class MongoClientConnection(MongoConnection):
         try:
             self.db = self._get_db
             crew_id = session.get("crewId")
+            print(f"Crew ID: {crew_id}")
             crew_tasks = list()
             try:
                 assert crew_id is not None
@@ -52,9 +53,9 @@ class MongoClientConnection(MongoConnection):
             tasks_collection: collection.Collection = self._get_collection("tasks")
             agents_collection: collection.Collection = self._get_collection("agents")
             try:
-                the_crew: Crew = crews_collection.find_one({"_id": crew_id})
+                the_crew: Dict = crews_collection.find_one({"_id": crew_id})
                 assert the_crew
-                crew_task_ids: List[Task] = the_crew.tasks
+                crew_task_ids = the_crew.get("tasks")
                 if crew_task_ids and len(crew_task_ids) > 0:
                     crew_tasks = [tasks_collection.find_one({"_id": task}) for task in crew_task_ids]
             except AssertionError:
@@ -69,19 +70,19 @@ class MongoClientConnection(MongoConnection):
         except Exception:
             raise
 
-    def get_agent_tools(self, agent: Agent):
-        return [tool for tool in self._get_collection("tools").find(({"_id": {"$in": agent.tools}}))]
+    def get_agent_tools(self, toolIds: List):
+        return [tool for tool in self._get_collection("tools").find(({"_id": {"$in": toolIds}}))]
 
-    def get_agent_tasks(self, agent: Agent):
-        return [task for task in self._get_collection("tasks").find(({"_id": {"$in": agent.tasks}}))]
+    def get_agent_tasks(self, taskIds: List):
+        return [task for task in self._get_collection("tasks").find(({"_id": {"$in": taskIds}}))]
 
-    def get_agent_model(self, agent: Agent):
-        return self._get_collection("models").find_one(({"_id": agent.llm}))
+    def get_agent_model(self, modelIds: List):
+        return self._get_collection("models").find_one(({"_id": modelIds}))
 
-    def get_model_credentials(self, model: Model):
-        return self._get_collection("credentials").find_one(({"_id": model.credentials}))
+    def get_model_credentials(self, credentialIds: List):
+        return self._get_collection("credentials").find_one(({"_id": credentialIds}))
 
-    def get_agent_datasources(self, agent: Agent):
+    def get_agent_datasources(self, agent: Dict):
         pass
 
     # TODO we need to store chat history in the correct format to align with LLM return

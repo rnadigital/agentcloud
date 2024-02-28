@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Union, Callable
 from random import randint
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, Field, ConfigDict
 from enum import Enum
 from typing import Annotated
 
@@ -35,17 +35,20 @@ class ModelType(str, Enum):
 
 # Models
 class FunctionProperty(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     type: Union[str, int, float, bool, None]
     description: str
 
 
 class ToolParameters(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     type: str
     properties: Dict[str, FunctionProperty]
     required: List[str]
 
 
 class Tool(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     description: str
     parameters: ToolParameters
     name: str
@@ -54,12 +57,14 @@ class Tool(BaseModel):
 
 
 class Credentials(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     key: Optional[str] = ""
     endpoint: Optional[str]
     type: Optional[Platforms] = Platforms.OpenAI
 
 
 class Model(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     name: str
     model: Optional[ModelType] = ModelType.GPT4
     credentials: Credentials
@@ -72,6 +77,7 @@ class Model(BaseModel):
 
 
 class Data(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     task: str = "qa"
     collection_name: str
     chunk_token_size: int = 2000
@@ -81,6 +87,7 @@ class Data(BaseModel):
 
 
 class Task(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     description: str
     expectedOutput: Optional[str]
@@ -94,6 +101,7 @@ class Task(BaseModel):
 
 
 class Agent(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     """Data model for Autogen Agent Config"""
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     role: str
@@ -111,9 +119,10 @@ class Agent(BaseModel):
 
 
 class Crew(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     tasks: Optional[List[Task]]
-    agents: List[Agent]
+    agents: Optional[List[Agent]]
     process: Optional[Process] = Process.Sequential
     managerLLM: Optional[Model]
     functionCallingLLM: Optional[Callable]
@@ -127,11 +136,13 @@ class Crew(BaseModel):
 
 
 class Session(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     crewId: Crew
 
 
 class Datasource(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     orgId: Optional[PyObjectId] = Field(default=None)
     teamId: Optional[PyObjectId] = Field(default=None)
