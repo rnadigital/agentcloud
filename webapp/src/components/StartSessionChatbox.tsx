@@ -133,7 +133,7 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 								<div className='py-2 text-xs flex items-center justify-between'>
 									<span className='font-bold'>{data.label}</span>
 									<span className='bg-gray-200 h-5 h-5 p-1.5 flex items-center justify-center rounded-ful'>
-										{data.options.length}
+										{data.options.length-1}
 									</span>
 								</div>
 							)}
