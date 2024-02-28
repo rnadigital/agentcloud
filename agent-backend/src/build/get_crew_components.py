@@ -3,7 +3,7 @@ from typing import Optional, List, Dict
 
 from init.mongo_session import start_mongo_session
 from models.mongo import Session
-from build.build_crew import CrewBuilder
+from build.build_crew import CrewAIBuilder
 
 # from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 
@@ -23,7 +23,7 @@ def construct_crew(session_id: str, task: Optional[str]):
                                          agent_models]
         chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
-        crew_builder = CrewBuilder(
+        crew_builder = CrewAIBuilder(
             task,
             session_id,
             the_crew,
@@ -35,9 +35,8 @@ def construct_crew(session_id: str, task: Optional[str]):
             model_credentials,
             chat_history
         )
-        agents, tasks = crew_builder.build_crew()
-        crew_builder.run_crew(agents, tasks)
-
+        crew = crew_builder.build_crew()
+        crew_builder.run_crew(crew)
     except Exception as e:
         logging.error(f"{e}")
 
