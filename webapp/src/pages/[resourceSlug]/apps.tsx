@@ -35,8 +35,6 @@ export default function Apps(props) {
 			<title>{`Apps - ${teamName}`}</title>
 		</Head>
 
-		Under construction...
-
 		{apps.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/app/add`}
 			emptyMessage={'No apps'}

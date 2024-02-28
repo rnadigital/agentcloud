@@ -58,6 +58,16 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 		setModalOpen(false);
 	}
 
+	async function createToolCallback() { // TODO:
+		// await fetchAgents && fetchAgents();
+		// setModalOpen(false);
+	}
+
+	async function createTaskCallback() { // TODO:
+		// await fetchAgents && fetchAgents();
+		// setModalOpen(false);
+	}
+
 	return (<>
 		<CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={createAgentCallback} />
 		<form onSubmit={appPost}>
@@ -134,7 +144,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
 								            {data.allowDelegation && <span className='tooltip z-100'>
 									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
-       												<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
+													<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
        											</span>
 							        			<span className='tooltiptext'>
 													This agent allows automatic task delegation.
