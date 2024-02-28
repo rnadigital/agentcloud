@@ -1,7 +1,7 @@
 import logging
 
 from mongo.client import MongoConnection
-from pymongo import collection, database
+from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
 from models.mongo import Session
@@ -12,33 +12,27 @@ class MongoClientConnection(MongoConnection):
     def __init__(self):
         super().__init__()
         self.mongo_client = self.connect()
-        self.db_name = MONGO_DB_NAME
-        self.db = None
-
-    @property
-    def _get_db(self) -> database.Database:
-        return self.mongo_client[self.db_name]
+        self.db = self.mongo_client[MONGO_DB_NAME]
 
     def _get_collection(self, collection_name: str) -> collection.Collection:
         return self.db[collection_name]
 
     def get_session(self, session_id: str) -> Session:
         try:
-            self.db = self._get_db
-            sessions_collection: collection.Collection = self._get_collection(
+            session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
-            )
-            session_query_results = sessions_collection.find_one(
+            ).find_one(
                 {"_id": ObjectId(session_id)}, {"crewId": 1}
             )
             assert session_query_results
             return session_query_results
+        except AssertionError as ae:
+            logging.exception(f"Query returned NO sessions: {ae}")
         except Exception as e:
             logging.error(f"an error has occurred while retrieving session from the database: {e}")
 
     def get_crew(self, session: Session):
         try:
-            self.db = self._get_db
             crew_id = session.get("crewId")
             print(f"Crew ID: {crew_id}")
             crew_tasks = list()
@@ -86,7 +80,6 @@ class MongoClientConnection(MongoConnection):
     def get_chat_history(
             self, session_id: str
     ) -> Optional[List[dict[str, Union[str, Any]]]]:
-        self.db = self._get_db
         chat_collection: collection.Collection = self._get_collection("chat")
         chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
         if chat_messages:
