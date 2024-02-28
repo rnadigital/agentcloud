@@ -33,13 +33,14 @@ export default function AddTask(props) {
 				<title>{`New Task - ${teamName}`}</title>
 			</Head>
 
-			{/* Adjusted to pass relevant props to TaskForm */}
-			<TaskForm tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
+			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+				<TaskForm tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
+			</span>
+
 		</>
 	);
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
-// Ensure the server-side props fetch necessary data for tasks if needed
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

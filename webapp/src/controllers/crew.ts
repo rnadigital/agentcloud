@@ -88,7 +88,7 @@ export async function crewEditPage(app, req, res, next) {
  */
 export async function addCrewApi(req, res, next) {
 
-	const { name, agents, crewChat }  = req.body;
+	const { name, agents, crewChat, process }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0
 		|| !agents || !Array.isArray(agents) || agents.length === 0 || agents.some(i => typeof i !== 'string' || i.length != 24)) {
@@ -100,13 +100,17 @@ export async function addCrewApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	if (!Object.values(ProcessImpl).includes(process)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid process implementation' });
+ 	}
+
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		tasks: [], //TODO
 		agents: agents.map(toObjectId),
-		process: ProcessImpl.SEQUENTIAL, //TODO
+		process,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedCrew.insertedId, redirect: `/${req.params.resourceSlug}/crews` });

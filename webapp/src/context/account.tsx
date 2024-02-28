@@ -29,6 +29,7 @@ export function AccountWrapper({ children, pageProps }) {
 				...pageProps,
 				...data,
 				...getTeamAndOrgName(data),
+				switching: false,
 			});
 		}, null, null);
 	}

@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { ProcessImpl } from 'struct/crew';
 
 import * as API from '../api';
 import CreateAgentModal from '../components/CreateAgentModal';
@@ -20,6 +21,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen] = useState(false);
+	const [processState, setProcessState] = useState(crew.process || ProcessImpl.SEQUENTIAL);
 	const [crewState, setCrew] = useState(crew);
 	const [error, setError] = useState();
 
@@ -37,6 +39,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 			resourceSlug,
 			name: e.target.name.value,
 			agents: agentsState.map(a => a.value),
+			process: processState,
 		};
 		if (editing) {
 			await API.editCrew(crewState._id, body, null, setError, null);
@@ -135,7 +138,35 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 						        />
 							</div>
 						</div>
-
+						<div className='sm:col-span-12'>
+							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+		Process Implementation
+							</label>
+							<div className='mt-2'>
+								<label className='inline-flex items-center mr-6'>
+									<input
+										type='radio'
+										name='process'
+										value={ProcessImpl.SEQUENTIAL}
+										checked={processState === ProcessImpl.SEQUENTIAL}
+										onChange={() => setProcessState(ProcessImpl.SEQUENTIAL)}
+										className='form-radio'
+									/>
+									<span className='ml-2'>Sequential</span>
+								</label>
+								<label className='inline-flex items-center'>
+									<input
+										type='radio'
+										name='process'
+										value={ProcessImpl.HEIRARCHICAL}
+										checked={processState === ProcessImpl.HEIRARCHICAL}
+										onChange={() => setProcessState(ProcessImpl.HEIRARCHICAL)}
+										className='form-radio'
+									/>
+									<span className='ml-2'>Hierarchical</span>
+								</label>
+							</div>
+						</div>
 					</div>
 				</div>			
 

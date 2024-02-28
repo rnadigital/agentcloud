@@ -40,7 +40,9 @@ export default function EditTask(props) {
 				<h3 className='font-semibold text-gray-900'>Edit Task</h3>
 			</div>
 
-			<TaskForm task={task} tools={tools} fetchTaskFormData={fetchTaskFormData} editing={true} />
+			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+				<TaskForm task={task} tools={tools} fetchTaskFormData={fetchTaskFormData} editing={true} />
+			</span>
 
 		</>
 	);

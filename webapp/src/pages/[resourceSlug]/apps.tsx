@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 
-export default function Playground(props) {
+export default function Apps(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName } = accountContext as any;
@@ -30,7 +30,7 @@ export default function Playground(props) {
 	return (<>
 
 		<Head>
-			<title>{`Playground - ${teamName}`}</title>
+			<title>{`Apps - ${teamName}`}</title>
 		</Head>
 
 		Under construction...
