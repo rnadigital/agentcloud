@@ -30,7 +30,9 @@ replicate = "^0.23.1"
 langchain = "^0.1.8"
 langchain-openai = ">=0.0.5,<0.0.6"
 crewai = "^0.14.4"
-crewai-tools = "^0.0.12"
+onnxruntime = "1.17.0"
+torch = "2.2.0"
+#crewai-tools = "^0.0.12"
 
 
 [build-system]
