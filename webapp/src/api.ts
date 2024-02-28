@@ -254,7 +254,7 @@ function buildOptions(_route, method, body) {
 export async function ApiCall(route, method='get', body, dispatch, errorCallback, router, finishProgress=1) {
 
 	// Start progress bar
-	NProgress.start();
+	NProgress.inc();
 
 	// Build request options for fetch
 	const requestOptions = buildOptions(route, method, body);
