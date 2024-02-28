@@ -1,6 +1,7 @@
 import logging
 
 import crewai.agent
+from bson import ObjectId
 from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
@@ -14,13 +15,13 @@ class CrewBuilder:
             prompt: str,
             session_id: str,
             crew: Crew,
-            crew_tasks: List[Task],
-            agents: List[Agent],
-            agent_tasks: List[Task],
-            tools: List[Tool],
-            model: List[Model],
-            creds: List[Credentials],
-            history: Optional[dict],
+            crew_tasks: List[Dict],
+            agents: List[Dict],
+            agent_tasks: List[Dict],
+            tools: List[Dict],
+            model: List[Dict],
+            creds: List[Dict],
+            history: Optional[List[Dict]],
     ):
         self.prompt: str = prompt
         self.crew = crew
