@@ -35,7 +35,9 @@ export default function AddAgent(props) {
 			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
-		<AgentForm datasources={datasources} models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+		<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+			<AgentForm datasources={datasources} models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+		</span>
 
 	</>);
 

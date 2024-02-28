@@ -140,10 +140,10 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 						</div>
 						<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-		Process Implementation
+								Process Implementation
 							</label>
 							<div className='mt-2'>
-								<label className='inline-flex items-center mr-6'>
+								<label className='inline-flex items-center mr-6 text-sm'>
 									<input
 										type='radio'
 										name='process'
@@ -154,7 +154,7 @@ export default function CrewForm({ agentChoices = [], crew = {}, editing, compac
 									/>
 									<span className='ml-2'>Sequential</span>
 								</label>
-								<label className='inline-flex items-center'>
+								<label className='inline-flex items-center text-sm'>
 									<input
 										type='radio'
 										name='process'

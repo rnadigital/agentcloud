@@ -43,7 +43,9 @@ export default function EditAgent(props) {
 			<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
 		</div>
 
-		<AgentForm editing={true} agent={agent} datasources={datasources} models={models} tools={tools} fetchAgentFormData={fetchAgentData} />
+		<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+			<AgentForm editing={true} agent={agent} datasources={datasources} models={models} tools={tools} fetchAgentFormData={fetchAgentData} />
+		</span>
 
 	</>);
 }
