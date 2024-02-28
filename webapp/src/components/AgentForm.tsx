@@ -142,7 +142,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 								id='role'
 								name='role'
 								placeholder='Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.'
-								rows={5}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={role}
 							/>
@@ -163,7 +162,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 								id='goal'
 								name='goal'
 								placeholder='The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.'
-								rows={5}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={goal}
 							/>
@@ -184,7 +182,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 								id='backstory'
 								name='backstory'
 								placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
-								rows={5}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={goal}
 							/>
