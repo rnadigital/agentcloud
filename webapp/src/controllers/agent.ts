@@ -131,11 +131,6 @@ export async function addAgentApi(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	
-	const agents = await getAgentsByTeam(req.params.resourceSlug);
-	if (agents.some(agent => agent.name === name && agent._id.toString() !== req.params.agentId)) {
-		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
-	}
 		
     // Check for foundTools
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);

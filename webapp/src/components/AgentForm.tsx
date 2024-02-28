@@ -109,7 +109,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 				name='_csrf'
 				value={csrf}
 			/>
-			<div className={`space-y-${compact ? '6' : '12'}`}>
+			<div className='space-y-4'>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
