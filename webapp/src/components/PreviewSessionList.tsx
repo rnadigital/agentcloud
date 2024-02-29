@@ -20,13 +20,22 @@ export default function PreviewSessionList(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [state, dispatch] = useState(props);
+	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState();
 	const { sessions } = state;
 
 	async function fetchSessions() {
-		await API.getSessions({ resourceSlug }, dispatch, setError, router);
+		setLoading(true);
+		const start = Date.now();
+		try {
+			await API.getSessions({ resourceSlug }, dispatch, setError, router);
+		} finally {
+			setTimeout(() => {
+				setLoading(false);
+			}, 500-(Date.now()-start));
+		}
 	}
 
 	async function deleteSession(sessionId) {
@@ -46,14 +55,24 @@ export default function PreviewSessionList(props) {
 	}
 
 	useEffect(() => {
+		// if (!resourceSlug) { dispatch({}); }
 		fetchSessions();
 	}, [resourceSlug, router.asPath]);
+	
+	useEffect(() => {
+		const interval = setInterval(() => {
+			fetchSessions();
+		}, 30000);
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
 
 	if (!resourceSlug) {
 		return null;
 	}
 
-	if (!sessions) {
+	if (!sessions || loading) {
 		return <div className='py-2 flex items-center justify-center'>
 			<ButtonSpinner />
 		</div>;
