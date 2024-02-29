@@ -50,6 +50,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			description: e.target.description.value,
 			agents: agentsState.map(a => a.value),
 			process: e.target.process.value,
+			tasks: tasksState.map(x => x.value),
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
