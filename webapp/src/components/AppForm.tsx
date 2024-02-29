@@ -12,8 +12,8 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ProcessImpl } from 'struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}, app = {}, editing, compact=false, callback, fetchAgents }
-	: { agentChoices?: any[], taskChoices?: any[], crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchAgents?: Function }) { //TODO: fix any types
+export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
+	: { agentChoices?: any[], taskChoices?: any[], crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -27,11 +27,11 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 
 	const initialAgents = crew.agents && crew.agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
-		return { label: oa.name, value: a, allowDelegation: oa.allowDelegation };
-	});
+		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
+	}).filter(n => n);
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
-	const { _id, name, agents, description, tags, process } = crewState;
-	// const { _id, name, agents, description, tags, process } = appState; //TODO: make it take correct stuff from appstate
+	const { name, agents, tasks, process } = crewState;
+	const { description, tags } = appState; //TODO: make it take correct stuff from appstate
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -43,7 +43,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 			agents: agentsState.map(a => a.value),
 			process: processState,
 		};
-		if (editing) {
+		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
 				toast.success('App Updated');
 			}, setError, null);
@@ -54,17 +54,17 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 	}
 
 	async function createAgentCallback() {
-		await fetchAgents && fetchAgents();
+		await fetchFormData && fetchFormData();
 		setModalOpen(false);
 	}
 
 	async function createToolCallback() { // TODO:
-		// await fetchAgents && fetchAgents();
+		// await fetchFormData && fetchFormData();
 		// setModalOpen(false);
 	}
 
 	async function createTaskCallback() { // TODO:
-		// await fetchAgents && fetchAgents();
+		// await fetchFormData && fetchFormData();
 		// setModalOpen(false);
 	}
 

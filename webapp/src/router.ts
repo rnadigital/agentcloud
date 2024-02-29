@@ -127,12 +127,12 @@ export default function router(server, app) {
 	//apps
 	teamRouter.get('/apps', appController.appsPage.bind(null, app));
 	teamRouter.get('/apps.json', appController.appsJson);
-	// teamRouter.get('/app/add', appController.appAddPage.bind(null, app));
-	// teamRouter.get('/app/:appId([a-f0-9]{24}).json', appController.appJson);
-	// teamRouter.get('/app/:appId([a-f0-9]{24})/edit', alppController.appEditPage.bind(null, app));
-	// teamRouter.post('/forms/app/add', appController.addAppApi);
-	// teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', appController.editAppApi);
-	// teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', appController.deleteAppApi);
+	teamRouter.get('/app/add', appController.appAddPage.bind(null, app));
+	teamRouter.get('/app/:appId([a-f0-9]{24}).json', appController.appJson);
+	teamRouter.get('/app/:appId([a-f0-9]{24})/edit', appController.appEditPage.bind(null, app));
+	teamRouter.post('/forms/app/add', appController.addAppApi);
+	teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', appController.editAppApi);
+	teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', appController.deleteAppApi);
 
 	//credentials
 	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));

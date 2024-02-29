@@ -11,5 +11,5 @@ export type App = {
 	tags?: string[];
 	visibility?: any; //TODO: perms
 	capabilities?: string;
-	//TODO: 
+	crewId?: ObjectId;
 };

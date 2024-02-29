@@ -2,7 +2,7 @@
 
 import { getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
-import { addCrew } from 'db/crew';
+import { addCrew, updateCrew } from 'db/crew';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
@@ -100,27 +100,30 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities }  = req.body;
+	const { name, description, tags, capabilities, agents, process }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	// const addedCrew = await addCrew({
-	// 	orgId: res.locals.matchingOrg.id,
-	// 	teamId: toObjectId(req.params.resourceSlug),
-	// 	name,
-	// 	tasks: [], //TODO
-	// 	agents: agents.map(toObjectId),
-	// 	process,
-	// });
+	const addedCrew = await addCrew({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name,
+		tasks: [], //TODO
+		agents: agents.map(toObjectId),
+		process,
+	});
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
-		tags: tags.map(tag => tag.trim()), // Assuming tags is an array of strings
+		tags: (tags||[])
+			.map(tag => tag.trim()) // Assuming tags is an array of strings
+			.filter(x => x),
 		capabilities,
+		crewId: addedCrew.insertedId,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
@@ -136,20 +139,38 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities }  = req.body;
+	const { name, description, tags, capabilities, agents, process }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await updateApp(req.params.resourceSlug, req.params.appId, {
-	    name,
-		description,
-		tags: tags.map(toObjectId),
-		capabilities,
-	});
+	const app = await getAppById(req.params.resourceSlug, req.params.appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit` });
+	//const [updatedCrew, _] = 
+	await Promise.all([
+		updateCrew(req.params.resourceSlug, app.crewId, {
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+			name,
+			tasks: [], //TODO
+			agents: agents.map(toObjectId),
+			process,
+		}),
+		updateApp(req.params.resourceSlug, req.params.appId, {
+		    name,
+			description,
+			tags: (tags||[]) //TODO
+				.map(t => t.trim())
+				.filter(t => t),
+			capabilities,
+		})
+	]);
+
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
 
 }
 

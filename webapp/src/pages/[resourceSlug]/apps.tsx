@@ -1,6 +1,7 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import NewButtonSection from 'components/NewButtonSection';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
@@ -35,6 +36,19 @@ export default function Apps(props) {
 			<title>{`Apps - ${teamName}`}</title>
 		</Head>
 
+		{apps.length > 0 && <div className='border-b pb-2 my-2 dark:border-slate-600 flex justify-between'>
+			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Apps</h3>
+			{apps.length > 0 && <Link href={`/${resourceSlug}/app/add`}>
+				<button
+					type='button'
+					className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+				>
+					<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />
+					New App
+				</button>
+			</Link>}
+		</div>}
+
 		{apps.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/app/add`}
 			emptyMessage={'No apps'}
@@ -53,6 +67,10 @@ export default function Apps(props) {
 			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 			buttonMessage={'New App'}
 		/>}
+
+		{apps.map((a, ai) => (<Link key={`app_link_${ai}`} className='m-2' href={`/${resourceSlug}/app/${a._id}/edit`} >{a.name}</Link>))}
+
+		<pre>{JSON.stringify(apps, null, 2)}</pre>
 
 	</>);
 
