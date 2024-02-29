@@ -1,9 +1,12 @@
 'use strict';
+
 import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
+// import CreateToolModal from 'components/CreateToolModal';
+import CreateTaskModal from 'components/CreateTaskModal';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -12,26 +15,31 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ProcessImpl } from 'struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
-	: { agentChoices?: any[], taskChoices?: any[], crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
+	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [modalOpen, setModalOpen] = useState(false);
-	const [processState, setProcessState] = useState(crew.process || ProcessImpl.SEQUENTIAL);
+	const [modalOpen, setModalOpen]: any = useState(false);
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
 	const [error, setError] = useState();
+	const { name, agents, tasks, tools, process } = crewState;
+	const { description, tags } = appState; //TODO: make it take correct stuff from appstate
 
-	const initialAgents = crew.agents && crew.agents.map(a => {
+	const initialAgents = agents && agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
 		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
 	}).filter(n => n);
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
-	const { name, agents, tasks, process } = crewState;
-	const { description, tags } = appState; //TODO: make it take correct stuff from appstate
+	
+	const initialTasks = tasks && tasks.map(t => {
+		const ot = taskChoices.find(at => at._id === t);
+		return ot ? { label: ot.name, value: t } : null;
+	}).filter(n => n);
+	const [tasksState, setTasksState] = useState(initialTasks || []);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -41,7 +49,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 			name: e.target.name.value,
 			description: e.target.description.value,
 			agents: agentsState.map(a => a.value),
-			process: processState,
+			process: e.target.process.value,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
@@ -58,18 +66,34 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 		setModalOpen(false);
 	}
 
-	async function createToolCallback() { // TODO:
-		// await fetchFormData && fetchFormData();
-		// setModalOpen(false);
-	}
+	// async function createToolCallback() { // TODO:
+	// 	await fetchFormData && fetchFormData();
+	// 	setModalOpen(false);
+	// }
 
 	async function createTaskCallback() { // TODO:
-		// await fetchFormData && fetchFormData();
-		// setModalOpen(false);
+		await fetchFormData && fetchFormData();
+		setModalOpen(false);
+	}
+
+	let modal;
+	switch (modalOpen) {
+		case 'agent':
+			modal = <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={createAgentCallback} />;
+			break;
+		case 'task':
+			modal = <CreateTaskModal open={modalOpen !== false} setOpen={setModalOpen} callback={createTaskCallback} />;
+			break;
+		// case 'tool':
+		// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
+		// 	break;
+		default:
+			modal = null;
+			break;
 	}
 
 	return (<>
-		<CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={createAgentCallback} />
+		{modal}
 		<form onSubmit={appPost}>
 			<input
 				type='hidden'
@@ -108,6 +132,48 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Tasks
+							</label>
+							<div className='mt-2'>
+								<Select
+									isMultiple
+									isSearchable
+						            primaryColor={'indigo'}
+						            classNames={{
+										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+						            }}
+						            value={tasksState}
+						            onChange={(v: any) => {
+										if (v && v.length > 0 && v[v.length-1]?.value == null) {
+											return setModalOpen('task');
+										}
+										setTasksState(v||[]);
+        						   	}}
+						            options={taskChoices
+						            	.map(a => ({ label: a.name, value: a._id }))
+						            	.concat([{ label: '+ New task', value: null }])}
+						            formatOptionLabel={(data: any) => {
+						            	const optionTask = taskChoices.find(tc => tc._id === data.value);
+						                return (<li
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+						                        data.isSelected
+						                            ? 'bg-blue-100 text-blue-500'
+						                            : 'dark:text-white'
+						                    }`}
+						                >
+						                    {data.label}{optionTask ? ` (${optionTask.type})` : null}
+						                </li>);
+						            }}
+						        />
+							</div>
+						</div>
+						
+						<div className='sm:col-span-12'>
+							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Agents
 							</label>
 							<div className='mt-2'>
@@ -125,7 +191,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 						            value={agentsState}
 						            onChange={(v: any) => {
 										if (v && v.length > 0 && v[v.length-1]?.value == null) {
-											return setModalOpen(true);
+											return setModalOpen('agent');
 										}
 										setAgentsState(v||[]);
         						   	}}
@@ -165,8 +231,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 										type='radio'
 										name='process'
 										value={ProcessImpl.SEQUENTIAL}
-										checked={processState === ProcessImpl.SEQUENTIAL}
-										onChange={() => setProcessState(ProcessImpl.SEQUENTIAL)}
+										defaultChecked={process === ProcessImpl.SEQUENTIAL}
 										className='form-radio'
 									/>
 									<span className='ml-2'>Sequential</span>
@@ -176,8 +241,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], crew = {}
 										type='radio'
 										name='process'
 										value={ProcessImpl.HEIRARCHICAL}
-										checked={processState === ProcessImpl.HEIRARCHICAL}
-										onChange={() => setProcessState(ProcessImpl.HEIRARCHICAL)}
+										defaultChecked={process === ProcessImpl.HEIRARCHICAL}
 										className='form-radio'
 									/>
 									<span className='ml-2'>Hierarchical</span>

@@ -15,10 +15,10 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	const { tools } = state as any;
+	const { tools, tasks, agents } = state as any;
 
 	async function fetchTaskFormData() {
-		await API.getTools({ resourceSlug }, dispatch, setError, router);
+		await API.getTasks({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -51,13 +51,13 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 							leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 							leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 						>
-							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 sm:w-full sm:max-w-lg'>
+							<Dialog.Panel className='relative transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 sm:w-full sm:max-w-lg'>
 								<div>
 									<Dialog.Title as='h3' className='text-lg font-medium leading-6 text-gray-900'>
 										Add New Task
 									</Dialog.Title>
 									<div className='mt-2'>
-										<TaskForm compact={true} callback={callback} tools={tools} fetchTaskFormData={fetchTaskFormData} />
+										<TaskForm compact={true} callback={callback} tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
 									</div>
 								</div>
 							</Dialog.Panel>
