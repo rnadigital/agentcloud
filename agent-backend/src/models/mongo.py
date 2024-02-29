@@ -47,13 +47,19 @@ class ToolParameters(BaseModel):
     required: List[str]
 
 
-class Tool(BaseModel):
-    model_config = ConfigDict(extra='ignore')
-    description: str
-    parameters: ToolParameters
+class ToolData(BaseModel):
     name: str
     code: str
+    description: str
+    parameters: Optional[ToolParameters] = None
     builtin: bool
+
+
+class Tool(BaseModel):
+    model_config = ConfigDict(extra='ignore')
+    name: str
+    type: Optional[str] = "function"
+    data: Optional[ToolData] = None
 
 
 class ApiCredentials(BaseModel):

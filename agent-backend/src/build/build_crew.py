@@ -1,4 +1,6 @@
+import importlib
 import logging
+from pprint import pprint
 
 import crewai.agent
 import langchain.tools
@@ -6,9 +8,10 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 
 import models.mongo
-from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN, LOCAL, QDRANT_HOST
-from typing import Optional, Union, List, Dict, Callable, Literal
+from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN
+from typing import Optional, Union, List, Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
+from tools.global_tools import GlobalTools
 
 
 class CrewAIBuilder:
@@ -61,6 +64,23 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
+    def build_tool_objects(self) -> List[models.mongo.Tool]:
+        list_tool_objects = [
+            models.mongo.Tool(**tool)
+            for n in range(len(self.tools))
+            for tool in self.tools[n]
+        ]
+
+        for tool in list_tool_objects:
+            if tool.data.builtin:
+                pass
+            #     load function from GlobalTools class
+            else:
+                module = importlib.import_module('tools.base_tool')
+                base_tool_class = getattr(module, 'BaseTool')
+                init_base_tool_class = base_tool_class()
+                init_base_tool_class.tool(
+
     def attach_model_to_agent(self, agents: List[models.mongo.Agent]):
         try:
             mods: List[models.mongo.Model] = [models.mongo.Model(**model) for model in self.models]
@@ -84,22 +104,21 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
-    def attach_tools_to_agents(self) -> List[langchain.tools.Tool]:
-        pass
-
     def build_crew(self):
         try:
             agents: List[crewai.Agent] = self.build_crewai_agents()
             agents_with_models: List[crewai.Agent] = self.attach_model_to_agent(agents)
             tasks: List[crewai.Task] = self.attach_agents_to_tasks(agents_with_models)
             # todo: attach tools to agents
-            # tools: List[langchain.tools.Tool] = self.build_langchain_tools()
+            # todo: attach tools to tasks
+            tool_objects: List[models.mongo.Tool] = self.build_tool_objects()
 
             # Instantiate CrewAI Crew and attache agents and tasks
             crew = crewai.Crew(agents=agents_with_models, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
                 exclude_none=True,
                 exclude={"agents", "tasks"}
             ))
+            pprint(crew.model_dump())
             return crew
         except Exception as e:
             logging.exception(e)

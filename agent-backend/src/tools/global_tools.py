@@ -1,7 +1,7 @@
 from langchain.tools import tool
 
 
-class Arxiv:
+class GlobalTools:
     @tool("Get papers from Arxiv")
     def get_papers_from_arxiv(query: str) -> list:
         try:
