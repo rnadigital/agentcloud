@@ -57,7 +57,7 @@ export default function PreviewSessionList(props) {
 	useEffect(() => {
 		// if (!resourceSlug) { dispatch({}); }
 		fetchSessions();
-	}, [resourceSlug, router.asPath]);
+	}, [resourceSlug]);
 	
 	useEffect(() => {
 		const interval = setInterval(() => {
