@@ -166,7 +166,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						                            : 'dark:text-white'
 						                    }`}
 						                >
-						                    {data.label}{optionTask ? ` (${optionTask.type})` : null}
+						                    {data.label}{optionTask ? ` (${optionTask.description})` : null}
 						                </li>);
 						            }}
 						        />
