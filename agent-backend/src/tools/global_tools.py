@@ -4,6 +4,7 @@ from langchain.tools import tool
 class GlobalTools:
     @tool("Get papers from Arxiv")
     def get_papers_from_arxiv(query: str) -> list:
+        """Gets papers from Arxiv"""
         try:
             import arxiv
 
@@ -21,6 +22,7 @@ class GlobalTools:
 class OpenAi:
     @tool("Open AI request")
     def openapi_request(**kwargs):
+        """Makes Open AI request"""
         try:
             import requests
 

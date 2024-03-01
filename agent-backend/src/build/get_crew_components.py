@@ -12,15 +12,15 @@ mongo_client = start_mongo_session()
 
 
 def construct_crew(session_id: str, task: Optional[str]):
-    try:
+    # try:
         session: Session = mongo_client.get_session(session_id)
         print(f"Session: {session}")
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
-        agent_tools: List[Dict] = [mongo_client.get_agent_tools(agent.get("toolIds")) for agent in crew_agents]
-        agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents]
-        agent_models: List[Dict] = [mongo_client.get_agent_model(agent.get("modelId")) for agent in crew_agents]
-        model_credentials: List[Dict] = [mongo_client.get_model_credentials(model.get("credentialId")) for model in
-                                         agent_models]
+        print("Crew:", the_crew, crew_tasks, crew_agents)
+        agent_tools: List[Dict] = [mongo_client.get_agent_tools(agent.get("toolIds")) for agent in crew_agents] if crew_agents else []
+        agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents] if crew_agents else []
+        agent_models: List[Dict] = [mongo_client.get_agent_model(agent.get("modelId")) for agent in crew_agents] if crew_agents else []
+        model_credentials: List[Dict] = [mongo_client.get_model_credentials(model.get("credentialId")) for model in agent_models] if agent_models else []
         chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
         crew_builder = CrewAIBuilder(
@@ -37,8 +37,8 @@ def construct_crew(session_id: str, task: Optional[str]):
         )
         crew = crew_builder.build_crew()
         crew_builder.run_crew(crew)
-    except Exception as e:
-        logging.error(f"{e}")
+    # except Exception as e:
+    #     logging.error(f"{e}")
 
 
 if __name__ == "__main__":

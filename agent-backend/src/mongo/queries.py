@@ -62,10 +62,16 @@ class MongoClientConnection(MongoConnection):
             raise
 
     def get_agent_tools(self, toolIds: List):
-        return [tool for tool in self._get_collection("tools").find(({"_id": {"$in": toolIds}}))]
+        if toolIds is None:
+            return []
+        else:
+            return [tool for tool in self._get_collection("tools").find(({"_id": {"$in": toolIds}}))]
 
     def get_agent_tasks(self, taskIds: List):
-        return [task for task in self._get_collection("tasks").find(({"_id": {"$in": taskIds}}))]
+        if taskIds is None:
+            return []
+        else:
+            return [task for task in self._get_collection("tasks").find(({"_id": {"$in": taskIds}}))]
 
     def get_agent_model(self, modelIds: List):
         return self._get_collection("models").find_one(({"_id": modelIds}))

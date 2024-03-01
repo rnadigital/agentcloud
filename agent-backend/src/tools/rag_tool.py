@@ -7,7 +7,7 @@ from langchain_community.tools import Tool
 
 ###### INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT ######
 
-class RagTool(BaseModel):
+class RagTool:
     """
     DO NOT INSTANTIATE DIRECTLY. USE FACTORY CLASS AT END OF FILE (UNLESS YOU REALLY WANT TO).
 
@@ -52,6 +52,7 @@ class RagTool(BaseModel):
             self.post_processors.append(functions)
 
     def search(self, query: str):
+        """ Returns search results"""
         search_results = []
         pre_data = [query]
         for pre_processor in self.pre_processors:
@@ -76,7 +77,7 @@ class RagToolArgsSchema(BaseModel):
 _default_tool_name = "document_retrieval_tool"
 _default_tool_description = "Returns information from a search"
 
-class RagToolFactory(BaseModel):
+class RagToolFactory:
     """First call init(...) method to cerate set up the retrieval, then call generate_langchain_tool(...) to convert to a tool ready for Crew"""
 
     tool_instance: RagTool = None
