@@ -1,6 +1,7 @@
 'use strict';
 
 import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
+import { getDatasourcesByTeam } from 'db/datasource';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';

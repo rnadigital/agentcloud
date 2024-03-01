@@ -8,12 +8,11 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { DatasourceStatus } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function AgentForm({ agent = {}, models = [], tools=[], datasources=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
-	: { agent?: any, models?: any[], tools?: any[], datasources?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
+export default function AgentForm({ agent = {}, models = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+	: { agent?: any, models?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -27,7 +26,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
 
-	const { _id, name, modelId, functionModelId, toolIds, datasourceIds, role, goal, backstory } = agentState;
+	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 
@@ -39,15 +38,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 		})
 		.filter(t => t);
 	const [toolState, setToolState] = useState(initialTools || []);
-
-	const initialDatasources = agent.datasourceIds && agent.datasourceIds
-		.map(did => {
-			const foundSource = datasources.find(d => d._id === did);
-			if (!foundSource) { return null; }
-			return { label: `${foundSource.name} (${foundSource.originalName})`, value: foundSource._id, ...foundSource };
-		})
-		.filter(t => t);
-	const [datasourcesState, setDatasourcesState] = useState(initialDatasources || []);
 
 	useEffect(() => {
 		if (models && models.length > 0 && !modelId) {
@@ -73,7 +63,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
-			datasourceIds: datasourcesState ? datasourcesState.map(d => d.value) : [],
 		};
 		if (editing) {			
 			await API.editAgent(agentState._id, body, () => {
@@ -351,51 +340,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], datasourc
 						</div>
 					</div>
 
-					<div className='sm:col-span-12'>
-						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Datasources (Optional)
-						</label>
-						<div className='mt-2'>
-							<Select
-								isSearchable
-								isMultiple
-					            primaryColor={'indigo'}
-					            classNames={{
-									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-									list: 'dark:bg-slate-700',
-									listGroupLabel: 'dark:bg-slate-700',
-									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-					            }}
-					            value={datasourcesState}
-					            onChange={(v: any) => {
-					            	console.log(v);
-					            	setDatasourcesState(v);
-				            	}}
-					            options={datasources
-					            	.filter(t => t?.status === DatasourceStatus.READY)
-					            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
-					            formatOptionLabel={(data: any) => {
-					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    <span>
-											<img
-												src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${data.sourceType}/latest/icon.svg`}
-												loading='lazy'
-												className='inline-flex me-2 w-4 h-4'
-											/>
-											{data.label}
-										</span>
-					                </li>);
-					            }}
-					        />
-						</div>
-					</div>
 				</div>
 
 			</div>

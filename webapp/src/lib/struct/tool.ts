@@ -7,6 +7,7 @@ export type Tool = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
     name: string;
+    description: string;
  	type: ToolType;
  	schema?: string; //NOTE: not really used since the function description and params are based on one function
  	datasourceId?: ObjectId;

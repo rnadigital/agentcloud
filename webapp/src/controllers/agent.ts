@@ -13,18 +13,16 @@ import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../li
 import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
-	const [agents, models, tools, datasources] = await Promise.all([
+	const [agents, models, tools] = await Promise.all([
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
 		models,
 		tools,
-		datasources,
 	};
 }
 
@@ -58,18 +56,16 @@ export async function agentAddPage(app, req, res, next) {
 }
 
 export async function agentData(req, res, _next) {
-	const [agent, models, tools, datasources] = await Promise.all([
+	const [agent, models, tools] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
 		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
 		models,
 		tools,
-		datasources,
 	};
 }
 

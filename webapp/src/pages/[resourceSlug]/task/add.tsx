@@ -13,7 +13,7 @@ export default function AddTask(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tasks, tools, agents } = state;
+	const { tasks, tools, agents, datasources } = state;
 
 	async function fetchTaskFormData() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
@@ -34,7 +34,12 @@ export default function AddTask(props) {
 			</Head>
 
 			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
-				<TaskForm tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
+				<TaskForm
+					tools={tools}
+					agents={agents}
+					datasources={datasources}
+					fetchTaskFormData={fetchTaskFormData}
+				/>
 			</span>
 
 		</>

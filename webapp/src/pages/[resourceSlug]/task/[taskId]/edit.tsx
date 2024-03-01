@@ -13,7 +13,7 @@ export default function EditTask(props) {
 	const { resourceSlug, taskId } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { task, tools } = state; // Assuming tasks need tools
+	const { task, tools, agents, datasources } = state; // Assuming tasks need tools
 
 	async function fetchTaskFormData() {
 		await API.getTask({
@@ -41,7 +41,14 @@ export default function EditTask(props) {
 			</div>
 
 			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
-				<TaskForm task={task} tools={tools} fetchTaskFormData={fetchTaskFormData} editing={true} />
+				<TaskForm
+					task={task}
+					tools={tools}
+					agents={agents}
+					datasources={datasources}
+					fetchTaskFormData={fetchTaskFormData}
+					editing={true}
+				/>
 			</span>
 
 		</>

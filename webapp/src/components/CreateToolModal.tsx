@@ -2,7 +2,8 @@ import { Dialog, Transition } from '@headlessui/react';
 import ToolForm from 'components/ToolForm';
 import { Fragment } from 'react';
 
-export default function CreateToolModal({ open, setOpen, callback, tool = {}, credentials = [], editing = false }) {
+export default function CreateToolModal({ open, setOpen, callback, tool = {}, credentials = [], datasources = [], editing = false }) {
+
 	return (
 		<Transition.Root show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
@@ -41,6 +42,7 @@ export default function CreateToolModal({ open, setOpen, callback, tool = {}, cr
 											editing={editing}
 											compact={true}
 											callback={callback}
+											datasources={datasources} 
 										/>
 									</div>
 								</div>

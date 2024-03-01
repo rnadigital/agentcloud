@@ -15,7 +15,7 @@ export default function AddTool(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tools, credentials } = state;
+	const { tools, credentials, datasources } = state;
 
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
@@ -39,7 +39,7 @@ export default function AddTool(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
 		</div>}
 
-		<ToolForm credentials={credentials} />
+		<ToolForm credentials={credentials} datasources={datasources} />
 
 	</>);
 

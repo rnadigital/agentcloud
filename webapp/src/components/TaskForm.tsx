@@ -14,8 +14,8 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function TaskForm({ task = {}, tools = [], agents = [], editing, compact = false, callback, fetchTaskFormData }
-	: { task?: any, tools?: any[], agents?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
+export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
+	: { task?: any, tools?: any[], agents?: any[], datasources?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -95,7 +95,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], editing, 
 		<>
 			{modalOpen === 'agent'
 				? <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={agentCallback} />
-				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
+				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} datasources={datasources} />}
 			<form onSubmit={taskPost}>
 				<input
 					type='hidden'

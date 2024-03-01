@@ -15,7 +15,7 @@ export default function AddAgent(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, models, tools, datasources } = state;
+	const { agents, models, tools } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -36,7 +36,7 @@ export default function AddAgent(props) {
 		</Head>
 
 		<span className='sm: w-full md:w-1/2 xl:w-1/3'>
-			<AgentForm datasources={datasources} models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+			<AgentForm models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
 		</span>
 
 	</>);
