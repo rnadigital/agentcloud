@@ -73,13 +73,14 @@ class CrewAIBuilder:
 
         for tool in list_tool_objects:
             if tool.data.builtin:
-                pass
+                print("TOOL", tool)
             #     load function from GlobalTools class
             else:
-                module = importlib.import_module('tools.base_tool')
-                base_tool_class = getattr(module, 'BaseTool')
-                init_base_tool_class = base_tool_class()
-                init_base_tool_class.tool(
+                pass
+                # module = importlib.import_module('tools.base_tool')
+                # base_tool_class = getattr(module, 'BaseTool')
+                # init_base_tool_class = base_tool_class()
+                # init_base_tool_class.tool(
 
     def attach_model_to_agent(self, agents: List[models.mongo.Agent]):
         try:
