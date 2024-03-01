@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import InviteForm from 'components/InviteForm';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';

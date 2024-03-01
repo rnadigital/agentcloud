@@ -1,5 +1,6 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import NewButtonSection from 'components/NewButtonSection';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import TaskCards from 'components/TaskCards';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -40,18 +41,7 @@ export default function Tasks(props) {
 				
 			</Head>
 
-			{tasks.length > 0 && <div className='border-b pb-2 my-2 dark:border-slate-600 flex justify-between'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Tasks</h3>
-				{tasks.length > 0 && <Link href={`/${resourceSlug}/task/add`}>
-					<button
-						type='button'
-						className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
-					>
-						<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />
-						Add Task
-					</button>
-				</Link>}
-			</div>}
+			<PageTitleWithNewButton list={tasks} title='Tasks' buttonText='New Task' href='/task/add' />
 
 			<TaskCards tasks={tasks} fetchTasks={fetchTasks} />
 
