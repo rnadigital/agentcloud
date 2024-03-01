@@ -1,8 +1,27 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import ToolForm from 'components/ToolForm';
-import { Fragment } from 'react';
+import { useAccountContext } from 'context/account';
+import { useRouter } from 'next/router';
+import { Fragment, useEffect,useState } from 'react';
 
-export default function CreateToolModal({ open, setOpen, callback, tool = {}, credentials = [], datasources = [], editing = false }) {
+export default function CreateToolModal({ open, setOpen, callback }) {
+
+	const [accountContext]: any = useAccountContext();
+	const { account, csrf } = accountContext as any;
+	const router = useRouter();
+	const { resourceSlug } = router.query;
+	const [state, dispatch] = useState({});
+	const [error, setError] = useState();
+	const { agents, models, tools, datasources } = state as any;
+
+	async function fetchToolFormData() {
+		await API.getTools({ resourceSlug }, dispatch, setError, router);
+	}
+	
+	useEffect(() => {
+		fetchToolFormData();
+	}, []);
 
 	return (
 		<Transition.Root show={open} as={Fragment}>
@@ -30,16 +49,14 @@ export default function CreateToolModal({ open, setOpen, callback, tool = {}, cr
 							leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 							leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 						>
-							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 sm:w-full md:w-1/2'>
+							<Dialog.Panel className='relative transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 sm:w-full md:w-1/2'>
 								<div>
 									<Dialog.Title as='h3' className='text-lg font-medium leading-6 text-gray-900'>
-										{editing ? 'Edit Tool' : 'Add New Tool'}
+										New Tool
 									</Dialog.Title>
 									<div className='mt-2'>
 										<ToolForm
-											tool={tool}
-											credentials={credentials}
-											editing={editing}
+											// credentials={credentials}
 											compact={true}
 											callback={callback}
 											datasources={datasources} 

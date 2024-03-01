@@ -95,7 +95,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		<>
 			{modalOpen === 'agent'
 				? <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={agentCallback} />
-				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} datasources={datasources} />}
+				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
 			<form onSubmit={taskPost}>
 				<input
 					type='hidden'

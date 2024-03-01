@@ -12,9 +12,9 @@ import * as API from '../api';
 // import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import SelectClassNames from '../lib/styles/SelectClassNames';
+import SelectClassNames, { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
 
-export default function StartSessionForm({ agents = [], crews = [], setOpen, fetchSessions }) {
+export default function StartSessionForm({ agents = [], crews = [], setOpen, fetchSessions, inverted = false }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -101,7 +101,7 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 							isClearable
 							primaryColor={'indigo'}
 							value={selected}
-							classNames={SelectClassNames}
+							classNames={inverted ? SelectClassNamesInverted : SelectClassNames}
 							onChange={(e: any) => {
 								if (e?.value === null) {
 									return setModalOpen(e.crew ? 'crew' : 'single');
@@ -145,7 +145,7 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 									name='prompt'
 									id='prompt'
 									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:text-white'
-									placeholder={'Describe a task...'}
+									placeholder={'Say something...'}
 									value={promptValue}
 									onChange={(e) => setPromptValue(e.target.value)}
 								/>

@@ -26,13 +26,13 @@ export default function PreviewSessionList(props) {
 	const [error, setError] = useState();
 	const { sessions } = state;
 
-	async function fetchSessions() {
-		setLoading(true);
+	async function fetchSessions(noLoading: boolean = false) {
+		!noLoading && setLoading(true);
 		const start = Date.now();
 		try {
 			await API.getSessions({ resourceSlug }, dispatch, setError, router);
 		} finally {
-			setTimeout(() => {
+			!noLoading && setTimeout(() => {
 				setLoading(false);
 			}, 500-(Date.now()-start));
 		}
@@ -61,7 +61,7 @@ export default function PreviewSessionList(props) {
 	
 	useEffect(() => {
 		const interval = setInterval(() => {
-			fetchSessions();
+			fetchSessions(true);
 		}, 30000);
 		return () => {
 			clearInterval(interval);

@@ -45,7 +45,8 @@ const noNavPages = [
 
 const agentNavigation: any[] = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
-	{ name: 'Apps (crews)', href: '/apps', icon: <PuzzlePieceIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Playground', href: '/playground', icon: <ChatBubbleLeftIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, childComponent: <PreviewSessionList /> },
+	{ name: 'Apps', href: '/apps', icon: <PuzzlePieceIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Agents', href: '/agents', icon: <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
 		<path d='M22.125 11.85C21.7125 11.5875 21.225 11.7375 20.9625 12.1125L16.9875 18.4125C16.9125 18.4875 16.8375 18.6 16.8 18.7125C16.725 18.825 16.6875 18.9375 16.6875 19.05L15.375 22.5L18 19.8375C18.075 19.7625 18.15 19.6875 18.225 19.6125C18.3 19.5375 18.375 19.425 18.4125 19.3125L22.3875 13.0125C22.6125 12.6 22.5 12.075 22.125 11.85Z' fill='currentColor'/>
 		<path d='M13.35 19.05C12.15 19.35 10.9125 19.5375 9.75 19.5375C7.0125 19.5375 4.425 18.525 3.1875 17.9625C3.3375 15.9 4.0125 14.025 5.175 12.6375C6.375 11.2125 8.025 10.425 9.75 10.425C11.475 10.425 13.125 11.2125 14.325 12.6375C14.9625 13.3875 15.45 14.2875 15.7875 15.3C15.9375 15.75 16.425 15.975 16.8375 15.825C17.2875 15.675 17.5125 15.1875 17.3625 14.775C16.95 13.5375 16.35 12.45 15.6 11.55C14.625 10.3875 13.3875 9.56255 12.0375 9.11255C13.3875 8.32505 14.2875 6.86255 14.2875 5.21255C14.2875 2.70005 12.2625 0.675049 9.75 0.675049C7.2375 0.675049 5.2125 2.70005 5.2125 5.21255C5.2125 6.86255 6.1125 8.32505 7.4625 9.11255C6.1125 9.56255 4.9125 10.3875 3.9 11.55C2.4 13.3125 1.575 15.7875 1.5 18.4501C1.5 18.7875 1.6875 19.0875 1.95 19.2375C2.8875 19.6875 6.1875 21.225 9.75 21.225C11.0625 21.225 12.4125 21.0375 13.7625 20.7001C14.2125 20.5875 14.475 20.1375 14.3625 19.6875C14.25 19.2 13.8 18.9375 13.35 19.05ZM9.75 2.36255C11.325 2.36255 12.6 3.63755 12.6 5.21255C12.6 6.78755 11.325 8.06255 9.75 8.06255C8.175 8.06255 6.9 6.78755 6.9 5.21255C6.9 3.63755 8.175 2.36255 9.75 2.36255Z' fill='currentColor'/>
@@ -55,7 +56,6 @@ const agentNavigation: any[] = [
 	{ name: 'Data Sources', href: '/datasources', icon: <CircleStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Models', href: '/models', icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Credentials', href: '/credentials', icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
-	{ name: 'Playground', href: '/playground', icon: <ChatBubbleLeftIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, childComponent: <PreviewSessionList /> },
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, indent: 4 },
 ];
 

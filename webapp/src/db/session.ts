@@ -10,7 +10,6 @@ export type Session = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	prompt: string;
     name: string;
     startDate: Date;
     lastUpdatedDate: Date;

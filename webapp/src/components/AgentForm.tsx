@@ -2,6 +2,8 @@
 
 import * as API from '@api';
 import CreateModelModal from 'components/CreateModelModal';
+import CreateToolModal from 'components/CreateToolModal';
+import ToolSelectIcons from 'components/ToolSelectIcons';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -18,7 +20,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modalOpen, setModalOpen]: any = useState(false);
 	const [callbackKey, setCallbackKey] = useState(null);
 	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || true);
 	const [verbose, setVerbose] = useState(agent.verbose || false);
@@ -92,8 +94,16 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		setCallbackKey(null);
 	};
 
+	const toolCallback = async (addedToolId, body) => {
+		await fetchAgentFormData && fetchAgentFormData();
+		setModalOpen(false);
+		setToolState([{ label: `${body.name} (${body.type}) - ${body.description}`, value: addedToolId }]);
+	};
+
 	return (<>
-		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
+		{modalOpen === 'model'
+			? <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
+			: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
 		<form onSubmit={agentPost}>
 			<input
 				type='hidden'
@@ -246,7 +256,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
   											};
   										});
 				            	}}
-					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
 					            formatOptionLabel={data => {
   										const optionCred = models.find(oc => oc._id === data.value);
 					                return (<li
@@ -275,17 +285,17 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					            value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
 					            onChange={(v: any) => {
 									if (v?.value === null) {
-										setModalOpen(true);
+										setModalOpen('model');
 										return setCallbackKey('functionModelId');
 									}
 					            	setAgent(oldAgent => {
-  											return {
-  												...oldAgent,
-  												functionModelId: v?.value,
-  											};
-  										});
+										return {
+											...oldAgent,
+											functionModelId: v?.value,
+										};
+									});
 				            	}}
-					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
+					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
 					            formatOptionLabel={data => {
   										const optionCred = models.find(oc => oc._id === data.value);
 					                return (<li
@@ -320,20 +330,28 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					            }}
 					            value={toolState}
 					            onChange={(v: any) => {
-					            	console.log(v);
+									if (Array.isArray(v) && v.length > 0 && v[0]?.value === null) {
+										return setModalOpen('tool');
+									}
 					            	setToolState(v);
 				            	}}
-					            options={tools.map(t => ({ label: t.name, value: t._id }))}
+					            options={tools.map(t => ({ label: t.name, value: t._id })).concat([{ label: '+ New tool', value: null }])}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(ac => ac._id === data.value);
 					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+					                    className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
 					                        data.isSelected
 					                            ? 'bg-blue-100 text-blue-500'
 					                            : 'dark:text-white'
 					                    }`}
 					                >
-					                    {data.label}{` - ${optionTool.data.description}`}
+										<span className='tooltip z-100'>
+											{ToolSelectIcons[optionTool?.type]}
+											<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
+												{optionTool?.type} tool
+											</span>
+										</span>
+					                    <span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 					                </li>);
 					            }}
 					        />

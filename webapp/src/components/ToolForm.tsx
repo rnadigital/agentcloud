@@ -135,7 +135,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 		} else {
 			const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
 			console.log('addedTool', addedTool);
-			callback && addedTool && callback(addedTool._id);
+			callback && addedTool && callback(addedTool._id, body);
 		}
 	}
 
@@ -320,6 +320,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
 					<div>
 						<textarea
+							required
 							readOnly={isBuiltin}
 							name='toolName'
 							className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'

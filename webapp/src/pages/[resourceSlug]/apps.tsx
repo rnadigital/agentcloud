@@ -68,9 +68,9 @@ export default function Apps(props) {
 			buttonMessage={'New App'}
 		/>}
 
-		{apps.map((a, ai) => (<Link key={`app_link_${ai}`} className='m-2' href={`/${resourceSlug}/app/${a._id}/edit`} >{a.name}</Link>))}
+		{apps.map((a, ai) => (<Link key={`app_link_${ai}`} className='m-2 text-blue-500' href={`/${resourceSlug}/app/${a._id}/edit`} >{a.name}</Link>))}
 
-		<pre>{JSON.stringify(apps, null, 2)}</pre>
+		{/*<pre>{JSON.stringify(apps, null, 2)}</pre>*/}
 
 	</>);
 

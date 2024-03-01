@@ -14,7 +14,7 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	const { agents, models, tools } = state as any;
+	const { agents, models, tools, datasources } = state as any;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -58,7 +58,13 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 										</Dialog.Title>
 									</div>
 								</div>
-								<AgentForm models={models} tools={tools} compact={true} callback={callback} fetchAgentFormData={fetchAgentFormData} />
+								<AgentForm
+									models={models}
+									tools={tools}
+									compact={true}
+									callback={callback}
+									fetchAgentFormData={fetchAgentFormData}
+								/>
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>
