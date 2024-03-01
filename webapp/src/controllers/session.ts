@@ -8,7 +8,7 @@ import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
-import { SessionStatus, SessionType } from 'struct/session';
+import { SessionStatus } from 'struct/session';
 
 import { dynamicResponse } from '../util';
 
@@ -112,39 +112,30 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	let crewId = null
-		, agentId = null;
-	const [crew, agent] = await Promise.all([
-		getCrewById(req.params.resourceSlug, req.body.id),
-		getAgentById(req.params.resourceSlug, req.body.id),
-	]);
+	let crewId;
+	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
 	if (crew) {
 		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		crewId = crew._id;
-	} else if (agent) {
-		agentId = agent._id;
 	} else {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	prompt = `${prompt}\n`;
 
-	const sessionType = agent && agent.datasourceIds.length > 0 ? SessionType.RAG : SessionType.TASK; //TODO: allow for groups? new sessionType?
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    prompt,
-	 	type: sessionType,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		crewId,
-		agentId,
 	});
 
 	const now = Date.now();
@@ -164,7 +155,6 @@ export async function addSessionApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		sessionId: addedSession.insertedId,
 		message,
-		type: sessionType,
 		authorId: null,
 		authorName: res.locals.account.name,
 		ts: now,
@@ -175,7 +165,7 @@ export async function addSessionApi(req, res, next) {
 		chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
 	});
 
-	taskQueue.add(sessionType, {
+	taskQueue.add('execute_rag', { //TODO: figure out room w/ pete
 		task: prompt,
 		sessionId: addedSession.insertedId.toString(),
 	});

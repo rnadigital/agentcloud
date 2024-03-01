@@ -9,6 +9,7 @@ export type Tool = {
     name: string;
  	type: ToolType;
  	schema?: string; //NOTE: not really used since the function description and params are based on one function
+ 	datasourceId?: ObjectId;
 	data?: {
 		builtin?: boolean;
 		name: string;
@@ -31,7 +32,8 @@ export type FunctionProperty = {
 
 export enum ToolType {
 	API_TOOL = 'api',
-	HOSTED_FUNCTION_TOOL = 'function',
+	FUNCTION_TOOL = 'function',
+	RAG_TOOL = 'rag',
 }
 
 export const ToolTypes = Object.values(ToolType);

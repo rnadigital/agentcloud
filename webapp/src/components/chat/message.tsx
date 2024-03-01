@@ -3,7 +3,7 @@ import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { FeedbackOption, SessionType } from 'struct/session';
+import { FeedbackOption } from 'struct/session';
 
 import { useChatContext } from '../../context/chat';
 
@@ -17,38 +17,14 @@ import { toast } from 'react-toastify';
 
 const COLLAPSE_AFTER_LINES = 10
 	, feedbackLabels = {
-		[SessionType.TEAM]: {
-			[FeedbackOption.EXIT]: 'Accept team',
-			[FeedbackOption.CONTINUE]: 'Auto reply',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
-		[SessionType.TASK]: {
-			// [FeedbackOption.EXIT]: 'Continue',
-			[FeedbackOption.CONTINUE]: 'Continue',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
-		[SessionType.RAG]: {
-			// [FeedbackOption.EXIT]: 'Continue',
-			[FeedbackOption.CONTINUE]: 'Continue',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
+		// [FeedbackOption.EXIT]: 'Continue',
+		[FeedbackOption.CONTINUE]: 'Continue',
+		[FeedbackOption.CANCEL]: 'End session',
 	}
 	, feedbackMessages = {
-		[SessionType.TEAM]: {
-			[FeedbackOption.EXIT]: 'exit',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
-		[SessionType.TASK]: {
-			// [FeedbackOption.EXIT]: 'Looks good!',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
-		[SessionType.RAG]: {
-			// [FeedbackOption.EXIT]: 'exit',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
+		// [FeedbackOption.EXIT]: 'Looks good!',
+		[FeedbackOption.CONTINUE]: '',
+		[FeedbackOption.CANCEL]: 'TERMINATE',
 	};
 
 export function CopyToClipboardButton({ dataToCopy }) {
@@ -255,15 +231,15 @@ export function Message({
 		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800 ${isLastSeen && !isLastMessage ? 'border-b border-red-500' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
-				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
+				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
 					<button
 						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
 							e.preventDefault();
-							sendMessage(feedbackMessages[chatContext.type][fo], { displayMessage: feedbackLabels[chatContext.type][fo] });
+							sendMessage(feedbackMessages[fo], { displayMessage: feedbackLabels[fo] });
 						}}
 					>
-						{feedbackLabels[chatContext.type][fo]}
+						{feedbackLabels[fo]}
 					</button>
 				</div>)).filter(n => n)}
 			</div>

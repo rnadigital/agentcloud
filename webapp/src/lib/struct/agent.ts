@@ -22,6 +22,5 @@ export type Agent = {
 	verbose: boolean;
 	allowDelegation: boolean;
 	toolIds?: ObjectId[];
-	datasourceIds?: ObjectId[];
 	// stepCallback: Function;
 };

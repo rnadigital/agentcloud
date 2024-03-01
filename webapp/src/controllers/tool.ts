@@ -1,13 +1,14 @@
 'use strict';
 
+import { removeAgentsTool } from 'db/agent';
+import { getCredentialsByTeam } from 'db/credential';
+import { getDatasourceById } from 'db/datasource';
+import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
-import { ToolType } from 'struct/tool';
+import { ToolType, ToolTypes } from 'struct/tool';
+import { chainValidations } from 'utils/validationUtils';
 
-import { removeAgentsTool } from '../db/agent';
-import { getCredentialsByTeam } from '../db/credential';
-import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from '../db/tool';
-import { chainValidations } from '../lib/utils/validationUtils';
 import { dynamicResponse } from '../util';
 
 export async function toolsData(req, res, _next) {
@@ -85,7 +86,8 @@ export async function toolAddPage(app, req, res, next) {
 function validateTool(tool) {
 	return chainValidations(tool, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'type', validation: { notEmpty: true, inSet: new Set([ToolType.API_TOOL, ToolType.HOSTED_FUNCTION_TOOL])}},
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes))}},
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL }},
 		{ field: 'data.description', validation: { notEmpty: true }},
 		{ field: 'data.parameters', validation: { notEmpty: true }},
 		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
@@ -93,7 +95,7 @@ function validateTool(tool) {
 			customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed' },
 		validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
 		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.HOSTED_FUNCTION_TOOL }},
+		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
 	], { 
 		name: 'Name',
 		type: 'Type',
@@ -108,11 +110,18 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema }  = req.body;
+	const { name, type, data, schema, datasourceId }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	if (datasourceId && (typeof datasourceId !== 'string' || datasourceId.length !== 24)) {
+		const foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+		if (!foundDatasource) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
+		}
 	}
 
 	const addedTool = await addTool({
@@ -120,6 +129,7 @@ export async function addToolApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	 	type: type as ToolType,
+	 	datasourceId,
 	 	schema: schema,
 		data: {
 			...data,

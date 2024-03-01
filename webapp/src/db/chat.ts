@@ -4,7 +4,6 @@ import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
-import { SessionType } from 'struct/session';
 
 export type ChatChunk = {
 	ts: number;
@@ -26,7 +25,6 @@ export type ChatMessage = {
 	message: any;
 	displayMessage: string;
 	ts: number;
-	type: SessionType,
 	authorId: ObjectId;
 	isFeedback: boolean;
 	authorName: string;
@@ -65,7 +63,6 @@ export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMes
 	return ChatCollection().find({
 		sessionId: toObjectId(sessionId),
 		'codeBlocks.language': 'json',
-		type: SessionType.TEAM,
 	}).sort({
 		_id: -1,
 	}).limit(1).toArray().then(res => res && res.length > 0 ? res[0] : null);

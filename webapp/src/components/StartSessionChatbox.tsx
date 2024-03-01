@@ -23,7 +23,6 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 	const { stripeCustomerId } = account?.stripe || {};
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
-	const [sessionType, setSessionType] = useState('single');
 	const [selected, setSelected] = useState(null);
 	const [addedId, setAddedId] = useState(null);
 	const [modalOpen, setModalOpen]: any = useState(false);

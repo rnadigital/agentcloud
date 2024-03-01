@@ -43,7 +43,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing, callbac
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || '');
-	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.HOSTED_FUNCTION_TOOL);
+	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.FUNCTION_TOOL);
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
@@ -95,7 +95,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing, callbac
 					},
 				};
 				break;
-			case ToolType.HOSTED_FUNCTION_TOOL:
+			case ToolType.FUNCTION_TOOL:
 				body.data = {
 					code: toolCode,
 					description: toolDescription,
@@ -238,7 +238,7 @@ export default function ToolForm({ tool = {}, credentials = [], editing, callbac
 	}, [toolAPISchema]); // Only re-run the effect if inputValue changes
 
 	useEffect(() => {
-		if (toolType == ToolType.HOSTED_FUNCTION_TOOL) {
+		if (toolType == ToolType.FUNCTION_TOOL) {
 			setSearchTerm('');
 			setFunctionsList(null);
 			setInvalidFuns(0);
@@ -311,13 +311,20 @@ export default function ToolForm({ tool = {}, credentials = [], editing, callbac
 							value={toolType}
 							onChange={(e) => setToolType(e.target.value as ToolType)}
 						>
-							<option value={ToolType.HOSTED_FUNCTION_TOOL}>Custom code</option>
+							<option value={ToolType.RAG_TOOL}>Datasource RAG (retrieval augmentation)</option>
+							<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
 							<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>
 						</select>
 					</div>
 				</div>}
 
-				{toolType === ToolType.HOSTED_FUNCTION_TOOL && !isBuiltin && <>
+				{toolType === ToolType.RAG_TOOL && <>
+					<div className='border-gray-900/10'>
+						rag form.....
+					</div>					
+				</>}
+
+				{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
 					<div className='border-gray-900/10'>
 						<div className='flex justify-between'>
 							<h2 className='text-base font-semibold leading-7 text-gray-900'>

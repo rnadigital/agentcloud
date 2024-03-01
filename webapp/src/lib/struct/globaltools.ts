@@ -5,7 +5,7 @@ import { Tool, ToolType } from 'struct/tool';
 const GlobalTools: Tool[] = [
 	{
 		name: 'Get papers from arXiv',
-		type: ToolType.HOSTED_FUNCTION_TOOL, //TODO: rename this type
+		type: ToolType.FUNCTION_TOOL, //TODO: rename this type
 		data: {
 			code: '', //TODO: not make mandatory in pydantic
 			name: 'get_papers_from_arxiv',

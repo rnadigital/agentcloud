@@ -4,7 +4,7 @@ import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
-import { SessionStatus, SessionType } from 'struct/session';
+import { SessionStatus } from 'struct/session';
 
 export type Session = {
 	_id?: ObjectId;
@@ -16,9 +16,7 @@ export type Session = {
     lastUpdatedDate: Date;
     tokensUsed: number;
 	status: SessionStatus;
-	type: SessionType;
 	crewId?: ObjectId;
-	agentId?: ObjectId;
 }
 
 export function SessionCollection(): any {

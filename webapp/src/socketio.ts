@@ -15,7 +15,7 @@ import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJson
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
-import { SessionStatus, SessionType } from 'struct/session';
+import { SessionStatus } from 'struct/session';
 
 import checkSession from './lib/middleware/auth/checksession';
 import fetchSession from './lib/middleware/auth/fetchsession';
@@ -164,7 +164,6 @@ export function initSocket(rawHttpServer) {
 					teamId: session.teamId,
 					sessionId: session._id,
 					message: finalMessage,
-					type: session.type as SessionType,
 					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
 					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?.name : 'AgentCloud',
 					ts: finalMessage.ts || messageTimestamp,

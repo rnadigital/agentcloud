@@ -7,12 +7,6 @@ export enum SessionStatus {
 	TERMINATED = 'terminated',
 }
 
-export enum SessionType {
-	TEAM = 'generate_team',
-	TASK = 'execute_task',
-	RAG = 'execute_rag',
-}
-
 export enum FeedbackOption {
 	EXIT = 'exit',
 	CONTINUE = 'continue',

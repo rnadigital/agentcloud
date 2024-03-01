@@ -105,7 +105,6 @@ export async function addAgentApi(req, res, next) {
 
 	const {
 		toolIds,
-		datasourceIds,
 		name,
 	    role,
 	    goal,
@@ -125,7 +124,6 @@ export async function addAgentApi(req, res, next) {
 		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
-		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -135,14 +133,6 @@ export async function addAgentApi(req, res, next) {
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
-	}
-
-	// Check for foundDatasources
-	if (datasourceIds && datasourceIds.length > 0) {
-		const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
-		if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
-		}
 	}
 
 	// Check for model
@@ -175,7 +165,6 @@ export async function addAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation,
 		toolIds: foundTools.map(t => t._id),
-		datasourceIds: datasourceIds,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${req.params.resourceSlug}/agents` });
@@ -195,7 +184,6 @@ export async function editAgentApi(req, res, next) {
 
 	const {
 		toolIds,
-		datasourceIds,
 		name,
 	    role,
 	    goal,
@@ -216,7 +204,6 @@ export async function editAgentApi(req, res, next) {
 		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
-		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -232,11 +219,6 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
-	if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
 	    role,
@@ -249,7 +231,6 @@ export async function editAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation,
 		toolIds: foundTools.map(t => t._id),
-		datasourceIds: datasourceIds,
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
