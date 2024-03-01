@@ -61,12 +61,18 @@ class MongoClientConnection(MongoConnection):
         except Exception:
             raise
 
-    def get_agent_tools(self, toolIds: List):
-        if toolIds is None:
+    def get_tool_datasources(self, tools: List):
+        if tools is None:
             return []
         else:
-            return [tool for tool in self._get_collection("tools").find(({"_id": {"$in": toolIds}}))]
+            return [self._get_collection("datasources").find_one({"_id": tool["datasourceId"]}) if tool["datasourceId"] else None for tool in tools]
 
+    def get_agent_tools(self, toolsIds: List):
+        if toolsIds is None:
+            return []
+        else:
+            return list(self._get_collection("tools").find(({"_id": {"$in": toolsIds}})))
+    
     def get_agent_tasks(self, taskIds: List):
         if taskIds is None:
             return []

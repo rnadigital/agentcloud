@@ -17,7 +17,8 @@ def construct_crew(session_id: str, task: Optional[str]):
         print(f"Session: {session}")
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
         print("Crew:", the_crew, crew_tasks, crew_agents)
-        agent_tools: List[Dict] = [mongo_client.get_agent_tools(agent.get("toolIds")) for agent in crew_agents] if crew_agents else []
+        agents_tools: Dict[str, Dict] = [(agent["_id"], mongo_client.get_agent_tools(agent.get("toolIds"))) for agent in crew_agents] if crew_agents else []
+        tools_datasources: List[Dict] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for agent_id, agent_tools in enumerate(agents_tools)]
         agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents] if crew_agents else []
         agent_models: List[Dict] = [mongo_client.get_agent_model(agent.get("modelId")) for agent in crew_agents] if crew_agents else []
         model_credentials: List[Dict] = [mongo_client.get_model_credentials(model.get("credentialId")) for model in agent_models] if agent_models else []
@@ -30,7 +31,8 @@ def construct_crew(session_id: str, task: Optional[str]):
             crew_tasks,
             crew_agents,
             agent_tasks,
-            agent_tools,
+            agents_tools,
+            tools_datasources,
             agent_models,
             model_credentials,
             chat_history

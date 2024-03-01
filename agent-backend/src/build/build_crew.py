@@ -8,10 +8,15 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 
 import models.mongo
-from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN
+from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST
 from typing import Optional, Union, List, Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
 from tools.global_tools import GlobalTools
+from langchain.tools import Tool
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+from langchain_community.vectorstores.qdrant import Qdrant
+from qdrant_client import QdrantClient
+from tools import RagToolFactory
 
 
 class CrewAIBuilder:
@@ -23,7 +28,8 @@ class CrewAIBuilder:
             crew_tasks: List[Dict],
             agents: List[Dict],
             agent_tasks: List[Dict],
-            tools: List[Dict],
+            agents_tools: Dict[str, Dict],
+            tools_datasources: Dict[str, Dict],
             llms: List[Dict],
             creds: List[Dict],
             history: Optional[List[Dict]],
@@ -33,7 +39,8 @@ class CrewAIBuilder:
         self.crew_tasks = crew_tasks
         self.agents = agents
         self.agent_tasks = agent_tasks
-        self.tools = tools
+        self.agents_tools = agents_tools
+        self.tools_datasources = tools_datasources
         self.models = llms
         self.creds = creds
         self.history: Optional[dict] = history
@@ -82,8 +89,9 @@ class CrewAIBuilder:
                 # init_base_tool_class = base_tool_class()
                 # init_base_tool_class.tool(
 
-    def attach_model_to_agent(self, agents: List[models.mongo.Agent]):
+    def build_models(self):
         try:
+            model_instances = []
             mods: List[models.mongo.Model] = [models.mongo.Model(**model) for model in self.models]
             creds: List[models.mongo.Credentials] = [models.mongo.Credentials(**cred) for cred in self.creds]
             for i, v in enumerate(mods):
@@ -92,30 +100,80 @@ class CrewAIBuilder:
                 )
                 c.api_key = creds[i].credentials.api_key
                 c.base_url = creds[i].credentials.base_url
-                agents[i].llm = ChatOpenAI(**c.model_dump(exclude_none=True, exclude_unset=True))
-            return agents
+                model_instances.append(ChatOpenAI(**c.model_dump(exclude_none=True, exclude_unset=True)))
+            return model_instances
         except Exception as e:
             logging.exception(e)
 
-    def build_crewai_agents(self) -> List[Agent]:
+    # def attach_model_to_agent(self, agents: List[models.mongo.Agent]):
+    #     try:
+    #         for i, v in enumerate(agents):
+                
+            # mods: List[models.mongo.Model] = [models.mongo.Model(**model) for model in self.models]
+            # creds: List[models.mongo.Credentials] = [models.mongo.Credentials(**cred) for cred in self.creds]
+            # for i, v in enumerate(mods):
+            #     c = models.mongo.ChatModel(
+            #         **v.model_dump(exclude_none=True)
+            #     )
+            #     c.api_key = creds[i].credentials.api_key
+            #     c.base_url = creds[i].credentials.base_url
+            #     agents[i].llm = ChatOpenAI(**c.model_dump(exclude_none=True, exclude_unset=True))
+        #     return agents
+        # except Exception as e:
+        #
+        #      logging.exception(e)
+    
+    def build_agent_tools(self):
+        agents_tools = {}
+        for tool_agent_id, tools in enumerate(self.agents_tools):
+            if tools is not None:
+                tool_models: List[models.mongo.Tool] = [
+                    models.mongo.Tool(**tool).model_dump(exclude_none=True, exclude_unset=True)
+                    for tool in tools]
+                for tool in tool_models:
+                    if tool.type == "rag" and tool.datasourceId:
+                        for ds_agent_id, ds in enumerate(self.tools_datasources):
+                            if ds_agent_id == tool_agent_id and ds["_id"] == tool.datasourceId:
+                                if "connectionId" not in ds or ds["connectionId"] is None:
+                                    tool_factory = RagToolFactory()
+                                    collection = str(ds["_id"])
+                                    embedding = FastEmbedEmbeddings(model_name="BAAI/bge-small-en")
+                                    tool_factory.init(collection, Qdrant(QdrantClient(QDRANT_HOST) , collection_name=collection, embeddings=embedding))
+                                    tool_instance = tool_factory.generate_langchain_tool(tool.name, tool.description)
+                                    if tool_agent_id in agents_tools:
+                                        agents_tools[tool_agent_id].append(tool_instance)
+                                    else:
+                                        agents_tools[tool_agent_id] = [tool_instance]
+
+
+    def build_crewai_agents(self, model_instances: List, agent_tools: Dict[str, Tool]) -> List[Agent]:
         try:
-            return [Agent(
-                **models.mongo.Agent(**agent).model_dump(exclude_none=True, exclude_unset=True)
-            ) for agent in self.agents]
+            agent_instances = []
+            for i, v in enumerate(self.agents):
+                agent = Agent(
+                    **models.mongo.Agent(**v).model_dump(exclude_none=True, exclude_unset=True, exclude="llm"),
+                    llm=model_instances[i],
+                    tools=agent_tools[v["_id"]] if v["_id"] in agent_tools else [] # TODO complete building tool
+                )
+                agent_instances.append(agent)
+            return agent_instances
         except Exception as e:
             logging.exception(e)
 
     def build_crew(self):
         try:
-            agents: List[Agent] = self.build_crewai_agents()
-            agents_with_models: List[Agent] = self.attach_model_to_agent(agents)
-            tasks: List[Task] = self.attach_agents_to_tasks(agents_with_models)
+            # agents_with_models: List[Agent] = self.attach_model_to_agent(self.agents)
+            model_instances = self.build_models()
+            agent_tools = self.build_agent_tools()
+            # self.attach_model_to_agent(self.agents)
+            agents: List[Agent] = self.build_crewai_agents(model_instances, agent_tools)
+            tasks: List[Task] = self.attach_agents_to_tasks(agents)
             # todo: attach tools to agents
             # todo: attach tools to tasks
             tool_objects: List[models.mongo.Tool] = self.build_tool_objects()
 
             # Instantiate CrewAI Crew and attache agents and tasks
-            crew = Crew(agents=agents_with_models, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
+            crew = Crew(agents=agents, tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
                 exclude_none=True,
                 exclude={"agents", "tasks"}
             ))

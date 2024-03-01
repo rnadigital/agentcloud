@@ -59,6 +59,7 @@ class Tool(BaseModel):
     model_config = ConfigDict(extra='ignore')
     name: str
     type: Optional[str] = "function"
+    datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
 
 
