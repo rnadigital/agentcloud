@@ -108,9 +108,9 @@ export async function addSessionApi(req, res, next) {
 
 	let { rag, prompt, id }  = req.body;
 
-	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
+// 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
+// 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+// 	}
 
 	let crewId;
 	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
@@ -124,12 +124,10 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	prompt = `${prompt}\n`;
-
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-	    prompt,
+	    // prompt,
 	    name: '',
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
@@ -139,31 +137,31 @@ export async function addSessionApi(req, res, next) {
 	});
 
 	const now = Date.now();
-	const message = {
-		room: addedSession.insertedId.toString(),
-		authorName: res.locals.account.name,
-		incoming: true,
-		message: {
-			type: 'text',
-			text: prompt,
-		},
-		event: 'message',
-		ts: now
-	};
-	await addChatMessage({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		sessionId: addedSession.insertedId,
-		message,
-		authorId: null,
-		authorName: res.locals.account.name,
-		ts: now,
-		isFeedback: false,
-		chunkId: null,
-		tokens: 0,
-		displayMessage: null,
-		chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
-	});
+	// const message = {
+	// 	room: addedSession.insertedId.toString(),
+	// 	authorName: res.locals.account.name,
+	// 	incoming: true,
+	// 	message: {
+	// 		type: 'text',
+	// 		text: prompt,
+	// 	},
+	// 	event: 'message',
+	// 	ts: now
+	// };
+	// await addChatMessage({
+	// 	orgId: res.locals.matchingOrg.id,
+	// 	teamId: toObjectId(req.params.resourceSlug),
+	// 	sessionId: addedSession.insertedId,
+	// 	message,
+	// 	authorId: null,
+	// 	authorName: res.locals.account.name,
+	// 	ts: now,
+	// 	isFeedback: false,
+	// 	chunkId: null,
+	// 	tokens: 0,
+	// 	displayMessage: null,
+	// 	chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
+	// });
 
 	taskQueue.add('execute_rag', { //TODO: figure out room w/ pete
 		task: prompt,

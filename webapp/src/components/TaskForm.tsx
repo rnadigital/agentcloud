@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
+import ToolSelectIcons from 'components/ToolSelectIcons';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -95,7 +96,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		<>
 			{modalOpen === 'agent'
 				? <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={agentCallback} />
-				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} datasources={datasources} />}
+				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
 			<form onSubmit={taskPost}>
 				<input
 					type='hidden'
@@ -175,14 +176,20 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
 					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    {data.label} {optionTool ? `(${optionTool?.type})` : null}
-					                </li>);
+										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
+											data.isSelected
+												? 'bg-blue-100 text-blue-500'
+												: 'dark:text-white'
+										}`}
+									>
+										<span className='tooltip z-100'>
+											{ToolSelectIcons[optionTool?.type]}
+											<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
+												{optionTool?.type} tool
+											</span>
+										</span>
+										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
+									</li>);
 					            }}
 							/>
 						</div>
