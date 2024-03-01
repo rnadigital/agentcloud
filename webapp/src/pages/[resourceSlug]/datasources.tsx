@@ -1,5 +1,7 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
+import CreateDatasourceForm from 'components/CreateDatasourceForm';
+import DatasourceFileTable from 'components/DatasourceFileTable';
 import DatasourceTable from 'components/DatasourceTable';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
@@ -21,7 +23,7 @@ export default function Datasources(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { datasources } = state;
+	const { datasources, models } = state;
 
 	async function fetchDatasources() {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
@@ -47,28 +49,19 @@ export default function Datasources(props) {
 			<title>{`Datasources - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={datasources} title='Datasources' buttonText='New Datasource' href='/datasource/add' />
+		<PageTitleWithNewButton list={datasources} title='File Uploads' />
 
-		<DatasourceTable datasources={datasources} fetchDatasources={fetchDatasources} />
+		<span className='pt-1 mb-3 w-full'>
+			<CreateDatasourceForm models={models} fetchDatasourceFormData={()=>{}} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
+		</span>
+		
+		<DatasourceFileTable datasources={datasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
 
-		{datasources.length === 0 && <NewButtonSection
-			link={`/${resourceSlug}/datasource/add`}
-			emptyMessage={'No datasources'}
-			icon={<svg
-				className='mx-auto mt-4 h-12 w-12 text-gray-400'
-				fill='none'
-				viewBox='0 0 24 24'
-				stroke='currentColor'
-				aria-hidden='true'
-			>
-				<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-6 h-6'>
-					<path strokeLinecap='round' strokeLinejoin='round' d='M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z' />
-				</svg>
-			</svg>}
-			message={'Get started by adding a datasource.'}
-			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
-			buttonMessage={'Add Datasource'}
-		/>}
+		<span className='py-8 h-1'></span>
+
+		<PageTitleWithNewButton list={datasources} title='Data Connections' buttonText='New Connection' href='/datasource/add' />
+
+		<DatasourceTable datasources={datasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
 
 	</>);
 

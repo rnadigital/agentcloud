@@ -35,7 +35,7 @@ export default function AddAgent(props) {
 			<title>{`New Agent - ${teamName}`}</title>
 		</Head>
 
-		<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+		<span className='sm:w-full md:w-1/2 xl:w-1/3'>
 			<AgentForm models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
 		</span>
 

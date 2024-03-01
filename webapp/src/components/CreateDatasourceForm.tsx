@@ -27,10 +27,10 @@ import { getSubmitButtonOptions, RJSFSchema, SubmitButtonProps } from '@rjsf/uti
 import { StreamsList } from 'components/DatasourceStream';
 
 const stepList = [
-	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
-	{ id: 'Step 2', name: 'Connect datasource', href: '#', steps: [1, 2] },
-	{ id: 'Step 3', name: 'Choose which data to sync', href: '#', steps: [3] },
-	{ id: 'Step 4', name: 'Pick an embedding model', href: '#', steps: [4] },
+	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
+	{ id: 'Step 1', name: 'Connect datasource', href: '#', steps: [1, 2] },
+	{ id: 'Step 2', name: 'Choose which data to sync', href: '#', steps: [3] },
+	{ id: 'Step 3', name: 'Pick an embedding model', href: '#', steps: [4] },
 ];
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -38,10 +38,10 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 	ssr: false,
 });
 
-export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData }
-	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function }) { //TODO: fix any types
+export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData, hideTabs, initialStep = 0, fetchDatasources }
+	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function, hideTabs?: boolean, initialStep?: number, fetchDatasources?: Function }) { //TODO: fix any types
 
-	const [step, setStep] = useState(0);
+	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -208,8 +208,15 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					setFiles={setFiles}
 					modelId={modelId}
 					name={datasourceName}
+					callback={() => {
+					//jank form reset (for now)
+						setStep(initialStep);
+						setFiles(null);
+						setDatasourceName('');
+						fetchDatasources();
+					}}
 				>
-					<div className='my-4'>
+					<div>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							{/* cba moving */}
 							Datasource Name<span className='text-red-700'> *</span>
@@ -469,9 +476,9 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}
 	}
 
-	return (<div className='m-4'>
+	return (<div>
 		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
-		<nav aria-label='Progress' className='mb-10'>
+		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (
 					<li key={stepData.name} className='md:flex-1 cursor-pointer'>
@@ -504,7 +511,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					</li>
 				))}
 			</ol>
-		</nav>
+		</nav>}
 
 		{getStepSection(step)}
 
