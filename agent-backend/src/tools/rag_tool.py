@@ -28,6 +28,12 @@ class RagTool:
         further examples of pre and post processors: https://python.langchain.com/docs/modules/data_connection/retrievers/
     """
 
+    def __init__(self, vector_store: VectorStore, embedding: Embeddings, pre_processors = [], post_processors = []):
+        self.vector_store = vector_store
+        self.embedding = embedding
+        self.pre_processors = pre_processors
+        self.post_processors = post_processors
+
     vector_store: VectorStore = None
     embedding: Embeddings = None
     pre_processors: List[Callable] = []

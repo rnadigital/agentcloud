@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 
 from init.mongo_session import start_mongo_session
 from models.mongo import Session
@@ -17,8 +17,8 @@ def construct_crew(session_id: str, task: Optional[str]):
         print(f"Session: {session}")
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
         print("Crew:", the_crew, crew_tasks, crew_agents)
-        agents_tools: Dict[str, Dict] = [(agent["_id"], mongo_client.get_agent_tools(agent.get("toolIds"))) for agent in crew_agents] if crew_agents else []
-        tools_datasources: List[Dict] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for agent_id, agent_tools in enumerate(agents_tools)]
+        agents_tools: List[Tuple] = [(agent["_id"], mongo_client.get_agent_tools(agent.get("toolIds"))) for agent in crew_agents] if crew_agents else []
+        tools_datasources: List[Dict] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for (agent_id, agent_tools) in agents_tools]
         agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents] if crew_agents else []
         agent_models: List[Dict] = [mongo_client.get_agent_model(agent.get("modelId")) for agent in crew_agents] if crew_agents else []
         model_credentials: List[Dict] = [mongo_client.get_model_credentials(model.get("credentialId")) for model in agent_models] if agent_models else []

@@ -49,8 +49,8 @@ class ToolParameters(BaseModel):
 
 class ToolData(BaseModel):
     name: str
-    code: str
-    description: str
+    code: Optional[str] = None
+    description: Optional[str] = None
     parameters: Optional[ToolParameters] = None
     builtin: bool
 
@@ -58,6 +58,7 @@ class ToolData(BaseModel):
 class Tool(BaseModel):
     model_config = ConfigDict(extra='ignore')
     name: str
+    description: Optional[str] = None
     type: Optional[str] = "function"
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None

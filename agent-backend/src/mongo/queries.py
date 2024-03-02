@@ -65,7 +65,7 @@ class MongoClientConnection(MongoConnection):
         if tools is None:
             return []
         else:
-            return [self._get_collection("datasources").find_one({"_id": tool["datasourceId"]}) if tool["datasourceId"] else None for tool in tools]
+            return [self._get_collection("datasources").find_one({"_id": convert_id_to_ObjectId(tool["datasourceId"])}) if ("datasourceId" in tool and tool["datasourceId"] is not None) else None for tool in tools]
 
     def get_agent_tools(self, toolsIds: List):
         if toolsIds is None:
@@ -106,3 +106,9 @@ class MongoClientConnection(MongoConnection):
                 return messages
 
         return []
+
+def convert_id_to_ObjectId(id):
+    if type(id) == str:
+        return ObjectId(id)
+    else:
+        return id
