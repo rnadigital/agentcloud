@@ -56,6 +56,11 @@ class CrewAIBuilder:
         except ConnError as ce:
             logging.error(f"Connection error occurred: {ce}")
             raise
+    
+    def send_message_to_socket(self, event: str, sender_name: str, message: dict):
+        self.socket.emit(
+            event, {"room": self.session_id, "authorName": sender_name, "message": message}
+        )
 
     def attach_agents_to_tasks(self, agents: Dict[ObjectId, Agent]) -> List[Task]:
         try:
@@ -186,9 +191,11 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
-    @staticmethod
-    def run_crew(crew: Crew):
+    def run_crew(self, crew: Crew):
         try:
-            crew.kickoff()
+            res = crew.kickoff()
+            print(res)
+            self.send_message_to_socket("message", "crew", {"message": res})
+            
         except Exception as e:
             logging.exception(e)
