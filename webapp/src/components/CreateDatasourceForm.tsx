@@ -41,7 +41,7 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData, hideTabs, initialStep = 0, fetchDatasources }
 	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function, hideTabs?: boolean, initialStep?: number, fetchDatasources?: Function }) { //TODO: fix any types
 
-	const [step, setStep] = useState(initialStep);
+	const [step, setStep] = useState(3);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -389,14 +389,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}
 					/>
-					<button
-						disabled={submitting}
-						type='submit'
-						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						{submitting && <ButtonSpinner />}
-						Continue
-					</button>
+					<div className='flex justify-end'>
+						<button
+							disabled={submitting}
+							type='submit'
+							className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
+							{submitting && <ButtonSpinner />}
+							Continue
+						</button>
+					</div>
 				</form>;
 			case 4:
 				return <>
