@@ -18,9 +18,10 @@ def construct_crew(session_id: str, task: Optional[str]):
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
         print("Crew:", the_crew, crew_tasks, crew_agents)
         agents_tools: List[Tuple] = [(agent["_id"], mongo_client.get_agent_tools(agent.get("toolIds"))) for agent in crew_agents] if crew_agents else []
-        tools_datasources: List[Dict] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for (agent_id, agent_tools) in agents_tools]
+        tools_datasources: List[Tuple] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for (agent_id, agent_tools) in agents_tools]
+        datasources_models: List[Tuple] = [(datasource.get("_id"), mongo_client.get_model(datasource.get("modelId"))) for _, datasource in tools_datasources] if crew_agents else []
         agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents] if crew_agents else []
-        agent_models: List[Dict] = [mongo_client.get_agent_model(agent.get("modelId")) for agent in crew_agents] if crew_agents else []
+        agent_models: List[Dict] = [mongo_client.get_model(agent.get("modelId")) for agent in crew_agents] if crew_agents else []
         model_credentials: List[Dict] = [mongo_client.get_model_credentials(model.get("credentialId")) for model in agent_models] if agent_models else []
         chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
@@ -33,6 +34,7 @@ def construct_crew(session_id: str, task: Optional[str]):
             agent_tasks,
             agents_tools,
             tools_datasources,
+            datasources_models,
             agent_models,
             model_credentials,
             chat_history
