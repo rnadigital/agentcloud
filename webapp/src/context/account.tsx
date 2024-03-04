@@ -59,8 +59,6 @@ export function AccountWrapper({ children, pageProps }) {
 		}
 	}, [sharedState?.account?.name]);
 
-	// log('AppWrapper sharedState %O', sharedState);
-
 	return (
 		<AccountContext.Provider value={[sharedState, refreshAccountContext, setSwitchingContext]}>
 			{children}
