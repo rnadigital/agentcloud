@@ -159,7 +159,7 @@ export async function addAgentApi(req, res, next) {
 		maxIter,
 		maxRPM,
 		verbose: verbose === true,
-		allowDelegation,
+		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
 	});
 
@@ -225,7 +225,7 @@ export async function editAgentApi(req, res, next) {
 		maxIter,
 		maxRPM,
 		verbose: verbose === true,
-		allowDelegation,
+		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
 	});
 

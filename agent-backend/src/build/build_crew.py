@@ -1,6 +1,7 @@
 import logging
 from pprint import pprint
 from bson import ObjectId
+import json
 
 from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
@@ -13,10 +14,13 @@ from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
 from tools.global_tools import GlobalTools  # This needs to be used to instantiate tools that are not rag
 from langchain.tools import Tool
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+from langchain_core.agents import AgentFinish, AgentAction
+from crewai.agents import CrewAgentParser
+from models.sockets import SocketMessage, SocketEvents, Message
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 from tools import RagToolFactory
-
+from messaging.send_message_to_socket import send
 
 class CrewAIBuilder:
     def __init__(
@@ -135,6 +139,31 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
+    def send_it(self, message):
+        try:
+
+
+            message_type = type(message)
+            if message_type is AgentFinish:
+                if hasattr(message, "return_values"):
+                    socket_message = SocketMessage(
+                        room=self.session_id,
+                        authorName="system",
+                        message=Message(
+                            text=message.return_values.get('output'),
+                            tokens=1,
+                            first=True,
+                        )
+                    )
+                    send(self.socket, SocketEvents.MESSAGE, socket_message, "both")
+            elif message_type is list or message_type is tuple:
+                for message_part in message:
+                    self.send_it(message_part)
+            else:
+                print("FAILED TO PROCESS", message_type, message)
+        except Exception as e:
+            logging.exception(e)
+
     def build_crew(self):
         try:
             # agents_with_models: List[Agent] = self.attach_model_to_agent(self.agents)
@@ -145,7 +174,7 @@ class CrewAIBuilder:
             tasks: List[Task] = self.attach_agents_to_tasks(agents)
 
             # Instantiate CrewAI Crew and attache agents and tasks
-            crew = Crew(agents=agents.values(), tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
+            crew = Crew(step_callback=self.send_it, agents=agents.values(), tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
                 exclude_none=True,
                 exclude={"agents", "tasks"}
             ))
@@ -156,6 +185,7 @@ class CrewAIBuilder:
 
     def run_crew(self, crew: Crew):
         try:
+            pprint(crew.model_dump())
             res = crew.kickoff()
         except Exception as e:
             logging.exception(e)

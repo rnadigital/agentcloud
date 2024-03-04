@@ -1,5 +1,6 @@
 import logging
 from typing import Optional, List, Dict, Tuple
+from pprint import pprint
 
 from init.mongo_session import start_mongo_session
 from models.mongo import Session
@@ -16,7 +17,10 @@ def construct_crew(session_id: str, task: Optional[str]):
         session: Session = mongo_client.get_session(session_id)
         print(f"Session: {session}")
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
-        print("Crew:", the_crew, crew_tasks, crew_agents)
+        print("Crew:")
+        pprint(the_crew)
+        pprint(crew_tasks)
+        pprint(crew_agents)
         agents_tools: List[Tuple] = [(agent["_id"], mongo_client.get_agent_tools(agent.get("toolIds"))) for agent in crew_agents] if crew_agents else []
         tools_datasources: List[Dict] = [(agent_id, mongo_client.get_tool_datasources(agent_tools)) for (agent_id, agent_tools) in agents_tools]
         agent_tasks: List[Dict] = [mongo_client.get_agent_tasks(agent.get("taskIds")) for agent in crew_agents] if crew_agents else []

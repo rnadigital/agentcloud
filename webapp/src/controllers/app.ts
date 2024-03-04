@@ -100,7 +100,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, process }  = req.body;
+	const { name, description, tags, capabilities, agents, process, tasks }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -110,7 +110,7 @@ export async function addAppApi(req, res, next) {
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
-		tasks: [], //TODO
+		tasks: tasks.map(toObjectId),
 		agents: agents.map(toObjectId),
 		process,
 	});
@@ -156,7 +156,7 @@ export async function editAppApi(req, res, next) {
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
 			name,
-			tasks,
+			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
 		}),
