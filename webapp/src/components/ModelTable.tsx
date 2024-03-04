@@ -77,7 +77,7 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200'>
 						{models.map((model) => (
-							<tr key={model._id}>
+							<tr key={model._id} className='cursor-pointer hover:bg-gray-50' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 								<td className='px-6 py-4 whitespace-nowrap'>
 									<div className='text-sm text-gray-900'>{model.name}</div>
 								</td>

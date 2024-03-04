@@ -2,7 +2,7 @@
 
 import { removeAgentsModel } from 'db/agent';
 import { getCredentialById, getCredentialsById, getCredentialsByTeam } from 'db/credential';
-import { addModel, deleteModelById,getModelsByTeam } from 'db/model';
+import { addModel, deleteModelById, getModelById, getModelsByTeam,updateModel } from 'db/model';
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
@@ -24,6 +24,18 @@ export async function modelsData(req, res, _next) {
 	};
 }
 
+export async function modelData(req, res, _next) {
+	const [model, credentials] = await Promise.all([
+		getModelById(req.params.resourceSlug, req.params.modelId),
+		getCredentialsByTeam(req.params.resourceSlug),
+	]);
+	return {
+		csrf: req.csrfToken(),
+		model,
+		credentials,
+	};
+}
+
 /**
 * GET /[resourceSlug]/models
 * models page html
@@ -40,6 +52,11 @@ export async function modelsPage(app, req, res, next) {
 */
 export async function modelsJson(req, res, next) {
 	const data = await modelsData(req, res, next);
+	return res.json({ ...data, account: res.locals.account });
+}
+
+export async function modelJson(req, res, next) {
+	const data = await modelData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
 
@@ -93,6 +110,47 @@ export async function modelAddApi(req, res, next) {
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });
+
+}
+
+export async function editModelApi(req, res, next) {
+
+	const { name, model, credentialId }  = req.body;
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true }},
+		// { field: 'credentialId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'model', validation: { notEmpty: true }},
+	], { name: 'Name', credentialId: 'Credential', model: 'Model'});
+	if (validationError) {	
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	let credential;
+	if (credentialId && credentialId.length > 0) {
+		// Validate model for credential is valid
+		validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
+		if (validationError) {
+			return dynamicResponse(req, res, 400, { error: validationError });
+		}
+		// Check for credential
+		credential = await getCredentialById(req.params.resourceSlug, credentialId);
+		if (!credential) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
+		}
+	}
+
+	// Insert model to db
+	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, {
+		name,
+		credentialId: credentialId ? toObjectId(credentialId) : null,
+		model,
+		embeddingLength: ModelEmbeddingLength[model] || 0,
+		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
+		type: credential.type,
+	});
+
+	return dynamicResponse(req, res, 302, { });
 
 }
 

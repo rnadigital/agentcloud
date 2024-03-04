@@ -34,14 +34,15 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 			resourceSlug,
 			name: e.target.modelName.value,
 			model: modelState.model,
+			modelId: modelState._id,
 			credentialId: modelState.credentialId,
 		};
 		if (editing) {			
-			// await API.editAgent(agentState._id, body, () => {
-			// 	toast.success('Agent Updated');
-			// }, (res) => {
-			// 	toast.error(res);
-			// }, null);
+			await API.editModel(body, () => {
+				toast.success('Model Updated');
+			}, (res) => {
+				toast.error(res);
+			}, null);
 		} else {
 			const addedModel: any = await API.addModel(body, () => {
 				toast.success('Added Model');
@@ -85,7 +86,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 			<div className='space-y-12'>
 			
 				<div className='space-y-6'>
-					{!compact && <div>
+					{!compact && !editing &&  <div>
 						<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>Model</h2>
 						<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>Configure models to be used for agents and/or embedding data sources.</p>
 					</div>}
