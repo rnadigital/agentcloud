@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import {
+	ExclamationTriangleIcon,
 	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
@@ -42,7 +43,7 @@ export default function Datasource(props) {
 	const [units, setUnits] = useState(0);
 	const [cronExpression, setCronExpression] = useState('');
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-
+	const numStreams = datasource?.connectionSettings?.syncCatalog?.streams?.length;
 	async function fetchDatasource() {
 		await API.getDatasource({
 			resourceSlug,
@@ -224,24 +225,38 @@ export default function Datasource(props) {
 				</button>
 			</form>}
 
-			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <>
-				<StreamsList
-					streams={datasource.connectionSettings.syncCatalog.streams}
-					existingStreams={datasource.connectionSettings.syncCatalog.streams}
-					readonly={true}
-				/>
-				<span>
-					<button
-						disabled={submitting['fetchSchema']}
-						onClick={() => fetchSchema()}
-						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						{submitting['fetchSchema'] && <ButtonSpinner />}
-						{submitting['fetchSchema'] ? 'Fetching Streams...' : 'Edit Streams'}
-					</button>
-				</span>
+			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <StreamsList
+				streams={datasource.connectionSettings.syncCatalog.streams}
+				existingStreams={datasource.connectionSettings.syncCatalog.streams}
+				readonly={true}
+			/>}
+			{!discoveredSchema && !numStreams && <>
+				<div className='rounded-md bg-yellow-50 p-4 mt-4 mb-2'>
+					<div className='flex'>
+						<div className='flex-shrink-0'>
+							<ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' aria-hidden='true' />
+						</div>
+						<div className='ml-3'>
+							<h3 className='text-sm font-bold text-yellow-800'>Draft View</h3>
+							<div className='mt-2 text-sm text-yellow-700'>
+								<p>
+									This data connection is a draft and needs more configuration before it can be used.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
 			</>}
-
+			{!discoveredSchema && <span>
+				<button
+					disabled={submitting['fetchSchema']}
+					onClick={() => fetchSchema()}
+					className={'rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 my-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+				>
+					{submitting['fetchSchema'] && <ButtonSpinner />}
+					{submitting['fetchSchema'] ? 'Fetching Streams...' : numStreams > 1 ? 'Edit Streams' : 'Finish Draft'}
+				</button>
+			</span>}
 		</>}
 
 		{/*TODO: component that takes jobList*/}
