@@ -18,7 +18,7 @@ import { toast } from 'react-toastify';
 import { DatasourceStatus,datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 
-export default function DatasourceTable({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
+export default function DatasourceFileTable({ datasources, fetchDatasources }: { datasources: any[], fetchDatasources?: any }) {
 
 	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
 	const [accountContext]: any = useAccountContext();
@@ -46,23 +46,6 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 		}
 	}
 
-	async function syncDatasource(datasourceId) {
-		setSyncing({ [datasourceId]: true });
-		try {
-			await API.syncDatasource({
-				_csrf: csrf,
-				resourceSlug,
-				datasourceId,
-			}, () => {
-				fetchDatasources();
-			}, () => {
-				toast.error('Error syncing');
-			}, router);
-		} finally {
-			setSyncing({ [datasourceId]: false });
-		}
-	}
-
 	return (
 
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
@@ -70,19 +53,13 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				<thead className='bg-gray-50'>
 					<tr>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
-							Type
-						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
 							Name
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+							Original Filename
+						</th>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
 							Status
-						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
-							Schedule Type
-						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
-							Last Synced
 						</th>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
 							Date Uploaded
@@ -96,14 +73,13 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 					{datasources.map((datasource) => (
 						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center'>
-								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 me-1.5' />
-								<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
-				                    {datasource.sourceType}
-								</span>
+								<div className='flex items-center'>
+									<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
+								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
 								<div className='flex items-center'>
-									<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
+									<div className='text-sm font-medium text-gray-900'>{datasource.originalName}</div>
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
@@ -112,43 +88,20 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
-								<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>
-									{datasource?.connectionSettings?.scheduleType || '-'}
-								</span>
-							</td>
-							<td className='px-6 py-3 whitespace-nowrap'>
-								<div className='text-sm text-gray-900' suppressHydrationWarning>
-									{datasource.sourceType === 'file' ? 'N/A' : (datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : 'Never')}
-								</div>
-							</td>
-							<td className='px-6 py-3 whitespace-nowrap'>
 								<span className='text-sm text-gray-900'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>
 							<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
-								{datasource.sourceType !== 'file' && <button
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										syncDatasource(datasource._id);
-									}}
-									disabled={syncing[datasource._id] || deleting[datasource._id] || datasource.status !== DatasourceStatus.READY}
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								>
-								
-									{syncing[datasource._id] && <ButtonSpinner size={14} className='ms-2 -me-1' />}
-									{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
-								</button>}
-								{/*<a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
-									<Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
-								</a>*/}
-								<button
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										deleteDatasource(datasource._id);
-									}}
+		                        {/*<a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
+		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
+		                        </a>*/}
+		                        <button
+		                        	onClick={(e) => {
+		                        		e.preventDefault();
+		                        		e.stopPropagation();
+		                        		deleteDatasource(datasource._id);
+		                        	}}
 		                        	className='text-red-500 hover:text-red-700'
 		                        	disabled={deleting[datasource._id]}
 		                        >
