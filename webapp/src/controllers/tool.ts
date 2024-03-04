@@ -135,7 +135,7 @@ export async function addToolApi(req, res, next) {
 	    name,
 	    description,
 	 	type: type as ToolType,
-	 	datasourceId,
+		datasourceId: toObjectId(datasourceId),
 	 	schema: schema,
 		data: {
 			...data,
@@ -169,6 +169,7 @@ export async function editToolApi(req, res, next) {
 	 	type: type as ToolType,
 	    description,
 	 	schema: schema,
+	 	datasourceId: toObjectId(datasourceId),
 		data: {
 			...data,
 			builtin: false,
