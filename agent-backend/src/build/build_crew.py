@@ -87,15 +87,16 @@ class CrewAIBuilder:
             logging.exception(e)
 
     def build_agent_tools(self):
+        """This method build the langchain tool and attaches to the correct resource"""
         agents_tools = {}
         for tool_agent_id, tools in self.agents_tools:
             if tools is not None:
-                tool_models: List[Dict] = [
+                tool_models: List[Tool] = [
                     models.mongo.Tool(**tool)
-                    .model_dump(exclude_none=True, exclude_unset=True)
                     for tool in tools
                 ]
                 for tool in tool_models:  # whis tool a Dict not a model????
+                    # we need to take rag specific logic outside to another function that deals with datasources and embedding and auth
                     if tool["type"] == "rag" and "datasourceId" in tool:
                         for ds_agent_id, datasources in self.tools_datasources:
                             if ds_agent_id == tool_agent_id:
@@ -106,10 +107,11 @@ class CrewAIBuilder:
                                         collection = str(ds["_id"])
                                         embedding = FastEmbedEmbeddings(model_name="BAAI/bge-small-en")
                                         tool_factory.init(
-                                            collection,
                                             Qdrant(
-                                                QdrantClient(QDRANT_HOST), collection_name=collection,
-                                                embeddings=embedding)
+                                                QdrantClient(QDRANT_HOST),
+                                                collection_name=collection,
+                                                embeddings=embedding),
+                                            embedding
                                         )
                                         tool_instance = tool_factory.generate_langchain_tool(tool["name"],
                                                                                              tool["description"])
@@ -138,7 +140,7 @@ class CrewAIBuilder:
             # agents_with_models: List[Agent] = self.attach_model_to_agent(self.agents)
             model_instances = self.build_models()
             agent_tools = self.build_agent_tools()
-            # self.attach_model_to_agent(self.agents)
+            self.attach_model_to_agent(self.agents)
             agents: Dict[ObjectId, Agent] = self.build_crewai_agents(model_instances, agent_tools)
             tasks: List[Task] = self.attach_agents_to_tasks(agents)
 

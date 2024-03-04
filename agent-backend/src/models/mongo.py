@@ -24,6 +24,7 @@ class ToolType(str, Enum):
 class Platforms(str, Enum):
     ChatOpenAI = "open_ai"
     AzureChatOpenAI = "azure"
+    FastEmbed = "fastembed"
 
 
 class ModelType(str, Enum):
@@ -174,7 +175,3 @@ class Datasource(BaseModel):
     workspaceId: str
     connectionId: str
     destinationId: str
-
-#
-# [{'_id': ObjectId('65dbcda365dbd3ac36434a51'), 'orgId': ObjectId('65d56d322f9651271cc671d3'), 'teamId': ObjectId('65d56d322f9651271cc671d4'), 'name': 'OpenAI', 'credentialId': ObjectId('65dbcd9865dbd3ac36434a50'), 'model': 'gpt-3.5-turbo', 'embeddingLength': 0, 'modelType': 'llm'}]
-# [{'_id': ObjectId('65dbcd9865dbd3ac36434a50'), 'orgId': ObjectId('65d56d322f9651271cc671d3'), 'teamId': ObjectId('65d56d322f9651271cc671d4'), 'name': 'oai_creds', 'createdDate': datetime.datetime(2024, 2, 25, 23, 30, 32, 706000), 'type': 'open_ai', 'credentials': {'key': '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', 'endpointURL': None}}]
