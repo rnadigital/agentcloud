@@ -66,15 +66,16 @@ export async function modelAddApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	let credential;
 	if (credentialId && credentialId.length > 0) {
 		// Validate model for credential is valid
 		validationError = await valdiateCredentialModel(req.params.resourceSlug, credentialId, model);
 		if (validationError) {
 			return dynamicResponse(req, res, 400, { error: validationError });
 		}
-		// Check for foundCredentials
-		const foundCredential = await getCredentialById(req.params.resourceSlug, credentialId);
-		if (!foundCredential) {
+		// Check for credential
+		credential = await getCredentialById(req.params.resourceSlug, credentialId);
+		if (!credential) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
 		}
 	}
@@ -88,6 +89,7 @@ export async function modelAddApi(req, res, next) {
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
+		type: credential.type,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });
