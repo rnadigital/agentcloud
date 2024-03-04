@@ -97,11 +97,11 @@ class CrewAIBuilder:
                 ]
                 for tool in tool_models:  # whis tool a Dict not a model????
                     # we need to take rag specific logic outside to another function that deals with datasources and embedding and auth
-                    if tool["type"] == "rag" and "datasourceId" in tool:
+                    if tool.type == "rag" and tool.datasourceId is not None:
                         for ds_agent_id, datasources in self.tools_datasources:
                             if ds_agent_id == tool_agent_id:
                                 for ds in datasources:
-                                    if str(ds["_id"]) == str(tool["datasourceId"]) and (
+                                    if str(ds["_id"]) == str(tool.datasourceId) and (
                                             "connectionId" not in ds or ds["connectionId"] is None):
                                         tool_factory = RagToolFactory()
                                         collection = str(ds["_id"])
@@ -113,8 +113,8 @@ class CrewAIBuilder:
                                                 embeddings=embedding),
                                             embedding
                                         )
-                                        tool_instance = tool_factory.generate_langchain_tool(tool["name"],
-                                                                                             tool["description"])
+                                        tool_instance = tool_factory.generate_langchain_tool(tool.name,
+                                                                                             tool.description)
                                         if tool_agent_id in agents_tools:
                                             agents_tools[tool_agent_id].append(tool_instance)
                                         else:
@@ -140,7 +140,7 @@ class CrewAIBuilder:
             # agents_with_models: List[Agent] = self.attach_model_to_agent(self.agents)
             model_instances = self.build_models()
             agent_tools = self.build_agent_tools()
-            self.attach_model_to_agent(self.agents)
+            # self.attach_model_to_agent(self.agents)
             agents: Dict[ObjectId, Agent] = self.build_crewai_agents(model_instances, agent_tools)
             tasks: List[Task] = self.attach_agents_to_tasks(agents)
 
