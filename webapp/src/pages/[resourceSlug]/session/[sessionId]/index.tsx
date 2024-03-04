@@ -278,7 +278,7 @@ export default function Session(props) {
 
 	return (<>
 		<Head>
-			<title>Session - {sessionId}</title>
+			<title>{`Session - ${sessionId}`}</title>
 		</Head>
 		<div className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1' style={{ maxHeight: 'calc(100vh - 110px)' }}>
 			<div className='overflow-y-auto' ref={scrollContainerRef}>
