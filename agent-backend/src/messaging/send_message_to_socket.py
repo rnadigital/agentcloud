@@ -1,7 +1,7 @@
 from models.sockets import SocketMessage, SocketEvents
 from socketio import SimpleClient
-from typing import Any, List, Union, Optional
-from pydantic import BaseModel, constr, validator, root_validator
+from typing import Any, Optional
+from pydantic import BaseModel, constr, field_validator
 
 import logging
 
@@ -9,10 +9,10 @@ import utils.class_checker as cch
 
 
 def send(
-    client: Optional[SimpleClient],
-    event: Optional[SocketEvents],
-    message: Optional[SocketMessage],
-    socket_logging: str = "socket",
+        client: Optional[SimpleClient],
+        event: Optional[SocketEvents],
+        message: Optional[SocketMessage],
+        socket_logging: str = "socket",
 ):
     # Check inputs
     class Params(BaseModel):
@@ -21,15 +21,15 @@ def send(
         message: Any
         socket_logging: constr(min_length=1)
 
-        @validator("socket_logging")
+        @field_validator("socket_logging")
         def check_socket_or_logging(cls, v):
-            socket_logging = v.lower()
+            socket_log = v.lower()
             assert socket_logging in [
                 "socket",
                 "logging",
                 "both",
             ], f"Invalid socket_logging value: {v}"
-            return socket_logging
+            return socket_log
 
     params = Params(
         client=client, event=event, message=message, socket_logging=socket_logging
