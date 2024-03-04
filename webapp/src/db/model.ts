@@ -3,6 +3,7 @@
 import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { CredentialType } from 'struct/credential';
 import { InsertResult } from 'struct/db';
 
 export type Model = {
@@ -14,6 +15,7 @@ export type Model = {
 	model: string;
 	modelType: 'embedding' | 'llm';
 	embeddingLength: number;
+	type: CredentialType; //redundant
 }
 
 export function ModelCollection(): any {

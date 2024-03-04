@@ -279,7 +279,7 @@ export default function Datasource(props) {
 		</>}
 
 		{tab === 2 && datasource.sourceType !== 'file' && <div className='space-y-3'>
-			{editingSchedule === false && <div className='my-2'>
+			{/*editingSchedule === false && <div className='my-2'>
 				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
 				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
@@ -289,8 +289,8 @@ export default function Datasource(props) {
 					<p>Cron Express: <strong>{datasource.connectionSettings.scheduleData.cron.cronExpression}</strong></p>
 					<p>Timezone: <strong>{datasource.connectionSettings.scheduleData.cron.cronTimezone}</strong></p>
 				</>}
-			</div>}
-			{editingSchedule && <DatasourceScheduleForm
+			</div>*/}
+			<DatasourceScheduleForm
 				scheduleType={scheduleType}
 				setScheduleType={setScheduleType}
 				timeUnit={timeUnit}
@@ -301,7 +301,7 @@ export default function Datasource(props) {
 				setCronExpression={setCronExpression}
 				cronTimezone={cronTimezone}
 				setCronTimezone={setCronTimezone}
-			/>}
+			/>
 			<div className='flex space-x-2'>
 				<button
 					onClick={async (e) => {

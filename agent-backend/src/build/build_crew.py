@@ -1,10 +1,8 @@
-import importlib
 import logging
 from pprint import pprint
 from bson import ObjectId
 
 from crewai import Agent, Task, Crew
-import langchain.tools
 from socketio.exceptions import ConnectionError as ConnError
 from socketio.simple_client import SimpleClient
 
@@ -12,7 +10,7 @@ import models.mongo
 from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST
 from typing import Optional, Union, List, Dict, Tuple
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
-from tools.global_tools import GlobalTools
+from tools.global_tools import GlobalTools  # This needs to be used to instantiate tools that are not rag
 from langchain.tools import Tool
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores.qdrant import Qdrant
@@ -58,11 +56,6 @@ class CrewAIBuilder:
         except ConnError as ce:
             logging.error(f"Connection error occurred: {ce}")
             raise
-    
-    def send_message_to_socket(self, event: str, sender_name: str, message: dict):
-        self.socket.emit(
-            event, {"room": self.session_id, "authorName": sender_name, "message": message}
-        )
 
     def attach_agents_to_tasks(self, agents: Dict[ObjectId, Agent]) -> List[Task]:
         try:
@@ -78,25 +71,6 @@ class CrewAIBuilder:
             ]
         except Exception as e:
             logging.exception(e)
-
-    def build_tool_objects(self) -> List[models.mongo.Tool]:
-        return []
-        # list_tool_objects = [
-        #     models.mongo.Tool(**tool)
-        #     for n in range(len(self.tools))
-        #     for tool in self.tools[n]
-        # ]
-
-        # for tool in list_tool_objects:
-        #     if tool.data.builtin:
-        #         print("TOOL", tool)
-        #     #     load function from GlobalTools class
-        #     else:
-        #         pass
-                # module = importlib.import_module('tools.base_tool')
-                # base_tool_class = getattr(module, 'BaseTool')
-                # init_base_tool_class = base_tool_class()
-                # init_base_tool_class.tool(
 
     def build_models(self):
         try:
@@ -114,48 +88,40 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
-    # def attach_model_to_agent(self, agents: List[models.mongo.Agent]):
-    #     try:
-    #         for i, v in enumerate(agents):
-                
-            # mods: List[models.mongo.Model] = [models.mongo.Model(**model) for model in self.models]
-            # creds: List[models.mongo.Credentials] = [models.mongo.Credentials(**cred) for cred in self.creds]
-            # for i, v in enumerate(mods):
-            #     c = models.mongo.ChatModel(
-            #         **v.model_dump(exclude_none=True)
-            #     )
-            #     c.api_key = creds[i].credentials.api_key
-            #     c.base_url = creds[i].credentials.base_url
-            #     agents[i].llm = ChatOpenAI(**c.model_dump(exclude_none=True, exclude_unset=True))
-        #     return agents
-        # except Exception as e:
-        #
-        #      logging.exception(e)
-    
     def build_agent_tools(self):
+        """This method build the langchain tool and attaches to the correct resource"""
         agents_tools = {}
         for tool_agent_id, tools in self.agents_tools:
             if tools is not None:
-                tool_models: List[models.mongo.Tool] = [
-                    models.mongo.Tool(**tool).model_dump(exclude_none=True, exclude_unset=True)
-                    for tool in tools]
-                for tool in tool_models: # whis tool a Dict not a model????
+                tool_models: List[Tool] = [
+                    models.mongo.Tool(**tool)
+                    for tool in tools
+                ]
+                for tool in tool_models:  # whis tool a Dict not a model????
+                    # we need to take rag specific logic outside to another function that deals with datasources and embedding and auth
                     if tool["type"] == "rag" and "datasourceId" in tool:
                         for ds_agent_id, datasources in self.tools_datasources:
                             if ds_agent_id == tool_agent_id:
                                 for ds in datasources:
-                                    if str(ds["_id"]) == str(tool["datasourceId"]) and ("connectionId" not in ds or ds["connectionId"] is None):
+                                    if str(ds["_id"]) == str(tool["datasourceId"]) and (
+                                            "connectionId" not in ds or ds["connectionId"] is None):
                                         tool_factory = RagToolFactory()
                                         collection = str(ds["_id"])
                                         embedding = FastEmbedEmbeddings(model_name="BAAI/bge-small-en")
-                                        tool_factory.init(collection, Qdrant(QdrantClient(QDRANT_HOST) , collection_name=collection, embeddings=embedding))
-                                        tool_instance = tool_factory.generate_langchain_tool(tool["name"], tool["description"])
+                                        tool_factory.init(
+                                            Qdrant(
+                                                QdrantClient(QDRANT_HOST),
+                                                collection_name=collection,
+                                                embeddings=embedding),
+                                            embedding
+                                        )
+                                        tool_instance = tool_factory.generate_langchain_tool(tool["name"],
+                                                                                             tool["description"])
                                         if tool_agent_id in agents_tools:
                                             agents_tools[tool_agent_id].append(tool_instance)
                                         else:
                                             agents_tools[tool_agent_id] = [tool_instance]
         return agents_tools
-
 
     def build_crewai_agents(self, model_instances: List, agent_tools: Dict[str, Tool]) -> Dict[ObjectId, Agent]:
         try:
@@ -176,12 +142,9 @@ class CrewAIBuilder:
             # agents_with_models: List[Agent] = self.attach_model_to_agent(self.agents)
             model_instances = self.build_models()
             agent_tools = self.build_agent_tools()
-            # self.attach_model_to_agent(self.agents)
+            self.attach_model_to_agent(self.agents)
             agents: Dict[ObjectId, Agent] = self.build_crewai_agents(model_instances, agent_tools)
             tasks: List[Task] = self.attach_agents_to_tasks(agents)
-            # todo: attach tools to agents
-            # todo: attach tools to tasks
-            tool_objects: List[models.mongo.Tool] = self.build_tool_objects()
 
             # Instantiate CrewAI Crew and attache agents and tasks
             crew = Crew(agents=agents.values(), tasks=tasks, **models.mongo.Crew(**self.crew).model_dump(
@@ -196,8 +159,5 @@ class CrewAIBuilder:
     def run_crew(self, crew: Crew):
         try:
             res = crew.kickoff()
-            print(res)
-            self.send_message_to_socket("message", "crew", {"message": res})
-            
         except Exception as e:
             logging.exception(e)

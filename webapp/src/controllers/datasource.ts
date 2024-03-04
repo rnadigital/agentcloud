@@ -4,7 +4,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
-import { getModelById } from 'db/model';
+import { getModelById, getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { deleteFile, uploadFile } from 'lib/google/gcs';
@@ -45,10 +45,14 @@ const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
-	const datasources = await getDatasourcesByTeam(req.params.resourceSlug);
+	const [datasources, models] = await Promise.all([
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		datasources,
+		models,
 	};
 }
 
@@ -72,10 +76,14 @@ export async function datasourcesJson(req, res, next) {
 }
 
 export async function datasourceData(req, res, _next) {
-	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+	const [datasource, models] = await Promise.all([
+		getDatasourceById(req.params.resourceSlug, req.params.datasourceId),
+		getModelsByTeam(req.params.resourceSlug),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		datasource,
+		models,
 	};
 }
 
@@ -681,6 +689,6 @@ export async function uploadFileApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
 
 }
