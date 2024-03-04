@@ -1,6 +1,7 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourceFileTable from 'components/DatasourceFileTable';
 import DatasourceTable from 'components/DatasourceTable';
 import NewButtonSection from 'components/NewButtonSection';
@@ -24,6 +25,7 @@ export default function Datasources(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { datasources, models } = state;
+	const [open, setOpen] = useState(false);
 
 	async function fetchDatasources() {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
@@ -59,7 +61,16 @@ export default function Datasources(props) {
 
 		<span className='py-8 h-1'></span>
 
-		<PageTitleWithNewButton list={datasources} title='Data Connections' buttonText='New Connection' href='/datasource/add' />
+		<PageTitleWithNewButton list={datasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
+
+		<CreateDatasourceModal
+			open={open}
+			setOpen={setOpen}
+			callback={() => {
+				setOpen(false);
+				fetchDatasources();
+			}}
+		/>
 
 		<DatasourceTable datasources={datasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
 

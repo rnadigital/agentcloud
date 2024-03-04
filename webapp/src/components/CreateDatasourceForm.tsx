@@ -143,7 +143,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				setDatasourceId(stagedDatasource.datasourceId);
 				setDiscoveredSchema(stagedDatasource.discoveredSchema);
 				setStep(3);
-				// callback && addedDatasource && callback(addedDatasource._id);
+				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
 				e.preventDefault();
@@ -167,7 +167,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				}, (res) => {
 					toast.error(res);
 				}, compact ? null : router);
-				// callback && addedDatasource && callback(addedDatasource._id);
+				callback && addedDatasource && callback(addedDatasource._id);
 			}
 		} finally {
 			setSubmitting(false);
