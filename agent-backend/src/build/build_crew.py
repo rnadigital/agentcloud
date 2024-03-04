@@ -28,7 +28,6 @@ class CrewAIBuilder:
             agents: List[Dict],
             agent_tasks: List[Dict],
             agents_tools: List[Tuple],
-            datasources_models: List[Tuple],
             tools_datasources: Dict[str, Dict],
             llms: List[Dict],
             creds: List[Dict],
@@ -40,7 +39,6 @@ class CrewAIBuilder:
         self.agents = agents
         self.agent_tasks = agent_tasks
         self.agents_tools = agents_tools
-        self.datasources_models = datasources_models
         self.tools_datasources = tools_datasources
         self.models = llms
         self.creds = creds

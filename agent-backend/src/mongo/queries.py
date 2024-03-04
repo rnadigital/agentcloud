@@ -79,8 +79,8 @@ class MongoClientConnection(MongoConnection):
         else:
             return [task for task in self._get_collection("tasks").find(({"_id": {"$in": taskIds}}))]
 
-    def get_model(self, modelId: List):
-        return self._get_collection("models").find_one(({"_id": modelId}))
+    def get_agent_model(self, modelIds: List):
+        return self._get_collection("models").find_one(({"_id": modelIds}))
 
     def get_model_credentials(self, credentialIds: List):
         return self._get_collection("credentials").find_one(({"_id": credentialIds}))
