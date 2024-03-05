@@ -8,7 +8,6 @@ from typing import Annotated
 # It will be represented as a `str` on the model so that it can be serialized to JSON.
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
-
 # Enums
 class Process(str, Enum):
     Sequential = "sequential"
@@ -57,6 +56,7 @@ class ToolData(BaseModel):
 
 
 class Tool(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     name: str
     description: Optional[str] = None
@@ -71,15 +71,18 @@ class ApiCredentials(BaseModel):
 
 
 class Credentials(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     type: Optional[Platforms] = Field(default=Platforms.ChatOpenAI)
     credentials: Optional[ApiCredentials] = None
 
 
 class Model(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     name: str
     model_name: Optional[ModelType] = Field(default=ModelType.GPT4, alias="model")
+    credentialId: Optional[PyObjectId] = None
     credentials: Optional[PyObjectId] = None
     embeddingLength: Optional[int] = 384
     seed: Optional[int] = randint(1, 100)
@@ -90,6 +93,7 @@ class Model(BaseModel):
 
 
 class ChatModel(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     api_key: Optional[str] = None
     model_name: Optional[ModelType] = Field(default=ModelType.GPT4, alias="model")
@@ -103,6 +107,7 @@ class ChatModel(BaseModel):
 
 
 class Data(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     task: str = "qa"
     collection_name: str
@@ -113,9 +118,11 @@ class Data(BaseModel):
 
 
 class Task(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     description: str
     expectedOutput: Optional[str] = None
+    toolIds: Optional[List[PyObjectId]] = None
     tools: Optional[Tool] = None
     asyncExecution: Optional[bool] = False
     context: Optional[str] = None
@@ -126,12 +133,16 @@ class Task(BaseModel):
 
 
 class Agent(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     """Data model for Autogen Agent Config"""
     role: str
     goal: str
     backstory: str
     llm: Optional[Model] = ModelType.GPT4
+    toolIds: Optional[List[PyObjectId]] = None
+    taskIds: Optional[List[PyObjectId]] = None
+    modelId: PyObjectId
     tools: Optional[List[Tool]] = None
     tasks: Optional[List[Task]] = None
     functionCallingLLM: Optional[Model] = ModelType.GPT4
@@ -143,6 +154,7 @@ class Agent(BaseModel):
 
 
 class Crew(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     tasks: Optional[List[PyObjectId]] = None
     agents: Optional[List[PyObjectId]] = None
@@ -159,19 +171,21 @@ class Crew(BaseModel):
 
 
 class Session(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     crewId: Crew
 
 
 class Datasource(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     orgId: Optional[PyObjectId] = Field(default=None)
     teamId: Optional[PyObjectId] = Field(default=None)
     name: str
-    sourceId: str
+    sourceId: PyObjectId
     sourceType: str
-    workspaceId: str
-    connectionId: str
-    destinationId: str
+    workspaceId: PyObjectId
+    connectionId: PyObjectId
+    destinationId: PyObjectId
