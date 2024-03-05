@@ -16,3 +16,7 @@ def convert_dictionaries_to_models(dictionaries: List[Dict], model: BaseModel):
     def _convert(dictionary: Dict):
             return model(**dictionary)
     return list(map(_convert, dictionaries))
+
+
+def keyset(*args):
+    return frozenset(args)

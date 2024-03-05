@@ -122,6 +122,7 @@ class Task(BaseModel):
     model_config = ConfigDict(extra='ignore')
     description: str
     expectedOutput: Optional[str] = None
+    agentId: PyObjectId = None
     toolIds: Optional[List[PyObjectId]] = None
     tools: Optional[Tool] = None
     asyncExecution: Optional[bool] = False
