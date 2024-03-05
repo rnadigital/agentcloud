@@ -18,43 +18,63 @@ def construct_crew(session_id: str, task: Optional[str]):
         the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
         print("Crew:", the_crew, crew_tasks, crew_agents)
 
+        # Agent > Tools
         agents_tools: Dict[Set[PyObjectId], List[Tool]] = dict([
-            (_keyset(agent.id), mongo_client.get_tools(agent.toolIds))
-            for agent in crew_agents
+            (_keyset(agent.id), mongo_client.get_tools(agent.toolIds)) # (id, Tool)
+            for agent in crew_agents # [Agent]
         ]) if crew_agents else {}
-        # agents_tools: List[Tuple] = [(agent["id"], mongo_client.get_models_by_ids("tools", Tool, agent.get("tool_ids"))) for agent in crew_agents] if crew_agents else []
+
+        # Agent > Tools > Datasource
         agents_tools_datasources: Dict[Set[PyObjectId], Datasource] = dict(flatten(*[ 
              [
-                (agent_id_set.union(_keyset(tool_id)), datasource)
-                for tool_id, datasource in mongo_client.get_tools_datasources(agent_tools)
-            ] for _i, (agent_id_set, agent_tools) in enumerate(agents_tools.items())
+                (agent_id_set.union(_keyset(tool_id)), datasource) # (id, Datasource)
+                for tool_id, datasource in mongo_client.get_tools_datasources(agent_tools) # [(id, Datasource)] 
+            ] for _i, (agent_id_set, agent_tools) in enumerate(agents_tools.items()) # { id: Tool }
         ]))
-        # agent_tools_dataources_models = [(tool_id) for agent_id, datasource in agents_tools_dataources]
+        
+        # Agent > Datasource > Model
+
+        # Agent > Datasource > Model > Credentials
+
+        # Agent > Task
         agents_tasks: Dict[Set[PyObjectId], List[Task]] = dict([
-            (_keyset(agent.id), mongo_client.get_agent_tasks(agent.taskIds))
-            for agent in crew_agents
+            (_keyset(agent.id), mongo_client.get_agent_tasks(agent.taskIds)) # (id, Task)
+            for agent in crew_agents # [Agent]
         ]) if crew_agents else {}
+        
+        # Agent > Tasks > Tools
         agents_tasks_tools: Dict[Set[PyObjectId], Dict[PyObjectId, List[Tool]]] = dict(flatten(*[
             [
-                (agent_id_set.union(_keyset(task.id)), mongo_client.get_tools(task.toolIds))
-                for task in tasks
-            ] for _i, (agent_id_set, tasks) in enumerate(agents_tasks.items())
+                (agent_id_set.union(_keyset(task.id)), mongo_client.get_tools(task.toolIds)) # (id, Tool)
+                for task in tasks # [Task]
+            ] for _i, (agent_id_set, tasks) in enumerate(agents_tasks.items()) # { id: Task }
         ])) if agents_tasks else {}
+        
+        # Agent > Tasks > Tools > Datasource
         tasks_tools_datasources: Dict[Set[PyObjectId], Datasource] = dict(flatten(*[
             [
-                (task_id_set.union(_keyset(tool_id)), datasource)
-                for tool_id, datasource in mongo_client.get_tools_datasources(tasks_tools)
+                (task_id_set.union(_keyset(tool_id)), datasource) # (id, Datasource)
+                for tool_id, datasource in mongo_client.get_tools_datasources(tasks_tools) # [(id, Datasource)]
             ]
-            for _i, (task_id_set, tasks_tools) in enumerate(agents_tasks_tools.items())
+            for _i, (task_id_set, tasks_tools) in enumerate(agents_tasks_tools.items()) # { id: Tool }
         ]))
+        
+        # Agent > Tasks > Tools > Datasource > Model
+
+        # Agent > Tasks > Tools > Datasource > Model > Credentials
+        
+        # Agent > Model
         agent_models: Dict[Set[PyObjectId], Model] = dict([
-             (_keyset(agent.id), mongo_client.get_agent_model(agent.modelId))
-            for agent in crew_agents
+             (_keyset(agent.id), mongo_client.get_agent_model(agent.modelId)) # (id, Model)
+            for agent in crew_agents # [Agent]
         ]) if crew_agents else {}
+        
+        #Agent > Model > Credential
         agent_model_credentials: Dict[Set[PyObjectId], Credentials] = dict([
-             (model_id_set.union(_keyset(model.id)), mongo_client.get_model_credential(model.credentialId))
-             for _i, (model_id_set, model) in enumerate(agent_models.items())
+             (model_id_set.union(_keyset(model.id)), mongo_client.get_model_credential(model.credentialId)) # (id, Credentials)
+             for _i, (model_id_set, model) in enumerate(agent_models.items()) # { id, Model }
         ]) if agent_models else {}
+        
         chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
         crew_builder = CrewAIBuilder(
