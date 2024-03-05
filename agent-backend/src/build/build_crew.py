@@ -169,10 +169,10 @@ class CrewAIBuilder2:
             session_id: str,
             crew: Crew,
             agents: Dict[Set[models.mongo.PyObjectId], models.mongo.Agent],
-            tasks: Dict[Set[models.mongo.PyObjectId], models.mongo.Task], 
-            tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool], 
-            datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource], 
-            models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model], 
+            tasks: Dict[Set[models.mongo.PyObjectId], models.mongo.Task],
+            tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
+            datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
+            models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
             credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials]
     ):
         self.session_id = session_id
@@ -183,10 +183,15 @@ class CrewAIBuilder2:
         self.datasources_models = datasources
         self.models_models = models
         self.credentials_models = credentials
+        self.crew = None
+        self.crew_models = dict()
+        self.crew_tools = dict()
+        self.crew_agents = dict()
+        self.crew_tasks = dict()
 
     # def process_elements_dictionary(self, func: Callable, elements_dict: Dict[Set[str], any]):
-
-    def match_key(self, elements_dict: Dict[Set[str], any], key: Set[str], exact=False):
+    @staticmethod
+    def match_key(elements_dict: Dict[Set[str], any], key: Set[str], exact=False):
         for k, v in elements_dict.items():
             if exact and key == k:
                 return v
@@ -194,7 +199,8 @@ class CrewAIBuilder2:
                 return v
         return None
 
-    def search_subordinate_keys(self, elements_dict: Dict[Set[str], any], key: Set[str]):
+    @staticmethod
+    def search_subordinate_keys(elements_dict: Dict[Set[str], any], key: Set[str]):
         results = {}
         for k, v in elements_dict.items():
             if key.issubset(k) and key != k:
@@ -202,21 +208,36 @@ class CrewAIBuilder2:
         return results
 
     def build_crew(self):
-        #1. Build llm/embedding model from Model + Credentials 
-        self.crew_models = {}
+        # 1. Build llm/embedding model from Model + Credentials
         for key, model in self.models_models.items():
             credential = self.match_key(self.credentials_models, key)
             if credential:
                 match credential.type:
                     case models.mongo.Platforms.ChatOpenAI:
-                        self.crew_models[key] = ChatOpenAI(api_key=credential.credentials.api_key, **model.model_dump(exclude_none=True, exclude_unset=True, exclude=["id", "credentialId", "embeddingLength"]))
+                        self.crew_models[key] = ChatOpenAI(
+                            api_key=credential.credentials.api_key,
+                            **model.model_dump(
+                                exclude_none=True,
+                                exclude_unset=True,
+                                exclude=["id", "credentialId",
+                                         "embeddingLength"]
+                            )
+                        )
                     case models.mongo.Platforms.AzureChatOpenAI:
-                        self.crew_models[key] = AzureChatOpenAI(api_key=credential.credentials.api_key, **model.model_dump(exclude_none=True, exclude_unset=True, exclude=["id", "credentialId", "embeddingLength"]))
+                        self.crew_models[key] = AzureChatOpenAI(
+                            api_key=credential.credentials.api_key,
+                            **model.model_dump(
+                                exclude_none=True,
+                                exclude_unset=True,
+                                exclude=["id", "credentialId",
+                                         "embeddingLength"]
+                            )
+                        )
                     case models.mongo.Platforms.FastEmbed:
-                        self.crew_models[key] = FastEmbedEmbeddings(**model.model_dump(exclude_none=True, exclude_unset=True))
+                        self.crew_models[key] = FastEmbedEmbeddings(
+                            **model.model_dump(exclude_none=True, exclude_unset=True))
 
-        #2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
-        self.crew_tools = {}
+        # 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
         for key, tool in self.tools_models.items():
             datasource = self.match_key(self.datasources_models, key)
             if datasource:
@@ -228,31 +249,45 @@ class CrewAIBuilder2:
                         Qdrant(
                             QdrantClient(QDRANT_HOST),
                             collection_name=collection,
-                            embeddings=FastEmbedEmbeddings(model_name="BAAI/bge-small-en")),
-                        FastEmbedEmbeddings(model_name="BAAI/bge-small-en")
+                            embeddings=FastEmbedEmbeddings(
+                                model_name="BAAI/bge-small-en")),
+                        FastEmbedEmbeddings(
+                            model_name="BAAI/bge-small-en")
                     )
                     self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
-                
-        #3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
-        self.crew_agents = {}
+
+        # 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
         for key, agent in self.agents_models.items():
             model_obj = self.match_key(self.crew_models, key, exact=True)
             agent_tools_objs = self.search_subordinate_keys(self.crew_tools, key)
-            self.crew_agents[key] = Agent(**agent.model_dump(exclude_none=True, exclude_unset=True, exclude=["id", "toolIds", "modelId", "taskIds"]), llm=model_obj, tools=agent_tools_objs.values())
+            self.crew_agents[key] = Agent(
+                **agent.model_dump(
+                    exclude_none=True, exclude_unset=True,
+                    exclude=["id", "toolIds", "modelId", "taskIds"]
+                ),
+                llm=model_obj, tools=agent_tools_objs.values()
+            )
 
-        #4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
-        self.crew_tasks = {}
+        # 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
         for key, task in self.tasks_models.items():
             agent_obj = self.match_key(self.crew_agents, keyset(task.agentId), exact=True)
             task_tools_objs = self.search_subordinate_keys(self.crew_tools, key)
-            self.crew_tasks[key] = Task(**task.model_dump(exclude_none=True, exclude_unset=True, exclude=["id"]), agent=agent_obj, tools=task_tools_objs.values())
+            self.crew_tasks[key] = Task(
+                **task.model_dump(exclude_none=True, exclude_unset=True, exclude=["id"]),
+                agent=agent_obj, tools=task_tools_objs.values()
+            )
 
-        #5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
-        self.crew = Crew(agents=self.crew_agents.values(), tasks=self.crew_tasks.values(), **self.crew_model.model_dump(exclude_none=True, exclude_unset=True, exclude=["id", "tasks", "agents"]))
+        # 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+        self.crew = Crew(
+            agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
+            **self.crew_model.model_dump(
+                exclude_none=True, exclude_unset=True,
+                exclude=["id", "tasks", "agents"])
+        )
         pprint(self.crew.model_dump())
-    
+
     def run_crew(self):
         try:
-            res = self.crew.kickoff()
+            self.crew.kickoff()
         except Exception as e:
             logging.exception(e)
