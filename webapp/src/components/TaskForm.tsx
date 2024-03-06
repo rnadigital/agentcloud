@@ -27,7 +27,9 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 
 	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
-	const initialTools = task.toolIds && task.toolIds
+	console.log(toolIds)
+
+	const initialTools = toolIds && toolIds
 		.map(tid => {
 			const foundTool = tools.find(t => t._id === tid);
 			if (!foundTool) { return null; }

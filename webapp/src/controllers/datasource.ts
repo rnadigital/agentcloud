@@ -491,10 +491,18 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		};
 	}
 	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	const updatedConnection = await connectionsApi
-		.updateConnection(null, connectionBody)
-		.then(res => res.data);
-	console.log('updatedConnection', updatedConnection);
+	let updatedConnection;
+	if (connectionBody?.connectionId) {
+		updatedConnection = await connectionsApi
+			.updateConnection(null, connectionBody)
+			.then(res => res.data);
+		console.log('updatedConnection', updatedConnection);
+	} else {
+		updatedConnection = await connectionsApi
+			.createConnection(null, connectionBody)
+			.then(res => res.data);
+		console.log('createdConnection', JSON.stringify(updatedConnection, null, 2));
+	}
 
 	if (sync === true) {
 		// Create a job to trigger the connection to sync

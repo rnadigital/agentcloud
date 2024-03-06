@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Tuple, Set
+from typing import Optional, List, Dict, Set
 from itertools import chain as flatten
 from init.mongo_session import start_mongo_session
 from models.mongo import Credentials, Datasource, Model, PyObjectId, Session, Task, Tool
@@ -20,6 +20,7 @@ def construct_crew(session_id: str, task: Optional[str]):
     # try:
     session: Session = mongo_client.get_session(session_id)
     print(f"Session: {session}")
+    
     the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
     print("Crew:", the_crew, crew_tasks, crew_agents)
 

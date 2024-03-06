@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
+import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import submittingReducer from 'utils/submittingreducer';
 // @ts-ignore
@@ -43,7 +44,8 @@ export default function Datasource(props) {
 	const [units, setUnits] = useState(0);
 	const [cronExpression, setCronExpression] = useState('');
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-	const numStreams = datasource?.connectionSettings?.syncCatalog?.streams?.length;
+	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
+	const numStreams = datasource?.connectionSettings?.syncCatalog?.streams?.length || 0;
 	async function fetchDatasource() {
 		await API.getDatasource({
 			resourceSlug,
@@ -230,7 +232,7 @@ export default function Datasource(props) {
 				existingStreams={datasource.connectionSettings.syncCatalog.streams}
 				readonly={true}
 			/>}
-			{!discoveredSchema && !numStreams && <>
+			{!discoveredSchema && isDraft && numStreams === 0 && <>
 				<div className='rounded-md bg-yellow-50 p-4 mt-4 mb-2'>
 					<div className='flex'>
 						<div className='flex-shrink-0'>
@@ -254,7 +256,7 @@ export default function Datasource(props) {
 					className={'rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 my-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 				>
 					{submitting['fetchSchema'] && <ButtonSpinner />}
-					{submitting['fetchSchema'] ? 'Fetching Streams...' : numStreams > 1 ? 'Edit Streams' : 'Finish Draft'}
+					{submitting['fetchSchema'] ? 'Fetching Streams...' : isDraft && numStreams === 0 ? 'Finish Draft' : 'Edit Streams'}
 				</button>
 			</span>}
 		</>}

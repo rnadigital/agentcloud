@@ -246,7 +246,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
 					            onChange={(v: any) => {
 									if (v?.value === null) {
-										setModalOpen(true);
+										setModalOpen('model');
 										return setCallbackKey('modelId');
 									}
 					            	setAgent(oldAgent => {

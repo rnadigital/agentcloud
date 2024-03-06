@@ -1,24 +1,22 @@
 import logging
 from pprint import pprint
 from bson import ObjectId
-from typing import Callable, Set
+from typing import  Set
 
 from crewai import Agent, Task, Crew
-from socketio.exceptions import ConnectionError as ConnError
-from socketio.simple_client import SimpleClient
 
 import models.mongo
 from utils.model_helper import keyset
-from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST
-from typing import Optional, Union, List, Dict, Tuple
+from init.env_variables import QDRANT_HOST
+from typing import Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
-from tools.global_tools import GlobalTools  # This needs to be used to instantiate tools that are not rag
-from langchain.tools import Tool
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+from langchain_core.agents import AgentFinish
+from models.sockets import SocketMessage, SocketEvents, Message
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 from tools import RagToolFactory
-
+from messaging.send_message_to_socket import send
 
 class CrewAIBuilder:
 
@@ -139,9 +137,33 @@ class CrewAIBuilder:
             agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
-                exclude=["id", "tasks", "agents"])
+                exclude=["id", "tasks", "agents"]),
+                step_callback=self.send_it
         )
         pprint(self.crew.model_dump())
+
+    def send_it(self, message):
+        try:
+            message_type = type(message)
+            if message_type is AgentFinish:
+                if hasattr(message, "return_values"):
+                    socket_message = SocketMessage(
+                        room=self.session_id,
+                        authorName="system",
+                        message=Message(
+                            text=message.return_values.get('output'),
+                            tokens=1,
+                            first=True,
+                        )
+                    )
+                    send(self.socket, SocketEvents.MESSAGE, socket_message, "both")
+            elif message_type is list or message_type is tuple:
+                for message_part in message:
+                    self.send_it(message_part)
+            else:
+                print("FAILED TO PROCESS", message_type, message)
+        except Exception as e:
+            logging.exception(e)
 
     def run_crew(self):
         try:
