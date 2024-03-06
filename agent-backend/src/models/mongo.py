@@ -33,6 +33,22 @@ class ModelType(str, Enum):
     GPT3TURBO = "gpt-3.5-turbo"
 
 
+class FastEmbedModelsStandardFormat(str, Enum):
+    FAST_BGE_SMALL_EN = 'fast-bge-small-en'
+    FAST_BGE_SMALL_EN_V15 = 'fast-bge-small-en-v1.5'
+    FAST_BGE_BASE_EN = 'fast-bge-base-en'
+    FAST_BGE_BASE_EN_V15 = 'fast-bge-base-en-v1.5'
+    FAST_ALL_MINILM_L6_V2 = 'fast-all-MiniLM-L6-v2'
+    FAST_MULTILINGUAL_E5_LARGE = 'fast-multilingual-e5-large'
+
+class FastEmbedModelsDocFormat(str, Enum):
+    FAST_BGE_SMALL_EN = "BAAI/bge-small-en"
+    FAST_BGE_SMALL_EN_V15 = "BAAI/bge-small-en-v1.5"
+    FAST_BGE_BASE_EN = "BAAI/bge-base-en"
+    FAST_BGE_BASE_EN_V15 = "BAAI/bge-base-en-v1.5"
+    FAST_ALL_MINILM_L6_V2 = "sentence-transformers/all-MiniLM-L6-v2"
+    FAST_MULTILINGUAL_E5_LARGE = "intfloat/multilingual-e5-large"
+
 # Models
 class FunctionProperty(BaseModel):
     model_config = ConfigDict(extra='ignore')
@@ -81,7 +97,7 @@ class Model(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     name: str
-    model_name: Optional[ModelType] = Field(default=ModelType.GPT4, alias="model")
+    model_name: Optional[str] = Field(default=ModelType.GPT4, alias="model")
     credentialId: Optional[PyObjectId] = None
     credentials: Optional[PyObjectId] = None
     embeddingLength: Optional[int] = 384
@@ -184,6 +200,7 @@ class Datasource(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     orgId: Optional[PyObjectId] = Field(default=None)
     teamId: Optional[PyObjectId] = Field(default=None)
+    modelId: Optional[PyObjectId] = Field(default=None)
     name: str
     sourceId: PyObjectId
     sourceType: str

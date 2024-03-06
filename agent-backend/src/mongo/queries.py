@@ -65,8 +65,8 @@ class MongoClientConnection(MongoConnection):
         except Exception:
             raise
 
-    def get_tools_datasources(self, tools: List[Tool]):
-        return [(tool.id, self.get_single_model_by_id("datasources", Datasource, tool.datasourceId)) for tool in tools]
+    def get_tool_datasource(self, tool: Tool):
+        return self.get_single_model_by_id("datasources", Datasource, tool.datasourceId)
         # return self.get_models_by_attributes("datasource", Datasource, tools, from_model_attribute="datasourceId", to_query_attribute="_id")
         # if tools is None:
         #     return []

@@ -46,6 +46,7 @@ class CrewAIBuilder:
         self.crew_tools = dict()
         self.crew_agents = dict()
         self.crew_tasks = dict()
+        self.init_socket()
 
     @staticmethod
     def match_key(elements_dict: Dict[Set[str], any], key: Set[str], exact=False):
@@ -91,26 +92,26 @@ class CrewAIBuilder:
                         )
                     case models.mongo.Platforms.FastEmbed:
                         self.crew_models[key] = FastEmbedEmbeddings(
-                            **model.model_dump(exclude_none=True, exclude_unset=True))
+                            **model.model_dump(exclude_none=True, exclude_unset=True,
+                                exclude=["id", "name", "embeddingLength"]))
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-                    datasource = self.match_key(self.datasources_models, key)
-                    if datasource:
-                        embedding_model = self.match_key(self.models_models, key)
-                        if embedding_model:
-                            tool_factory = RagToolFactory()
-                            collection = str(datasource.id)
-                            tool_factory.init(
-                                Qdrant(
-                                    QdrantClient(QDRANT_HOST),
-                                    collection_name=collection,
-                                    embeddings=FastEmbedEmbeddings(
-                                        model_name="BAAI/bge-small-en")),
-                                FastEmbedEmbeddings(
-                                    model_name="BAAI/bge-small-en")
-                            )
-                            self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
+                datasource = self.match_key(self.datasources_models, key)
+                if datasource:
+                    embedding_model = self.match_key(self.crew_models, key)
+                    if embedding_model:
+                        tool_factory = RagToolFactory()
+                        collection = str(datasource.id)
+                        tool_factory.init(
+                            Qdrant(
+                                QdrantClient(QDRANT_HOST),
+                                collection_name=collection,
+                                embeddings=embedding_model
+                            ),
+                            embedding_model
+                        )
+                        self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
     
     def build_agents(self):
         for key, agent in self.agents_models.items():
