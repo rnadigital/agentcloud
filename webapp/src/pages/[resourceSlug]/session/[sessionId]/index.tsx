@@ -260,7 +260,7 @@ export default function Session(props) {
 		}
 		return () => {
 			setReady(null);
-		}
+		};
 	}, [messages]);
 
 	function stopGenerating() {
