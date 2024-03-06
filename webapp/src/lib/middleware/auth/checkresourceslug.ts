@@ -1,7 +1,9 @@
 'use strict';
 
 export default function checkResourceSlug(req, res, next) {
-	if (!req.params?.resourceSlug || req.params.resourceSlug.length === 0) {
+	if (!req.params?.resourceSlug
+		|| req.params.resourceSlug.length === 0
+		|| !res?.locals?.account?.orgs) {
 		return res.status(403).send({ error: 'No permission' });
 	}
 	const allowedSlugs = res.locals.account.orgs
