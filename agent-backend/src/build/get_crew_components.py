@@ -39,7 +39,7 @@ def construct_tools(parents: List[Tuple[Set[str], Agent | Tool]]):
             tools[keyset(parent_id_set, tool.id)] = tool
     return tools
 
-def construct_tool_datasources(tools: List[Tuple[Set[str], Tool]]):
+def construct_tools_datasources(tools: List[Tuple[Set[str], Tool]]):
     datasources: Dict[Set[PyObjectId], Datasource] = dict()
     for tool_id_set, tool in tools:
         datasource = mongo_client.get_tool_datasource(tool)
@@ -76,7 +76,7 @@ def construct_crew(session_id: str, task: Optional[str]):
     agents_tools = construct_tools(crew_agents_dict.items())
 
     # Agent > Tools > Datasource
-    agents_tools_datasources = construct_tool_datasources(agents_tools.items())
+    agents_tools_datasources = construct_tools_datasources(agents_tools.items())
 
     # Agent > Datasource > Model
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
