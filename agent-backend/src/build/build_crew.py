@@ -1,5 +1,4 @@
 import logging
-from pprint import pprint
 from bson import ObjectId
 import json
 
@@ -60,19 +59,21 @@ class CrewAIBuilder:
             raise
 
     def attach_agents_to_tasks(self, agents: Dict[ObjectId, Agent]) -> List[Task]:
-        try:
+        # try:
             """this method will iterate over all tasks and convert our mongo model into a crewAi Task object
         then it will attach the corresponding Agent (crewAi agent object) to the matching task"""
-            return [
+            print(f"crew tasks: {self.crew_tasks}")
+            tasks = [
                 Task(
                     **models.mongo.Task(**task).model_dump(exclude_none=True, exclude_unset=True),
+                    expected_output=task.get('expectedOutput'),
                     agent=agents[task["agentId"]]
                 )
-                # for j in range(len(self.agent_tasks))
                 for task in self.crew_tasks
             ]
-        except Exception as e:
-            logging.exception(e)
+            return tasks
+        # except Exception as e:
+            # logging.exception(e)
 
     def build_models(self):
         try:
@@ -139,30 +140,18 @@ class CrewAIBuilder:
         except Exception as e:
             logging.exception(e)
 
-    def send_it(self, message):
-        try:
-
-
-            message_type = type(message)
-            if message_type is AgentFinish:
-                if hasattr(message, "return_values"):
-                    socket_message = SocketMessage(
-                        room=self.session_id,
-                        authorName="system",
-                        message=Message(
-                            text=message.return_values.get('output'),
-                            tokens=1,
-                            first=True,
-                        )
-                    )
-                    send(self.socket, SocketEvents.MESSAGE, socket_message, "both")
-            elif message_type is list or message_type is tuple:
-                for message_part in message:
-                    self.send_it(message_part)
-            else:
-                print("FAILED TO PROCESS", message_type, message)
-        except Exception as e:
-            logging.exception(e)
+    def send_it(self, event, message, first):
+        socket_message = SocketMessage(
+            room=self.session_id,
+            authorName="system",
+            message=Message(
+                text=message,
+                chunkId="x",
+                tokens=1,
+                first=first,
+            )
+        )
+        send(self.socket, SocketEvents(event), socket_message, "both")
 
     def build_crew(self):
         try:
@@ -178,14 +167,12 @@ class CrewAIBuilder:
                 exclude_none=True,
                 exclude={"agents", "tasks"}
             ))
-            pprint(crew.model_dump())
             return crew
         except Exception as e:
             logging.exception(e)
 
     def run_crew(self, crew: Crew):
         try:
-            pprint(crew.model_dump())
             res = crew.kickoff()
         except Exception as e:
             logging.exception(e)

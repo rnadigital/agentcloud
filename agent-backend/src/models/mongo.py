@@ -115,7 +115,7 @@ class Data(BaseModel):
 class Task(BaseModel):
     model_config = ConfigDict(extra='ignore')
     description: str
-    expectedOutput: Optional[str] = None
+    expected_output: Optional[str] = None
     tools: Optional[Tool] = None
     asyncExecution: Optional[bool] = False
     context: Optional[str] = None

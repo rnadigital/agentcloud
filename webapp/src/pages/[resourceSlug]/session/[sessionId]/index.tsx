@@ -25,7 +25,8 @@ export default function Session(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	const [ready, setReady] = useState(false);
+	const [ready, setReady] = useState(resourceSlug);
+	
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
@@ -36,7 +37,7 @@ export default function Session(props) {
 	const { sessions, groups, agents } = (sessionsData||{});
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const [socketContext]: any = useSocketContext();
-	const [messages, setMessages] = useState(null);
+	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(state?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
@@ -66,12 +67,11 @@ export default function Session(props) {
 		await API.getSessions({ resourceSlug }, setSessionData, setError, router);
 	}
 	async function joinSessionRoom() {
-		// setTimeout(() => {
+		console.log('joinSessionRoom', joinSessionRoom, sessionId);
 		socketContext.emit('join_room', sessionId);
-		// }, 1000);
 	}
 	async function leaveSessionRoom() {
-		socketContext.emit('leave_room', sessionId);
+		// socketContext.emit('leave_room', sessionId);
 	}
 	function handleTerminateMessage(message) {
 		log('Received terminate message %s', message);
@@ -79,15 +79,15 @@ export default function Session(props) {
 	}
 	// console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
-		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
+		console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) { return; }
-		if (isAtBottom) {
+		if (isAtBottom && message?._id) {
 			setLastSeenMessageId(message._id);
 		}
 		const newMessage = typeof message === 'string'
 			? { type: null, text: message }
 			: message;
-		setMessages(oldMessages => {
+		setMessages((oldMessages) => {
 			// There are existing messages
 			const matchingMessage = oldMessages.find(m => m?.message?.chunkId != undefined && m?.message?.chunkId === message?.message?.chunkId
 				&& m?.authorName === message?.authorName);
@@ -189,6 +189,9 @@ export default function Session(props) {
 		if (session) {
 			setTerminated(session.status === SessionStatus.TERMINATED);
 		}
+		return () => {
+			setTerminated(false);
+		};
 	}, [session]);
 	async function updateChat() {
 		// fetchSessions();
@@ -234,22 +237,29 @@ export default function Session(props) {
 	}
 	useEffect(() => {
 		updateChat();
+		joinSessionRoom();
+		return () => {
+			leaveSessionRoom();
+		};
 	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
-		if (ready) {
+		if (ready !== resourceSlug) {
 			console.log('useEffect ready check handleSocketStart()');
 			handleSocketStart();
 		}
 		return () => {
 			//stop/disconnect on unmount
 			console.log('useEffect ready check handleSocketStop()');
-			handleSocketStop();
+			// handleSocketStop();
 		};
 	}, [ready]);
 	useEffect(() => {
-		if (messages && messages.length > 0 && ready === false) {
-			console.log('useEffect messages check setReady(true)');
-			setReady(true);
+		if (messages && messages.length > 0 && ready === resourceSlug) {
+			console.log('useEffect messages check setReady()');
+			setReady(resourceSlug);
+		}
+		return () => {
+			setReady(null);
 		}
 	}, [messages]);
 

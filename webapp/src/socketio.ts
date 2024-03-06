@@ -76,7 +76,8 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest?.locals?.account?.orgs?.some(o => o?.teams?.some(t => t.id.toString() === room))) {
 				// Room name is same as a team id
 				log('socket.id "%s" joined team notification room %s', socket.id, room);
-				return socket.join(room);
+				socket.join(room);
+				return socket.emit('joined', room);
 			}
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(room.substring(1)) // removing _
@@ -87,9 +88,7 @@ export function initSocket(rawHttpServer) {
 			}
 			log('socket.id "%s" joined room %s', socket.id, room);
 			socket.join(room);
-			if (socketRequest.locals.isAgentBackend !== true) {
-				socket.emit('joined', room); //only send to webapp clients
-			}
+			socket.emit('joined', room); //only send to webapp clients
 		});
 
 		socket.on('terminate', async (data) => {
@@ -137,6 +136,7 @@ export function initSocket(rawHttpServer) {
 				message,
 				incoming: socketRequest.locals.isAgentBackend === false,
 				authorName: data.authorName || 'System',
+				_id: Math.random().toString(26)+Math.random().toString(26)+Math.random().toString(26),
 				ts: messageTimestamp,
 			};
 			if (!finalMessage.room || finalMessage.room.length !== 24) {

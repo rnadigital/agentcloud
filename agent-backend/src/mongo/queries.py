@@ -44,7 +44,7 @@ class MongoClientConnection(MongoConnection):
             tasks_collection: collection.Collection = self._get_collection("tasks")
             agents_collection: collection.Collection = self._get_collection("agents")
             try:
-                the_crew: Dict = crews_collection.find_one({"_id": crew_id})
+                the_crew: Dict = crews_collection.find_one({"_id": ObjectId(crew_id)})
                 assert the_crew
                 crew_task_ids = the_crew.get("tasks")
                 if crew_task_ids and len(crew_task_ids) > 0:

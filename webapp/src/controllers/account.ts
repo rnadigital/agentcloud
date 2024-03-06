@@ -221,18 +221,19 @@ async function dockerLogsData(containerId) {
 
 export async function dockerLogsJson(req, res, next) {
 
-	const containersResponse = await fetch('http://localhost:2375/containers/json');
-	if (!containersResponse.ok) {
-		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
-	}
-	const containers = await containersResponse.json();
-
-	// Fetch logs from all containers
-	const logsPromises = containers.map(container => dockerLogsData(container.Id));
-	const logsArrays = await Promise.all(logsPromises);
-
-	// Flatten, sort by timestamp, and then join back into a single string
-	const sortedLogs = logsArrays.flat().sort().join('\n');
-	return res.json({ logs: sortedLogs });
+	return res.json({});
+// 	const containersResponse = await fetch('http://localhost:2375/containers/json');
+// 	if (!containersResponse.ok) {
+// 		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
+// 	}
+// 	const containers = await containersResponse.json();
+// 
+// 	// Fetch logs from all containers
+// 	const logsPromises = containers.map(container => dockerLogsData(container.Id));
+// 	const logsArrays = await Promise.all(logsPromises);
+// 
+// 	// Flatten, sort by timestamp, and then join back into a single string
+// 	const sortedLogs = logsArrays.flat().sort().join('\n');
+// 	return res.json({ logs: sortedLogs });
 
 }
