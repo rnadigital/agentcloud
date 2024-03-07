@@ -1,5 +1,6 @@
 import logging
 from typing import Set
+from time import time
 
 from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
@@ -166,32 +167,28 @@ class CrewAIBuilder:
             agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
-                exclude=["id", "tasks", "agents"]),
+                exclude=["id", "tasks", "agents"]
+            ),
             step_callback=self.send_it
         )
 
-    def send_it(self, message):
-        try:
-            message_type = type(message)
-            if message_type is AgentFinish:
-                if hasattr(message, "return_values"):
-                    socket_message = SocketMessage(
-                        room=self.session_id,
-                        authorName="system",
-                        message=Message(
-                            text=message.return_values.get('output'),
-                            tokens=1,
-                            first=True,
-                        )
-                    )
-                    send(self.socket, SocketEvents.MESSAGE, socket_message, "both")
-            elif message_type is list or message_type is tuple:
-                for message_part in message:
-                    self.send_it(message_part)
-            else:
-                print("FAILED TO PROCESS", message_type, message)
-        except Exception as e:
-            logging.exception(e)
+    def send_it(self, event, text, first, chunkId):
+        send(
+            self.socket,
+            SocketEvents(event),
+            SocketMessage(
+                room=self.session_id,
+                authorName="system",
+                message=Message(
+                    chunkId=chunkId,
+                    text=text,
+                    first=first,
+                    tokens=1,
+                    timestamp=time()
+                )
+            ),
+            "both"
+        )
 
     def run_crew(self):
         try:
