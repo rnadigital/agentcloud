@@ -2,8 +2,7 @@
 // @ts-nocheck
 
 import * as BigBitfield from 'big-bitfield';
-
-import * as Metadata from './metadata';
+import Metadata from 'permissions/metadata';
 
 export default class Permission extends BigBitfield {
 
