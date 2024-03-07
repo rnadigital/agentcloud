@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Union, Callable
 from random import randint
-from pydantic import BaseModel, BeforeValidator, Field, ConfigDict
+from pydantic import BaseModel, BeforeValidator, Field, ConfigDict, AliasChoices
 from enum import Enum
 from typing import Annotated
 
@@ -137,7 +137,7 @@ class Task(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     description: str
-    expected_output: Optional[str] = None
+    expected_output: Optional[str] = Field(validation_alias=AliasChoices('expectedOutput', 'expected_output'))
     expectedOutput: Optional[str] = None
     agentId: PyObjectId = None
     toolIds: Optional[List[PyObjectId]] = None
