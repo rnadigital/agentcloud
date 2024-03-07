@@ -1,7 +1,5 @@
 import logging
-import pprint
-from bson import ObjectId
-from typing import  Set
+from typing import Set
 
 from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
@@ -19,6 +17,7 @@ from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 from tools import RagToolFactory
 from messaging.send_message_to_socket import send
+
 
 class CrewAIBuilder:
 
@@ -46,7 +45,7 @@ class CrewAIBuilder:
         self.crew_tools = dict()
         self.crew_agents = dict()
         self.crew_tasks = dict()
-        self.init_socket()        
+        self.init_socket()
 
     def init_socket(self):
         try:
@@ -105,29 +104,29 @@ class CrewAIBuilder:
                     case models.mongo.Platforms.FastEmbed:
                         self.crew_models[key] = FastEmbedEmbeddings(
                             **model.model_dump(exclude_none=True, exclude_unset=True,
-                                exclude=["id", "name", "embeddingLength"]))
+                                               exclude=["id", "name", "embeddingLength"]))
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-                datasource = self.match_key(self.datasources_models, key)
-                if datasource:
-                    embedding_model = self.match_key(self.crew_models, key)
-                    ## Avoid the model_name conversion in FastEmbed models instantiation
-                    embedding_model_model = self.match_key(self.models_models, key)
-                    if embedding_model:
-                        tool_factory = RagToolFactory()
-                        collection = str(datasource.id)
-                        tool_factory.init(
-                            Qdrant(
-                                QdrantClient(QDRANT_HOST),
-                                collection_name=collection,
-                                embeddings=embedding_model,
-                                vector_name=embedding_model_model.model_name
-                            ),
-                            embedding_model
-                        )
-                        self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
-    
+            datasource = self.match_key(self.datasources_models, key)
+            if datasource:
+                embedding_model = self.match_key(self.crew_models, key)
+                # Avoid the model_name conversion in FastEmbed models instantiation
+                embedding_model_model = self.match_key(self.models_models, key)
+                if embedding_model:
+                    tool_factory = RagToolFactory()
+                    collection = str(datasource.id)
+                    tool_factory.init(
+                        Qdrant(
+                            QdrantClient(QDRANT_HOST),
+                            collection_name=collection,
+                            embeddings=embedding_model,
+                            vector_name=embedding_model_model.model_name
+                        ),
+                        embedding_model
+                    )
+                    self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
+
     def build_agents(self):
         for key, agent in self.agents_models.items():
             model_obj = self.match_key(self.crew_models, key, exact=True)
@@ -150,27 +149,26 @@ class CrewAIBuilder:
             )
 
     def build_crew(self):
-        ## 1. Build llm/embedding model from Model + Credentials
+        # 1. Build llm/embedding model from Model + Credentials
         self.build_models_with_credentials()
 
-        ## 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
-        self.build_tools_and_their_datasources()    
+        # 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
+        self.build_tools_and_their_datasources()
 
-        ## 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
+        # 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
         self.build_agents()
 
-        ## 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
+        # 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
         self.build_tasks()
 
-        ## 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+        # 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
             agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
                 exclude=["id", "tasks", "agents"]),
-                step_callback=self.send_it
+            step_callback=self.send_it
         )
-        # pprint(self.crew.model_dump())
 
     def send_it(self, message):
         try:

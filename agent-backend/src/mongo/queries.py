@@ -67,42 +67,27 @@ class MongoClientConnection(MongoConnection):
 
     def get_tool_datasource(self, tool: Tool):
         return self.get_single_model_by_id("datasources", Datasource, tool.datasourceId)
-        # return self.get_models_by_attributes("datasource", Datasource, tools, from_model_attribute="datasourceId", to_query_attribute="_id")
-        # if tools is None:
-        #     return []
-        # else:
-        # return [self._get_collection("datasources").find_one({"_id": convert_id_to_ObjectId(tool["datasourceId"])}) if ("datasourceId" in tool and tool["datasourceId"] is not None) else None for tool in tools]
 
     def get_tools(self, toolsIds: List[str]):
         return self.get_models_by_ids("tools", Tool, toolsIds)
-        # if toolsIds is None:
-        #     return []
-        # else:
-        #     return list(self._get_collection("tools").find(({"_id": {"$in": toolsIds}})))
 
     def get_agent_tasks(self, taskIds: List[str]):
         return self.get_models_by_ids("tasks", Task, taskIds)
-        # if taskIds is None:
-        #     return []
-        # else:
-        #     return [task for task in self._get_collection("tasks").find(({"_id": {"$in": taskIds}}))]
 
     def get_agent_model(self, modelId: str):
         return self.get_single_model_by_id("models", Model, modelId)
-        # return self._get_collection("models").find_one(({"_id": modelIds}))
 
     def get_model_credential(self, credentialId: str):
         return self.get_single_model_by_id("credentials", Credentials, credentialId)
-        # return self._get_collection("credentials").find_one(({"_id": credentialIds}))
 
     def get_agent_datasources(self, agent: Dict):
         pass
 
-    ### OTHER
     def get_models_by_query(self, db_collection: str, model_class: type, query: Dict):
         """Takes a db collection name and a pydantic model and after calling query gets the retrned list of dictionary and converts to list of specified model"""
-        return convert_dictionaries_to_models(self._get_collection(db_collection).find(query),
-                                              model_class) if query else []
+        return convert_dictionaries_to_models(
+            self._get_collection(db_collection).find(query),
+            model_class) if query else []
 
     def get_models_by_attributes(self, db_collection: str, model_class: type, query_models: List[BaseModel],
                                  from_model_attribute: str, to_query_attribute: str):
@@ -110,11 +95,12 @@ class MongoClientConnection(MongoConnection):
         Takes a db collection name and a pydantic model. Also takes the list of models to query from, and what proerty of theirs to use as values in the search.
         Also takes the attribute in the db collection to search by (.e.g from_model_attribute is 'toolIds' and to_query_attribute is '_id').
         After calling query gets the retrned list of dictionary and converts to list of specified model"""
-        return self.get_models_by_query(db_collection, model_class,
-                                        {to_query_attribute: {
-                                            "$in": get_models_attribute_values(from_model_attribute, query_models)
-                                        }
-                                        }) if (query_models and len(query_models) > 0) else []
+        return self.get_models_by_query(
+            db_collection, model_class,
+            {to_query_attribute: {
+                "$in": get_models_attribute_values(from_model_attribute, query_models)
+            }
+            }) if (query_models and len(query_models) > 0) else []
 
     def get_models_by_ids(self, db_collection: str, model_class: type, ids: List[ObjectId] | List[str]):
         """Takes a db collection name and a pydantic model. Creates query where the '_id' is search by the list of ids provided.
