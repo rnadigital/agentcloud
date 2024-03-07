@@ -50,7 +50,7 @@ class CrewAIBuilder:
 
     def init_socket(self):
         try:
-            # Initialize the socket client and connect
+            ## Initialize the socket client and connect
             self.socket = SimpleClient()
             custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
             print(f"Socker URL:   {SOCKET_URL}")
@@ -112,6 +112,8 @@ class CrewAIBuilder:
                 datasource = self.match_key(self.datasources_models, key)
                 if datasource:
                     embedding_model = self.match_key(self.crew_models, key)
+                    ## Avoid the model_name conversion in FastEmbed models instantiation
+                    embedding_model_model = self.match_key(self.models_models, key)
                     if embedding_model:
                         tool_factory = RagToolFactory()
                         collection = str(datasource.id)
@@ -119,7 +121,8 @@ class CrewAIBuilder:
                             Qdrant(
                                 QdrantClient(QDRANT_HOST),
                                 collection_name=collection,
-                                embeddings=embedding_model
+                                embeddings=embedding_model,
+                                vector_name=embedding_model_model.model_name
                             ),
                             embedding_model
                         )
@@ -147,19 +150,19 @@ class CrewAIBuilder:
             )
 
     def build_crew(self):
-        # 1. Build llm/embedding model from Model + Credentials
+        ## 1. Build llm/embedding model from Model + Credentials
         self.build_models_with_credentials()
 
-        # 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
+        ## 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
         self.build_tools_and_their_datasources()    
 
-        # 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
+        ## 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
         self.build_agents()
 
-        # 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
+        ## 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
         self.build_tasks()
 
-        # 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+        ## 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
             agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
             **self.crew_model.model_dump(

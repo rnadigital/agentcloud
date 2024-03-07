@@ -73,7 +73,7 @@ class RagTool:
             search_results = post_processor(search_results)
         return "\n".join(map(lambda x: x if type(x) is str else (
             x.payload["document"] if "document" in x.payload else x.payload["page_content"]),
-                             search_results))  # assuming this is langchain_core.documents.Document or containts Document
+                             search_results))  ## assuming this is langchain_core.documents.Document or containts Document
 
 
 class RagToolArgsSchema(BaseModel):

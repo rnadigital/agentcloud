@@ -60,43 +60,43 @@ def construct_crew(session_id: str, task: Optional[str]):
     print("Crew:", the_crew, crew_tasks, crew_agents)
 
 
-    # Put Agents in a dictionary with their Ids as key
+    ## Put Agents in a dictionary with their Ids as key
     crew_agents_dict: Dict[Set[PyObjectId], Agent] = dict([(keyset(agent.id), agent) for agent in crew_agents])
     
-    # Put Tasks in a dictionary with their Ids as key
+    ## Put Tasks in a dictionary with their Ids as key
     crew_tasks_dict: Dict[Set[PyObjectId], Task] = dict([(keyset(task.id), task) for task in crew_tasks])
     
-    # Agent > Model
+    ## Agent > Model
     agent_models: Dict[Set[PyObjectId], Model] = construct_models(crew_agents_dict.items())
         
-    # Agent > Model > Credential
+    ## Agent > Model > Credential
     agent_model_credentials = construct_model_credentials(agent_models.items())
 
-    # Agent > Tools
+    ## Agent > Tools
     agents_tools = construct_tools(crew_agents_dict.items())
 
-    # Agent > Tools > Datasource
+    ## Agent > Tools > Datasource
     agents_tools_datasources = construct_tools_datasources(agents_tools.items())
 
-    # Agent > Datasource > Model
+    ## Agent > Datasource > Model
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
 
-    # Agent > Datasource > Model > Credentials
+    ## Agent > Datasource > Model > Credentials
     agents_tools_datasources_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(agents_tools_datasources_models.items())
 
-    # Agent > Task (not currently needed)
+    ## Agent > Task (not currently needed)
 
-    # Agent > Tasks > Tools (not currently needed)
+    ## Agent > Tasks > Tools (not currently needed)
     
-    # Agent > Tasks > Tools > Datasource (not currently needed)
+    ## Agent > Tasks > Tools > Datasource (not currently needed)
 
-    # Agent > Tasks > Tools > Datasource > Model (not currently needed)
+    ## Agent > Tasks > Tools > Datasource > Model (not currently needed)
 
-    # Agent > Tasks > Tools > Datasource > Model > Credentials (not currently needed)
+    ## Agent > Tasks > Tools > Datasource > Model > Credentials (not currently needed)
         
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
-    # Flatten Agents Tasks so Dict[Set[str], List[Task]] becomes Dict[Set[str], Task] (not currently needed)
+    ## Flatten Agents Tasks so Dict[Set[str], List[Task]] becomes Dict[Set[str], Task] (not currently needed)
         # crew_agents_tasks_dict = dict(flatten(
         #     *[[(task_id_set.union(keyset(task.id)), task) for task in tasks] for _i, (task_id_set, tasks) in
         #     enumerate(agents_tasks.items())]))
