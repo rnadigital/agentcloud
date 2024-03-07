@@ -21,11 +21,13 @@ export default async function createAccount(email: string, name: string, passwor
 
 	// Create default org and team for account
 	const addedOrg = await addOrg({
+		ownerId: newAccountId,
 		name: `${name}'s Org`,
 		teamIds: [],
 		members: [newAccountId],
 	});
 	const addedTeam = await addTeam({
+		ownerId: newAccountId,
 		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],

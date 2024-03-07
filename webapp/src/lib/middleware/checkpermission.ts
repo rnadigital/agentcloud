@@ -13,14 +13,14 @@ export default function checkPermissions(req, res, next) {
 		const { user } = res.locals;
 		calculatedPermissions = new Permission(user.permissions);
 
-		//TODO: check if an org owner and set ORG_OWNER, team owner set TEAM OWNER, etc
+		//TODO: check if an org owner and set ORG_OWNER, team owner set TEAM_OWNER, etc
 
 		//apply inheritances
 		calculatedPermissions.applyInheritance();
 
 	} else {
 		// not logged in
-		calculatedPermissions = new Permission(Role.NOT_LOGGED_IN.base64);
+		// calculatedPermissions = new Permission(Role.NOT_LOGGED_IN.base64);
 	}
 
 	return calculatedPermissions;

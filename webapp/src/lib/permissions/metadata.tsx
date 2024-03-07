@@ -1,6 +1,9 @@
+import Permission from '@permission';
+
 export const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT: 0,
+	TESTING: 1,
 	ORG_OWNER: 10,
 	TEAM_OWNER: 15,
 
@@ -53,6 +56,7 @@ export const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 export const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
 	[Permissions.ROOT]: { title: 'Root', label: 'Root', desc: 'Root permissions', parent: Permissions.ROOT },
+	[Permissions.TESTING]: { title: 'TESTING', label: 'TESTING', desc: 'TESTING', parent: Permissions.ROOT },
 	[Permissions.ORG_OWNER]: { title: 'Org Owner', label: 'Organization Owner', desc: 'Permissions for organization owners' },
 	[Permissions.TEAM_OWNER]: { title: 'Team Owner', label: 'Team Owner', desc: 'Permissions for team owners', parent: Permissions.ORG_OWNER },
 
@@ -98,5 +102,13 @@ export const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 	[Permissions.CREATE_DATASOURCE]: { title: 'Create DataSource', label: 'Create DataSource', desc: 'Ability to create a data source', parent: Permissions.ORG_OWNER },
 	[Permissions.EDIT_DATASOURCE]: { title: 'Edit DataSource', label: 'Edit DataSource', desc: 'Ability to edit a data source', parent: Permissions.ORG_OWNER },
 	[Permissions.DELETE_DATASOURCE]: { title: 'Delete DataSource', label: 'Delete DataSource', desc: 'Ability to delete a data source', parent: Permissions.ORG_OWNER },
+
+})));
+
+export const Role = Object.seal(Object.freeze(Object.preventExtensions({
+
+	ROOT: new Permission([Permissions.ROOT]),
+
+	NOT_LOGGED_IN: new Permission([Permissions.TESTING]),
 
 })));

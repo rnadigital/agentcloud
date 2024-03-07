@@ -131,6 +131,7 @@ export async function addTeamApi(req, res) {
 	}
 	const addedTeam = await addTeam({
 		name: teamName,
+		ownerId: toObjectId(res.locals.account._id),
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		members: [toObjectId(res.locals.account._id)],
 	});
