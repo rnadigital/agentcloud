@@ -51,6 +51,12 @@
       "secret/*": [
         "lib/secret/*"
       ],
+      "permissions/*": [
+        "lib/permissions/*"
+      ],
+      "@permission": [
+        "lib/permissions/index.ts"
+      ],
       "airbyte/*": [
         "lib/airbyte/*"
       ],
