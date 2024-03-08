@@ -1,5 +1,5 @@
 from typing import Callable, List
-from langchain.pydantic_v1 import BaseModel
+from langchain_core.pydantic_v1 import BaseModel
 from langchain_community.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
 from langchain_community.tools import Tool
@@ -28,7 +28,7 @@ class RagTool:
         further examples of pre and post processors: https://python.langchain.com/docs/modules/data_connection/retrievers/
     """
 
-    def __init__(self, vector_store: VectorStore, embedding: Embeddings, pre_processors=[], post_processors=[]):
+    def __init__(self, vector_store: VectorStore, embedding: Embeddings, pre_processors=list(), post_processors=list()):
         self.vector_store = vector_store
         self.embedding = embedding
         self.pre_processors = pre_processors
@@ -36,8 +36,6 @@ class RagTool:
 
     vector_store: VectorStore = None
     embedding: Embeddings = None
-    pre_processors: List[Callable] = []
-    post_processors: List[Callable] = []
 
     def _validate_instance(self):
         """validate vector_store and embedding"""
@@ -67,21 +65,21 @@ class RagTool:
             pre_data = [pre_data]
         for pre_data_question in pre_data:
             embedded_question = self.embedding.embed_query(pre_data_question)
+            # print("SEARCH QUESTION", pre_data_question, embedded_question)
             res = self.vector_store.similarity_search_by_vector(embedded_question, k=4)
-            search_results.append(res)
+            search_results += res
         for post_processor in self.post_processors:
             search_results = post_processor(search_results)
-        return "\n".join(map(lambda x: x if type(x) is str else (
-            x.payload["document"] if "document" in x.payload else x.payload["page_content"]),
-                             search_results))  ## assuming this is langchain_core.documents.Document or containts Document
+            print("SEARCH RESULTS", search_results)
+        return "\n".join(map(lambda x: x if type(x) is str else x.page_content, search_results))  ## assuming this is langchain_core.documents.Document or containts Document
 
 
 class RagToolArgsSchema(BaseModel):
     query: str
 
-    def __init__(self, query: str):
-        return query
-
+    # def __init__(self, query: str):
+    #     print(">> query >>", query)
+    #     self.query = query
 
 _default_tool_name = "document_retrieval_tool"
 _default_tool_description = "Returns information from a search"
@@ -92,14 +90,10 @@ class RagToolFactory:
 
     tool_instance: RagTool = None
 
-    def init(self, vector_store: VectorStore, embedding: Embeddings, pre_processors=None, post_processors=None):
-        if pre_processors is None:
-            pre_processors = list()
-        if pre_processors is None:
-            pre_processors = []
+    def init(self, vector_store: VectorStore, embedding: Embeddings, pre_processors=list(), post_processors=list()):
         self.tool_instance = RagTool(vector_store, embedding, pre_processors, post_processors)
 
     def generate_langchain_tool(self, tool_name: str = _default_tool_name,
                                 tool_description: str = _default_tool_description):
-        return Tool(name=tool_name, description=tool_description, func=self.tool_instance.search,
+        return Tool(name=tool_name, description=tool_description + '. You must use argument "query" as string input', func=self.tool_instance.search,
                     args_schema=RagToolArgsSchema)

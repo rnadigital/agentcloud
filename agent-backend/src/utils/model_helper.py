@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Set
 from pydantic import BaseModel
 
 
@@ -59,3 +59,18 @@ def get_enum_key_from_value(enum: Enum, value: str):
 
 def get_enum_value_from_str_key(enum: Enum, key: str):
     return dict(enum.__members__)[key].value
+
+def match_key(elements_dict: Dict[Set[str], any], key: Set[str], exact=False):
+    for k, v in elements_dict.items():
+        if exact and key == k:
+            return v
+        elif key.issubset(k):
+            return v
+    return None
+
+def search_subordinate_keys(elements_dict: Dict[Set[str], any], key: Set[str]):
+    results = dict()
+    for k, v in elements_dict.items():
+        if key.issubset(k) and key != k:
+            results[k] = v
+    return results

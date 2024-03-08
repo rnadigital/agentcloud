@@ -1,8 +1,7 @@
-from typing import Dict, List, Optional, Union, Callable
+from typing import Dict, List, Optional, Union, Callable, Annotated
 from random import randint
 from pydantic import BaseModel, BeforeValidator, Field, ConfigDict, AliasChoices
 from enum import Enum
-from typing import Annotated
 
 # Represents an ObjectId field in the database.
 # It will be represented as a `str` on the model so that it can be serialized to JSON.
@@ -205,6 +204,7 @@ class Datasource(BaseModel):
     name: str
     sourceId: PyObjectId
     sourceType: str
+    embeddingField : Optional[str] = Field(default="page_content")
     workspaceId: PyObjectId
     connectionId: PyObjectId
     destinationId: PyObjectId

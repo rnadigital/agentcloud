@@ -7,7 +7,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 import models.mongo
-from utils.model_helper import keyset
+from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
 from typing import Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
@@ -61,25 +61,19 @@ class CrewAIBuilder:
             raise
 
     @staticmethod
-    def match_key(elements_dict: Dict[Set[str], any], key: Set[str], exact=False):
-        for k, v in elements_dict.items():
-            if exact and key == k:
-                return v
-            elif key.issubset(k):
-                return v
-        return None
-
-    @staticmethod
-    def search_subordinate_keys(elements_dict: Dict[Set[str], any], key: Set[str]):
-        results = dict()
-        for k, v in elements_dict.items():
-            if key.issubset(k) and key != k:
-                results[k] = v
-        return results
+    def fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_to_doc: bool):
+        from_enum = models.mongo.FastEmbedModelsStandardFormat if from_standard_to_doc else models.mongo.FastEmbedModelsDocFormat
+        to_enum = models.mongo.FastEmbedModelsDocFormat if from_standard_to_doc else models.mongo.FastEmbedModelsStandardFormat
+        if in_enums(enums=[to_enum], value=fastembed_model_name):
+            return fastembed_model_name
+        elif in_enums(enums=[from_enum], value=fastembed_model_name):
+            return get_enum_value_from_str_key(to_enum,
+                            get_enum_key_from_value(
+                            from_enum, fastembed_model_name))
 
     def build_models_with_credentials(self):
         for key, model in self.models_models.items():
-            credential = self.match_key(self.credentials_models, key)
+            credential = match_key(self.credentials_models, key)
             if credential:
                 match credential.type:
                     case models.mongo.Platforms.ChatOpenAI:
@@ -103,17 +97,20 @@ class CrewAIBuilder:
                             )
                         )
                     case models.mongo.Platforms.FastEmbed:
+                        overwrite_model_name = self.fastembed_standard_doc_name_swap(model.model_name, from_standard_to_doc=True)
                         self.crew_models[key] = FastEmbedEmbeddings(
                             **model.model_dump(exclude_none=True, exclude_unset=True,
-                                               exclude=["id", "name", "embeddingLength"]))
+                                               exclude=["id", "name", "embeddingLength",
+                                                        "model_name"]),
+                                                        model_name=overwrite_model_name)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-            datasource = self.match_key(self.datasources_models, key)
+            datasource = match_key(self.datasources_models, key)
             if datasource:
-                embedding_model = self.match_key(self.crew_models, key)
+                embedding_model = match_key(self.crew_models, key)
+                embedding_model_model = match_key(self.models_models, key)
                 # Avoid the model_name conversion in FastEmbed models instantiation
-                embedding_model_model = self.match_key(self.models_models, key)
                 if embedding_model:
                     tool_factory = RagToolFactory()
                     collection = str(datasource.id)
@@ -122,7 +119,8 @@ class CrewAIBuilder:
                             QdrantClient(QDRANT_HOST),
                             collection_name=collection,
                             embeddings=embedding_model,
-                            vector_name=embedding_model_model.model_name
+                            vector_name=embedding_model_model.model_name,
+                            content_payload_key=datasource.embeddingField
                         ),
                         embedding_model
                     )
@@ -130,8 +128,8 @@ class CrewAIBuilder:
 
     def build_agents(self):
         for key, agent in self.agents_models.items():
-            model_obj = self.match_key(self.crew_models, key, exact=True)
-            agent_tools_objs = self.search_subordinate_keys(self.crew_tools, key)
+            model_obj = match_key(self.crew_models, key, exact=True)
+            agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -142,8 +140,8 @@ class CrewAIBuilder:
 
     def build_tasks(self):
         for key, task in self.tasks_models.items():
-            agent_obj = self.match_key(self.crew_agents, keyset(task.agentId), exact=True)
-            task_tools_objs = self.search_subordinate_keys(self.crew_tools, key)
+            agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
+            task_tools_objs = search_subordinate_keys(self.crew_tools, key)
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude=["id"]),
                 agent=agent_obj, tools=task_tools_objs.values()

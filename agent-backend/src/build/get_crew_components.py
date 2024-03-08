@@ -3,7 +3,7 @@ from init.mongo_session import start_mongo_session
 from models.mongo import Agent, Credentials, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool
 from build.build_crew import CrewAIBuilder
-from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset
+from utils.model_helper import in_enums, keyset
 
 mongo_client = start_mongo_session()
 
@@ -22,15 +22,7 @@ def construct_model_credentials(models: List[Tuple[Set[str], Model]]):
         if model.credentialId:
             credential = mongo_client.get_model_credential(model.credentialId)
             credentials[keyset(model_id_set, credential.id)] = credential
-        elif in_enums(enums=[FastEmbedModelsStandardFormat], value=model.model_name):
-            model.model_name = get_enum_value_from_str_key(
-                FastEmbedModelsDocFormat,
-                get_enum_key_from_value(
-                    FastEmbedModelsStandardFormat,
-                    model.model_name)
-            )
-            credentials[keyset(model_id_set)] = Credentials(type=Platforms.FastEmbed)
-        elif in_enums(enums=[FastEmbedModelsDocFormat], value=model.model_name):
+        elif in_enums(enums=[FastEmbedModelsStandardFormat, FastEmbedModelsDocFormat], value=model.model_name):
             credentials[keyset(model_id_set)] = Credentials(type=Platforms.FastEmbed)
     return credentials
 
@@ -89,16 +81,6 @@ def construct_crew(session_id: str, task: Optional[str]):
     # Agent > Datasource > Model > Credentials
     agents_tools_datasources_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(
         agents_tools_datasources_models.items())
-
-    # Agent > Task (not currently needed)
-
-    # Agent > Tasks > Tools (not currently needed)
-
-    # Agent > Tasks > Tools > Datasource (not currently needed)
-
-    # Agent > Tasks > Tools > Datasource > Model (not currently needed)
-
-    # Agent > Tasks > Tools > Datasource > Model > Credentials (not currently needed)
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
