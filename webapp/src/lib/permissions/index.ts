@@ -10,6 +10,8 @@ export default class Permission extends BigBitfield {
 		super(data);
 	}
 
+	array: Uint8Array;
+
 	// List of permission bits
 	static allPermissions = Object.values(Permissions)
 		.filter(v => typeof v === 'number');

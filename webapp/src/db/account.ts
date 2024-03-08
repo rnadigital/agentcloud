@@ -1,7 +1,7 @@
 'use strict';
 
 import * as db from 'db/index';
-import { ObjectId } from 'mongodb';
+import { Binary,ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
@@ -45,17 +45,22 @@ export type Account = {
 	apiJwt?: string;
 	token?: string;
 	stripe?: AccountStripeData;
-	oauth?: OAuthRecordType,
+	oauth?: OAuthRecordType;
+	permissions: Binary;
 }
 
 export function AccountCollection(): any {
 	return db.db().collection('accounts');
 }
 
-export function getAccountById(userId: db.IdOrStr): Promise<Account> {
-	return AccountCollection().findOne({
+export async function getAccountById(userId: db.IdOrStr): Promise<Account> {
+	const acc = await AccountCollection().findOne({
 		_id: toObjectId(userId)
 	});
+	if (acc != null && acc.permissions) {
+		acc.permissions = acc.permissions.toString('base64');
+	}
+	return acc;
 }
 
 export function getAccountByEmail(email: string): Promise<Account> {

@@ -109,6 +109,8 @@ export const Role = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT: new Permission([Permissions.ROOT]),
 
-	NOT_LOGGED_IN: new Permission([Permissions.TESTING]),
+	NOT_LOGGED_IN: new Permission([]),
+	
+	TESTING: new Permission([Permissions.TESTING]),
 
 })));

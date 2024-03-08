@@ -9,7 +9,8 @@ import { addVerification,VerificationTypes } from 'db/verification';
 import * as ses from 'lib/email/ses';
 import SecretKeys from 'lib/secret/secretkeys';
 import { getSecret } from 'lib/secret/secretmanager';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
+import { Role } from 'permissions/metadata';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
@@ -58,6 +59,7 @@ export default async function createAccount(email: string, name: string, passwor
 			currentTeam: teamId,
 			emailVerified,
 			oauth,
+			permissions: new Binary(Role.TESTING.array),
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
