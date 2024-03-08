@@ -8,8 +8,9 @@ import toObjectId from '../lib/misc/toobjectid';
 
 export type Org = {
 	_id?: ObjectId;
-	teamIds: ObjectId[],
-	members: ObjectId[],
+	ownerId: ObjectId;
+	teamIds: ObjectId[];
+	members: ObjectId[];
 	name: string;
 }
 

@@ -9,8 +9,9 @@ import { addTeamToOrg } from './org';
 
 export type Team = {
 	_id?: ObjectId;
+	ownerId: ObjectId;
 	orgId: ObjectId;
-	members: ObjectId[],
+	members: ObjectId[];
 	name: string;
 }
 

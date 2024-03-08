@@ -1,58 +1,9 @@
-export const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
+import Permissions from 'permissions/permissions';
 
-	ROOT: 0,
-	ORG_OWNER: 10,
-	TEAM_OWNER: 15,
-
-	CREATE_ORG: 25,
-	EDIT_ORG: 30,
-	DELETE_ORG: 35,
-
-	CREATE_TEAM: 40,
-	EDIT_TEAM: 45,
-	DELETE_TEAM: 50,
-
-	ADD_TEAM_MEMBER: 55,
-	EDIT_TEAM_MEMBER: 60,
-	REMOVE_TEAM_MEMBER: 65,
-
-	CREATE_APP: 70,
-	EDIT_APP: 75,
-	DELETE_APP: 80,
-
-	CREATE_DEPLOYMENT: 85,
-	EDIT_DEPLOYMENT: 90,
-	DELETE_DEPLOYMENT: 95,
-
-	CREATE_AGENT: 100,
-	EDIT_AGENT: 105,
-	DELETE_AGENT: 110,
-
-	CREATE_MODEL: 115,
-	EDIT_MODEL: 120,
-	DELETE_MODEL: 125,
-
-	CREATE_CREDENTIAL: 130,
-	EDIT_CREDENTIAL: 135,
-	DELETE_CREDENTIAL: 140,
-
-	CREATE_TASK: 145,
-	EDIT_TASK: 150,
-	DELETE_TASK: 155,
-
-	CREATE_TOOL: 160,
-	EDIT_TOOL: 165,
-	DELETE_TOOL: 170,
-
-	CREATE_DATASOURCE: 175,
-	EDIT_DATASOURCE: 180,
-	DELETE_DATASOURCE: 185,
-
-})));
-
-export const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
+const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
 	[Permissions.ROOT]: { title: 'Root', label: 'Root', desc: 'Root permissions', parent: Permissions.ROOT },
+	[Permissions.TESTING]: { title: 'TESTING', label: 'TESTING', desc: 'TESTING', parent: Permissions.ROOT },
 	[Permissions.ORG_OWNER]: { title: 'Org Owner', label: 'Organization Owner', desc: 'Permissions for organization owners' },
 	[Permissions.TEAM_OWNER]: { title: 'Team Owner', label: 'Team Owner', desc: 'Permissions for team owners', parent: Permissions.ORG_OWNER },
 
@@ -100,3 +51,5 @@ export const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 	[Permissions.DELETE_DATASOURCE]: { title: 'Delete DataSource', label: 'Delete DataSource', desc: 'Ability to delete a data source', parent: Permissions.ORG_OWNER },
 
 })));
+
+export default Metadata;
