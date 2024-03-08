@@ -682,6 +682,7 @@ export async function uploadFileApi(req, res, next) {
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
 	    createdDate: new Date(),
+	    embeddingField: 'document', //Note: always document for sourceType: file
 	    status: DatasourceStatus.EMBEDDING, //TODO: have a feedback message when actually READY/set this from vector db proxy
 	});
 	

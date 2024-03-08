@@ -57,6 +57,6 @@ export type Datasource = {
 	discoveredSchema?: any;
 	chunkStrategy?: DatasourceChunkStrategy;
 	chunkCharacter?: string | null;
-	embeddingField?: string | null;
+	embeddingField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 };
