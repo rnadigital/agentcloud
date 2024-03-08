@@ -1,11 +1,13 @@
 'use strict';
 
 import Permission from '@permission';
-import { Metadata, Permissions, Role } from 'permissions/metadata';
+import Metadata from 'permissions/metadata';
+import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
 
-export default function checkPermissions(req, res, next) {
-
+export default function checkPermission(req, res, next) {
 	let calculatedPermissions;
+	console.log(Metadata, Permissions, Roles, Permission);
 
 	if (req.session && res.locals && res.locals.user) {
 

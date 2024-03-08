@@ -40,11 +40,11 @@
       "airbyte/*": [
         "lib/airbyte/*"
       ],
+      "@permission": [
+        "lib/permissions/Permission.ts"
+      ],
       "permissions/*": [
         "lib/permissions/*"
-      ],
-      "@permission": [
-        "lib/permissions/index.ts"
       ],
       "styles/*": [
         "lib/styles/*"
@@ -63,7 +63,10 @@
       ]
     }
   },
-  "include": ["src/server.ts", "src/migrations/*.ts"],
+  "include": [
+    "src/server.ts",
+    "src/migrations/*.ts"
+  ],
   "ts-node": {
     "esm": false,
     "experimentalSpecifierResolution": "node",

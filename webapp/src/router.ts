@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 
+import checkPermission from './lib/middleware/auth/checkpermission';
 import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import checkSession from './lib/middleware/auth/checksession';
 import csrfMiddleware from './lib/middleware/auth/csrf';
@@ -30,6 +31,8 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
+
+checkPermission(1, 1 ,1);
 
 export default function router(server, app) {
 
