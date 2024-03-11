@@ -9,6 +9,7 @@ import json
 class SocketEvents(Enum):
     MESSAGE = "message"
     MESSAGES_COMPLETE = "message_complete"
+    TERMINATE = "terminate"
     HUMAN_INPUT = "isFeedback"
 
 

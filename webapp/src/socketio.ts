@@ -88,16 +88,18 @@ export function initSocket(rawHttpServer) {
 			}
 			log('socket.id "%s" joined room %s', socket.id, room);
 			socket.join(room);
-			socket.emit('joined', room); //only send to webapp clients
+			if (socketRequest.locals.isAgentBackend === false) {
+				socket.emit('joined', room); //only send to webapp clients
+			}
 		});
 
 		socket.on('terminate', async (data) => {
 			const socketRequest = socket.request as any;
 			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(data.message.sessionId)
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.message.sessionId));
+				? unsafeGetSessionById(data.room)
+				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
 			if (!session) {
-				return log('socket.id "%s" terminate invalid session %s', socket.id, data.message.sessionId);
+				return log('socket.id "%s" terminate invalid session %s', socket.id, data.room);
 			}
 			await (socketRequest.locals.isAgentBackend === true
 				? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
@@ -136,7 +138,6 @@ export function initSocket(rawHttpServer) {
 				message,
 				incoming: socketRequest.locals.isAgentBackend === false,
 				authorName: data.authorName || 'System',
-				_id: Math.random().toString(26)+Math.random().toString(26)+Math.random().toString(26),
 				ts: messageTimestamp,
 			};
 			if (!finalMessage.room || finalMessage.room.length !== 24) {

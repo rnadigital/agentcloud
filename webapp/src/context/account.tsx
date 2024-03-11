@@ -9,8 +9,8 @@ const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
 	return {
-		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name,
-		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id === data?.account?.currentTeam)?.name
+		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name || 'Loading...',
+		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id === data?.account?.currentTeam)?.name || 'Loading...',
 	};
 }
 

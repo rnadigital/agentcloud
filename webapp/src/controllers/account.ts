@@ -13,6 +13,7 @@ import { dynamicResponse } from '../util';
 
 export async function accountData(req, res, _next) {
 	return {
+		team: res.locals.matchingTeam,
 		csrf: req.csrfToken(),
 	};
 };

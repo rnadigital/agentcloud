@@ -3,7 +3,7 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	ROOT: 0,
 	TESTING: 1,
 
-	// Gets set in checkPermission based on context
+	// Gets set in calcPerms based on context
 	ORG_OWNER: 10,
 	TEAM_OWNER: 15,
 
@@ -53,6 +53,8 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	CREATE_DATASOURCE: 175,
 	EDIT_DATASOURCE: 180,
 	DELETE_DATASOURCE: 185,
+
+	DUMMY_BIT: 255, // Just padding
 
 })));
 //TODO: split these up in to categories? since there wont be any set "team" bits from 55-185 for perms records on orgs/accounts/whatever

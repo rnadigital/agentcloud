@@ -2,6 +2,7 @@ import logging
 from typing import Set
 from time import time
 from uuid import uuid4
+from datetime import datetime
 
 from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
@@ -93,7 +94,8 @@ class CrewAIBuilder:
                                 exclude={
                                     "id",
                                     "credentialId",
-                                    "embeddingLength"}
+                                    "embeddingLength"
+                                    }
                             )
                         )
                     case models.mongo.Platforms.AzureChatOpenAI:
@@ -190,7 +192,7 @@ class CrewAIBuilder:
             step_callback=self.send_to_sockets
         )
 
-    def send_to_sockets(self, text, event=SocketEvents.MESSAGE, first=True, chunkId=uuid4().hex):
+    def send_to_sockets(self, text, event=SocketEvents.MESSAGE, first=False, chunkId=None, timestamp=datetime.now().timestamp() * 1000):
         send(
             self.socket,
             SocketEvents(event),
@@ -199,9 +201,10 @@ class CrewAIBuilder:
                 authorName="system",
                 message=Message(
                     chunkId=chunkId,
-                    text=text,
+                    text=self.session_id if event is SocketEvents.TERMINATE else text,
                     first=first,
                     tokens=1,
+                    timestamp=timestamp,
                 )
             ),
             "both"

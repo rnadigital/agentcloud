@@ -3,16 +3,18 @@
 import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
+import Permissions from 'permissions/permissions';
 
-import checkPermission from './lib/middleware/auth/checkpermission';
 import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
 import checkSession from './lib/middleware/auth/checksession';
 import csrfMiddleware from './lib/middleware/auth/csrf';
 import fetchSession from './lib/middleware/auth/fetchsession';
+import setPermissions from './lib/middleware/auth/setpermissions';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
 import homeRedirect from './lib/middleware/homeredirect';
 import myPassport from './lib/middleware/mypassport';
+import * as hasPerms from './lib/middleware/permissions/hasperms';
 import renderStaticPage from './lib/middleware/render/staticpage';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
@@ -31,8 +33,6 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
-
-checkPermission(1, 1 ,1);
 
 export default function router(server, app) {
 
@@ -181,7 +181,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
-	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', teamController.memberEditPage.bind(null, app));
+	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);
@@ -196,6 +196,6 @@ export default function router(server, app) {
 	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
 	server.use('/webhook', webhookRouter);
 
-	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
+	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, setPermissions, teamRouter);
 
 }

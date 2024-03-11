@@ -62,6 +62,7 @@ export default function Session(props) {
 	}, [isAtBottom, scrollContainerRef?.current]);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
+
 	const chatBusyState = sentLastMessage || !lastMessageFeedback;
 	async function fetchSessions() {
 		await API.getSessions({ resourceSlug }, setSessionData, setError, router);

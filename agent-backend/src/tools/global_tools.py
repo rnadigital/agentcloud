@@ -1,8 +1,9 @@
 from typing import Optional, Type, Any
 from uuid import uuid4
+from datetime import datetime
 
 from langchain.tools import tool
-from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
+from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
 from socketio import SimpleClient
 
@@ -37,21 +38,22 @@ class CustomHumanInput(BaseTool):
     def _run(
             self,
             text: Optional[str],
-            first: Optional[bool],
+            first: Optional[bool] = False,
             run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         try:
             send(
                 self.socket_client,
-                SocketEvents(SocketEvents.MESSAGE),
+                SocketEvents.MESSAGE,
                 SocketMessage(
                     room=self.session_id,
                     authorName="system",
                     message=Message(
-                        chunkId=uuid4().hex,
+                        chunkId=str(uuid4()),
                         text=text,
                         first=first,
                         tokens=1,  # Assumes 1 token is a constant value for message segmentation.
+                        timestamp=datetime.now().timestamp() * 1000
                     ),
                     isFeedback=True,
                 ),
@@ -69,12 +71,6 @@ class CustomHumanInput(BaseTool):
                     "message": "TimeOutError"},
             )
             return "exit"
-
-    async def _arun(
-            self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
-    ) -> str:
-        """Use the tool asynchronously."""
-        raise NotImplementedError("custom_search does not support async")
 
 
 class GlobalTools:
@@ -144,7 +140,7 @@ class HumanInput:
             event: Optional[SocketEvents] = SocketEvents.HUMAN_INPUT,
             text: Optional[str] = None,
             first: Optional[bool] = False,
-            chunkId: Optional[str] = uuid4().hex
+            chunkId: Optional[str] = None
     ) -> str:
         """
         Sends a text input to a client through the socket connection managed by this instance

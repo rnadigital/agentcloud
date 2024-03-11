@@ -1,20 +1,17 @@
 import BigBitfield from 'big-bitfield';
+import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 
-interface TypedPermission {
-	array?: Uint8Array;
-	get?(bit: Permissions|string|number): boolean;
-	set?(bit: Permissions|string|number, value: boolean);
-	setAll?(bits);
-}
-
-export default class Permission extends BigBitfield implements TypedPermission {
+export default class Permission extends BigBitfield {
  
-	declare array: Uint8Array;
-    
-	constructor(data) {
+	declare array?: Uint8Array;
+	public get?(bit: Permissions|string|number): boolean;
+	public set?(bit: Permissions|string|number, value: boolean);
+	public setAll?(bits);
+
+	constructor(data: number|number[]) {
 		super(data);
 	}
 
@@ -27,7 +24,7 @@ export default class Permission extends BigBitfield implements TypedPermission {
 		return Object.entries(Metadata)
 			.reduce((acc, entry) => {
 				acc[entry[0]] = {
-					state: (this as TypedPermission).get(entry[0]),
+					state: this.get(entry[0]),
 					...entry[1],
 				};
 				return acc;
@@ -41,21 +38,21 @@ export default class Permission extends BigBitfield implements TypedPermission {
 			const allowedParent = Metadata[bit].parent == null
 				|| editorPermission.get(Metadata[bit].parent);
 			if (allowedParent) { // && !Metadata[bit].blocked
-				(this as TypedPermission).set(parseInt(bit), (body[`permission_bit_${bit}`] != null));
+				this.set(parseInt(bit), (body[`permission_bit_${bit}`] != null));
 			}
 		}
 	}
 
 	applyInheritance() { //write custom inheritance logic here? or find a way to put a flag in the metadata or permissions
-		if ((this as TypedPermission).get(Permissions.ROOT)) {
-			return (this as TypedPermission).setAll(Permission.allPermissions);
+		if (this.get(Permissions.ROOT)) {
+			return this.setAll(Permission.allPermissions);
 		}
-		// if (this.get(Permissions.ORG_OWNER)) {
-		// 	this.setAll(Permissions._ORG_OWNER_BITS);
-		// }
-		// if (this.get(Permissions.TEAM_OWNER)) {
-		// 	this.setAll(Permissions._TEAM_OWNER_BITS);
-		// }
+		if (this.get(Permissions.ORG_OWNER)) {
+			this.setAll(ORG_BITS);
+		}
+		if (this.get(Permissions.TEAM_OWNER)) {
+			this.setAll(TEAM_BITS);
+		}
 	}
 
 }

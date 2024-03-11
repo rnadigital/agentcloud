@@ -9,7 +9,7 @@ import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-export default function EditAccount(props) {
+export default function EditTeamMember(props) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -18,17 +18,12 @@ export default function EditAccount(props) {
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
 
-	async function fetchEditingAccountData(e) {
-		e.preventDefault();
-		API.getPortalLink({
-			_csrf: e.target._csrf.value,
-		}, null, setError, router);
+	async function fetchTeamMember() {
+		API.getTeam({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
-		if (!account) {
-			API.getAccount(dispatch, setError, router);
-		}
+		fetchTeamMember();
 	}, [resourceSlug]);
 	
 	if (!account) {

@@ -94,6 +94,8 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				_id: 1,
 				orgId: 1,
 				name: 1,
+				ownerId: 1,
+				permission: 1, //TODO: later project away for lower perms users
 				members: {
 					$map: {
 						input: '$members',
@@ -104,9 +106,6 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 							email: '$$member.email',
 							emailVerified: '$$member.emailVerified', //know if vreified or not (implies accepted invite)
 							memberId: '$$member._id',    
-							teamOwner: {
-								$in: ['$$member._id','$orgs.members']
-							}
 						}
 					}
 				}
