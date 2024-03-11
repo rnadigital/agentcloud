@@ -13,6 +13,7 @@ import json
 class RagToolArgsSchema(BaseModel):
     query: str = Field(description="Retrieval argument")
 
+
 class RagTool(BaseTool):
     """
     DO NOT INSTANTIATE DIRECTLY. USE FACTORY CLASS AT END OF FILE (UNLESS YOU REALLY WANT TO).
@@ -92,7 +93,8 @@ class RagTool(BaseTool):
         for post_processor in self.post_processors:
             search_results = post_processor(search_results)
             print("SEARCH RESULTS", search_results)
-        return "\n".join(map(lambda x: x if type(x) is str else x.page_content, search_results))  ## assuming this is langchain_core.documents.Document or containts Document
+        return "\n".join(map(lambda x: x if type(x) is str else x.page_content,
+                             search_results))  ## assuming this is langchain_core.documents.Document or containts Document
 
 # class RagToolFactory:
 #     """First call init(...) method to create set up the retrieval, then call generate_langchain_tool(...) to convert to a tool ready for Crew"""
