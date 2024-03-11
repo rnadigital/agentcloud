@@ -1,6 +1,7 @@
 import logging
 from typing import Set
 from time import time
+from uuid import uuid4
 
 from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
@@ -19,7 +20,7 @@ from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 from tools import RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
-from tools.global_tools import HumanInput
+from tools.global_tools import CustomHumanInput
 
 
 class CrewAIBuilder:
@@ -146,8 +147,8 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-            human = HumanInput(self.socket, self.session_id)
-            agent_tools_objs["human_input"] = human.human_input
+            human = CustomHumanInput(self.socket, self.session_id)
+            agent_tools_objs["human_input"] = human
             print(agent_tools_objs.values())
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
@@ -186,10 +187,10 @@ class CrewAIBuilder:
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            # step_callback=self.send_to_sockets
+            step_callback=self.send_to_sockets
         )
 
-    def send_to_sockets(self, event, text, first, chunkId):
+    def send_to_sockets(self, text, event=SocketEvents.MESSAGE, first=True, chunkId=uuid4().hex):
         send(
             self.socket,
             SocketEvents(event),

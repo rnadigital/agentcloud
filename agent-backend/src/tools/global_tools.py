@@ -1,11 +1,80 @@
-from typing import Optional
+from typing import Optional, Type, Any
 from uuid import uuid4
 
 from langchain.tools import tool
+from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
+from langchain_core.tools import BaseTool
 from socketio import SimpleClient
 
 from messaging.send_message_to_socket import send
 from models.sockets import SocketEvents, SocketMessage, Message
+from pydantic import BaseModel, Field
+
+
+class HumanInputParams(BaseModel):
+    text: Optional[str] = Field(description="The text message content to be sent to the client.", default=None, )
+    first: Optional[bool] = Field(
+        description="Indicates if this message is the first chunk of a segmented message, aiding in message partitioning.",
+        default=False)
+
+
+class CustomHumanInput(BaseTool):
+    name = "Human Input Class"
+    description = """A class designed to facilitate communication between a server and a client
+    over a socket connection for sending human input messages and receiving feedback.
+
+    This class initializes with a socket client and a session identifier to manage messages
+    for a specific connection session."""
+    args_schema: Type[BaseModel] = HumanInputParams
+    session_id: str = None
+    socket_client: SimpleClient = None
+
+    def __init__(self, socket_client: SimpleClient, session_id: str, **kwargs: Any):
+        super().__init__(**kwargs)
+        self.session_id = session_id
+        self.socket_client = socket_client
+
+    def _run(
+            self,
+            text: Optional[str],
+            first: Optional[bool],
+            run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> str:
+        try:
+            send(
+                self.socket_client,
+                SocketEvents(SocketEvents.MESSAGE),
+                SocketMessage(
+                    room=self.session_id,
+                    authorName="system",
+                    message=Message(
+                        chunkId=uuid4().hex,
+                        text=text,
+                        first=first,
+                        tokens=1,  # Assumes 1 token is a constant value for message segmentation.
+                    ),
+                    isFeedback=True,
+                ),
+                "both"
+            )
+            feedback = self.socket_client.receive()
+            print(feedback)
+            return feedback[1]
+        except TimeoutError:
+            self.socket_client.emit(
+                "message",
+                {
+                    "room": self.session_id,
+                    "type": "error",
+                    "message": "TimeOutError"},
+            )
+            return "exit"
+
+    async def _arun(
+            self, query: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
+    ) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("custom_search does not support async")
 
 
 class GlobalTools:
