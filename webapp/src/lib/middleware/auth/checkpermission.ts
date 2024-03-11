@@ -2,7 +2,8 @@
 
 import Permission from '@permission';
 import Metadata from 'permissions/metadata';
-import Permissions, { ORG_BITS, TEAM_BITS } from 'permissions/permissions';
+import Permissions from 'permissions/permissions';
+import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
 import Roles from 'permissions/roles';
 
 export default function checkPermission(req, res, next) {
