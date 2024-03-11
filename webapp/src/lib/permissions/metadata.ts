@@ -11,7 +11,7 @@ const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 	[Permissions.EDIT_ORG]: { title: 'Edit Organization', label: 'Edit Org', desc: 'Ability to edit an organization', parent: Permissions.ORG_OWNER },
 	[Permissions.DELETE_ORG]: { title: 'Delete Organization', label: 'Delete Org', desc: 'Ability to delete an organization', parent: Permissions.ORG_OWNER },
 
-	[Permissions.CREATE_TEAM]: { title: 'Create Team', label: 'Create Team', desc: 'Ability to create a team', parent: Permissions.TEAM_OWNER },
+	[Permissions.CREATE_TEAM]: { title: 'Create Team', label: 'Create Team', desc: 'Ability to create a team', parent: Permissions.ORG_OWNER },
 	[Permissions.EDIT_TEAM]: { title: 'Edit Team', label: 'Edit Team', desc: 'Ability to edit a team', parent: Permissions.TEAM_OWNER },
 	[Permissions.DELETE_TEAM]: { title: 'Delete Team', label: 'Delete Team', desc: 'Ability to delete a team', parent: Permissions.TEAM_OWNER },
 	[Permissions.ADD_TEAM_MEMBER]: { title: 'Add Team Member', label: 'Add Member', desc: 'Ability to add a team member', parent: Permissions.TEAM_OWNER },
@@ -44,6 +44,7 @@ const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
 	[Permissions.CREATE_TOOL]: { title: 'Create Tool', label: 'Create Tool', desc: 'Ability to create a tool', parent: Permissions.ORG_OWNER },
 	[Permissions.EDIT_TOOL]: { title: 'Edit Tool', label: 'Edit Tool', desc: 'Ability to edit a tool', parent: Permissions.ORG_OWNER },
+	[Permissions.DELETE_TOOL]: { title: 'Delete Tool', label: 'Delete Tool', desc: 'Ability to delete a tool', parent: Permissions.ORG_OWNER },
 	[Permissions.DELETE_TOOL]: { title: 'Delete Tool', label: 'Delete Tool', desc: 'Ability to delete a tool', parent: Permissions.ORG_OWNER },
 
 	[Permissions.CREATE_DATASOURCE]: { title: 'Create DataSource', label: 'Create DataSource', desc: 'Ability to create a data source', parent: Permissions.ORG_OWNER },

@@ -181,6 +181,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);

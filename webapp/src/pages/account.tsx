@@ -1,6 +1,5 @@
 import * as API from '@api';
 import ErrorAlert from 'components/ErrorAlert';
-import PermissionsEditor from 'components/PermissionsEditor';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -89,8 +88,6 @@ export default function Account(props) {
 			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
 			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
 			{stripeCancelled && <p>Stripe subscription cancelled.</p>}
-
-			<PermissionsEditor currentPermission={null} editingPermission={null} />
 
 		</>
 	);

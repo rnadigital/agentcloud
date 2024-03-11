@@ -10,11 +10,13 @@ import toObjectId from '../lib/misc/toobjectid';
 export type AccountTeam = {
 	id: ObjectId;
 	name: string;
+	ownerId: ObjectId;
 }
 
 export type AccountOrg = {
 	id: ObjectId;
 	name: string;
+	ownerId: ObjectId;
 	teams: AccountTeam[];
 }
 
@@ -54,13 +56,16 @@ export function AccountCollection(): any {
 }
 
 export async function getAccountById(userId: db.IdOrStr): Promise<Account> {
-	const acc = await AccountCollection().findOne({
+	return AccountCollection().findOne({
 		_id: toObjectId(userId)
 	});
-	if (acc != null && acc.permissions) {
-		acc.permissions = acc.permissions.toString('base64');
-	}
-	return acc;
+}
+
+export async function getAccountTeamMember(userId: db.IdOrStr, teamId: db.IdOrStr): Promise<Account> {
+	return AccountCollection().findOne({
+		_id: toObjectId(userId),
+		'orgs.teams.id': toObjectId(teamId),
+	});
 }
 
 export function getAccountByEmail(email: string): Promise<Account> {

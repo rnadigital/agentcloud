@@ -1,5 +1,6 @@
 'use strict';
 
+import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import { addAccount,OAuthRecordType } from 'db/account';
@@ -10,6 +11,7 @@ import * as ses from 'lib/email/ses';
 import SecretKeys from 'lib/secret/secretkeys';
 import { getSecret } from 'lib/secret/secretmanager';
 import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
@@ -26,12 +28,20 @@ export default async function createAccount(email: string, name: string, passwor
 		name: `${name}'s Org`,
 		teamIds: [],
 		members: [newAccountId],
+		dateCreated: new Date(),
+		permissions: {
+			[newAccountId.toString()]: new Binary(new Permission([Permissions.ORG_OWNER]).array),
+		},
 	});
 	const addedTeam = await addTeam({
 		ownerId: newAccountId,
 		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
+		dateCreated: new Date(),
+		permissions: {
+			[newAccountId.toString()]: new Binary(new Permission([Permissions.TEAM_OWNER]).array),
+		},
 	});
 	const orgId = addedOrg.insertedId;
 	const teamId = addedTeam.insertedId;
@@ -50,9 +60,11 @@ export default async function createAccount(email: string, name: string, passwor
 			orgs: [{
 				id: orgId,
 				name: `${name}'s Org`,
+				ownerId: newAccountId,
 				teams: [{
 					id: teamId,
 					name: `${name}'s Team`,
+					ownerId: newAccountId,
 				}]
 			}],
 			currentOrg: orgId,

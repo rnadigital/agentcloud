@@ -2,17 +2,22 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT: 0,
 	TESTING: 1,
+
+	// Gets set in checkPermission based on context
 	ORG_OWNER: 10,
 	TEAM_OWNER: 15,
 
+	// Account level perms
 	CREATE_ORG: 25,
 	EDIT_ORG: 30,
 	DELETE_ORG: 35,
 
+	// Org level perms
 	CREATE_TEAM: 40,
 	EDIT_TEAM: 45,
 	DELETE_TEAM: 50,
 
+	// Team level perms
 	ADD_TEAM_MEMBER: 55,
 	EDIT_TEAM_MEMBER: 60,
 	REMOVE_TEAM_MEMBER: 65,
@@ -52,3 +57,19 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 })));
 
 export default Permissions;
+
+//TODO: make these 
+export const ACCOUNT_BITS = Object.seal(Object.freeze(Object.preventExtensions([
+	Permissions.ROOT,
+	Permissions.TESTING,
+	
+])));
+
+export const ORG_BITS = Object.seal(Object.freeze(Object.preventExtensions([
+	
+])));
+
+// console.log(Object.values(Permissions).filter(v => v >= Permissions.ADD_TEAM_MEMBER && v <= Permissions.DELETE_DATASOURCE))
+export const TEAM_BITS = Object.seal(Object.freeze(Object.preventExtensions(
+	[1]
+)));

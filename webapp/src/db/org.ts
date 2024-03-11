@@ -1,7 +1,7 @@
 'use strict';
 
 import * as db from 'db/index';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -12,6 +12,8 @@ export type Org = {
 	teamIds: ObjectId[];
 	members: ObjectId[];
 	name: string;
+	dateCreated: Date;
+	permissions: Record<string,Binary>;
 }
 
 export function OrgCollection(): any {

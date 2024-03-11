@@ -1,13 +1,16 @@
 'use strict';
 
+import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import createAccount from 'lib/account/create';
 import toObjectId from 'misc/toobjectid';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
 
 import { Account, addAccount, changeAccountPassword, getAccountByEmail,
-	getAccountById, OAuthRecordType, pushAccountOrg, pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
+	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
+	pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
 import { addOrg, getOrgById } from '../db/org';
 import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember } from '../db/team';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
@@ -134,11 +137,36 @@ export async function addTeamApi(req, res) {
 		ownerId: toObjectId(res.locals.account._id),
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		members: [toObjectId(res.locals.account._id)],
+		dateCreated: new Date(),
+		permissions: {
+			[res.locals.account._id.toString()]: new Binary((new Permission([Permissions.TESTING]).array)),
+		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
 	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
 		id: addedTeam.insertedId,
 		name: teamName,
+		ownerId: toObjectId(res.locals.account._id),
 	});
 	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
+}
+
+export async function teamMemberData(req, res, _next) {
+	const [teamMember] = await Promise.all([
+		getAccountTeamMember(req.params.accountId, req.params.resourceSlug),
+	]);
+	return {
+		teamMember,
+		csrf: req.csrfToken(),
+	};
+};
+
+/**
+ * GET /[resourceSlug]/team/[memberId]/edit
+ * edit team member page html
+ */
+export async function memberEditPage(app, req, res, next) {
+	const data = await teamMemberData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/team/${req.params.memberId}/edit`);
 }
