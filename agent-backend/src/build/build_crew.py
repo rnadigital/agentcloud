@@ -16,7 +16,7 @@ from langchain_core.agents import AgentFinish
 from models.sockets import SocketMessage, SocketEvents, Message
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
-from tools import RagToolFactory
+from tools import RagTool #, RagToolFactory
 from messaging.send_message_to_socket import send
 
 
@@ -112,19 +112,17 @@ class CrewAIBuilder:
                 embedding_model_model = match_key(self.models_models, key)
                 # Avoid the model_name conversion in FastEmbed models instantiation
                 if embedding_model:
-                    tool_factory = RagToolFactory()
                     collection = str(datasource.id)
-                    tool_factory.init(
-                        Qdrant(
-                            QdrantClient(QDRANT_HOST),
+                    self.crew_tools[key] = RagTool(
+                        vector_store=Qdrant(
+                            client=QdrantClient(QDRANT_HOST),
                             collection_name=collection,
                             embeddings=embedding_model,
                             vector_name=embedding_model_model.model_name,
                             content_payload_key=datasource.embeddingField
                         ),
-                        embedding_model
-                    )
-                    self.crew_tools[key] = tool_factory.generate_langchain_tool(tool.name, tool.description)
+                        embedding=embedding_model,
+                        name=tool.name, description=tool.description)
 
     def build_agents(self):
         for key, agent in self.agents_models.items():
