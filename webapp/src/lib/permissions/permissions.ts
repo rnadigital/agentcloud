@@ -55,21 +55,6 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	DELETE_DATASOURCE: 185,
 
 })));
+//TODO: split these up in to categories? since there wont be any set "team" bits from 55-185 for perms records on orgs/accounts/whatever
 
 export default Permissions;
-
-//TODO: make these 
-export const ACCOUNT_BITS = Object.seal(Object.freeze(Object.preventExtensions([
-	Permissions.ROOT,
-	Permissions.TESTING,
-	
-])));
-
-export const ORG_BITS = Object.seal(Object.freeze(Object.preventExtensions([
-	
-])));
-
-// console.log(Object.values(Permissions).filter(v => v >= Permissions.ADD_TEAM_MEMBER && v <= Permissions.DELETE_DATASOURCE))
-export const TEAM_BITS = Object.seal(Object.freeze(Object.preventExtensions(
-	[1]
-)));
