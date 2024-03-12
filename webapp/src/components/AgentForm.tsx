@@ -330,7 +330,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					            }}
 					            value={toolState}
 					            onChange={(v: any) => {
-									if (Array.isArray(v) && v.length > 0 && v[0]?.value === null) {
+									if (Array.isArray(v) && v.length > 0 && v[v.length-1]?.value === null) {
 										return setModalOpen('tool');
 									}
 					            	setToolState(v);
