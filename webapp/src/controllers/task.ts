@@ -127,7 +127,7 @@ export async function addTaskApi(req, res, next) {
 
 export async function editTaskApi(req, res, next) {
 
-	const { name, description, expectedOutput, toolIds, asyncExecution }  = req.body;
+	const { name, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -140,6 +140,7 @@ export async function editTaskApi(req, res, next) {
 		expectedOutput,
 		toolIds: toolIds ? toolIds.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
+		agentId: toObjectId(agentId)
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tasks`*/ });
