@@ -11,4 +11,5 @@ RUN cargo build
 RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
 COPY . .
 RUN cargo build
+EXPOSE 8001
 CMD ["target/release/vector-db-proxy"]
