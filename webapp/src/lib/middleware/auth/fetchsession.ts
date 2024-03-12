@@ -27,6 +27,7 @@ export default async function fetchSession(req, res, next) {
 				token: account.token,
 				stripe: account.stripe,
 				oauth: account.oauth,
+				permissions: account.permissions,
 			};
 			return next();
 		}

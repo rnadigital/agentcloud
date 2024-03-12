@@ -9,9 +9,7 @@ const cache = {
 };
 
 export function one(requiredPermission) {
-	console.log('one hasperms', requiredPermission);
 	return cache.one[requiredPermission] || (cache.one[requiredPermission] = function(req, res, next) {
-		console.log(res.locals.permissions.toJSON());
 		if (!res.locals.permissions.get(requiredPermission)) {
 			return dynamicResponse(req, res, 400, { error: 'No permission' });
 		}

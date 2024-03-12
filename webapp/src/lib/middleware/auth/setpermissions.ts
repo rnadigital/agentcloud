@@ -8,31 +8,31 @@ import Roles from 'permissions/roles';
 
 function calcPerms(req, res, next) {
 	let calculatedPermissions;
-	
-	if (req.session && (req.session.accountId || req.session.passport?.user)) {
+	if (req.session && res.locals && res.locals.account) {
 		//has a session and user, not anon, so their permissions from the db/user instead.
-		const { user, matchingOrg, matchingTeam } = res.locals;
-		const userPerms = user.permissions
-			? typeof user.permissions !== 'string' ? user.permissions.toString('base64') : user.permissions
-			: Math.max(...Object.values(Permissions)); //empty all false
+		const { account, matchingOrg, matchingTeam } = res.locals;
+
+		const userPerms = account.permissions
+			? typeof account.permissions !== 'string' ? account.permissions.toString('base64') : account.permissions
+			: Math.max(...Object.values(Permissions)); //full size empty
+
 		console.log('userPerms', userPerms);
 		calculatedPermissions = new Permission(userPerms);
-		if (matchingOrg && matchingOrg.ownerId.toString() === user._id.toString()) {
-			calculatedPermissions.set(Permissions.ORG_OWNER);
-		}
+		calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER);
+		console.log('account, matchingOrg, matchingTeam', account, matchingOrg, matchingTeam);
 		
-		if (matchingOrg && matchingOrg.ownerId.toString() === user._id.toString()) {
+		if (matchingOrg && matchingOrg.ownerId.toString() === account._id.toString()) {
 			// Setting  org owner perm
 			calculatedPermissions.set(Permissions.ORG_OWNER);
-		} else if (matchingTeam && matchingTeam.ownerId.toString() === user._id.toString()) {
+		} else if (matchingTeam && matchingTeam.ownerId.toString() === account._id.toString()) {
 			// Setting team owner perm
 			calculatedPermissions.set(Permissions.TEAM_OWNER);
-		} else if (matchingTeam && matchingTeam.permissions[user._id.toString()]) {
+		} else if (matchingTeam && matchingTeam.permissions[account._id.toString()]) {
 			// Setting all the bits of a users perms with their perms from the team they are a member of
-			const teamPermissions = matchingTeam.permissions[user._id.toString()];
-			for (let bit of TEAM_BITS) {
-				calculatedPermissions.set(bit, teamPermissions.get(bit));
-			}
+			const teamPermissions = matchingTeam.permissions[account._id.toString()];
+			// for (let bit of TEAM_BITS) {
+			// 	calculatedPermissions.set(bit, teamPermissions.get(bit));
+			// }
 		}
 		
 		// Apply inheritance, see Permission

@@ -8,11 +8,13 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	TEAM_OWNER: 15,
 
 	// Account level perms
+	ORG_ADMIN: 24,
 	CREATE_ORG: 25,
 	EDIT_ORG: 30,
 	DELETE_ORG: 35,
 
 	// Org level perms
+	TEAM_ADMIN: 39,
 	CREATE_TEAM: 40,
 	EDIT_TEAM: 45,
 	DELETE_TEAM: 50,

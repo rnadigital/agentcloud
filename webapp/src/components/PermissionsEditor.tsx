@@ -1,7 +1,7 @@
 import Permission from '@permission';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import React from 'react';
+import React, { useState } from 'react';
 
 // Helper function to check if a permission is allowed
 const isPermissionAllowed = (currentPermission, permissionKey) => {
@@ -16,11 +16,13 @@ const isPermissionAllowed = (currentPermission, permissionKey) => {
 };
 
 const PermissionsEditor = ({ currentPermission, editingPermission }) => {
+	const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
+	console.log(editingPermission);
 	return (
 		<div>
 			{Object.entries(Metadata).map(([key, { title, label, desc }]) => {
 				const isEnabled = isPermissionAllowed(currentPermission, key);
-				const isChecked = editingPermission.get(parseInt(key));
+				const isChecked = editingPermissionState.get(parseInt(key));
 				return (
 					<div key={key}>
 						<label>
@@ -28,9 +30,12 @@ const PermissionsEditor = ({ currentPermission, editingPermission }) => {
 								type='checkbox'
 								checked={isChecked}
 								disabled={!isEnabled}
-								onChange={(e) => editingPermission.set(parseInt(key), e.target.checked)}
+								onChange={(e) => {
+									editingPermission.set(parseInt(key), e.target.checked);
+									setEditingPermissionState(editingPermission);
+								}}
 							/>
-							{`${title} (${label}): ${desc}`}
+							{`${title}: ${desc}`}
 						</label>
 					</div>
 				);

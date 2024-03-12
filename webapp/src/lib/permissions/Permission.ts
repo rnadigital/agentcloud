@@ -11,12 +11,12 @@ export default class Permission extends BigBitfield {
 	public set?(bit: Permissions|string|number, value: boolean);
 	public setAll?(bits);
 
-	constructor(data: number|number[]) {
+	constructor(data: number|number[] = Math.max(...Object.values(Permissions))) {
 		super(data);
 	}
 
 	// List of permission bits
-	static allPermissions = Object.values((Permissions||{}))
+	static allPermissions = Object.values(Permissions)
 		.filter(v => typeof v === 'number');
 
 	// Convert to a map of bit to metadata and state, for use in frontend
@@ -37,7 +37,7 @@ export default class Permission extends BigBitfield {
 			// If perm has no "parent" bit, or current user has the parent permission, set each bit based on the form input
 			const allowedParent = Metadata[bit].parent == null
 				|| editorPermission.get(Metadata[bit].parent);
-			if (allowedParent) { // && !Metadata[bit].blocked
+			if (allowedParent && !Metadata[bit].blocked) {
 				this.set(parseInt(bit), (body[`permission_bit_${bit}`] != null));
 			}
 		}
@@ -45,10 +45,12 @@ export default class Permission extends BigBitfield {
 
 	applyInheritance() { //write custom inheritance logic here? or find a way to put a flag in the metadata or permissions
 		if (this.get(Permissions.ROOT)) {
-			return this.setAll(Permission.allPermissions);
+			this.setAll(Permission.allPermissions);
+			return;
 		}
 		if (this.get(Permissions.ORG_OWNER)) {
 			this.setAll(ORG_BITS);
+			this.set(Permissions.TEAM_OWNER, true); // Naturally, org owner has all team owner perms too
 		}
 		if (this.get(Permissions.TEAM_OWNER)) {
 			this.setAll(TEAM_BITS);
