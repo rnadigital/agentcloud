@@ -5,6 +5,7 @@ ENV NODE_ENV production
 
 RUN touch /app/.env
 COPY package.json /app
+COPY package-lock.json /app
 RUN npm install
 
 ARG SHORT_COMMIT_HASH
