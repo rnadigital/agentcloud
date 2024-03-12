@@ -3,9 +3,8 @@ FROM node:latest
 WORKDIR /app
 ENV NODE_ENV production
 
-COPY . /app
 RUN touch /app/.env
-
+COPY package.json /app
 RUN npm install
 
 ARG SHORT_COMMIT_HASH
@@ -26,6 +25,8 @@ ENV NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=$NEXT_PUBLIC_ENABLE_GITHUB_OAUTH
 ARG GOOGLE_KEYPATH
 COPY $GOOGLE_KEYPATH /app/keyfile.json
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+
+COPY . /app
 
 RUN npx next telemetry disable
 RUN npm run build
