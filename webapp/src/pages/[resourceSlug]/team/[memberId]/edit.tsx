@@ -6,6 +6,7 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -45,7 +46,7 @@ export default function EditTeamMember(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
 			</div>
 
-			<PermissionsEditor currentPermission={new Permission(account.permissions)} editingPermission={new Permission(account.permissions)} />
+			<PermissionsEditor currentPermission={new Permission(Roles.ROOT.base64)} editingPermission={new Permission(account.permissions)} />
 
 		</>
 	);

@@ -40,7 +40,7 @@ export default async function createAccount(email: string, name: string, passwor
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_OWNER).array),
+			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_OWNER.base64).array),
 		},
 	});
 	const orgId = addedOrg.insertedId;

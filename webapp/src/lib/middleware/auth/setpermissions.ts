@@ -30,9 +30,9 @@ function calcPerms(req, res, next) {
 		} else if (matchingTeam && matchingTeam.permissions[account._id.toString()]) {
 			// Setting all the bits of a users perms with their perms from the team they are a member of
 			const teamPermissions = matchingTeam.permissions[account._id.toString()];
-			// for (let bit of TEAM_BITS) {
-			// 	calculatedPermissions.set(bit, teamPermissions.get(bit));
-			// }
+			for (let bit of TEAM_BITS) {
+				calculatedPermissions.set(bit, teamPermissions.get(bit));
+			}
 		}
 		
 		// Apply inheritance, see Permission
