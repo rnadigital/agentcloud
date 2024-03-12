@@ -1,26 +1,14 @@
-FROM rust:latest
-# Create working directory
-RUN mkdir -p /usr/local/src/vector-db-proxy
-ARG workdir=/usr/local/src/vector-db-proxy
-#Set working directory
-WORKDIR ${workdir}
-
-RUN apt-get update && \
-    apt-get install -y cmake
-
+FROM rust
+WORKDIR /usr/local/src/vector-db-proxy
 ARG GOOGLE_KEYPATH
-COPY $GOOGLE_KEYPATH ${workdir}/keyfile.json
-ENV GOOGLE_APPLICATION_CREDENTIALS=${workdir}/keyfile.json
-
-#Copy source code to image
-COPY . $workdir
-#COPY src/publish_to_pubsub.rs ${workdir}
+COPY $GOOGLE_KEYPATH keyfile.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/usr/local/src/vector-db-proxy/keyfile.json
+RUN mkdir -p src
+COPY src/dummy.rs src
 COPY Cargo.toml .
-#Install cmake
-# Build release application
-RUN #cargo build --release
+RUN sed -i 's#src/main.rs#src/dummy.rs#' Cargo.toml
 RUN cargo build
-#Expose port
-EXPOSE 8001
-#Run app
-CMD ["target/debug/vector-db-proxy"]
+RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
+COPY . .
+RUN cargo build
+CMD ["target/release/vector-db-proxy"]
