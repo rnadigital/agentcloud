@@ -9,6 +9,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 import models.mongo
+from models.mongo import ToolType
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -19,7 +20,7 @@ from langchain_core.agents import AgentFinish
 from models.sockets import SocketMessage, SocketEvents, Message
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
-from tools import RagTool  # , RagToolFactory
+from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
 from tools.global_tools import CustomHumanInput
 
@@ -127,24 +128,37 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-            datasource = match_key(self.datasources_models, key)
-            if datasource:
-                embedding_model = match_key(self.crew_models, key)
-                embedding_model_model = match_key(self.models_models, key)
-                # Avoid the model_name conversion in FastEmbed models instantiation
-                if embedding_model:
-                    collection = str(datasource.id)
-                    self.crew_tools[key] = RagTool(
-                        vector_store=Qdrant(
-                            client=QdrantClient(QDRANT_HOST),
-                            collection_name=collection,
-                            embeddings=embedding_model,
-                            vector_name=embedding_model_model.model_name,
-                            content_payload_key=datasource.embeddingField
-                        ),
-                        embedding=embedding_model,
-                        name=tool.name, description=tool.description)
-
+            match tool.type:
+                case ToolType.RAG_TOOL:
+                    datasource = match_key(self.datasources_models, key)
+                    if datasource:
+                        embedding_model = match_key(self.crew_models, key)
+                        embedding_model_model = match_key(self.models_models, key)
+                        # Avoid the model_name conversion in FastEmbed models instantiation
+                        if embedding_model:
+                            # self.crew_tools[key] = RagTool.factory(tool, datasources=[datasource], models=[embedding_model], models_data=[embedding_model_model])
+                            collection = str(datasource.id)
+                            self.crew_tools[key] = RagTool(
+                                vector_store=Qdrant(
+                                    client=QdrantClient(QDRANT_HOST),
+                                    collection_name=collection,
+                                    embeddings=embedding_model,
+                                    vector_name=embedding_model_model.model_name,
+                                    content_payload_key=datasource.embeddingField
+                                ),
+                                embedding=embedding_model,
+                                name=tool.name, description=tool.description)
+                case ToolType.HOSTED_FUNCTION_TOOL:
+                    # TODO: use more secure option tools.CodeExecutionUsingDockerNotebookTool
+                    function_tool = CodeExecutionTool(
+                        name=tool.name,
+                        description=tool.description,
+                        function_name=tool.data.name,
+                        code=tool.data.code,
+                        properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
+                    )
+                    function_tool.post_init()
+                    self.crew_tools[key] = function_tool
     def build_agents(self):
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
