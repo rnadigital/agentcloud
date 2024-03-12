@@ -6,18 +6,16 @@ import React, { useState } from 'react';
 // Helper function to check if a permission is allowed
 const isPermissionAllowed = (currentPermission, permissionKey) => {
 	const metadata = Metadata[permissionKey];
-	if (!metadata) { return false; }
-
-	// If no parent is defined, it's a root permission and thus allowed
+	if (!metadata || metadata?.blocked === true) { return false; }
 	if (!metadata.parent) { return true; }
-
 	// Check if the current permission includes the parent permission
 	return currentPermission.get(metadata.parent);
 };
 
 const PermissionsEditor = ({ currentPermission, editingPermission }) => {
 	const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
-	console.log(editingPermission);
+	console.log('currentPermission', currentPermission);
+	console.log('editingPermissionState', editingPermissionState);
 	return (
 		<div>
 			{Object.entries(Metadata).map(([key, { title, label, desc }]) => {
@@ -29,10 +27,10 @@ const PermissionsEditor = ({ currentPermission, editingPermission }) => {
 							<input
 								type='checkbox'
 								checked={isChecked}
-								disabled={!isEnabled}
+								disabled={Metadata[key].parent ? !currentPermission.get(Metadata[key].parent) : false}
 								onChange={(e) => {
-									editingPermission.set(parseInt(key), e.target.checked);
-									setEditingPermissionState(editingPermission);
+									editingPermissionState.set(parseInt(key), e.target.checked);
+									setEditingPermissionState(editingPermissionState);
 								}}
 							/>
 							{`${title}: ${desc}`}
