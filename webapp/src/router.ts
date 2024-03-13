@@ -181,7 +181,8 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
-	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', setPermissions, hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
+	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
+	teamRouter.post('/forms/team/:membedId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
 	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);
@@ -196,6 +197,6 @@ export default function router(server, app) {
 	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
 	server.use('/webhook', webhookRouter);
 
-	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, teamRouter);
+	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, setPermissions, teamRouter);
 
 }

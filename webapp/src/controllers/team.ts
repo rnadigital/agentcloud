@@ -152,6 +152,18 @@ export async function addTeamApi(req, res) {
 	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
 }
 
+/**
+ * @api {post} /forms/team/[memberId]/edit
+ * @apiName edit
+ * @apiGroup Team
+ *
+ * @apiParam {String} teamName Name of new team
+ */
+export async function editTeamMemberApi(req, res) {
+
+	return dynamicResponse(req, res, 200, { });
+}
+
 export async function teamMemberData(req, res, _next) {
 	const [teamMember] = await Promise.all([
 		getAccountTeamMember(req.params.accountId, req.params.resourceSlug),
