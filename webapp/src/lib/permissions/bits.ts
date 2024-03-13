@@ -2,7 +2,9 @@ import Permissions from 'permissions/permissions';
 
 export const ACCOUNT_BITS = Object.seal(Object.freeze(Object.preventExtensions([
 	Permissions.ROOT,
-	Permissions.TESTING,
+	Permissions.CREATE_ORG,
+	Permissions.EDIT_ORG,
+	Permissions.DELETE_ORG,
 ])));
 
 export const ORG_BITS = Object.seal(Object.freeze(Object.preventExtensions([

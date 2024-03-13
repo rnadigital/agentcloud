@@ -7,20 +7,22 @@ ROOT.setAll(Permission.allPermissions);
 
 const NOT_LOGGED_IN = new Permission();
 
-const TESTING = new Permission();
-TESTING.setAll([Permissions.TESTING]);
+const REGISTERED_USER = new Permission();
+REGISTERED_USER.setAll([Permissions.EDIT_ORG, Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
 
-const ORG_OWNER = new Permission();
-ORG_OWNER.setAll([Permissions.ORG_OWNER, ...ORG_BITS]);
+const ORG_ADMIN = new Permission();
+ORG_ADMIN.setAll([Permissions.ORG_ADMIN, ...ORG_BITS]);
+//TODO: various org roles
 
-const TEAM_OWNER = new Permission();
-TEAM_OWNER.setAll([Permissions.TEAM_OWNER, ...TEAM_BITS]);
+const TEAM_ADMIN = new Permission();
+TEAM_ADMIN.setAll([Permissions.TEAM_ADMIN, ...TEAM_BITS]);
+//TODO: various team roles
 
 const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
 
-	ROOT, NOT_LOGGED_IN, TESTING,
+	ROOT, NOT_LOGGED_IN, REGISTERED_USER,
 
-	ORG_OWNER, TEAM_OWNER
+	ORG_ADMIN, TEAM_ADMIN
 
 })));
 

@@ -3,7 +3,6 @@ import Permissions from 'permissions/permissions';
 const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
 	[Permissions.ROOT]: { title: 'Root', label: 'Root', desc: 'Root permissions', parent: Permissions.ROOT, blocked: true },
-	[Permissions.TESTING]: { title: 'TESTING', label: 'TESTING', desc: 'TESTING', parent: Permissions.ROOT },
 	[Permissions.ORG_OWNER]: { title: 'Org Owner', label: 'Organization Owner', desc: 'Permissions for organization owners', parent: Permissions.ROOT  },
 	[Permissions.TEAM_OWNER]: { title: 'Team Owner', label: 'Team Owner', desc: 'Permissions for team owners', parent: Permissions.ORG_OWNER },
 	

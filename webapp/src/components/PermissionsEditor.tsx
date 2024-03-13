@@ -1,10 +1,11 @@
+import * as API from '@api';
 import Permission from '@permission';
+import { useAccountContext } from 'context/account';
+import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
-
-import { useAccountContext } from 'context/account';
+import { toast } from 'react-toastify';
 
 // Helper function to check if a permission is allowed
 const isPermissionAllowed = (currentPermission, permissionKey) => {
@@ -20,7 +21,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const { resourceSlug, memberId } = router.query;
 
 	// const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
 	// const [_, reRender] = useState(Date.now());
@@ -30,18 +31,19 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 		console.log(e, e.target.elements);
 		const body = new FormData();
 		body.set('resourceSlug', resourceSlug as string);
+		body.set('memberId', memberId as string);
 		body.set('_csrf', csrf as string);
-		for (let elem of Array.from(e.target.elements).filter(z => z.name.startsWith('permission_bit'))) {
-			if (elem.checked) {
-				body.set(elem.name, 'true'); //Note: value doesn't matter. Any value = true
+		for (let elem of Array.from(e.target.elements).filter((z: any) => z.name.startsWith('permission_bit'))) {
+			if (elem['checked']) {
+				body.set(elem['name'], 'true'); //Note: value doesn't matter. Any value = true
 			}
 		}
 		console.log(body);
-		// await API.editTeamMember(agentState._id, body, () => {
-		// 	toast.success('Permissions Updated');
-		// }, (res) => {
-		// 	toast.error(res);
-		// }, null);
+		await API.editTeamMember(body, () => {
+			toast.success('Permissions Updated');
+		}, (res) => {
+			toast.error(res);
+		}, null);
 	}
 
 	return (

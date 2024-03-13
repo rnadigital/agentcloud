@@ -221,6 +221,9 @@ export function deleteFromTeam(body, dispatch, errorCallback, router) {
 export function addTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/team/add`, 'POST', body, dispatch, errorCallback, router);
 }
+export function editTeamMember(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.get('resourceSlug')}/forms/team/${body.get('memberId')}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
 
 function buildOptions(_route, method, body) {
 

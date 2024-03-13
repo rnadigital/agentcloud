@@ -71,7 +71,7 @@ export default async function createAccount(email: string, name: string, passwor
 			currentTeam: teamId,
 			emailVerified,
 			oauth,
-			permissions: new Binary(Roles.TESTING.array),
+			permissions: new Binary(Roles.REGISTERED_USER.array),
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

@@ -16,7 +16,7 @@ function calcPerms(req, res, next) {
 			: Math.max(...Object.values(Permissions)); //If empty, get highest permission bit to use as bitfield size.
 		calculatedPermissions = new Permission(userPerms);
 
-calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER, true); //TODO: remove
+		calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER, true); //TODO: remove
 
 		if (matchingOrg && matchingOrg.ownerId.toString() === account._id.toString()) {
 			// Setting  org owner perm
@@ -27,7 +27,9 @@ calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER, true); //TODO: remove
 			for (let bit of ORG_BITS) {
 				calculatedPermissions.set(bit, orgPermissions.get(bit));
 			}
-		} else if (matchingTeam && matchingTeam.ownerId.toString() === account._id.toString()) {
+		}
+
+		if (matchingTeam && matchingTeam.ownerId.toString() === account._id.toString()) {
 			// Setting team owner perm
 			calculatedPermissions.set(Permissions.TEAM_OWNER);
 		} else if (matchingTeam && matchingTeam.permissions[account._id.toString()]) {
@@ -37,6 +39,7 @@ calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER, true); //TODO: remove
 				calculatedPermissions.set(bit, teamPermissions.get(bit));
 			}
 		}
+
 		// Apply inheritance, see Permission
 		calculatedPermissions.applyInheritance();
 	} else {
