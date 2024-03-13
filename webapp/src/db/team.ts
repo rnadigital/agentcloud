@@ -1,7 +1,9 @@
 'use strict';
 
+import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
+import Roles from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -48,8 +50,11 @@ export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Promis
 		_id: toObjectId(teamId),
 	}, {
 		$push: {
-			members: toObjectId(accountId),
+			members: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
 		},
+		$set: {
+			[`permissions.${accountId}`]: new Binary((new Permission(Roles.TESTING.base64).array)),
+		}
 	});
 }
 
@@ -60,6 +65,9 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 		$pullAll: {
 			members: [toObjectId(accountId)],
 		},
+		$unset: {
+			[`permissions.${accountId}`]: ''
+		}
 	});
 }
 

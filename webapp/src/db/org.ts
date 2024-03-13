@@ -3,7 +3,8 @@
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
-
+import Permission from '@permission';
+import Roles from 'permissions/roles';
 import toObjectId from '../lib/misc/toobjectid';
 
 export type Org = {
@@ -37,6 +38,32 @@ export function addTeamToOrg(orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any
 		$addToSet: {
 			teamIds: toObjectId(teamId),
 		},
+	});
+}
+
+export function addOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
+	return OrgCollection().updateOne({
+		_id: toObjectId(orgId),
+	}, {
+		$push: {
+			admins: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
+		},
+		$set: {
+			[`permissions.${accountId}`]: new Binary((new Permission(Roles.TESTING.base64).array)),
+		}
+	});
+}
+
+export function removeOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
+	return OrgCollection().updateOne({
+		_id: toObjectId(orgId),
+	}, {
+		$pullAll: {
+			admins: [toObjectId(accountId)],
+		},
+		$unset: {
+			[`permissions.${accountId}`]: ''
+		}
 	});
 }
 

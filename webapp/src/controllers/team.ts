@@ -7,6 +7,7 @@ import createAccount from 'lib/account/create';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
 
 import { Account, addAccount, changeAccountPassword, getAccountByEmail,
 	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
@@ -140,7 +141,7 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary((new Permission([Permissions.TESTING]).array)),
+			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.TESTING.base64).array)),
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);

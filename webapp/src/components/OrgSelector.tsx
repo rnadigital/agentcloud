@@ -87,39 +87,41 @@ export default function OrgSelector({ orgs }) {
 						
 					</div>*/}
 					<div className='py-1'>
-						{orgs.map((org, oi) => (<span key={`org_${oi}`}>
-							{oi > 0 && <hr className='border-t border-slate-700 w-full' />}
-							<Menu.Item disabled>
-								{({ active }) => (
-									<a
-										href='#'
-										className={classNames(
-											active ? 'bg-gray-100' : 'text-gray-100',
-											'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
-										)}
-									>
-										{org.name}
-									</a>
-								)}
-							</Menu.Item>
-							{org.teams.map((team, ti) => (
-								<Menu.Item key={`org_${oi}_team_${ti}`}>
+						{orgs
+							.filter(o => o?.teams?.length > 0)
+							.map((org, oi) => (<span key={`org_${oi}`}>
+								{oi > 0 && <hr className='border-t border-slate-700 w-full' />}
+								<Menu.Item disabled>
 									{({ active }) => (
 										<a
-											onClick={() => switchTeam(org.id, team.id)}
 											href='#'
 											className={classNames(
-												active ? '' : 'text-gray-100',
-												resourceSlug === team.id ? 'bg-indigo-900': '',
-												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
+												active ? 'bg-gray-100' : 'text-gray-100',
+												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
 											)}
 										>
-											{team.name}
+											{org.name}
 										</a>
 									)}
 								</Menu.Item>
-							))}
-						</span>))}
+								{org.teams.map((team, ti) => (
+									<Menu.Item key={`org_${oi}_team_${ti}`}>
+										{({ active }) => (
+											<a
+												onClick={() => switchTeam(org.id, team.id)}
+												href='#'
+												className={classNames(
+													active ? '' : 'text-gray-100',
+													resourceSlug === team.id ? 'bg-indigo-900': '',
+													'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
+												)}
+											>
+												{team.name}
+											</a>
+										)}
+									</Menu.Item>
+								))}
+							</span>))}
 						<hr className='border-t border-2 border-slate-700 w-full' />
 						<a
 							onClick={() => setModalOpen(true)}

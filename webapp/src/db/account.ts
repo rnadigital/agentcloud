@@ -144,6 +144,23 @@ export function pushAccountTeam(userId: db.IdOrStr, orgId: db.IdOrStr, team: Acc
 	});
 }
 
+//NOTE: will leave dangling orgs if removed from all teams in an org, but we filter these on the FE.
+export function pullAccountTeam(userId: db.IdOrStr, orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$pull: {
+			'orgs.$[org].teams': {
+				id: toObjectId(teamId)
+			}
+		}
+	}, {
+		arrayFilters: [{
+			'org.id': toObjectId(orgId)
+		}]
+	});
+}
+
 export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<any> {
 	return AccountCollection().updateOne({
 		_id: toObjectId(userId)
