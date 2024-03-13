@@ -12,6 +12,7 @@ import * as ses from '../lib/email/ses';
 import { dynamicResponse } from '../util';
 
 export async function accountData(req, res, _next) {
+	//TODO: calculate and send the base64 of calcuated permissions for the resourceSlug here:
 	return {
 		team: res.locals.matchingTeam,
 		csrf: req.csrfToken(),

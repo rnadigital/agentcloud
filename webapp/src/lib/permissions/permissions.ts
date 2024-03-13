@@ -1,7 +1,6 @@
 const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT: 0,
-	TESTING: 1,
 
 	// Gets set in calcPerms based on context
 	ORG_OWNER: 10,

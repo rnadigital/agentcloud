@@ -29,10 +29,12 @@ export default function Account(props) {
 		}, null, setError, router);
 	}
 
+	function fetchAccount() {
+		API.getAccount({ resourceSlug }, dispatch, setError, router);
+	}
+
 	useEffect(() => {
-		if (!account) {
-			API.getAccount(dispatch, setError, router);
-		}
+		fetchAccount();
 	}, [resourceSlug]);
 	
 	if (!account) {

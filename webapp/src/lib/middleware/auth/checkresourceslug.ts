@@ -1,6 +1,9 @@
 'use strict';
 
-export default function checkResourceSlug(req, res, next) {
+import { getOrgById } from 'db/org';
+import { getTeamById } from 'db/team';
+
+export default async function checkResourceSlug(req, res, next) {
 	if (!req.params?.resourceSlug
 		|| req.params.resourceSlug.length === 0
 		|| !res?.locals?.account?.orgs) {
@@ -24,6 +27,10 @@ export default function checkResourceSlug(req, res, next) {
 		return res.status(403).send({ error: 'No permission' });
 	}
 	res.locals.matchingOrg = matchingOrg;
+
+	//TODO: cache in redis
+	const foundOrg = await getOrgById(matchingOrg.id);
+	res.locals.matchingOrg.permissions = foundOrg.permissions;
 	
 	const matchingTeam = matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
@@ -31,6 +38,10 @@ export default function checkResourceSlug(req, res, next) {
 		return res.status(403).send({ error: 'No permission' });
 	}
 	res.locals.matchingTeam = matchingTeam;
+
+	//TODO: cache in redis
+	const foundTeam = await getTeamById(matchingTeam.id);
+	res.locals.matchingTeam.permissions = foundTeam.permissions;
 
 	next();
 }
