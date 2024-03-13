@@ -17,6 +17,7 @@ function getTeamAndOrgName(data) {
 export function AccountWrapper({ children, pageProps }) {
 
 	const router = useRouter();
+	const { resourceSlug, memberId } = (router?.query||{});
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),
@@ -24,7 +25,7 @@ export function AccountWrapper({ children, pageProps }) {
 	});
 
 	function refreshAccountContext() {
-		API.getAccount((data) => {
+		API.getAccount({ resourceSlug, memberId }, (data) => {
 			setSharedState({
 				...pageProps,
 				...data,

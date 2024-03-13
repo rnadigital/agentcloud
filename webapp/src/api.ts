@@ -1,8 +1,12 @@
 import NProgress from 'nprogress';
 
 // Account
-export function getAccount(dispatch, errorCallback, router) {
-	return ApiCall('/account.json', 'GET', null, dispatch, errorCallback, router);
+export function getAccount(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		memberId: body?.memberId,
+		resourceSlug: body?.resourceSlug,
+	}).toString();
+	return ApiCall(`/account.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
 export function getDockerLogs(dispatch, errorCallback, router) {
 	return ApiCall('/logs.json', 'GET', null, dispatch, errorCallback, router);
