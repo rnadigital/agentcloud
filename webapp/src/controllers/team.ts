@@ -58,12 +58,13 @@ export async function inviteTeamMemberApi(req, res) {
 	if (!email || typeof email !== 'string' || email.length === 0) {
 		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
 	}
-	const foundAccount = await getAccountByEmail(email);
+	let foundAccount = await getAccountByEmail(email);
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
 		const { addedAccount } = await createAccount(email, name, null, true);
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
+		foundAccount = await getAccountByEmail(email);
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
@@ -71,16 +72,16 @@ export async function inviteTeamMemberApi(req, res) {
 			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id);
-		if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
-			//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
-			await pushAccountOrg(foundAccount._id, {
-				...res.locals.matchingOrg,
-				teams: [invitingTeam],
-			});
-		} else {
-			//otherwise theyre already in the org, just push the single team to the matching org
-			await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
-		}
+	}
+	if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
+		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
+		await pushAccountOrg(foundAccount._id, {
+			...res.locals.matchingOrg,
+			teams: [invitingTeam],
+		});
+	} else {
+		//otherwise theyre already in the org, just push the single team to the matching org
+		await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 	}
 	//member invited
 	return dynamicResponse(req, res, 200, { });

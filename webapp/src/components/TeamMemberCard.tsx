@@ -39,7 +39,7 @@ export default function TeamMemberCard({ member, callback }) {
 				<span className={`px-3 py-1 text-sm font-semibold text-white rounded-full ${member.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`}>
 					{member.emailVerified ? 'Active' : 'Pending'}
 				</span>
-				{team && member._id  && member._id.toString() !== team[0].ownerId.toString() && <button type='button' onClick={deleteMember}
+				{team && member._id  && member._id.toString() !== team[0].ownerId?.toString() && <button type='button' onClick={deleteMember}
 					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0'
 					// className='rounded-full relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
 				>
