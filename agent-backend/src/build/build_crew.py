@@ -1,5 +1,5 @@
 import logging
-from typing import Set
+from typing import Set, Type
 from time import time
 from uuid import uuid4
 from datetime import datetime
@@ -22,7 +22,7 @@ from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
-from tools.global_tools import CustomHumanInput
+from tools.global_tools import CustomHumanInput, GlobalBaseTool
 
 
 class CrewAIBuilder:
@@ -128,37 +128,47 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
+            # Decide on tool class
+            tool_class: Type[GlobalBaseTool] = None
             match tool.type:
                 case ToolType.RAG_TOOL:
-                    datasource = match_key(self.datasources_models, key)
-                    if datasource:
-                        embedding_model = match_key(self.crew_models, key)
-                        embedding_model_model = match_key(self.models_models, key)
-                        # Avoid the model_name conversion in FastEmbed models instantiation
-                        if embedding_model:
-                            # self.crew_tools[key] = RagTool.factory(tool, datasources=[datasource], models=[embedding_model], models_data=[embedding_model_model])
-                            collection = str(datasource.id)
-                            self.crew_tools[key] = RagTool(
-                                vector_store=Qdrant(
-                                    client=QdrantClient(QDRANT_HOST),
-                                    collection_name=collection,
-                                    embeddings=embedding_model,
-                                    vector_name=embedding_model_model.model_name,
-                                    content_payload_key=datasource.embeddingField
-                                ),
-                                embedding=embedding_model,
-                                name=tool.name, description=tool.description)
+                    tool_class = RagTool
                 case ToolType.HOSTED_FUNCTION_TOOL:
                     # TODO: use more secure option tools.CodeExecutionUsingDockerNotebookTool
-                    function_tool = CodeExecutionTool(
-                        name=tool.name,
-                        description=tool.description,
-                        function_name=tool.data.name,
-                        code=tool.data.code,
-                        properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
-                    )
-                    function_tool.post_init()
-                    self.crew_tools[key] = function_tool
+                    tool_class = CodeExecutionTool
+            # Assign tool models and datasources
+            datasources = search_subordinate_keys(self.datasources_models, key)
+            tool_models_objects = search_subordinate_keys(self.crew_models, key)
+            tool_models_models = []
+            for model_key, model_object in tool_models_objects.items():
+                model_data = match_key(self.models_models, model_key)
+                tool_models_models.append((model_object, model_data))
+            tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()), models=tool_models_models)
+            self.crew_tools[key] = tool_instance
+
+                    # if datasource:
+                        # Avoid the model_name conversion in FastEmbed models instantiation
+                        # if embedding_model:
+                        #     collection = str(datasource.id)
+                        #     self.crew_tools[key] = RagTool(
+                        #         vector_store=Qdrant(
+                        #             client=QdrantClient(QDRANT_HOST),
+                        #             collection_name=collection,
+                        #             embeddings=embedding_model,
+                        #             vector_name=embedding_model_model.model_name,
+                        #             content_payload_key=datasource.embeddingField
+                        #         ),
+                        #         embedding=embedding_model,
+                        #         name=tool.name, description=tool.description)
+                    # function_tool = CodeExecutionTool(
+                    #     name=tool.name,
+                    #     description=tool.description,
+                    #     function_name=tool.data.name,
+                    #     code=tool.data.code,
+                    #     properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
+                    # )
+                    # function_tool.post_init()
+                    # self.crew_tools[key] = function_tool
     def build_agents(self):
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)

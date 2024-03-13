@@ -1,15 +1,18 @@
-from typing import Optional, Type, Any
+from typing import List, Optional, Tuple, Type, Any
 from uuid import uuid4
 from datetime import datetime
 
 from langchain.tools import tool
 from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
+from langchain_core.language_models import BaseChatModel
 from socketio import SimpleClient
 
 from messaging.send_message_to_socket import send
 from models.sockets import SocketEvents, SocketMessage, Message
 from pydantic import BaseModel, Field
+from abc import ABC, abstractmethod
+from models.mongo import Tool, Datasource, Model
 
 
 class HumanInputParams(BaseModel):
@@ -199,3 +202,23 @@ class HumanInput:
                     "message": "TimeOutError"},
             )
             return "exit"
+
+
+class GlobalBaseTool(BaseTool, ABC):
+
+    @classmethod
+    @abstractmethod
+    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kargs) -> BaseTool:
+        """ 
+            cls: class type instance - tells you what class was is calling this class-level method
+            tool: tool model. Need to copy or extract mandatory BaseTool fields such as name, description, args_schema
+            datasources: datasource mongo object. Used to instantiate datasources such as Vector DB
+            models: list of Tuple (model object such as OpenAI or FastEmbed, Model mongo object)
+            kargs: other arguments. futfureproofing method for when we need to pass other mongo model data or app/team configuration to the tool
+        """
+        pass
+
+    # @abstractmethod
+    # def post_init() -> Any:
+    #     """use to instantiate any clients or objects, or dynamic arguments. E.g. self.args_schema = dynamic_create_args_schema(...)"""
+    #     pass

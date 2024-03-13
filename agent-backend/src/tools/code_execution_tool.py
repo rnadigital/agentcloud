@@ -5,9 +5,17 @@ import json
 import subprocess
 
 from langchain_core.pydantic_v1 import create_model, Field
+from .global_tools import GlobalBaseTool
+from models.mongo import Tool
 
-class CodeExecutionTool(BaseTool):
-    """Code execution tool"""
+class CodeExecutionTool(GlobalBaseTool):
+    """
+    Code execution tool
+    Args:
+        function_name (str): Name of the function. Has to be a valid python name. This name is used to call the function.
+        properties_dict (dict): dictionary of tool.data.parameters.properties { proeprty_name: { type: string | number | boolean, ... } }
+                                this dict is used to create a dynamic pydantic model for "args_schema"
+    """
     name: str = ""
     description: str = ""
     code: str
@@ -19,6 +27,18 @@ class CodeExecutionTool(BaseTool):
         self.args_schema = create_model(f"{self.function_name}_model", **self.convert_args_dict_to_type(self.properties_dict))
 
 
+    @classmethod
+    def factory(cls, tool: Tool, **kargs):
+        code_execution_tool = CodeExecutionTool(
+            name=tool.name,
+            description=tool.description,
+            function_name=tool.data.name,
+            code=tool.data.code,
+            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
+        )
+        code_execution_tool.post_init()
+        return code_execution_tool
+    
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():

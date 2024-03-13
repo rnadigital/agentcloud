@@ -1,4 +1,4 @@
-from typing import Callable, List, Type
+from typing import Any, Callable, List, Tuple, Type
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_community.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
@@ -6,6 +6,13 @@ from langchain_core.embeddings import Embeddings
 from langchain.tools import BaseTool
 import json
 
+from socketio import SimpleClient
+from .global_tools import GlobalBaseTool
+from models.sockets import SocketEvents, SocketMessage, Message
+from models.mongo import Model, Tool, Datasource
+from init.env_variables import QDRANT_HOST
+from langchain_community.vectorstores.qdrant import Qdrant
+from qdrant_client import QdrantClient
 
 ###### INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT ######
 
@@ -14,7 +21,7 @@ class RagToolArgsSchema(BaseModel):
     query: str = Field(description="Retrieval argument")
 
 
-class RagTool(BaseTool):
+class RagTool(GlobalBaseTool):
     """
     DO NOT INSTANTIATE DIRECTLY. USE FACTORY CLASS AT END OF FILE (UNLESS YOU REALLY WANT TO).
 
@@ -45,16 +52,32 @@ class RagTool(BaseTool):
     post_processors: List[Callable] = Field(default=list())
     args_schema: Type[BaseModel] = RagToolArgsSchema
 
-    # def __hash__(self) -> int:
-    #     return hash((
-    #         self.vector_store.__class__.__name__ if self.vector_store else "",
-    #         self.embedding.model_name if self.embedding else "",
-    #         self.name,
-    #         self.description))
+    @classmethod
+    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]]) -> BaseTool:
+        assert len(datasources) == 1
+        assert isinstance(datasources[0], Datasource)
 
-    # def _validate_instance(self):
-    #     """validate vector_store and embedding"""
-    #     "later validate callables"
+        datasource = datasources[0]
+
+        assert len(models) == 1
+        assert isinstance(models[0][0], Embeddings)
+        assert isinstance(models[0][1], Model)
+        
+        embedding_model = models[0][0]
+        model_data = models[0][1]
+
+        collection = str(datasource.id)
+
+        return RagTool(
+        vector_store=Qdrant(
+            client=QdrantClient(QDRANT_HOST),
+            collection_name=collection,
+            embeddings=embedding_model,
+            vector_name=model_data.model_name,
+            content_payload_key=datasource.embeddingField
+        ),
+        embedding=embedding_model,
+        name=tool.name, description=tool.description)
 
     def register_pre_processors(self, functions: Callable | List[Callable]):
         if hasattr(functions, '__iter__'):
