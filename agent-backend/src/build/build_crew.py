@@ -145,30 +145,7 @@ class CrewAIBuilder:
                 tool_models_models.append((model_object, model_data))
             tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()), models=tool_models_models)
             self.crew_tools[key] = tool_instance
-
-                    # if datasource:
-                        # Avoid the model_name conversion in FastEmbed models instantiation
-                        # if embedding_model:
-                        #     collection = str(datasource.id)
-                        #     self.crew_tools[key] = RagTool(
-                        #         vector_store=Qdrant(
-                        #             client=QdrantClient(QDRANT_HOST),
-                        #             collection_name=collection,
-                        #             embeddings=embedding_model,
-                        #             vector_name=embedding_model_model.model_name,
-                        #             content_payload_key=datasource.embeddingField
-                        #         ),
-                        #         embedding=embedding_model,
-                        #         name=tool.name, description=tool.description)
-                    # function_tool = CodeExecutionTool(
-                    #     name=tool.name,
-                    #     description=tool.description,
-                    #     function_name=tool.data.name,
-                    #     code=tool.data.code,
-                    #     properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
-                    # )
-                    # function_tool.post_init()
-                    # self.crew_tools[key] = function_tool
+            
     def build_agents(self):
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
