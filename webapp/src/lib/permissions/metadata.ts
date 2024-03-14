@@ -2,19 +2,21 @@ import Permissions from 'permissions/permissions';
 
 const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
-	[Permissions.ROOT]: { title: 'Root', label: 'Root', desc: 'Root permissions', parent: Permissions.ROOT, blocked: true },
+	[Permissions.ROOT]: { heading: 'Developer Permissions', title: 'Root', label: 'Root', desc: 'Root permissions', parent: Permissions.ROOT, blocked: true },
 	[Permissions.ORG_OWNER]: { title: 'Org Owner', label: 'Organization Owner', desc: 'Permissions for organization owners', parent: Permissions.ROOT  },
 	[Permissions.TEAM_OWNER]: { title: 'Team Owner', label: 'Team Owner', desc: 'Permissions for team owners', parent: Permissions.ORG_OWNER },
-	
-	[Permissions.ORG_ADMIN]: { title: 'Org Admin', label: 'Organization Admin', desc: 'Permissions for organization admins', parent: Permissions.ORG_OWNER },
-	[Permissions.CREATE_ORG]: { title: 'Create Organization', label: 'Create Org', desc: 'Ability to create an organization' },
+
+	[Permissions.CREATE_ORG]: { heading: 'Account Permissions', title: 'Create Organization', label: 'Create Org', desc: 'Ability to create an organization' },
 	[Permissions.EDIT_ORG]: { title: 'Edit Organization', label: 'Edit Org', desc: 'Ability to edit an organization' },
 	[Permissions.DELETE_ORG]: { title: 'Delete Organization', label: 'Delete Org', desc: 'Ability to delete an organization' },
+	
+	[Permissions.ORG_ADMIN]: { heading: 'Org Permissions', title: 'Org Admin', label: 'Organization Admin', desc: 'Permissions for organization admins', parent: Permissions.ORG_OWNER },
 
-	[Permissions.TEAM_ADMIN]: { title: 'Team Admin', label: 'Team Admin', desc: 'Permissions for team admins', parent: Permissions.TEAM_OWNER },
 	[Permissions.CREATE_TEAM]: { title: 'Create Team', label: 'Create Team', desc: 'Ability to create a team' },
 	[Permissions.EDIT_TEAM]: { title: 'Edit Team', label: 'Edit Team', desc: 'Ability to edit a team' },
 	[Permissions.DELETE_TEAM]: { title: 'Delete Team', label: 'Delete Team', desc: 'Ability to delete a team' },
+
+	[Permissions.TEAM_ADMIN]: { heading: 'Team Permissions', title: 'Team Admin', label: 'Team Admin', desc: 'Permissions for team admins', parent: Permissions.TEAM_OWNER },
 
 	[Permissions.ADD_TEAM_MEMBER]: { title: 'Add Team Member', label: 'Add Member', desc: 'Ability to add a team member' },
 	[Permissions.EDIT_TEAM_MEMBER]: { title: 'Edit Team Member', label: 'Edit Member', desc: 'Ability to edit team members' },

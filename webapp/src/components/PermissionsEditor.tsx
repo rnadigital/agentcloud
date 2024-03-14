@@ -48,12 +48,14 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 
 	return (
 		<form onSubmit={permissionsPost}>
-			{Object.entries(Metadata).map(([key, { title, label, desc }]) => {
+			{Object.entries(Metadata).map(([key, { title, label, desc, heading }]) => {
 				const isEnabled = isPermissionAllowed(currentPermission, key);
-				return (
+				return (<>
+					{heading && <h2>{heading}</h2>}
 					<div key={`perm_${title}_${key}`}>
 						<label>
 							<input
+								className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 								type='checkbox'
 								name={`permission_bit_${key}`}
 								value='true'
@@ -68,7 +70,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 							{`${title}: ${desc}`}
 						</label>
 					</div>
-				);
+				</>);
 			})}
 			<button type='submit' value='submit'>submit</button>
 		</form>

@@ -12,7 +12,7 @@ if ! docker info &> /dev/null; then
 fi
 
 print_logo() {
-    clear
+    #clear
     if [ "$terminal_width" -gt 120 ]; then
         echo -e """
 \033[34m            ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -170,15 +170,17 @@ INSTANCE_CONFIGURATION=$(curl 'http://localhost:8000/api/v1/instance_configurati
 	-H 'Accept: */*' \
 	-H 'Accept-Language: en-US,en;q=0.5' \
 	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/setup' \
+	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
 	-H 'x-airbyte-analytic-source: webapp' \
 	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
 	-H 'Connection: keep-alive' \
-	--data-raw '{"email":"localhost@localhost.localdomain","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"localhost","initialSetupComplete":true,"displaySetupWizard":false}')
+	--data-raw '{"email":"example@example.org","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"example","initialSetupComplete":true,"displaySetupWizard":false}')
 
 export AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $INSTANCE_CONFIGURATION | jq -r '.defaultWorkspaceId')
+echo $INSTANCE_CONFIGURATION
+echo $AIRBYTE_ADMIN_WORKSPACE_ID
 
 # create rabbitmq destination
 CREATED_DESTINATION=$(curl 'http://localhost:8000/api/v1/destinations/create' --compressed -X POST \
@@ -186,7 +188,7 @@ CREATED_DESTINATION=$(curl 'http://localhost:8000/api/v1/destinations/create' --
 	-H 'Accept: */*' \
 	-H 'Accept-Language: en-US,en;q=0.5' \
 	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/workspaces/7b1abeef-4c09-4cad-b23d-539bc236c597/destination/new-destination/e06ad785-ad6f-4647-b2e8-3027a5c59454' \
+	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
 	-H 'x-airbyte-analytic-source: webapp' \
 	-H 'Origin: http://localhost:8000' \
@@ -201,7 +203,7 @@ UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --c
 	-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0' \
 	-H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' \
 	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/workspaces/8eb14cdb-7d9a-435d-b4c6-9c53b0ca99b6/settings/notifications' \
+	-H 'Referer: http://localhost:8000/' \
 	-H 'content-type: application/json' \
 	-H 'x-airbyte-analytic-source: webapp' \
 	-H 'Origin: http://localhost:8000' \
