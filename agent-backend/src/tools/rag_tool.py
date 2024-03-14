@@ -23,7 +23,7 @@ class RagToolArgsSchema(BaseModel):
 
 class RagTool(GlobalBaseTool):
     """
-    DO NOT INSTANTIATE DIRECTLY. USE FACTORY CLASS AT END OF FILE (UNLESS YOU REALLY WANT TO).
+    DO NOT INSTANTIATE DIRECTLY. USE FACTORY METHOD AT END OF FILE (UNLESS YOU REALLY WANT TO).
 
     Args:
         vector_store: can be any vector store in langchain_community.vectorstores
