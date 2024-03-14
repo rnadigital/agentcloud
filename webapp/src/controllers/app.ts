@@ -3,9 +3,11 @@
 import { getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { addCrew, updateCrew } from 'db/crew';
+import { getModelsByTeam } from 'db/model';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
+import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
 
 import { dynamicResponse } from '../util';
@@ -27,11 +29,12 @@ export async function appsData(req, res, _next) {
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents] = await Promise.all([
+	const [app, tasks, tools, agents, models] = await Promise.all([
 		 getAppById(req.params.resourceSlug, req.params.appId),
 		 getTasksByTeam(req.params.resourceSlug),
 		 getToolsByTeam(req.params.resourceSlug),
 		 getAgentsByTeam(req.params.resourceSlug),
+		 getModelsByTeam(req.params.resourceSlug),
 	 ]);
 	 return {
 		csrf: req.csrfToken(),
@@ -39,6 +42,7 @@ export async function appData(req, res, _next) {
 		tasks,
 		tools,
 		agents,
+		models
 	};
 }
 
@@ -100,11 +104,13 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, process, tasks }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, tasks, managerModelId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	const process = appType == AppType.CHAT ? ProcessImpl.HIERARCHICAL : ProcessImpl.SEQUENTIAL;
 
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,
@@ -113,6 +119,7 @@ export async function addAppApi(req, res, next) {
 		tasks: tasks.map(toObjectId),
 		agents: agents.map(toObjectId),
 		process,
+		managerModelId: toObjectId(managerModelId)
 	});
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
@@ -124,6 +131,7 @@ export async function addAppApi(req, res, next) {
 			.filter(x => x),
 		capabilities,
 		crewId: addedCrew.insertedId,
+		appType
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
@@ -139,7 +147,9 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, process, tasks }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, tasks, managerModelId }  = req.body;
+
+	const process = appType == AppType.CHAT ? ProcessImpl.HIERARCHICAL : ProcessImpl.SEQUENTIAL;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -159,6 +169,7 @@ export async function editAppApi(req, res, next) {
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
+			managerModelId: toObjectId(managerModelId)
 		}),
 		updateApp(req.params.resourceSlug, req.params.appId, {
 		    name,
@@ -167,6 +178,7 @@ export async function editAppApi(req, res, next) {
 				.map(t => t.trim())
 				.filter(t => t),
 			capabilities,
+			appType
 		})
 	]);
 

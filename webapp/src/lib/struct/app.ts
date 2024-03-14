@@ -12,4 +12,10 @@ export type App = {
 	visibility?: any; //TODO: perms
 	capabilities?: string;
 	crewId?: ObjectId;
+	appType: AppType;
 };
+
+export enum AppType {
+	CHAT = 'chat',
+	PROCESS = 'process',
+}

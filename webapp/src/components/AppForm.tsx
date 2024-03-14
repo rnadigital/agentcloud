@@ -13,10 +13,10 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { ProcessImpl } from 'struct/crew';
+import { AppType } from 'struct/app';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
-	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
+	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -25,8 +25,10 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
+	const [managerModels, setManagerModels] = useState(modelChoices.filter(model => model._id == crew.managerModelId).map(m => ({ label: m.name, value: m._id })));
+	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [error, setError] = useState();
-	const { name, agents, tasks, tools, process } = crewState;
+	const { name, agents, tasks, tools } = crewState;
 	const { description, tags } = appState; //TODO: make it take correct stuff from appstate
 
 	const initialAgents = agents && agents.map(a => {
@@ -49,7 +51,8 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			name: e.target.name.value,
 			description: e.target.description.value,
 			agents: agentsState.map(a => a.value),
-			process: e.target.process.value,
+			appType: appTypeState,
+			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
 		};
 		if (editing === true) {
@@ -224,31 +227,70 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						</div>
 						<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Process Implementation
+								App Type
 							</label>
 							<div className='mt-2'>
 								<label className='inline-flex items-center mr-6 text-sm'>
 									<input
 										type='radio'
 										name='process'
-										value={ProcessImpl.SEQUENTIAL}
-										defaultChecked={process === ProcessImpl.SEQUENTIAL}
+										value={AppType.CHAT}
+										defaultChecked={appTypeState === AppType.CHAT}
+										onChange={(e) => { e.target.checked && setAppTypeState(AppType.CHAT); }}
 										className='form-radio'
 									/>
-									<span className='ml-2'>Sequential</span>
+									<span className='ml-2'>Chat</span>
 								</label>
 								<label className='inline-flex items-center text-sm'>
 									<input
 										type='radio'
 										name='process'
-										value={ProcessImpl.HEIRARCHICAL}
-										defaultChecked={process === ProcessImpl.HEIRARCHICAL}
+										value={AppType.PROCESS}
+										defaultChecked={appTypeState === AppType.PROCESS}
+										onChange={(e) => { e.target.checked && setAppTypeState(AppType.PROCESS); e.target.checked && setManagerModels([]); }}
 										className='form-radio'
 									/>
-									<span className='ml-2'>Hierarchical</span>
+									<span className='ml-2'>Process</span>
 								</label>
 							</div>
 						</div>
+						{appTypeState === AppType.CHAT && <div className='sm:col-span-12'>
+							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Chat Manager Model
+							</label>
+							<div className='mt-2'>
+								<Select
+									isMultiple
+									isSearchable
+						            primaryColor={'indigo'}
+						            classNames={{
+										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+						            }}
+						            value={managerModels}
+						            onChange={(v: any) => {
+										setManagerModels(v);
+        						   	}}
+						            options={modelChoices.filter(model => model.modelType == undefined || model.modelType == 'llm')
+						            	.map(m => ({ label: m.name, value: m._id }))} // map to options
+						            	// .concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+						            formatOptionLabel={(data: any) => {
+						                return (<li
+						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+						                        data.isSelected
+						                            ? 'bg-blue-100 text-blue-500'
+						                            : 'dark:text-white'
+						                    }`}
+						                >
+						                    {data.label}
+						                </li>);
+						            }}
+						        />
+							</div>
+						</div>}
 					</div>
 				</div>			
 
