@@ -8,7 +8,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { CredentialType } from 'struct/credential';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
-import { addCredential } from '../db/credential';
+import { addCredential, deleteCredentialById } from '../db/credential';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
 import { dynamicResponse } from '../util';
@@ -74,7 +74,7 @@ export async function modelAddPage(app, req, res, next) {
 
 export async function modelAddApi(req, res, next) {
 
-	const { name, model, credentialId }  = req.body;
+	let { name, model, credentialId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
@@ -143,6 +143,13 @@ export async function editModelApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	const update = {
+		name,
+		model,
+		embeddingLength: ModelEmbeddingLength[model] || 0,
+		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
+	};
+
 	let credential;
 	if (credentialId && credentialId.length > 0) {
 		// Validate model for credential is valid
@@ -155,17 +162,12 @@ export async function editModelApi(req, res, next) {
 		if (!credential) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
 		}
+		update['credentialId'] = credentialId ? toObjectId(credentialId) : null;
 	}
+	update['type'] = credential?.type || CredentialType.FASTEMBED;
 
 	// Insert model to db
-	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, {
-		name,
-		credentialId: credentialId ? toObjectId(credentialId) : null,
-		model,
-		embeddingLength: ModelEmbeddingLength[model] || 0,
-		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type: credential?.type || CredentialType.FASTEMBED,
-	});
+	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, update);
 
 	return dynamicResponse(req, res, 302, { });
 
@@ -186,9 +188,15 @@ export async function deleteModelApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const model = await getModelById(req.params.resourceSlug, modelId);
+	if (!model) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
 	Promise.all([
 		removeAgentsModel(req.params.resourceSlug, modelId),
-		deleteModelById(req.params.resourceSlug, modelId)
+		deleteModelById(req.params.resourceSlug, modelId),
+		model?.type === CredentialType.FASTEMBED ? deleteCredentialById(req.paarams.resourceSlug, model.credentialId) : void 0, //Delete dumym cred if this is a fastembed model
 	]);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });
