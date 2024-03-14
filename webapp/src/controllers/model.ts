@@ -6,6 +6,7 @@ import { addModel, deleteModelById, getModelById, getModelsByTeam,updateModel } 
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { CredentialType } from 'struct/credential';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
@@ -106,7 +107,7 @@ export async function modelAddApi(req, res, next) {
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type: credential.type,
+		type: credential?.type || CredentialType.FASTEMBED,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });
@@ -147,7 +148,7 @@ export async function editModelApi(req, res, next) {
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type: credential.type,
+		type: credential?.type || CredentialType.FASTEMBED,
 	});
 
 	return dynamicResponse(req, res, 302, { });
