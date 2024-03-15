@@ -54,9 +54,10 @@ class CustomHumanInput(BaseTool):
                     message=Message(
                         chunkId=str(uuid4()),
                         text=text,
-                        first=first,
+                        first=True,
                         tokens=1,  # Assumes 1 token is a constant value for message segmentation.
-                        timestamp=datetime.now().timestamp() * 1000
+                        timestamp=datetime.now().timestamp() * 1000,
+                        single=True,
                     ),
                     isFeedback=True,
                 ),
@@ -184,8 +185,10 @@ class HumanInput:
                     message=Message(
                         chunkId=chunkId,
                         text=text,
-                        first=first,
+                        first=True,
                         tokens=1,  # Assumes 1 token is a constant value for message segmentation.
+                        timestamp=datetime.now().timestamp() * 1000,
+                        single=True,
                     ),
                     isFeedback=True,
                 ),

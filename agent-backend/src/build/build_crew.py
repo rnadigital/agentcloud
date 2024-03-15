@@ -62,7 +62,7 @@ class CrewAIBuilder:
     def init_socket(self):
         try:
             # Initialize the socket client and connect
-            print(f"Socker URL: {SOCKET_URL}")
+            print(f"Socket URL: {SOCKET_URL}")
             custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
             self.socket.connect(url=SOCKET_URL, headers=custom_headers)
             self.socket.emit("join_room", f"_{self.session_id}")
@@ -161,9 +161,11 @@ class CrewAIBuilder:
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "toolIds", "modelId", "taskIds"}
+                    exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
-                llm=model_obj, tools=agent_tools_objs.values()
+                step_callback=self.send_to_sockets,
+                llm=model_obj,
+                tools=agent_tools_objs.values()
             )
 
     def build_tasks(self):
@@ -202,7 +204,7 @@ class CrewAIBuilder:
                     backstory='You have all the knowdgle, and are willing to help answer anything the human asks. To function, you NEED human input ALWAYS.',
                     tools=[human_input_tool],
                     allow_delegation=True,
-                    step_callback=self.send_to_sockets
+                    step_callback=self.send_to_sockets,
                 )
                 chat_task = Task(
                     description=dedent(f"""
@@ -245,7 +247,17 @@ class CrewAIBuilder:
             manager_llm = match_key(self.crew_models, keyset(self.crew_model.id))
         )
 
-    def send_to_sockets(self, text, event=SocketEvents.MESSAGE, first=False, chunkId=None, timestamp=datetime.now().timestamp() * 1000):
+
+    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayMessage=None):
+        if text is None:
+            text = ''
+        if event is None:
+            event = SocketEvents.MESSAGE
+        if first is None:
+            first = True
+        if timestamp is None:
+            timestamp = datetime.now().timestamp() * 1000
+
         send(
             self.socket,
             SocketEvents(event),
@@ -258,6 +270,7 @@ class CrewAIBuilder:
                     first=first,
                     tokens=1,
                     timestamp=timestamp,
+                    displayMessage=displayMessage,
                 )
             ),
             "both"
