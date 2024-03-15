@@ -22,7 +22,7 @@ def construct_model_credentials(models: List[Tuple[Set[str], Model]]):
     for model_id_set, model in models:
         if model.credentialId:
             credential = mongo_client.get_model_credential(model.credentialId)
-            credentials[keyset(model_id_set, credential.id)] = credential
+            credentials[keyset(model_id_set, credential.id if credential else None)] = credential
         elif in_enums(enums=[FastEmbedModelsStandardFormat, FastEmbedModelsDocFormat], value=model.model_name):
             credentials[keyset(model_id_set)] = Credentials(type=Platforms.FastEmbed)
     return credentials

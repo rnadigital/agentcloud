@@ -8,6 +8,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { CredentialType } from 'struct/credential';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
+import { addCredential, deleteCredentialById } from '../db/credential';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
 import { dynamicResponse } from '../util';
@@ -73,7 +74,7 @@ export async function modelAddPage(app, req, res, next) {
 
 export async function modelAddApi(req, res, next) {
 
-	const { name, model, credentialId }  = req.body;
+	let { name, model, credentialId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
@@ -99,6 +100,21 @@ export async function modelAddApi(req, res, next) {
 	}
 
 	// Insert model to db
+	const type = credential?.type || CredentialType.FASTEMBED;
+	if (type === CredentialType.FASTEMBED) {
+		// Insert dummy cred for agent-backend
+		const dummyCred = await addCredential({
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+		    name: '-',
+		    createdDate: new Date(),
+		    type,
+		    credentials: {
+				key: '',
+		    },
+		});
+		credentialId = dummyCred.insertedId;
+	}
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -107,7 +123,7 @@ export async function modelAddApi(req, res, next) {
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type: credential?.type || CredentialType.FASTEMBED,
+		type,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });
@@ -116,7 +132,7 @@ export async function modelAddApi(req, res, next) {
 
 export async function editModelApi(req, res, next) {
 
-	const { name, model, credentialId }  = req.body;
+	let { name, model, credentialId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
@@ -126,6 +142,13 @@ export async function editModelApi(req, res, next) {
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
+	const update = {
+		name,
+		model,
+		embeddingLength: ModelEmbeddingLength[model] || 0,
+		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
+	};
 
 	let credential;
 	if (credentialId && credentialId.length > 0) {
@@ -139,17 +162,12 @@ export async function editModelApi(req, res, next) {
 		if (!credential) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
 		}
+		update['credentialId'] = credentialId ? toObjectId(credentialId) : null;
 	}
+	update['type'] = credential?.type || CredentialType.FASTEMBED;
 
 	// Insert model to db
-	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, {
-		name,
-		credentialId: credentialId ? toObjectId(credentialId) : null,
-		model,
-		embeddingLength: ModelEmbeddingLength[model] || 0,
-		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type: credential?.type || CredentialType.FASTEMBED,
-	});
+	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, update);
 
 	return dynamicResponse(req, res, 302, { });
 
@@ -170,9 +188,15 @@ export async function deleteModelApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const model = await getModelById(req.params.resourceSlug, modelId);
+	if (!model) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
 	Promise.all([
 		removeAgentsModel(req.params.resourceSlug, modelId),
-		deleteModelById(req.params.resourceSlug, modelId)
+		deleteModelById(req.params.resourceSlug, modelId),
+		model?.type === CredentialType.FASTEMBED ? deleteCredentialById(req.paarams.resourceSlug, model.credentialId) : void 0, //Delete dumym cred if this is a fastembed model
 	]);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });

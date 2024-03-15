@@ -10,10 +10,10 @@ export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	credentialId: ObjectId; //id of credential (holds key) in credentials db 
+	credentialId?: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
 	model: string;
-	modelType: 'embedding' | 'llm';
+	modelType: string; //'embedding' | 'llm'
 	embeddingLength: number;
 	type?: CredentialType; //redundant
 }
