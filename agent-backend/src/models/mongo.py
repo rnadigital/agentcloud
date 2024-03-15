@@ -168,7 +168,7 @@ class Agent(BaseModel):
     maxRPM: Optional[int] = 100
     verbose: Optional[bool] = False
     allowDelegation: Optional[bool] = True
-    stepCallback: Optional[Callable] = None
+    step_callback: Optional[Callable] = None
 
 
 class Crew(BaseModel):
