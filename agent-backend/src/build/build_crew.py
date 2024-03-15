@@ -38,7 +38,8 @@ class CrewAIBuilder:
             datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
             credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials],
-            chat_history: List[Dict]
+            chat_history: List[Dict],
+            init_socket: bool = True
     ):
         self.session_id = session_id
         self.crew_model = crew
@@ -55,7 +56,8 @@ class CrewAIBuilder:
         self.crew_agents = dict()
         self.crew_tasks = dict()
         self.socket = SimpleClient()
-        self.init_socket()
+        if init_socket:
+            self.init_socket()
 
     def init_socket(self):
         try:
@@ -240,8 +242,7 @@ class CrewAIBuilder:
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
-            step_callback=self.send_to_sockets
+            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id))
         )
 
     def send_to_sockets(self, text, event=SocketEvents.MESSAGE, first=False, chunkId=None, timestamp=datetime.now().timestamp() * 1000):
