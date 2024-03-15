@@ -153,9 +153,9 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-            # human = CustomHumanInput(self.socket, self.session_id)
-            # agent_tools_objs["human_input"] = human
-            # print(agent_tools_objs.values())
+            human = CustomHumanInput(self.socket, self.session_id)
+            agent_tools_objs["human_input"] = human
+            print(agent_tools_objs.values())
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -199,7 +199,8 @@ class CrewAIBuilder:
                     goal='Take human input using the human tool. Respond to human input appropriately. Your responses must relate to the human input.\n',
                     backstory='You have all the knowdgle, and are willing to help answer anything the human asks. To function, you NEED human input ALWAYS.',
                     tools=[human_input_tool],
-                    allow_delegation=True
+                    allow_delegation=True,
+                    step_callback=self.send_to_sockets
                 )
                 chat_task = Task(
                     description=dedent(f"""
@@ -213,8 +214,8 @@ class CrewAIBuilder:
                     agent=chat_agent,
                     expected_output="Execution of any human requests in the chat or resposne to any user inquiries in the chat"
                 )
-        self.crew_tasks["chat_task"] = chat_task
-        self.crew_agents["chat_agent"] = chat_agent
+                self.crew_tasks["chat_task"] = chat_task
+                self.crew_agents["chat_agent"] = chat_agent
 
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
