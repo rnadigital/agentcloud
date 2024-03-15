@@ -186,6 +186,7 @@ class Crew(BaseModel):
     fullOutput: Optional[bool] = False
     stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
+    modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)
 
 
 class Session(BaseModel):

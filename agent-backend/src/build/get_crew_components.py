@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Set, Tuple, Union
 from init.mongo_session import start_mongo_session
-from models.mongo import Agent, Credentials, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
+from models.mongo import Agent, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool
 from build.build_crew import CrewAIBuilder
 from utils.model_helper import in_enums, keyset
@@ -8,11 +8,12 @@ from utils.model_helper import in_enums, keyset
 mongo_client = start_mongo_session()
 
 
-def construct_models(parents: List[Tuple[Set[str], Agent | Datasource]]):
+def construct_models(parents: List[Tuple[Set[str], Agent | Datasource | Crew]]):
     models: Dict[Set[PyObjectId], Model] = dict()
     for parent_id_set, parent in parents:
         model = mongo_client.get_agent_model(parent.modelId)
-        models[keyset(parent_id_set, model.id)] = model
+        if model is not None:
+            models[keyset(parent_id_set, model.id)] = model
     return models
 
 
@@ -81,6 +82,12 @@ def construct_crew(session_id: str, task: Optional[str]):
     # Agent > Datasource > Model > Credentials
     agents_tools_datasources_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(
         agents_tools_datasources_models.items())
+    
+    # Crew > chat Model
+    crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])
+    
+    # Crew > chat Model
+    crew_chat_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(crew_chat_models.items())
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
@@ -91,8 +98,9 @@ def construct_crew(session_id: str, task: Optional[str]):
         tasks=crew_tasks_dict,  # | crew_agents_tasks_dict,
         tools=agents_tools,
         datasources=agents_tools_datasources,  # | tasks_tools_datasources,
-        models=agent_models | agents_tools_datasources_models,
-        credentials=agent_model_credentials | agents_tools_datasources_models_credentials
+        models=agent_models | agents_tools_datasources_models | crew_chat_models,
+        credentials=agent_model_credentials | agents_tools_datasources_models_credentials | crew_chat_models_credentials,
+        chat_history=chat_history
     )
     crew_builder.build_crew()
     crew_builder.run_crew()

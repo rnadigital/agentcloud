@@ -1,5 +1,6 @@
 import logging
-from typing import Set, Type
+from textwrap import dedent
+from typing import List, Set, Type
 from time import time
 from uuid import uuid4
 from datetime import datetime
@@ -36,7 +37,8 @@ class CrewAIBuilder:
             tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
             datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
-            credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials]
+            credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials],
+            chat_history: List[Dict]
     ):
         self.session_id = session_id
         self.crew_model = crew
@@ -46,6 +48,7 @@ class CrewAIBuilder:
         self.datasources_models = datasources
         self.models_models = models
         self.credentials_models = credentials
+        self.chat_history = chat_history
         self.crew = None
         self.crew_models = dict()
         self.crew_tools = dict()
@@ -150,9 +153,9 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-            human = CustomHumanInput(self.socket, self.session_id)
-            agent_tools_objs["human_input"] = human
-            print(agent_tools_objs.values())
+            # human = CustomHumanInput(self.socket, self.session_id)
+            # agent_tools_objs["human_input"] = human
+            # print(agent_tools_objs.values())
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -170,6 +173,49 @@ class CrewAIBuilder:
                 agent=agent_obj, tools=task_tools_objs.values()
             )
 
+    def make_user_question(self):
+        if self.chat_history and len(self.chat_history) > 0:
+            return "and what else?"
+        else:
+            return "How can I help you?"
+
+    def make_current_context(self):
+        if self.chat_history and len(self.chat_history) > 0:
+            return "\n".join(map(lambda chat: f"{chat.role}: {chat.content}", self.chat_history))
+        else:
+            return ""
+
+    def make_task(self) -> Task:
+        return 
+    
+    def build_chat(self):
+        if self.crew_model.modelId:
+            crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
+            if crew_chat_model:
+                human_input_tool = CustomHumanInput(self.socket, self.session_id)
+                chat_agent = Agent(
+                    llm=crew_chat_model,
+                    role='A human chat partner',
+                    goal='Take human input using the human tool. Respond to human input appropriately. Your responses must relate to the human input.\n',
+                    backstory='You have all the knowdgle, and are willing to help answer anything the human asks. To function, you NEED human input ALWAYS.',
+                    tools=[human_input_tool],
+                    allow_delegation=True
+                )
+                chat_task = Task(
+                    description=dedent(f"""
+                                    You need to use the human tool. ALWAYS use the human tool.
+                                    step 1: Prompt the user by saying "{self.make_user_question()}"
+                                    step 2: use the human tool to get the human answer.
+                                    step 3: Wait for that answer.
+                                    step 4: Once you get the answer then based on the answer, delegate to agent who is suitable to respond to the user's answer.
+                                    {self.make_current_context()}
+                                    """),
+                    agent=chat_agent,
+                    expected_output="Execution of any human requests in the chat or resposne to any user inquiries in the chat"
+                )
+        self.crew_tasks["chat_task"] = chat_task
+        self.crew_agents["chat_agent"] = chat_agent
+
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
         self.build_models_with_credentials()
@@ -183,13 +229,17 @@ class CrewAIBuilder:
         # 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
         self.build_tasks()
 
-        # 5. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+        # 5. Build chat Agent + Task
+        self.build_chat()
+
+        # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
             agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
+            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
             step_callback=self.send_to_sockets
         )
 

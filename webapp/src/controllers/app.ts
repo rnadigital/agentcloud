@@ -13,18 +13,20 @@ import { ProcessImpl } from 'struct/crew';
 import { dynamicResponse } from '../util';
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents] = await Promise.all([
+	const [apps, tasks, tools, agents, models] = await Promise.all([
 		 getAppsByTeam(req.params.resourceSlug),
 		 getTasksByTeam(req.params.resourceSlug),
 		 getToolsByTeam(req.params.resourceSlug),
 		 getAgentsByTeam(req.params.resourceSlug),
-	 ]);
+		 getModelsByTeam(req.params.resourceSlug),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		apps,
 		tasks,
 		tools,
 		agents,
+		models,
 	};
 }
 
