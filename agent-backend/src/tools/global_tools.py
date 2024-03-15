@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple, Type, Any
 from uuid import uuid4
+import json
 from datetime import datetime
 
 from langchain.tools import tool
@@ -38,6 +39,15 @@ class CustomHumanInput(BaseTool):
         self.session_id = session_id
         self.socket_client = socket_client
 
+    @staticmethod
+    def extract_message(text):
+        try:
+            print(f"extract_message text: {text}")
+            text_json = json.loads(text)
+            return next((value for value in text_json.values() if value is not None), None) # get the first key, which is usually "question" or "message"
+        except:
+            return text
+
     def _run(
             self,
             text: Optional[str],
@@ -53,7 +63,7 @@ class CustomHumanInput(BaseTool):
                     authorName="system",
                     message=Message(
                         chunkId=str(uuid4()),
-                        text=text,
+                        text=CustomHumanInput.extract_message(text),
                         first=True,
                         tokens=1,  # Assumes 1 token is a constant value for message segmentation.
                         timestamp=datetime.now().timestamp() * 1000,
