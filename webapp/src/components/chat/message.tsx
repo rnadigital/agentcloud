@@ -1,4 +1,4 @@
-import { ChatBubbleLeftIcon, ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -189,7 +189,7 @@ export function Message({
 		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
-				<ChatBubbleLeftIcon width={14} className='mx-1' /> {displayMessage}
+				{displayMessage}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>;

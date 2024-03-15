@@ -249,7 +249,7 @@ class CrewAIBuilder:
 
 
     def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayMessage=None):
-        if text is None:
+        if text is None or len(text) == 0:
             text = ''
         if event is None:
             event = SocketEvents.MESSAGE
@@ -266,7 +266,7 @@ class CrewAIBuilder:
                 authorName="system",
                 message=Message(
                     chunkId=chunkId,
-                    text=self.session_id if event is SocketEvents.TERMINATE else text,
+                    text=text,
                     first=first,
                     tokens=1,
                     timestamp=timestamp,
