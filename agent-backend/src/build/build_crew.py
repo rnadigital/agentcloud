@@ -56,6 +56,8 @@ class CrewAIBuilder:
         self.crew_agents = dict()
         self.crew_tasks = dict()
         self.socket = SimpleClient()
+        self.crew_chat_tasks = list()
+        self.crew_chat_agents = list()
         if init_socket:
             self.init_socket()
 
@@ -218,8 +220,8 @@ class CrewAIBuilder:
                     agent=chat_agent,
                     expected_output="Execution of any human requests in the chat or resposne to any user inquiries in the chat"
                 )
-                self.crew_tasks["chat_task"] = chat_task
-                self.crew_agents["chat_agent"] = chat_agent
+                self.crew_chat_tasks = [chat_task]
+                self.crew_chat_agents = [chat_agent]
 
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
@@ -238,13 +240,15 @@ class CrewAIBuilder:
         self.build_chat()
 
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+        self.crew_model.process = "sequential"
         self.crew = Crew(
-            agents=self.crew_agents.values(), tasks=self.crew_tasks.values(),
+            agents=self.crew_chat_agents + list(self.crew_agents.values()), tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id))
+            # manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
+            verbose=True
         )
 
 

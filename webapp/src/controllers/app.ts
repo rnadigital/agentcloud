@@ -106,13 +106,11 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, tasks, managerModelId }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-
-	const process = appType == AppType.CHAT ? ProcessImpl.HIERARCHICAL : ProcessImpl.SEQUENTIAL;
 
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,
@@ -149,9 +147,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, tasks, managerModelId }  = req.body;
-
-	const process = appType == AppType.CHAT ? ProcessImpl.HIERARCHICAL : ProcessImpl.SEQUENTIAL;
+	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

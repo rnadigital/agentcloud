@@ -15,6 +15,8 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
 
+import { ProcessImpl } from '../lib/struct/crew';
+
 export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
 	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
@@ -50,6 +52,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			resourceSlug,
 			name: e.target.name.value,
 			description: e.target.description.value,
+			process: e.target.process.value,
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
@@ -121,6 +124,35 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								defaultValue={name}
 								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
+						</div>
+						<div className='sm:col-span-12'>
+							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								App Type
+							</label>
+							<div className='mt-2'>
+								<label className='inline-flex items-center mr-6 text-sm'>
+									<input
+										type='radio'
+										name='appType'
+										value={AppType.CHAT}
+										defaultChecked={appTypeState === AppType.CHAT}
+										onChange={(e) => { e.target.checked && setAppTypeState(AppType.CHAT); }}
+										className='form-radio'
+									/>
+									<span className='ml-2'>Coversation Chat App</span>
+								</label>
+								<label className='inline-flex items-center text-sm'>
+									<input
+										type='radio'
+										name='appType'
+										value={AppType.PROCESS}
+										defaultChecked={appTypeState === AppType.PROCESS}
+										onChange={(e) => { e.target.checked && setAppTypeState(AppType.PROCESS); e.target.checked && setManagerModels([]); }}
+										className='form-radio'
+									/>
+									<span className='ml-2'>Process App (multi-agent)</span>
+								</label>
+							</div>
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -227,34 +259,34 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						</div>
 						<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								App Type
+								Process
 							</label>
 							<div className='mt-2'>
 								<label className='inline-flex items-center mr-6 text-sm'>
 									<input
 										type='radio'
 										name='process'
-										value={AppType.CHAT}
-										defaultChecked={appTypeState === AppType.CHAT}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.CHAT); }}
+										value={ProcessImpl.SEQUENTIAL}
+										defaultChecked={crewState.process === ProcessImpl.SEQUENTIAL}
+										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.SEQUENTIAL }; }); }}
 										className='form-radio'
 									/>
-									<span className='ml-2'>Chat</span>
+									<span className='ml-2'>Sequential</span>
 								</label>
 								<label className='inline-flex items-center text-sm'>
 									<input
 										type='radio'
 										name='process'
-										value={AppType.PROCESS}
-										defaultChecked={appTypeState === AppType.PROCESS}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.PROCESS); e.target.checked && setManagerModels([]); }}
+										value={ProcessImpl.HIERARCHICAL}
+										defaultChecked={crewState.process === ProcessImpl.HIERARCHICAL}
+										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.HIERARCHICAL }; }); }}
 										className='form-radio'
 									/>
-									<span className='ml-2'>Process</span>
+									<span className='ml-2'>Hirarchial</span>
 								</label>
 							</div>
 						</div>
-						{appTypeState === AppType.CHAT && <div className='sm:col-span-12'>
+						{(appTypeState === AppType.CHAT || crewState.process === ProcessImpl.HIERARCHICAL) && <div className='sm:col-span-12'>
 							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Chat Manager Model
 							</label>

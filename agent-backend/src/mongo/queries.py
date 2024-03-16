@@ -56,7 +56,7 @@ class MongoClientConnection(MongoConnection):
                 raise AssertionError(f"Crew ID returned NO crews for ID: {crew_id}")
             try:
                 crew_agent_ids = the_crew.get("agents")
-                assert crew_agent_ids
+                # assert crew_agent_ids
                 crew_agents = [agents_collection.find_one({"_id": agent}) for agent in crew_agent_ids]
             except AssertionError:
                 raise AssertionError(f"There were no agents associated with the crew ID: {crew_id}")
