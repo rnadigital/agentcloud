@@ -2,17 +2,15 @@ from typing import Any, Callable, List, Tuple, Type
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_community.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
-# from langchain_community.tools import Tool
 from langchain.tools import BaseTool
 import json
 
-from socketio import SimpleClient
 from .global_tools import GlobalBaseTool
-from models.sockets import SocketEvents, SocketMessage, Message
 from models.mongo import Model, Tool, Datasource
 from init.env_variables import QDRANT_HOST
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
+
 
 ###### INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT ######
 
@@ -62,22 +60,22 @@ class RagTool(GlobalBaseTool):
         assert len(models) == 1
         assert isinstance(models[0][0], Embeddings)
         assert isinstance(models[0][1], Model)
-        
+
         embedding_model = models[0][0]
         model_data = models[0][1]
 
         collection = str(datasource.id)
 
         return RagTool(
-        vector_store=Qdrant(
-            client=QdrantClient(QDRANT_HOST),
-            collection_name=collection,
-            embeddings=embedding_model,
-            vector_name=model_data.model_name,
-            content_payload_key=datasource.embeddingField
-        ),
-        embedding=embedding_model,
-        name=tool.name, description=tool.description)
+            vector_store=Qdrant(
+                client=QdrantClient(QDRANT_HOST),
+                collection_name=collection,
+                embeddings=embedding_model,
+                vector_name=model_data.model_name,
+                content_payload_key=datasource.embeddingField
+            ),
+            embedding=embedding_model,
+            name=tool.name, description=tool.description)
 
     def register_pre_processors(self, functions: Callable | List[Callable]):
         if hasattr(functions, '__iter__'):

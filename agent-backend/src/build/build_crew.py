@@ -1,8 +1,6 @@
 import logging
 from textwrap import dedent
 from typing import List, Set, Type
-from time import time
-from uuid import uuid4
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
@@ -17,10 +15,7 @@ from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_U
 from typing import Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
-from langchain_core.agents import AgentFinish
 from models.sockets import SocketMessage, SocketEvents, Message
-from langchain_community.vectorstores.qdrant import Qdrant
-from qdrant_client import QdrantClient
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
 from tools.global_tools import CustomHumanInput, GlobalBaseTool
@@ -103,7 +98,7 @@ class CrewAIBuilder:
                                     "id",
                                     "credentialId",
                                     "embeddingLength"
-                                    }
+                                }
                             )
                         )
                     case models.mongo.Platforms.AzureChatOpenAI:
@@ -150,9 +145,10 @@ class CrewAIBuilder:
             for model_key, model_object in tool_models_objects.items():
                 model_data = match_key(self.models_models, model_key)
                 tool_models_models.append((model_object, model_data))
-            tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()), models=tool_models_models)
+            tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()),
+                                               models=tool_models_models)
             self.crew_tools[key] = tool_instance
-            
+
     def build_agents(self):
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
@@ -192,8 +188,8 @@ class CrewAIBuilder:
             return ""
 
     def make_task(self) -> Task:
-        return 
-    
+        return
+
     def build_chat(self):
         if self.crew_model.modelId:
             crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
@@ -241,7 +237,8 @@ class CrewAIBuilder:
 
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
-            agents=self.crew_chat_agents + list(self.crew_agents.values()), tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
+            agents=self.crew_chat_agents + list(self.crew_agents.values()),
+            tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
             **self.crew_model.model_dump(
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
@@ -249,7 +246,6 @@ class CrewAIBuilder:
             # manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
             verbose=True
         )
-
 
     def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayMessage=None):
         if text is None or len(text) == 0:
