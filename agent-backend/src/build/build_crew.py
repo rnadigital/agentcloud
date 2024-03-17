@@ -202,10 +202,10 @@ class CrewAIBuilder:
                 chat_agent = Agent(
                     llm=crew_chat_model,
                     role='A human chat partner',
-                    goal='Take human input using the human tool. Respond to human input appropriately. Your responses must relate to the human input.\n',
-                    backstory='You have all the knowdgle, and are willing to help answer anything the human asks. To function, you NEED human input ALWAYS.',
+                    goal='Take human input using the "human_input". Pass on the human input. Your must quote the human input exactly.\n',
+                    backstory='You are a helpful agent whose sole job is to get the himan input. To function, you NEED human input ALWAYS.',
                     tools=[human_input_tool],
-                    allow_delegation=True,
+                    allow_delegation=False,
                     step_callback=self.send_to_sockets,
                 )
                 chat_task = Task(
@@ -214,11 +214,11 @@ class CrewAIBuilder:
                                     step 1: Prompt the user by saying "{self.make_user_question()}"
                                     step 2: use the human tool to get the human answer.
                                     step 3: Wait for that answer.
-                                    step 4: Once you get the answer then based on the answer, delegate to agent who is suitable to respond to the user's answer.
+                                    step 4: Once you get the answer from the human, that's your final answer.
                                     {self.make_current_context()}
                                     """),
                     agent=chat_agent,
-                    expected_output="Execution of any human requests in the chat or resposne to any user inquiries in the chat"
+                    expected_output="Human request"
                 )
                 self.crew_chat_tasks = [chat_task]
                 self.crew_chat_agents = [chat_agent]
@@ -240,7 +240,6 @@ class CrewAIBuilder:
         self.build_chat()
 
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
-        self.crew_model.process = "sequential"
         self.crew = Crew(
             agents=self.crew_chat_agents + list(self.crew_agents.values()), tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
             **self.crew_model.model_dump(

@@ -18,18 +18,16 @@ from models.mongo import Tool, Datasource, Model
 
 class HumanInputParams(BaseModel):
     text: Optional[str] = Field(description="The text message content to be sent to the client.", default=None, )
-    first: Optional[bool] = Field(
-        description="Indicates if this message is the first chunk of a segmented message, aiding in message partitioning.",
-        default=False)
 
 
 class CustomHumanInput(BaseTool):
-    name = "Human Input Class"
-    description = """A class designed to facilitate communication between a server and a client
+    """A class designed to facilitate communication between a server and a client
     over a socket connection for sending human input messages and receiving feedback.
 
     This class initializes with a socket client and a session identifier to manage messages
     for a specific connection session."""
+    name = "human_input"
+    description = """Sends input to the user. The parameter of the input is called "text". It then waits for the human to respond. It returns the human response."""
     args_schema: Type[BaseModel] = HumanInputParams
     session_id: str = None
     socket_client: SimpleClient = None
@@ -50,9 +48,7 @@ class CustomHumanInput(BaseTool):
 
     def _run(
             self,
-            text: Optional[str],
-            first: Optional[bool] = False,
-            run_manager: Optional[CallbackManagerForToolRun] = None
+            text: Optional[str]
     ) -> str:
         try:
             send(
