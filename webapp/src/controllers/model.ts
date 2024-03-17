@@ -8,9 +8,9 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { CredentialType } from 'struct/credential';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
-import { addCredential, deleteCredentialById } from '../db/credential';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
+import { addCredential, deleteCredentialById } from '../db/credential';
 import { dynamicResponse } from '../util';
 dotenv.config({ path: '.env' });
 
