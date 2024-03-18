@@ -54,7 +54,6 @@ class CodeExecutionTool(GlobalBaseTool):
 res = {self.function_name}({", ".join([f"{k}={repr(v)}" for k, v in args.items()])})
 print(res)
 """
-        print(formatted_function)
         if sys.platform != "win32":
             formatted_function = formatted_function.replace("\r\n", "\n")
         try:

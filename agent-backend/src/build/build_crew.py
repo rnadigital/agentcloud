@@ -266,7 +266,7 @@ class CrewAIBuilder:
             verbose=True
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayMessage=None):
+    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayType="bubble"):
 
         # test isnt string, its agentaction, etc
         if type(text) != str:
@@ -295,7 +295,7 @@ class CrewAIBuilder:
                     first=first,
                     tokens=1,
                     timestamp=timestamp,
-                    displayMessage=displayMessage,
+                    displayType=displayType,
                 )
             ),
             "both"
