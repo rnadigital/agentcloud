@@ -1,6 +1,6 @@
 import logging
 from textwrap import dedent
-from typing import List, Set, Type
+from typing import Any, List, Set, Type
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
@@ -35,7 +35,7 @@ class CrewAIBuilder:
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
             credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials],
             chat_history: List[Dict],
-            init_socket: bool = True
+            socket: Any = None
     ):
         self.session_id = session_id
         self.crew_app_type = app_type
@@ -47,15 +47,16 @@ class CrewAIBuilder:
         self.models_models = models
         self.credentials_models = credentials
         self.chat_history = chat_history
+        self.socket = socket
         self.crew = None
         self.crew_models = dict()
         self.crew_tools = dict()
         self.crew_agents = dict()
         self.crew_tasks = dict()
-        self.socket = SimpleClient()
         self.crew_chat_tasks = list()
         self.crew_chat_agents = list()
-        if init_socket:
+        if socket is None:
+            self.socket = SimpleClient()
             self.init_socket()
 
     def init_socket(self):
@@ -161,11 +162,12 @@ class CrewAIBuilder:
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
+                    exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm", "verbose"}
                 ),
                 step_callback=self.send_to_sockets,
                 llm=model_obj,
-                tools=agent_tools_objs.values()
+                tools=agent_tools_objs.values(),
+                verbose=True
             )
 
     def build_tasks(self):
@@ -185,7 +187,13 @@ class CrewAIBuilder:
 
     def make_current_context(self):
         if self.chat_history and len(self.chat_history) > 0:
-            return "\n".join(map(lambda chat: f"{chat.role}: {chat.content}", self.chat_history))
+            return "=== START of Current context: ===\n" + "\n".join(map(
+                lambda chat: f"""{chat["role"]}: {chat["content"]}""",
+                filter(
+                    lambda chat: "role" in chat and "content" in chat and len(chat["content"]) > 0 and len(chat["role"]) > 0,
+                       self.chat_history
+                )
+            )) + "\n=== END of Current context: ===\n"
         else:
             return ""
 
@@ -197,20 +205,21 @@ class CrewAIBuilder:
             human_input_tool = CustomHumanInput(self.socket, self.session_id)
             crew_tasks = list(self.crew_tasks.values())
             if len(crew_tasks) == 1:
-                # add human tool to first task agent
-                # first_agent = crew_tasks[0].agent
-                # if first_agent is not None:
-                    # first_agent_tools = first_agent.tools
-                    # if first_agent_tools is None:
-                        # first_agent_tools = []
-                        # first_agent.tools = first_agent_tools
-                    # first_agent_tools.append(human_input_tool)
                 first_task = crew_tasks[0]
                 first_task_tools = first_task.tools
                 if first_task_tools is None:
                     first_task_tools = []
                     first_task.tools = first_task_tools
                 first_task_tools.append(human_input_tool)
+                first_task.description = dedent(f"""
+                                                Complete the following steps:
+                                                step 1: start by using the "human_input" tool to get the question.
+                                                step 2: Complete the following sub-task, using the question if necessary:
+                                                ===== SUB-TASK START =====
+                                                {first_task.description}
+                                                ===== SUB-TASK END =====
+                """)
+                                                # {self.make_current_context()}
             elif len(crew_tasks) > 1:
                 crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
                 if crew_chat_model:
@@ -295,7 +304,8 @@ class CrewAIBuilder:
         )
 
     def run_crew(self):
-        try:
-            self.crew.kickoff()
-        except Exception as e:
-            logging.exception(e)
+        self.crew.kickoff()
+        print("FINISHED!")
+
+    
+    

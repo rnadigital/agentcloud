@@ -25,7 +25,7 @@ class MongoClientConnection(MongoConnection):
             session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
             ).find_one(
-                {"_id": ObjectId(session_id)}, {"crewId": 1}
+                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1}
             )
             assert session_query_results
             return session_query_results

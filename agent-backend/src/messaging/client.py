@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from build.get_crew_components import construct_crew
+from build.get_crew_components import construct_crew, looping_app, session_terminated
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
@@ -34,6 +34,14 @@ def backoff(attempt, base_delay=1.0, max_delay=60):
 
 def execute_task(data: dict):
     with log_exception():
-        task = data.get("task")
         session_id = data.get("sessionId")
-        construct_crew(session_id, task)
+        socket = None
+        loop_max = 10
+        while True:
+            crew_builder, app = construct_crew(session_id, socket)
+            crew_builder.build_crew()
+            crew_builder.run_crew()
+            socket = crew_builder.socket
+            loop_max = loop_max - 1
+            if looping_app(app) == False or loop_max < 1 or session_terminated(session_id):
+                break

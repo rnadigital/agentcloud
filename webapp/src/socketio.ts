@@ -17,10 +17,12 @@ import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
 import { SessionStatus } from 'struct/session';
 
+import { getAppByCrewId } from './db/app';
 import checkSession from './lib/middleware/auth/checksession';
 import fetchSession from './lib/middleware/auth/fetchsession';
 import useJWT from './lib/middleware/auth/usejwt';
 import useSession from './lib/middleware/auth/usesession';
+import { AppType } from './lib/struct/app';
 
 export const io = new Server();
 
@@ -101,11 +103,19 @@ export function initSocket(rawHttpServer) {
 			if (!session) {
 				return log('socket.id "%s" terminate invalid session %s', socket.id, data.room);
 			}
-			await (socketRequest.locals.isAgentBackend === true
-				? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
-				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
-			log('socket.id "%s" terminate %s', socket.id, session._id);
-			return io.to(data.room).emit('terminate', true);
+			const app = await getAppByCrewId(socketRequest?.locals?.account?.currentTeam, session.crewId);
+			if (!app) {
+				return log('socket.id "%s" terminate invalid app by crew %s', session.crewId);
+			}
+			if (app.appType != AppType.CHAT) {
+				await (socketRequest.locals.isAgentBackend === true
+					? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
+					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
+				log('socket.id "%s" terminate %s', socket.id, session._id);
+				return io.to(data.room).emit('terminate', true);
+			} else {
+				return log('NOT terminating because CHAT app - socket.id "%s" terminate %s', socket.id, session);
+			}
 		});
 
 		socket.on('message', async (data) => {
@@ -202,6 +212,7 @@ export function initSocket(rawHttpServer) {
 			await (socketRequest.locals.isAgentBackend === true
 				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
 				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
+			io.to(`_${data.room}`).emit('terminate', '');
 			return io.to(data.room).emit('terminate', true);
 		});
 

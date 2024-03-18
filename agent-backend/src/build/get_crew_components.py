@@ -1,7 +1,7 @@
-from typing import Optional, List, Dict, Set, Tuple, Union
+from typing import Any, Optional, List, Dict, Set, Tuple, Union
 from init.mongo_session import start_mongo_session
-from models.mongo import Agent, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
-    Platforms, PyObjectId, Session, Task, Tool
+from models.mongo import Agent, AppType, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
+    Platforms, PyObjectId, Session, Task, Tool, App
 from build.build_crew import CrewAIBuilder
 from utils.model_helper import in_enums, keyset
 
@@ -46,7 +46,7 @@ def construct_tools_datasources(tools: List[Tuple[Set[str], Tool]]):
     return datasources
 
 
-def construct_crew(session_id: str, task: Optional[str]):
+def construct_crew(session_id: str, socket: Any):
     """Construct crew. Collate every element into dictionary by type.
     The key is a set of all the parent ids.
     This allows for a flat structure that distinguishes between agent tools and task tools,
@@ -93,6 +93,7 @@ def construct_crew(session_id: str, task: Optional[str]):
 
     crew_builder = CrewAIBuilder(
         session_id=session_id,
+        socket=socket,
         app_type=app.appType,
         crew=the_crew,
         agents=crew_agents_dict,
@@ -103,9 +104,15 @@ def construct_crew(session_id: str, task: Optional[str]):
         credentials=agent_model_credentials | agents_tools_datasources_models_credentials | crew_chat_models_credentials,
         chat_history=chat_history
     )
-    crew_builder.build_crew()
-    crew_builder.run_crew()
+    return crew_builder, app
 
+def looping_app(app: App):
+    return app.appType == AppType.CHAT
 
+def session_terminated(session_id: str):
+    session = mongo_client.get_session(session_id)
+    if session:
+        return "status" in session and session["status"] == "terminated"
+    return False
 if __name__ == "__main__":
     print("Running file")

@@ -76,7 +76,7 @@ export default function Session(props) {
 	}
 	function handleTerminateMessage(message) {
 		log('Received terminate message %s', message);
-		setTerminated(true);
+		// setTerminated(true);
 	}
 	// console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
@@ -159,6 +159,20 @@ export default function Session(props) {
 			}
 		});
 	}
+
+	function sendChatCancellation() {
+		socketContext.emit('terminate', {
+			room: sessionId,
+			authorName: account.name,
+			incoming: true,
+			displayMessage: false,
+			message: {
+				type: 'text',
+				text: '',
+			}
+		});
+	}
+
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
 		updateChat();
@@ -321,9 +335,9 @@ export default function Session(props) {
 			</div>
 			<div className='flex flex-col mt-auto'>
 				<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
-					{chatBusyState && !terminated && messages &&  <div className='flex items-end basis-1/2'>
+					{!terminated && messages &&  <div className='flex items-end basis-1/2'>
 						<button
-							onClick={() => stopGenerating()}
+							onClick={() => { stopGenerating(); }}
 							type='submit'
 							className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 						>

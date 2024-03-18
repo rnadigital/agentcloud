@@ -50,6 +50,11 @@ export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> 
 	return res.then(docs => docs.length > 0 ? docs[0] : null);
 }
 
+export function getAppByCrewId(teamId: db.IdOrStr, crewId: db.IdOrStr): Promise<App> {
+	const res = AppCollection().findOne({crewId});
+	return res.then(docs => docs.length > 0 ? docs[0] : null);
+}
+
 export function getAppsByTeam(teamId: db.IdOrStr): Promise<App[]> {
 	return AppCollection().aggregate([
 		{

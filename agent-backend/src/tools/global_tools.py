@@ -90,8 +90,11 @@ class CustomHumanInput(BaseTool):
                 "both"
             )
             feedback = self.socket_client.receive()
-            print(feedback)
-            return feedback[1]
+            print("feedback::::", feedback)
+            if feedback[0] == "terminate":
+                return " TERMINATE ALL TASKS IMMEDIATELY "
+            else:
+                return feedback[1]
         except TimeoutError:
             self.socket_client.emit(
                 "message",
@@ -157,9 +160,4 @@ class GlobalBaseTool(BaseTool, ABC):
             models: list of Tuple (model object such as OpenAI or FastEmbed, Model mongo object)
             kwargs: other arguments. future proofing method for when we need to pass other mongo model data or app/team configuration to the tool
         """
-        pass
-
-    @abstractmethod
-    def post_init(self) -> Any:
-        """use to instantiate any clients or objects, or dynamic arguments. E.g. self.args_schema = dynamic_create_args_schema(...)"""
         pass
