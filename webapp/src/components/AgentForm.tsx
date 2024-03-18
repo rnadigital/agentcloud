@@ -22,7 +22,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [callbackKey, setCallbackKey] = useState(null);
-	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || true);
+	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || false);
 	const [verbose, setVerbose] = useState(agent.verbose || false);
 	const [agentState, setAgent] = useState(agent);
 	const [error, setError] = useState();
