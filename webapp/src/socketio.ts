@@ -11,7 +11,7 @@ dotenv.config({ path: '.env' });
 
 import { timingSafeEqual } from 'crypto';
 import { addAgents } from 'db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, upsertOrUpdateChatMessage, updateCompletedMessage } from 'db/chat';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage,upsertOrUpdateChatMessage } from 'db/chat';
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
