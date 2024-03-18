@@ -142,7 +142,7 @@ export function Message({
 	incoming,
 	sendMessage,
 	chunking,
-	displayMessage,
+	displayType,
 	tokens,
 }: {
 		prevMessage?: any,
@@ -159,7 +159,7 @@ export function Message({
 		incoming?: boolean,
 		sendMessage?: Function,
 		chunking?: boolean,
-		displayMessage?: string,
+		displayType?: string,
 		tokens?: number,
 	}) {
 
@@ -184,12 +184,11 @@ export function Message({
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
-
-	if (displayMessage) {
+	if (displayType === 'inline') { //TODO: enum and handle "other" types not just like bubble
 		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
-				{displayMessage}
+				{message}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>;
@@ -236,7 +235,7 @@ export function Message({
 						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
 							e.preventDefault();
-							sendMessage(feedbackMessages[fo], { displayMessage: feedbackLabels[fo] });
+							sendMessage(feedbackMessages[fo], { message: feedbackLabels[fo]});
 						}}
 					>
 						{feedbackLabels[fo]}

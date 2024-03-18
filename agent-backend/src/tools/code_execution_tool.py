@@ -48,16 +48,17 @@ class CodeExecutionTool(GlobalBaseTool):
     def _run(self, args_str: Dict):
         args = json.loads(args_str)
         indented_code = self.code.replace("\n", "\n    ")
-        formatted_function = f"""
-def {self.function_name}():
+        function_parameters = ", ".join(args.keys())  # Extract the keys as parameter names
+        formatted_function = f"""def {self.function_name}({function_parameters}):
     {indented_code}
-res = {self.function_name}({", ".join(map(lambda k, v: f"{k}={v}", args.items()))})
+res = {self.function_name}({", ".join([f"{k}={repr(v)}" for k, v in args.items()])})
 print(res)
-        """
+"""
         if sys.platform != "win32":
             formatted_function = formatted_function.replace("\r\n", "\n")
         try:
             output = subprocess.check_output(['python', '-c', formatted_function], timeout=5) # 5 seconds
+            print(output)
             return output
         except TimeoutError:
                 return "Not data returned because the call to Code Execution Tool timedout"

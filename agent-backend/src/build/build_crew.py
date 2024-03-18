@@ -275,7 +275,13 @@ class CrewAIBuilder:
             verbose=True
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayMessage=None):
+    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayType="bubble"):
+
+        # test isnt string, its agentaction, etc
+        if type(text) != str:
+            text = "NON STRING MESSAGE"
+
+        # handle missig args
         if text is None or len(text) == 0:
             text = ''
         if event is None:
@@ -285,6 +291,7 @@ class CrewAIBuilder:
         if timestamp is None:
             timestamp = datetime.now().timestamp() * 1000
 
+        # send the message
         send(
             self.socket,
             SocketEvents(event),
@@ -297,7 +304,7 @@ class CrewAIBuilder:
                     first=first,
                     tokens=1,
                     timestamp=timestamp,
-                    displayMessage=displayMessage,
+                    displayType=displayType,
                 )
             ),
             "both"

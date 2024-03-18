@@ -18,6 +18,11 @@ class MessageType(Enum):
     CODE = "code"
 
 
+class MessageDisplayType(Enum):
+    BUBBLE = "bubble"
+    INLINE = "inline"
+
+
 class Message(BaseModel):
     text: str
     chunkId: Optional[str] = None
@@ -27,7 +32,7 @@ class Message(BaseModel):
     first: Optional[bool] = False
     single: Optional[bool] = False
     type: Optional[MessageType] = MessageType.TEXT.value
-    displayMessage: Optional[str] = None
+    displayType: Optional[str] = MessageDisplayType.BUBBLE.value
     timestamp: Optional[float] = datetime.now().timestamp() * 1000
 
 

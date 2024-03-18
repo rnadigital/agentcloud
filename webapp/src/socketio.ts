@@ -11,7 +11,7 @@ dotenv.config({ path: '.env' });
 
 import { timingSafeEqual } from 'crypto';
 import { addAgents } from 'db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage, updateMessageWithChunkById } from 'db/chat';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage,upsertOrUpdateChatMessage } from 'db/chat';
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
@@ -161,30 +161,22 @@ export function initSocket(rawHttpServer) {
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
 			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage?.message?.tokens };
-			if (finalMessage.message.first === false) {
-				//This is a previous message that is returning in chunks
-				await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
-				if (chunk?.tokens != null && chunk?.tokens > 0) {
-					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-				}
-				//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-				//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
-			} else {
-				await addChatMessage({
+			await upsertOrUpdateChatMessage(
+				finalMessage.room,
+				{
 					orgId: session.orgId,
 					teamId: session.teamId,
 					sessionId: session._id,
-					message: finalMessage,
 					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
 					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?.name : 'AgentCloud',
 					ts: finalMessage.ts || messageTimestamp,
 					isFeedback: finalMessage?.isFeedback || false,
 					chunkId: finalMessage.message.chunkId || null,
-					tokens: finalMessage?.message?.tokens || 0,
-					displayMessage: finalMessage?.displayMessage || null,
-					chunks: finalMessage?.message?.single ? [] : [chunk],
-				});
-			}
+					message: finalMessage,
+				},
+				chunk,
+			);
+
 			const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 			if (newStatus !== session.status) { //Note: chat messages can be received out of order
 				log('socket.id "%s" updating session %s status to %s', socket.id, finalMessage.room, newStatus);
