@@ -159,7 +159,6 @@ export async function addSessionApi(req, res, next) {
 	// 	isFeedback: false,
 	// 	chunkId: null,
 	// 	tokens: 0,
-	// 	displayMessage: null,
 	// 	chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
 	// });
 
