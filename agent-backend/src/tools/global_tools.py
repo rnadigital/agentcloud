@@ -1,12 +1,11 @@
+import logging
 from typing import List, Optional, Tuple, Type, Any
 from uuid import uuid4
 import json
 from datetime import datetime
 
 from langchain.tools import tool
-from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
-from langchain_core.language_models import BaseChatModel
 from socketio import SimpleClient
 
 from messaging.send_message_to_socket import send
@@ -42,14 +41,35 @@ class CustomHumanInput(BaseTool):
         try:
             print(f"extract_message text: {text}")
             text_json = json.loads(text)
-            return next((value for value in text_json.values() if value is not None), None) # get the first key, which is usually "question" or "message"
-        except:
+            return next((value for value in text_json.values() if value is not None),
+                        None)  # get the first key, which is usually "question" or "message"
+        except Exception as e:
+            logging.exception(e)
             return text
 
     def _run(
             self,
             text: Optional[str]
     ) -> str:
+        """
+        Sends a text input to a client through the socket connection managed by this instance
+        and waits for feedback.
+
+        Parameters:
+
+            text (str): The text message content to be sent to the client.
+
+        Returns:
+            str: Feedback received from the client as a string. Returns "exit" if a timeout
+                error occurs during the process.
+
+        Raises:
+            TimeoutError: Triggered if there's a timeout while awaiting a response from
+                the client. An error message is emitted to the client before the method returns "exit".
+
+        This method constructs and sends a structured message based on the provided parameters,
+        handling any potential timeouts by notifying the client of an error.
+        """
         try:
             send(
                 self.socket_client,
@@ -84,6 +104,7 @@ class CustomHumanInput(BaseTool):
 
 
 class GlobalTools:
+    @staticmethod
     @tool("Get papers from Arxiv")
     def get_papers_from_arxiv(query: str) -> list:
         """Gets papers from Arxiv"""
@@ -102,6 +123,7 @@ class GlobalTools:
 
 
 class OpenAi:
+    @staticmethod
     @tool("Open AI request")
     def openapi_request(**kwargs):
         """Makes Open AI request"""
@@ -123,111 +145,21 @@ class OpenAi:
             print(f"An error occurred: {str(e)}")
 
 
-class HumanInput:
-    """
-    A class designed to facilitate communication between a server and a client
-    over a socket connection for sending human input messages and receiving feedback.
-
-    This class initializes with a socket client and a session identifier to manage messages
-    for a specific connection session.
-
-    Attributes:
-        None. There are no class attributes required
-
-    Methods:
-        human_input(event, text, first, chunkId):
-            Sends a text message through a socket connection based on specified parameters and waits for feedback.
-    """
-
-    def __init__(self, socket_client: SimpleClient, session_id: str):
-        self.socket_client = socket_client
-        self.session_id = session_id
-
-    @staticmethod
-    @tool("Human Input Tool")
-    def human_input(
-            self,
-            event: Optional[SocketEvents] = SocketEvents.HUMAN_INPUT,
-            text: Optional[str] = None,
-            first: Optional[bool] = False,
-            chunkId: Optional[str] = None
-    ) -> str:
-        """
-        Sends a text input to a client through the socket connection managed by this instance
-        and waits for feedback.
-
-        Parameters:
-
-            event (SocketEvents): An enum value representing the type of event to emit, dictating
-                the nature of the message being sent (e.g., message event, typing event).
-
-            text (str): The text message content to be sent to the client.
-
-            first (bool): Indicates if this message is the first chunk of a segmented message,
-                aiding in message partitioning.
-
-            chunkId (Optional[str]): A UUID as a string that serves as an identifier for the message
-                chunk, defaulting to a new UUID if not provided. It's used for associating
-                different parts of a segmented message.
-
-        Returns:
-            str: Feedback received from the client as a string. Returns "exit" if a timeout
-                error occurs during the process.
-
-        Raises:
-            TimeoutError: Triggered if there's a timeout while awaiting a response from
-                the client. An error message is emitted to the client before the method returns "exit".
-
-        This method constructs and sends a structured message based on the provided parameters,
-        handling any potential timeouts by notifying the client of an error.
-        """
-        try:
-            send(
-                self.socket_client,
-                SocketEvents(event),
-                SocketMessage(
-                    room=self.session_id,
-                    authorName="system",
-                    message=Message(
-                        chunkId=chunkId,
-                        text=text,
-                        first=True,
-                        tokens=1,  # Assumes 1 token is a constant value for message segmentation.
-                        timestamp=datetime.now().timestamp() * 1000,
-                        single=True,
-                    ),
-                    isFeedback=True,
-                ),
-                "both"
-            )
-            feedback = self.socket_client.receive()
-            return feedback[1]
-        except TimeoutError:
-            self.socket_client.emit(
-                "message",
-                {
-                    "room": self.session_id,
-                    "type": "error",
-                    "message": "TimeOutError"},
-            )
-            return "exit"
-
-
 class GlobalBaseTool(BaseTool, ABC):
 
     @classmethod
     @abstractmethod
-    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kargs) -> BaseTool:
+    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kwargs) -> BaseTool:
         """ 
             cls: class type instance - tells you what class was is calling this class-level method
             tool: tool model. Need to copy or extract mandatory BaseTool fields such as name, description, args_schema
             datasources: datasource mongo object. Used to instantiate datasources such as Vector DB
             models: list of Tuple (model object such as OpenAI or FastEmbed, Model mongo object)
-            kargs: other arguments. futfureproofing method for when we need to pass other mongo model data or app/team configuration to the tool
+            kwargs: other arguments. future proofing method for when we need to pass other mongo model data or app/team configuration to the tool
         """
         pass
 
-    # @abstractmethod
-    # def post_init() -> Any:
-    #     """use to instantiate any clients or objects, or dynamic arguments. E.g. self.args_schema = dynamic_create_args_schema(...)"""
-    #     pass
+    @abstractmethod
+    def post_init(self) -> Any:
+        """use to instantiate any clients or objects, or dynamic arguments. E.g. self.args_schema = dynamic_create_args_schema(...)"""
+        pass

@@ -126,7 +126,7 @@ export async function requestChangePassword(req, res) {
 					subject: 'Password reset verification',
 					body: `Somebody entered your email a password reset for agentcloud.
 
-If this was you, click the link to reset your password: ${process.env.URL_APP}/changepassword?token=${verificationToken}
+If this was you, click the link to reset your password: "${process.env.URL_APP}/changepassword?token=${verificationToken}"
 
 If you didn't request a password reset, you can safely ignore this email.`,
 				});
@@ -140,18 +140,18 @@ If you didn't request a password reset, you can safely ignore this email.`,
  * change password with token from email
  */
 export async function changePassword(req, res) {
-	if (!req.body || !req.body.token || typeof req.body.token !== 'string') {
+	const { password, token } = req.body;
+	if (!token || typeof token !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
-	const password = req.body.password;
 	if (!password || typeof password !== 'string' || password.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.CHANGE_PASSWORD);
+	const deletedVerification = await getAndDeleteVerification(token, VerificationTypes.CHANGE_PASSWORD);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid password reset token' });
 	}
-	const newPasswordHash = await bcrypt.hash(req.body.password, 12);
+	const newPasswordHash = await bcrypt.hash(password, 12);
 	await changeAccountPassword(deletedVerification.accountId, newPasswordHash);
 	return dynamicResponse(req, res, 302, { redirect: '/login?changepassword=true' });
 }
