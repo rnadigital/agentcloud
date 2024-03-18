@@ -221,7 +221,7 @@ export default function Session(props) {
 						.sort((ca, cb) => ca.ts - cb.ts)
 						.map(x => x.chunk)
 						.join('');
-					if (combinedChunks?.length > 0) {
+					if (m.chunks.length > 1 && combinedChunks?.length > 0) {
 						_m.message.text = (_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') + combinedChunks;
 					}
 					_m.tokens = m.tokens || _m.tokens;
