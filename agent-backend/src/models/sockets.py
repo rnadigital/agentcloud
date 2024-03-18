@@ -32,7 +32,7 @@ class Message(BaseModel):
     first: Optional[bool] = False
     single: Optional[bool] = False
     type: Optional[MessageType] = MessageType.TEXT.value
-    displayType: Optional[MessageDisplayType] = None
+    displayType: Optional[str] = MessageDisplayType.BUBBLE.value
     timestamp: Optional[float] = datetime.now().timestamp() * 1000
 
 
