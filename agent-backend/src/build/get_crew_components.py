@@ -55,8 +55,8 @@ def construct_crew(session_id: str, task: Optional[str]):
     session: Session = mongo_client.get_session(session_id)
     print(f"Session: {session}")
 
-    the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
-    print("Crew:", the_crew, crew_tasks, crew_agents)
+    app, the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
+    print("Crew:", app, the_crew, crew_tasks, crew_agents)
 
     # Put Agents in a dictionary with their Ids as key
     crew_agents_dict: Dict[Set[PyObjectId], Agent] = dict([(keyset(agent.id), agent) for agent in crew_agents])
@@ -93,6 +93,7 @@ def construct_crew(session_id: str, task: Optional[str]):
 
     crew_builder = CrewAIBuilder(
         session_id=session_id,
+        app_type=app.appType,
         crew=the_crew,
         agents=crew_agents_dict,
         tasks=crew_tasks_dict,  # | crew_agents_tasks_dict,

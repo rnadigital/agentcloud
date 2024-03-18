@@ -10,7 +10,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 import models.mongo
-from models.mongo import ToolType
+from models.mongo import AppType, ToolType
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -32,6 +32,7 @@ class CrewAIBuilder:
             self,
             session_id: str,
             crew: Crew,
+            app_type: AppType,
             agents: Dict[Set[models.mongo.PyObjectId], models.mongo.Agent],
             tasks: Dict[Set[models.mongo.PyObjectId], models.mongo.Task],
             tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
@@ -42,6 +43,7 @@ class CrewAIBuilder:
             init_socket: bool = True
     ):
         self.session_id = session_id
+        self.crew_app_type = app_type
         self.crew_model = crew
         self.agents_models = agents
         self.tasks_models = tasks
@@ -157,9 +159,9 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-            human = CustomHumanInput(self.socket, self.session_id)
-            agent_tools_objs["human_input"] = human
-            print(agent_tools_objs.values())
+            # human = CustomHumanInput(self.socket, self.session_id)
+            # agent_tools_objs["human_input"] = human
+            # print(agent_tools_objs.values())
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -195,33 +197,51 @@ class CrewAIBuilder:
         return 
     
     def build_chat(self):
-        if self.crew_model.modelId:
-            crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
-            if crew_chat_model:
-                human_input_tool = CustomHumanInput(self.socket, self.session_id)
-                chat_agent = Agent(
-                    llm=crew_chat_model,
-                    role='A human chat partner',
-                    goal='Take human input using the "human_input". Pass on the human input. Your must quote the human input exactly.\n',
-                    backstory='You are a helpful agent whose sole job is to get the himan input. To function, you NEED human input ALWAYS.',
-                    tools=[human_input_tool],
-                    allow_delegation=False,
-                    step_callback=self.send_to_sockets,
-                )
-                chat_task = Task(
-                    description=dedent(f"""
-                                    You need to use the human tool. ALWAYS use the human tool.
-                                    step 1: Prompt the user by saying "{self.make_user_question()}"
-                                    step 2: use the human tool to get the human answer.
-                                    step 3: Wait for that answer.
-                                    step 4: Once you get the answer from the human, that's your final answer.
-                                    {self.make_current_context()}
-                                    """),
-                    agent=chat_agent,
-                    expected_output="Human request"
-                )
-                self.crew_chat_tasks = [chat_task]
-                self.crew_chat_agents = [chat_agent]
+        if self.crew_app_type == AppType.CHAT:
+            human_input_tool = CustomHumanInput(self.socket, self.session_id)
+            crew_tasks = list(self.crew_tasks.values())
+            if len(crew_tasks) == 1:
+                # add human tool to first task agent
+                # first_agent = crew_tasks[0].agent
+                # if first_agent is not None:
+                    # first_agent_tools = first_agent.tools
+                    # if first_agent_tools is None:
+                        # first_agent_tools = []
+                        # first_agent.tools = first_agent_tools
+                    # first_agent_tools.append(human_input_tool)
+                first_task = crew_tasks[0]
+                first_task_tools = first_task.tools
+                if first_task_tools is None:
+                    first_task_tools = []
+                    first_task.tools = first_task_tools
+                first_task_tools.append(human_input_tool)
+            elif len(crew_tasks) > 1:
+                crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
+                if crew_chat_model:
+                    # human_input_tool = CustomHumanInput(self.socket, self.session_id)
+                    chat_agent = Agent(
+                        llm=crew_chat_model,
+                        role='A human chat partner',
+                        goal='Take human input using the "human_input". Pass on the human input. Your must quote the human input exactly.\n',
+                        backstory='You are a helpful agent whose sole job is to get the himan input. To function, you NEED human input ALWAYS.',
+                        tools=[human_input_tool],
+                        allow_delegation=False,
+                        step_callback=self.send_to_sockets,
+                    )
+                    chat_task = Task(
+                        description=dedent(f"""
+                                        You need to use the human tool. ALWAYS use the human tool.
+                                        step 1: Prompt the user by saying "{self.make_user_question()}"
+                                        step 2: use the human tool to get the human answer.
+                                        step 3: Wait for that answer.
+                                        step 4: Once you get the answer from the human, that's your final answer.
+                                        {self.make_current_context()}
+                                        """),
+                        agent=chat_agent,
+                        expected_output="Human request"
+                    )
+                    self.crew_chat_tasks = [chat_task]
+                    self.crew_chat_agents = [chat_agent]
 
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
@@ -238,7 +258,6 @@ class CrewAIBuilder:
 
         # 5. Build chat Agent + Task
         self.build_chat()
-
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
             agents=self.crew_chat_agents + list(self.crew_agents.values()), tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
@@ -246,7 +265,7 @@ class CrewAIBuilder:
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            # manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
+            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
             verbose=True
         )
 

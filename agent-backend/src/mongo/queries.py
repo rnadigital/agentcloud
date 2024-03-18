@@ -4,7 +4,7 @@ from mongo.client import MongoConnection
 from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from models.mongo import Agent, Credentials, Crew, Datasource, Model, Session, Task, Tool
+from models.mongo import Agent, App, Credentials, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
 from typing import List, Dict, Union, Any, Optional
 from pydantic import BaseModel
 
@@ -60,7 +60,13 @@ class MongoClientConnection(MongoConnection):
                 crew_agents = [agents_collection.find_one({"_id": agent}) for agent in crew_agent_ids]
             except AssertionError:
                 raise AssertionError(f"There were no agents associated with the crew ID: {crew_id}")
-            return (Crew(**the_crew), convert_dictionaries_to_models(crew_tasks, Task),
+            try:
+                app: App = self.get_app_by_crew_id(crew_id)
+                assert app
+            except AssertionError:
+                raise AssertionError(f"There were no apps associated with the crew: {crew_id}")
+
+            return (app, Crew(**the_crew), convert_dictionaries_to_models(crew_tasks, Task),
                     convert_dictionaries_to_models(crew_agents, Agent))
         except Exception:
             raise
@@ -82,6 +88,10 @@ class MongoClientConnection(MongoConnection):
 
     def get_agent_datasources(self, agent: Dict):
         pass
+
+
+    def get_app_by_crew_id(self, crewId: PyObjectId):
+        return self.get_single_model_by_query("apps", App, {"crewId": crewId})
 
     def get_models_by_query(self, db_collection: str, model_class: type, query: Dict):
         """Takes a db collection name and a pydantic model and after calling query gets the retrned list of dictionary and converts to list of specified model"""

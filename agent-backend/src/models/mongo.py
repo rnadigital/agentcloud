@@ -192,14 +192,12 @@ class Crew(BaseModel):
 class Session(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     crewId: Crew
 
 
 class Datasource(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     orgId: Optional[PyObjectId] = Field(default=None)
     teamId: Optional[PyObjectId] = Field(default=None)
     modelId: Optional[PyObjectId] = Field(default=None)
@@ -210,3 +208,13 @@ class Datasource(BaseModel):
     workspaceId: PyObjectId
     connectionId: PyObjectId
     destinationId: PyObjectId
+
+class AppType(str, Enum):
+    CHAT = "chat"
+    PROCESS = "process"
+
+
+class App(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    appType: Optional[AppType] = Field(default=None)
+    crewId: Optional[PyObjectId] = Field(default=None)
