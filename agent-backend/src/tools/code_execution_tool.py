@@ -42,16 +42,25 @@ class CodeExecutionTool(GlobalBaseTool):
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():
-            args_schema_pydantic[k]=((bool if v.type == "boolean" else (int if v.type == "integer" else str), None))
+            args_schema_pydantic[k]=((str, None))
         return args_schema_pydantic
+    
+    def convert_str_args_to_correct_type(self, args):
+        typed_args = dict()
+        for k, v in args.items():
+            prop = self.properties_dict[k]
+            if prop:
+                typed_args[k]=bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
+        return typed_args
     
     def _run(self, args_str: Dict):
         args = json.loads(args_str)
+        typed_args = self.convert_str_args_to_correct_type(args)
         indented_code = self.code.replace("\n", "\n    ")
         function_parameters = ", ".join(args.keys())  # Extract the keys as parameter names
         formatted_function = f"""def {self.function_name}({function_parameters}):
     {indented_code}
-res = {self.function_name}({", ".join([f"{k}={repr(v)}" for k, v in args.items()])})
+res = {self.function_name}({", ".join([f"{k}={repr(v)}" for k, v in typed_args.items()])})
 print(res)
 """
         if sys.platform != "win32":
