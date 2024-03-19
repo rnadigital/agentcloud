@@ -100,6 +100,14 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		setToolState([{ label: `${body.name} (${body.type}) - ${body.description}`, value: addedToolId }]);
 	};
 
+	const handleToolSelect = (tool) => {
+		if (toolState.some(t => t.value === tool._id)) {
+			setToolState(oldTs => oldTs.filter(t => t.value !== tool._id));
+		} else {
+			setToolState(oldTs => oldTs.concat([tool]));
+		}
+	};
+
 	return (<>
 		{modalOpen === 'model'
 			? <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
@@ -317,44 +325,27 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 							Tools (Optional)
 						</label>
 						<div className='mt-2'>
-							<Select
-								isSearchable
-								isMultiple
-					            primaryColor={'indigo'}
-					            classNames={{
-									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-									list: 'dark:bg-slate-700',
-									listGroupLabel: 'dark:bg-slate-700',
-									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-					            }}
-					            value={toolState}
-					            onChange={(v: any) => {
-									if (Array.isArray(v) && v.length > 0 && v[v.length-1]?.value === null) {
-										return setModalOpen('tool');
-									}
-					            	setToolState(v);
-				            	}}
-					            options={tools.map(t => ({ label: t.name, value: t._id })).concat([{ label: '+ New tool', value: null }])}
-					            formatOptionLabel={data => {
-									const optionTool = tools.find(ac => ac._id === data.value);
-					                return (<li
-					                    className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-										<span className='tooltip z-100'>
-											{ToolSelectIcons[optionTool?.type]}
-											<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
-												{optionTool?.type} tool
-											</span>
-										</span>
-					                    <span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
-					                </li>);
-					            }}
-					        />
+							<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-4'>
+								{tools.map(tool => (
+									<div
+										key={tool._id}
+										className={`tool-card flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-blue-100 ${toolState.some(ts => ts.value === tool._id) ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-200'} transition-all`}
+										onClick={() => handleToolSelect({ value: tool._id, ...tool })}
+									>
+										<span className='text-gray-800 text-sm font-medium'>{tool.name}</span>
+										<span className={`text-blue-500 ${!toolState.some(ts => ts.value === tool._id) && 'invisible'}`}>✓</span>
+									</div>
+								))}
+							</div>
+								<button 
+									className={`w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+									onClick={(e) => {
+									e.preventDefault();
+									setModalOpen('tool');
+								}}>
+									+ New Tool
+								</button>
+
 						</div>
 					</div>
 
