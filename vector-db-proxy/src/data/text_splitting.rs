@@ -28,27 +28,28 @@ impl Default for Sentence {
 
 fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
+    println!("Sentence Length: {}", sentences.len());
+    if sentences.len() > 0 {
+        for i in 0..sentences.len() - 1 {
+            let embedding_current = &sentences[i].sentence_embedding;
+            let embedding_next = &sentences[i + 1].sentence_embedding;
 
-    for i in 0..sentences.len() - 1 {
-        let embedding_current = &sentences[i].sentence_embedding;
-        let embedding_next = &sentences[i + 1].sentence_embedding;
+            // Calculate cosine similarity
+            let similarity = cosine_similarity(embedding_current, embedding_next);
 
-        // Calculate cosine similarity
-        let similarity = cosine_similarity(embedding_current, embedding_next);
+            // Convert to cosine distance
+            let distance = 1.0 - similarity;
 
-        // Convert to cosine distance
-        let distance = 1.0 - similarity;
+            // Append cosine distance to the list
+            distances.push(distance);
 
-        // Append cosine distance to the list
-        distances.push(distance);
+            // Store distance in the struct
+            sentences[i].distance_to_next = Some(distance);
+        }
 
-        // Store distance in the struct
-        sentences[i].distance_to_next = Some(distance);
+        // Optionally handle the last sentence
+        sentences.last_mut().unwrap().distance_to_next = None; // or a default value
     }
-
-    // Optionally handle the last sentence
-    sentences.last_mut().unwrap().distance_to_next = None; // or a default value
-
     distances
 }
 
