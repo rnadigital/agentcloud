@@ -161,11 +161,10 @@ The returned data includes essential details like the paper's title, authors, ab
             results = []
             for result in arxiv.Client().results(search):
                 results.append(result.title)
-            print(results)
             return results
         except Exception as e:
             print(f"An error occurred: {str(e)}")
-            return f"An error occurred: {str(e)}" 
+            return f"An error occurred: {str(e)}"
 
 
 class openapi_request:
