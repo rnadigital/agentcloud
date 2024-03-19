@@ -36,7 +36,7 @@ def execute_task(data: dict):
     with log_exception():
         session_id = data.get("sessionId")
         socket = None
-        loop_max = 10
+        loop_max = 20
         while True:
             crew_builder, app = construct_crew(session_id, socket)
             crew_builder.build_crew()
