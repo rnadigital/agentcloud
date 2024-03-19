@@ -215,6 +215,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						setDatasourceName('');
 						fetchDatasources();
 					}}
+					modalOpen={modalOpen}
 				>
 					<div>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -479,7 +480,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	}
 
 	return (<div>
-		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
+		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
 		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (

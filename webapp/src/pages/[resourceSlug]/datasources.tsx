@@ -54,7 +54,7 @@ export default function Datasources(props) {
 		<PageTitleWithNewButton list={datasources} title='File Uploads' />
 
 		<span className='pt-1 mb-3 w-full'>
-			<CreateDatasourceForm models={models} fetchDatasourceFormData={()=>{}} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
+			<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasources} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
 		</span>
 		
 		<DatasourceFileTable datasources={datasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />

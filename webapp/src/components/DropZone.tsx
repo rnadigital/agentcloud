@@ -13,8 +13,8 @@ import formatSize from 'utils/formatsize';
 
 import * as API from '../api';
 
-export default function DropZone({ children, setFiles, files, modelId, name, callback }:
-	{ children: any, setFiles: any, files: any[], modelId: string, name: string, callback?: Function }) {
+export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback }:
+	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -83,7 +83,11 @@ export default function DropZone({ children, setFiles, files, modelId, name, cal
 			</label>
 
 			<Transition.Root show={open} as={Fragment}>
-				<Dialog as='div' className='relative z-10' initialFocus={cancelButtonRef} onClose={() => setFiles(null)}>
+				<Dialog as='div' className='relative z-10' initialFocus={cancelButtonRef} onClose={() =>{
+					if (!modalOpen) {
+						setFiles(null);
+					}
+				}}>
 					<Transition.Child
 						as={Fragment}
 						enter='ease-out duration-300'
