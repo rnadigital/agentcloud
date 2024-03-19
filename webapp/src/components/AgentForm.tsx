@@ -182,7 +182,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								name='backstory'
 								placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={goal}
+								defaultValue={backstory}
 							/>
 						</div>
 						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
