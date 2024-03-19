@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 
-use crate::llm::models::FastEmbedModels;
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -118,37 +117,22 @@ impl Qdrant {
                         Some(name) => {
                             // if it's a value check that it's a known fast embed model variant. If it is treat it as a named vector. Otherwise go down the path of a normal upload.
                             let model_name = name.clone();
-                            match FastEmbedModels::from(name) {
-                                // Case where the model name is not None however it is not a known Fast embed model variant
-                                FastEmbedModels::UNKNOWN => {
-                                    config = Some(VectorsConfig {
-                                        config: Some(Config::Params(VectorParams {
+                            // case where we model name is None in which case use standard point upload method.
+                            config = Some(VectorsConfig {
+                                config: Some(Config::ParamsMap(VectorParamsMap {
+                                    map: [(
+                                        String::from(model_name.as_str()),
+                                        VectorParams {
                                             size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                             ..Default::default()
-                                        })),
-                                    });
-                                }
-                                _ => {
-                                    //case where the model name is Not None AND it is a known Fast embed model variant
-                                    config = Some(VectorsConfig {
-                                        config: Some(Config::ParamsMap(VectorParamsMap {
-                                            map: [(
-                                                String::from(model_name.as_str()),
-                                                VectorParams {
-                                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
-                                                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
-                                                    ..Default::default()
-                                                },
-                                            )]
-                                            .into(),
-                                        })),
-                                    })
-                                }
-                            }
+                                        },
+                                    )]
+                                        .into(),
+                                })),
+                            })
                         }
                         None => {
-                            // case where we model name is None in which case use standard point upload method.
                             config = Some(VectorsConfig {
                                 config: Some(Config::Params(VectorParams {
                                     size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
@@ -182,8 +166,8 @@ impl Qdrant {
                         Err(e) => {
                             println!("Err: {}", e);
                             Err(anyhow!(
-                                "An error occurred while trying to create collection: {}",
-                                e
+                            "An error occurred while trying to create collection: {}",
+                            e
                             ))
                         }
                     }

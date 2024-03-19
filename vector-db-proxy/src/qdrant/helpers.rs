@@ -162,7 +162,7 @@ pub async fn construct_point_struct(
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(
                     Uuid::new_v4().to_string(),
-                    HashMap::from([(String::from(model), vector.to_owned())]), //TODO: not hardcode
+                    HashMap::from([(String::from(model), vector.to_owned())]),
                     json!(payload).try_into().unwrap(),
                 );
                 Some(qdrant_point_struct)

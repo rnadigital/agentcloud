@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { client } from './lib/redis/redis';
 const log = debug('webapp:socket');
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid'
 dotenv.config({ path: '.env' });
 
 import { timingSafeEqual } from 'crypto';
@@ -150,6 +151,9 @@ export function initSocket(rawHttpServer) {
 				authorName: data.authorName || 'System',
 				ts: messageTimestamp,
 			};
+			if (!finalMessage?.message?.chunkId) {
+				finalMessage.message.chunkId = uuidv4();
+			}
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
 				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}

@@ -154,6 +154,7 @@ class Agent(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     """Data model for Autogen Agent Config"""
+    name: str
     role: str
     goal: str
     backstory: str

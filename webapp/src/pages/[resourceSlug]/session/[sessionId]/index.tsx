@@ -290,7 +290,6 @@ export default function Session(props) {
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account.name,
-			incoming: true,
 			message: {
 				type: 'text',
 				text: message,

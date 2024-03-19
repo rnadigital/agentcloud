@@ -352,7 +352,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					            	setDatasourceState(v);
 				            	}}
 					            options={datasources
-					            	.filter(t => t?.status === DatasourceStatus.READY)
+					            	// .filter(t => t?.status === DatasourceStatus.READY)
 					            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
 					            formatOptionLabel={(data: any) => {
 					                return (<li

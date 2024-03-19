@@ -18,7 +18,7 @@ from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from models.sockets import SocketMessage, SocketEvents, Message
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
-from tools.global_tools import CustomHumanInput, GlobalBaseTool
+from tools.global_tools import CustomHumanInput, GlobalBaseTool, get_papers_from_arxiv, openapi_request
 
 
 class CrewAIBuilder:
@@ -133,6 +133,12 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
+
+            # testing
+            # if tool.data.builtin == True:
+            #     self.crew_tools[key] = globals()[tool.data.name]
+            #     continue
+
             # Decide on tool class
             tool_class: Type[GlobalBaseTool] = None
             match tool.type:
@@ -141,6 +147,9 @@ class CrewAIBuilder:
                 case ToolType.HOSTED_FUNCTION_TOOL:
                     # TODO: use more secure option tools.CodeExecutionUsingDockerNotebookTool
                     tool_class = CodeExecutionTool
+            if tool.data.builtin:
+                tool_class = globals()[tool.data.name]
+                print(f"tool_class: {tool_class}")
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
             tool_models_objects = search_subordinate_keys(self.crew_models, key)
@@ -226,11 +235,12 @@ class CrewAIBuilder:
                     # human_input_tool = CustomHumanInput(self.socket, self.session_id)
                     chat_agent = Agent(
                         llm=crew_chat_model,
+                        name='Human partner',
                         role='A human chat partner',
                         goal='Take human input using the "human_input". Pass on the human input. Your must quote the human input exactly.\n',
                         backstory='You are a helpful agent whose sole job is to get the himan input. To function, you NEED human input ALWAYS.',
                         tools=[human_input_tool],
-                        allow_delegation=False,
+                        allow_delegation=True,
                         step_callback=self.send_to_sockets,
                     )
                     chat_task = Task(
@@ -275,7 +285,7 @@ class CrewAIBuilder:
             verbose=True
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunkId=None, timestamp=None, displayType="bubble"):
+    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble", author_name="System"):
 
         # test isnt string, its agentaction, etc
         if type(text) != str:
@@ -290,6 +300,8 @@ class CrewAIBuilder:
             first = True
         if timestamp is None:
             timestamp = datetime.now().timestamp() * 1000
+        if author_name is None or len(author_name) == 0:
+            author_name = "System"
 
         # send the message
         send(
@@ -297,14 +309,14 @@ class CrewAIBuilder:
             SocketEvents(event),
             SocketMessage(
                 room=self.session_id,
-                authorName="system",
+                authorName=author_name,
                 message=Message(
-                    chunkId=chunkId,
+                    chunkId=chunk_id,
                     text=text,
                     first=first,
                     tokens=1,
                     timestamp=timestamp,
-                    displayType=displayType,
+                    displayType=display_type,
                 )
             ),
             "both"
