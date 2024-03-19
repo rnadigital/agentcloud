@@ -20,7 +20,7 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import classNames from 'components/ClassNames';
-import DebugLogs from 'components/DebugLogs';
+// import DebugLogs from 'components/DebugLogs';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
@@ -449,8 +449,8 @@ export default withRouter(function Layout(props) {
 								{/* Notification Bell */}
 								<NotificationBell />
 
-								{/* debug logs */}
-								<DebugLogs />
+								{/* debug logs
+								<DebugLogs />*/}
 								
 								{/* Separator */}
 								<div
