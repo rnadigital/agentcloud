@@ -4,6 +4,7 @@ import * as API from '@api';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
+import ToolSelector from 'components/ToolSelector';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -324,19 +325,11 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Tools (Optional)
 						</label>
-						<div className='mt-2'>
-							<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-4'>
-								{tools.map(tool => (
-									<div
-										key={tool._id}
-										className={`tool-card flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-blue-100 ${toolState.some(ts => ts.value === tool._id) ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-200'} transition-all`}
-										onClick={() => handleToolSelect({ value: tool._id, ...tool })}
-									>
-										<span className='text-gray-800 text-sm font-medium'>{tool.name}</span>
-										<span className={`text-blue-500 ${!toolState.some(ts => ts.value === tool._id) && 'invisible'}`}>✓</span>
-									</div>
-								))}
-							</div>
+						<ToolSelector
+						  tools={tools}
+						  toolState={toolState}
+						  setToolState={setToolState}
+						>
 							<button 
 								className={`w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 								onClick={(e) => {
@@ -345,8 +338,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								}}>
 									+ New Tool
 							</button>
-
-						</div>
+						</ToolSelector>
 					</div>
 
 				</div>
