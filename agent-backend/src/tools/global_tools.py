@@ -39,10 +39,13 @@ class CustomHumanInput(BaseTool):
     @staticmethod
     def extract_message(text):
         try:
-            print(f"extract_message text: {text}")
-            text_json = json.loads(text)
-            return next((value for value in text_json.values() if value is not None),
-                        None)  # get the first key, which is usually "question" or "message"
+            if isinstance(text, str) and text.startswith('{'):
+                text_json = json.loads(text)
+                if len(text_json) > 1:
+                    return text # not a single key object
+                return next((value for value in text_json.values() if value is not None),
+                    None)  # get the first key, which is usually "question" or "message"
+            return text
         except Exception as e:
             logging.exception(e)
             return text
@@ -90,7 +93,6 @@ class CustomHumanInput(BaseTool):
                 "both"
             )
             feedback = self.socket_client.receive()
-            print("feedback::::", feedback)
             if feedback[0] == "terminate":
                 return " TERMINATE ALL TASKS IMMEDIATELY "
             else:
@@ -106,26 +108,67 @@ class CustomHumanInput(BaseTool):
             return "exit"
 
 
-class GlobalTools:
-    @staticmethod
-    @tool("Get papers from Arxiv")
-    def get_papers_from_arxiv(query: str) -> list:
-        """Gets papers from Arxiv"""
+class GlobalBaseTool(BaseTool, ABC):
+
+    @classmethod
+    @abstractmethod
+    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kwargs) -> BaseTool:
+        """ 
+            cls: class type instance - tells you what class was is calling this class-level method
+            tool: tool model. Need to copy or extract mandatory BaseTool fields such as name, description, args_schema
+            datasources: datasource mongo object. Used to instantiate datasources such as Vector DB
+            models: list of Tuple (model object such as OpenAI or FastEmbed, Model mongo object)
+            kwargs: other arguments. future proofing method for when we need to pass other mongo model data or app/team configuration to the tool
+        """
+        pass
+
+
+class get_papers_from_arxiv(GlobalBaseTool):
+    """
+get_papers_from_arxiv
+This function takes a string query as input and fetches related research papers from the arXiv repository.
+The function connects to the arXiv API, submits the query, and retrieves a list of papers matching the query criteria.
+The returned data includes essential details like the paper's title, authors, abstract, and arXiv ID.
+    Args:
+        query (str): The query to send to arxiv to search for papers with.
+    """
+    name: str = "get_papers_from_arxiv"
+    description: str = "This function takes a string query as input and fetches related research papers from the arXiv repository. The function connects to the arXiv API, submits the query, and retrieves a list of papers matching the query criteria. The returned data includes essential details like the paper's title, authors, abstract, and arXiv ID."
+    code: str
+    function_name: str
+    properties_dict: dict = None
+    args_schema: Type = None
+
+    @classmethod
+    def factory(cls, tool: Tool, **kargs):
+        return get_papers_from_arxiv(
+            name=tool.name,
+            description=tool.description,
+            function_name=tool.data.name,
+            code=tool.data.code,
+            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
+        )
+
+    def _run(
+        self,
+        query: str
+    ) -> str:
         try:
             import arxiv
-
             search = arxiv.Search(
                 query=query, max_results=10, sort_by=arxiv.SortCriterion.SubmittedDate
             )
             results = []
             for result in arxiv.Client().results(search):
                 results.append(result.title)
+            print(results)
             return results
         except Exception as e:
             print(f"An error occurred: {str(e)}")
+            return f"An error occurred: {str(e)}" 
 
 
-class OpenAi:
+class openapi_request:
     @staticmethod
     @tool("Open AI request")
     def openapi_request(**kwargs):
@@ -148,16 +191,3 @@ class OpenAi:
             print(f"An error occurred: {str(e)}")
 
 
-class GlobalBaseTool(BaseTool, ABC):
-
-    @classmethod
-    @abstractmethod
-    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kwargs) -> BaseTool:
-        """ 
-            cls: class type instance - tells you what class was is calling this class-level method
-            tool: tool model. Need to copy or extract mandatory BaseTool fields such as name, description, args_schema
-            datasources: datasource mongo object. Used to instantiate datasources such as Vector DB
-            models: list of Tuple (model object such as OpenAI or FastEmbed, Model mongo object)
-            kwargs: other arguments. future proofing method for when we need to pass other mongo model data or app/team configuration to the tool
-        """
-        pass
