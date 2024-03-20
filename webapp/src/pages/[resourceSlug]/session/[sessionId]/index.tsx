@@ -260,6 +260,7 @@ export default function Session(props) {
 		};
 	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
+		console.log('ready, resourceSlug', ready, resourceSlug);
 		if (ready !== resourceSlug) {
 			console.log('useEffect ready check handleSocketStart()');
 			handleSocketStart();
@@ -267,7 +268,8 @@ export default function Session(props) {
 		return () => {
 			//stop/disconnect on unmount
 			console.log('useEffect ready check handleSocketStop()');
-			handleSocketStop();
+			// handleSocketStop();
+			leaveSessionRoom();
 		};
 	}, [ready, resourceSlug]);
 	useEffect(() => {
