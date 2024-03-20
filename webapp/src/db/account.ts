@@ -2,6 +2,7 @@
 
 import * as db from 'db/index';
 import { Binary,ObjectId } from 'mongodb';
+import { SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
@@ -33,6 +34,7 @@ export type AccountStripeData = {
 	stripeCustomerId?: string;
 	stripeEndsAt?: number;
 	stripeCancelled?: boolean;
+	stripePlan?: SubscriptionPlan;
 }
 
 export type Account = {
@@ -192,6 +194,7 @@ export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: num
 			'stripe.stripeCustomerId': stripeCustomerId,
 			'stripe.stripeEndsAt': stripeEndsAt,
 			'stripe.stripeCancelled': stripeCancelled || false,
+			'stripe.stripePlan': 'TEST', // TODO
 		}
 	});
 }
@@ -201,6 +204,7 @@ export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
 		stripeCustomerId,
 	}, {
 		$unset: {
+			'stripe.stripePlan': '',
 			'stripe.stripeCustomerId': '',
 			'stripe.stripeEndsAt': '',
 		}
