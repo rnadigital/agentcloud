@@ -408,7 +408,7 @@ pub async fn scroll_data(
     if qdrant_conn
         .read()
         .await
-        .has_collection(dataset_id.clone())
+        .collection_exists(dataset_id.clone())
         .await?
         == false
     {
