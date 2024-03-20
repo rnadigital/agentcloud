@@ -25,12 +25,12 @@ export default function Session(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	const [ready, setReady] = useState(resourceSlug);
+	const [ready, setReady] = useState(null);
 	
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
-	const { sessionId } = router.query && router.query.sessionId.startsWith('[') ? props.query : router.query;
+	const { sessionId } = router.query;
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 	const [sessionsData, setSessionData] = useState(null);
@@ -175,9 +175,11 @@ export default function Session(props) {
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
 		updateChat();
+		// joinSessionRoom();
 		scrollToBottom();
 	}
 	function handleSocketStart() {
+	console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('terminate', handleTerminateMessage);
@@ -211,7 +213,7 @@ export default function Session(props) {
 		// fetchSessions();
 		API.getSession({
 			resourceSlug,
-			sessionId,
+			sessionId: router?.query?.sessionId,
 		}, (res) => {
 			dispatch(res);
 			if (res && res?.session) {
@@ -226,7 +228,7 @@ export default function Session(props) {
 		}, setError, router);
 		API.getMessages({
 			resourceSlug,
-			sessionId,
+			sessionId: router?.query?.sessionId,
 		}, (_messages) => {
 			const sortedMessages = _messages
 				.map(m => {
@@ -252,6 +254,7 @@ export default function Session(props) {
 	useEffect(() => {
 		updateChat();
 		joinSessionRoom();
+		setReady(resourceSlug);
 		return () => {
 			leaveSessionRoom();
 		};
@@ -264,9 +267,9 @@ export default function Session(props) {
 		return () => {
 			//stop/disconnect on unmount
 			console.log('useEffect ready check handleSocketStop()');
-			// handleSocketStop();
+			handleSocketStop();
 		};
-	}, [ready]);
+	}, [ready, resourceSlug]);
 	useEffect(() => {
 		if (messages && messages.length > 0 && ready === resourceSlug) {
 			console.log('useEffect messages check setReady()');

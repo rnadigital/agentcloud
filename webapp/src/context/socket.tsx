@@ -17,6 +17,9 @@ export function SocketWrapper({ children }) {
 		if (!sharedSocket || !resourceSlug) { return; }
 		sharedSocket.emit('join_room', resourceSlug);
 		console.log('joined room');
+		// sharedSocket.onAny((eventName, ...args) => {
+		// 	console.log('Socket eventName:', eventName, args);
+		// });
 		sharedSocket.on('notification', msg => {
 			console.log('notification', msg);
 			toast('New Notification!');
