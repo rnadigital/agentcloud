@@ -16,6 +16,7 @@ pub struct GlobalData {
     pub webapp_host: String,
     pub redis_host: String,
     pub redis_port: String,
+    pub openai_key: String,
 }
 
 impl GlobalData {
@@ -38,6 +39,7 @@ impl GlobalData {
             webapp_host: dotenv::var("WEBAPP_HOST").unwrap_or("localhost".to_string()),
             redis_host: dotenv::var("REDIS_HOST").unwrap_or("localhost".to_string()),
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
+            openai_key: dotenv::var("OPENAI_API_KEY").unwrap_or("".to_string()),
         }
     }
 }

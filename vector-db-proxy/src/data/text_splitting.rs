@@ -133,12 +133,14 @@ impl Chunker {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                     for (i, sentence) in sentences.iter().enumerate() {
-                        if i < embeddings.len() && !embeddings[i].is_empty() {
-                            vector_of_sentences.push(Sentence {
-                                sentence_embedding: Array1::from_vec(embeddings[i].clone()),
-                                distance_to_next: None,
-                                sentence: Some(sentence["sentence"].clone()),
-                            });
+                        if !embeddings.is_empty() && embeddings.len() > 0 {
+                            if i < embeddings.len() && !embeddings[i].is_empty() {
+                                vector_of_sentences.push(Sentence {
+                                    sentence_embedding: Array1::from_vec(embeddings[i].clone()),
+                                    distance_to_next: None,
+                                    sentence: Some(sentence["sentence"].clone()),
+                                });
+                            }
                         }
                     }
                     // here is where the divergence occurs depending on the chunking strategy chosen by the use
