@@ -282,6 +282,7 @@ pub async fn lookup_data_point(
                 must,
                 must_not,
                 should,
+                ..Default::default()
             }),
             limit,
             with_payload: Some(true.into()),
@@ -430,6 +431,7 @@ pub async fn scroll_data(
             must,
             must_not,
             should,
+            ..Default::default()
         }),
         limit: data.limit,
         with_vectors: Some(WithVectorsSelector {
