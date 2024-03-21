@@ -41,7 +41,7 @@ export default function Account(props) {
 		return 'Loading...'; //TODO: loader
 	}
 
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe || {};
+	const { stripeCustomerId, stripeEndsAt, stripeCancelled, stripePlan } = account?.stripe || {};
 
 	return (
 		<>
@@ -69,7 +69,19 @@ export default function Account(props) {
 						type='submit'
 						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
-						Subscribe
+						Subscribe (test plan A)
+					</button>
+				</div>
+			</form>}
+
+			{!stripeCustomerId && <form onSubmit={getPaymentLink}>
+				<input type='hidden' name='_csrf' value={csrf} />
+				<div className='my-2 flex items-center justify-start gap-x-6'>
+					<button
+						type='submit'
+						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
+						Subscribe (test plan B)
 					</button>
 				</div>
 			</form>}
@@ -87,6 +99,7 @@ export default function Account(props) {
 			</form>}
 
 			<p>Subscribed: {stripeCustomerId ? 'Yes' : 'No'}</p>
+			{stripeCustomerId && <p>Stripe Plan: <code>{stripePlan}</code></p>}
 			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
 			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
 			{stripeCancelled && <p>Stripe subscription cancelled.</p>}
