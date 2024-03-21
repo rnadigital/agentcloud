@@ -1,11 +1,11 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import toObjectId from 'misc/toobjectid';
 import { CredentialType, CredentialTypes } from 'struct/credential';
 
 import { removeAgentsModel } from '../db/agent';
 import { addCredential, Credential, deleteCredentialById, getCredentialById, getCredentialsByTeam } from '../db/credential';
-import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {
 	const credentials = await getCredentialsByTeam(req.params.resourceSlug);

@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -9,7 +10,6 @@ import { ObjectId } from 'mongodb';
 import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
-import { dynamicResponse } from '../util';
 
 export async function accountData(req, res, _next) {
 	//TODO: calculate and send the base64 of calcuated permissions for the resourceSlug here:

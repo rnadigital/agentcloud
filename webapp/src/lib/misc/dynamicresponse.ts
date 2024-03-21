@@ -1,9 +1,5 @@
 import url from 'node:url';
 
-export function	makeArrayIfSingle(obj) {
-	return !Array.isArray(obj) ? [obj] : obj;
-}
-
 export function dynamicResponse(req, res, code, data) {
 	const isRedirect = code === 302;
 	if (req.headers && (req.headers['content-type'] === 'application/json'

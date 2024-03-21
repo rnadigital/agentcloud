@@ -3,7 +3,10 @@
 import * as API from '@api';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
+import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
+import SubscriptionModal from 'components/SubscriptionModal';
+import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,10 +16,6 @@ import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import SelectClassNames from 'styles/SelectClassNames';
-
-import CreateModelModal from 'components/CreateModelModal';
-import SubscriptionModal from 'components/SubscriptionModal'
-import { useAccountContext } from 'context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
 	ssr: false,
 });

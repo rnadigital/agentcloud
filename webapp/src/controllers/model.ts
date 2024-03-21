@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { removeAgentsModel } from 'db/agent';
 import { getCredentialById, getCredentialsById, getCredentialsByTeam } from 'db/credential';
 import { addModel, deleteModelById, getModelById, getModelsByTeam,updateModel } from 'db/model';
@@ -11,7 +12,6 @@ import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
 import { addCredential, deleteCredentialById } from '../db/credential';
-import { dynamicResponse } from '../util';
 dotenv.config({ path: '.env' });
 
 export async function modelsData(req, res, _next) {

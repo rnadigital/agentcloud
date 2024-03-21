@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
@@ -9,8 +10,6 @@ import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { SessionStatus } from 'struct/session';
-
-import { dynamicResponse } from '../util';
 
 export async function sessionsData(req, res, _next) {
 	const [crews, sessions, agents] = await Promise.all([

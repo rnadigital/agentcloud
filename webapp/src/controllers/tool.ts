@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
@@ -8,8 +9,6 @@ import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
-
-import { dynamicResponse } from '../util';
 
 export async function toolsData(req, res, _next) {
 	const [tools, credentials, datasources] = await Promise.all([

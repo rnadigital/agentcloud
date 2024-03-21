@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
@@ -22,7 +23,6 @@ import { promisify } from 'util';
 import deleteCollectionFromQdrant from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
-import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;

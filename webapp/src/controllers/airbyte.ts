@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
@@ -9,7 +10,6 @@ import { DatasourceStatus } from 'struct/datasource';
 import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus,setDatasourceSyncedCount } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
-import { dynamicResponse } from '../util';
 /**
  * GET /airbyte/schema
  * get the specification for an airbyte source

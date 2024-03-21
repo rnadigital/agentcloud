@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import Stripe from 'stripe';
 
 import { setStripeCustomerId, unsetStripeCustomer, updateStripeCustomer } from '../db/account';
@@ -7,7 +8,6 @@ import { addCheckoutSession, getCheckoutSessionByAccountId } from '../db/checkou
 import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
 import { addPortalLink } from '../db/portallink';
 import toObjectId from '../lib/misc/toobjectid';
-import { dynamicResponse } from '../util';
 const stripe = new Stripe(process.env['STRIPE_ACCOUNT_SECRET']);
 import debug from 'debug';
 const log = debug('webapp:stripe');

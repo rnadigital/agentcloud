@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 
@@ -10,7 +11,6 @@ import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
 import { ModelList } from '../lib/struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/validationUtils';
-import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
 	const [agents, models, tools] = await Promise.all([

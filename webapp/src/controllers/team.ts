@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
@@ -17,7 +18,6 @@ import { addOrg, getOrgById } from '../db/org';
 import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions } from '../db/team';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
-import { dynamicResponse } from '../util';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([

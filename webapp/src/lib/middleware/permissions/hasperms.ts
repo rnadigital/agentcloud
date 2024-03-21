@@ -1,6 +1,6 @@
 'use strict';
 
-import { dynamicResponse } from '../../../util';
+import { dynamicResponse } from '@dr';
 
 const cache = {
 	one: {},

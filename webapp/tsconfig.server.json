@@ -55,6 +55,9 @@
       "lib/*": [
         "lib/*"
       ],
+      "@dr": [
+        "lib/misc/dynamicresponse.ts"
+      ],
       "components/*": [
         "components/*"
       ],

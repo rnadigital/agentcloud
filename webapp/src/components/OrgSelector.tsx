@@ -1,17 +1,15 @@
+import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
 import {
 	ChevronDownIcon,
 	HomeIcon,
 } from '@heroicons/react/20/solid';
 import CreateTeamModal from 'components/CreateTeamModal';
+import SubscriptionModal from 'components/SubscriptionModal';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import { SubscriptionPlan } from 'struct/billing';
-
-import * as API from '@api';
-import { useAccountContext } from 'context/account';
-import SubscriptionModal from 'components/SubscriptionModal'
-
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');

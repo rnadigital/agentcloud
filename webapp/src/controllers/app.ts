@@ -1,5 +1,6 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { addCrew, updateCrew } from 'db/crew';
@@ -9,8 +10,6 @@ import { getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
-
-import { dynamicResponse } from '../util';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models] = await Promise.all([
