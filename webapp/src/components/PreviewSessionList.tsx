@@ -97,7 +97,7 @@ export default function PreviewSessionList(props) {
 			href={`/${resourceSlug}/session/${s._id}`}
 			onClick={(e: any) => e.target.tagName === 'svg' && e.preventDefault()}
 		>
-			<p className='overflow-hidden truncate text-ellipsis'>{s.prompt || s.description || <span className='text-xs italic'>New Session</span>}</p>
+			<p className='overflow-hidden truncate text-ellipsis'>{s.previewLabel || s.name || <span className='text-xs italic'>New Session</span>}</p>
 			<Menu as='div' className='relative ml-auto p-0 m-0 h-full'>
 				<Menu.Button className='-m-2 block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
 					<span className='sr-only'>Open options</span>

@@ -65,10 +65,6 @@ export async function sessionPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
-		// query: {
-		// 	resourceSlug: req.params.resourceSlug,
-		// 	sessionId: req.params.sessionId,
-		// }
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
@@ -108,10 +104,6 @@ export async function addSessionApi(req, res, next) {
 
 	let { rag, prompt, id }  = req.body;
 
-// 	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
-// 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-// 	}
-
 	let crewId;
 	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
 	if (crew) {
@@ -128,39 +120,13 @@ export async function addSessionApi(req, res, next) {
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    // prompt,
-	    name: '',
+	    name: crew.name,
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		crewId,
 	});
-
-	const now = Date.now();
-	// const message = {
-	// 	room: addedSession.insertedId.toString(),
-	// 	authorName: res.locals.account.name,
-	// 	incoming: true,
-	// 	message: {
-	// 		type: 'text',
-	// 		text: prompt,
-	// 	},
-	// 	event: 'message',
-	// 	ts: now
-	// };
-	// await addChatMessage({
-	// 	orgId: res.locals.matchingOrg.id,
-	// 	teamId: toObjectId(req.params.resourceSlug),
-	// 	sessionId: addedSession.insertedId,
-	// 	message,
-	// 	authorId: null,
-	// 	authorName: res.locals.account.name,
-	// 	ts: now,
-	// 	isFeedback: false,
-	// 	chunkId: null,
-	// 	tokens: 0,
-	// 	chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
-	// });
 
 	taskQueue.add('execute_rag', { //TODO: figure out room w/ pete
 		task: prompt,

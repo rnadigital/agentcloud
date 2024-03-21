@@ -16,7 +16,7 @@ export type Session = {
     tokensUsed: number;
 	status: SessionStatus;
 	crewId?: ObjectId;
-	
+	previewLabel?: string;
 }
 
 export function SessionCollection(): any {

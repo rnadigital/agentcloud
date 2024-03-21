@@ -30,11 +30,13 @@ export default function Session(props) {
 	const [error, setError] = useState();
 	// @ts-ignore
 	const { sessionId } = router.query;
+	const [currentSession, setCurrentSession] = useState(sessionId);
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 	const [sessionsData, setSessionData] = useState(null);
 	const { sessions, groups, agents } = (sessionsData||{});
 	const [_chatContext, setChatContext]: any = useChatContext();
+	const [loading, setLoading] = useState(false);
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(state?.status === SessionStatus.TERMINATED);
@@ -230,6 +232,7 @@ export default function Session(props) {
 				setLastSeenMessageId(sortedMessages[sortedMessages.length-1]._id);
 			}
 			setMessages(sortedMessages);
+			setLoading(false);
 			scrollToBottom('smooth');
 		}, setError, router);
 	}
@@ -240,6 +243,13 @@ export default function Session(props) {
 			handleSocketStop();
 		};
 	}, [resourceSlug, router?.query?.sessionId]);
+	useEffect(() => {
+		if (currentSession !== router?.query?.sessionId) {
+			setMessages([]);
+			setLoading(true);
+			setCurrentSession(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
+		}
+	}, [router?.query?.sessionId]);
 
 	function stopGenerating() {
 		socketContext.emit('stop_generating', {
@@ -289,7 +299,7 @@ export default function Session(props) {
 						chunking={m?.chunks?.length > 0 && mi === marr.length-1}
 					/>;
 				})}
-				{chatBusyState && messages?.length > 0 && !terminated && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+				{((chatBusyState && messages?.length > 0 && !terminated) || loading || (messages && messages.length === 0)) && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
 					<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 					<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
