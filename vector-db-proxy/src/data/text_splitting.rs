@@ -246,11 +246,17 @@ impl Chunker {
                 for mut chunk in chunks {
                     let mut metadata = metadata[i].clone().unwrap();
                     if self.add_start_index {
+                        // Use char_indices to work with character boundaries
+                        let text_chars: Vec<(usize, char)> = text.char_indices().collect();
                         index = match index {
-                            Some(idx) => text[idx + 1..]
-                                .find(&chunk.page_content)
-                                .map(|found_idx| found_idx + idx + 1),
-                            None => text.find(&chunk.page_content),
+                            Some(idx) => {
+                                // Find the chunk's start position relative to idx, ensuring we're within character boundaries
+                                text_chars.iter().skip(idx + 1).position(|(_, c)| chunk.page_content.starts_with(*c)).map(|pos| text_chars[idx + 1 + pos].0)
+                            }
+                            None => {
+                                // Find the first occurrence of the chunk.page_content, still ensuring we're within character boundaries
+                                text_chars.iter().find(|(_, c)| chunk.page_content.starts_with(*c)).map(|&(pos, _)| pos)
+                            }
                         };
                         if let Some(idx) = index {
                             metadata.insert("start_index".to_string(), idx.to_string());
