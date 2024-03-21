@@ -25,7 +25,6 @@ export default function Session(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	const [ready, setReady] = useState(null);
 	
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
@@ -72,13 +71,8 @@ export default function Session(props) {
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom() {
-		// socketContext.emit('leave_room', sessionId);
+		socketContext.emit('leave_room', sessionId);
 	}
-	function handleTerminateMessage(message) {
-		log('Received terminate message %s', message);
-		// setTerminated(true);
-	}
-	// console.log('lastSeenMessageId', lastSeenMessageId);
 	function handleSocketMessage(message) {
 		console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) { return; }
@@ -175,14 +169,11 @@ export default function Session(props) {
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
 		updateChat();
-		// joinSessionRoom();
-		scrollToBottom();
+		scrollToBottom('smooth');
 	}
 	function handleSocketStart() {
-	console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
-		socketContext.on('reconnect', joinSessionRoom);
-		socketContext.on('terminate', handleTerminateMessage);
+		// socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
 		socketContext.on('status', handleSocketStatus);
 		socketContext.on('tokens', handleSocketTokens);
@@ -192,8 +183,7 @@ export default function Session(props) {
 	}
 	function handleSocketStop() {
 		socketContext.off('connect', joinSessionRoom);
-		socketContext.off('reconnect', joinSessionRoom);
-		socketContext.off('terminate', handleTerminateMessage);
+		// socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('status', handleSocketStatus);
 		socketContext.off('tokens', handleSocketTokens);
@@ -201,16 +191,7 @@ export default function Session(props) {
 		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
-	useEffect(() => {
-		if (session) {
-			setTerminated(session.status === SessionStatus.TERMINATED);
-		}
-		return () => {
-			setTerminated(false);
-		};
-	}, [session]);
 	async function updateChat() {
-		// fetchSessions();
 		API.getSession({
 			resourceSlug,
 			sessionId: router?.query?.sessionId,
@@ -249,38 +230,16 @@ export default function Session(props) {
 				setLastSeenMessageId(sortedMessages[sortedMessages.length-1]._id);
 			}
 			setMessages(sortedMessages);
+			scrollToBottom('smooth');
 		}, setError, router);
 	}
 	useEffect(() => {
-		updateChat();
-		joinSessionRoom();
-		setReady(resourceSlug);
+		leaveSessionRoom();
+		handleSocketStart();
 		return () => {
-			leaveSessionRoom();
+			handleSocketStop();
 		};
 	}, [resourceSlug, router?.query?.sessionId]);
-	useEffect(() => {
-		console.log('ready, resourceSlug', ready, resourceSlug);
-		if (ready !== resourceSlug) {
-			console.log('useEffect ready check handleSocketStart()');
-			handleSocketStart();
-		}
-		return () => {
-			//stop/disconnect on unmount
-			console.log('useEffect ready check handleSocketStop()');
-			// handleSocketStop();
-			leaveSessionRoom();
-		};
-	}, [ready, resourceSlug]);
-	useEffect(() => {
-		if (messages && messages.length > 0 && ready === resourceSlug) {
-			console.log('useEffect messages check setReady()');
-			setReady(resourceSlug);
-		}
-		return () => {
-			setReady(null);
-		};
-	}, [messages]);
 
 	function stopGenerating() {
 		socketContext.emit('stop_generating', {
