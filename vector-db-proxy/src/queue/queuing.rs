@@ -9,6 +9,7 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 
 use crate::data::processing_incoming_messages::process_messages;
+use crate::redis_rs::client::RedisConnection;
 
 pub struct MyQueue<T> {
     q: Mutex<VecDeque<Vec<T>>>,
@@ -43,7 +44,7 @@ impl<T: Send + 'static> MyQueue<T> {
         while l.is_empty() {
             self.can_pop.notified().await;
         }
-        l.pop_front().map(|item:Vec<T>| {
+        l.pop_front().map(|item: Vec<T>| {
             self.can_push.notify_one(); // Notify one waiting producer task
             item
         })
@@ -56,8 +57,9 @@ impl<T: Send + 'static> MyQueue<T> {
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
+        redis_conn_pool: Arc<Mutex<RedisConnection>>,
         message: String,
-        datasource_id: String
+        datasource_id: String,
     ) {
         println!("Received table embedding task...");
         // We try and coerce T into String type, if it can't we handle the error
@@ -66,7 +68,7 @@ impl<T: Send + 'static> MyQueue<T> {
         thread::scope(move |_| {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
-                let _ = process_messages(qdrant_client, mongo_client, message, datasource_id).await;
+                let _ = process_messages(qdrant_client, mongo_client, redis_conn_pool, message, datasource_id).await;
             })
         });
     }

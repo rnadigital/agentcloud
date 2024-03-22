@@ -1,6 +1,6 @@
 use mongodb::Database;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
@@ -14,12 +14,13 @@ use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
+    redis_connection_pool: Arc<Mutex<RedisConnection>>,
     message: String,
     datasource_id: String,
 ) -> bool {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
-    let redis_connection = RedisConnection::new(None).await.unwrap();
+    let redis_connection = redis_connection_pool.lock().await;
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())

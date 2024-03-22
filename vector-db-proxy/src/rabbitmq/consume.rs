@@ -16,13 +16,15 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use std::sync::{Arc};
+use tokio::sync::{RwLock, Mutex};
+use crate::redis_rs::client::RedisConnection;
 
 pub async fn subscribe_to_queue(
     qdrant_clone: Arc<RwLock<QdrantClient>>,
     queue: Arc<RwLock<MyQueue<String>>>,
     mongo_client: Arc<RwLock<Database>>,
+    redis_connection_pool: Arc<Mutex<RedisConnection>>,
     channel: &Channel,
     queue_name: &String,
 ) {
@@ -93,6 +95,7 @@ pub async fn subscribe_to_queue(
                                                                         let message_queue = Arc::clone(&queue);
                                                                         let qdrant_conn = Arc::clone(&qdrant_clone);
                                                                         let mongo_conn = Arc::clone(&mongo_client);
+                                                                        let redis_conn = Arc::clone(&redis_connection_pool);
                                                                         let (document_text, metadata) =
                                                                             extract_text_from_file(
                                                                                 file_type,
@@ -102,6 +105,7 @@ pub async fn subscribe_to_queue(
                                                                                 message_queue,
                                                                                 qdrant_conn,
                                                                                 mongo_conn,
+                                                                                redis_conn,
                                                                             )
                                                                                 .await
                                                                                 .unwrap();
@@ -207,12 +211,14 @@ pub async fn subscribe_to_queue(
                                                     let message_queue = Arc::clone(&queue);
                                                     let qdrant_conn = Arc::clone(&qdrant_clone);
                                                     let mongo_conn = Arc::clone(&mongo_client);
+                                                    let redis_conn_pool = Arc::clone(&redis_connection_pool);
                                                     let params = vec![datasource_id.to_string(), message_string];
                                                     let _ = add_message_to_embedding_queue(
                                                         message_queue,
                                                         qdrant_conn,
                                                         mongo_conn,
-                                                        params
+                                                        redis_conn_pool,
+                                                        params,
                                                     )
                                                         .await;
                                                 }
