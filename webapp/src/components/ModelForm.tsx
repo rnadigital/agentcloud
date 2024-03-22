@@ -13,7 +13,7 @@ import * as API from '../api';
 import CreateCredentialModal from '../components/CreateCredentialModal';
 import { useAccountContext } from '../context/account';
 
-export default function ModelForm({ _model = {}, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
+export default function ModelForm({ _model = { type: CredentialType.OPENAI }, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
