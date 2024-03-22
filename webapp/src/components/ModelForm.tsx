@@ -23,9 +23,8 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const [modalOpen, setModalOpen] = useState(false);
-	const [type, setType] = useState(CredentialType.OPENAI);
 
-	const { _id, name, credentialId, model } = modelState;
+	const { _id, name, credentialId, model, type } = modelState;
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 	async function modelPost(e) {
 		e.preventDefault();
@@ -119,11 +118,11 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								value={type}
 								onChange={(e: any) => {
-									setType(e.target.value);
 									setModelState(oldModel => ({
 										...oldModel,
 										credentialId: null,
 										model: '',
+										type: e.target.value,
 									}));
 								}}
 							>
@@ -135,7 +134,7 @@ export default function ModelForm({ _model = {}, credentials = [], editing, comp
 							</select>
 						</div>
 					</div>
-					{type && type !== CredentialType.FASTEMBED && <div className='sm:col-span-12'>
+					{type !== CredentialType.FASTEMBED && <div className='sm:col-span-12'>
 						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Credential
 						</label>
