@@ -9,15 +9,15 @@ pub async fn add_message_to_embedding_queue(
     queue: Arc<RwLock<MyQueue<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
-    params: (String, String),
+    params: Vec<String>,
 ) {
     println!("Received task to be executed");
-    let (dataset_id, message) = params;
+    // let (dataset_id, message) = params;
     // Instantiate a new instance of the MyQueue
     let mut q_guard = queue.write().await;
     // Add task to queue
     q_guard.enqueue(params).await;
     let item = q_guard.dequeue().await.unwrap();
     // Call associated function to being processing tasks in the queue
-    q_guard.embed_message(qdrant_conn, mongo_conn, item);
+    q_guard.embed_message(qdrant_conn, mongo_conn, item[0].clone(), item[1].clone()).await;
 }

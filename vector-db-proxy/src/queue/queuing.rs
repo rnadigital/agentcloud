@@ -11,7 +11,7 @@ use qdrant_client::client::QdrantClient;
 use crate::data::processing_incoming_messages::process_messages;
 
 pub struct MyQueue<T> {
-    q: Mutex<VecDeque<T>>,
+    q: Mutex<VecDeque<Vec<T>>>,
     max_size: usize,
     can_push: Arc<Notify>,
     can_pop: Arc<Notify>,
@@ -27,7 +27,7 @@ impl<T: Send + 'static> MyQueue<T> {
         }
     }
 
-    pub(crate) async fn enqueue(&self, task: T) {
+    pub(crate) async fn enqueue(&self, task: Vec<T>) {
         let mut l = self.q.lock().await;
         println!("Got lock");
         while l.len() == self.max_size {
@@ -38,12 +38,12 @@ impl<T: Send + 'static> MyQueue<T> {
         self.can_pop.notify_one(); // Notify one waiting consumer task
     }
 
-    pub async fn dequeue(&self) -> Option<T> {
+    pub async fn dequeue(&self) -> Option<Vec<T>> {
         let mut l = self.q.lock().await;
         while l.is_empty() {
             self.can_pop.notified().await;
         }
-        l.pop_front().map(|item| {
+        l.pop_front().map(|item:Vec<T>| {
             self.can_push.notify_one(); // Notify one waiting producer task
             item
         })
@@ -57,16 +57,16 @@ impl<T: Send + 'static> MyQueue<T> {
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
+        datasource_id: String
     ) {
         println!("Received table embedding task...");
         // We try and coerce T into String type, if it can't we handle the error
-        let data = message.clone();
         let qdrant_client = Arc::clone(&qdrant_conn);
         let mongo_client = Arc::clone(&mongo_conn);
         thread::scope(move |_| {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
-                let _ = process_messages(qdrant_client, mongo_client, data, message).await;
+                let _ = process_messages(qdrant_client, mongo_client, message, datasource_id).await;
             })
         });
     }

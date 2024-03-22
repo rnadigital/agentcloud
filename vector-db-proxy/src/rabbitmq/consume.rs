@@ -207,11 +207,12 @@ pub async fn subscribe_to_queue(
                                                     let message_queue = Arc::clone(&queue);
                                                     let qdrant_conn = Arc::clone(&qdrant_clone);
                                                     let mongo_conn = Arc::clone(&mongo_client);
+                                                    let params = vec![datasource_id.to_string(), message_string];
                                                     let _ = add_message_to_embedding_queue(
                                                         message_queue,
                                                         qdrant_conn,
                                                         mongo_conn,
-                                                        (datasource_id.to_string(), message_string),
+                                                        params
                                                     )
                                                         .await;
                                                 }

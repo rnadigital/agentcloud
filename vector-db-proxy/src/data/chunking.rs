@@ -208,12 +208,12 @@ impl Chunking for TextChunker {
                             let qdrant_conn = Arc::clone(&qdrant_conn);
                             let mongo_conn = Arc::clone(&mongo_conn);
                             let ds_clone = datasource_id.clone();
+                            let params = vec![ds_clone, string_record];
                             add_message_to_embedding_queue(
                                 queue,
                                 qdrant_conn,
                                 mongo_conn,
-                                (ds_clone,
-                                 string_record),
+                                params,
                             ).await;
                         }
                         Err(e) => { println!("An error occurred {}", e); }
