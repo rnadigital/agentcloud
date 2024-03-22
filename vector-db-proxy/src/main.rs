@@ -41,7 +41,7 @@ use routes::api_routes::{
     list_collections, lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
 };
 use crate::mongo::client::start_mongo_connection;
-use crate::queue::queuing::{Control, MyQueue};
+use crate::queue::queuing::{MyQueue};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 
 pub fn init(config: &mut web::ServiceConfig) {
@@ -86,7 +86,7 @@ async fn main() -> std::io::Result<()> {
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
+    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(MyQueue::default()));
     let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
     let rabbitmq_connection_details = RabbitConnect {
         host: global_data.rabbitmq_host.clone(),
