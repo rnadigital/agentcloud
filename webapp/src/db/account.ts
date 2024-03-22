@@ -1,3 +1,4 @@
+
 'use strict';
 
 import * as db from 'db/index';
@@ -172,6 +173,16 @@ export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, pro
 				[provider]: { id: oauthId },
 			},
 		}
+	});
+}
+
+export function setPlanDebug(userId: db.IdOrStr, plan: SubscriptionPlan): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId),
+	}, {
+		$set: {
+			'stripe.stripePlan': plan,
+		},
 	});
 }
 

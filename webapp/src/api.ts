@@ -35,6 +35,9 @@ export function getPaymentLink(body, dispatch, errorCallback, router) {
 export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
+export function setPlan(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/plan', 'POST', body, dispatch, errorCallback, router);
+}
 
 // Apps
 export function getApps(body, dispatch, errorCallback, router) {

@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setPlanDebug, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 
@@ -237,5 +237,15 @@ export async function dockerLogsJson(req, res, next) {
 // 	// Flatten, sort by timestamp, and then join back into a single string
 // 	const sortedLogs = logsArrays.flat().sort().join('\n');
 // 	return res.json({ logs: sortedLogs });
+
+}
+
+export async function setPlanDebugApi(req, res, next) {
+
+	const { plan } = req.body;
+
+	setPlanDebug(res.locals.account._id, plan);
+
+	return res.json({});
 
 }

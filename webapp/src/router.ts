@@ -81,6 +81,10 @@ export default function router(server, app) {
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
 	accountRouter.post('/login', unauthedMiddlewareChain, accountController.login);
+
+	//TODO: remove
+	accountRouter.post('/plan', authedMiddlewareChain, accountController.setPlanDebugApi);
+	
 	accountRouter.post('/register', unauthedMiddlewareChain, accountController.register);
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
