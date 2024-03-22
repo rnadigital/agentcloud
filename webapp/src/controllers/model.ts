@@ -110,7 +110,8 @@ export async function modelAddApi(req, res, next) {
 		    createdDate: new Date(),
 		    type,
 		    credentials: {
-				key: '',
+				key: null,
+				endpointURL: null
 		    },
 		});
 		credentialId = dummyCred.insertedId;

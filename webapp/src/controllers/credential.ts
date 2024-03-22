@@ -93,7 +93,10 @@ export async function addCredentialApi(req, res, next) {
 	    name,
 	    createdDate: new Date(),
 	    type: type as CredentialType,
-	    credentials,
+	    credentials: {
+    		key,
+    		endpointURL,
+    	},
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${req.params.resourceSlug}/credentials` });
