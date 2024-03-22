@@ -80,16 +80,20 @@ export async function addCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const credentials: any = {
+		key,
+	};
+	if (endpointURL) {
+		credentials['endpointURL'] = endpointURL;
+	}
+
 	const addedCredential = await addCredential({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	    createdDate: new Date(),
 	    type: type as CredentialType,
-	    credentials: {
-			key,
-		    endpointURL,
-	    },
+	    credentials,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${req.params.resourceSlug}/credentials` });
