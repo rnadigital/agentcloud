@@ -25,6 +25,7 @@ const dev = process.env.NODE_ENV !== 'production'
 	, handle = app.getRequestHandler();
 
 // import getAirbyteInternalApi from 'lib/airbyte/internal';
+import { dynamicResponse } from '@dr';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
@@ -70,10 +71,10 @@ app.prepare()
 			return handle(req, res);
 		});
 
-		server.use((err, _req, res, _next) => {
+		server.use((err, req, res, _next) => {
 			const uuid = uuidv4();
 			console.error('An error occurred', uuid, err);
-			return res.send('An error occurred. Please contact support with code: '+uuid);
+			return dynamicResponse(req, res, 400, { error: `An error occurred. Please contact support with code: ${uuid}` });
 		});
 
 		rawHttpServer.listen(parseInt(process.env.EXPRESS_PORT), process.env.EXPRESS_HOST, () => {

@@ -36,7 +36,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				resourceSlug,
 				datasourceId,
 			}, () => {
-				// toast.success();
+				// toast.success('Datasource deleted successfully');
 			}, () => {
 				toast.error('Error deleting datasource');
 			}, router);

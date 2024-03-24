@@ -52,7 +52,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-	const [timeUnit, setTimeUnit] = useState('');
+	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('');
 	const [modelId, setModelId] = useState('');

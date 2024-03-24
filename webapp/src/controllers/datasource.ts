@@ -585,7 +585,11 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the points in qdrant
+	// try {
 	await deleteCollectionFromQdrant(req.params.datasourceId);
+	// } catch (e) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
+	// }
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
