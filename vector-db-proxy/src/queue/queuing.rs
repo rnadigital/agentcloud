@@ -2,7 +2,6 @@
 use std::marker::Send;
 use std::sync::Arc;
 use std::collections::VecDeque;
-use std::thread;
 use tokio::sync::{Mutex, Notify, RwLock};
 use std::thread::available_parallelism;
 use mongodb::Database;
@@ -18,6 +17,18 @@ pub struct MyQueue<T> {
     can_pop: Arc<Notify>,
 }
 
+impl<T> Default for MyQueue<T> {
+    fn default() -> Self {
+        let number_of_threads = available_parallelism().unwrap().get();
+        MyQueue {
+            q: Mutex::new(VecDeque::new()),
+            max_size: number_of_threads * 100,
+            can_push: Arc::new(Notify::new()),
+            can_pop: Arc::new(Notify::new()),
+        }
+    }
+}
+
 impl<T: Send + 'static> MyQueue<T> {
     fn new(max_size: usize) -> Self {
         MyQueue {
@@ -30,12 +41,10 @@ impl<T: Send + 'static> MyQueue<T> {
 
     pub(crate) async fn enqueue(&self, task: Vec<T>) {
         let mut l = self.q.lock().await;
-        println!("Got lock");
         while l.len() == self.max_size {
             println!("Queue is currently at capacity...please wait.");
             self.can_push.notified().await;
         }
-        println!("Can push items to queue");
         l.push_back(task);
         drop(l); // Drop the lock before notifying
         self.can_pop.notify_one(); // Notify one waiting consumer task
@@ -47,7 +56,6 @@ impl<T: Send + 'static> MyQueue<T> {
             println!("Queue is currently empty...there are no items to pop");
             self.can_pop.notified().await;
         }
-        println!("Popping items from queue");
         l.pop_front().map(|item: Vec<T>| {
             self.can_push.notify_one(); // Notify one waiting producer task
             item
@@ -65,7 +73,6 @@ impl<T: Send + 'static> MyQueue<T> {
         message: String,
         datasource_id: String,
     ) {
-        println!("Received table embedding task...");
         // We try and coerce T into String type, if it can't we handle the error
         let qdrant_client = Arc::clone(&qdrant_conn);
         let mongo_client = Arc::clone(&mongo_conn);
@@ -73,17 +80,7 @@ impl<T: Send + 'static> MyQueue<T> {
     }
 }
 
-impl<T> Default for MyQueue<T> {
-    fn default() -> Self {
-        let number_of_threads = available_parallelism().unwrap().get();
-        MyQueue {
-            q: Mutex::new(VecDeque::new()),
-            max_size: number_of_threads * 100,
-            can_push: Arc::new(Notify::new()),
-            can_pop: Arc::new(Notify::new()),
-        }
-    }
-}
+
 
 
 
