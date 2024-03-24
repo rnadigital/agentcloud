@@ -189,8 +189,8 @@ export default withRouter(function Layout(props) {
 														))}
 													</ul>
 												</li>
+												{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
 												<li className='mt-auto'>
-													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
