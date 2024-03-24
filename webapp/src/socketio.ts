@@ -10,6 +10,10 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
 
+import checkSession from '@mw/auth/checksession';
+import fetchSession from '@mw/auth/fetchsession';
+import useJWT from '@mw/auth/usejwt';
+import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
 import { addAgents } from 'db/agent';
 import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage,upsertOrUpdateChatMessage } from 'db/chat';
@@ -19,10 +23,6 @@ import { taskQueue } from 'queue/bull';
 import { SessionStatus } from 'struct/session';
 
 import { getAppByCrewId } from './db/app';
-import checkSession from './lib/middleware/auth/checksession';
-import fetchSession from './lib/middleware/auth/fetchsession';
-import useJWT from './lib/middleware/auth/usejwt';
-import useSession from './lib/middleware/auth/usesession';
 import { AppType } from './lib/struct/app';
 
 export const io = new Server();

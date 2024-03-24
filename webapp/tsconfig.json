@@ -27,6 +27,9 @@
       "struct/*": [
         "lib/struct/*"
       ],
+      "@mw/*": [
+        "lib/middleware/*"
+      ],
       "email/*": [
         "lib/email/*"
       ],

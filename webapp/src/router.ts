@@ -1,21 +1,25 @@
 'use strict';
 
+import checkResourceSlug from '@mw/auth/checkresourceslug';
+import checkSession from '@mw/auth/checksession';
+import {
+	checkSubscriptionLimit,
+	checkSubscriptionPlan, 
+	setSubscriptionLocals,
+} from '@mw/auth/checksubscription';
+import csrfMiddleware from '@mw/auth/csrf';
+import fetchSession from '@mw/auth/fetchsession';
+import setPermissions from '@mw/auth/setpermissions';
+import useJWT from '@mw/auth/usejwt';
+import useSession from '@mw/auth/usesession';
+import homeRedirect from '@mw/homeredirect';
+import myPassport from '@mw/mypassport';
+import * as hasPerms from '@mw/permissions/hasperms';
+import renderStaticPage from '@mw/render/staticpage';
 import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
-
-import checkResourceSlug from './lib/middleware/auth/checkresourceslug';
-import checkSession from './lib/middleware/auth/checksession';
-import csrfMiddleware from './lib/middleware/auth/csrf';
-import fetchSession from './lib/middleware/auth/fetchsession';
-import setPermissions from './lib/middleware/auth/setpermissions';
-import useJWT from './lib/middleware/auth/usejwt';
-import useSession from './lib/middleware/auth/usesession';
-import homeRedirect from './lib/middleware/homeredirect';
-import myPassport from './lib/middleware/mypassport';
-import * as hasPerms from './lib/middleware/permissions/hasperms';
-import renderStaticPage from './lib/middleware/render/staticpage';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
