@@ -32,8 +32,10 @@ impl<T: Send + 'static> MyQueue<T> {
         let mut l = self.q.lock().await;
         println!("Got lock");
         while l.len() == self.max_size {
+            println!("Queue is currently at capacity...please wait.");
             self.can_push.notified().await;
         }
+        println!("Can push items to queue");
         l.push_back(task);
         drop(l); // Drop the lock before notifying
         self.can_pop.notify_one(); // Notify one waiting consumer task
@@ -42,8 +44,10 @@ impl<T: Send + 'static> MyQueue<T> {
     pub async fn dequeue(&self) -> Option<Vec<T>> {
         let mut l = self.q.lock().await;
         while l.is_empty() {
+            println!("Queue is currently empty...there are no items to pop");
             self.can_pop.notified().await;
         }
+        println!("Popping items from queue");
         l.pop_front().map(|item: Vec<T>| {
             self.can_push.notify_one(); // Notify one waiting producer task
             item
@@ -65,12 +69,7 @@ impl<T: Send + 'static> MyQueue<T> {
         // We try and coerce T into String type, if it can't we handle the error
         let qdrant_client = Arc::clone(&qdrant_conn);
         let mongo_client = Arc::clone(&mongo_conn);
-        thread::scope(move |_| {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async {
-                let _ = process_messages(qdrant_client, mongo_client, redis_conn_pool, message, datasource_id).await;
-            })
-        });
+        let _ = process_messages(qdrant_client, mongo_client, redis_conn_pool, message, datasource_id).await;
     }
 }
 

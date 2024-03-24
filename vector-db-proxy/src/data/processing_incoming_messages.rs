@@ -36,6 +36,7 @@ pub async fn process_messages(
                         if let Value::Object(data_obj) = message_data {
                             let mut metadata = convert_serde_value_to_hashmap_string(data_obj);
                             if let Some(text_field) = embedding_field {
+                                println!("text field: {}", text_field.as_str());
                                 let text = metadata.remove(text_field.as_str()).unwrap();
                                 metadata.insert("page_content".to_string(), text.to_owned());
                                 match embed_payload(

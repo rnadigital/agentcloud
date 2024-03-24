@@ -21,5 +21,5 @@ pub async fn add_message_to_embedding_queue(
     q_guard.enqueue(params).await;
     let item = q_guard.dequeue().await.unwrap();
     // Call associated function to being processing tasks in the queue
-    q_guard.embed_message(qdrant_conn, mongo_conn, redis_conn_pool, item[0].clone(), item[1].clone()).await;
+    q_guard.embed_message(qdrant_conn, mongo_conn, redis_conn_pool, item[1].clone(), item[0].clone()).await;
 }
