@@ -282,6 +282,7 @@ pub async fn lookup_data_point(
                 must,
                 must_not,
                 should,
+                ..Default::default()
             }),
             limit,
             with_payload: Some(true.into()),
@@ -407,7 +408,7 @@ pub async fn scroll_data(
     if qdrant_conn
         .read()
         .await
-        .has_collection(dataset_id.clone())
+        .collection_exists(dataset_id.clone())
         .await?
         == false
     {
@@ -430,6 +431,7 @@ pub async fn scroll_data(
             must,
             must_not,
             should,
+            ..Default::default()
         }),
         limit: data.limit,
         with_vectors: Some(WithVectorsSelector {
