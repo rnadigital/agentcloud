@@ -38,8 +38,8 @@ export default function TeamMemberCard({ member, callback }) {
 			</p>
 			<p className='mb-3 font-normal text-sm text-gray-700'>{member.email}</p>
 			<div className='flex space-x-4 space-between w-full relative'>
-				<span className={`px-3 py-1 text-sm font-semibold text-white rounded-full ${isOwner || member.email ? 'bg-green-500' : 'bg-yellow-500'}`}>
-					{isOwner || member.email ? 'Active' : 'Pending'}
+				<span className={`px-3 py-1 text-sm font-semibold text-white rounded-full ${isOwner || member.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`}>
+					{isOwner || member.emailVerified ? 'Active' : 'Pending'}
 				</span>
 				{team && !isOwner && <button type='button' onClick={deleteMember}
 					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0'
