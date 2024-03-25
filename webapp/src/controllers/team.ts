@@ -10,6 +10,7 @@ import { Binary, ObjectId } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
+import { calcPerms } from 'lib/middleware/auth/setpermissions';
 
 import { Account, addAccount, changeAccountPassword, getAccountByEmail,
 	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
@@ -187,13 +188,23 @@ export async function editTeamMemberApi(req, res) {
 
 export async function teamMemberData(req, res, _next) {
 	const [teamMember] = await Promise.all([
-		getAccountTeamMember(req.params.accountId, req.params.resourceSlug),
+		getAccountTeamMember(req.params.memberId, req.params.resourceSlug),
 	]);
+	teamMember.permissions = calcPerms(teamMember, res.locals.matchingOrg, res.locals.matchingTeam).base64;
 	return {
 		teamMember,
 		csrf: req.csrfToken(),
 	};
 };
+
+/**
+ * GET /[resourceSlug]/team/[memberId].json
+ * team member json data
+ */
+export async function teamMemberJson(req, res, next) {
+	const data = await teamMemberData(req, res, next);
+	return res.json({ ...data, account: res.locals.account });
+}
 
 /**
  * GET /[resourceSlug]/team/[memberId]/edit

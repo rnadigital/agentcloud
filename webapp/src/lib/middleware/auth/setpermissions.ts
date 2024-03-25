@@ -6,17 +6,25 @@ import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 
-function calcPerms(req, res, next) {
+export default function setPermissions(req, res, next) {
+	const { account, matchingOrg, matchingTeam } = res.locals;
+	res.locals.permissions = calcPerms(account, matchingOrg, matchingTeam);
+	next();
+}
+
+export function calcPerms(account, matchingOrg, matchingTeam) {
 	let calculatedPermissions;
-	if (req.session && res.locals && res.locals.account) {
+	if (account) {
 		//has a session and user, not anon, so their permissions from the db/user instead.
-		const { account, matchingOrg, matchingTeam } = res.locals;
 		const userPerms = account.permissions
 			? typeof account.permissions !== 'string' ? account.permissions.toString('base64') : account.permissions
 			: Math.max(...Object.values(Permissions)); //If empty, get highest permission bit to use as bitfield size.
 		calculatedPermissions = new Permission(userPerms);
 
 		calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER, true); //TODO: remove
+
+		// console.log('matchingOrg', matchingOrg);
+		// console.log('matchingTeam', matchingTeam);
 
 		if (matchingOrg && matchingOrg.ownerId.toString() === account._id.toString()) {
 			// Setting  org owner perm
@@ -49,7 +57,3 @@ function calcPerms(req, res, next) {
 	return calculatedPermissions;
 }
 
-export default function setPermissions(req, res, next) {
-	res.locals.permissions = calcPerms(req, res, next);
-	next();
-};

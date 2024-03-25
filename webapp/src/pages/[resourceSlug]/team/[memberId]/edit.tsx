@@ -17,10 +17,12 @@ export default function EditTeamMember(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { resourceSlug } = router.query;
+	const { resourceSlug,  memberId } = router.query;
+	const { teamMember } = state;
+	console.log('teamMember', teamMember);
 
 	async function fetchTeamMember() {
-		API.getTeam({ resourceSlug }, dispatch, setError, router);
+		API.getTeamMember({ resourceSlug, memberId }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
@@ -46,7 +48,7 @@ export default function EditTeamMember(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
 			</div>
 
-			<PermissionsEditor currentPermission={new Permission(account?.permissions)} editingPermission={new Permission(account?.permissions)} />
+			<PermissionsEditor currentPermission={new Permission(account?.permissions)} editingPermission={new Permission(teamMember?.permissions)} />
 
 		</>
 	);

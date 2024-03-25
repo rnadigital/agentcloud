@@ -190,6 +190,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/:memberId([a-f0-9]{24}).json', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.teamMemberJson);
 	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
 	teamRouter.post('/forms/team/invite', checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);

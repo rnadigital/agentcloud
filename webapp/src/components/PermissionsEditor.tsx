@@ -8,12 +8,12 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 // Helper function to check if a permission is allowed
-const isPermissionAllowed = (currentPermission, permissionKey) => {
+const isPermissionAllowed = (editingPermission, permissionKey) => {
 	const metadata = Metadata[permissionKey];
 	if (!metadata || metadata?.blocked === true) { return false; }
 	if (!metadata.parent) { return true; }
 	// Check if the current permission includes the parent permission
-	return currentPermission.get(metadata.parent);
+	return editingPermission.get(metadata.parent);
 };
 
 function PermissionsEditor({ currentPermission, editingPermission }) {
@@ -59,7 +59,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 								type='checkbox'
 								name={`permission_bit_${key}`}
 								value='true'
-								defaultChecked={currentPermission.get(parseInt(key))}
+								defaultChecked={editingPermission.get(parseInt(key))}
 								// To understand name property, see Permission#handleBody()
 								// checked={editingPermission.get(parseInt(key))}
 								// onChange={(e) => {

@@ -219,6 +219,9 @@ export function markNotificationsSeen(body, dispatch, errorCallback, router) {
 export function getTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/team.json`, 'GET', null, dispatch, errorCallback, router);
 }
+export function getTeamMember(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/team/${body.memberId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
 export function inviteToTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/team/invite`, 'POST', body, dispatch, errorCallback, router);
 }
