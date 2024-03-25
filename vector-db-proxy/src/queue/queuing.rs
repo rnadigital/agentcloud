@@ -62,7 +62,7 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
             },
             Err(_) => MyQueue {
                 q: Queue::new(),
-                pool: ThreadPool::new(10),
+                pool: ThreadPool::new(1),
             },
         }
     }
@@ -101,7 +101,7 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
             self.pool.execute(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    let _ = process_messages(qdrant_client, mongo_client, data, id).await;
+                    process_messages(qdrant_client, mongo_client, data, id).await;
                 })
             });
         }

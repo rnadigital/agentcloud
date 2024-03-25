@@ -1,6 +1,6 @@
 use mongodb::Database;
 use std::sync::Arc;
-use tokio::sync::{ RwLock};
+use tokio::sync::{RwLock};
 use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
@@ -15,7 +15,7 @@ pub async fn process_messages(
     mongo_conn: Arc<RwLock<Database>>,
     message: String,
     datasource_id: String,
-) -> bool {
+) {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
     // let redis_connection = redis_connection_pool.lock().await;
@@ -46,7 +46,7 @@ pub async fn process_messages(
                                     .await
                                 {
                                     Ok(point_struct) => {
-                                        if let Ok(bulk_upload_result) =
+                                        if let Ok(_bulk_upload_result) =
                                             qdrant
                                                 .upsert_data_point_blocking(
                                                     point_struct,
@@ -56,37 +56,29 @@ pub async fn process_messages(
                                                 .await
                                         {
                                             // let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
-                                            return bulk_upload_result;
                                         }
                                     }
                                     Err(e) => {
                                         eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
-                                        return false;
                                     }
                                 }
                             }
-                        } else {
-                            return false;
                         }
                     }
                     None => {
                         eprintln!("Model mongo object returned None!");
-                        return false;
                     }
                 },
                 Err(e) => {
                     println!("An error occurred: {}", e);
-                    return false;
                 }
             }
-            false
         }
         Err(e) => {
             eprintln!(
                 "An error occurred while attempting to convert message to JSON: {}",
                 e
             );
-            false
         }
     }
 }
