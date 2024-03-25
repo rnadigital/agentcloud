@@ -42,8 +42,7 @@ export default function TeamMemberCard({ member, callback }) {
 					{isOwner || member.emailVerified ? 'Active' : 'Pending'}
 				</span>
 				{team && !isOwner && <button type='button' onClick={deleteMember}
-					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0'
-					// className='rounded-full relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
+					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0 h-full'
 				>
 					<TrashIcon className='h-5 w-5' aria-hidden='true' />
 					<span className='tooltip z-100'>
