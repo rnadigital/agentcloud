@@ -4,6 +4,7 @@ import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
+import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions } from 'db/team';
 import createAccount from 'lib/account/create';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
@@ -16,7 +17,6 @@ import { Account, addAccount, changeAccountPassword, getAccountByEmail,
 	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
 	pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
 import { addOrg, getOrgById } from '../db/org';
-import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions } from '../db/team';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 
@@ -172,15 +172,21 @@ export async function editTeamMemberApi(req, res) {
 	}
 
 	const editingMember = await getAccountById(req.params.memberId);
+	
 	let updatingPermissions;
 	if (template) {
 		updatingPermissions = new Permission(template); //TODO: template (.base64 of official roles)
 	} else {
-		updatingPermissions = new Permission(/* TODO: PERMISSIONS OF THE PERSON BEING EDITED */);
+
+		const updatingPermissions = new Permission(editingMember.permissions.toString('base64'));		
 		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
+		console.log('setMemberPermissions', resourceSlug, memberId, updatingPermissions);
+		await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
+
 	}
 
-	await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
+	//For the bits that are org level, set those in the org map
+	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
 
 	return dynamicResponse(req, res, 200, { });
 

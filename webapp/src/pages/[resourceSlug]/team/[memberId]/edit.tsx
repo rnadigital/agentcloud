@@ -47,7 +47,7 @@ export default function EditTeamMember(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
 			</div>
 
-			<PermissionsEditor currentPermission={new Permission(account?.permissions)} editingPermission={new Permission(teamMember?.permissions)} />
+			<PermissionsEditor editingPermission={new Permission(teamMember?.permissions)} />
 
 		</>
 	);

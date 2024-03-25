@@ -16,11 +16,11 @@ export default function Account(props) {
 	const { resourceSlug } = router.query;
 
 	// Add this function to handle setting plans
-	async function setPlan(e, plan) {
+	async function adminEditAction(e, action) {
 		e.preventDefault();
-		API.setPlanDebug({
+		API.adminEditAccount({
 			_csrf: csrf,
-			plan: plan
+			action,
 		}, () => {
 			refreshAccountContext();
 		}, setError, router);
@@ -71,29 +71,42 @@ export default function Account(props) {
 
 			<div className='my-2 flex flex-wrap items-center justify-start gap-x-6 gap-y-2'>
 				<button
-					onClick={(e) => setPlan(e, 'Free')}
+					onClick={(e) => adminEditAction(e, 'Free')}
 					className='inline-flex justify-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400'
 				>
 			Set Free Plan
 				</button>
 				<button
-					onClick={(e) => setPlan(e, 'Pro')}
+					onClick={(e) => adminEditAction(e, 'Pro')}
 					className='inline-flex justify-center rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-400'
 				>
 			Set Pro Plan
 				</button>
 				<button
-					onClick={(e) => setPlan(e, 'Teams')}
+					onClick={(e) => adminEditAction(e, 'Teams')}
 					className='inline-flex justify-center rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-400'
 				>
 			Set Teams Plan
 				</button>
 				<button
-					onClick={(e) => setPlan(e, 'Enterprise')}
+					onClick={(e) => adminEditAction(e, 'Enterprise')}
 					className='inline-flex justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-400'
 				>
 			Set Enterprise Plan
 				</button>
+				<button
+					onClick={(e) => adminEditAction(e, 'Root')}
+					className='inline-flex justify-center rounded-md bg-purple-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400'
+				>
+			Set ROOT Permissions
+				</button>
+				<button
+					onClick={(e) => adminEditAction(e, 'Default')}
+					className='inline-flex justify-center rounded-md bg-gray-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-400'
+				>
+			Set Default Permissions
+				</button>
+
 			</div>
 
 			<div className='border-b dark:border-slate-400 pb-2 my-2 mt-20'>

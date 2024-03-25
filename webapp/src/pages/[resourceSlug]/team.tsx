@@ -6,13 +6,14 @@ import TeamMemberCard from 'components/TeamMemberCard';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function Team(props) {
 
 	const [accountContext]: any = useAccountContext();
-	const { account, teamName } = accountContext as any;
+	const { account, teamName, permissions } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
@@ -48,11 +49,12 @@ export default function Team(props) {
 			))}
 		</div>}
 
-		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
-		</div>
-
-		<InviteForm callback={fetchTeam} />
+		{permissions.get(Permissions.ADD_TEAM_MEMBER) && <>	
+			<div className='border-b pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
+			</div>
+			<InviteForm callback={fetchTeam} />
+		</>}
 
 	</>);
 

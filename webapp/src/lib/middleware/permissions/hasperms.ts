@@ -1,6 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import Metadata from 'permissions/metadata';
 
 const cache = {
 	one: {},
@@ -11,7 +12,7 @@ const cache = {
 export function one(requiredPermission) {
 	return cache.one[requiredPermission] || (cache.one[requiredPermission] = function(req, res, next) {
 		if (!res.locals.permissions.get(requiredPermission)) {
-			return dynamicResponse(req, res, 400, { error: 'No permission' });
+			return dynamicResponse(req, res, 400, { error: `Missing permission "${Metadata[requiredPermission].title}"`});
 		}
 		next();
 	});

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import posthog from 'posthog-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 const log = debug('webapp:context');
-
+import Permission from '@permission';
 const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
@@ -18,19 +18,23 @@ export function AccountWrapper({ children, pageProps }) {
 
 	const router = useRouter();
 	const { resourceSlug, memberId } = (router?.query||{});
+	console.log('perm', new Permission(pageProps?.permissions));
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),
 		switching: false,
+		permissions: new Permission(pageProps?.account?.permissions),
 	});
 
 	function refreshAccountContext() {
 		API.getAccount({ resourceSlug, memberId }, (data) => {
+			console.log('refreshAccountContext data', data?.account?.permissions);
 			setSharedState({
 				...pageProps,
 				...data,
 				...getTeamAndOrgName(data),
 				switching: false,
+				permissions: new Permission(data?.account?.permissions)
 			});
 		}, null, null);
 	}

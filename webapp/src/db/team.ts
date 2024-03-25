@@ -3,6 +3,7 @@
 import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 

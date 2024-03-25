@@ -1,6 +1,7 @@
 
 'use strict';
 
+import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary,ObjectId } from 'mongodb';
 import { SubscriptionPlan } from 'struct/billing';
@@ -218,6 +219,16 @@ export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
 			'stripe.stripePlan': '',
 			'stripe.stripeCustomerId': '',
 			'stripe.stripeEndsAt': '',
+		}
+	});
+}
+
+export function setAccountPermissions(userId: db.IdOrStr, permissions: Permission): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId),
+	}, {
+		$set: {
+			'permissions': new Binary(permissions.array),
 		}
 	});
 }

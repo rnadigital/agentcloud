@@ -22,8 +22,8 @@ import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
 import { PlanLimitsKeys } from 'struct/billing';
 
-const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, setSubscriptionLocals];
-const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
+const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
+const authedMiddlewareChain = [...unauthedMiddlewareChain, setSubscriptionLocals, checkSession, csrfMiddleware];
 
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
@@ -88,7 +88,7 @@ export default function router(server, app) {
 	accountRouter.post('/login', unauthedMiddlewareChain, accountController.login);
 
 	//TODO: remove
-	accountRouter.post('/plan', authedMiddlewareChain, accountController.setPlanDebugApi);
+	accountRouter.post('/admin', authedMiddlewareChain, accountController.adminApi);
 	
 	accountRouter.post('/register', unauthedMiddlewareChain, accountController.register);
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);

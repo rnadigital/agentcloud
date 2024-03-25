@@ -4,7 +4,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import React, { useReducer,useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 // Helper function to check if a permission is allowed
@@ -13,35 +13,17 @@ const isPermissionAllowed = (editingPermission, permissionKey) => {
 	if (!metadata || metadata?.blocked === true) { return false; }
 	if (!metadata.parent) { return true; }
 	// Check if the current permission includes the parent permission
-	return editingPermission.get(metadata.parent);
+	return editingPermission && editingPermission.get(metadata.parent);
 };
 
-enum setAction {
-	ADD = 'ADD',
-	DELETE = 'DELETE',
-};
-
-// Reducer function to manage set operations
-function setReducer(state, action) {
-	switch (action.type) {
-		case setAction.ADD:
-			return new Set([...state, action.payload]);
-		case setAction.DELETE:
-			state.delete(action.payload);
-			return new Set(state);
-		default:
-			throw new Error(`Unhandled action type: ${action.type}`);
-	}
-}
-
-function PermissionsEditor({ currentPermission, editingPermission }) {
+function PermissionsEditor({ editingPermission }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const { csrf, permission: currentPermission } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug, memberId } = router.query;
 
-	const [editingPermissionState, updatePermissionState] = useReducer(setReducer, editingPermission||[]);
+	const [_state, _updateState] = useState(Date.now());
 
 	async function permissionsPost(e) {
 		e.preventDefault();
@@ -63,7 +45,6 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 		}, null);
 	}
 
-// Wrap your form content in a div using grid classes to create a 3-column layout
 	return (
 		<form onSubmit={permissionsPost} className='max-w-full'>
 			<div className='grid gap-4 grid-cols-3'>
@@ -81,10 +62,8 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 										value='true'
 										checked={editingPermission.get(parseInt(key))}
 										onChange={(e) => {
-											updatePermissionState({
-												type: e.target.checked ? 'ADD' : 'DELETE',
-												payload: parseInt(key)
-											});
+											editingPermission.set(parseInt(key), e.target.checked ? true : false);
+											_updateState(Date.now());
 										}}
 									/>
 									<strong>{title}</strong>: {desc}

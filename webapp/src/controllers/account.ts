@@ -1,18 +1,21 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
+import { SubscriptionPlan } from 'struct/billing';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setPlanDebug, verifyAccount } from '../db/account';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setAccountPermissions, setCurrentTeam, setPlanDebug, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 
 export async function accountData(req, res, _next) {
-	//TODO: calculate and send the base64 of calcuated permissions for the resourceSlug here:
 	return {
 		team: res.locals.matchingTeam,
 		csrf: req.csrfToken(),
@@ -240,11 +243,17 @@ export async function dockerLogsJson(req, res, next) {
 
 }
 
-export async function setPlanDebugApi(req, res, next) {
+export async function adminApi(req, res, next) {
 
-	const { plan } = req.body;
+	const { action } = req.body;
 
-	setPlanDebug(res.locals.account._id, plan);
+	if (Object.values(SubscriptionPlan).includes(action)) {
+		setPlanDebug(res.locals.account._id, action);
+	} else {
+		const updatingPerms = new Permission(Roles.REGISTERED_USER.base64);
+		updatingPerms.set(Permissions.ROOT, action === 'Root');
+		setAccountPermissions(res.locals.account._id, updatingPerms);
+	}
 
 	return res.json({});
 

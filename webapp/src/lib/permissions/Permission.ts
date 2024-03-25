@@ -11,7 +11,7 @@ export default class Permission extends BigBitfield {
 	public set?(bit: Permissions|string|number, value: boolean);
 	public setAll?(bits);
 
-	constructor(data: number|number[] = Math.max(...Object.values(Permissions))) {
+	constructor(data: string|number|number[] = Math.max(...Object.values(Permissions))) {
 		super(data);
 	}
 
