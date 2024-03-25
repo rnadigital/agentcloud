@@ -41,7 +41,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 	const router = useRouter();
 	const { resourceSlug, memberId } = router.query;
 
-	const [editingPermissionState, updatePermissionState] = useReducer(setReducer, editingPermission);
+	const [editingPermissionState, updatePermissionState] = useReducer(setReducer, editingPermission||[]);
 
 	async function permissionsPost(e) {
 		e.preventDefault();
@@ -63,35 +63,44 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 		}, null);
 	}
 
+// Wrap your form content in a div using grid classes to create a 3-column layout
 	return (
-		<form onSubmit={permissionsPost}>
-			{Object.entries(Metadata).map(([key, { title, label, desc, heading }]) => {
-				const isEnabled = isPermissionAllowed(currentPermission, key);
-				return (<>
-					{heading && <h2 className='font-semibold mt-4'>{heading}</h2>}
-					<div key={`perm_${title}_${key}`}>
-						<label>
-							<input
-								className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-								type='checkbox'
-								name={`permission_bit_${key}`}
-								value='true'
-								checked={editingPermission.get(parseInt(key))}
-								onChange={(e) => {
-									updatePermissionState({
-										type: e.target.checked ? setAction.ADD : setAction.DELETE,
-										payload: parseInt(key)
-									});
-								}}
-							/>
-							{`${title}: ${desc}`}
-						</label>
-					</div>
-				</>);
-			})}
-			<button type='submit' value='submit'>submit</button>
+		<form onSubmit={permissionsPost} className='max-w-full'>
+			<div className='grid gap-4 grid-cols-3'>
+				{Object.entries(Metadata).map(([key, { title, label, desc, heading }], index) => {
+					const isEnabled = isPermissionAllowed(currentPermission, key);
+					return (<>
+						{heading && <h2 className='font-semibold mt-4 col-span-3'>{heading}</h2>}
+						<div key={`perm_${title}_${key}`} className={`${heading && index % 3 === 0 ? 'col-span-3' : ''}`}>
+							<div className='flex'>
+								<label>
+									<input
+										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										type='checkbox'
+										name={`permission_bit_${key}`}
+										value='true'
+										checked={editingPermission.get(parseInt(key))}
+										onChange={(e) => {
+											updatePermissionState({
+												type: e.target.checked ? 'ADD' : 'DELETE',
+												payload: parseInt(key)
+											});
+										}}
+									/>
+									<strong>{title}</strong>: {desc}
+								</label>
+							</div>
+						</div>
+					</>);
+				})}
+			</div>
+			<button type='submit' value='submit'
+				className='mt-4 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+
+			>Submit</button>
 		</form>
 	);
+
 }
 
 export default PermissionsEditor;
