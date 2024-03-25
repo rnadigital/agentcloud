@@ -9,6 +9,7 @@ use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 use crate::queue::queuing::MyQueue;
 use crate::data::utils::{extract_text_from_file, apply_chunking_strategy_to_document};
 use crate::utils::file_operations::save_file_to_disk;
+use crate::redis_rs::client::RedisConnection;
 
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicCancelArguments, BasicConsumeArguments, Channel};
@@ -16,19 +17,24 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use std::sync::{Arc};
+use std::thread::available_parallelism;
+use tokio::sync::{RwLock, Mutex};
+use threadpool::ThreadPool;
 
 pub async fn subscribe_to_queue(
     qdrant_clone: Arc<RwLock<QdrantClient>>,
     queue: Arc<RwLock<MyQueue<String>>>,
     mongo_client: Arc<RwLock<Database>>,
+    redis_connection_pool: Arc<Mutex<RedisConnection>>,
     channel: &Channel,
     queue_name: &String,
 ) {
     // loop {
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
+    let number_of_threads = available_parallelism().unwrap().get();
+    let thread_pool = ThreadPool::new(number_of_threads * 4);
     match channel.basic_consume_rx(args.clone()).await {
         Ok((ctag, mut messages_rx)) => {
             loop {
@@ -93,6 +99,7 @@ pub async fn subscribe_to_queue(
                                                                         let message_queue = Arc::clone(&queue);
                                                                         let qdrant_conn = Arc::clone(&qdrant_clone);
                                                                         let mongo_conn = Arc::clone(&mongo_client);
+                                                                        let redis_conn = Arc::clone(&redis_connection_pool);
                                                                         let (document_text, metadata) =
                                                                             extract_text_from_file(
                                                                                 file_type,
@@ -102,6 +109,7 @@ pub async fn subscribe_to_queue(
                                                                                 message_queue,
                                                                                 qdrant_conn,
                                                                                 mongo_conn,
+                                                                                redis_conn,
                                                                             )
                                                                                 .await
                                                                                 .unwrap();
@@ -207,13 +215,27 @@ pub async fn subscribe_to_queue(
                                                     let message_queue = Arc::clone(&queue);
                                                     let qdrant_conn = Arc::clone(&qdrant_clone);
                                                     let mongo_conn = Arc::clone(&mongo_client);
-                                                    let _ = add_message_to_embedding_queue(
-                                                        message_queue,
-                                                        qdrant_conn,
-                                                        mongo_conn,
-                                                        (datasource_id.to_string(), message_string),
-                                                    )
-                                                        .await;
+                                                    let redis_conn_pool = Arc::clone(&redis_connection_pool);
+                                                    let params = vec![datasource_id.to_string(), message_string];
+                                                    thread_pool.execute(move || {
+                                                        match tokio::runtime::Runtime::new() {
+                                                            Ok(rt) => {
+                                                                rt.block_on(async {
+                                                                    let _ = add_message_to_embedding_queue(
+                                                                        message_queue,
+                                                                        qdrant_conn,
+                                                                        mongo_conn,
+                                                                        redis_conn_pool,
+                                                                        params,
+                                                                    )
+                                                                        .await;
+                                                                })
+                                                            }
+                                                            Err(e) => {
+                                                                eprintln!("There was an error starting the tokio runtime. Err: {}", e);
+                                                            }
+                                                        }
+                                                    });
                                                 }
                                             } else {
                                                 eprintln!(
