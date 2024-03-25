@@ -37,7 +37,6 @@ function PermissionsEditor({ editingPermission }) {
 				body.set(elem['name'], 'true'); //Note: value doesn't matter. Any value = true
 			}
 		}
-		console.log(body);
 		await API.editTeamMember(body, () => {
 			toast.success('Permissions Updated');
 		}, (res) => {
