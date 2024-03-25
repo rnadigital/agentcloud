@@ -6,7 +6,7 @@ use qdrant_client::client::QdrantClient;
 use std::sync::Arc as arc;
 use std::sync::Arc;
 use async_openai::config::OpenAIConfig;
-use ort::{CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch};
+use ort::{CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
@@ -28,18 +28,18 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
         | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
         | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
             Some(m) => {
-                let coreml = CoreMLExecutionProvider::default();
-                if !coreml.is_available().unwrap() {
-                    eprintln!("Please compile ONNX Runtime with CoreML!");
-                    std::process::exit(1);
-                }
+                // let coreml = CoreMLExecutionProvider::default();
+                // if !coreml.is_available().unwrap() {
+                //     eprintln!("Please compile ONNX Runtime with CoreML!");
+                //     std::process::exit(1);
+                // }
                 let model = FastEmbedModels::from(m.to_string());
                 match FastEmbedModels::translate(&model) {
                     Some(translation) => {
                         let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                             model_name: translation,
                             show_download_message: true,
-                            execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
+                            // execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
                             ..Default::default()
                         })?;
                         let embeddings = model.passage_embed(text, None)?;
