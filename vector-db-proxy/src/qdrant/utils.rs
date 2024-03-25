@@ -224,18 +224,64 @@ impl Qdrant {
         }
     }
 
-    pub async fn upsert_data_point_non_blocking(&self, point: PointStruct) -> Result<bool> {
+    pub async fn upsert_data_point_non_blocking(
+        &self,
+        point: PointStruct,
+        vector_length: Option<u64>,
+        vector_name: Option<String>,
+    ) -> Result<bool> {
         println!(
             "Uploading data point to collection: {}",
             &self.collection_name
         );
         let qdrant_conn = &self.client.read().await;
-        let upsert_results = qdrant_conn
-            .upsert_points(&self.collection_name, None, vec![point], None)
-            .await?;
-        match upsert_results.result.unwrap().status {
-            2 => Ok(true),
-            _ => Ok(false),
+        match &self
+            .check_collection_exists(
+                CreateDisposition::CreateIfNeeded,
+                vector_length,
+                vector_name,
+            )
+            .await
+        {
+            Ok(result) => match result {
+                true => {
+                    match qdrant_conn
+                        .upsert_points(
+                            &self.collection_name,
+                            None,
+                            vec![point],
+                            None,
+                        )
+                        .await
+                    {
+                        Ok(res) => match res.result {
+                            Some(stat) => match stat.status {
+                                2 => {
+                                    println!("upload success");
+                                    Ok(true)
+                                }
+                                _ => {
+                                    println!("Upload failed");
+                                    Ok(false)
+                                }
+                            },
+                            None => Err(anyhow!("Results returned None")),
+                        },
+                        Err(e) => Err(anyhow!("There was an error upserting to qdrant: {}", e)),
+                    }
+                }
+                false => {
+                    println!("Collection: {} creation failed!", &self.collection_name);
+                    Err(anyhow!("Collection does not exist"))
+                }
+            },
+            Err(e) => {
+                println!("Err: {}", e);
+                Err(anyhow!(
+                    "An error occurred while trying to create collection: {}",
+                    e
+                ))
+            }
         }
     }
 
