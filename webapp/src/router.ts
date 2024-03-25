@@ -176,16 +176,16 @@ export default function router(server, app) {
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
 	teamRouter.get('/datasources.json', datasourceController.datasourcesJson);
-	teamRouter.get('/datasource/add', datasourceController.datasourceAddPage.bind(null, app));
+	teamRouter.get('/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.datasourceAddPage.bind(null, app));
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
-	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', datasourceController.datasourceEditPage.bind(null, app));
-	teamRouter.post('/forms/datasource/upload', datasourceController.uploadFileApi);
-	teamRouter.post('/forms/datasource/test', datasourceController.testDatasourceApi);
-	teamRouter.post('/forms/datasource/add', datasourceController.addDatasourceApi);
-	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', datasourceController.updateDatasourceStreamsApi);
-	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', datasourceController.updateDatasourceScheduleApi);
-	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', datasourceController.syncDatasourceApi);
-	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', datasourceController.deleteDatasourceApi);
+	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.datasourceEditPage.bind(null, app));
+	teamRouter.post('/forms/datasource/upload', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.uploadFileApi);
+	teamRouter.post('/forms/datasource/test', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.testDatasourceApi);
+	teamRouter.post('/forms/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.addDatasourceApi);
+	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceStreamsApi);
+	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceScheduleApi);
+	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', hasPerms.one(Permissions.SYNC_DATASOURCE), datasourceController.syncDatasourceApi);
+	teamRouter.delete('/forms/datasource/:datasourceId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_DATASOURCE), datasourceController.deleteDatasourceApi);
 
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
@@ -193,9 +193,9 @@ export default function router(server, app) {
 	teamRouter.get('/team/:memberId([a-f0-9]{24}).json', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.teamMemberJson);
 	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
-	teamRouter.post('/forms/team/invite', checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
-	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
-	teamRouter.post('/forms/team/add', teamController.addTeamApi);
+	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
+	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.deleteTeamMemberApi);
+	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.addTeamApi);
 
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);

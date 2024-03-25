@@ -5,12 +5,12 @@ import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import createAccount from 'lib/account/create';
+import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
-import { calcPerms } from 'lib/middleware/auth/setpermissions';
 
 import { Account, addAccount, changeAccountPassword, getAccountByEmail,
 	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,

@@ -53,6 +53,7 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 
 	CREATE_DATASOURCE: 175,
 	EDIT_DATASOURCE: 180,
+	SYNC_DATASOURCE: 181,
 	DELETE_DATASOURCE: 185,
 
 	DUMMY_BIT: 255, // Just padding

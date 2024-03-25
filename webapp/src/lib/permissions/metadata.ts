@@ -53,6 +53,7 @@ const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 
 	[Permissions.CREATE_DATASOURCE]: { title: 'Create DataSource', label: 'Create DataSource', desc: 'Ability to create a data source' },
 	[Permissions.EDIT_DATASOURCE]: { title: 'Edit DataSource', label: 'Edit DataSource', desc: 'Ability to edit a data source' },
+	[Permissions.SYNC_DATASOURCE]: { title: 'Sync DataSource', label: 'Sync DataSource', desc: 'Ability to sync a data source' },
 	[Permissions.DELETE_DATASOURCE]: { title: 'Delete DataSource', label: 'Delete DataSource', desc: 'Ability to delete a data source' },
 
 })));
