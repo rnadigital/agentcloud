@@ -34,7 +34,7 @@ pub async fn subscribe_to_queue(
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
     let number_of_threads = available_parallelism().unwrap().get();
-    let thread_pool = ThreadPool::new(number_of_threads);
+    let thread_pool = ThreadPool::new(number_of_threads * 4);
     match channel.basic_consume_rx(args.clone()).await {
         Ok((ctag, mut messages_rx)) => {
             loop {

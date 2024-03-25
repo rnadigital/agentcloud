@@ -48,13 +48,14 @@ pub async fn process_messages(
                                     .await
                                 {
                                     Ok(point_struct) => {
-                                        if let Ok(bulk_upload_result) = qdrant
-                                            .bulk_upsert_data(
-                                                vec![point_struct],
-                                                Some(vector_length),
-                                                Some(embedding_model_name_clone),
-                                            )
-                                            .await
+                                        if let Ok(bulk_upload_result) =
+                                            qdrant
+                                                .upsert_data_point_non_blocking(
+                                                    point_struct,
+                                                    Some(vector_length),
+                                                    Some(embedding_model_name_clone),
+                                                )
+                                                .await
                                         {
                                             let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
                                             return bulk_upload_result;
