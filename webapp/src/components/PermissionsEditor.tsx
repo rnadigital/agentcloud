@@ -23,8 +23,8 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 	const router = useRouter();
 	const { resourceSlug, memberId } = router.query;
 
-	// const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
-	// const [_, reRender] = useState(Date.now());
+	const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
+	const [_, reRender] = useState(Date.now());
 
 	async function permissionsPost(e) {
 		e.preventDefault();
@@ -59,13 +59,13 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 								type='checkbox'
 								name={`permission_bit_${key}`}
 								value='true'
-								defaultChecked={editingPermission.get(parseInt(key))}
+								checked={editingPermission.get(parseInt(key))}
 								// To understand name property, see Permission#handleBody()
-								// checked={editingPermission.get(parseInt(key))}
-								// onChange={(e) => {
-								// 	editingPermission.set(parseInt(key), e.target.checked);
-								// 	reRender(Date.now());
-								// }}
+								checked={editingPermission.get(parseInt(key))}
+								onChange={(e) => {
+									editingPermission.set(parseInt(key), e.target.checked);
+									reRender(Date.now());
+								}}
 							/>
 							{`${title}: ${desc}`}
 						</label>
