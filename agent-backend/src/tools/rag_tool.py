@@ -72,7 +72,7 @@ class RagTool(GlobalBaseTool):
                 collection_name=collection,
                 embeddings=embedding_model,
                 vector_name=model_data.model_name,
-                content_payload_key=datasource.embeddingField
+                content_payload_key="page_content"
             ),
             embedding=embedding_model,
             name=tool.name, description=tool.description)
