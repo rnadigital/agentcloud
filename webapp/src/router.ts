@@ -20,8 +20,9 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
+import { PlanLimitsKeys } from 'struct/billing';
 
-const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
+const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, setSubscriptionLocals];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
 import * as accountController from 'controllers/account';
@@ -191,7 +192,7 @@ export default function router(server, app) {
 	teamRouter.get('/team.json', teamController.teamJson);
 	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
-	teamRouter.post('/forms/team/invite', teamController.inviteTeamMemberApi);
+	teamRouter.post('/forms/team/invite', checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', teamController.addTeamApi);
 

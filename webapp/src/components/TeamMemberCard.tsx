@@ -26,7 +26,7 @@ export default function TeamMemberCard({ member, callback }) {
 		}, null);
 	}
 
-	const isOwner = member?._id?.toString() === team[0].ownerId?.toString();
+	const isOwner = member?._id?.toString() === (team && team[0].ownerId?.toString());
 
 	return (
 		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md'>

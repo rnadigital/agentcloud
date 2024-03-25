@@ -1,7 +1,7 @@
 import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
-import { PlanLimits, SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, SubscriptionPlan } from 'struct/billing';
 
 const cache = {};
 
@@ -10,7 +10,7 @@ export async function setSubscriptionLocals(req, res, next) {
 	let ownerId = res.locals?.matchingOrg?.ownerId;
 
 	if (!ownerId) {
-		const currentOrgId = res.locals.matchingOrg.id || res.locals.account.currentOrg;
+		const currentOrgId = res.locals?.matchingOrg?.id || res.locals?.account?.currentOrg;
 		if (!currentOrgId) {
 			return dynamicResponse(req, res, 400, { error: 'Missing org in subscription check context' });
 		}
@@ -43,7 +43,7 @@ export function checkSubscriptionPlan(plan: SubscriptionPlan) {
 	});
 }
 
-export function checkSubscriptionLimit(limit: keyof PlanLimits) {
+export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 	return cache[limit] || (cache[limit] = async function(req, res, next) {
 		const usage = res.locals.usage;
 		if (usage && usage[limit] > res.locals.subscription[limit]) {

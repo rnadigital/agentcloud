@@ -8,15 +8,29 @@ export enum SubscriptionPlan {
     Enterprise = 'Enterprise'
 }
 
-// Type for the limits of each plan, now with orgs and teams as numbers
 export type PlanLimits = {
-    price: string; // For real application, consider a more appropriate type for handling currencies
-    users: number | 'Custom';
-    permissions?: Permissions[] | number[];
-    orgs: number | 'Custom'; // Maximum number of organizations
-    teams: number | 'Custom'; // Maximum number of teams
-    appsYouCanBuild?: string; // Consider a more detailed type than string for structured data
-}
+	price: string;
+	users: number | 'Custom';
+	permissions?: Permissions[] | number[];
+	orgs: number | 'Custom';
+	teams: number | 'Custom';
+	appsYouCanBuild?: string;
+};
+
+// This utility type extracts the keys from PlanLimits and maps them to the same value as the key
+type PlanLimitsKeysType = {
+	[K in keyof PlanLimits]: K;
+};
+
+// Create a const object with keys that match the PlanLimits type
+export const PlanLimitsKeys: PlanLimitsKeysType = {
+	price: 'price',
+	users: 'users',
+	permissions: 'permissions',
+	orgs: 'orgs',
+	teams: 'teams',
+	appsYouCanBuild: 'appsYouCanBuild',
+};
 
 // Object to hold the limits for each plan, using computed property names
 export type PricingMatrix = {
@@ -42,7 +56,7 @@ export const pricingMatrix: PricingMatrix = {
 		orgs: 1,
 		teams: -1,
 	},
-	[SubscriptionPlan.Enterprise]: {
+	[SubscriptionPlan.Enterprise]: { //TODO
 		price: 'Custom',
 		users: 'Custom',
 		orgs: 'Custom', // Enterprise plans may offer custom configurations for organizations

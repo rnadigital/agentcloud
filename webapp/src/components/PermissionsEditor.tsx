@@ -51,7 +51,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 			{Object.entries(Metadata).map(([key, { title, label, desc, heading }]) => {
 				const isEnabled = isPermissionAllowed(currentPermission, key);
 				return (<>
-					{heading && <h2>{heading}</h2>}
+					{heading && <h2 className='font-semibold mt-4'>{heading}</h2>}
 					<div key={`perm_${title}_${key}`}>
 						<label>
 							<input

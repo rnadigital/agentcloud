@@ -20,7 +20,7 @@ function calcPerms(req, res, next) {
 
 		if (matchingOrg && matchingOrg.ownerId.toString() === account._id.toString()) {
 			// Setting  org owner perm
-			calculatedPermissions.set(Permissions.ORG_OWNER);
+			calculatedPermissions.set(Permissions.ORG_ADMIN);
 		} else if (matchingOrg && matchingOrg.permissions[account._id.toString()]) {
 			// Setting all the bits of a users perms with their perms from the org they are an admin of
 			const orgPermissions = new Permission(matchingOrg.permissions[account._id.toString()].toString('base64'));
@@ -31,7 +31,7 @@ function calcPerms(req, res, next) {
 
 		if (matchingTeam && matchingTeam.ownerId.toString() === account._id.toString()) {
 			// Setting team owner perm
-			calculatedPermissions.set(Permissions.TEAM_OWNER);
+			calculatedPermissions.set(Permissions.TEAM_ADMIN);
 		} else if (matchingTeam && matchingTeam.permissions[account._id.toString()]) {
 			// Setting all the bits of a users perms with their perms from the team they are a member of
 			const teamPermissions = new Permission(matchingTeam.permissions[account._id.toString()].toString('base64'));
