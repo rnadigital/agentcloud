@@ -12,14 +12,13 @@ import { toast } from 'react-toastify';
 
 export default function EditTeamMember(props) {
 
-	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
+	const { account, team, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug,  memberId } = router.query;
 	const { teamMember } = state;
-	console.log('teamMember', teamMember);
 
 	async function fetchTeamMember() {
 		API.getTeamMember({ resourceSlug, memberId }, dispatch, setError, router);

@@ -9,10 +9,10 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
-export default function TeamMemberCard({ member, callback }) {
+export default function TeamMemberCard({ team, member, callback }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { csrf, team } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 

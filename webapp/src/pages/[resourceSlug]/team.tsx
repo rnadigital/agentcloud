@@ -44,7 +44,7 @@ export default function Team(props) {
 		{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
 		{team && team.length > 0 && <div className='flex flex-wrap gap-4 my-4'>
 			{team[0].members.map(member => (
-				<TeamMemberCard key={member._id} member={member} callback={fetchTeam} />
+				<TeamMemberCard team={team} key={member._id} member={member} callback={fetchTeam} />
 			))}
 		</div>}
 
