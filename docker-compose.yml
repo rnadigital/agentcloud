@@ -134,6 +134,9 @@ services:
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
       - QDRANT_URI=http://qdrant:6334
+      - REDIS_HOST=docker_redis
+      - REDIS_PORT=6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   qdrant:
     ports:
