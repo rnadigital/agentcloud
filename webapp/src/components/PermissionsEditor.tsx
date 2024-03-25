@@ -4,7 +4,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import React, { useState } from 'react';
+import React, { useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
 
 // Helper function to check if a permission is allowed
@@ -16,6 +16,24 @@ const isPermissionAllowed = (editingPermission, permissionKey) => {
 	return editingPermission.get(metadata.parent);
 };
 
+enum setAction {
+	ADD = 'ADD',
+	DELETE = 'DELETE',
+};
+
+// Reducer function to manage set operations
+function setReducer(state, action) {
+	switch (action.type) {
+		case setAction.ADD:
+			return new Set([...state, action.payload]);
+		case setAction.DELETE:
+			state.delete(action.payload);
+			return new Set(state);
+		default:
+			throw new Error(`Unhandled action type: ${action.type}`);
+	}
+}
+
 function PermissionsEditor({ currentPermission, editingPermission }) {
 
 	const [accountContext]: any = useAccountContext();
@@ -23,8 +41,7 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 	const router = useRouter();
 	const { resourceSlug, memberId } = router.query;
 
-	const [editingPermissionState, setEditingPermissionState] = useState(editingPermission);
-	const [_, reRender] = useState(Date.now());
+	const [editingPermissionState, updatePermissionState] = useReducer(setReducer, editingPermission);
 
 	async function permissionsPost(e) {
 		e.preventDefault();
@@ -60,11 +77,11 @@ function PermissionsEditor({ currentPermission, editingPermission }) {
 								name={`permission_bit_${key}`}
 								value='true'
 								checked={editingPermission.get(parseInt(key))}
-								// To understand name property, see Permission#handleBody()
-								checked={editingPermission.get(parseInt(key))}
 								onChange={(e) => {
-									editingPermission.set(parseInt(key), e.target.checked);
-									reRender(Date.now());
+									updatePermissionState({
+										type: e.target.checked ? setAction.ADD : setAction.DELETE,
+										payload: parseInt(key)
+									});
 								}}
 							/>
 							{`${title}: ${desc}`}
