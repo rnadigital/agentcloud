@@ -33,6 +33,8 @@ pub async fn subscribe_to_queue(
     // loop {
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
+    let number_of_threads = available_parallelism().unwrap().get();
+    let thread_pool = ThreadPool::new(number_of_threads);
     match channel.basic_consume_rx(args.clone()).await {
         Ok((ctag, mut messages_rx)) => {
             loop {
@@ -215,8 +217,6 @@ pub async fn subscribe_to_queue(
                                                     let mongo_conn = Arc::clone(&mongo_client);
                                                     let redis_conn_pool = Arc::clone(&redis_connection_pool);
                                                     let params = vec![datasource_id.to_string(), message_string];
-                                                    let number_of_threads = available_parallelism().unwrap().get();
-                                                    let thread_pool = ThreadPool::new(number_of_threads);
                                                     thread_pool.execute(move || {
                                                         match tokio::runtime::Runtime::new() {
                                                             Ok(rt) => {
