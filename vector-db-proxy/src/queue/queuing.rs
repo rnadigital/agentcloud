@@ -23,8 +23,8 @@ pub struct MyQueue<T: Clone> {
 
 // This list all the methods that are available in this class
 pub trait Control<T>
-where
-    T: Debug,
+    where
+        T: Debug,
 {
     fn new(pool_size: usize) -> Self;
     fn default() -> Self;
@@ -41,9 +41,9 @@ where
 // This implementation is generic for all types that are both Send and Clone
 // T must be Send in order to be sent safely across threads
 impl<T: Clone + Send> Control<T> for MyQueue<T>
-where
-    T: Debug,
-    String: From<T>,
+    where
+        T: Debug,
+        String: From<T>,
 {
     // This is similar to the __init__ method in python. That instantiates an instance of the class
     fn new(pool_size: usize) -> Self {
@@ -69,10 +69,7 @@ where
 
     fn enqueue(&mut self, task: T) {
         match self.q.add(task) {
-            Ok(_) => println!(
-                "Task added successfully. Queue size is now: '{}'",
-                self.q.size()
-            ),
+            Ok(_) => {}
             Err(_) => println!("Could not add task to queue"),
         };
     }
