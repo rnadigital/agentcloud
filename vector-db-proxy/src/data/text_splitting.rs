@@ -26,29 +26,34 @@ impl Default for Sentence {
     }
 }
 
+
 fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
+    println!("Sentence Length: {}", sentences.len());
+    let mut distance = 1.0;
+    if sentences.len() > 1 {
+        for i in 0..sentences.len() - 1 {
+            let embedding_current = &sentences[i].sentence_embedding;
+            let embedding_next = &sentences[i + 1].sentence_embedding;
+            println!("Embedding  next: {}", embedding_next);
+            // Calculate cosine similarity
+            let similarity = cosine_similarity(embedding_current, embedding_next);
+            println!("Similarity Score: {}", similarity);
+            // Convert to cosine distance
+            distance = 1.0 - similarity;
 
-    for i in 0..sentences.len() - 1 {
-        let embedding_current = &sentences[i].sentence_embedding;
-        let embedding_next = &sentences[i + 1].sentence_embedding;
+            // Append cosine distance to the list
+            distances.push(distance);
 
-        // Calculate cosine similarity
-        let similarity = cosine_similarity(embedding_current, embedding_next);
+            // Store distance in the struct
+            sentences[i].distance_to_next = Some(distance);
+        }
 
-        // Convert to cosine distance
-        let distance = 1.0 - similarity;
-
-        // Append cosine distance to the list
-        distances.push(distance);
-
-        // Store distance in the struct
-        sentences[i].distance_to_next = Some(distance);
+        // Optionally handle the last sentence
+        sentences.last_mut().unwrap().distance_to_next = None; // or a default value
+    } else {
+        distances.push(distance)
     }
-
-    // Optionally handle the last sentence
-    sentences.last_mut().unwrap().distance_to_next = None; // or a default value
-
     distances
 }
 
@@ -128,12 +133,14 @@ impl Chunker {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                     for (i, sentence) in sentences.iter().enumerate() {
-                        if !embeddings[i].is_empty() {
-                            vector_of_sentences.push(Sentence {
-                                sentence_embedding: Array1::from_vec(embeddings[i].clone()),
-                                distance_to_next: None,
-                                sentence: Some(sentence["sentence"].clone()),
-                            });
+                        if !embeddings.is_empty() && embeddings.len() > 0 {
+                            if i < embeddings.len() && !embeddings[i].is_empty() {
+                                vector_of_sentences.push(Sentence {
+                                    sentence_embedding: Array1::from_vec(embeddings[i].clone()),
+                                    distance_to_next: None,
+                                    sentence: Some(sentence["sentence"].clone()),
+                                });
+                            }
                         }
                     }
                     // here is where the divergence occurs depending on the chunking strategy chosen by the use
@@ -239,25 +246,31 @@ impl Chunker {
                 for mut chunk in chunks {
                     let mut metadata = metadata[i].clone().unwrap();
                     if self.add_start_index {
+                        // Use char_indices to work with character boundaries
+                        let text_chars: Vec<(usize, char)> = text.char_indices().collect();
                         index = match index {
-                            Some(idx) => text[idx + 1..]
-                                .find(&chunk.page_content)
-                                .map(|found_idx| found_idx + idx + 1),
-                            None => text.find(&chunk.page_content),
+                            Some(idx) => {
+                                // Find the chunk's start position relative to idx, ensuring we're within character boundaries
+                                text_chars.iter().skip(idx + 1).position(|(_, c)| chunk.page_content.starts_with(*c)).map(|pos| text_chars[idx + 1 + pos].0)
+                            }
+                            None => {
+                                // Find the first occurrence of the chunk.page_content, still ensuring we're within character boundaries
+                                text_chars.iter().find(|(_, c)| chunk.page_content.starts_with(*c)).map(|&(pos, _)| pos)
+                            }
                         };
                         if let Some(idx) = index {
                             metadata.insert("start_index".to_string(), idx.to_string());
                         }
                     }
-                    metadata.insert("document".to_string(), chunk.page_content.to_string());
+                    metadata.insert("page_content".to_string(), chunk.page_content.to_string());
                     chunk.metadata = Some(metadata);
                     documents.push(chunk);
                 }
             }
         }
-        // todo: @Tom make api call here to let webapp know tha embedding is done!
         documents
     }
+
 
     pub async fn split_documents(&self, documents: Vec<Document>) -> Result<Vec<Document>> {
         let (texts, metadata): (Vec<_>, Vec<_>) = documents

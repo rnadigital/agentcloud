@@ -28,6 +28,8 @@ pub struct DataSources {
     pub gcsFilename: Option<String>,
     pub sourceType: String,
     pub sourceId: Option<String>,
+    pub syncedCount: Option<i32>,
+    pub embeddedCount: Option<i32>,
     pub destinationId: Option<String>,
     pub workspaceId: Option<String>,
     pub connectionId: Option<String>,

@@ -3,17 +3,19 @@
 import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { CredentialType } from 'struct/credential';
 import { InsertResult } from 'struct/db';
 
 export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	credentialId: ObjectId; //id of credential (holds key) in credentials db 
+	credentialId?: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
 	model: string;
-	modelType: 'embedding' | 'llm';
+	modelType: string; //'embedding' | 'llm'
 	embeddingLength: number;
+	type?: CredentialType; //redundant
 }
 
 export function ModelCollection(): any {
@@ -44,6 +46,15 @@ export function getModelsById(teamId: db.IdOrStr, modelIds: db.IdOrStr[]): Promi
 
 export async function addModel(model: Model): Promise<InsertResult> {
 	return ModelCollection().insertOne(model);
+}
+
+export async function updateModel(teamId: db.IdOrStr, modelId: db.IdOrStr, model: Partial<Model>): Promise<InsertResult> {
+	return ModelCollection().updateOne({
+		_id: toObjectId(modelId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: model,
+	});
 }
 
 export function deleteModelById(teamId: db.IdOrStr, modelId: db.IdOrStr): Promise<any> {

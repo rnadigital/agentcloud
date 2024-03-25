@@ -84,6 +84,17 @@ export async function setDatasourceStatus(teamId: db.IdOrStr, datasourceId: db.I
 	});
 }
 
+export async function setDatasourceSyncedCount(teamId: db.IdOrStr, datasourceId: db.IdOrStr, syncedCount: number): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			syncedCount,
+		},
+	});
+}
+
 export async function setDatasourceEmbedding(teamId: db.IdOrStr, datasourceId: db.IdOrStr, modelId: db.IdOrStr, embeddingField: string): Promise<any> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),

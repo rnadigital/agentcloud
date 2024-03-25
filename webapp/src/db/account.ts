@@ -1,7 +1,9 @@
+
 'use strict';
 
 import * as db from 'db/index';
-import { ObjectId } from 'mongodb';
+import { Binary,ObjectId } from 'mongodb';
+import { SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
@@ -10,12 +12,13 @@ import toObjectId from '../lib/misc/toobjectid';
 export type AccountTeam = {
 	id: ObjectId;
 	name: string;
-	airbyteWorkspaceId?: string;
+	ownerId: ObjectId;
 }
 
 export type AccountOrg = {
 	id: ObjectId;
 	name: string;
+	ownerId: ObjectId;
 	teams: AccountTeam[];
 }
 
@@ -32,6 +35,7 @@ export type AccountStripeData = {
 	stripeCustomerId?: string;
 	stripeEndsAt?: number;
 	stripeCancelled?: boolean;
+	stripePlan?: SubscriptionPlan;
 }
 
 export type Account = {
@@ -46,16 +50,24 @@ export type Account = {
 	apiJwt?: string;
 	token?: string;
 	stripe?: AccountStripeData;
-	oauth?: OAuthRecordType,
+	oauth?: OAuthRecordType;
+	permissions: Binary;
 }
 
 export function AccountCollection(): any {
 	return db.db().collection('accounts');
 }
 
-export function getAccountById(userId: db.IdOrStr): Promise<Account> {
+export async function getAccountById(userId: db.IdOrStr): Promise<Account> {
 	return AccountCollection().findOne({
 		_id: toObjectId(userId)
+	});
+}
+
+export async function getAccountTeamMember(userId: db.IdOrStr, teamId: db.IdOrStr): Promise<Account> {
+	return AccountCollection().findOne({
+		_id: toObjectId(userId),
+		'orgs.teams.id': toObjectId(teamId),
 	});
 }
 
@@ -135,6 +147,23 @@ export function pushAccountTeam(userId: db.IdOrStr, orgId: db.IdOrStr, team: Acc
 	});
 }
 
+//NOTE: will leave dangling orgs if removed from all teams in an org, but we filter these on the FE.
+export function pullAccountTeam(userId: db.IdOrStr, orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId)
+	}, {
+		$pull: {
+			'orgs.$[org].teams': {
+				id: toObjectId(teamId)
+			}
+		}
+	}, {
+		arrayFilters: [{
+			'org.id': toObjectId(orgId)
+		}]
+	});
+}
+
 export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, provider: OAUTH_PROVIDER): Promise<any> {
 	return AccountCollection().updateOne({
 		_id: toObjectId(userId)
@@ -144,6 +173,16 @@ export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, pro
 				[provider]: { id: oauthId },
 			},
 		}
+	});
+}
+
+export function setPlanDebug(userId: db.IdOrStr, plan: SubscriptionPlan): Promise<any> {
+	return AccountCollection().updateOne({
+		_id: toObjectId(userId),
+	}, {
+		$set: {
+			'stripe.stripePlan': plan,
+		},
 	});
 }
 
@@ -166,6 +205,7 @@ export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: num
 			'stripe.stripeCustomerId': stripeCustomerId,
 			'stripe.stripeEndsAt': stripeEndsAt,
 			'stripe.stripeCancelled': stripeCancelled || false,
+			'stripe.stripePlan': 'TEST', // TODO
 		}
 	});
 }
@@ -175,6 +215,7 @@ export function unsetStripeCustomer(stripeCustomerId: string): Promise<any> {
 		stripeCustomerId,
 	}, {
 		$unset: {
+			'stripe.stripePlan': '',
 			'stripe.stripeCustomerId': '',
 			'stripe.stripeEndsAt': '',
 		}

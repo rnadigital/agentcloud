@@ -5,7 +5,8 @@ use llm_chain::{chains::conversation::Chain, executor, parameters, prompt, step:
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc as arc;
 use std::sync::Arc;
-use ort::{CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch};
+use async_openai::config::OpenAIConfig;
+use ort::{CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
@@ -14,6 +15,7 @@ use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::qdrant::helpers::reverse_embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
+use crate::init::env_variables::GLOBAL_DATA;
 
 pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<Vec<Vec<f32>>> {
     match model {
@@ -54,10 +56,15 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
         // Group all OAI models
         _ => match model.to_str() {
             Some(m) => {
+                let global_data = GLOBAL_DATA.read().await; // TODO: temp fix until we get key from mongo
+                let config = OpenAIConfig::new()
+                    .with_api_key(global_data.openai_key.as_str())
+                    .with_org_id("rna-digital"); // todo: need to get this from mongo
+
                 let backoff = backoff::ExponentialBackoffBuilder::new()
                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                     .build();
-                let client = async_openai::Client::new().with_backoff(backoff);
+                let client = async_openai::Client::with_config(config).with_backoff(backoff);
                 let request = CreateEmbeddingRequestArgs::default()
                     .model(m)
                     .input(text)

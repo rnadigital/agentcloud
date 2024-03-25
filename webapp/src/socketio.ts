@@ -7,22 +7,23 @@ import { Server } from 'socket.io';
 import { client } from './lib/redis/redis';
 const log = debug('webapp:socket');
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
 
+import checkSession from '@mw/auth/checksession';
+import fetchSession from '@mw/auth/fetchsession';
+import useJWT from '@mw/auth/usejwt';
+import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
+import { addAgents } from 'db/agent';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage,upsertOrUpdateChatMessage } from 'db/chat';
+import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
-import { AgentType } from 'struct/agent';
-import { SessionStatus, SessionType } from 'struct/session';
+import { taskQueue } from 'queue/bull';
+import { SessionStatus } from 'struct/session';
 
-import { addAgents } from './db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage, updateMessageWithChunkById } from './db/chat';
-import { addGroup } from './db/group';
-import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionGroupId, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from './db/session';
-import checkSession from './lib/middleware/auth/checksession';
-import fetchSession from './lib/middleware/auth/fetchsession';
-import useJWT from './lib/middleware/auth/usejwt';
-import useSession from './lib/middleware/auth/usesession';
-import { taskQueue } from './lib/queue/bull';
+import { getAppByCrewId } from './db/app';
+import { AppType } from './lib/struct/app';
 
 export const io = new Server();
 
@@ -78,7 +79,8 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest?.locals?.account?.orgs?.some(o => o?.teams?.some(t => t.id.toString() === room))) {
 				// Room name is same as a team id
 				log('socket.id "%s" joined team notification room %s', socket.id, room);
-				return socket.join(room);
+				socket.join(room);
+				return socket.emit('joined', room);
 			}
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(room.substring(1)) // removing _
@@ -89,7 +91,7 @@ export function initSocket(rawHttpServer) {
 			}
 			log('socket.id "%s" joined room %s', socket.id, room);
 			socket.join(room);
-			if (socketRequest.locals.isAgentBackend !== true) {
+			if (socketRequest.locals.isAgentBackend === false) {
 				socket.emit('joined', room); //only send to webapp clients
 			}
 		});
@@ -97,16 +99,24 @@ export function initSocket(rawHttpServer) {
 		socket.on('terminate', async (data) => {
 			const socketRequest = socket.request as any;
 			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(data.message.sessionId)
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.message.sessionId));
+				? unsafeGetSessionById(data.room)
+				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
 			if (!session) {
-				return log('socket.id "%s" terminate invalid session %s', socket.id, data.message.sessionId);
+				return log('socket.id "%s" terminate invalid session %s', socket.id, data.room);
 			}
-			await (socketRequest.locals.isAgentBackend === true
-				? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
-				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
-			log('socket.id "%s" terminate %s', socket.id, session._id);
-			return io.to(data.room).emit('terminate', true);
+			const app = await getAppByCrewId(socketRequest?.locals?.account?.currentTeam, session.crewId);
+			if (!app) {
+				return log('socket.id "%s" terminate invalid app by crew %s', session.crewId);
+			}
+			if (app.appType != AppType.CHAT) {
+				await (socketRequest.locals.isAgentBackend === true
+					? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
+					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
+				log('socket.id "%s" terminate %s', socket.id, session._id);
+				return io.to(data.room).emit('terminate', true);
+			} else {
+				return log('NOT terminating because CHAT app - socket.id "%s" terminate %s', socket.id, session);
+			}
 		});
 
 		socket.on('message', async (data) => {
@@ -141,6 +151,9 @@ export function initSocket(rawHttpServer) {
 				authorName: data.authorName || 'System',
 				ts: messageTimestamp,
 			};
+			if (!finalMessage?.message?.chunkId) {
+				finalMessage.message.chunkId = uuidv4();
+			}
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
 				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}
@@ -152,31 +165,22 @@ export function initSocket(rawHttpServer) {
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
 			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage?.message?.tokens };
-			if (finalMessage.message.first === false) {
-				//This is a previous message that is returning in chunks
-				await updateMessageWithChunkById(finalMessage.room, finalMessage.message.chunkId, chunk);
-				if (chunk?.tokens != null && chunk?.tokens > 0) {
-					await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-				}
-				//const updatedSession = await unsafeIncrementTokens(finalMessage.room, chunk?.tokens);
-				//io.to(data.room).emit('tokens', updatedSession.tokensUsed);
-			} else {
-				await addChatMessage({
+			await upsertOrUpdateChatMessage(
+				finalMessage.room,
+				{
 					orgId: session.orgId,
 					teamId: session.teamId,
 					sessionId: session._id,
-					message: finalMessage,
-					type: session.type as SessionType,
 					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
 					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?.name : 'AgentCloud',
 					ts: finalMessage.ts || messageTimestamp,
 					isFeedback: finalMessage?.isFeedback || false,
 					chunkId: finalMessage.message.chunkId || null,
-					tokens: finalMessage?.message?.tokens || 0,
-					displayMessage: finalMessage?.displayMessage || null,
-					chunks: finalMessage?.message?.single ? [] : [chunk],
-				});
-			}
+					message: finalMessage,
+				},
+				chunk,
+			);
+
 			const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 			if (newStatus !== session.status) { //Note: chat messages can be received out of order
 				log('socket.id "%s" updating session %s status to %s', socket.id, finalMessage.room, newStatus);
@@ -204,6 +208,7 @@ export function initSocket(rawHttpServer) {
 			await (socketRequest.locals.isAgentBackend === true
 				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
 				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
+			io.to(`_${data.room}`).emit('terminate', '');
 			return io.to(data.room).emit('terminate', true);
 		});
 

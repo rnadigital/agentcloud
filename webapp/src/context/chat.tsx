@@ -36,8 +36,6 @@ export function ChatWrapper({ children }) {
 		}
 	}, [router.asPath]);
 
-	log('ChatWrapper sharedState %O', sharedState);
-
 	return (
 		<ChatContext.Provider value={[sharedState, updateSharedState]}>
 			{children}

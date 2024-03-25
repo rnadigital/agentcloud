@@ -1,18 +1,24 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
+import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import createAccount from 'lib/account/create';
+import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
+import { TEAM_BITS } from 'permissions/bits';
+import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
 
 import { Account, addAccount, changeAccountPassword, getAccountByEmail,
-	getAccountById, OAuthRecordType, pushAccountOrg, pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
+	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
+	pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
 import { addOrg, getOrgById } from '../db/org';
-import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember } from '../db/team';
+import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions } from '../db/team';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
-import { dynamicResponse } from '../util';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -55,12 +61,13 @@ export async function inviteTeamMemberApi(req, res) {
 	if (!email || typeof email !== 'string' || email.length === 0) {
 		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
 	}
-	const foundAccount = await getAccountByEmail(email);
+	let foundAccount = await getAccountByEmail(email);
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
 		const { addedAccount } = await createAccount(email, name, null, true);
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
+		foundAccount = await getAccountByEmail(email);
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
@@ -68,16 +75,16 @@ export async function inviteTeamMemberApi(req, res) {
 			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id);
-		if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
-			//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
-			await pushAccountOrg(foundAccount._id, {
-				...res.locals.matchingOrg,
-				teams: [invitingTeam],
-			});
-		} else {
-			//otherwise theyre already in the org, just push the single team to the matching org
-			await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
-		}
+	}
+	if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
+		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
+		await pushAccountOrg(foundAccount._id, {
+			...res.locals.matchingOrg,
+			teams: [invitingTeam],
+		});
+	} else {
+		//otherwise theyre already in the org, just push the single team to the matching org
+		await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 	}
 	//member invited
 	return dynamicResponse(req, res, 200, { });
@@ -127,26 +134,84 @@ export async function deleteTeamMemberApi(req, res) {
 export async function addTeamApi(req, res) {
 	const { teamName } = req.body;
 	if (!teamName || typeof teamName !== 'string' || teamName.length === 0) {
-		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
-	}
-	let airbyteWorkspaceId = null;
-	if (process.env.AIRBYTE_USERNAME) {
-		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-		const workspace = await workspaceApi.createWorkspace(null, {
-			name: res.locals.account._id.toString(), // account _id stringified as workspace nam
-		}).then(res => res.data);
-		airbyteWorkspaceId = workspace.workspaceId;
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 	const addedTeam = await addTeam({
 		name: teamName,
+		ownerId: toObjectId(res.locals.account._id),
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		members: [toObjectId(res.locals.account._id)],
-		airbyteWorkspaceId,
+		dateCreated: new Date(),
+		permissions: {
+			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
 	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
 		id: addedTeam.insertedId,
 		name: teamName,
+		ownerId: toObjectId(res.locals.account._id),
 	});
 	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
+}
+
+/**
+ * @api {post} /forms/team/[memberId]/edit
+ * @apiName edit
+ * @apiGroup Team
+ *
+ * @apiParam {String} teamName Name of new team
+ */
+export async function editTeamMemberApi(req, res) {
+
+	const { resourceSlug, memberId } = req.params;
+	const { template } = req.body;
+	
+	if (memberId === res.locals.matchingTeam.ownerId.toString()) {
+		return dynamicResponse(req, res, 400, { error: 'Team owner permissions can\'t be edited' });
+	}
+
+	const editingMember = await getAccountById(req.params.memberId);
+	let updatingPermissions;
+	if (template) {
+		updatingPermissions = new Permission(template); //TODO: template (.base64 of official roles)
+	} else {
+		updatingPermissions = new Permission(/* TODO: PERMISSIONS OF THE PERSON BEING EDITED */);
+		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
+	}
+
+	await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
+
+	return dynamicResponse(req, res, 200, { });
+
+}
+
+export async function teamMemberData(req, res, _next) {
+	const [teamMember] = await Promise.all([
+		getAccountTeamMember(req.params.memberId, req.params.resourceSlug),
+	]);
+	teamMember.permissions = calcPerms(teamMember, res.locals.matchingOrg, res.locals.matchingTeam).base64;
+	return {
+		teamMember,
+		csrf: req.csrfToken(),
+	};
+};
+
+/**
+ * GET /[resourceSlug]/team/[memberId].json
+ * team member json data
+ */
+export async function teamMemberJson(req, res, next) {
+	const data = await teamMemberData(req, res, next);
+	return res.json({ ...data, account: res.locals.account });
+}
+
+/**
+ * GET /[resourceSlug]/team/[memberId]/edit
+ * edit team member page html
+ */
+export async function memberEditPage(app, req, res, next) {
+	const data = await teamMemberData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/team/${req.params.memberId}/edit`);
 }

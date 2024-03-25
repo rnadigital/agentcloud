@@ -3,7 +3,7 @@
 import { CredentialType } from 'struct/credential';
 
 export const ModelList = {
-	[CredentialType.OPENAI]: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview', 'text-embedding-3-large', 'text-embedding-3-small', 'text-embedding-ada-002'],
+	[CredentialType.OPENAI]: ['gpt-4-0125-preview', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview', 'text-embedding-3-large', 'text-embedding-3-small', 'text-embedding-ada-002'],
 	[CredentialType.AZURE]: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview'],
 	[CredentialType.LMSTUDIO]: null,
 	[CredentialType.FASTEMBED]: [

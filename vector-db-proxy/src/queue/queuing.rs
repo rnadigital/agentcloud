@@ -1,18 +1,17 @@
 //! This is queueing module that provides app wide capability to add tasks to a queue
-use mongodb::Database;
 use std::fmt::Debug;
-use std::marker::Send;
-use std::sync::Arc;
-use std::thread::available_parallelism;
-use tokio::sync::RwLock;
-
 use queues::Queue;
 use queues::*;
 use threadpool::ThreadPool;
-
+use std::marker::Send;
+use std::sync::Arc;
+use tokio::sync::{Mutex, RwLock};
+use std::thread::available_parallelism;
+use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 
 use crate::data::processing_incoming_messages::process_messages;
+use crate::redis_rs::client::RedisConnection;
 
 // This is essentially the Class
 // The requirement for T to be Clone is a constraint of the queues crate
@@ -33,6 +32,7 @@ pub trait Control<T>
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
+        redis_conn_pool: Arc<Mutex<RedisConnection>>,
         message: String,
     ) -> bool;
 }
@@ -82,6 +82,7 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
+        redis_conn_pool: Arc<Mutex<RedisConnection>>,
         message: String,
     ) -> bool {
         println!("Received table embedding task...");
@@ -98,10 +99,11 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
             let data = message.clone();
             let qdrant_client = Arc::clone(&qdrant_conn);
             let mongo_client = Arc::clone(&mongo_conn);
+            let redis_conn = Arc::clone(&redis_conn_pool);
             self.pool.execute(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    let _ = process_messages(qdrant_client, mongo_client, data, id).await;
+                    let _ = process_messages(qdrant_client, mongo_client, redis_conn, data, id).await;
                 })
             });
         }

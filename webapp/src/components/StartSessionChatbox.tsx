@@ -8,24 +8,13 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
-import CreateAgentModal from '../components/CreateAgentModal';
-import CreateGroupModal from '../components/CreateGroupModal';
+// import CreateAgentModal from '../components/CreateAgentModal';
+// import CreateCrewModal from '../components/CreateCrewModal';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
-import { AgentType } from '../lib/struct/agent';
-import SelectClassNames from '../lib/styles/SelectClassNames';
+import SelectClassNames, { SelectClassNamesInverted } from '../lib/styles/SelectClassNames';
 
-const sessionRadios = [
-	{ name: 'single', title: 'Single Agent' },
-	{ name: 'rag', title: 'Single Agent', badge: <span className='inline-flex items-center rounded-md bg-green-100 mx-1 px-2 py-1 text-xs font-medium text-green-700'>
-		+ RAG
-	</span> },
-	{ name: 'multi', title: 'Multi Agent', badge: <span className='inline-flex items-center rounded-md bg-blue-100 mx-1 px-2 py-1 text-xs font-medium text-blue-700'>
-		BETA
-	</span> },
-];
-
-export default function StartSessionChatbox({ agents = [], groups = [], setOpen, fetchSessions }) {
+export default function StartSessionForm({ agents = [], crews = [], setOpen, fetchSessions, inverted = false }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -34,20 +23,18 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 	const { stripeCustomerId } = account?.stripe || {};
 	const [error, setError] = useState();
 	const [promptValue, setPromptValue] = useState('');
-	const [sessionRadio, setSessionRadio] = useState('single');
-	const [selectedGroup, setSelectedGroup] = useState(null);
-	const [selectedAgent, setSelectedAgent] = useState(null);
+	const [selected, setSelected] = useState(null);
 	const [addedId, setAddedId] = useState(null);
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function addSession(e) {
 		e.preventDefault();
-		if (!stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
+		if (setOpen && !stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
 			setOpen(true);
 			return null;
 		}
-		if (!selectedGroup?.value && !selectedAgent?.value) {
-			toast.error(`Please select ${sessionRadio === 'multi' ? 'a group' : 'an agent'} from the dropdown`);
+		if (!selected?.value && !selected?.value) {
+			toast.error('Please select an agent or crew from the dropdown');
 			return null;
 		}
 		const target = e.target.form ? e.target.form : e.target;
@@ -55,9 +42,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 			_csrf: target._csrf.value,
 			resourceSlug,
 			prompt: target.prompt.value,
-			group: selectedGroup?.value,
-			agent: selectedAgent?.value,
-			rag: sessionRadio === 'rag',
+			id: selected?.value,
 		}, null, setError, router);
 	}
 
@@ -66,105 +51,93 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 		await fetchSessions();
 	}
 
-	//When agents or groups change set the selected group from the callback
+	//When agents or crews change set the selected crew from the callback
 	useEffect(() => {
 		if (!addedId) { return; }
-		if (sessionRadio === 'single') {
-			const foundAgent = agents.find(a => a._id === addedId);
-			foundAgent && setSelectedAgent({ label: foundAgent.name, value: foundAgent._id });
-		} else {
-			const foundGroup = groups.find(g => g._id === addedId);
-			foundGroup && setSelectedGroup({ label: foundGroup.name, value: foundGroup._id });
-		}
+		const foundAgent = agents.find(a => a._id === addedId);
+		foundAgent && setSelected({ label: foundAgent.name, value: foundAgent._id, tools: foundAgent.toolIds?.length > 0, rag: foundAgent.datasourceIds?.length > 0 });
+		const foundCrew = crews.find(g => g._id === addedId);
+		foundCrew && setSelected({ label: foundCrew.name, value: foundCrew._id });
 		setAddedId(null);
 		setModalOpen(false);
-	}, [agents, groups]);
+	}, [agents, crews]);
 
-	const groupOptions = groups
-		.filter(g => {
-			return g.adminAgent && g.agents.length > 0;
-		}).map(g => ({
+	const crewOptions: any[] = crews
+		.map(g => ({
 			label: g.name,
 			value: g._id,
-		}));
+			//TODO: rag true/false capability
+		})).concat([{
+			label: '+ New crew',
+			value: null,
+			crew: true,
+		} as any]);
 
-	const ragAgentOptions = agents
-		.filter(a => a?.datasourceIds?.length > 0 && a.type === AgentType.RETRIEVER_ASSISTANT_AGENT)
+	const agentOptions: any[] = agents
 		.map(a => ({
 			label: a.name,
 			value: a._id,
-		}));
-	const agentOptions = agents
-		.map(a => ({
-			label: a.name,
-			value: a._id,
-		}));
+			rag: a.datasourceIds?.length > 0,
+			tools: a.toolIds?.length > 0,
+		} as any)).concat([{
+			label: '+ New agent',
+			value: null,
+			crew: false,
+		} as any]);
 
-	return (<div className='flex flex-col mb-10'>
+	return (<div className='flex flex-col'>
 
-		{sessionRadio !== 'multi'
-			? <CreateAgentModal open={modalOpen} setOpen={setModalOpen} callback={callback} />
-			: <CreateGroupModal open={modalOpen} setOpen={setModalOpen} callback={callback} />}
+		{/*modalOpen === 'crew'
+			? <CreateCrewModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />
+			: <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={callback} />*/}
 
 		<div className='flex flex-row justify-center'>
-			<div className='flex items-start space-x-4 basis-1/2'>
+			<div className='flex items-start space-x-4 w-full'>
 				<div className='min-w-0 flex-1'>
 					<form action='/forms/session/add' className='relative' onSubmit={addSession}>
-						<div>
-							<fieldset className='my-3'>
-								<legend className='sr-only'>Notification method</legend>
-								<div className='space-y-4'>
-									{sessionRadios.map((r) => (
-										<div key={r.name} className='flex items-center'>
-											<input
-												id={r.name}
-												name='notification-method'
-												type='radio'
-												onChange={(e) => setSessionRadio(e.target.id)}
-												defaultChecked={r.name === sessionRadio}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											/>
-											<label htmlFor={r.name} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
-												{r.title} {r.badge}
-											</label>
-										</div>
-									))}
-								</div>
-							</fieldset>
-						</div>
 						<input type='hidden' name='_csrf' value={csrf} />
-						{sessionRadio === 'multi'
-							? <Select
-								isSearchable={groupOptions.length > 5}
-								isClearable
-								primaryColor={'indigo'}
-								value={selectedGroup}
-								classNames={SelectClassNames}
-								onChange={(e: any) => {
-									if (e?.value === null) {
-										//Create new pressed
-										return setModalOpen(true);
-									}
-									setSelectedGroup(e);
-								}}
-								options={groupOptions.concat([{ label: '+ Create new group', value: null }])}
-							/>
-							: <Select
-								isSearchable={agentOptions.length > 5}
-								isClearable
-								primaryColor={'indigo'}
-								value={selectedAgent}
-								classNames={SelectClassNames}
-								onChange={(e: any) => {
-									if (e?.value === null) {
-										//Create new pressed
-										return setModalOpen(true);
-									}
-									setSelectedAgent(e);
-								}}
-								options={(sessionRadio === 'rag' ? ragAgentOptions : agentOptions).concat([{ label: '+ Create new agent', value: null }])}
-							/>}
-						<label className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<Select
+							isSearchable={crewOptions.length > 5}
+							isClearable
+							primaryColor={'indigo'}
+							value={selected}
+							classNames={inverted ? SelectClassNamesInverted : SelectClassNames}
+							onChange={(e: any) => {
+								if (e?.value === null) {
+									return setModalOpen(e.crew ? 'crew' : 'single');
+								}
+								setSelected(e);
+							}}
+							options={[{
+								label: 'Single Agent',
+								options: agentOptions,
+							}, {
+								label: 'Crew',
+								options: crewOptions,
+							}]}
+							formatOptionLabel={(data: any) => (
+				                <li
+				                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-${data.isSelected?'500 text-white':'100'} ${data.isSelected?'bg-blue-500':''}`}
+				                >
+				                    {data.label}
+				                    {data.rag && <span className='inline-flex items-center rounded-md bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
+										ʀᴀɢ
+									</span>}
+				                    {data.tools && <span className='inline-flex items-center rounded-md bg-yellow-100 mx-1 px-2 py-1 text-xs font-semibold text-yellow-700'>
+										ᴛᴏᴏʟs
+									</span>}
+				                </li>
+				            )}
+							formatGroupLabel={data => (
+								<div className='py-2 text-xs flex items-center justify-between'>
+									<span className='font-bold'>{data.label}</span>
+									<span className='bg-gray-200 h-5 h-5 p-1.5 flex items-center justify-center rounded-ful'>
+										{data.options.length-1}
+									</span>
+								</div>
+							)}
+						/>
+						<label className='transition-all bg-white dark:bg-slate-800 mt-2 flex overflow-hidden rounded shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-600 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<div className='block w-full min-h-20'>
 								<textarea
 									onKeyDown={e => handleShiftNewlines(e, promptValue, addSession, setPromptValue)}
@@ -172,7 +145,7 @@ export default function StartSessionChatbox({ agents = [], groups = [], setOpen,
 									name='prompt'
 									id='prompt'
 									className='noscrollbar block min-h-20 w-full h-full resize-none border-0 bg-transparent py-1.5 text-gray-900 focus:ring-0 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:text-white'
-									placeholder={'Describe a task...'}
+									placeholder={'Say something...'}
 									value={promptValue}
 									onChange={(e) => setPromptValue(e.target.value)}
 								/>

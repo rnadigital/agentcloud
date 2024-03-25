@@ -1,14 +1,15 @@
+import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
 import {
 	ChevronDownIcon,
 	HomeIcon,
 } from '@heroicons/react/20/solid';
 import CreateTeamModal from 'components/CreateTeamModal';
+import SubscriptionModal from 'components/SubscriptionModal';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
+import { SubscriptionPlan } from 'struct/billing';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
@@ -16,14 +17,15 @@ function classNames(...classes) {
 
 export default function OrgSelector({ orgs }) {
 
-	const [accountContext, refreshAccountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const teamName = orgs?.find(o => o.teams.find(t => t.id === resourceSlug))?.name;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function switchTeam(orgId, teamId) {
 		const splitLocation = location.pathname.split('/').filter(n => n);
@@ -38,13 +40,23 @@ export default function OrgSelector({ orgs }) {
 				redirect = `/${teamId}/${splitLocation[0]}s`;
 			}
 		}
-		await API.switchTeam({
-			orgId,
-			teamId,
-			_csrf: csrf,
-			redirect,
-		}, dispatch, setError, router);
-		refreshAccountContext();
+		const start = Date.now();
+		try {
+			setSwitchingContext(true);
+			await API.switchTeam({
+				orgId,
+				teamId,
+				_csrf: csrf,
+				redirect,
+			}, (res) => {
+				dispatch(res);
+			}, setError, router);
+			refreshAccountContext();
+		} finally {
+			setTimeout(() => {
+				setSwitchingContext(false);
+			}, 300+(Date.now()-start));
+		}
 	}
 
 	async function callback(newTeamId, newOrgId) {
@@ -77,42 +89,47 @@ export default function OrgSelector({ orgs }) {
 						
 					</div>*/}
 					<div className='py-1'>
-						{orgs.map((org, oi) => (<span key={`org_${oi}`}>
-							{oi > 0 && <hr className='border-t border-slate-700 w-full' />}
-							<Menu.Item disabled>
-								{({ active }) => (
-									<a
-										href='#'
-										className={classNames(
-											active ? 'bg-gray-100' : 'text-gray-100',
-											'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
-										)}
-									>
-										{org.name}
-									</a>
-								)}
-							</Menu.Item>
-							{org.teams.map((team, ti) => (
-								<Menu.Item key={`org_${oi}_team_${ti}`}>
+						{orgs
+							.filter(o => o?.teams?.length > 0)
+							.map((org, oi) => (<span key={`org_${oi}`}>
+								{oi > 0 && <hr className='border-t border-slate-700 w-full' />}
+								<Menu.Item disabled>
 									{({ active }) => (
 										<a
-											onClick={() => switchTeam(org.id, team.id)}
 											href='#'
 											className={classNames(
-												active ? '' : 'text-gray-100',
-												resourceSlug === team.id ? 'bg-indigo-900': '',
-												'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
+												active ? 'bg-gray-100' : 'text-gray-100',
+												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
 											)}
 										>
-											{team.name}
+											{org.name}
 										</a>
 									)}
 								</Menu.Item>
-							))}
-						</span>))}
+								{org.teams.map((team, ti) => (
+									<Menu.Item key={`org_${oi}_team_${ti}`}>
+										{({ active }) => (
+											<a
+												onClick={() => switchTeam(org.id, team.id)}
+												href='#'
+												className={classNames(
+													active ? '' : 'text-gray-100',
+													resourceSlug === team.id ? 'bg-indigo-900': '',
+													'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
+												)}
+											>
+												{team.name}
+											</a>
+										)}
+									</Menu.Item>
+								))}
+							</span>))}
 						<hr className='border-t border-2 border-slate-700 w-full' />
 						<a
-							onClick={() => setModalOpen(true)}
+							onClick={() => {
+								const planAllowed = [SubscriptionPlan.Free, SubscriptionPlan.Pro].includes(stripePlan);
+								setModalOpen(!planAllowed ? 'subscribe' : 'team');
+							}}
 							href='#'
 							className='text-gray-100 group flex items-center px-3 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
 						>
@@ -122,6 +139,7 @@ export default function OrgSelector({ orgs }) {
 				</Menu.Items>
 			</Transition>
 		</Menu>
-		<CreateTeamModal open={modalOpen} setOpen={setModalOpen} callback={callback} />
+		<SubscriptionModal open={modalOpen === 'subscribe'} setOpen={setModalOpen} title='Upgrade Required' text='To create additional teams, upgrade to the teams plan.' buttonText='Upgrade' />
+		<CreateTeamModal open={modalOpen === 'team'} setOpen={setModalOpen} callback={callback} />
 	</>);
 }

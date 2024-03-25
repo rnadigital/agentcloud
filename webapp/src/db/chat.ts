@@ -4,7 +4,6 @@ import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
-import { SessionType } from 'struct/session';
 
 export type ChatChunk = {
 	ts: number;
@@ -17,6 +16,8 @@ export type ChatCodeBlock = {
 	codeBlock: string;
 }
 
+export type DisplayType = 'bubble' | 'inline';
+
 export type ChatMessage = {
 	_id?: ObjectId;
 	orgId: ObjectId;
@@ -24,11 +25,10 @@ export type ChatMessage = {
 	sessionId: ObjectId;
 	chunkId?: string;
 	message: any;
-	displayMessage: string;
 	ts: number;
-	type: SessionType,
 	authorId: ObjectId;
 	isFeedback: boolean;
+	displayType: DisplayType;
 	authorName: string;
 	tokens?: number;
 	chunks?: ChatChunk[];
@@ -65,27 +65,24 @@ export function unsafeGetTeamJsonMessage(sessionId: db.IdOrStr): Promise<ChatMes
 	return ChatCollection().find({
 		sessionId: toObjectId(sessionId),
 		'codeBlocks.language': 'json',
-		type: SessionType.TEAM,
 	}).sort({
 		_id: -1,
 	}).limit(1).toArray().then(res => res && res.length > 0 ? res[0] : null);
 }
 
-export async function updateMessageWithChunkById(sessionId: db.IdOrStr, chunkId: string, chunk: ChatChunk) {
+// Revised function that handles both upserting and updating chat messages
+export async function upsertOrUpdateChatMessage(sessionId: db.IdOrStr, chatMessage: Partial<ChatMessage>, chunk: ChatChunk) {
 	return ChatCollection().updateOne({
 		sessionId: toObjectId(sessionId),
-		chunkId,
-		completed: {
-			$ne: true,
-		},
+		chunkId: chatMessage.chunkId,
+		completed: { $ne: true } //this may be a mistake
 	}, {
-		$push: {
-			chunks: chunk,
-		},
-		$inc: {
-			tokens: chunk.tokens || 0,
-		}
-	});
+		$setOnInsert: chatMessage,
+		...(chunk ? {
+			$push: { chunks: chunk }, // Push new chunk if provided
+			$inc: { tokens: chunk.tokens || 0 }, // Increment token count
+		} : {}),
+	}, { upsert: true });
 }
 
 export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string, codeBlocks: ChatCodeBlock, tokens: number) {
@@ -95,8 +92,8 @@ export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: str
 		},
 		$set: {
 			'message.message.text': text,
-			codeBlocks,
 			completed: true,
+			codeBlocks,
 		},
 		$inc: {
 			tokens: tokens || 0,

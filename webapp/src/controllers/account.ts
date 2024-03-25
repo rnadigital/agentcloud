@@ -1,18 +1,20 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setPlanDebug, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
-import { dynamicResponse } from '../util';
 
 export async function accountData(req, res, _next) {
+	//TODO: calculate and send the base64 of calcuated permissions for the resourceSlug here:
 	return {
+		team: res.locals.matchingTeam,
 		csrf: req.csrfToken(),
 	};
 };
@@ -124,7 +126,7 @@ export async function requestChangePassword(req, res) {
 					subject: 'Password reset verification',
 					body: `Somebody entered your email a password reset for agentcloud.
 
-If this was you, click the link to reset your password: ${process.env.URL_APP}/changepassword?token=${verificationToken}
+If this was you, click the link to reset your password: "${process.env.URL_APP}/changepassword?token=${verificationToken}"
 
 If you didn't request a password reset, you can safely ignore this email.`,
 				});
@@ -138,18 +140,18 @@ If you didn't request a password reset, you can safely ignore this email.`,
  * change password with token from email
  */
 export async function changePassword(req, res) {
-	if (!req.body || !req.body.token || typeof req.body.token !== 'string') {
+	const { password, token } = req.body;
+	if (!token || typeof token !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
-	const password = req.body.password;
 	if (!password || typeof password !== 'string' || password.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.CHANGE_PASSWORD);
+	const deletedVerification = await getAndDeleteVerification(token, VerificationTypes.CHANGE_PASSWORD);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid password reset token' });
 	}
-	const newPasswordHash = await bcrypt.hash(req.body.password, 12);
+	const newPasswordHash = await bcrypt.hash(password, 12);
 	await changeAccountPassword(deletedVerification.accountId, newPasswordHash);
 	return dynamicResponse(req, res, 302, { redirect: '/login?changepassword=true' });
 }
@@ -221,18 +223,29 @@ async function dockerLogsData(containerId) {
 
 export async function dockerLogsJson(req, res, next) {
 
-	const containersResponse = await fetch('http://localhost:2375/containers/json');
-	if (!containersResponse.ok) {
-		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
-	}
-	const containers = await containersResponse.json();
+	return res.json({});
+// 	const containersResponse = await fetch('http://localhost:2375/containers/json');
+// 	if (!containersResponse.ok) {
+// 		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
+// 	}
+// 	const containers = await containersResponse.json();
+// 
+// 	// Fetch logs from all containers
+// 	const logsPromises = containers.map(container => dockerLogsData(container.Id));
+// 	const logsArrays = await Promise.all(logsPromises);
+// 
+// 	// Flatten, sort by timestamp, and then join back into a single string
+// 	const sortedLogs = logsArrays.flat().sort().join('\n');
+// 	return res.json({ logs: sortedLogs });
 
-	// Fetch logs from all containers
-	const logsPromises = containers.map(container => dockerLogsData(container.Id));
-	const logsArrays = await Promise.all(logsPromises);
+}
 
-	// Flatten, sort by timestamp, and then join back into a single string
-	const sortedLogs = logsArrays.flat().sort().join('\n');
-	return res.json({ logs: sortedLogs });
+export async function setPlanDebugApi(req, res, next) {
+
+	const { plan } = req.body;
+
+	setPlanDebug(res.locals.account._id, plan);
+
+	return res.json({});
 
 }

@@ -2,8 +2,6 @@
 
 import { ObjectId } from 'mongodb';
 
-export type HumanInputModeType = 'ALWAYS' | 'NEVER' | 'TERMINAL';
-
 export type CodeExecutionConfigType = {
 	lastNMessages: number;
 	workDirectory: string;
@@ -14,19 +12,15 @@ export type Agent = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
 	name: string;
-	type: AgentType;
-	codeExecutionConfig?: CodeExecutionConfigType;
-	systemMessage: string;
-	humanInputMode: HumanInputModeType;
+	role: string;
+	goal: string;
+	backstory: string;
 	modelId: ObjectId;
+	functionModelId: ObjectId;
+	maxIter: number;
+	maxRPM: number;
+	verbose: boolean;
+	allowDelegation: boolean;
 	toolIds?: ObjectId[];
-	datasourceIds?: ObjectId[];
-	model: string;
+	// stepCallback: Function;
 };
-
-export enum AgentType {
-	USER_PROXY_AGENT = 'UserProxyAgent',
-	ASSISTANT_AGENT = 'AssistantAgent',
-	EXECUTOR_AGENT = 'ExecutorAgent',
-	RETRIEVER_ASSISTANT_AGENT = 'RetrieveAssistantAgent'
-}

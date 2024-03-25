@@ -93,7 +93,7 @@ export default function Verify() {
 					</div>
 
 					<p className='mt-10 text-center text-sm text-gray-500'>
-						<Link href='/register' className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'>
+						<Link href='/login' className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'>
               				Back to Login
 						</Link>
 					</p>

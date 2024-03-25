@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 
-use crate::llm::models::FastEmbedModels;
 use crate::qdrant::models::{CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -118,34 +117,20 @@ impl Qdrant {
                         Some(name) => {
                             // if it's a value check that it's a known fast embed model variant. If it is treat it as a named vector. Otherwise go down the path of a normal upload.
                             let model_name = name.clone();
-                            match FastEmbedModels::from(name) {
-                                // Case where the model name is not None however it is not a known Fast embed model variant
-                                FastEmbedModels::UNKNOWN => {
-                                    config = Some(VectorsConfig {
-                                        config: Some(Config::Params(VectorParams {
+                            // case where we model name is None in which case use standard point upload method.
+                            config = Some(VectorsConfig {
+                                config: Some(Config::ParamsMap(VectorParamsMap {
+                                    map: [(
+                                        String::from(model_name.as_str()),
+                                        VectorParams {
                                             size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection
                                             ..Default::default()
-                                        })),
-                                    });
-                                }
-                                _ => {
-                                    //case where the model name is Not None AND it is a known Fast embed model variant
-                                    config = Some(VectorsConfig {
-                                        config: Some(Config::ParamsMap(VectorParamsMap {
-                                            map: [(
-                                                String::from(model_name.as_str()),
-                                                VectorParams {
-                                                    size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
-                                                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
-                                                    ..Default::default()
-                                                },
-                                            )]
-                                                .into(),
-                                        })),
-                                    })
-                                }
-                            }
+                                        },
+                                    )]
+                                        .into(),
+                                })),
+                            })
                         }
                         None => {
                             // case where we model name is None in which case use standard point upload method.
@@ -182,8 +167,8 @@ impl Qdrant {
                         Err(e) => {
                             println!("Err: {}", e);
                             Err(anyhow!(
-                                "An error occurred while trying to create collection: {}",
-                                e
+                            "An error occurred while trying to create collection: {}",
+                            e
                             ))
                         }
                     }
@@ -224,18 +209,64 @@ impl Qdrant {
         }
     }
 
-    pub async fn upsert_data_point_non_blocking(&self, point: PointStruct) -> Result<bool> {
+    pub async fn upsert_data_point_non_blocking(
+        &self,
+        point: PointStruct,
+        vector_length: Option<u64>,
+        vector_name: Option<String>,
+    ) -> Result<bool> {
         println!(
             "Uploading data point to collection: {}",
             &self.collection_name
         );
         let qdrant_conn = &self.client.read().await;
-        let upsert_results = qdrant_conn
-            .upsert_points(&self.collection_name, None, vec![point], None)
-            .await?;
-        match upsert_results.result.unwrap().status {
-            2 => Ok(true),
-            _ => Ok(false),
+        match &self
+            .check_collection_exists(
+                CreateDisposition::CreateIfNeeded,
+                vector_length,
+                vector_name,
+            )
+            .await
+        {
+            Ok(result) => match result {
+                true => {
+                    match qdrant_conn
+                        .upsert_points(
+                            &self.collection_name,
+                            None,
+                            vec![point],
+                            None,
+                        )
+                        .await
+                    {
+                        Ok(res) => match res.result {
+                            Some(stat) => match stat.status {
+                                2 => {
+                                    println!("upload success");
+                                    Ok(true)
+                                }
+                                _ => {
+                                    println!("Upload failed");
+                                    Ok(false)
+                                }
+                            },
+                            None => Err(anyhow!("Results returned None")),
+                        },
+                        Err(e) => Err(anyhow!("There was an error upserting to qdrant: {}", e)),
+                    }
+                }
+                false => {
+                    println!("Collection: {} creation failed!", &self.collection_name);
+                    Err(anyhow!("Collection does not exist"))
+                }
+            },
+            Err(e) => {
+                println!("Err: {}", e);
+                Err(anyhow!(
+                    "An error occurred while trying to create collection: {}",
+                    e
+                ))
+            }
         }
     }
 

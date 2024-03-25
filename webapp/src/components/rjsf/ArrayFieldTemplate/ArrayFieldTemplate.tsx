@@ -49,8 +49,12 @@ export default function ArrayFieldTemplate<
 		ButtonTemplates: { AddButton },
 	} = registry.templates;
 
+	const anySchema = schema as any;
+	const topArray = anySchema?.type === 'array' && anySchema?.items?.type === 'object'; //may not be 100%
+
 	return (
-		<div>
+		<div className={`${topArray ? 'pe-32 border p-4 shadow-sm rounded' : ''}`}>
+			
 			<div className='m-0 flex p-0'>
 				<div className='m-0 w-full p-0'>
 					<ArrayFieldTitleTemplate
@@ -80,9 +84,9 @@ export default function ArrayFieldTemplate<
               )}
 						{canAdd && (
 							<div className='mt-2 flex'>
-								<div className='ms-auto mt-2'>
+								<div className={`ms-auto mt-2 ${topArray ? '-me-[110px]' : '-me-[46px]'}`}>
 									<AddButton
-										className='array-item-add'
+										className={`array-item-add ${topArray ? 'bg-indigo-700' : ''}`}
 										onClick={onAddClick}
 										disabled={disabled || readonly}
 										uiSchema={uiSchema}

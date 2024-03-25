@@ -42,7 +42,7 @@ export default function AddDatasource(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
 		</div>
 
-		<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasourceFormData} />
+		<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={2} />
 
 	</>);
 

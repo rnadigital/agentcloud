@@ -1,4 +1,5 @@
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -37,9 +38,7 @@ export default function Agents(props) {
 			<title>{`Agents - ${teamName}`}</title>
 		</Head>
 
-		<div className='border-b pb-2 my-2 mb-6 dark:border-slate-600'>
-			<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Agents</h3>
-		</div>
+		<PageTitleWithNewButton list={agents} title='Agents' buttonText='New Agent' href='/agent/add' />
 
 		{agents.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/agent/add`}
@@ -61,16 +60,6 @@ export default function Agents(props) {
 		/>}
 		
 		<AgentList agents={agents} fetchAgents={fetchAgents} />
-
-		{agents.length > 0 && <Link href={`/${resourceSlug}/agent/add`}>
-			<button
-				type='button'
-				className='mt-6 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-			>
-				<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />
-				New Agent
-			</button>
-		</Link>}
 
 	</>);
 }

@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import {
+	ExclamationTriangleIcon,
 	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
@@ -15,6 +16,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer,useState } from 'react';
 import { toast } from 'react-toastify';
+import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import submittingReducer from 'utils/submittingreducer';
 // @ts-ignore
@@ -42,7 +44,8 @@ export default function Datasource(props) {
 	const [units, setUnits] = useState(0);
 	const [cronExpression, setCronExpression] = useState('');
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-
+	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
+	const numStreams = datasource?.connectionSettings?.syncCatalog?.streams?.length || 0;
 	async function fetchDatasource() {
 		await API.getDatasource({
 			resourceSlug,
@@ -224,24 +227,38 @@ export default function Datasource(props) {
 				</button>
 			</form>}
 
-			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <>
-				<StreamsList
-					streams={datasource.connectionSettings.syncCatalog.streams}
-					existingStreams={datasource.connectionSettings.syncCatalog.streams}
-					readonly={true}
-				/>
-				<span>
-					<button
-						disabled={submitting['fetchSchema']}
-						onClick={() => fetchSchema()}
-						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						{submitting['fetchSchema'] && <ButtonSpinner />}
-						{submitting['fetchSchema'] ? 'Fetching Streams...' : 'Edit Streams'}
-					</button>
-				</span>
+			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <StreamsList
+				streams={datasource.connectionSettings.syncCatalog.streams}
+				existingStreams={datasource.connectionSettings.syncCatalog.streams}
+				readonly={true}
+			/>}
+			{!discoveredSchema && isDraft && numStreams === 0 && <>
+				<div className='rounded-md bg-yellow-50 p-4 mt-4 mb-2'>
+					<div className='flex'>
+						<div className='flex-shrink-0'>
+							<ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' aria-hidden='true' />
+						</div>
+						<div className='ml-3'>
+							<h3 className='text-sm font-bold text-yellow-800'>Draft View</h3>
+							<div className='mt-2 text-sm text-yellow-700'>
+								<p>
+									This data connection is a draft and needs more configuration before it can be used.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
 			</>}
-
+			{!discoveredSchema && <span>
+				<button
+					disabled={submitting['fetchSchema']}
+					onClick={() => fetchSchema()}
+					className={'rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 my-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+				>
+					{submitting['fetchSchema'] && <ButtonSpinner />}
+					{submitting['fetchSchema'] ? 'Fetching Streams...' : isDraft && numStreams === 0 ? 'Finish Draft' : 'Edit Streams'}
+				</button>
+			</span>}
 		</>}
 
 		{/*TODO: component that takes jobList*/}
@@ -278,8 +295,8 @@ export default function Datasource(props) {
 			</div>
 		</>}
 
-		{tab === 2 && datasource.sourceType === 'file' && <div className='space-y-3'>
-			{editingSchedule === false && <div className='my-2'>
+		{tab === 2 && datasource.sourceType !== 'file' && <div className='space-y-3'>
+			{/*editingSchedule === false && <div className='my-2'>
 				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
 				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
@@ -289,8 +306,8 @@ export default function Datasource(props) {
 					<p>Cron Express: <strong>{datasource.connectionSettings.scheduleData.cron.cronExpression}</strong></p>
 					<p>Timezone: <strong>{datasource.connectionSettings.scheduleData.cron.cronTimezone}</strong></p>
 				</>}
-			</div>}
-			{editingSchedule && <DatasourceScheduleForm
+			</div>*/}
+			<DatasourceScheduleForm
 				scheduleType={scheduleType}
 				setScheduleType={setScheduleType}
 				timeUnit={timeUnit}
@@ -301,7 +318,7 @@ export default function Datasource(props) {
 				setCronExpression={setCronExpression}
 				cronTimezone={cronTimezone}
 				setCronTimezone={setCronTimezone}
-			/>}
+			/>
 			<div className='flex space-x-2'>
 				<button
 					onClick={async (e) => {

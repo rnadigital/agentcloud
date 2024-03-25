@@ -27,6 +27,9 @@
       "struct/*": [
         "lib/struct/*"
       ],
+      "@mw/*": [
+        "lib/middleware/*"
+      ],
       "email/*": [
         "lib/email/*"
       ],
@@ -51,6 +54,12 @@
       "secret/*": [
         "lib/secret/*"
       ],
+      "@permission": [
+        "lib/permissions/Permission.ts"
+      ],
+      "permissions/*": [
+        "lib/permissions/*"
+      ],
       "airbyte/*": [
         "lib/airbyte/*"
       ],
@@ -59,6 +68,9 @@
       ],
       "lib/*": [
         "lib/*"
+      ],
+      "@dr": [
+        "lib/misc/dynamicresponse.ts"
       ],
       "components/*": [
         "components/*"

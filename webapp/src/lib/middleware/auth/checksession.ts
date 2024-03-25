@@ -1,6 +1,6 @@
 'use strict';
 
-import { dynamicResponse } from '../../../util';
+import { dynamicResponse } from '@dr';
 
 export default function checkSession(req, res, next, socket?) {
 	if (!res.locals.account && !res.locals.isAgentBackend) {

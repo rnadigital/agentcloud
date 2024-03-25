@@ -18,7 +18,7 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 	return <form action='/forms/session/add' className='relative' onSubmit={e => onSubmit(e, () => setPromptValue(''))}>
 		<input type='hidden' name='_csrf' value={csrf} />
 		<input type='hidden' name='type' value='generate_team' />
-		<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'>
+		<label className='flex overflow-hidden rounded shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'>
 			<div className='block w-full min-h-20'>
 				<textarea
 					onKeyDown={e => handleShiftNewlines(e, promptValue, onSubmit, setPromptValue, scrollToBottom, chatBusyState)}

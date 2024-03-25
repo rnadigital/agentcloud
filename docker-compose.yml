@@ -1,5 +1,5 @@
 version: '3.7'
-name: airbyte
+name: agentcloud
 services:
 
   docker_rabbitmq:
@@ -104,6 +104,7 @@ services:
       - SOCKET_URL=http://webapp_next:3000/
       - DB_URL=mongodb://docker_mongo:27017/test
       - REDIS_HOST=docker_redis
+      - QDRANT_HOST=qdrant
       - MONGO_DB_NAME=test
       - MAX_RETRIES=10
       - AGENT_BACKEND_SOCKET_TOKEN=changeme

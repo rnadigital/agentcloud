@@ -13,6 +13,9 @@
       "struct/*": [
         "lib/struct/*"
       ],
+      "@mw/*": [
+        "lib/middleware/*"
+      ],
       "email/*": [
         "lib/email/*"
       ],
@@ -40,6 +43,12 @@
       "airbyte/*": [
         "lib/airbyte/*"
       ],
+      "@permission": [
+        "lib/permissions/Permission.ts"
+      ],
+      "permissions/*": [
+        "lib/permissions/*"
+      ],
       "styles/*": [
         "lib/styles/*"
       ],
@@ -49,6 +58,9 @@
       "lib/*": [
         "lib/*"
       ],
+      "@dr": [
+        "lib/misc/dynamicresponse.ts"
+      ],
       "components/*": [
         "components/*"
       ],
@@ -57,7 +69,10 @@
       ]
     }
   },
-  "include": ["src/server.ts", "src/migrations/*.ts"],
+  "include": [
+    "src/server.ts",
+    "src/migrations/*.ts"
+  ],
   "ts-node": {
     "esm": false,
     "experimentalSpecifierResolution": "node",

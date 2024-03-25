@@ -1,9 +1,8 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getNotificationsByTeam, markNotificationsSeen } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
-
-import { dynamicResponse } from '../util';
 
 export async function notificationsData(req, res, _next) {
 	const notifications = await getNotificationsByTeam(req.params.resourceSlug);

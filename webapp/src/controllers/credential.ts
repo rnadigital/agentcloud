@@ -1,11 +1,11 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import toObjectId from 'misc/toobjectid';
 import { CredentialType, CredentialTypes } from 'struct/credential';
 
 import { removeAgentsModel } from '../db/agent';
 import { addCredential, Credential, deleteCredentialById, getCredentialById, getCredentialsByTeam } from '../db/credential';
-import { dynamicResponse } from '../util';
 
 export async function credentialsData(req, res, _next) {
 	const credentials = await getCredentialsByTeam(req.params.resourceSlug);
@@ -80,6 +80,13 @@ export async function addCredentialApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const credentials: any = {
+		key,
+	};
+	if (endpointURL) {
+		credentials['endpointURL'] = endpointURL;
+	}
+
 	const addedCredential = await addCredential({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -87,9 +94,9 @@ export async function addCredentialApi(req, res, next) {
 	    createdDate: new Date(),
 	    type: type as CredentialType,
 	    credentials: {
-			key,
-		    endpointURL,
-	    },
+    		key,
+    		endpointURL,
+    	},
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedCredential.insertedId, redirect: `/${req.params.resourceSlug}/credentials` });

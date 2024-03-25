@@ -1,5 +1,31 @@
 'use strict';
 
+import { ObjectId } from 'mongodb';
+
+export type Tool = {
+	_id?: ObjectId;
+	orgId?: ObjectId;
+	teamId?: ObjectId;
+    name: string;
+    description: string;
+ 	type: ToolType;
+ 	schema?: string;
+ 	datasourceId?: ObjectId;
+	data?: {
+		builtin?: boolean;
+		name: string;
+		description?: string;
+		parameters?: {
+			//type: string;
+			properties: Record<string,FunctionProperty>;
+			required?: string[];
+		};
+		code?: string;
+		openAPIMatchKey?: string;
+	},
+	credentialId?: ObjectId; //links to a credential 
+};
+
 export type FunctionProperty = {
 	type: string; // should probably be string | number | whatever
 	description: string;
@@ -7,7 +33,8 @@ export type FunctionProperty = {
 
 export enum ToolType {
 	API_TOOL = 'api',
-	HOSTED_FUNCTION_TOOL = 'function',
+	FUNCTION_TOOL = 'function',
+	RAG_TOOL = 'rag',
 }
 
 export const ToolTypes = Object.values(ToolType);

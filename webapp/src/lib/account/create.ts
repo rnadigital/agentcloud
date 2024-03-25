@@ -1,5 +1,6 @@
 'use strict';
 
+import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import { addAccount,OAuthRecordType } from 'db/account';
@@ -9,7 +10,9 @@ import { addVerification,VerificationTypes } from 'db/verification';
 import * as ses from 'lib/email/ses';
 import SecretKeys from 'lib/secret/secretkeys';
 import { getSecret } from 'lib/secret/secretmanager';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
+import Roles from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
@@ -19,27 +22,26 @@ export default async function createAccount(email: string, name: string, passwor
 	// Create mongo id or new account
 	const newAccountId = new ObjectId();
 
-	// Create airbyte workspace for user (NOTE: not used, we use 1 shared workspace and this might be removed in future)
-	let airbyteWorkspaceId = null;
-	if (process.env.AIRBYTE_USERNAME) {
-		const workspaceApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-		const workspace = await workspaceApi.createWorkspace(null, {
-			name: newAccountId.toString(), // account _id stringified as workspace name
-		}).then(res => res.data);
-		airbyteWorkspaceId = workspace.workspaceId;
-	}
-
 	// Create default org and team for account
 	const addedOrg = await addOrg({
+		ownerId: newAccountId,
 		name: `${name}'s Org`,
 		teamIds: [],
 		members: [newAccountId],
+		dateCreated: new Date(),
+		permissions: {
+			[newAccountId.toString()]: new Binary(new Permission(Roles.ORG_ADMIN.base64).array),
+		},
 	});
 	const addedTeam = await addTeam({
+		ownerId: newAccountId,
 		name: `${name}'s Team`,
 		orgId: addedOrg.insertedId,
 		members: [newAccountId],
-		airbyteWorkspaceId,
+		dateCreated: new Date(),
+		permissions: {
+			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array),
+		},
 	});
 	const orgId = addedOrg.insertedId;
 	const teamId = addedTeam.insertedId;
@@ -58,16 +60,18 @@ export default async function createAccount(email: string, name: string, passwor
 			orgs: [{
 				id: orgId,
 				name: `${name}'s Org`,
+				ownerId: newAccountId,
 				teams: [{
 					id: teamId,
 					name: `${name}'s Team`,
-					airbyteWorkspaceId,
+					ownerId: newAccountId,
 				}]
 			}],
 			currentOrg: orgId,
 			currentTeam: teamId,
 			emailVerified,
 			oauth,
+			permissions: new Binary(Roles.REGISTERED_USER.array),
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

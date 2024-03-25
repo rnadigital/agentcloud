@@ -1,120 +1,221 @@
-from dataclasses import field
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Dict, List, Optional, Union, Callable, Annotated
 from random import randint
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, Field, ConfigDict, AliasChoices
 from enum import Enum
-from typing import Annotated
 
 # Represents an ObjectId field in the database.
 # It will be represented as a `str` on the model so that it can be serialized to JSON.
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+# Enums
+class Process(str, Enum):
+    Sequential = "sequential"
+    Hierarchical = "hierarchical"
+    Consensual = "consensual"
+
 
 class ToolType(str, Enum):
     API_TOOL = "api"
-    HOSTED_FUNCTION_TOOL = "function"
+    HOSTED_FUNCTION_TOOL = "function",
+    RAG_TOOL = "rag",
 
 
+class Platforms(str, Enum):
+    ChatOpenAI = "open_ai"
+    AzureChatOpenAI = "azure"
+    FastEmbed = "fastembed"
+
+
+class ModelType(str, Enum):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    GPT4 = "gpt-4"
+    GPT4TURBO = "gpt-4-1106-preview"
+    GPT3TURBO = "gpt-3.5-turbo"
+
+
+class FastEmbedModelsStandardFormat(str, Enum):
+    FAST_BGE_SMALL_EN = 'fast-bge-small-en'
+    FAST_BGE_SMALL_EN_V15 = 'fast-bge-small-en-v1.5'
+    FAST_BGE_BASE_EN = 'fast-bge-base-en'
+    FAST_BGE_BASE_EN_V15 = 'fast-bge-base-en-v1.5'
+    FAST_ALL_MINILM_L6_V2 = 'fast-all-MiniLM-L6-v2'
+    FAST_MULTILINGUAL_E5_LARGE = 'fast-multilingual-e5-large'
+
+class FastEmbedModelsDocFormat(str, Enum):
+    FAST_BGE_SMALL_EN = "BAAI/bge-small-en"
+    FAST_BGE_SMALL_EN_V15 = "BAAI/bge-small-en-v1.5"
+    FAST_BGE_BASE_EN = "BAAI/bge-base-en"
+    FAST_BGE_BASE_EN_V15 = "BAAI/bge-base-en-v1.5"
+    FAST_ALL_MINILM_L6_V2 = "sentence-transformers/all-MiniLM-L6-v2"
+    FAST_MULTILINGUAL_E5_LARGE = "intfloat/multilingual-e5-large"
+
+# Models
 class FunctionProperty(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     type: Union[str, int, float, bool, None]
     description: str
 
 
 class ToolParameters(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     type: str
     properties: Dict[str, FunctionProperty]
     required: List[str]
 
 
 class ToolData(BaseModel):
-    description: str
-    parameters: ToolParameters
     name: str
-    code: str
+    code: Optional[str] = None
+    description: Optional[str] = None
+    parameters: Optional[ToolParameters] = None
     builtin: bool
 
-class DatasourceData(BaseModel):
-    id: str
-    model: str
+
+class Tool(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    name: str
+    description: Optional[str] = None
+    type: Optional[str] = "function"
+    datasourceId: Optional[PyObjectId] = None
+    data: Optional[ToolData] = None
 
 
-class Platforms(str, Enum):
-    OpenAI = "open_ai"
-    Azure = "azure"
+class ApiCredentials(BaseModel):
+    api_key: Optional[str] = Field(alias="key")
+    base_url: Optional[str] = Field(alias="endpointURL")
 
 
-class Models(str, Enum):
-    GPT4 = "gpt-4"
-    GPT4TURBO = "gpt-4-1106-preview"
-    GPT3TURBO = "gpt-3.5-turbo"
+class Credentials(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    type: Optional[Platforms] = Field(default=Platforms.ChatOpenAI)
+    credentials: Optional[ApiCredentials] = None
 
 
-class ConfigList(BaseModel):
-    """Data model for OpenAi Model Config"""
-
-    api_key: Optional[str] = ""
-    api_type: Optional[Platforms] = Platforms.OpenAI
-    model: Optional[Models] = Models.GPT4
-    timeout: Optional[int] = 300
-    max_retries: Optional[int] = 10
-
-
-class LLMConfig(BaseModel):
-    """Data model for Autogen  LLMConfig"""
-
+class Model(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    name: str
+    model_name: Optional[str] = Field(default=ModelType.GPT4, alias="model")
+    credentialId: Optional[PyObjectId] = None
+    credentials: Optional[PyObjectId] = None
+    embeddingLength: Optional[int] = 384
     seed: Optional[int] = randint(1, 100)
-    config_list: List[ConfigList] = field(default_factory=list)
     temperature: Optional[float] = 0
     timeout: Optional[int] = 300
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
-    functions: Optional[List[ToolData]] = None
 
 
-class AgentConfig(BaseModel):
+class ChatModel(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    api_key: Optional[str] = None
+    model_name: Optional[ModelType] = Field(default=ModelType.GPT4, alias="model")
+    seed: Optional[int] = randint(1, 100)
+    temperature: Optional[float] = 0
+    timeout: Optional[int] = 300
+    max_retries: Optional[int] = 10
+    stream: Optional[bool] = True
+    base_url: Optional[str] = None
+    max_tokens: Optional[int] = None
+
+
+class Data(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    task: str = "qa"
+    collection_name: str
+    chunk_token_size: int = 2000
+    embedding_model: str
+    model: str
+    client: Optional[object] = None
+
+
+class Task(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    description: str
+    expected_output: Optional[str] = Field(validation_alias=AliasChoices('expectedOutput', 'expected_output'))
+    expectedOutput: Optional[str] = None
+    agentId: PyObjectId = None
+    toolIds: Optional[List[PyObjectId]] = None
+    tools: Optional[Tool] = None
+    asyncExecution: Optional[bool] = False
+    context: Optional[str] = None
+    outputJSON: Optional[BaseModel] = None
+    outputPydantic: Optional[BaseModel] = None
+    outputFile: Optional[str] = None
+    callback: Optional[Callable] = None
+
+
+class Agent(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
     """Data model for Autogen Agent Config"""
-
     name: str
-    llm_config: LLMConfig
-    human_input_mode: Optional[str] = "NEVER"
-    system_message: Optional[str] = ""
-    max_consecutive_auto_reply: Optional[int] = 10
-    is_termination_msg: Union[Callable, str] = lambda x: x.get("content", "") and x.get(
-        "content", ""
-    ).rstrip().endswith("TERMINATE")
-    code_execution_config: Optional[Union[bool, str, Dict[str, Any]]] = {}
-    use_sockets: Optional[bool] = True
-    socket_client: Any = None
-    sid: str = None
-    datasource_data: Optional[List[DatasourceData]] = None
-    datasource_ids: Optional[List[str]] = None
-    retrieve_config: Optional[Dict[str, Any]] = None
-    debug_docs: Optional[bool] = False
+    role: str
+    goal: str
+    backstory: str
+    llm: Optional[Model] = ModelType.GPT4
+    toolIds: Optional[List[PyObjectId]] = None
+    taskIds: Optional[List[PyObjectId]] = None
+    modelId: PyObjectId
+    tools: Optional[List[Tool]] = None
+    tasks: Optional[List[Task]] = None
+    functionCallingLLM: Optional[Model] = ModelType.GPT4
+    maxIter: Optional[int] = 10
+    maxRPM: Optional[int] = 100
+    verbose: Optional[bool] = False
+    allowDelegation: Optional[bool] = True
+    step_callback: Optional[Callable] = None
 
 
-AgentConfigArgs = tuple([k for k in AgentConfig.model_fields.keys()])
+class Crew(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    tasks: Optional[List[PyObjectId]] = None
+    agents: Optional[List[PyObjectId]] = None
+    process: Optional[Process] = Process.Sequential
+    managerLLM: Optional[Model] = None
+    functionCallingLLM: Optional[Callable] = None
+    verbose: Optional[bool] = False
+    config: Optional[Dict] = {}
+    maxRPM: Optional[int] = None
+    language: Optional[str] = "en"
+    fullOutput: Optional[bool] = False
+    stepCallback: Optional[Callable] = None
+    shareCrew: Optional[bool] = False
+    modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)
 
-class AgentTypes(str, Enum):
-    AssistantAgent = "AssistantAgent"
-    UserProxyAgent = "UserProxyAgent"
-    RetrieverUserProxyAgent = "RetrieverUserProxyAgent"
-    RetrieverAssistantProxyAgent = "RetrieverAssistantProxyAgent"
-    TeachableAgent = "TeachableAgent"
 
-
-class AgentData(BaseModel):
-    data: AgentConfig
-    type: str
-    is_admin: Optional[bool] = False
+class Session(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
+    crewId: Crew
 
 
 class Datasource(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    model_config = ConfigDict(extra='ignore')
     orgId: Optional[PyObjectId] = Field(default=None)
     teamId: Optional[PyObjectId] = Field(default=None)
+    modelId: Optional[PyObjectId] = Field(default=None)
     name: str
-    sourceId: str
+    sourceId: PyObjectId
     sourceType: str
-    workspaceId: str
-    connectionId: str
-    destinationId: str
+    embeddingField : Optional[str] = Field(default="page_content")
+    workspaceId: PyObjectId
+    connectionId: PyObjectId
+    destinationId: PyObjectId
+
+class AppType(str, Enum):
+    CHAT = "chat"
+    PROCESS = "process"
+
+
+class App(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    appType: Optional[AppType] = Field(default=None)
+    crewId: Optional[PyObjectId] = Field(default=None)

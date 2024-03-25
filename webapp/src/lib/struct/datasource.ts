@@ -48,6 +48,8 @@ export type Datasource = {
 	destinationId: string;
 	workspaceId: string;
 	connectionId: string;
+	syncedCount?: number;
+	embeddedCount?: number;
 	connectionSettings?: DatasourceConnectionSettings;
 	createdDate: Date;
 	lastSyncedDate?: Date | null; //Note: null = never synced
@@ -55,6 +57,6 @@ export type Datasource = {
 	discoveredSchema?: any;
 	chunkStrategy?: DatasourceChunkStrategy;
 	chunkCharacter?: string | null;
-	embeddingField?: string | null;
+	embeddingField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 };

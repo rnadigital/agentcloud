@@ -1,9 +1,9 @@
-import { ChatBubbleLeftIcon, ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { FeedbackOption, SessionType } from 'struct/session';
+import { FeedbackOption } from 'struct/session';
 
 import { useChatContext } from '../../context/chat';
 
@@ -17,38 +17,14 @@ import { toast } from 'react-toastify';
 
 const COLLAPSE_AFTER_LINES = 10
 	, feedbackLabels = {
-		[SessionType.TEAM]: {
-			[FeedbackOption.EXIT]: 'Accept team',
-			[FeedbackOption.CONTINUE]: 'Auto reply',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
-		[SessionType.TASK]: {
-			// [FeedbackOption.EXIT]: 'Continue',
-			[FeedbackOption.CONTINUE]: 'Continue',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
-		[SessionType.RAG]: {
-			// [FeedbackOption.EXIT]: 'Continue',
-			[FeedbackOption.CONTINUE]: 'Continue',
-			[FeedbackOption.CANCEL]: 'End session',
-		},
+		// [FeedbackOption.EXIT]: 'Continue',
+		[FeedbackOption.CONTINUE]: 'Continue',
+		[FeedbackOption.CANCEL]: 'End session',
 	}
 	, feedbackMessages = {
-		[SessionType.TEAM]: {
-			[FeedbackOption.EXIT]: 'exit',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
-		[SessionType.TASK]: {
-			// [FeedbackOption.EXIT]: 'Looks good!',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
-		[SessionType.RAG]: {
-			// [FeedbackOption.EXIT]: 'exit',
-			[FeedbackOption.CONTINUE]: '',
-			[FeedbackOption.CANCEL]: 'TERMINATE',
-		},
+		// [FeedbackOption.EXIT]: 'Looks good!',
+		[FeedbackOption.CONTINUE]: '',
+		[FeedbackOption.CANCEL]: 'TERMINATE',
 	};
 
 export function CopyToClipboardButton({ dataToCopy }) {
@@ -166,7 +142,7 @@ export function Message({
 	incoming,
 	sendMessage,
 	chunking,
-	displayMessage,
+	displayType,
 	tokens,
 }: {
 		prevMessage?: any,
@@ -183,7 +159,7 @@ export function Message({
 		incoming?: boolean,
 		sendMessage?: Function,
 		chunking?: boolean,
-		displayMessage?: string,
+		displayType?: string,
 		tokens?: number,
 	}) {
 
@@ -208,12 +184,11 @@ export function Message({
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
-
-	if (displayMessage) {
+	if (displayType === 'inline') { //TODO: enum and handle "other" types not just like bubble
 		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
-				<ChatBubbleLeftIcon width={14} className='mx-1' /> {displayMessage}
+				{message}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>;
@@ -255,15 +230,15 @@ export function Message({
 		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800 ${isLastSeen && !isLastMessage ? 'border-b border-red-500' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
-				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[chatContext.type][fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
+				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
 					<button
 						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
 						onClick={(e) => {
 							e.preventDefault();
-							sendMessage(feedbackMessages[chatContext.type][fo], { displayMessage: feedbackLabels[chatContext.type][fo] });
+							sendMessage(feedbackMessages[fo], { message: feedbackLabels[fo]});
 						}}
 					>
-						{feedbackLabels[chatContext.type][fo]}
+						{feedbackLabels[fo]}
 					</button>
 				</div>)).filter(n => n)}
 			</div>

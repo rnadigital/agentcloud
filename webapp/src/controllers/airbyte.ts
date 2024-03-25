@@ -1,15 +1,15 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 import { addNotification } from 'db/notification';
 import { DatasourceStatus } from 'struct/datasource';
 
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus,setDatasourceSyncedCount } from '../db/datasource';
 import toObjectId from '../lib/misc/toobjectid';
 import { io } from '../socketio';
-import { dynamicResponse } from '../util';
 /**
  * GET /airbyte/schema
  * get the specification for an airbyte source
@@ -118,7 +118,16 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		if (datasourceId) {
 			const datasource = await getDatasourceByIdUnsafe(datasourceId);
 			if (datasource) {
-				// console.log(datasource)
+				//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
+				const jobId = match[7];
+				const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+				const jobBody = {
+					jobId,
+				};
+				const jobData = await jobsApi
+					.getJob(jobBody)
+					.then(res => res.data)
+					.catch(res => {});
 				await Promise.all([
 					addNotification({
 					    orgId: toObjectId(datasource.orgId.toString()),
@@ -135,11 +144,47 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					    seen: false,
 					}),
 					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
+					jobData ? setDatasourceSyncedCount(datasource.teamId, datasourceId, parseInt(jobData?.rowsSynced||0)) : void 0,
 				]);
-				io.to(datasource.teamId.toString()).emit('notification', datasourceId); //TODO: change to emit notification after inserting
 			}
 		}
+	}
+
+	return dynamicResponse(req, res, 200, { });
+
+}
+
+export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
+	console.log('handleSuccessfulEmbeddingWebhook body', req.body);
+
+	//TODO: validate some kind of webhook key
+
+	// TODO: body validation
+	const { datasourceId } = req.body;
+
+	const datasource = await getDatasourceByIdUnsafe(datasourceId);
+	if (datasource) {
+		setTimeout(async () => {
+			await Promise.all([
+				addNotification({
+				    orgId: toObjectId(datasource.orgId.toString()),
+				    teamId: toObjectId(datasource.teamId.toString()),
+				    target: {
+						id: datasourceId,
+						collection: 'notifications',
+						property: '_id',
+						objectId: true,
+				    },
+				    title: 'Embedding Successful',
+				    description: `Embedding completed for datasource "${datasource.name}".`,
+				    date: new Date(),
+				    seen: false,
+				}),
+				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+			]);
+			io.to(datasource.teamId.toString()).emit('notification', datasourceId);
+		}, 5000); //TODO: remove hardcoded timeout and fix fo real
 	}
 
 	return dynamicResponse(req, res, 200, { });

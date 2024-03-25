@@ -1,31 +1,28 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
-import { AgentType } from 'struct/agent';
 
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
+import { removeAgentFromCrews } from '../db/crew';
 import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
-import { removeAgentFromGroups } from '../db/group';
 import { getToolsById, getToolsByTeam } from '../db/tool';
 import toObjectId from '../lib/misc/toobjectid';
 import { ModelList } from '../lib/struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/validationUtils';
-import { dynamicResponse } from '../util';
 
 export async function agentsData(req, res, _next) {
-	const [agents, models, tools, datasources] = await Promise.all([
+	const [agents, models, tools] = await Promise.all([
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
 		models,
 		tools,
-		datasources,
 	};
 }
 
@@ -59,18 +56,16 @@ export async function agentAddPage(app, req, res, next) {
 }
 
 export async function agentData(req, res, _next) {
-	const [agent, models, tools, datasources] = await Promise.all([
+	const [agent, models, tools] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
 		getModelsByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
 		models,
 		tools,
-		datasources,
 	};
 }
 
@@ -104,37 +99,36 @@ export async function agentJson(app, req, res, next) {
  */
 export async function addAgentApi(req, res, next) {
 
-	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
+	const {
+		toolIds,
+		name,
+	    role,
+	    goal,
+	    backstory,
+		modelId,
+		functionModelId,
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
+	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
+		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		{ field: 'type', validation: { notEmpty: true }},
-		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
-		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
-	if (validationError) {	
+	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
-	}
-	
-	const agents = await getAgentsByTeam(req.params.resourceSlug);
-	if (agents.some(agent => agent.name === name && agent._id.toString() !== req.params.agentId)) {
-		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
 	}
 		
     // Check for foundTools
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
-	}
-
-	// Check for foundDatasources
-	if (datasourceIds && datasourceIds.length > 0) {
-		const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
-		if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
-		}
 	}
 
 	// Check for model
@@ -145,26 +139,28 @@ export async function addAgentApi(req, res, next) {
 		}
 	}
 
+	// Check for function calling model
+	if (functionModelId && functionModelId.length > 0) {
+		const foundModel = await getModelById(req.params.resourceSlug, functionModelId);
+		if (!foundModel) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid function calling model ID' });
+		}
+	}
+
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
-	 	type: type === AgentType.EXECUTOR_AGENT
-	 		? AgentType.USER_PROXY_AGENT
-	 		: type as AgentType,
-		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT 
-			? { lastNMessages: 5, workDirectory: 'output' }
-			: null,
-		systemMessage,
-		humanInputMode: type === AgentType.EXECUTOR_AGENT
-			? 'TERMINAL'
-			: type === AgentType.USER_PROXY_AGENT
-				? 'ALWAYS'
-				: null,
-		model,
+	    role,
+	    goal,
+	    backstory,
 		modelId: toObjectId(modelId),
+		functionModelId: toObjectId(functionModelId),
+		maxIter,
+		maxRPM,
+		verbose: verbose === true,
+		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
-		datasourceIds: datasourceIds,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${req.params.resourceSlug}/agents` });
@@ -182,17 +178,29 @@ export async function addAgentApi(req, res, next) {
  */
 export async function editAgentApi(req, res, next) {
 
-	const { name, model, modelId, type, systemMessage, toolIds, datasourceIds }  = req.body;
-	
-	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, regexMatch: /^[a-zA-Z_][a-zA-Z0-9_]*$/g, customError: 'Name must start with letter or underscore and must not contain spaces' }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		{ field: 'type', validation: { notEmpty: true }},
-		{ field: 'systemMessage', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
-		{ field: 'datasourceIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid data sources' }},
-	], { name: 'Name', modelId: 'Model', systemMessage: 'Instructions', type: 'Type'});
+	const {
+		toolIds,
+		name,
+	    role,
+	    goal,
+	    backstory,
+		modelId,
+		functionModelId,
+		maxIter,
+		maxRPM,
+		verbose,
+		allowDelegation,
+	 } = req.body;
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'functionModelId', validation: { hasLength: 24 }},
+		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
+	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -207,29 +215,18 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundDatasources = await getDatasourcesById(req.params.resourceSlug, datasourceIds);
-	if (!foundDatasources || foundDatasources.length !== datasourceIds.length) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
-	 	type: type === AgentType.EXECUTOR_AGENT
-	 		? AgentType.USER_PROXY_AGENT
-	 		: type as AgentType, //TODO: revise
-		codeExecutionConfig: type === AgentType.EXECUTOR_AGENT
-			? { lastNMessages: 5, workDirectory: 'output' }
-			: null,
-		systemMessage,
-		humanInputMode: type === AgentType.EXECUTOR_AGENT
-			? 'TERMINAL'
-			: type === AgentType.USER_PROXY_AGENT
-				? 'ALWAYS'
-				: null,
-		model,
+	    role,
+	    goal,
+	    backstory,
 		modelId: toObjectId(modelId),
+		functionModelId: toObjectId(functionModelId),
+		maxIter,
+		maxRPM,
+		verbose: verbose === true,
+		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
-		datasourceIds: datasourceIds,
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
@@ -251,7 +248,7 @@ export async function deleteAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	await removeAgentFromGroups(req.params.resourceSlug, agentId);
+	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	await deleteAgentById(req.params.resourceSlug, agentId);
 

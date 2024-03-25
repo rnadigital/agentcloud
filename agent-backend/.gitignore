@@ -167,7 +167,11 @@ keyfile.json
 *.ipynb
 src/output
 output
-src/tools
+src/tools/*
 !src/tools/global_tools.py
 !src/tools/build_request_from_api_spec.py
+!src/tools/code_execution_docker_notebook_tool.py
+!src/tools/code_execution_tool.py
+!src/tools/rag_tool.py
 
+.run

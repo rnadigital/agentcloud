@@ -1,10 +1,11 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
-import { getModelById } from 'db/model';
+import { getModelById, getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { deleteFile, uploadFile } from 'lib/google/gcs';
@@ -22,7 +23,6 @@ import { promisify } from 'util';
 import deleteCollectionFromQdrant from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
-import { dynamicResponse } from '../util';
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -45,10 +45,14 @@ const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
-	const datasources = await getDatasourcesByTeam(req.params.resourceSlug);
+	const [datasources, models] = await Promise.all([
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		datasources,
+		models,
 	};
 }
 
@@ -72,10 +76,14 @@ export async function datasourcesJson(req, res, next) {
 }
 
 export async function datasourceData(req, res, _next) {
-	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+	const [datasource, models] = await Promise.all([
+		getDatasourceById(req.params.resourceSlug, req.params.datasourceId),
+		getModelsByTeam(req.params.resourceSlug),
+	]);
 	return {
 		csrf: req.csrfToken(),
 		datasource,
+		models,
 	};
 }
 
@@ -383,19 +391,6 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 		.then(res => res.data);
 	console.log('updatedConnection', updatedConnection);
 
-/*	if (sync === true) {
-		// Create a job to trigger the connection to sync
-		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-		const jobBody = {
-			connectionId: datasource.connectionId,
-			jobType: 'sync',
-		};
-		const createdJob = await jobsApi
-			.createJob(null, jobBody)
-			.then(res => res.data);
-		console.log('createdJob', createdJob);
-	}*/
-
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
 		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
@@ -496,10 +491,18 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		};
 	}
 	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	const updatedConnection = await connectionsApi
-		.updateConnection(null, connectionBody)
-		.then(res => res.data);
-	console.log('updatedConnection', updatedConnection);
+	let updatedConnection;
+	if (connectionBody?.connectionId) {
+		updatedConnection = await connectionsApi
+			.updateConnection(null, connectionBody)
+			.then(res => res.data);
+		console.log('updatedConnection', updatedConnection);
+	} else {
+		updatedConnection = await connectionsApi
+			.createConnection(null, connectionBody)
+			.then(res => res.data);
+		console.log('createdConnection', JSON.stringify(updatedConnection, null, 2));
+	}
 
 	if (sync === true) {
 		// Create a job to trigger the connection to sync
@@ -582,7 +585,11 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the points in qdrant
+	// try {
 	await deleteCollectionFromQdrant(req.params.datasourceId);
+	// } catch (e) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
+	// }
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
@@ -679,7 +686,8 @@ export async function uploadFileApi(req, res, next) {
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
 	    createdDate: new Date(),
-	    status: DatasourceStatus.READY, //TODO: have a feedback message when actually READY/set this from vector db proxy
+	    embeddingField: 'document', //Note: always document for sourceType: file
+	    status: DatasourceStatus.EMBEDDING, //TODO: have a feedback message when actually READY/set this from vector db proxy
 	});
 	
 	// Send the gcs file path to rabbitmq
@@ -694,6 +702,6 @@ export async function uploadFileApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
+	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
 
 }

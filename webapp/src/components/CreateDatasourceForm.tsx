@@ -3,7 +3,10 @@
 import * as API from '@api';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
+import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
+import SubscriptionModal from 'components/SubscriptionModal';
+import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,9 +16,6 @@ import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import SelectClassNames from 'styles/SelectClassNames';
-
-import CreateModelModal from '../components/CreateModelModal';
-import { useAccountContext } from '../context/account';
 const TailwindForm = dynamic(() => import('components/rjsf'), {
 	ssr: false,
 });
@@ -27,10 +27,10 @@ import { getSubmitButtonOptions, RJSFSchema, SubmitButtonProps } from '@rjsf/uti
 import { StreamsList } from 'components/DatasourceStream';
 
 const stepList = [
-	{ id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
-	{ id: 'Step 2', name: 'Connect datasource', href: '#', steps: [1, 2] },
-	{ id: 'Step 3', name: 'Choose which data to sync', href: '#', steps: [3] },
-	{ id: 'Step 4', name: 'Pick an embedding model', href: '#', steps: [4] },
+	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
+	{ id: 'Step 1', name: 'Connect datasource', href: '#', steps: [1, 2] },
+	{ id: 'Step 2', name: 'Choose which data to sync', href: '#', steps: [3] },
+	{ id: 'Step 3', name: 'Pick an embedding model', href: '#', steps: [4] },
 ];
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -38,10 +38,10 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 	ssr: false,
 });
 
-export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData }
-	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function }) { //TODO: fix any types
+export default function CreateDatasourceForm({ models, compact, callback, fetchDatasourceFormData, hideTabs, initialStep = 0, fetchDatasources }
+	: { models?: any[], compact?: boolean, callback?: Function, fetchDatasourceFormData?: Function, hideTabs?: boolean, initialStep?: number, fetchDatasources?: Function }) { //TODO: fix any types
 
-	const [step, setStep] = useState(0);
+	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -51,7 +51,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [datasourceName, setDatasourceName] = useState('');
 	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
-	const [timeUnit, setTimeUnit] = useState('');
+	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('');
 	const [modelId, setModelId] = useState('');
@@ -63,6 +64,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {} });
+	const [formData, setFormData] = useState(null);
 	const SubmitButton = (props: SubmitButtonProps) => {
 		const { uiSchema } = props;
 		const { norender } = getSubmitButtonOptions(uiSchema);
@@ -106,6 +108,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		  value: connectors[key]?.definitionId,
 		  label: connectors[key]?.name_oss || 'test',
 		  icon: connectors[key]?.iconUrl_oss,
+		  supportLevel: connectors[key]?.supportLevel_oss,
 		})) : [];
 
 	const modelCallback = async (addedModelId) => {
@@ -141,7 +144,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				setDatasourceId(stagedDatasource.datasourceId);
 				setDiscoveredSchema(stagedDatasource.discoveredSchema);
 				setStep(3);
-				// callback && addedDatasource && callback(addedDatasource._id);
+				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
 				e.preventDefault();
@@ -165,32 +168,12 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				}, (res) => {
 					toast.error(res);
 				}, compact ? null : router);
-				// callback && addedDatasource && callback(addedDatasource._id);
+				callback && addedDatasource && callback(addedDatasource._id);
 			}
 		} finally {
 			setSubmitting(false);
 		}
 	}
-
-	const MemoizedRJSF = useMemo(() => spec && (<TailwindForm
-		schema={spec.schema.connectionSpecification}
-		templates={{ ButtonTemplates: { SubmitButton } }}
-		validator={validator}
-		onSubmit={datasourcePost}
-		transformErrors={(errors) => {
-			return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
-		}}
-		noHtml5Validate
-	>
-		<button
-			disabled={submitting}
-			type='submit'
-			className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-		>
-			{submitting && <ButtonSpinner />}
-			{submitting ? 'Testing connection...' : 'Submit'}
-		</button>
-	</TailwindForm>), [spec, submitting, datasourcePost, datasourceName]);
 
 	function getStepSection(_step) {
 		//TODO: make steps enum
@@ -226,8 +209,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					setFiles={setFiles}
 					modelId={modelId}
 					name={datasourceName}
+					callback={() => {
+					//jank form reset (for now)
+						setStep(initialStep);
+						setFiles(null);
+						setDatasourceName('');
+						fetchDatasources();
+					}}
+					modalOpen={modalOpen}
 				>
-					<div className='my-4'>
+					<div>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							{/* cba moving */}
 							Datasource Name<span className='text-red-700'> *</span>
@@ -279,7 +270,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				</DropZone>;
 			case 2:
 				return <span className='flex'>
-					<div className='w-full sm:w-1/3 m-auto'>
+					<div className='w-full md:w-2/3 xl:w-1/2 m-auto'>
 						<Select
 							isClearable
 							isSearchable
@@ -305,13 +296,18 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											: 'dark:text-white'
 									}`}
 								>
-									<span>
-										{data?.icon && <img
-											src={data.icon}
-											loading='lazy'
-											className='inline-flex me-2 w-4 h-4'
-										/>}
-										{data.label}
+									<span className='flex justify-between'>
+										<span>
+											{data?.icon && <img
+												src={data.icon}
+												loading='lazy'
+												className='inline-flex me-2 w-4 h-4'
+											/>}
+											{data.label}
+										</span>
+										<span className={`px-1 rounded-full bg-${data.supportLevel==='certified'?'green':'gray'}-100 text-${data.supportLevel==='certified'?'green':'gray'}-700`}>
+											{data.supportLevel}
+										</span>
 									</span>
 								</li>);
 							}}
@@ -350,7 +346,27 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setCronTimezone={setCronTimezone}
 									/>
 								</div>
-								{MemoizedRJSF}
+								<TailwindForm
+									schema={spec.schema.connectionSpecification}
+									formData={formData}
+									onChange={(e) => setFormData(e.formData)}
+									templates={{ ButtonTemplates: { SubmitButton } }}
+									validator={validator}
+									onSubmit={datasourcePost}
+									transformErrors={(errors) => {
+										return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
+									}}
+									noHtml5Validate
+								>
+									<button
+										disabled={submitting}
+										type='submit'
+										className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									>
+										{submitting && <ButtonSpinner />}
+										{submitting ? 'Testing connection...' : 'Submit'}
+									</button>
+								</TailwindForm>
 							</>}
 		
 					</div>
@@ -375,14 +391,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}
 					/>
-					<button
-						disabled={submitting}
-						type='submit'
-						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						{submitting && <ButtonSpinner />}
-						Continue
-					</button>
+					<div className='flex justify-end'>
+						<button
+							disabled={submitting}
+							type='submit'
+							className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
+							{submitting && <ButtonSpinner />}
+							Continue
+						</button>
+					</div>
 				</form>;
 			case 4:
 				return <>
@@ -462,9 +480,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}
 	}
 
-	return (<div className='m-4'>
-		<CreateModelModal open={modalOpen} setOpen={setModalOpen} callback={modelCallback} />
-		<nav aria-label='Progress' className='mb-10'>
+	return (<div>
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ more data connections' buttonText='Upgrade' />
+		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
+		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (
 					<li key={stepData.name} className='md:flex-1 cursor-pointer'>
@@ -497,7 +516,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					</li>
 				))}
 			</ol>
-		</nav>
+		</nav>}
 
 		{getStepSection(step)}
 

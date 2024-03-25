@@ -3,34 +3,11 @@
 import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
-import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
-import { FunctionProperty, ToolType } from 'struct/tool';
+import { Tool } from 'struct/tool';
 
 const log = debug('webapp:db:tools');
-
-export type Tool = {
-	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
-    name: string;
- 	type: ToolType;
- 	schema?: string; //NOTE: not really used since the function description and params are based on one function
-	data?: {
-		builtin?: boolean;
-		name: string;
-		description?: string;
-		parameters?: {
-			//type: string;
-			properties: Record<string,FunctionProperty>;
-			required?: string[];
-		};
-		code?: string;
-		openAPIMatchKey?: string;
-	},
-	credentialId?: ObjectId; //links to a credential 
-};
 
 export function ToolCollection(): any {
 	return db.db().collection('tools');

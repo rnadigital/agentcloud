@@ -32,9 +32,6 @@ if (typeof window !== 'undefined') {
 }
   
 NProgress.configure({ showSpinner: false });
-// const loadRoutes = ['/login', '/register', '/changepassword', '/'];
-// Router.events.on('routeChangeStart', (url) => loadRoutes.includes(url) &&NProgress.start());
-// Router.events.on('routeChangeComplete', (url) => loadRoutes.includes(url) && NProgress.done());
 Router.events.on('routeChangeStart', (url) => NProgress.start());
 Router.events.on('routeChangeComplete', (url) => NProgress.done());
 Router.events.on('routeChangeError', (_url) => NProgress.done());

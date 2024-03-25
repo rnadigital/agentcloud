@@ -1,10 +1,9 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
+import ModelForm from 'components/ModelForm';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import ModelForm from './ModelForm';
 
 export default function CreateModelModal({ open, setOpen, callback }) {
 
@@ -50,7 +49,7 @@ export default function CreateModelModal({ open, setOpen, callback }) {
 							leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 							leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 						>
-							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible'>
+							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible md:min-w-[400px]'>
 								<div>
 									<div>
 										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
@@ -58,7 +57,7 @@ export default function CreateModelModal({ open, setOpen, callback }) {
 										</Dialog.Title>
 									</div>
 								</div>
-								<ModelForm compact={true} callback={callback} credentials={credentials} />
+								<ModelForm compact={true} callback={callback} credentials={credentials} fetchModelFormData={fetchModelFormData} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

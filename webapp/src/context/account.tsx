@@ -9,27 +9,38 @@ const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
 	return {
-		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name,
-		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id === data?.account?.currentTeam)?.name
+		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name || 'Loading...',
+		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id === data?.account?.currentTeam)?.name || 'Loading...',
 	};
 }
 
 export function AccountWrapper({ children, pageProps }) {
 
 	const router = useRouter();
+	const { resourceSlug, memberId } = (router?.query||{});
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),
+		switching: false,
 	});
 
 	function refreshAccountContext() {
-		API.getAccount((data) => {
+		API.getAccount({ resourceSlug, memberId }, (data) => {
 			setSharedState({
 				...pageProps,
 				...data,
 				...getTeamAndOrgName(data),
+				switching: false,
 			});
 		}, null, null);
+	}
+
+	function setSwitchingContext(switching: boolean) {
+		setSharedState({
+			...sharedState,
+			...getTeamAndOrgName(sharedState),
+			switching,
+		});
 	}
 	
 	useEffect(() => {
@@ -49,10 +60,8 @@ export function AccountWrapper({ children, pageProps }) {
 		}
 	}, [sharedState?.account?.name]);
 
-	// log('AppWrapper sharedState %O', sharedState);
-
 	return (
-		<AccountContext.Provider value={[sharedState, refreshAccountContext]}>
+		<AccountContext.Provider value={[sharedState, refreshAccountContext, setSwitchingContext]}>
 			{children}
 		</AccountContext.Provider>
 	);

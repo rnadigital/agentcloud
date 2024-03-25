@@ -1,26 +1,25 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
-import { getGroupById, getGroupsByTeam } from 'db/group';
+import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
-import { SessionStatus, SessionType } from 'struct/session';
-
-import { dynamicResponse } from '../util';
+import { SessionStatus } from 'struct/session';
 
 export async function sessionsData(req, res, _next) {
-	const [groups, sessions, agents] = await Promise.all([
-		getGroupsByTeam(req.params.resourceSlug),
+	const [crews, sessions, agents] = await Promise.all([
+		getCrewsByTeam(req.params.resourceSlug),
 		getSessionsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
-		groups,
+		crews,
 		sessions,
 		agents,
 	};
@@ -65,10 +64,6 @@ export async function sessionPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
-		// query: {
-		// 	resourceSlug: req.params.resourceSlug,
-		// 	sessionId: req.params.sessionId,
-		// }
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
@@ -106,78 +101,33 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { rag, prompt }  = req.body;
+	let { rag, prompt, id }  = req.body;
 
-	if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	let groupId = null
-		, agentId = null;
-	if (req.body.group && typeof req.body.group === 'string' && req.body.group.length === 24) {
-		const group = await getGroupById(req.params.resourceSlug, req.body.group);
-		if (!group || !group.adminAgent || group.agents.length === 0) {
-			return dynamicResponse(req, res, 400, { error: 'Group missing member(s)' });
-		}
-		const agents = await getAgentsById(req.params.resourceSlug, [group.adminAgent, ...group.agents]);
+	let crewId;
+	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
+	if (crew) {
+		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		groupId = group._id;
-	} else if (req.body.agent && typeof req.body.agent === 'string' && req.body.agent.length === 24) {
-		const agent = await getAgentById(req.params.resourceSlug, req.body.agent);
-		if (!agent || !agent.modelId) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-		}
-		agentId = agent._id;
+		crewId = crew._id;
+	} else {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	prompt = `${prompt}\n`;
-
-	const sessionType = rag == true ? SessionType.RAG : SessionType.TASK;
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-	    prompt,
-	 	type: sessionType,
-	    name: '',
+	    // prompt,
+	    name: crew.name,
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		groupId,
-		agentId,
+		crewId,
 	});
 
-	const now = Date.now();
-	const message = {
-		room: addedSession.insertedId.toString(),
-		authorName: res.locals.account.name,
-		incoming: true,
-		message: {
-			type: 'text',
-			text: prompt,
-		},
-		event: 'message',
-		ts: now
-	};
-	await addChatMessage({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		sessionId: addedSession.insertedId,
-		message,
-		type: sessionType,
-		authorId: null,
-		authorName: res.locals.account.name,
-		ts: now,
-		isFeedback: false,
-		chunkId: null,
-		tokens: 0,
-		displayMessage: null,
-		chunks: [ { ts: now, chunk: prompt, tokens: undefined } ]
-	});
-
-	taskQueue.add(sessionType, {
+	taskQueue.add('execute_rag', { //TODO: figure out room w/ pete
 		task: prompt,
 		sessionId: addedSession.insertedId.toString(),
 	});

@@ -1,7 +1,9 @@
 'use strict';
 
+import Permission from '@permission';
 import * as db from 'db/index';
-import { ObjectId } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
+import Roles from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -9,10 +11,12 @@ import { addTeamToOrg } from './org';
 
 export type Team = {
 	_id?: ObjectId;
+	ownerId: ObjectId;
 	orgId: ObjectId;
-	members: ObjectId[],
-	airbyteWorkspaceId?: string;
+	members: ObjectId[];
 	name: string;
+	dateCreated: Date;
+	permissions: Record<string,Binary>;
 }
 
 export function TeamCollection(): any {
@@ -46,8 +50,11 @@ export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Promis
 		_id: toObjectId(teamId),
 	}, {
 		$push: {
-			members: toObjectId(accountId),
+			members: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
 		},
+		$set: {
+			[`permissions.${accountId}`]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+		}
 	});
 }
 
@@ -58,6 +65,19 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 		$pullAll: {
 			members: [toObjectId(accountId)],
 		},
+		$unset: {
+			[`permissions.${accountId}`]: ''
+		}
+	});
+}
+
+export function setMemberPermissions(teamId: db.IdOrStr, accountId: string, permissions: Permission): Promise<any> {
+	return TeamCollection().updateOne({
+		_id: toObjectId(teamId)
+	}, {
+		$set: {
+			[`permissions.${accountId}`]: new Binary(permissions.array),
+		}
 	});
 }
 
@@ -91,8 +111,9 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 			$project: {
 				_id: 1,
 				orgId: 1,
-				airbyteWorkspaceId: 1,
 				name: 1,
+				ownerId: 1,
+				permission: 1, //TODO: later project away for lower perms users
 				members: {
 					$map: {
 						input: '$members',
@@ -103,9 +124,6 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 							email: '$$member.email',
 							emailVerified: '$$member.emailVerified', //know if vreified or not (implies accepted invite)
 							memberId: '$$member._id',    
-							teamOwner: {
-								$in: ['$$member._id','$orgs.members']
-							}
 						}
 					}
 				}

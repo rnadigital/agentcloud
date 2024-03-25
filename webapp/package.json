@@ -34,6 +34,7 @@
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
+    "big-bitfield": "^1.2.1",
     "body-parser": "^1.20.2",
     "bullmq": "^4.13.0",
     "connect-redis": "^7.1.0",

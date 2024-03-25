@@ -1,5 +1,4 @@
 import * as API from '@api';
-import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
 import debug from 'debug';
 import { useRouter } from 'next/router';
@@ -14,7 +13,7 @@ export function NotificationWrapper({ children }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [sharedState, setSharedState] = useState([]);
-	const [_chatContext, setChatContext]: any = useChatContext();
+	const [, notificationTrigger]: any = useSocketContext();
 	const [socketContext]: any = useSocketContext();
 
 	function refreshNotificationContext() {
@@ -30,7 +29,7 @@ export function NotificationWrapper({ children }) {
 	
 	useEffect(() => {
 		refreshNotificationContext();
-	}, []); //TODO: what should be the variables?
+	}, [notificationTrigger]); //TODO: what should be the variables?
 
 	return (
 		<NotificationContext.Provider value={[sharedState, refreshNotificationContext]}>

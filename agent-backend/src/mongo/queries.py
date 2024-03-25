@@ -1,171 +1,144 @@
 import logging
 
-from utils.log_exception_context_manager import log_exception
 from mongo.client import MongoConnection
-from pymongo import collection, database
+from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from init.env_variables import BASE_PATH
-from models.mongo import DatasourceData, ToolData, AgentData, AgentConfig, LLMConfig, ConfigList
+from models.mongo import Agent, App, Credentials, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
 from typing import List, Dict, Union, Any, Optional
+from pydantic import BaseModel
+
+from utils.model_helper import convert_dictionaries_to_models, get_models_attribute_values
 
 
 class MongoClientConnection(MongoConnection):
     def __init__(self):
         super().__init__()
         self.mongo_client = self.connect()
-        self.db_name = MONGO_DB_NAME
-        self.db = None
-
-    @property
-    def _get_db(self) -> database.Database:
-        return self.mongo_client[self.db_name]
+        self.db = self.mongo_client[MONGO_DB_NAME]
 
     def _get_collection(self, collection_name: str) -> collection.Collection:
         return self.db[collection_name]
 
-    def get_session(self, session_id: str) -> Dict:
-        with log_exception():
-            self.db = self._get_db
-            sessions_collection: collection.Collection = self._get_collection(
-                "sessions"
-            )
-            session_query_results = sessions_collection.find_one(
-                {"_id": ObjectId(session_id)}, {"groupId": 1, "agentId": 1}
-            )
-            if session_query_results is None:
-                raise Exception(f"session not found for session _id {session_id}")
-            return session_query_results
-
-    def get_group(self, session: dict) -> Dict:
-        with log_exception():
-            self.db = self._get_db
-            team = {"roles": []}
-            list_of_agents = list()
-            group_id = session.get("groupId")
-            agent_id = session.get("agentId")
-            if group_id is None and agent_id is None:
-                raise Exception(
-                    f"no groupId or agentId found on session id {session.get('id')}"
-                )
-            agents = list()
-            if agent_id:
-                agents.append(agent_id)
-            elif group_id:
-                groups_collection: collection.Collection = self._get_collection(
-                    "groups"
-                )
-                group_query_results = groups_collection.find_one({"_id": group_id})
-                if group_query_results is None:
-                    raise Exception(f"group not found from session groupId {group_id}")
-                team["group_chat"] = group_query_results.get("groupChat")
-                agents = group_query_results.get("agents")
-                admin_agent = group_query_results.get("adminAgent")
-                agents.append(admin_agent)
-            if agents and len(agents) > 0:
-                for agent in agents:
-                    agent_data: Union[AgentData, None] = self._get_group_member(agent)
-                    if agent_data:
-                        agent_data.is_admin = (
-                            True if ((group_id and agent == admin_agent) or (agent_id is not None and agent_data.type == "QdrantRetrieveUserProxyAgent")) else False
-                        )
-                        list_of_agents.append(agent_data.model_dump())
-            team["roles"] = list_of_agents
-            return team
-
-    def _get_group_member(self, agent_id: ObjectId) -> Union[AgentData, None]:
+    def get_session(self, session_id: str) -> Session:
         try:
-            _collection: collection.Collection = self._get_collection("agents")
-            agent = _collection.find_one({"_id": ObjectId(agent_id)})
-            _config_list: ConfigList = ConfigList()
-            # Get agent credentials
-            if agent is not None:
-                model_id = agent.get("modelId")
-                model_obj = self._get_collection("models").find_one(
-                    {"_id": model_id}, {"credentialId": 1, "model": 1}
-                )
-                print(model_obj)
-                credential_id = model_obj.get("credentialId")
-                credential_obj = self._get_collection("credentials").find_one(
-                    {"_id": credential_id}, {"type": 1, "credentials": 1}
-                )
-                print(credential_obj)
-                if credential_obj is not None and len(credential_obj) > 0:
-                    creds = credential_obj.get("credentials")
-                    # Construct Agent Config List
-                    _config_list = ConfigList(
-                        api_key=creds.get("key"),
-                        api_type=credential_obj.get("type"),
-                        model=model_obj.get("model"),
-                    )
-
-                # Construct LLMConfig
-                tool_ids: List[ObjectId] = agent.get("toolIds")
-                list_of_agent_tools: List[ToolData] = list()
-                if tool_ids and len(tool_ids) > 0:
-                    for tool_id in tool_ids:
-                        tool = self._get_collection("tools").find_one(
-                            {"_id": tool_id}, {"teamId": 0, "orgId": 0, "_id": 0}
-                        )
-                        if tool and len(tool) > 0:
-                            agent_tool = ToolData(**tool.get("data"))
-                            list_of_agent_tools.append(agent_tool)
-
-                _llm_config = LLMConfig(
-                    functions=list_of_agent_tools, config_list=[_config_list]
-                )
-                
-                #Construct datasources
-                list_of_datasources: List[DatasourceData] = list()
-                datasource_ids: List[ObjectId] = agent.get("datasourceIds")
-                if datasource_ids and len(datasource_ids) > 0:
-                    for datasource_id in datasource_ids:
-                        datasource = self._get_collection("datasources").aggregate(
-                            [{ "$match": { "_id": ObjectId(datasource_id) }}, { "$lookup": { "from": "models", "localField": "modelId", "foreignField": "_id", "as": "model"} }, {"$unwind": "$model"}, {"$project": {"model": "$model.model"}}]
-                        )
-                        if datasource is not None:
-                            ds_list = list(datasource)
-                            if len(ds_list) > 0:
-                                datasource_data = DatasourceData(id=datasource_id,**ds_list[0])
-                                list_of_datasources.append(datasource_data)
-                
-                # Construct Agent Config
-                code_execution = agent.get("codeExecutionConfig")
-                if code_execution and len(code_execution) > 0:
-                    last_n_messages = code_execution.get("lastNMessages", 3)
-                    code_execution_config = {
-                        "last_n_messages": last_n_messages
-                        if last_n_messages is not None
-                        else 3,
-                        "work_dir": f"{BASE_PATH}/{code_execution.get('workDirectory', 'output')}",
-                        "use_docker": "python:3",
-                    }
-                else:
-                    code_execution_config = {}
-                _agent_config = AgentConfig(
-                    name=agent.get("name"),
-                    system_message=agent.get("systemMessage"),
-                    human_input_mode=agent.get("humanInputMode") or "NEVER",
-                    llm_config=_llm_config,
-                    code_execution_config=code_execution_config,
-                    datasource_data=list_of_datasources
-                )
-
-                # Construct Agent Data
-                _agent_data = AgentData(
-                    type=agent.get("type", "AssistantAgent"), data=_agent_config
-                )
-                return _agent_data
-            else:
-                return None
+            session_query_results: Optional[Session] = self._get_collection(
+                "sessions"
+            ).find_one(
+                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1}
+            )
+            assert session_query_results
+            return session_query_results
+        except AssertionError as ae:
+            logging.exception(f"Query returned NO sessions: {ae}")
         except Exception as e:
-            logging.exception(e)
+            logging.error(f"an error has occurred while retrieving session from the database: {e}")
+
+    def get_crew(self, session: Session):
+        try:
+            crew_id = session.get("crewId")
+            print(f"Crew ID: {crew_id}")
+            crew_tasks = list()
+            try:
+                assert crew_id is not None
+            except AssertionError:
+                raise AssertionError(f"no Crew ID found for Session Id {session.get('id')}")
+            crews_collection: collection.Collection = self._get_collection("crews")
+            tasks_collection: collection.Collection = self._get_collection("tasks")
+            agents_collection: collection.Collection = self._get_collection("agents")
+            try:
+                the_crew: Dict = crews_collection.find_one({"_id": ObjectId(crew_id)})
+                assert the_crew
+                crew_task_ids = the_crew.get("tasks")
+                if crew_task_ids and len(crew_task_ids) > 0:
+                    crew_tasks = [tasks_collection.find_one({"_id": task}) for task in crew_task_ids]
+            except AssertionError:
+                raise AssertionError(f"Crew ID returned NO crews for ID: {crew_id}")
+            try:
+                crew_agent_ids = the_crew.get("agents")
+                # assert crew_agent_ids
+                crew_agents = [agents_collection.find_one({"_id": agent}) for agent in crew_agent_ids]
+            except AssertionError:
+                raise AssertionError(f"There were no agents associated with the crew ID: {crew_id}")
+            try:
+                app: App = self.get_app_by_crew_id(crew_id)
+                assert app
+            except AssertionError:
+                raise AssertionError(f"There were no apps associated with the crew: {crew_id}")
+
+            return (app, Crew(**the_crew), convert_dictionaries_to_models(crew_tasks, Task),
+                    convert_dictionaries_to_models(crew_agents, Agent))
+        except Exception:
+            raise
+
+    def get_tool_datasource(self, tool: Tool):
+        return self.get_single_model_by_id("datasources", Datasource, tool.datasourceId)
+
+    def get_tools(self, toolsIds: List[str]):
+        return self.get_models_by_ids("tools", Tool, toolsIds)
+
+    def get_agent_tasks(self, taskIds: List[str]):
+        return self.get_models_by_ids("tasks", Task, taskIds)
+
+    def get_agent_model(self, modelId: str):
+        return self.get_single_model_by_id("models", Model, modelId)
+
+    def get_model_credential(self, credentialId: str):
+        return self.get_single_model_by_id("credentials", Credentials, credentialId)
+
+    def get_agent_datasources(self, agent: Dict):
+        pass
+
+
+    def get_app_by_crew_id(self, crewId: PyObjectId):
+        return self.get_single_model_by_query("apps", App, {"crewId": crewId})
+
+    def get_models_by_query(self, db_collection: str, model_class: type, query: Dict):
+        """Takes a db collection name and a pydantic model and after calling query gets the retrned list of dictionary and converts to list of specified model"""
+        return convert_dictionaries_to_models(
+            self._get_collection(db_collection).find(query),
+            model_class) if query else []
+
+    def get_models_by_attributes(self, db_collection: str, model_class: type, query_models: List[BaseModel],
+                                 from_model_attribute: str, to_query_attribute: str):
+        """
+        Takes a db collection name and a pydantic model. Also takes the list of models to query from, and what proerty of theirs to use as values in the search.
+        Also takes the attribute in the db collection to search by (.e.g from_model_attribute is 'toolIds' and to_query_attribute is '_id').
+        After calling query gets the retrned list of dictionary and converts to list of specified model"""
+        return self.get_models_by_query(
+            db_collection, model_class,
+            {to_query_attribute: {
+                "$in": get_models_attribute_values(from_model_attribute, query_models)
+            }
+            }) if (query_models and len(query_models) > 0) else []
+
+    def get_models_by_ids(self, db_collection: str, model_class: type, ids: List[ObjectId] | List[str]):
+        """Takes a db collection name and a pydantic model. Creates query where the '_id' is search by the list of ids provided.
+        After calling query gets the retrned list of dictionary and converts to list of specified model"""
+        if ids and len(ids) > 0:
+            use_ids = list(map(convert_id_to_ObjectId, ids))
+            return self.get_models_by_query(db_collection, model_class, {"_id": {"$in": use_ids}})
+        else:
+            return []
+
+    def get_single_model_by_query(self, db_collection: str, model_class: type, query: Dict):
+        """Takes a db collection name and a pydantic model and after calling query gets the retrned it returns a single model instance or None"""
+        res = self._get_collection(db_collection).find_one(query)
+        if res:
+            return model_class(**res)
+        else:
+            return None
+
+    def get_single_model_by_id(self, db_collection: str, model_class: type, id: ObjectId | str):
+        """Takes a db collection name and a pydantic model and creates a query to compare the given id to the ids in the collection.
+        After the query has retrned it returns a single model instance or None"""
+        use_id = convert_id_to_ObjectId(id)
+        return self.get_single_model_by_query(db_collection, model_class, {"_id": use_id})
 
     # TODO we need to store chat history in the correct format to align with LLM return
     def get_chat_history(
-        self, session_id: str
+            self, session_id: str
     ) -> Optional[List[dict[str, Union[str, Any]]]]:
-        self.db = self._get_db
         chat_collection: collection.Collection = self._get_collection("chat")
         chat_messages = chat_collection.find({"sessionId": ObjectId(session_id)})
         if chat_messages:
@@ -180,3 +153,10 @@ class MongoClientConnection(MongoConnection):
                 return messages
 
         return []
+
+
+def convert_id_to_ObjectId(id):
+    if type(id) == str:
+        return ObjectId(id)
+    else:
+        return id
