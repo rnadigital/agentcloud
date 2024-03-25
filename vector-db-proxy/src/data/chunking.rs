@@ -14,10 +14,9 @@ use crate::llm::models::EmbeddingModels;
 use dotext::*;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{RwLock};
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 use crate::queue::queuing::MyQueue;
-use crate::redis_rs::client::RedisConnection;
 
 pub trait Chunking {
     type Item;
@@ -34,7 +33,7 @@ pub trait Chunking {
         queue: Arc<RwLock<MyQueue<String>>>,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
-        redis_conn_pool: Arc<Mutex<RedisConnection>>,
+        // redis_conn_pool: Arc<Mutex<RedisConnection>>,
     );
     async fn chunk(
         &self,
@@ -199,7 +198,7 @@ impl Chunking for TextChunker {
         queue: Arc<RwLock<MyQueue<String>>>,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
-        redis_conn_pool: Arc<Mutex<RedisConnection>>,
+        // redis_conn_pool: Arc<Mutex<RedisConnection>>,
     ) {
         match csv::Reader::from_path(path) {
             Ok(mut rdr) => {
@@ -210,15 +209,12 @@ impl Chunking for TextChunker {
                             let queue = Arc::clone(&queue);
                             let qdrant_conn = Arc::clone(&qdrant_conn);
                             let mongo_conn = Arc::clone(&mongo_conn);
-                            let redis_conn = Arc::clone(&redis_conn_pool);
                             let ds_clone = datasource_id.clone();
-                            let params = vec![ds_clone, string_record];
                             add_message_to_embedding_queue(
                                 queue,
                                 qdrant_conn,
                                 mongo_conn,
-                                redis_conn,
-                                params,
+                                (ds_clone, string_record),
                             ).await;
                         }
                         Err(e) => { println!("An error occurred {}", e); }

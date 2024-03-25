@@ -1,6 +1,6 @@
 use mongodb::Database;
 use std::sync::Arc;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{ RwLock};
 use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
@@ -8,19 +8,17 @@ use crate::llm::models::EmbeddingModels;
 use crate::mongo::queries::get_embedding_model_and_embedding_key;
 use crate::qdrant::helpers::embed_payload;
 use crate::qdrant::utils::Qdrant;
-use crate::redis_rs::client::RedisConnection;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 
 pub async fn process_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
-    redis_connection_pool: Arc<Mutex<RedisConnection>>,
     message: String,
     datasource_id: String,
 ) -> bool {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
-    let redis_connection = redis_connection_pool.lock().await;
+    // let redis_connection = redis_connection_pool.lock().await;
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
@@ -50,14 +48,14 @@ pub async fn process_messages(
                                     Ok(point_struct) => {
                                         if let Ok(bulk_upload_result) =
                                             qdrant
-                                                .upsert_data_point_non_blocking(
+                                                .upsert_data_point_blocking(
                                                     point_struct,
                                                     Some(vector_length),
                                                     Some(embedding_model_name_clone),
                                                 )
                                                 .await
                                         {
-                                            let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
+                                            // let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
                                             return bulk_upload_result;
                                         }
                                     }

@@ -159,7 +159,7 @@ pub async fn upsert_data_point_to_collection(
         json!(data.payload).try_into().unwrap(),
     );
     let qdrant = Qdrant::new(qdrant_conn, collection_name);
-    let upsert_results = qdrant.upsert_data_point(points).await?;
+    let upsert_results = qdrant.upsert_data_point_non_blocking(points).await?;
     println!("{:?}", upsert_results);
     match upsert_results {
         true => Ok(HttpResponse::Ok()

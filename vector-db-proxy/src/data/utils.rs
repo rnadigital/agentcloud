@@ -6,13 +6,12 @@ use actix_web::dev::ResourcePath;
 use anyhow::anyhow;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{RwLock};
 use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::{Document as DocumentModel, FileType};
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
 use crate::queue::queuing::MyQueue;
-use crate::redis_rs::client::RedisConnection;
 
 pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
@@ -40,7 +39,7 @@ pub async fn extract_text_from_file(
     queue: Arc<RwLock<MyQueue<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
-    redis_conn_pool: Arc<Mutex<RedisConnection>>,
+    // redis_conn_pool: Arc<Mutex<RedisConnection>>,
 ) -> Option<(String, Option<HashMap<String, String>>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
@@ -73,7 +72,7 @@ pub async fn extract_text_from_file(
                 queue,
                 qdrant_conn,
                 mongo_conn,
-                redis_conn_pool,
+                // redis_conn_pool,
             );
             None
         },

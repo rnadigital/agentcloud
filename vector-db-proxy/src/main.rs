@@ -31,7 +31,7 @@ use tokio::join;
 use tokio::signal::unix::{signal, SignalKind};
 #[cfg(windows)]
 use tokio::signal::windows::ctrl_c;
-use tokio::sync::{RwLock, Mutex};
+use tokio::sync::{RwLock};
 
 use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
@@ -41,9 +41,8 @@ use routes::api_routes::{
     list_collections, lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
 };
 use crate::mongo::client::start_mongo_connection;
-use crate::queue::queuing::{MyQueue};
+use crate::queue::queuing::{MyQueue, Control};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
-use crate::redis_rs::client::RedisConnection;
 
 pub fn init(config: &mut web::ServiceConfig) {
     let webapp_url =
@@ -87,9 +86,8 @@ async fn main() -> std::io::Result<()> {
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(MyQueue::default()));
-    let redis_pool = RedisConnection::new(Some(100)).await.unwrap();
-    let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
+    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
+    // let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
     let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
     let rabbitmq_connection_details = RabbitConnect {
         host: global_data.rabbitmq_host.clone(),
@@ -113,7 +111,7 @@ async fn main() -> std::io::Result<()> {
             Arc::clone(&qdrant_connection_for_rabbitmq),
             Arc::clone(&queue),
             Arc::clone(&mongo_client_clone),
-            Arc::clone(&redis_connection_pool),
+            // Arc::clone(&redis_connection_pool),
             &channel,
             &global_data.rabbitmq_stream,
         )
