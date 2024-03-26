@@ -233,7 +233,7 @@ export default function Session(props) {
 			}
 			setMessages(sortedMessages);
 			setLoading(false);
-			scrollToBottom('smooth');
+			setTimeout(() => { scrollToBottom('smooth'); }, 200);
 		}, setError, router);
 	}
 	useEffect(() => {
