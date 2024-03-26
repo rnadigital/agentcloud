@@ -137,6 +137,7 @@ services:
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WEBAPP_HOST=webapp_next
 
   qdrant:
     ports:
