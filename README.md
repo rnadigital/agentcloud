@@ -11,7 +11,7 @@ Welcome to `agentcloud` repository! This project comprises three main components
 
 ## Getting Started
 
-To run this project up locally, you'll to clone this repo and have Docker installed. 
+To run this project up locally, clone this repo and run Docker.
 For now there is a reliance on GCP for Bucket storage to store files. (We will add AWS S3, Local Disk in future releases.)
 Follow the steps below to get started:
 
