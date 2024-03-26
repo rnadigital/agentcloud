@@ -1,3 +1,6 @@
+### 1.0.0
+ - TODO
+
 ### 0.5.0
  - Add RAG from file upload or connection to other data source via Airbyte
  - Add vectordb proxy

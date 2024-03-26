@@ -1,6 +1,6 @@
 {
   "name": "webapp-next",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {

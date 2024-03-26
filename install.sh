@@ -12,7 +12,7 @@ if ! docker info &> /dev/null; then
 fi
 
 print_logo() {
-    #clear
+    clear
     if [ "$terminal_width" -gt 120 ]; then
         echo -e """
 \033[34m            ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
