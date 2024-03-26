@@ -20,7 +20,7 @@ export default function PreviewSessionList(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
-	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const { resourceSlug } = router?.query;
 	const [state, dispatch] = useState(props);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState();
@@ -44,11 +44,11 @@ export default function PreviewSessionList(props) {
 			resourceSlug,
 			sessionId,
 		}, () => {
-			if (router.asPath.includes('/session/')) {
+			fetchSessions(true);
+			toast('Deleted session');
+			if (router.asPath.includes(`/session/${sessionId}`)) {
 				return router.push(`/${resourceSlug}/playground`);
 			}
-			fetchSessions();
-			toast('Deleted session');
 		}, () => {
 			toast.error('Error deleting session');
 		}, router);
@@ -92,59 +92,62 @@ export default function PreviewSessionList(props) {
 
 	//TODO: sesion infinite scrolling/loading
 
-	return <li className='overflow-hidden'><ul>{sessions.map(s => (<li key={s._id}>
+	return <li className='overflow-hidden'><ul>{sessions.map(s => (<li key={s._id} className='flex justify-between'>
 		<Link
 			suppressHydrationWarning
-			className='text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+			className='text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full'
 			href={`/${resourceSlug}/session/${s._id}`}
-			onClick={(e: any) => e.target.tagName === 'svg' && e.preventDefault()}
 		>
 			<p className='overflow-hidden truncate text-ellipsis'>{s.previewLabel || s.name || <span className='text-xs italic'>New Session</span>}</p>
-			<Menu as='div' className='relative ml-auto p-0 m-0 h-full'>
-				<Menu.Button className='-m-2 block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
-					<span className='sr-only'>Open options</span>
-					<EllipsisHorizontalIcon className='h-5 w-5' aria-hidden='true' />
-				</Menu.Button>
-				<Transition
-					as={Fragment}
-					enter='transition ease-out duration-100'
-					enterFrom='transform opacity-0 scale-95'
-					enterTo='transform opacity-100 scale-100'
-					leave='transition ease-in duration-75'
-					leaveFrom='transform opacity-100 scale-100'
-					leaveTo='transform opacity-0 scale-95'
-				>
-					<Menu.Items className='absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-						<Menu.Item>
-							{({ active }) => (
-								<a
-									href={`/${resourceSlug}/session/${s._id}`}
-									className={classNames(
-										active ? 'bg-gray-50 dark:bg-slate-700' : '',
-										'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-									)}
-								>
-														View
-								</a>
-							)}
-						</Menu.Item>
-						<Menu.Item>
-							{({ active }) => (
-								<button
-									onClick={() => deleteSession(s._id)}
-									className={classNames(
-										active ? 'bg-gray-50 dark:bg-slate-700' : '',
-										'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
-									)}
-								>
-									Delete
-								</button>
-							)}
-						</Menu.Item>
-					</Menu.Items>
-				</Transition>
-			</Menu>
+			
 		</Link>
+		<Menu as='div' className=''>
+			<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
+				<span className='sr-only'>Open options</span>
+				<EllipsisHorizontalIcon className='h-5 w-5' aria-hidden='true' />
+			</Menu.Button>
+			<Transition
+				as={Fragment}
+				enter='transition ease-out duration-100'
+				enterFrom='transform opacity-0 scale-95'
+				enterTo='transform opacity-100 scale-100'
+				leave='transition ease-in duration-75'
+				leaveFrom='transform opacity-100 scale-100'
+				leaveTo='transform opacity-0 scale-95'
+			>
+				<Menu.Items className='absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+					<Menu.Item>
+						{({ active }) => (
+							<a
+								href={`/${resourceSlug}/session/${s._id}`}
+								className={classNames(
+									active ? 'bg-gray-50 dark:bg-slate-700' : '',
+									'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+								)}
+							>
+													View
+							</a>
+						)}
+					</Menu.Item>
+					<Menu.Item>
+						{({ active }) => (
+							<button
+								onClick={(e) => {
+									e.stopPropagation();
+									deleteSession(s._id);
+								}}
+								className={classNames(
+									active ? 'bg-gray-50 dark:bg-slate-700' : '',
+									'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
+								)}
+							>
+								Delete
+							</button>
+						)}
+					</Menu.Item>
+				</Menu.Items>
+			</Transition>
+		</Menu>
 	</li>))}</ul></li>;
 
 };
