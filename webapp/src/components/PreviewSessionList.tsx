@@ -90,7 +90,9 @@ export default function PreviewSessionList(props) {
 		// </div>));
 	}
 
-	return sessions.slice(0, 5).map(s => (<li key={s._id} className='ps-4'>
+	//TODO: sesion infinite scrolling/loading
+
+	return <li className='overflow-hidden'><ul>{sessions.map(s => (<li key={s._id}>
 		<Link
 			suppressHydrationWarning
 			className='text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
@@ -135,15 +137,15 @@ export default function PreviewSessionList(props) {
 										'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
 									)}
 								>
-														Delete
+									Delete
 								</button>
 							)}
 						</Menu.Item>
 					</Menu.Items>
 				</Transition>
-			</Menu>	
-		</Link>		
-	</li>));
+			</Menu>
+		</Link>
+	</li>))}</ul></li>;
 
 };
 

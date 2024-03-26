@@ -72,12 +72,12 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 	});
 }
 
-export function setMemberPermissions(teamId: db.IdOrStr, accountId: string, permissions: Permission): Promise<any> {
+export function setMemberPermissions(teamId: db.IdOrStr, accountId: db.IdOrStr, permissions: Permission): Promise<any> {
 	return TeamCollection().updateOne({
 		_id: toObjectId(teamId)
 	}, {
 		$set: {
-			[`permissions.${accountId}`]: new Binary(permissions.array),
+			[`permissions.${accountId.toString()}`]: new Binary(permissions.array),
 		}
 	});
 }

@@ -101,30 +101,30 @@ export async function modelAddApi(req, res, next) {
 
 	// Insert model to db
 	const type = credential?.type || CredentialType.FASTEMBED;
-	if (type === CredentialType.FASTEMBED) {
-		// Insert dummy cred for agent-backend
-		const dummyCred = await addCredential({
-			orgId: res.locals.matchingOrg.id,
-			teamId: toObjectId(req.params.resourceSlug),
-		    name: '-',
-		    createdDate: new Date(),
-		    type,
-		    credentials: {
-				key: null,
-				endpointURL: null
-		    },
-		});
-		credentialId = dummyCred.insertedId;
-	}
+	// if (type === CredentialType.FASTEMBED) {
+	// 	// Insert dummy cred for agent-backend
+	// 	const dummyCred = await addCredential({
+	// 		orgId: res.locals.matchingOrg.id,
+	// 		teamId: toObjectId(req.params.resourceSlug),
+	// 	    name: '-',
+	// 	    createdDate: new Date(),
+	// 	    type,
+	// 	    credentials: {
+	// 			key: null,
+	// 			endpointURL: null
+	// 	    },
+	// 	});
+	// 	credentialId = dummyCred.insertedId;
+	// }
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
-		credentialId: credentialId ? toObjectId(credentialId) : null,
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
 		type,
+		...(credentialId ? { credentialId: toObjectId(credentialId) } : {}),
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedModel.insertedId, redirect: `/${req.params.resourceSlug}/models` });

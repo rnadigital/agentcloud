@@ -56,6 +56,9 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	SYNC_DATASOURCE: 181,
 	DELETE_DATASOURCE: 185,
 
+	UPLOAD_ICON: 195,
+	DELETE_ICON: 200,
+
 	DUMMY_BIT: 255, // Just padding
 
 })));

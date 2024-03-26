@@ -144,6 +144,20 @@ export function deleteModel(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/model/${body.modelId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
+// Icons
+export function addIcon(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/icon/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function getIcon(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+export function editIcon(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteIcon(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+
 // Credentials
 export function getCredentials(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/credentials.json`, 'GET', null, dispatch, errorCallback, router);

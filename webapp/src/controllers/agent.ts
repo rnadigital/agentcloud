@@ -1,16 +1,16 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
+import { removeAgentFromCrews } from 'db/crew';
+import { getDatasourcesById, getDatasourcesByTeam } from 'db/datasource';
+import { getIconById } from 'db/icon';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
-
-import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from '../db/agent';
-import { removeAgentFromCrews } from '../db/crew';
-import { getDatasourcesById, getDatasourcesByTeam } from '../db/datasource';
-import { getToolsById, getToolsByTeam } from '../db/tool';
-import toObjectId from '../lib/misc/toobjectid';
-import { ModelList } from '../lib/struct/model';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from '../lib/utils/validationUtils';
+import { getToolsById, getToolsByTeam } from 'db/tool';
+import toObjectId from 'lib/misc/toobjectid';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'lib/utils/validationUtils';
+import { ModelList } from 'struct/model';
 
 export async function agentsData(req, res, _next) {
 	const [agents, models, tools] = await Promise.all([
@@ -190,6 +190,7 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
+		iconId, //iconId from icons db
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
@@ -215,6 +216,8 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const foundIcon = await getIconById(iconId);
+	
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,
 	    role,
@@ -227,6 +230,10 @@ export async function editAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
+		icon: {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		}
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });

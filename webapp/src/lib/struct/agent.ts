@@ -1,6 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
+import { IconAttachment } from 'struct/icon';
 
 export type CodeExecutionConfigType = {
 	lastNMessages: number;
@@ -22,5 +23,6 @@ export type Agent = {
 	verbose: boolean;
 	allowDelegation: boolean;
 	toolIds?: ObjectId[];
+	icon?: IconAttachment;
 	// stepCallback: Function;
 };

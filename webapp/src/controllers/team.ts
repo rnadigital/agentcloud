@@ -177,12 +177,9 @@ export async function editTeamMemberApi(req, res) {
 	if (template) {
 		updatingPermissions = new Permission(template); //TODO: template (.base64 of official roles)
 	} else {
-
 		const updatingPermissions = new Permission(editingMember.permissions.toString('base64'));		
 		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
-		console.log('setMemberPermissions', resourceSlug, memberId, updatingPermissions);
 		await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
-
 	}
 
 	//For the bits that are org level, set those in the org map
