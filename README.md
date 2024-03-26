@@ -3,19 +3,19 @@
 
 https://www.agentcloud.dev/
 
-Welcome to `agentcloud` repository! This project comprises two main components: 
+Welcome to `agentcloud` repository! This project comprises three main components: 
 
-1. **Agent Backend**: A Python application running autogen, communicating through socket.io.
+1. **Agent Backend**: A Python application running crewai, communicating LLM messages through socket.io
 2. **Webapp**: A UI built using next.js, tailwind, and an express custom server.
+3. **Vector Proxy:** A Rust application which communicates with Qdrant vector Database
 
 ## Getting Started
 
-To run this project up locally, you'll need docker-compose. Follow the steps below to get started:
+To run this project up locally, you'll to clone this repo and have Docker installed. 
+For now there is a reliance on GCP for Bucket storage to store files. (We will add AWS S3, Local Disk in future releases.)
+Follow the steps below to get started:
 
-1. **Environment Variables**: Before starting the services, ensure you fill out any necessary environment variables in the `docker-compose.yml` file.
-  - [webapp env vars](webapp/README.md)
-  - [agent backend env vars](agent-backend/README.md)
-2. **Start Services**: Simply run the following command:
+1. **Start Services**: Simply run the following command:
 
 Mac & Linux:
 ```
@@ -25,7 +25,7 @@ chmod +x install.sh && ./install.sh
 The script will prompt for some details, or you can pass them as command line arguments:
 
 ```
-~$ ./instal.sh --help
+~$ ./install.sh --help
 Usage: ./install.sh [options]
 Options:
     --project-id ID                  Specify the GCP project ID.
@@ -35,7 +35,6 @@ Options:
     --openai-api-key KEY             Specify your OpenAI API key.
     -h, --help                       Display this help message.
 ```
-
 
 Windows:
 
