@@ -22,12 +22,12 @@ export default function AppCard({ app, startSession }) {
 					</p>
 				</div>
 			</a>
-			<div className='flex justify-between pt-5 gap-4	grid-cols-1 xl:grid-cols-2'>
-				<span className='text-sm text-gray-600'>
+			<div className='flex flex-col lg:flex-row justify-between pt-5 gap-4	grid-cols-1 xl:grid-cols-2'>
+				<div className='w-full xl:w-min text-sm text-gray-600'>
 					{app.author ? `By ${app.author}` : 'AgentCloud App'}
-				</span>
+				</div>
 				<button
-					className='w-full rounded-md xl:rounded	xl:w-24  h-10 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full inline-flex items-center'
+					className='rounded-md xl:rounded xl:w-24  h-10 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full inline-flex items-center'
 					onClick={() => {
 						startSession(app._id);
 					}}
