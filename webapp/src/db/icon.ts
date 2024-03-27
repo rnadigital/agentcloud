@@ -12,12 +12,11 @@ export function IconCollection(): Collection<Icon> {
 }
 
 export async function addIcon(icon: Icon): Promise<InsertOneResult<Icon>> {
-	log('Adding new icon', icon.filename);
 	return IconCollection().insertOne(icon);
 }
 
 export async function getIconById(iconId: db.IdOrStr): Promise<Icon | null> {
-	log('Fetching icon by id', iconId);
+	//TODO: teamId restriction?
 	return IconCollection().findOne({
 		_id: toObjectId(iconId)
 	});

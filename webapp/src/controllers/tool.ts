@@ -4,6 +4,7 @@ import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
+import { getIconById } from 'db/icon';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -114,7 +115,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -127,6 +128,8 @@ export async function addToolApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
 	}
+
+	const foundIcon = await getIconById(iconId);
 
 	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
@@ -141,6 +144,10 @@ export async function addToolApi(req, res, next) {
 			builtin: false,
 		    name: (type as ToolType) === ToolType.API_TOOL ? 'openapi_request' : toSnakeCase(name),
 		},
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });

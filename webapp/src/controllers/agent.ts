@@ -230,10 +230,10 @@ export async function editAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
-		icon: {
+		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
-		}
+		} : null,
 	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/ });
