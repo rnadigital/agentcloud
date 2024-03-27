@@ -1,4 +1,5 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
+import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
@@ -6,7 +7,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import AppCard from 'components/AppCard';
 
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';

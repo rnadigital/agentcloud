@@ -8,6 +8,7 @@ export type App = {
 	teamId?: ObjectId;
 	name: string;
 	description?: string;
+	author?: string;
 	tags?: string[];
 	visibility?: any; //TODO: perms
 	capabilities?: string;

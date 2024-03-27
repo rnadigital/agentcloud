@@ -32,15 +32,13 @@ export default function AddApp(props) {
 				<title>{`New App - ${teamName}`}</title>
 			</Head>
 
-			<span className='sm:w-full md:w-1/2 xl:w-1/3'>
-				<AppForm
-					agentChoices={agents}
-					taskChoices={tasks}
+			<AppForm
+				agentChoices={agents}
+				taskChoices={tasks}
 					// toolChoices={tools}
-					modelChoices={models}
-					fetchFormData={fetchAppFormData}
-				/>
-			</span>
+				modelChoices={models}
+				fetchFormData={fetchAppFormData}
+			/>
 		</>
 	);
 }

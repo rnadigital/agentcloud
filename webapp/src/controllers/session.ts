@@ -2,10 +2,10 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
+import { getAppById } from 'db/app';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
-import { getAppById } from 'db/app';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';

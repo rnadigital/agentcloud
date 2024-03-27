@@ -130,7 +130,8 @@ export async function addAppApi(req, res, next) {
 			.filter(x => x),
 		capabilities,
 		crewId: addedCrew.insertedId,
-		appType
+		appType,
+		author: res.locals.matchingTeam.name,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
