@@ -16,10 +16,11 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
 
-// const Markdown = dynamic(() => import('react-markdown'), {
-// 	loading: () => <p className='markdown-content'>Loading...</p>,
-// 	ssr: false,
-// });
+// @ts-ignore
+const Markdown = dynamic(() => import('react-markdown'), {
+	loading: () => <p className='markdown-content p-2'>Loading...</p>,
+	ssr: false,
+});
 import { ProcessImpl } from '../lib/struct/crew';
 
 export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
@@ -176,7 +177,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 									rows={5}
 								/>
 							</div>
-							{/*<div className='rounded shadow-sm w-full'>
+							<div className='rounded shadow-sm w-full'>
 								<span className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Preview
 								</span>
@@ -185,7 +186,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								>
 									{description}
 								</Markdown>
-							</div>*/}
+							</div>
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
