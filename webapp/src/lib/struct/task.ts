@@ -1,6 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
+import { IconAttachment } from 'struct/icon';
 
 export type Task = {
 	_id?: ObjectId;
@@ -17,4 +18,5 @@ export type Task = {
 	outputPydantic?: any;
 	outputFile?: string;
 	// callback: any;
+	icon?: IconAttachment;
 };

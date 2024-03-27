@@ -1,6 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
+import { IconAttachment } from 'struct/icon';
 
 export type App = {
 	_id?: ObjectId;
@@ -14,6 +15,7 @@ export type App = {
 	capabilities?: string;
 	crewId?: ObjectId;
 	appType: AppType;
+	icon: IconAttachment;
 };
 
 export enum AppType {
