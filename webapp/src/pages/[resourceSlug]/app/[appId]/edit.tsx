@@ -38,7 +38,7 @@ export default function EditApp(props) {
 		</Head>
 
 		<div className='border-b pb-2 my-2 mb-6'>
-			<h3 className='font-semibold text-gray-900'>Edit App</h3>
+			<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
 		</div>
 
 		<AppForm

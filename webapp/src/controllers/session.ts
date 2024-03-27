@@ -5,6 +5,7 @@ import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
+import { getAppById } from 'db/app';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
@@ -103,8 +104,10 @@ export async function addSessionApi(req, res, next) {
 
 	let { rag, prompt, id }  = req.body;
 
+	const app = await getAppById(req.params.resourceSlug, id);
+
 	let crewId;
-	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
+	const crew = await getCrewById(req.params.resourceSlug, app?.crewId || id);
 	if (crew) {
 		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
