@@ -78,7 +78,7 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 					<p>Drop the icon here ...</p>
 				) : files?.length === 0 && !existingAvatar 
 					? <CameraIcon className='h-full transition-all hover:stroke-gray-600 stroke-gray-400 w-8 inline-flex align-center justify-center' />
-					: <AgentAvatar agent={{ icon: existingAvatar }} />}
+					: <AgentAvatar agent={{ icon: existingAvatar }} fill={true} />}
 			</label>
 			<small>TODO: button to remove avatar and a modal of aset library and click to pick one</small>
 		</div>
