@@ -2,6 +2,7 @@
 import { PlayIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/router';
 import Blockies from 'react-blockies';
+import AgentAvatar from 'components/AgentAvatar';
 
 export default function AppCard({ app, startSession }) {
 	const { description, name, icon } = app;
@@ -11,9 +12,7 @@ export default function AppCard({ app, startSession }) {
 		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<div className='flex items-center justify-center p-4'>
-					{icon && icon.path
-						? <img className='w-16 h-16 rounded-full' src={icon.path} alt={`${name} icon`} />
-						: <Blockies className='rounded-full' seed={app.name} size={16} />}
+					<AgentAvatar agent={app} />
 				</div>
 				<div>
 					<div className='font-bold text-xl mb-2'>{name}</div>

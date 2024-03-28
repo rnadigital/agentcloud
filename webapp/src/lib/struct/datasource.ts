@@ -41,6 +41,7 @@ export type Datasource = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
 	name: string;
+	description?: string;
 	originalName: string;
 	gcsFilename: string;
 	sourceType: string;

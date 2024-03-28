@@ -118,7 +118,7 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function testDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
+	const { connectorId, connectorName, datasourceName, datasourceDescription, sourceConfig }  = req.body;
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -190,6 +190,7 @@ export async function testDatasourceApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: datasourceName,
+	    description: datasourceDescription,
 	    gcsFilename: null,
 	    originalName: datasourceName,
 	    sourceId: createdSource.sourceId,
@@ -216,6 +217,7 @@ export async function addDatasourceApi(req, res, next) {
 	const { 
 		datasourceId,
 		datasourceName,
+		datasourceDescription,
 		streams,
 		selectedFieldsMap,
 		scheduleType,
@@ -646,7 +648,7 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	const { modelId, name } = req.body;
+	const { modelId, name, datasourceDescription } = req.body;
 
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
@@ -674,6 +676,7 @@ export async function uploadFileApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: name,
+	    description: datasourceDescription,
 	    gcsFilename: filename,
 	    originalName: uploadedFile.name,
 	    sourceId: null,

@@ -101,3 +101,16 @@ export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promis
 		teamId: toObjectId(teamId),
 	});
 }
+
+export async function getAgentNameMap(teamId: db.IdOrStr, agentIds: db.IdOrStr[] = []): Promise<Agent[]> {
+	const agents = await AgentCollection().find({
+		teamId: toObjectId(teamId),
+		_id: {
+			$in: agentIds.map(toObjectId)
+		},
+	}).toArray();
+	return (agents||[]).reduce((acc, x) => {
+		acc[x.name] = x?.icon?.filename;
+		return acc;
+	}, {});
+}

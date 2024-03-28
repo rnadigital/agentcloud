@@ -154,7 +154,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -164,6 +164,8 @@ export async function editAppApi(req, res, next) {
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	const foundIcon = await getAssetById(iconId);
 
 	//const [updatedCrew, _] = 
 	await Promise.all([
@@ -183,7 +185,11 @@ export async function editAppApi(req, res, next) {
 				.map(t => t.trim())
 				.filter(t => t),
 			capabilities,
-			appType
+			appType,
+			icon: foundIcon ? {
+				id: foundIcon._id,
+				filename: foundIcon.filename,
+			} : null,
 		})
 	]);
 

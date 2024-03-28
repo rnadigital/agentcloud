@@ -118,7 +118,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			setToolState(oldTs => oldTs.concat([tool]));
 		}
 	};
-	console.log(icon);
 	let modal;
 	switch (modalOpen) {
 		case 'model':

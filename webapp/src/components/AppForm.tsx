@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import AvatarUploader from 'components/AvatarUploader';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
@@ -44,6 +45,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 		const oa = agentChoices.find(ai => ai._id === a);
 		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
 	}).filter(n => n);
+	const [icon, setIcon] = useState(app?.icon);
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
 	
 	const initialTasks = tasks && tasks.map(t => {
@@ -64,6 +66,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			appType: appTypeState,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
+			iconId: icon?._id,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
@@ -89,6 +92,12 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 		await fetchFormData && fetchFormData();
 		setModalOpen(false);
 	}
+
+	const iconCallback = async (addedIcon) => {
+		await fetchFormData && fetchFormData();
+		setModalOpen(false);
+		setIcon(addedIcon);
+	};
 
 	let modal;
 	switch (modalOpen) {
@@ -116,6 +125,17 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			/>
 
 			<div className='space-y-4'>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Avatar
+						</label>
+						<div className='mt-2'>
+							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+						</div>
+					</div>
+				</div>			
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
