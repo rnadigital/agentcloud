@@ -70,7 +70,7 @@ export default function Apps(props) {
 			buttonMessage={'New App'}
 		/>}
 
-		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 py-2'>
+		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
 			{apps.map((a, ai) => (<AppCard key={ai} app={a} startSession={startSession} />))}
 		</div>
 	</>);

@@ -8,7 +8,7 @@ export default function AppCard({ app, startSession }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	return (
-		<div className='xs:w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 px-6 py-4 flex flex-col space-between min-h-50'>
+		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<div className='flex items-center justify-center p-4'>
 					{icon && icon.path
@@ -22,12 +22,12 @@ export default function AppCard({ app, startSession }) {
 					</p>
 				</div>
 			</a>
-			<div className='flex flex-col lg:flex-row justify-between pt-5 gap-4	grid-cols-1 xl:grid-cols-2'>
+			<div className='flex flex-col lg:flex-row justify-between pt-5 gap-4 grid-cols-1 xl:grid-cols-2'>
 				<div className='w-full xl:w-min text-sm text-gray-600'>
 					{app.author ? `By ${app.author}` : 'AgentCloud App'}
 				</div>
 				<button
-					className='rounded-md xl:rounded xl:w-24  h-10 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full inline-flex items-center'
+					className='rounded-md xl:rounded-full xl:w-24 h-10 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full inline-flex items-center self-end'
 					onClick={() => {
 						startSession(app._id);
 					}}

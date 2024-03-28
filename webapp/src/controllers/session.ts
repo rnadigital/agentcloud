@@ -51,12 +51,17 @@ export async function sessionsPage(app, req, res, next) {
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
 	const foundCrew = await getCrewById(req.params.resourceSlug, session?.crewId);
+	let agents;
 	if (foundCrew) {
-		const agentMap = await getAgents(req.params.resourceSlug, foundCrew.agents);
+		agents = await getAgents(req.params.resourceSlug, foundCrew.agents);
 	}
 	return {
 		csrf: req.csrfToken(),
 		session,
+		avatarMap: (agents||[]).reduce((acc, x) => {
+			acc[x.name] = x?.icon?.filename;
+			return acc;
+		}, {}),
 	};
 }
 
