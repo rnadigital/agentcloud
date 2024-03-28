@@ -1,7 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
+import { getAgentById, getAgents,getAgentsById, getAgentsByTeam } from 'db/agent';
 import { getAppById } from 'db/app';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
@@ -50,6 +50,10 @@ export async function sessionsPage(app, req, res, next) {
 
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
+	const foundCrew = await getCrewById(req.params.resourceSlug, session?.crewId);
+	if (foundCrew) {
+		const agentMap = await getAgents(req.params.resourceSlug, foundCrew.agents);
+	}
 	return {
 		csrf: req.csrfToken(),
 		session,

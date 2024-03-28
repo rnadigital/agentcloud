@@ -2,8 +2,8 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
+import { getAssetById } from 'db/asset';
 import { getDatasourcesByTeam } from 'db/datasource';
-import { getIconById } from 'db/icon';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
@@ -110,7 +110,7 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 	
-	const foundIcon = await getIconById(iconId);
+	const foundIcon = await getAssetById(iconId);
 
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,

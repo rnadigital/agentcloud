@@ -2,9 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
+import { getAssetById } from 'db/asset';
 import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
-import { getIconById } from 'db/icon';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -129,7 +129,7 @@ export async function addToolApi(req, res, next) {
 		}
 	}
 
-	const foundIcon = await getIconById(iconId);
+	const foundIcon = await getAssetById(iconId);
 
 	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,

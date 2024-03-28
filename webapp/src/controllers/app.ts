@@ -3,8 +3,8 @@
 import { dynamicResponse } from '@dr';
 import { getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
+import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
-import { getIconById } from 'db/icon';
 import { getModelsByTeam } from 'db/model';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
@@ -112,7 +112,7 @@ export async function addAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getIconById(iconId);
+	const foundIcon = await getAssetById(iconId);
 
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,

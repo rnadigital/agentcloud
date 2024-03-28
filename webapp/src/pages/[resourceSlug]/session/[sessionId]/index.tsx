@@ -2,6 +2,7 @@ import * as API from '@api';
 import {
 	StopIcon,
 } from '@heroicons/react/24/outline';
+import AgentAvatar from 'components/AgentAvatar';
 import { Message } from 'components/chat/message';
 import classNames from 'components/ClassNames';
 import SessionChatbox from 'components/SessionChatbox';
@@ -31,6 +32,7 @@ export default function Session(props) {
 	// @ts-ignore
 	const { sessionId } = router.query;
 	const [currentSession, setCurrentSession] = useState(sessionId);
+	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 	const { session } = state;
 	const scrollContainerRef = useRef(null);
 	const [sessionsData, setSessionData] = useState(null);
@@ -207,6 +209,7 @@ export default function Session(props) {
 					tokens: res.session.tokensUsed,
 					scrollToBottom,
 				});
+				setAuthorAvatarMap(res.avatarMap);
 			}
 		}, setError, router);
 		API.getMessages({
@@ -220,7 +223,7 @@ export default function Session(props) {
 						.sort((ca, cb) => ca.ts - cb.ts)
 						.map(x => x.chunk)
 						.join('');
-					if (m.chunks.length > 1 && combinedChunks?.length > 0) {
+					if (m?.chunks?.length > 1 && combinedChunks?.length > 0) {
 						_m.message.text = (_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') + combinedChunks;
 					}
 					_m.tokens = m.tokens || _m.tokens;
@@ -297,6 +300,7 @@ export default function Session(props) {
 						displayType={m?.displayType || m?.message?.displayType}
 						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
 						chunking={m?.chunks?.length > 0 && mi === marr.length-1}
+						avatar={<AgentAvatar agent={{ icon: { filename: authorAvatarMap[m?.message?.authorName] } }} />}
 					/>;
 				})}
 				{((chatBusyState && messages?.length > 0 && !terminated) || loading || (messages && messages.length === 0)) && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>

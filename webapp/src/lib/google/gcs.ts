@@ -27,7 +27,7 @@ export async function createBucket() {
 		.catch(e => console.warn(e.message)); //warning only
 }
 
-export async function uploadFile(filename: string, uploadedFile: any) { //TODO: remove any type
+export async function uploadFile(filename: string, uploadedFile: any, _public?: boolean) { //TODO: remove any type
 	log('Uploading file %s (%s)', uploadedFile.name, filename);
 	return new Promise((res, rej) => {
 		const file = initialiseCloudStorageClient()
@@ -42,8 +42,11 @@ export async function uploadFile(filename: string, uploadedFile: any) { //TODO: 
 			log('File upload error:', err);
 			rej(err);
 		});
-		stream.on('finish', () => {
+		stream.on('finish', async () => {
 			log('File uploaded successfully.');
+			if (_public === true) {
+				await file.makePublic();
+			}
 			res(null);
 		});
 		stream.end(uploadedFile.data);

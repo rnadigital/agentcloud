@@ -2,9 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
+import { getAssetById } from 'db/asset';
 import { removeAgentFromCrews } from 'db/crew';
 import { getDatasourcesById, getDatasourcesByTeam } from 'db/datasource';
-import { getIconById } from 'db/icon';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById, getToolsByTeam } from 'db/tool';
@@ -111,6 +111,7 @@ export async function addAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
+		iconId,
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
@@ -147,6 +148,8 @@ export async function addAgentApi(req, res, next) {
 		}
 	}
 
+	const foundIcon = await getAssetById(iconId);
+
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -161,6 +164,10 @@ export async function addAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedAgent.insertedId, redirect: `/${req.params.resourceSlug}/agents` });
@@ -190,7 +197,7 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-		iconId, //iconId from icons db
+		iconId,
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
@@ -216,7 +223,7 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getIconById(iconId);
+	const foundIcon = await getAssetById(iconId);
 	
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 	    name,

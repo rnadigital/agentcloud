@@ -144,18 +144,18 @@ export function deleteModel(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/model/${body.modelId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
-// Icons
-export function addIcon(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/icon/add`, 'POST', body, dispatch, errorCallback, router);
+// Asset
+export function addAsset(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.get('resourceSlug')}/forms/asset/add`, 'POST', body, dispatch, errorCallback, router);
 }
-export function getIcon(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}.json`, 'GET', null, dispatch, errorCallback, router);
+export function getAsset(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/asset/${body.assetId}.json`, 'GET', null, dispatch, errorCallback, router);
 }
-export function editIcon(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}/edit`, 'POST', body, dispatch, errorCallback, router);
+export function editAsset(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/asset/${body.assetId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
-export function deleteIcon(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/icon/${body.iconId}`, 'DELETE', body, dispatch, errorCallback, router);
+export function deleteAsset(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/asset/${body.assetId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 // Credentials

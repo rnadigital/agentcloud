@@ -56,8 +56,8 @@ const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 	[Permissions.SYNC_DATASOURCE]: { title: 'Sync DataSource', label: 'Sync DataSource', desc: 'Ability to sync a data source' },
 	[Permissions.DELETE_DATASOURCE]: { title: 'Delete DataSource', label: 'Delete DataSource', desc: 'Ability to delete a data source' },
 
-	[Permissions.UPLOAD_ICON]: { title: 'Upload Icon', label: 'Upload Icon', desc: 'Ability to upload an icon' },
-	[Permissions.DELETE_ICON]: { title: 'Delete Icon', label: 'Delete Icon', desc: 'Ability to delete an icon' },
+	[Permissions.UPLOAD_ASSET]: { title: 'Upload Asset', label: 'Upload Asset', desc: 'Ability to upload an asset' },
+	[Permissions.DELETE_ASSET]: { title: 'Delete Asset', label: 'Delete Asset', desc: 'Ability to delete an asset' },
 
 })));
 

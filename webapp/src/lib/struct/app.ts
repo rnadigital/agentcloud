@@ -1,7 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
-import { IconAttachment } from 'struct/icon';
+import { IconAttachment } from 'struct/asset';
 
 export type App = {
 	_id?: ObjectId;

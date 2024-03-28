@@ -29,9 +29,9 @@ import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
 import * as appController from 'controllers/app';
+import * as assetController from 'controllers/asset';
 import * as credentialController from 'controllers/credential';
 import * as datasourceController from 'controllers/datasource';
-import * as iconController from 'controllers/icon';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
 import * as sessionController from 'controllers/session';
@@ -198,13 +198,13 @@ export default function router(server, app) {
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.addTeamApi);
 
-	//icons
-	teamRouter.get('/icons', hasPerms.one(Permissions.UPLOAD_ICON), datasourceController.datasourceAddPage.bind(null, app));
-	teamRouter.get('/icon/add', hasPerms.one(Permissions.UPLOAD_ICON), datasourceController.datasourceAddPage.bind(null, app));
-	teamRouter.post('/forms/icon/add', hasPerms.one(Permissions.UPLOAD_ICON), iconController.uploadIconApi);
-	// teamRouter.get('/icon/:iconId([a-f0-9]{24}).json', authedMiddlewareChain, iconController.getIcon);
-	// teamRouter.post('/icon/:iconId([a-f0-9]{24})/edit', authedMiddlewareChain, iconController.editIcon);
-	// teamRouter.delete('/forms/icon/:iconId([a-f0-9]{24})', authedMiddlewareChain, iconController.deleteIcon);
+	//assets
+	// teamRouter.get('/assets', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetPage.bind(null, app));
+	// teamRouter.get('/asset/add', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetAddPage.bind(null, app));
+	teamRouter.post('/forms/asset/add', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.uploadAssetApi);
+	// teamRouter.get('/asset/:assetId([a-f0-9]{24}).json', authedMiddlewareChain, assetController.getAsset);
+	// teamRouter.post('/asset/:assetId([a-f0-9]{24})/edit', authedMiddlewareChain, assetController.editAsset);
+	// teamRouter.delete('/forms/asset/:assetId([a-f0-9]{24})', authedMiddlewareChain, assetController.deleteAsset);
 
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);

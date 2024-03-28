@@ -1,10 +1,11 @@
 import { ObjectId } from 'mongodb';
 
-export type Icon = {
+export type Asset = {
 	_id?: ObjectId;
 	teamId: ObjectId;
 	orgId: ObjectId;
 	filename: string;
+	originalFilename: string;
 	mimeType: string;
 	uploadedAt: Date;
 }

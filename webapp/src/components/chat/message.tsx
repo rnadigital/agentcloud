@@ -138,7 +138,7 @@ export function Message({
 	isLastSeen,
 	ts,
 	authorName,
-	authorImage,
+	avatar,
 	incoming,
 	sendMessage,
 	chunking,
@@ -155,7 +155,7 @@ export function Message({
 		isLastSeen?: boolean,
 		ts?: number,
 		authorName?: string,
-		authorImage?: string,
+		avatar?: any,
 		incoming?: boolean,
 		sendMessage?: Function,
 		chunking?: boolean,
@@ -196,7 +196,7 @@ export function Message({
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
-			{!sameAuthorAsPrevious && <Blockies seed={authorName} />}
+			{!sameAuthorAsPrevious && avatar}
 		</span>
 	</div>;
 
