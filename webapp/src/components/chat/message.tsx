@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FeedbackOption } from 'struct/session';
+import AgentAvatar from 'components/AgentAvatar';
 
 import { useChatContext } from '../../context/chat';
 
@@ -196,7 +197,7 @@ export function Message({
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
-			{!sameAuthorAsPrevious && avatar}
+			{!sameAuthorAsPrevious && avatar && <AgentAvatar agent={avatar} size={8} />}
 		</span>
 	</div>;
 

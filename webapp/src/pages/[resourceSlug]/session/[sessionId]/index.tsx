@@ -2,7 +2,6 @@ import * as API from '@api';
 import {
 	StopIcon,
 } from '@heroicons/react/24/outline';
-import AgentAvatar from 'components/AgentAvatar';
 import { Message } from 'components/chat/message';
 import classNames from 'components/ClassNames';
 import SessionChatbox from 'components/SessionChatbox';
@@ -301,7 +300,7 @@ export default function Session(props) {
 						displayType={m?.displayType || m?.message?.displayType}
 						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
 						chunking={m?.chunks?.length > 0 && mi === marr.length-1}
-						avatar={<AgentAvatar agent={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }} />}
+						avatar={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
 					/>;
 				})}
 				{((chatBusyState && messages?.length > 0 && !terminated) || loading || (messages && messages.length === 0)) && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
