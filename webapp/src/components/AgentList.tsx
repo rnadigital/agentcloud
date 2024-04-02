@@ -1,10 +1,10 @@
 import * as API from '@api';
 import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
-import Permissions from 'permissions/permissions';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import Permissions from 'permissions/permissions';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 

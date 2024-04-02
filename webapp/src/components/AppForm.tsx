@@ -1,10 +1,10 @@
 'use strict';
 
 import * as API from '@api';
-import AvatarUploader from 'components/AvatarUploader';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
+import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';

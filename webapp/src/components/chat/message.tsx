@@ -1,10 +1,10 @@
 import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import AgentAvatar from 'components/AgentAvatar';
 import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FeedbackOption } from 'struct/session';
-import AgentAvatar from 'components/AgentAvatar';
 
 import { useChatContext } from '../../context/chat';
 

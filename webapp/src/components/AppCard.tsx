@@ -1,8 +1,8 @@
 // import { useAccountContext } from '../../context/account';
 import { PlayIcon } from '@heroicons/react/20/solid';
+import AgentAvatar from 'components/AgentAvatar';
 import { useRouter } from 'next/router';
 import Blockies from 'react-blockies';
-import AgentAvatar from 'components/AgentAvatar';
 
 export default function AppCard({ app, startSession }) {
 	const { description, name, icon } = app;
