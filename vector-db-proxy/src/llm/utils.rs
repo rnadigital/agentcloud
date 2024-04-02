@@ -32,14 +32,65 @@ pub async fn embed_text(
                 let model = FastEmbedModels::from(m.to_string());
                 match FastEmbedModels::translate(&model) {
                     Some(translation) => {
-                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                            model_name: translation,
-                            show_download_message: true,
-                            // execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
-                            ..Default::default()
-                        })?;
-                        let embeddings = model.passage_embed(text, None)?;
-                        Ok(embeddings)
+                        println!("Checking for hardware acceleration...");
+                        println!("Checking for CoreML...");
+                        let coreml = CoreMLExecutionProvider::default();
+                        match coreml.is_available() {
+                            Ok(_) => {
+                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                    model_name: translation,
+                                    show_download_message: true,
+                                    execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
+                                    ..Default::default()
+                                })?;
+                                let embeddings = model.passage_embed(text, None)?;
+                                Ok(embeddings)
+                            }
+                            Err(_) => {
+                                println!("CoreML was not available");
+                                println!("Looking for CUDA hardware...");
+                                let cuda = CUDAExecutionProvider::default();
+                                match cuda.is_available() {
+                                    Ok(_) => {
+                                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                            model_name: translation,
+                                            show_download_message: true,
+                                            execution_providers: vec![ExecutionProviderDispatch::CUDA(cuda)],
+                                            ..Default::default()
+                                        })?;
+                                        let embeddings = model.passage_embed(text, None)?;
+                                        Ok(embeddings)
+                                    }
+                                    Err(_) => {
+                                        println!("CUDA was  not available");
+                                        println!("Checking for ROCm...");
+                                        let roc = ROCmExecutionProvider::default();
+                                        match roc.is_available() {
+                                            Ok(_) => {
+                                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                    model_name: translation,
+                                                    show_download_message: true,
+                                                    execution_providers: vec![ExecutionProviderDispatch::ROCm(roc)],
+                                                    ..Default::default()
+                                                })?;
+                                                let embeddings = model.passage_embed(text, None)?;
+                                                Ok(embeddings)
+                                            }
+                                            Err(_) => {
+                                                println!("No hardware acceleration found...falling back to CPU");
+                                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                    model_name: translation,
+                                                    show_download_message: true,
+                                                    ..Default::default()
+                                                })?;
+                                                let embeddings = model.passage_embed(text, None)?;
+                                                Ok(embeddings)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     None => Err(anyhow!(
                         "Model does not match any known fast embed model variants"
