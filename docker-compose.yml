@@ -100,7 +100,6 @@ services:
     environment:
       - LOCAL=True
       - MAX_THREADS=50
-      - OAI_CONFIG_LIST=/app/config/OAI_CONFIG_LIST.json
       - BASE_PATH=/app
       - SOCKET_URL=http://webapp_next:3000/
       - DB_URL=mongodb://docker_mongo:27017/test
