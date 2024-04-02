@@ -6,6 +6,7 @@ ENV GOOGLE_APPLICATION_CREDENTIALS=/usr/local/src/vector-db-proxy/keyfile.json
 RUN mkdir -p src
 COPY src/dummy.rs src
 COPY Cargo.toml .
+COPY Cargo.lock .
 RUN sed -i 's#src/main.rs#src/dummy.rs#' Cargo.toml
 RUN cargo build --release
 RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
