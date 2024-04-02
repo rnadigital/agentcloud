@@ -54,6 +54,8 @@ Options:
 --gcs-bucket-name NAME           Specify the GCS bucket name to use.
 --gcs-bucket-location LOCATION   Specify the GCS bucket location.
 --openai-api-key KEY             Specify your OpenAI API key.
+--stripe-pricing-table-id ID     Stripe pricing table ID.
+--stripe-publishable-key KEY      Stripe publishable API key.
 -h, --help                       Display this help message."""
 }
 
@@ -85,6 +87,8 @@ SERVICE_ACCOUNT_JSON_PATH=""
 GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
 OPENAI_API_KEY=""
+STRIPE_PRICING_TABLE_ID=""
+STRIPE_PUBLISHABLE_KEY=""
 
 # Initialize variables to indicate whether to kill specific containers
 KILL_WEBAPP_NEXT=0
@@ -119,6 +123,8 @@ while [[ "$#" -gt 0 ]]; do
         --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
         --gcs-bucket-location) GCS_BUCKET_LOCATION="$2"; shift ;;
         --openai-api-key) OPENAI_API_KEY="$2"; shift ;;
+        --stripe-pricing-table-id) STRIPE_PRICING_TABLE_ID="$2"; shift ;;
+        --stripe-publishable-key) STRIPE_PUBLISHABLE_KEY="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown parameter passed: $1"; usage; exit 1 ;;
     esac
