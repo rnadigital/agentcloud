@@ -83,6 +83,7 @@ export default function router(server, app) {
 
 	server.post('/stripe-paymentlink', authedMiddlewareChain, stripeController.createPaymentLink);
 	server.post('/stripe-portallink', authedMiddlewareChain, stripeController.createPortalLink);
+	server.post('/stripe-plan', authedMiddlewareChain, stripeController.changePlanApi);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -108,7 +109,6 @@ export default function router(server, app) {
 	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
-	teamRouter.get('/playground', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));

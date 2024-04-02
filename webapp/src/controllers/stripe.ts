@@ -87,6 +87,7 @@ export async function webhookHandler(req, res, next) {
 //			break;
 		case 'customer.subscription.updated':
 			const subscriptionUpdated = event.data.object;
+			//TODO: check if its the PLAN and update them, if its an addon don't bother
 			if (subscriptionUpdated.current_period_end) {
 				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.current_period_end*1000);
 			}
@@ -100,6 +101,7 @@ export async function webhookHandler(req, res, next) {
 			}
 			break;
 		case 'customer.subscription.deleted':
+			//TODO: check if its the PLAN or addons being unsubbed
 			const subscriptionDeleted = event.data.object;
 			await unsetStripeCustomer(subscriptionDeleted.customer);
 			break;
@@ -119,23 +121,17 @@ export async function createPortalLink(req, res, next) {
 	}
 
 	if (!res.locals.account?.stripe?.stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
+		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
 	const activeSub = await getFirstActiveSubscription(res.locals.account?.stripe?.stripeCustomerId);
 	if (!activeSub) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to cancel' });
+		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
 	const portalLink = await stripe.billingPortal.sessions.create({
 		customer: res.locals.account?.stripe?.stripeCustomerId,
-		return_url: `${process.env.URL_APP}/account`,
-		flow_data: {
-			type: 'subscription_cancel',
-			subscription_cancel: {
-				subscription: activeSub.id,
-			},
-		},
+		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
 	});
 
 	await addPortalLink({
@@ -152,6 +148,12 @@ export async function createPortalLink(req, res, next) {
 
 export async function createPaymentLink(req, res, next) {
 
+	// const { priceId } = req.body;
+	// if (!priceId) { //TODO: check if valid priceId
+	// 	return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	// }
+	const priceId = process.env.STRIPE_PRICE_ID;
+
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
@@ -163,14 +165,14 @@ export async function createPaymentLink(req, res, next) {
 	const paymentLink = await stripe.paymentLinks.create({
 		line_items: [
 			{
-				price: process.env.STRIPE_PRICE_ID,
+				price: priceId,
 				quantity: 1,
 			},
 		],
 		after_completion: {
 			type: 'redirect',
 			redirect: {
-				url: `${process.env.URL_APP}/account`,
+				url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
 			},
 		},
 	});
@@ -184,5 +186,54 @@ export async function createPaymentLink(req, res, next) {
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
+
+}
+
+export async function changePlanApi(req, res, next) {
+
+	const { priceId } = req.body;
+	if (!priceId) { //TODO: check if valid priceId
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
+
+	const stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+	
+	const currentSubscription = await getFirstActiveSubscription(stripeCustomerId);
+	if (!currentSubscription) {
+		const paymentLink = await stripe.paymentLinks.create({
+			line_items: [
+				{
+					price: priceId,
+					quantity: 1,
+				},
+			],
+			after_completion: {
+				type: 'redirect',
+				redirect: {
+					url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
+				},
+			},
+		});
+		await addPaymentLink({
+			accountId: toObjectId(res.locals.account._id),
+			paymentLinkId: paymentLink.id,
+			url: paymentLink.url,
+			payload: paymentLink,
+			createdDate: new Date(),
+		});
+		return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
+	}
+
+	// Update the subscription with the new plan, handling pro-rated charges
+	const updatedSubscription = await stripe.subscriptions.update(currentSubscription.id, {
+		items: [{
+			id: currentSubscription.items.data[0].id,
+			price: priceId,
+		}],
+		proration_behavior: 'always_invoice', // Ensure pro-ration is billed
+	});
+
+	// TODO: respond with the updated subscription details??
+	return dynamicResponse(req, res, 200, { /**/ });
 
 }
