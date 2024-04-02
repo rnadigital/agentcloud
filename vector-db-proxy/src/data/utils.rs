@@ -98,6 +98,8 @@ pub async fn apply_chunking_strategy_to_document(
     chunking_strategy: ChunkingStrategy,
     chunking_character: Option<String>,
     embedding_models: Option<String>,
+    mongo_conn: Arc<RwLock<Database>>,
+    datasource_id: String,
 ) -> anyhow::Result<Vec<DocumentModel>> {
     let chunker = TextChunker::default();
     let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
@@ -108,6 +110,8 @@ pub async fn apply_chunking_strategy_to_document(
             chunking_strategy,
             chunking_character,
             embedding_model_choice,
+            mongo_conn,
+            datasource_id,
         )
         .await
     {

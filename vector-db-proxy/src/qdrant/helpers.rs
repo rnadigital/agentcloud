@@ -8,6 +8,7 @@ use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
+use mongodb::Database;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -100,6 +101,7 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
 ///
 /// ```
 pub async fn embed_payload(
+    mongo_conn: Arc<RwLock<Database>>,
     data: &HashMap<String, String>,
     text: &String,
     datasource_id: Option<String>,
@@ -111,7 +113,7 @@ pub async fn embed_payload(
                 hash_map_values_as_serde_values!(data);
             if let Ok(metadata) = json!(payload).try_into() {
                 // Embedding sentences using OpenAI ADA2
-                let embedding_vec = embed_text(vec![text], &embedding_model).await?;
+                let embedding_vec = embed_text(mongo_conn, _id, vec![text], &embedding_model).await?;
                 // Construct PointStruct to insert into DB
                 if !embedding_vec.is_empty() {
                     if let Some(embedding) = embedding_vec.into_iter().next() {

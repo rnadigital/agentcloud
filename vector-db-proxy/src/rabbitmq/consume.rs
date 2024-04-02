@@ -125,12 +125,15 @@ pub async fn subscribe_to_queue(
                                                                             ChunkingStrategy::from(
                                                                                 chunking_method,
                                                                             );
+                                                                        let mongo_conn_clone = Arc::clone(&mongo_client);
                                                                         match apply_chunking_strategy_to_document(
                                                                             document_text,
                                                                             metadata,
                                                                             chunking_strategy,
                                                                             chunking_character,
                                                                             Some(model_parameters.model),
+                                                                            mongo_conn_clone,
+                                                                            datasource_id.to_string(),
                                                                         )
                                                                             .await
                                                                         {

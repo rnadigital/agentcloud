@@ -3,7 +3,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
     pub syncCatalog: Value,
     pub scheduleType: String,
@@ -17,7 +17,7 @@ pub struct DatasourceConnectionSettings {
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DataSources {
     pub _id: ObjectId,
     pub orgId: ObjectId,
@@ -71,4 +71,21 @@ pub struct Model {
     pub model: String,
     pub embeddingLength: i32,
     pub modelType: String,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CredentialsObj {
+    pub key: Option<String>,
+    pub endpoint: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Credentials {
+    pub _id: ObjectId,
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub name: String,
+    pub createdDate: Option<DateTime>,
+    pub credentials: Option<CredentialsObj>,
 }
