@@ -76,6 +76,7 @@ export default function router(server, app) {
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
+	server.get('/billing', authedMiddlewareChain, accountController.billingPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs

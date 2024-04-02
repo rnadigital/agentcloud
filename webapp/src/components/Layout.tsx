@@ -9,13 +9,13 @@ import {
 	ChatBubbleLeftIcon,
 	CircleStackIcon,
 	CpuChipIcon,
-	CreditCardIcon,
 	KeyIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
 	Square3Stack3DIcon,
 	UserGroupIcon,
 	UserIcon,
+	CreditCardIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
@@ -64,6 +64,7 @@ const teamNavigation = [
 
 const userNavigation = [
 	{ name: 'My Account', href: '/account' },
+	{ name: 'Billing', href: '/billing' },
 	{ name: 'Sign out', href: '#', logout: true },
 ];
 
@@ -225,6 +226,23 @@ export default withRouter(function Layout(props) {
 																Account
 															</Link>
 														</li>
+														<li key='billing'>
+															<Link
+																href='/billing'
+																className={classNames(
+																	path.endsWith('/billing')
+																		? 'bg-gray-800 text-white'
+																		: 'text-gray-400 hover:text-white hover:bg-gray-800',
+																	'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																)}
+															>
+																<CreditCardIcon
+																	className='h-6 w-6 shrink-0'
+																	aria-hidden='true'
+																/>
+																Billing
+															</Link>
+														</li>
 														{/*<li>
 															<Link
 																href='/settings'
@@ -349,6 +367,23 @@ export default withRouter(function Layout(props) {
 													aria-hidden='true'
 												/>
 												Account
+											</Link>
+										</li>
+										<li key='billing'>
+											<Link
+												href='/billing'
+												className={classNames(
+													path.endsWith('/billing')
+														? 'bg-gray-800 text-white'
+														: 'text-gray-400 hover:text-white hover:bg-gray-800',
+													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+												)}
+											>
+												<CreditCardIcon
+													className='h-6 w-6 shrink-0'
+													aria-hidden='true'
+												/>
+												Billing
 											</Link>
 										</li>
 										{/*<li>

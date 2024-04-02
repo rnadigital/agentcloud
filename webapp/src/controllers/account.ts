@@ -33,6 +33,16 @@ export async function accountPage(app, req, res, next) {
 }
 
 /**
+ * GET /billing
+ * billing page html
+ */
+export async function billingPage(app, req, res, next) {
+	const data = await accountData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, '/billing');
+}
+
+/**
  * GET /account.json
  * account page json data
  */

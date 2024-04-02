@@ -15,17 +15,6 @@ export default function Account(props) {
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
 
-	//TODO: move this to a lib (IF its useful in other files)
-	const stripeMethods = [API.getPaymentLink, API.getPortalLink, API.changePlan];
-	function createApiCallHandler(apiMethod) {
-		return (e) => {
-			e.preventDefault();
-			apiMethod({
-				_csrf: e.target._csrf.value,
-			}, null, setError, router);
-		};
-	}
-
 	// Add this function to handle setting plans
 	async function adminEditAction(e, action) {
 		e.preventDefault();
@@ -36,8 +25,6 @@ export default function Account(props) {
 			refreshAccountContext();
 		}, setError, router);
 	}
-
-	const [getPaymentLink, getPortalLink, changePlan, createPortalSession] = stripeMethods.map(createApiCallHandler);
 
 	function fetchAccount() {
 		API.getAccount({ resourceSlug }, dispatch, setError, router);
@@ -50,9 +37,6 @@ export default function Account(props) {
 	if (!account) {
 		return 'Loading...'; //TODO: loader
 	}
-
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled, stripePlan } = account?.stripe || {};
-	console.log(account?.stripe);
 
 	return (
 		<>
@@ -107,40 +91,6 @@ export default function Account(props) {
 					Set Default Permissions
 				</button>
 			</div>
-
-			<div className='border-b dark:border-slate-400 pb-2 my-2 mt-20'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Subscription Status</h3>
-			</div>
-			
-			<form onSubmit={getPaymentLink}>
-				<input type='hidden' name='_csrf' value={csrf} />
-				<div className='my-2 flex items-center justify-start gap-x-6'>
-					<button
-						type='submit'
-						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						Subscribe
-					</button>
-				</div>
-			</form>
-
-			<form onSubmit={getPortalLink}>
-				<input type='hidden' name='_csrf' value={csrf} />
-				<div className='mb-2 flex items-center justify-start gap-x-6'>
-					<button
-						type='submit'
-						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						Manage subscription
-					</button>
-				</div>
-			</form>
-
-			<p>Subscribed: {stripeCustomerId ? 'Yes' : 'No'}</p>
-			<p>Stripe Plan: <code>{stripePlan}</code></p>
-			{stripeCustomerId && <p>Stripe Customer ID: <code>{stripeCustomerId}</code></p>}
-			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
-			{stripeCancelled && <p>Stripe subscription cancelled.</p>}
 
 		</>
 	);

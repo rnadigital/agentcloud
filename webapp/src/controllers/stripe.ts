@@ -131,7 +131,7 @@ export async function createPortalLink(req, res, next) {
 
 	const portalLink = await stripe.billingPortal.sessions.create({
 		customer: res.locals.account?.stripe?.stripeCustomerId,
-		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
+		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 	});
 
 	await addPortalLink({
@@ -172,7 +172,7 @@ export async function createPaymentLink(req, res, next) {
 		after_completion: {
 			type: 'redirect',
 			redirect: {
-				url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
+				url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 			},
 		},
 	});
@@ -210,7 +210,7 @@ export async function changePlanApi(req, res, next) {
 			after_completion: {
 				type: 'redirect',
 				redirect: {
-					url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/account')}`,
+					url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 				},
 			},
 		});
