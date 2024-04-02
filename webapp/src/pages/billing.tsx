@@ -1,5 +1,6 @@
 import * as API from '@api';
 import ErrorAlert from 'components/ErrorAlert';
+import StripePricingTable from 'components/StripePricingTable';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -86,11 +87,7 @@ export default function Billing(props) {
 			{stripeEndsAt && <p>Billing Period End: <code suppressHydrationWarning={true}>{new Date(stripeEndsAt).toLocaleString()}</code></p>}
 			{stripeCancelled && <p>Stripe subscription cancelled.</p>}
 
-			<script async src='https://js.stripe.com/v3/pricing-table.js'></script>
-			<stripe-pricing-table
-				pricing-table-id={process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID}
-				publishable-key={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
-			</stripe-pricing-table>
+			<StripePricingTable />
 
 		</>
 	);
