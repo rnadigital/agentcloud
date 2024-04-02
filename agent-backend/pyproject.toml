@@ -30,7 +30,7 @@ replicate = "^0.23.1"
 #crewai = "^0.14.4"
 crewai = { git = "https://github.com/rnadigital/crewAI.git", branch = "main" }
 onnxruntime = "1.17.0"
-torch = "2.2.0"
+#torch = "2.2.0"
 #crewai-tools = "^0.0.12"
 #langchain-community = "^0.0.24"
 fastembed = "^0.2.2"
