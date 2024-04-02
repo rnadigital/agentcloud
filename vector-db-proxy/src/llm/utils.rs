@@ -29,11 +29,6 @@ pub async fn embed_text(
         | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
         | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
             Some(m) => {
-                let coreml = CoreMLExecutionProvider::default().is_available().unwrap();
-                let cuda = CUDAExecutionProvider::default().is_available().unwrap();
-                let rocm = ROCmExecutionProvider::default().is_available().unwrap();
-
-
                 let model = FastEmbedModels::from(m.to_string());
                 match FastEmbedModels::translate(&model) {
                     Some(translation) => {
