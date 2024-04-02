@@ -54,7 +54,7 @@ export default function Account(props) {
 			<p>Nothing here... yet.</p>
 
 			<div className='my-2 flex flex-wrap items-center justify-start gap-x-6 gap-y-2'>
-				<button
+				{/*<button
 					onClick={(e) => adminEditAction(e, 'Free')}
 					className='inline-flex justify-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400'
 				>
@@ -77,7 +77,7 @@ export default function Account(props) {
 					className='inline-flex justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-400'
 				>
 					Set Enterprise Plan
-				</button>
+				</button>*/}
 				<button
 					onClick={(e) => adminEditAction(e, 'Root')}
 					className='inline-flex justify-center rounded-md bg-purple-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-400'
