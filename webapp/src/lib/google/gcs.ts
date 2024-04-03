@@ -17,7 +17,7 @@ function initialiseCloudStorageClient() {
 export async function createBucket() {
 	// https://googleapis.dev/nodejs/storage/latest/global.html#CreateBucketRequest
 	await initialiseCloudStorageClient()
-		.createBucket(process.env.GCS_BUCKET_NAME, {
+		.createBucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME, {
 			autoclass: {
 				enabled: true,
 				terminalStorageClass: 'NEARLINE',
@@ -31,7 +31,7 @@ export async function uploadFile(filename: string, uploadedFile: any, _public?: 
 	log('Uploading file %s (%s)', uploadedFile.name, filename);
 	return new Promise((res, rej) => {
 		const file = initialiseCloudStorageClient()
-			.bucket(process.env.GCS_BUCKET_NAME)
+			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
 			.file(filename);
 		const stream = file.createWriteStream({
 			metadata: {
@@ -56,7 +56,7 @@ export async function uploadFile(filename: string, uploadedFile: any, _public?: 
 export async function deleteFile(filename: string) {
 	log('Deleting file %s', filename);
 	const file = initialiseCloudStorageClient()
-		.bucket(process.env.GCS_BUCKET_NAME)
+		.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
 		.file(filename);
 	await file.delete({});
 }

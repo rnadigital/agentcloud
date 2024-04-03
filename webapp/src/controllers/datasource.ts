@@ -696,7 +696,7 @@ export async function uploadFileApi(req, res, next) {
 	// Send the gcs file path to rabbitmq
 	await uploadFile(filename, uploadedFile);
 	await sendMessage(JSON.stringify({
-		bucket: process.env.GCS_BUCKET_NAME,
+		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 	}), { 
 		stream: newDatasourceId.toString(), 
