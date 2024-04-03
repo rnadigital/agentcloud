@@ -66,6 +66,9 @@
       ],
       "context/*": [
         "context/*"
+      ],
+      "storage/*": [
+        "lib/storage/*"
       ]
     }
   },

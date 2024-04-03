@@ -2,9 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import { addAsset } from 'db/asset';
-import { deleteFile, uploadFile } from 'lib/google/gcs';
 import toObjectId from 'lib/misc/toobjectid';
 import withLogging from 'lib/misc/withlogging';
+import GoogleStorageProvider from 'lib/storage/google';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { Asset } from 'struct/asset';
@@ -35,7 +35,7 @@ export async function uploadAssetApi(req, res) {
 
 	const wrappedAddAsset = withLogging(addAsset, res.locals?.account?._id);
 	const addedAsset = await wrappedAddAsset(assetBody);
-	await uploadFile(filename, uploadedFile, true); //TODO: change in future to not always pass public=true
+	await GoogleStorageProvider.addFile(filename, uploadedFile, true); //TODO: change in future to not always pass public=true
 
 	return dynamicResponse(req, res, 200, assetBody);
 
