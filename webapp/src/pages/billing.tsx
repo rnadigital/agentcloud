@@ -16,11 +16,11 @@ function SubscriptionCard({ title, link=null, plan=null, price=null, description
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
-	return <div className={`w-max min-w-[300px] rounded-lg p-6 ${isPopular ? 'shadow-lg border border-gray-300' : ''}`} style={{ backgroundColor: isPopular ? '#f2f2f2' : '' }}>
+	return <div className={` cursor-pointer w-max min-w-[300px] rounded-lg p-6 ${isPopular ? 'shadow-lg border border-gray-300' : ''} ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : ''}`} style={{ backgroundColor: isPopular ? '#f2f2f2' : '' }}>
 		{!currentPlan && isPopular && <span className='px-2 py-[0.5px] bg-yellow-100 text-yellow-800 border border-yellow-300 text-sm rounded-lg'>
 			{!currentPlan && isPopular && 'Most popular'}
 		</span>}
-		{currentPlan && <span className='px-2 py-[0.5px] bg-green-100 text-green-800 border border-green-300 text-sm rounded-lg'>
+		{currentPlan && <span className='px-2 py-[0.5px] bg-white text-blue-800 border border-blue-300 text-sm rounded-lg'>
 			Current Plan
 		</span>}
 		<div className={`flex items-center mt-4 ${!currentPlan && !isPopular ? 'pt-6' : ''}`}>
@@ -115,7 +115,7 @@ export default function Billing(props) {
 
 			{/*<StripePricingTable />*/}
 
-			<div className='flex flex-row'>
+			<div className='flex flex-row gap-x-4 py-4'>
 				<SubscriptionCard title='Agent Cloud Free' price={0} plan={SubscriptionPlan.FREE} />
 				<SubscriptionCard title='Agent Cloud Pro' price={4} plan={SubscriptionPlan.PRO} />
 				<SubscriptionCard title='Agent Cloud Teams' price={8} isPopular={true} plan={SubscriptionPlan.TEAMS} />
