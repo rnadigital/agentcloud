@@ -20,14 +20,13 @@ use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
 
 pub async fn subscribe_to_queue(
+    // redis_connection_pool: Arc<Mutex<RedisConnection>>,
     qdrant_clone: Arc<RwLock<QdrantClient>>,
     queue: Arc<RwLock<MyQueue<String>>>,
     mongo_client: Arc<RwLock<Database>>,
-    // redis_connection_pool: Arc<Mutex<RedisConnection>>,
     channel: &Channel,
     queue_name: &String,
 ) {
-    // loop {
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
     match channel.basic_consume_rx(args.clone()).await {
@@ -47,125 +46,52 @@ pub async fn subscribe_to_queue(
                                 match get_datasource(&mongodb_connection, datasource_id).await {
                                     Ok(datasource) => {
                                         if let Some(ds) = datasource {
-                                            if let Ok(Some(model_parameters)) =
-                                                get_embedding_model(&mongodb_connection, datasource_id)
-                                                    .await
-                                            {
-                                                if headers
-                                                    .get(&ShortStr::try_from("type").unwrap())
-                                                    .is_some()
-                                                {
-                                                    if let Ok(_json) =
-                                                        serde_json::from_str(message_string.as_str())
-                                                    {
+                                            if let Ok(Some(model_parameters)) = get_embedding_model(&mongodb_connection, datasource_id).await {
+                                                if headers.get(&ShortStr::try_from("type").unwrap()).is_some() {
+                                                    if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                                                         let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
-
                                                         match file_operations::read_file_from_source(message_data).await {
                                                             Some((file_type, file, file_path)) => {
-                                                                save_file_to_disk(
-                                                                    file,
-                                                                    file_path.as_str(),
-                                                                )
-                                                                    .await.unwrap();
+                                                                save_file_to_disk(file, file_path.as_str()).await.unwrap();
                                                                 let message_queue = Arc::clone(&queue);
                                                                 let qdrant_conn = Arc::clone(&qdrant_clone);
                                                                 let mongo_conn = Arc::clone(&mongo_client);
                                                                 // let redis_conn = Arc::clone(&redis_connection_pool);
                                                                 let datasource_clone = ds.clone();
                                                                 let (document_text, metadata) =
-                                                                    extract_text_from_file(
-                                                                        file_type,
-                                                                        file_path.as_str(),
-                                                                        ds.originalName,
-                                                                        datasource_id.to_string(),
-                                                                        message_queue,
-                                                                        qdrant_conn,
-                                                                        mongo_conn,
-                                                                        // redis_conn,
-                                                                    )
-                                                                        .await
-                                                                        .unwrap();
+                                                                    extract_text_from_file(file_type, file_path.as_str(), ds.originalName, datasource_id.to_string(), message_queue, qdrant_conn, mongo_conn).await.unwrap();
                                                                 // dynamically get user's chunking strategy of choice from the database
-                                                                let model_obj_clone =
-                                                                    model_parameters.clone();
-                                                                let model_name =
-                                                                    model_obj_clone.model;
-                                                                let chunking_character =
-                                                                    datasource_clone
-                                                                        .chunkCharacter;
-                                                                let chunking_method =
-                                                                    datasource_clone
-                                                                        .chunkStrategy
-                                                                        .unwrap();
-                                                                let chunking_strategy =
-                                                                    ChunkingStrategy::from(
-                                                                        chunking_method,
-                                                                    );
+                                                                let model_obj_clone = model_parameters.clone();
+                                                                let model_name = model_obj_clone.model;
+                                                                let chunking_character = datasource_clone.chunkCharacter;
+                                                                let chunking_method = datasource_clone.chunkStrategy.unwrap();
+                                                                let chunking_strategy = ChunkingStrategy::from(chunking_method);
                                                                 let mongo_conn_clone = Arc::clone(&mongo_client);
-                                                                match apply_chunking_strategy_to_document(
-                                                                    document_text,
-                                                                    metadata,
-                                                                    chunking_strategy,
-                                                                    chunking_character,
-                                                                    Some(model_parameters.model),
-                                                                    mongo_conn_clone,
-                                                                    datasource_id.to_string(),
-                                                                )
-                                                                    .await
-                                                                {
+                                                                match apply_chunking_strategy_to_document(document_text, metadata, chunking_strategy, chunking_character, Some(model_parameters.model), mongo_conn_clone, datasource_id.to_string())
+                                                                    .await {
                                                                     Ok(chunks) => {
-                                                                        let mut points_to_upload: Vec<
-                                                                            PointStruct,
-                                                                        > = vec![];
+                                                                        let mut points_to_upload: Vec<PointStruct> = vec![];
                                                                         for element in chunks.iter() {
                                                                             let embedding_vector =
                                                                                 &element.embedding_vector;
                                                                             match embedding_vector {
                                                                                 Some(val) => {
                                                                                     let model = EmbeddingModels::from(model_name.clone());
-                                                                                    if let Some(point_struct) =
-                                                                                        construct_point_struct(
-                                                                                            val,
-                                                                                            element
-                                                                                                .metadata
-                                                                                                .clone()
-                                                                                                .unwrap(),
-                                                                                            Some(model),
-                                                                                        )
-                                                                                            .await
-                                                                                    {
-                                                                                        points_to_upload
-                                                                                            .push(point_struct)
+                                                                                    if let Some(point_struct) = construct_point_struct(val, element.metadata.clone().unwrap(), Some(model)).await {
+                                                                                        points_to_upload.push(point_struct)
                                                                                     }
                                                                                 }
                                                                                 None => {
-                                                                                    println!(
-                                                                                        "Embedding vector was empty!"
-                                                                                    )
+                                                                                    println!("Embedding vector was empty!")
                                                                                 }
                                                                             }
                                                                         }
-                                                                        let vector_length = model_parameters
-                                                                            .embeddingLength
-                                                                            as u64;
-                                                                        let qdrant_conn_clone =
-                                                                            Arc::clone(&qdrant_clone);
-                                                                        let qdrant = Qdrant::new(
-                                                                            qdrant_conn_clone,
-                                                                            datasource_id.to_string(),
-                                                                        );
-                                                                        match qdrant
-                                                                            .bulk_upsert_data(
-                                                                                points_to_upload,
-                                                                                Some(vector_length),
-                                                                                Some(model_name),
-                                                                            )
-                                                                            .await
-                                                                        {
+                                                                        let vector_length = model_parameters.embeddingLength as u64;
+                                                                        let qdrant_conn_clone = Arc::clone(&qdrant_clone);
+                                                                        let qdrant = Qdrant::new(qdrant_conn_clone, datasource_id.to_string());
+                                                                        match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name)).await {
                                                                             Ok(_) => {
-                                                                                println!(
-                                                                                    "points uploaded successfully!"
-                                                                                );
+                                                                                println!("points uploaded successfully!");
                                                                                 if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
                                                                                     println!("Error notifying webapp: {}", e);
                                                                                 } else {
@@ -191,13 +117,7 @@ pub async fn subscribe_to_queue(
                                                 let message_queue = Arc::clone(&queue);
                                                 let qdrant_conn = Arc::clone(&qdrant_clone);
                                                 let mongo_conn = Arc::clone(&mongo_client);
-                                                let _ = add_message_to_embedding_queue(
-                                                    message_queue,
-                                                    qdrant_conn,
-                                                    mongo_conn,
-                                                    (datasource_id.to_string(), message_string),
-                                                )
-                                                    .await;
+                                                let _ = add_message_to_embedding_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
                                             }
                                         } else {
                                             eprintln!(
