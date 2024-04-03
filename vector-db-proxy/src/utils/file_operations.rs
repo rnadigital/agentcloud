@@ -33,18 +33,10 @@ pub async fn read_file_from_source(message_data: Value) -> Option<(FileType, Vec
         message_data.get("bucket")
     {
         if let Some(file_name) =
-            message_data.get("filename")
-        {
-            match get_object_from_gcs(
-                bucket_name.as_str().unwrap(),
-                file_name.as_str().unwrap(),
-            )
-                .await
-            {
+            message_data.get("filename") {
+            match get_object_from_gcs(bucket_name.as_str().unwrap(), file_name.as_str().unwrap()).await {
                 Ok(file) => {
                     let file_type = determine_file_type(file_name.as_str().unwrap()).await;
-                    // The reason we are choosing to write the file to disk first is to create
-                    // parity between running locally and running in cloud
                     let result = (file_type, file, file_name.to_string());
                     Some(result)
                 }

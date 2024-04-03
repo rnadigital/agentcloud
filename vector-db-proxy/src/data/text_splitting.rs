@@ -128,9 +128,7 @@ impl Chunker {
             // we embed each of those sentences
             let mongo_conn_clone = Arc::clone(&self.mongo_conn);
             let datasource_id_clone = self.datasource_id.clone();
-            match embed_text_chunks_async(mongo_conn_clone, datasource_id_clone, list_of_text, self.embedding_model)
-                .await
-            {
+            match embed_text_chunks_async(mongo_conn_clone, datasource_id_clone, list_of_text, self.embedding_model).await {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                     for (i, sentence) in sentences.iter().enumerate() {
@@ -154,21 +152,19 @@ impl Chunker {
                                 percentile(&distances, breakpoint_percentile_threshold);
 
                             // Initialize accumulators for indices above and below the threshold
-                            let (indices_above_thresh, indices_below_threshold): (
-                                Vec<usize>,
-                                Vec<usize>,
-                            ) = distances
-                                .iter()
-                                .enumerate()
-                                // Use fold to iterate once, separating indices based on the threshold
-                                .fold((vec![], vec![]), |(mut above, mut below), (i, &d)| {
-                                    if d >= breakpoint_distance_threshold {
-                                        above.push(i);
-                                    } else if d < breakpoint_distance_threshold {
-                                        below.push(i);
-                                    }
-                                    (above, below)
-                                });
+                            let (indices_above_thresh, indices_below_threshold): (Vec<usize>, Vec<usize>) =
+                                distances
+                                    .iter()
+                                    .enumerate()
+                                    // Use fold to iterate once, separating indices based on the threshold
+                                    .fold((vec![], vec![]), |(mut above, mut below), (i, &d)| {
+                                        if d >= breakpoint_distance_threshold {
+                                            above.push(i);
+                                        } else if d < breakpoint_distance_threshold {
+                                            below.push(i);
+                                        }
+                                        (above, below)
+                                    });
 
                             println!("Indices above threshold:  {:?}", &indices_above_thresh);
 
