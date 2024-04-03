@@ -31,12 +31,19 @@ export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlan
 }, {} as Record<string, SubscriptionPlan>);
 
 export type PlanLimits = {
-	price: string;
 	users: number | 'Custom';
 	permissions?: Permissions[] | number[];
 	orgs: number | 'Custom';
 	teams: number | 'Custom';
-	appsYouCanBuild?: string;
+	/* TODO: turn all boolean types here into an array of bits and add them as permissions,
+		then apply them in setpermissions middleware */
+	fileUploads: boolean;
+	dataConnections: boolean;
+	maxFileUploadBytes: number;
+	storageLocations: string[];
+	llmModels: string[];
+	embeddingModels: string[];
+	//TODO: keep updated to agentcloud priing sheet
 };
 
 // This utility type extracts the keys from PlanLimits and maps them to the same value as the key
@@ -46,12 +53,16 @@ type PlanLimitsKeysType = {
 
 // Create a const object with keys that match the PlanLimits type
 export const PlanLimitsKeys: PlanLimitsKeysType = {
-	price: 'price',
 	users: 'users',
 	permissions: 'permissions',
 	orgs: 'orgs',
 	teams: 'teams',
-	appsYouCanBuild: 'appsYouCanBuild',
+	fileUploads: 'fileUploads',
+	dataConnections: 'dataConnections',
+	maxFileUploadBytes: 'maxFileUploadBytes',
+	storageLocations: 'storageLocations',
+	llmModels: 'llmModels',
+	embeddingModels: 'embeddingModels',
 };
 
 // Object to hold the limits for each plan, using computed property names
@@ -61,27 +72,47 @@ export type PricingMatrix = {
 
 export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.FREE]: {
-		price: '0/mth',
 		users: 1,
 		orgs: 1,
 		teams: 1,
+		fileUploads: true,
+		dataConnections: true,
+		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
+		storageLocations: ['US'],
+		llmModels: [],
+		embeddingModels: [],
 	},
 	[SubscriptionPlan.PRO]: {
-		price: '99/mth',
 		users: 1,
 		orgs: 1,
 		teams: 1,
+		fileUploads: true,
+		dataConnections: true,
+		maxFileUploadBytes: (25 * 1024 * 1024), //5MB
+		storageLocations: ['US'],
+		llmModels: [],
+		embeddingModels: [],
 	},
 	[SubscriptionPlan.TEAMS]: {
-		price: '199/mth',
 		users: 5,
 		orgs: 1,
 		teams: -1,
+		fileUploads: true,
+		dataConnections: true,
+		maxFileUploadBytes: (50 * 1024 * 1024), //5MB
+		storageLocations: ['US'],
+		llmModels: [],
+		embeddingModels: [],
 	},
 	[SubscriptionPlan.ENTERPRISE]: { //TODO
-		price: 'Custom',
 		users: 'Custom',
 		orgs: 'Custom', // Enterprise plans may offer custom configurations for organizations
 		teams: 'Custom', // Similarly, the number of teams is customizable for Enterprise plans
+		fileUploads: true,
+		dataConnections: true,
+		maxFileUploadBytes: (1024 * 1024 * 1024), //1GB
+		storageLocations: ['US'],
+		llmModels: [],
+		embeddingModels: [],
 	}
 };
