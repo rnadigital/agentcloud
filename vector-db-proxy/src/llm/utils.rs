@@ -36,8 +36,8 @@ pub async fn embed_text(
                         println!("Checking for CoreML...");
                         let coreml = CoreMLExecutionProvider::default();
                         match coreml.is_available() {
-                            Ok(a) => {
-                                if a {
+                            Ok(acceleration) => {
+                                if acceleration {
                                     println!("Found CoreML...");
                                     let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                         model_name: translation,
@@ -52,8 +52,8 @@ pub async fn embed_text(
                                     println!("Looking for CUDA hardware...");
                                     let cuda = CUDAExecutionProvider::default();
                                     match cuda.is_available() {
-                                        Ok(a) => {
-                                            if a {
+                                        Ok(acceleration) => {
+                                            if acceleration {
                                                 println!("Found CUDA...");
                                                 let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                     model_name: translation,
@@ -68,8 +68,8 @@ pub async fn embed_text(
                                                 println!("Checking for ROCm...");
                                                 let roc = ROCmExecutionProvider::default();
                                                 match roc.is_available() {
-                                                    Ok(a) => {
-                                                        if a {
+                                                    Ok(acceleration) => {
+                                                        if acceleration {
                                                             println!("Found ROCm...");
                                                             let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                                 model_name: translation,
