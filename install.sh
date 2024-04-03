@@ -6,6 +6,8 @@ terminal_width=$(tput cols)
 command -v docker-compose >/dev/null 2>&1 || { echo >&2 "docker-compose is required but it's not installed. Aborting."; exit 1; }
 command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
+
 if ! docker info &> /dev/null; then
     echo "Docker daemon is not running. Aborting."
     exit 1
@@ -40,7 +42,6 @@ $1
 $1"""
     fi
 }
-
 
 # Function to show usage
 usage() {
@@ -158,10 +159,35 @@ cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
 
 print_logo "=> Starting airbyte"
 
-# clone and install airbyte
-if [ ! -d "airbyte" ] ; then
-	git clone --depth=1 https://github.com/airbytehq/airbyte.git
+# Define the target version
+AIRBYTE_TARGET_VERSION="v0.57.1"
+
+# Clone and install airbyte
+if [ ! -d "airbyte" ]; then
+    git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
+else
+    # Change to the airbyte directory to check the version
+    cd airbyte
+
+    # Check if the current tag matches the target version
+    CURRENT_VERSION=$(git tag --points-at HEAD)
+    if [ "$CURRENT_VERSION" == "$AIRBYTE_TARGET_VERSION" ]; then
+        echo "Airbyte is up-to-date on $AIRBYTE_TARGET_VERSION."
+        cd ..
+    else
+        echo "Warning: You have an outdated version of Airbyte ($CURRENT_VERSION). The target version is $AIRBYTE_TARGET_VERSION."
+        # Ask user if they want to delete the outdated version and re-clone
+        read -p "Would you like to delete the existing version and re-clone? (y/n): " user_response
+        if [[ "$user_response" == "y" ]]; then
+            # Move up a directory, delete the outdated version, and re-clone
+            cd ..
+            rm -rf airbyte
+            git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
+        fi
+    fi
+
 fi
+
 cd airbyte
 ./run-ab-platform.sh -b
 cd ..
@@ -173,48 +199,30 @@ docker_up vector_db_proxy
 
 # bypass airbyte setup sceeen
 INSTANCE_CONFIGURATION=$(curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST \
-	-H 'Accept: */*' \
-	-H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"email":"example@example.org","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"example","initialSetupComplete":true,"displaySetupWizard":false}')
 
-export AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $INSTANCE_CONFIGURATION | jq -r '.defaultWorkspaceId')
+WORKSPACES_LIST=$(curl 'http://localhost:8006/v1/workspaces' \
+    -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==')
+
+export AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $WORKSPACES_LIST | jq -r '.data[0].workspaceId')
 echo $INSTANCE_CONFIGURATION
+echo $WORKSPACES_LIST
 echo $AIRBYTE_ADMIN_WORKSPACE_ID
 
 # create rabbitmq destination
 CREATED_DESTINATION=$(curl 'http://localhost:8000/api/v1/destinations/create' --compressed -X POST \
-	-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0' \
-	-H 'Accept: */*' \
-	-H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}')
 
 export AIRBYTE_ADMIN_DESTINATION_ID=$(echo $CREATED_DESTINATION | jq -r '.destinationId')
 
 # set the webhook urls for airbyte webhooks back to the webapp
 UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --compressed -X POST \
-	-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0' \
-	-H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'content-type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","notificationSettings":{"sendOnFailure":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSuccess":{"notificationType":["slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdate":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdateActionRequired":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabled":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabledWarning":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnBreakingChangeWarning":{"notificationType":["customerio"]},"sendOnBreakingChangeSyncsDisabled":{"notificationType":["customerio"]}}}')
 
 print_logo "=> Starting agentcloud backend..."
