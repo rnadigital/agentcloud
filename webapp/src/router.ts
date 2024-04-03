@@ -4,7 +4,7 @@ import checkResourceSlug from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionLimit,
-	checkSubscriptionPlan, 
+	// checkSubscriptionPlan, 
 	setSubscriptionLocals,
 } from '@mw/auth/checksubscription';
 import csrfMiddleware from '@mw/auth/csrf';

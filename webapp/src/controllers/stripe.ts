@@ -2,8 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import Stripe from 'stripe';
+import { planToPriceMap, priceToPlanMap,SubscriptionPlan } from 'struct/billing';
 
-import { setStripeCustomerId, unsetStripeCustomer, updateStripeCustomer } from '../db/account';
+import { setStripeCustomerId, setStripePlan, unsetStripeCustomer, updateStripeCustomer } from '../db/account';
 import { addCheckoutSession, getCheckoutSessionByAccountId } from '../db/checkoutsession';
 import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
 import { addPortalLink } from '../db/portallink';
@@ -49,7 +50,7 @@ export async function webhookHandler(req, res, next) {
 		return res.status(400).send(`Webhook Error: ${err.message}`);
 	}
 
-	log(`Stripe webhook "${event.type}":`, event);
+	log(`Stripe webhook "${event.type}":`, JSON.stringify(event, null, '\t'));
 
 	// Handle the event
 	switch (event.type) {
@@ -97,7 +98,21 @@ export async function webhookHandler(req, res, next) {
 			}
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
-				await unsetStripeCustomer(subscriptionUpdated.customer);
+				// await unsetStripeCustomer(subscriptionUpdated.customer);
+			}
+			//WIP
+			if (subscriptionUpdated?.items?.data?.length > 0) {
+				let planId;
+				for (let item of subscriptionUpdated?.items?.data) {
+					console.log(item);
+					const itemPriceId = item?.plan?.id;
+					if (priceToPlanMap[itemPriceId]) {
+						log(`Found plan with itemPriceId: ${itemPriceId}, Plan: ${priceToPlanMap[itemPriceId]}`);
+						await setStripePlan(subscriptionUpdated.customer, priceToPlanMap[itemPriceId]);
+					} else {
+						log(`No plan with itemPriceId: ${itemPriceId}`);
+					}
+				}
 			}
 			break;
 		case 'customer.subscription.deleted':
@@ -148,11 +163,12 @@ export async function createPortalLink(req, res, next) {
 
 export async function createPaymentLink(req, res, next) {
 
-	// const { priceId } = req.body;
-	// if (!priceId) { //TODO: check if valid priceId
-	// 	return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
-	// }
-	const priceId = process.env.STRIPE_PRICE_ID;
+	const { plan } = req.body;
+	if (!Object.values(SubscriptionPlan).includes(plan)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
+
+	const priceId = planToPriceMap[plan]; //TODO: wheres the best place to store this?
 
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
