@@ -1,4 +1,5 @@
 import GoogleStorageProvider from 'storage/google';
+import LocalStorageProvider from 'storage/local';
 
 export default class StorageProviderFactory {
 	static getStorageProvider() {
@@ -6,9 +7,8 @@ export default class StorageProviderFactory {
 			case 'google':
 				return GoogleStorageProvider;
 			case 'local':
-				return null; //LocalDiskStorageProvider
 			default:
-				throw new Error('No valid storage provider configuration found.');
+				return LocalStorageProvider;
 		}
 	}
 }

@@ -2,7 +2,7 @@ const { Storage } = require('@google-cloud/storage');
 import debug from 'debug';
 import StorageProvider from 'storage/provider';
 
-const log = debug('webapp:GoogleStorageProvider');
+const log = debug('webapp:storage:google');
 
 class GoogleStorageProvider extends StorageProvider {
 
