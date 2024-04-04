@@ -10,7 +10,6 @@ use crate::mongo::models::{DataSources, Model, Credentials, CredentialsObj};
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
     let object_id = ObjectId::from_str(datasource_id).unwrap();
-    println!("Object ID: {}", object_id);
     let filter_options = FindOneOptions::builder().sort(doc! {"discoveredSchema": 0, "connectionSettings": 0}).build();
     match datasources_collection
         .find_one(
