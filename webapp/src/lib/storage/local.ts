@@ -6,6 +6,10 @@ import util from 'util';
 
 const log = debug('webapp:storage:local');
 
+const mkdir = util.promisify(fs.mkdir);
+const unlink = util.promisify(fs.unlink);
+const writeFile = util.promisify(fs.writeFile);
+
 class LocalStorageProvider extends StorageProvider {
 
 	#basePath: string;
@@ -20,7 +24,6 @@ class LocalStorageProvider extends StorageProvider {
 	}
 
 	async init() {
-		const mkdir = util.promisify(fs.mkdir);
 		try {
 			await mkdir(this.#basePath, { recursive: true });
 		} catch (e) {
@@ -30,7 +33,6 @@ class LocalStorageProvider extends StorageProvider {
 	}
 
 	async addFile(filename, uploadedFile, isPublic = false) {
-		const writeFile = util.promisify(fs.writeFile);
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, uploadedFile.data);
@@ -42,7 +44,6 @@ class LocalStorageProvider extends StorageProvider {
 	}
 
 	async deleteFile(filename) {
-		const unlink = util.promisify(fs.unlink);
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await unlink(filePath);
@@ -51,6 +52,10 @@ class LocalStorageProvider extends StorageProvider {
 			log(`Failed to delete file: ${e.message}`);
 			throw e;
 		}
+	}
+
+	static getBasePath() {
+		return '/uploads/static';
 	}
 
 }

@@ -4,9 +4,9 @@ import { dynamicResponse } from '@dr';
 import { addAsset } from 'db/asset';
 import toObjectId from 'lib/misc/toobjectid';
 import withLogging from 'lib/misc/withlogging';
-import GoogleStorageProvider from 'lib/storage/google';
 import { ObjectId } from 'mongodb';
 import path from 'path';
+import StorageProviderFactory from 'storage/index';
 import { Asset } from 'struct/asset';
 
 export async function uploadAssetApi(req, res) {
@@ -35,7 +35,8 @@ export async function uploadAssetApi(req, res) {
 
 	const wrappedAddAsset = withLogging(addAsset, res.locals?.account?._id);
 	const addedAsset = await wrappedAddAsset(assetBody);
-	await GoogleStorageProvider.addFile(filename, uploadedFile, true); //TODO: change in future to not always pass public=true
+	const storageProvider = StorageProviderFactory.getStorageProvider();
+	await storageProvider.addFile(filename, uploadedFile, true);
 
 	return dynamicResponse(req, res, 200, assetBody);
 

@@ -66,6 +66,10 @@ app.prepare()
 			return handle(req, res);
 		});
 
+		if (process.env.UPLOADS_BASE_PATH) {
+			server.use('/uploads/static', express.static('./uploads'));
+		}
+
 		router(server, app);
 
 		server.all('*', (req, res) => {

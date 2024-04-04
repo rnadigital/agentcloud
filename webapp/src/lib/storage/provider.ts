@@ -12,4 +12,8 @@ export default class StorageProvider {
 		throw new Error('deleteFile method not implemented');
 	}
 
+	getBasePath() {
+		throw new Error('getBasePath method not implemented.');
+	}
+
 }
