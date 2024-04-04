@@ -9,11 +9,10 @@ use crate::mongo::models::{DataSources, Model, Credentials, CredentialsObj};
 
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
-    let object_id = ObjectId::from_str(datasource_id).unwrap();
-    let filter_options = FindOneOptions::builder().sort(doc! {"discoveredSchema": 0, "connectionSettings": 0}).build();
+    let filter_options = FindOneOptions::builder().projection(doc! {"discoveredSchema": 0, "connectionSettings": 0}).build();
     match datasources_collection
         .find_one(
-            doc! {"_id": object_id},
+            doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
             filter_options,
         )
         .await
@@ -29,7 +28,6 @@ pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option
 pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<Option<Model>> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
-
     // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
         .find_one(

@@ -35,12 +35,12 @@ pub struct DataSources {
     pub connectionId: Option<String>,
     pub chunkStrategy: Option<String>,
     pub chunkCharacter: Option<String>,
-    pub connectionSettings: Option<DatasourceConnectionSettings>,
+    // pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<DateTime>,
     pub embeddingField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
-    pub discoveredSchema: Option<Value>,
+    // pub discoveredSchema: Option<Value>,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -103,7 +103,6 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
     ) -> bool {
-        println!("Received table embedding task...");
         while self.q.size() > 0 {
             let task = match self.q.remove() {
                 Ok(t) => t,

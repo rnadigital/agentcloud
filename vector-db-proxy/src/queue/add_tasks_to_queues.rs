@@ -11,7 +11,6 @@ pub async fn add_message_to_embedding_queue(
     mongo_conn: Arc<RwLock<Database>>,
     params: (String, String),
 ) {
-    println!("Received task to be executed");
     let (dataset_id, table_name) = params;
     // Instantiate a new instance of the MyQueue
     let mut q_guard = queue.write().await;
