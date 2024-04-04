@@ -47,7 +47,7 @@ export default function PreviewSessionList(props) {
 			fetchSessions(true);
 			toast('Deleted session');
 			if (router.asPath.includes(`/session/${sessionId}`)) {
-				return router.push(`/${resourceSlug}/playground`);
+				return router.push(`/${resourceSlug}/apps`);
 			}
 		}, () => {
 			toast.error('Error deleting session');

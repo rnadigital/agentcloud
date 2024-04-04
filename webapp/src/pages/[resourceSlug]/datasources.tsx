@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
@@ -12,8 +13,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../api';
 
 export default function Datasources(props) {
 

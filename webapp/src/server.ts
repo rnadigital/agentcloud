@@ -5,6 +5,7 @@ process
 	.on('unhandledRejection', console.error);
 
 import dotenv from 'dotenv';
+import path from 'path';
 dotenv.config({ path: '.env' });
 import { getShortCommitHash } from './lib/commit';
 if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
@@ -31,9 +32,9 @@ import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
 import * as ses from 'lib/email/ses';
-import { createBucket } from 'lib/google/gcs';
 import { initRabbit } from 'lib/rabbitmq/send';
 import * as redis from 'lib/redis/redis';
+import StorageProviderFactory from 'lib/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 import router from './router';
@@ -48,8 +49,9 @@ app.prepare()
 		await migrate();
 		await initGlobalTools();
 		await ses.init();
-		await createBucket();
 		await initRabbit();
+		const storageProvider = StorageProviderFactory.getStorageProvider();
+		await storageProvider.init();
 
 		// const ia = await getAirbyteInternalApi();
 		// console.log(ia);

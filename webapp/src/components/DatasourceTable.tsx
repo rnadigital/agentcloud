@@ -122,7 +122,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap'>
-								<span className='text-sm text-gray-900'>
+								<span suppressHydrationWarning className='text-sm text-gray-900'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>

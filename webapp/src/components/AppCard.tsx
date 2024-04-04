@@ -1,8 +1,15 @@
 // import { useAccountContext } from '../../context/account';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import Blockies from 'react-blockies';
+
+// @ts-ignore
+const Markdown = dynamic(() => import('react-markdown'), {
+	loading: () => <p className='markdown-content p-2'>Loading...</p>,
+	ssr: false,
+});
 
 export default function AppCard({ app, startSession }) {
 	const { description, name, icon } = app;
