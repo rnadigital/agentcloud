@@ -7,3 +7,4 @@ dist/
 keyfile.json
 doc/
 !src/lib/airbyte
+static/*

@@ -18,7 +18,6 @@ export function AccountWrapper({ children, pageProps }) {
 
 	const router = useRouter();
 	const { resourceSlug, memberId } = (router?.query||{});
-	console.log('perm', new Permission(pageProps?.permissions));
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),

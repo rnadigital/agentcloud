@@ -29,10 +29,6 @@ export default function StartSessionForm({ agents = [], crews = [], setOpen, fet
 
 	async function addSession(e) {
 		e.preventDefault();
-		if (setOpen && !stripeCustomerId && !process.env.NEXT_PUBLIC_NO_PAYMENT_REQUIRED) {
-			setOpen(true);
-			return null;
-		}
 		if (!selected?.value && !selected?.value) {
 			toast.error('Please select an agent or crew from the dropdown');
 			return null;

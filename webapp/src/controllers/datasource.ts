@@ -8,7 +8,6 @@ import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
-import { deleteFile, uploadFile } from 'lib/google/gcs';
 import { sendMessage } from 'lib/rabbitmq/send';
 import convertStringToJsonl from 'misc/converttojsonl';
 import getFileFormat from 'misc/getfileformat';
@@ -17,10 +16,11 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import StorageProviderFactory from 'storage/index';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { promisify } from 'util';
-import deleteCollectionFromQdrant from 'vectordb/proxy';
+import VectorDBProxy from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 const ajv = new Ajv({ strict: 'log' });
@@ -587,11 +587,11 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the points in qdrant
-	// try {
-	await deleteCollectionFromQdrant(req.params.datasourceId);
-	// } catch (e) {
-	// 	return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
-	// }
+	try {
+		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
+	}
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
@@ -618,7 +618,8 @@ export async function deleteDatasourceApi(req, res, next) {
 	// Delete the source file in GCS if this is a file
 	if (datasource.sourceType === 'file') { //TODO: make an enum?
 		try {
-			await deleteFile(datasource.gcsFilename);
+			const storageProvider = StorageProviderFactory.getStorageProvider();
+			await storageProvider.deleteFile(datasource.gcsFilename);
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
@@ -694,9 +695,10 @@ export async function uploadFileApi(req, res, next) {
 	});
 	
 	// Send the gcs file path to rabbitmq
-	await uploadFile(filename, uploadedFile);
+	const storageProvider = StorageProviderFactory.getStorageProvider();
+	await storageProvider.addFile(filename, uploadedFile);
 	await sendMessage(JSON.stringify({
-		bucket: process.env.GCS_BUCKET_NAME,
+		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 	}), { 
 		stream: newDatasourceId.toString(), 

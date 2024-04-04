@@ -127,7 +127,7 @@ export default function OrgSelector({ orgs }) {
 						<hr className='border-t border-2 border-slate-700 w-full' />
 						<a
 							onClick={() => {
-								const planAllowed = [SubscriptionPlan.Free, SubscriptionPlan.Pro].includes(stripePlan);
+								const planAllowed = [SubscriptionPlan.FREE, SubscriptionPlan.PRO].includes(stripePlan);
 								setModalOpen(!planAllowed ? 'subscribe' : 'team');
 							}}
 							href='#'

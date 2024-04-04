@@ -45,7 +45,6 @@ const noNavPages = [
 
 const agentNavigation: any[] = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
-	// { name: 'Playground', href: '/playground', icon: <ChatBubbleLeftIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, childComponent: <PreviewSessionList /> },
 	{ name: 'Apps', href: '/apps', icon: <PuzzlePieceIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Agents', href: '/agents', icon: <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
 		<path d='M22.125 11.85C21.7125 11.5875 21.225 11.7375 20.9625 12.1125L16.9875 18.4125C16.9125 18.4875 16.8375 18.6 16.8 18.7125C16.725 18.825 16.6875 18.9375 16.6875 19.05L15.375 22.5L18 19.8375C18.075 19.7625 18.15 19.6875 18.225 19.6125C18.3 19.5375 18.375 19.425 18.4125 19.3125L22.3875 13.0125C22.6125 12.6 22.5 12.075 22.125 11.85Z' fill='currentColor'/>
@@ -65,6 +64,7 @@ const teamNavigation = [
 
 const userNavigation = [
 	{ name: 'My Account', href: '/account' },
+	{ name: 'Billing', href: '/billing' },
 	{ name: 'Sign out', href: '#', logout: true },
 ];
 
@@ -226,6 +226,23 @@ export default withRouter(function Layout(props) {
 																Account
 															</Link>
 														</li>
+														<li key='billing'>
+															<Link
+																href='/billing'
+																className={classNames(
+																	path.endsWith('/billing')
+																		? 'bg-gray-800 text-white'
+																		: 'text-gray-400 hover:text-white hover:bg-gray-800',
+																	'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																)}
+															>
+																<CreditCardIcon
+																	className='h-6 w-6 shrink-0'
+																	aria-hidden='true'
+																/>
+																Billing
+															</Link>
+														</li>
 														{/*<li>
 															<Link
 																href='/settings'
@@ -350,6 +367,23 @@ export default withRouter(function Layout(props) {
 													aria-hidden='true'
 												/>
 												Account
+											</Link>
+										</li>
+										<li key='billing'>
+											<Link
+												href='/billing'
+												className={classNames(
+													path.endsWith('/billing')
+														? 'bg-gray-800 text-white'
+														: 'text-gray-400 hover:text-white hover:bg-gray-800',
+													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+												)}
+											>
+												<CreditCardIcon
+													className='h-6 w-6 shrink-0'
+													aria-hidden='true'
+												/>
+												Billing
 											</Link>
 										</li>
 										{/*<li>
