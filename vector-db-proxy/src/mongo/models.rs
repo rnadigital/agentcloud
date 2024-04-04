@@ -12,7 +12,7 @@ pub struct DatasourceConnectionSettings {
     pub nonBreakingSchemaUpdatesBehavior: String,
     pub prefix: Option<String>,
     pub name: String,
-    pub sourceId: String,
+    pub sourceId: String,   
     pub destinationId: String,
     pub status: String,
 }
@@ -26,7 +26,6 @@ pub struct DataSources {
     pub name: String,
     pub description: Option<String>,
     pub originalName: String,
-    pub gcsFilename: Option<String>,
     pub sourceType: String,
     pub sourceId: Option<String>,
     pub syncedCount: Option<i32>,
