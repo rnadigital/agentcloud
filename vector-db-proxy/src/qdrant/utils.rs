@@ -11,7 +11,10 @@ use qdrant_client::qdrant::{
     VectorParamsMap, VectorsConfig,
 };
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
+use backoff::{ExponentialBackoff};
+use backoff::backoff::Backoff;
 
 pub struct Qdrant {
     client: Arc<RwLock<QdrantClient>>,
@@ -229,32 +232,51 @@ impl Qdrant {
         {
             Ok(result) => match result {
                 true => {
-                    match qdrant_conn
-                        .upsert_points_blocking(
-                            &self.collection_name,
-                            None,
-                            vec![point],
-                            None,
-                        )
-                        .await
-                    {
-                        Ok(res) => match res.result {
-                            // todo: log time taken
-                            Some(stat) => match stat.status {
-                                2 => {
-                                    println!("upload success");
-                                    Ok(true)
-                                }
-                                _ => {
-                                    println!("Upload failed");
-                                    // todo: add retry
-                                    Ok(false)
-                                }
-                            },
-                            None => Err(anyhow!("Results returned None")),
-                        },
-                        Err(e) => Err(anyhow!("There was an error upserting to qdrant: {}", e)),
-                    }
+                    let mut backoff = ExponentialBackoff {
+                        current_interval: Duration::from_millis(50),
+                        initial_interval: Duration::from_millis(50),
+                        max_interval: Duration::from_secs(3),
+                        max_elapsed_time: Some(Duration::from_secs(60)),
+                        multiplier: 1.5,
+                        randomization_factor: 0.5,
+                        ..ExponentialBackoff::default()
+                    };
+
+                    let retry_result = async {
+                        loop {
+                            match qdrant_conn
+                                .upsert_points_blocking(
+                                    &self.collection_name,
+                                    None,
+                                    vec![point.clone()], // Ensure point is Clone for retries
+                                    None,
+                                )
+                                .await
+                            {
+                                Ok(res) => match res.result {
+                                    Some(stat) => match stat.status {
+                                        2 => {
+                                            println!("Time taken: {}", res.time);
+                                            println!("Upload success");
+                                            return Ok(true);
+                                        }
+                                        _ => println!("Upload failed, retrying..."),
+                                    },
+                                    None => return Err(anyhow!("Results returned None")),
+                                },
+                                Err(e) => println!("Error upserting to Qdrant: {}, retrying...", e),
+                            }
+
+                            if backoff.next_backoff().is_none() {
+                                return Err(anyhow!("Reached maximum retry attempts"));
+                            }
+
+                            // Await until the next retry interval
+                            tokio::time::sleep(backoff.next_backoff().unwrap()).await;
+                        }
+                    }.await;
+
+                    retry_result
                 }
                 false => {
                     println!("Collection: {} creation failed!", &self.collection_name);
@@ -262,11 +284,11 @@ impl Qdrant {
                 }
             },
             Err(e) => {
-                println!("Err: {}", e);
+                println!("Error: {}", e);
                 Err(anyhow!(
-                    "An error occurred while trying to create collection: {}",
-                    e
-                ))
+                "An error occurred while trying to create collection: {}",
+                e
+            ))
             }
         }
     }
