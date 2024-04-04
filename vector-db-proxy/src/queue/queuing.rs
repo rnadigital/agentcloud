@@ -13,6 +13,7 @@ use threadpool::ThreadPool;
 use qdrant_client::client::QdrantClient;
 
 use crate::data::processing_incoming_messages::process_messages;
+
 // This is essentially the Class
 // The requirement for T to be Clone is a constraint of the queues crate
 pub struct MyQueue<T: Clone> {
@@ -26,6 +27,7 @@ pub trait Control<T>
         T: Debug,
 {
     fn new(pool_size: usize) -> Self;
+    fn optimised(thread_utilisation_percentage: f64) -> Self;
     fn default() -> Self;
     fn enqueue(&mut self, task: T);
     fn embed_message(
@@ -50,6 +52,24 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
         MyQueue {
             q: Queue::new(),
             pool: ThreadPool::new(pool_size), // need to make this a dynamic number
+        }
+    }
+
+    fn optimised(thread_utilisation_percentage: f64) -> Self {
+        match available_parallelism() {
+            Ok(t) => {
+                println!("Threads Available: {} ", t.get());
+                let threads_utilised = (t.get() as f64 * thread_utilisation_percentage) as usize;
+                println!("Threads used: {}", threads_utilised);
+                MyQueue {
+                    q: Queue::new(),
+                    pool: ThreadPool::new(threads_utilised),
+                }
+            }
+            Err(_) => MyQueue {
+                q: Queue::new(),
+                pool: ThreadPool::new(1),
+            },
         }
     }
 
