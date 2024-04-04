@@ -239,6 +239,7 @@ impl Qdrant {
                         .await
                     {
                         Ok(res) => match res.result {
+                            // todo: log time taken
                             Some(stat) => match stat.status {
                                 2 => {
                                     println!("upload success");
@@ -246,6 +247,7 @@ impl Qdrant {
                                 }
                                 _ => {
                                     println!("Upload failed");
+                                    // todo: add retry
                                     Ok(false)
                                 }
                             },

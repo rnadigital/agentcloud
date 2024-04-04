@@ -50,7 +50,7 @@ pub async fn subscribe_to_queue(
                                                 if headers.get(&ShortStr::try_from("type").unwrap()).is_some() {
                                                     if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                                                         let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
-                                                        match file_operations::read_file_from_source(message_data).await {
+                                                        match file_operations::read_file_from_source(headers, message_data).await {
                                                             Some((file_type, file, file_path)) => {
                                                                 save_file_to_disk(file, file_path.as_str()).await.unwrap();
                                                                 let message_queue = Arc::clone(&queue);
@@ -107,7 +107,7 @@ pub async fn subscribe_to_queue(
                                                                 }
                                                             }
                                                             None => {
-                                                                println!("Could not read file...")
+                                                                println!("Could not read file from source...source returned NONE!")
                                                             }
                                                         }
                                                     }

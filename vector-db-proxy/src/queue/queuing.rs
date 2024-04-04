@@ -13,7 +13,6 @@ use threadpool::ThreadPool;
 use qdrant_client::client::QdrantClient;
 
 use crate::data::processing_incoming_messages::process_messages;
-
 // This is essentially the Class
 // The requirement for T to be Clone is a constraint of the queues crate
 pub struct MyQueue<T: Clone> {

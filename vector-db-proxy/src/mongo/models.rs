@@ -24,6 +24,7 @@ pub struct DataSources {
     pub teamId: ObjectId,
     pub modelId: Option<ObjectId>,
     pub name: String,
+    pub description: Option<String>,
     pub originalName: String,
     pub gcsFilename: Option<String>,
     pub sourceType: String,
@@ -40,6 +41,7 @@ pub struct DataSources {
     pub embeddingField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
+    pub discoveredSchema: Option<Value>,
 }
 
 #[derive(Serialize, Deserialize)]
