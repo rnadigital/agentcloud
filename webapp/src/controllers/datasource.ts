@@ -698,11 +698,12 @@ export async function uploadFileApi(req, res, next) {
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	await storageProvider.addFile(filename, uploadedFile);
 	await sendMessage(JSON.stringify({
-		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
-		filename,
+		// bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
+		// filename,
+		file: `/tmp/${filename}`,
 	}), { 
 		stream: newDatasourceId.toString(), 
-		type: 'file', //TODO: make 'file' an num once there are more
+		type: 'file',
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
