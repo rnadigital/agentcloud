@@ -5,6 +5,7 @@ process
 	.on('unhandledRejection', console.error);
 
 import dotenv from 'dotenv';
+import path from 'path';
 dotenv.config({ path: '.env' });
 import { getShortCommitHash } from './lib/commit';
 if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
@@ -65,10 +66,6 @@ app.prepare()
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
 		});
-
-		if (process.env.UPLOADS_BASE_PATH) {
-			server.use('/uploads/static', express.static('./uploads'));
-		}
 
 		router(server, app);
 

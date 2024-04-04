@@ -6,9 +6,12 @@ import util from 'util';
 
 const log = debug('webapp:storage:local');
 
-const mkdir = util.promisify(fs.mkdir);
-const unlink = util.promisify(fs.unlink);
-const writeFile = util.promisify(fs.writeFile);
+let mkdir, unlink, writeFile;
+if (typeof fs?.mkdir === 'function') {
+	mkdir = util.promisify(fs.mkdir);
+	unlink = util.promisify(fs.unlink);
+	writeFile = util.promisify(fs.writeFile);
+}
 
 class LocalStorageProvider extends StorageProvider {
 
@@ -16,10 +19,8 @@ class LocalStorageProvider extends StorageProvider {
 
 	constructor() {
 		super();
-		if (!process.env.UPLOADS_BASE_PATH) {
-			throw new Error('Missing process.env.UPLOADS_BASE_PATH');
-		}
-		this.#basePath = process.env.UPLOADS_BASE_PATH || 'uploads';
+		if (typeof fs?.mkdir !== 'function') { return; }
+		this.#basePath = process.env.UPLOADS_BASE_PATH || './uploads';
 		this.init();
 	}
 
@@ -54,8 +55,8 @@ class LocalStorageProvider extends StorageProvider {
 		}
 	}
 
-	static getBasePath() {
-		return '/uploads/static';
+	getBasePath() {
+		return '/static';
 	}
 
 }

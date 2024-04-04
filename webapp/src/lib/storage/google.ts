@@ -76,7 +76,7 @@ class GoogleStorageProvider extends StorageProvider {
 		await file.delete({});
 	}
 
-	static getBasePath() {
+	getBasePath() {
 		return `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET_NAME}`;
 	}
 
