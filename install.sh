@@ -3,7 +3,9 @@
 # Get the width of the terminal
 terminal_width=$(tput cols)
 
-command -v docker-compose >/dev/null 2>&1 || { echo >&2 "docker-compose is required but it's not installed. Aborting."; exit 1; }
+if ! command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
+    echo >&2 "docker compose is required but it's not installed. Aborting."
+fi
 command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 if ! docker info &> /dev/null; then
