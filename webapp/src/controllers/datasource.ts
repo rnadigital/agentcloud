@@ -700,9 +700,10 @@ export async function uploadFileApi(req, res, next) {
 	await sendMessage(JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
+		file: `/tmp/${filename}`,
 	}), { 
 		stream: newDatasourceId.toString(), 
-		type: 'file', //TODO: make 'file' an num once there are more
+		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
