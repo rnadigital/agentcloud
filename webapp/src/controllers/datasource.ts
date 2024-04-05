@@ -191,7 +191,7 @@ export async function testDatasourceApi(req, res, next) {
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: datasourceName,
 	    description: datasourceDescription,
-	    gcsFilename: null,
+	    filename: null,
 	    originalName: datasourceName,
 	    sourceId: createdSource.sourceId,
 	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
@@ -616,10 +616,10 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the source file in GCS if this is a file
-	if (datasource.sourceType === 'file') { //TODO: make an enum?
+	if (datasource.sourceType === 'file') {
 		try {
 			const storageProvider = StorageProviderFactory.getStorageProvider();
-			await storageProvider.deleteFile(datasource.gcsFilename);
+			await storageProvider.deleteFile(datasource.filename);
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
@@ -677,8 +677,8 @@ export async function uploadFileApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: name,
+	    filename: filename,
 	    description: datasourceDescription,
-	    gcsFilename: filename,
 	    originalName: uploadedFile.name,
 	    sourceId: null,
 	    connectionId: null,
