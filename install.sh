@@ -46,6 +46,10 @@ $1"""
 # Function to show usage
 usage() {
     echo """Usage: $0 [options]
+
+Note: By default, vector-db-proxy \`cargo build\`'s without the \`--release\` flag, for faster builds during development.
+      To specify a different dockerfile (i.e the non dev one), do \`VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...\`
+
 Options:
 --kill-webapp-next               Kill webapp after startup (for developers)
 --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
@@ -57,6 +61,7 @@ Options:
 --openai-api-key KEY             Specify your OpenAI API key.
 --stripe-pricing-table-id ID     Stripe pricing table ID.
 --stripe-publishable-key KEY      Stripe publishable API key.
+
 -h, --help                       Display this help message."""
 }
 
