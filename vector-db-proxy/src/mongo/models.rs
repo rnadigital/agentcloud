@@ -25,6 +25,7 @@ pub struct DataSources {
     pub modelId: Option<ObjectId>,
     pub name: String,
     pub description: Option<String>,
+    pub filename: Option<String>,
     pub originalName: String,
     pub sourceType: String,
     pub sourceId: Option<String>,
