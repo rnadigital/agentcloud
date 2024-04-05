@@ -160,7 +160,7 @@ cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
 print_logo "=> Starting airbyte"
 
 # Define the target version
-AIRBYTE_TARGET_VERSION="v0.57.1"
+AIRBYTE_TARGET_VERSION="v0.57.2"
 
 # Clone and install airbyte
 if [ ! -d "airbyte" ]; then
