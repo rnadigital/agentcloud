@@ -9,6 +9,7 @@ use ort::{CoreMLExecutionProvider, CUDAExecutionProvider, ExecutionProvider, Exe
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
+use crate::init::env_variables::GLOBAL_DATA;
 
 use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::mongo::queries::get_model_credentials;
@@ -29,77 +30,91 @@ pub async fn embed_text(
         | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
         | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
             Some(m) => {
+                let global_data = GLOBAL_DATA.read().await;
                 let model = FastEmbedModels::from(m.to_string());
                 match FastEmbedModels::translate(&model) {
                     Some(translation) => {
-                        println!("Checking for hardware acceleration...");
-                        println!("Checking for CoreML...");
-                        let coreml = CoreMLExecutionProvider::default();
-                        match coreml.is_available() {
-                            Ok(acceleration) => {
-                                if acceleration {
-                                    println!("Found CoreML...");
-                                    let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                                        model_name: translation,
-                                        show_download_message: true,
-                                        execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
-                                        ..Default::default()
-                                    })?;
-                                    let embeddings = model.passage_embed(text, None)?;
-                                    Ok(embeddings)
-                                } else {
-                                    println!("CoreML was not available");
-                                    println!("Looking for CUDA hardware...");
-                                    let cuda = CUDAExecutionProvider::default();
-                                    match cuda.is_available() {
-                                        Ok(acceleration) => {
-                                            if acceleration {
-                                                println!("Found CUDA...");
-                                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                                                    model_name: translation,
-                                                    show_download_message: true,
-                                                    execution_providers: vec![ExecutionProviderDispatch::CUDA(cuda)],
-                                                    ..Default::default()
-                                                })?;
-                                                let embeddings = model.passage_embed(text, None)?;
-                                                Ok(embeddings)
-                                            } else {
-                                                println!("CUDA was  not available");
-                                                println!("Checking for ROCm...");
-                                                let roc = ROCmExecutionProvider::default();
-                                                match roc.is_available() {
-                                                    Ok(acceleration) => {
-                                                        if acceleration {
-                                                            println!("Found ROCm...");
-                                                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                                                                model_name: translation,
-                                                                show_download_message: true,
-                                                                execution_providers: vec![ExecutionProviderDispatch::ROCm(roc)],
-                                                                ..Default::default()
-                                                            })?;
-                                                            let embeddings = model.passage_embed(text, None)?;
-                                                            Ok(embeddings)
-                                                        } else {
-                                                            println!("No hardware acceleration found...falling back to CPU");
-                                                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                                                                model_name: translation,
-                                                                show_download_message: true,
-                                                                ..Default::default()
-                                                            })?;
-                                                            let embeddings = model.passage_embed(text, None)?;
-                                                            Ok(embeddings)
+                        match global_data.use_gpu.as_str() {
+                            "false" => {
+                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                    model_name: translation,
+                                    show_download_message: true,
+                                    ..Default::default()
+                                })?;
+                                let embeddings = model.passage_embed(text, None)?;
+                                Ok(embeddings)
+                            }
+                            _ => {
+                                println!("Checking for hardware acceleration...");
+                                println!("Checking for CoreML...");
+                                let coreml = CoreMLExecutionProvider::default();
+                                match coreml.is_available() {
+                                    Ok(acceleration) => {
+                                        if acceleration {
+                                            println!("Found CoreML...");
+                                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                model_name: translation,
+                                                show_download_message: true,
+                                                execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
+                                                ..Default::default()
+                                            })?;
+                                            let embeddings = model.passage_embed(text, None)?;
+                                            Ok(embeddings)
+                                        } else {
+                                            println!("CoreML was not available");
+                                            println!("Looking for CUDA hardware...");
+                                            let cuda = CUDAExecutionProvider::default();
+                                            match cuda.is_available() {
+                                                Ok(acceleration) => {
+                                                    if acceleration {
+                                                        println!("Found CUDA...");
+                                                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                            model_name: translation,
+                                                            show_download_message: true,
+                                                            execution_providers: vec![ExecutionProviderDispatch::CUDA(cuda)],
+                                                            ..Default::default()
+                                                        })?;
+                                                        let embeddings = model.passage_embed(text, None)?;
+                                                        Ok(embeddings)
+                                                    } else {
+                                                        println!("CUDA was  not available");
+                                                        println!("Checking for ROCm...");
+                                                        let roc = ROCmExecutionProvider::default();
+                                                        match roc.is_available() {
+                                                            Ok(acceleration) => {
+                                                                if acceleration {
+                                                                    println!("Found ROCm...");
+                                                                    let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                                        model_name: translation,
+                                                                        show_download_message: true,
+                                                                        execution_providers: vec![ExecutionProviderDispatch::ROCm(roc)],
+                                                                        ..Default::default()
+                                                                    })?;
+                                                                    let embeddings = model.passage_embed(text, None)?;
+                                                                    Ok(embeddings)
+                                                                } else {
+                                                                    println!("No hardware acceleration found...falling back to CPU");
+                                                                    let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                                        model_name: translation,
+                                                                        show_download_message: true,
+                                                                        ..Default::default()
+                                                                    })?;
+                                                                    let embeddings = model.passage_embed(text, None)?;
+                                                                    Ok(embeddings)
+                                                                }
+                                                            }
+                                                            Err(e) => Err(anyhow!("Error occurred while looking for ROCm hardware: {}",e))
                                                         }
                                                     }
-                                                    Err(e) => Err(anyhow!("Error occurred while looking for ROCm hardware: {}",e))
                                                 }
+                                                Err(e) => Err(anyhow!("Error occurred while looking for CUDA hardware: {}",e))
                                             }
                                         }
-                                        Err(e) => Err(anyhow!("Error occurred while looking for CUDA hardware: {}",e))
                                     }
+                                    Err(e) =>
+                                        Err(anyhow!("An error occurred while looking for CoreML hardware: {}", e))
                                 }
                             }
-                            Err(e) =>
-                                Err(anyhow!("An error occurred while looking for CoreML hardware: {}", e))
                         }
                     }
                     None => Err(anyhow!(
@@ -119,12 +134,12 @@ pub async fn embed_text(
                     Ok(Some(creds_obj)) => {
                         match creds_obj.key {
                             Some(k) => {
-                                let config = OpenAIConfig::new()
-                                    .with_api_key(k)
-                                    .with_org_id("rna-digital"); // todo: need to get this from mongo
                                 let backoff = backoff::ExponentialBackoffBuilder::new()
                                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                                     .build();
+                                let config = OpenAIConfig::new()
+                                    .with_api_key(k)
+                                    .with_org_id("rna-digital"); // todo: need to get this from mongo
                                 let client = async_openai::Client::with_config(config).with_backoff(backoff);
                                 let request = CreateEmbeddingRequestArgs::default()
                                     .model(m)
