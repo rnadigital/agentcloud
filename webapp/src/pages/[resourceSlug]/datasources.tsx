@@ -16,7 +16,7 @@ import React, { useEffect, useState } from 'react';
 
 export default function Datasources(props) {
 
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const [, notificationTrigger]: any = useSocketContext();
 	const { account, teamName } = accountContext as any;
 	const router = useRouter();
@@ -38,6 +38,7 @@ export default function Datasources(props) {
 
 	useEffect(() => {
 		fetchDatasources();
+		refreshAccountContext();
 	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {

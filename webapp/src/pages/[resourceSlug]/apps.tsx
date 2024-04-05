@@ -13,7 +13,7 @@ import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -35,6 +35,7 @@ export default function Apps(props) {
 
 	useEffect(() => {
 		fetchApps();
+		refreshAccountContext();
 	}, [resourceSlug]);
 
 	if (!apps) {
