@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::errors::types::Result;
 use crate::qdrant::helpers::{get_next_page, get_scroll_results};
-use crate::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
+use crate::qdrant::models::{MyPoint, PointSearchResults, ScrollResults};
 use crate::qdrant::utils::Qdrant;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
@@ -20,11 +20,9 @@ use qdrant_client::qdrant::{
     WithVectorsSelector,
 };
 
-use crate::llm::utils::LLM;
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
 use crate::mongo::queries::get_embedding_model;
-use crate::routes::models::Prompt;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
@@ -303,79 +301,6 @@ pub async fn lookup_data_point(
             data: Some(json!(response_data)),
             error_message: None
         })))
-}
-
-///
-///
-/// # Arguments
-///
-/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
-/// * `Path(dataset_id)`:
-/// * `data`:
-///
-/// returns: Result<impl Responder<Body=<unknown>>+Sized, MyError>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
-#[wherr]
-#[post("/prompt/{dataset_id}")]
-pub async fn prompt(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
-    Path(dataset_id): Path<String>,
-    data: web::Json<Prompt>,
-) -> Result<impl Responder> {
-    let dataset_id_clone = dataset_id.clone();
-    let qdrant_conn = app_data.get_ref();
-
-    let data_clone = data.clone();
-    let dataset_clone_2 = dataset_id.clone();
-    let prompt = data_clone.prompt.to_vec();
-    let filters = data_clone.filters;
-    let limit = data.limit;
-    let mongodb_connection = start_mongo_connection().await.unwrap();
-    let model_parameters: Model =
-        get_embedding_model(&mongodb_connection, dataset_clone_2.as_str())
-            .await
-            .unwrap()
-            .unwrap();
-    let vector_length = model_parameters.embeddingLength as u64;
-    let qdrant = Qdrant::new(Arc::clone(&qdrant_conn), dataset_id_clone);
-    match qdrant
-        .check_collection_exists(CreateDisposition::CreateIfNeeded, Some(vector_length), None)
-        .await?
-    {
-        true => {
-            let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-            let llm_model = LLM::new();
-            let pr = prompt.iter().map(|p| p).collect();
-            let prompt_response = llm_model
-                .get_prompt_response(qdrant_conn_clone, dataset_id, pr, filters, limit)
-                .await?;
-
-            Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Success,
-                    data: Some(json!({"message":prompt_response})),
-                    error_message: None
-                })))
-        }
-        false => {
-            log::warn!("Collection: '{}' does not exist", dataset_id);
-            Ok(HttpResponse::BadRequest()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(json!({
-                        "errorMessage": format!("Collection: {} does not exists in BD", dataset_id)
-                    }))
-                })))
-        }
-    }
 }
 
 ///

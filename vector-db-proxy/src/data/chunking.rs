@@ -42,6 +42,8 @@ pub trait Chunking {
         strategy: ChunkingStrategy,
         chunking_character: Option<String>,
         embedding_model: EmbeddingModels,
+        mongo_conn: Arc<RwLock<Database>>,
+        datasource_id: String,
     ) -> Result<Vec<Document>>;
 }
 
@@ -210,12 +212,7 @@ impl Chunking for TextChunker {
                             let qdrant_conn = Arc::clone(&qdrant_conn);
                             let mongo_conn = Arc::clone(&mongo_conn);
                             let ds_clone = datasource_id.clone();
-                            add_message_to_embedding_queue(
-                                queue,
-                                qdrant_conn,
-                                mongo_conn,
-                                (ds_clone, string_record),
-                            ).await;
+                            add_message_to_embedding_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
                         }
                         Err(e) => { println!("An error occurred {}", e); }
                     }
@@ -235,8 +232,17 @@ impl Chunking for TextChunker {
         strategy: ChunkingStrategy,
         chunking_character: Option<String>,
         embedding_model: EmbeddingModels,
+        mongo_conn: Arc<RwLock<Database>>,
+        datasource_id: String,
     ) -> Result<Vec<Document>> {
-        let chunker = Chunker::new(embedding_model, true, Some(strategy), chunking_character);
+        let chunker = Chunker::new(
+            embedding_model,
+            true,
+            Some(strategy),
+            chunking_character,
+            mongo_conn,
+            datasource_id,
+        );
         let doc = Document {
             page_content: data,
             metadata,

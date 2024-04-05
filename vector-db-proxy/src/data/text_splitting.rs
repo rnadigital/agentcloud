@@ -1,11 +1,14 @@
 use crate::data::models::Document;
 use crate::data::utils::{cosine_similarity, percentile};
 use crate::llm::utils::embed_text;
-use crate::llm::{models::EmbeddingModels, utils::LLM};
+use crate::llm::{models::EmbeddingModels, utils::embed_text_chunks_async};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 use ndarray::Array1;
 use std::collections::HashMap;
+use std::sync::{Arc};
+use mongodb::Database;
+use tokio::sync::RwLock;
 
 // `Sentence` is a struct that holds the embedding and other metadata
 #[derive(Clone, Debug)]
@@ -62,6 +65,8 @@ pub struct Chunker {
     add_start_index: bool,
     chunking_strategy: Option<ChunkingStrategy>,
     chunking_character: Option<String>,
+    mongo_conn: Arc<RwLock<Database>>,
+    datasource_id: String,
 }
 
 impl Chunker {
@@ -70,20 +75,16 @@ impl Chunker {
         add_start_index: bool,
         chunking_strategy: Option<ChunkingStrategy>,
         chunking_character: Option<String>,
+        mongo_conn: Arc<RwLock<Database>>,
+        datasource_id: String,
     ) -> Self {
         Chunker {
             embedding_model,
             add_start_index,
             chunking_strategy,
             chunking_character,
-        }
-    }
-    pub fn default() -> Self {
-        Chunker {
-            embedding_model: EmbeddingModels::BAAI_BGE_SMALL_EN,
-            add_start_index: true,
-            chunking_strategy: Some(ChunkingStrategy::SEMANTIC_CHUNKING),
-            chunking_character: Some(String::from(".")),
+            mongo_conn,
+            datasource_id,
         }
     }
 
@@ -125,11 +126,9 @@ impl Chunker {
                 sentences.iter().map(|s| s["sentence"].clone()).collect();
 
             // we embed each of those sentences
-            let llm = LLM::new();
-            match llm
-                .embed_text_chunks_async(list_of_text, self.embedding_model)
-                .await
-            {
+            let mongo_conn_clone = Arc::clone(&self.mongo_conn);
+            let datasource_id_clone = self.datasource_id.clone();
+            match embed_text_chunks_async(mongo_conn_clone, datasource_id_clone, list_of_text, self.embedding_model).await {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
                     for (i, sentence) in sentences.iter().enumerate() {
@@ -153,21 +152,19 @@ impl Chunker {
                                 percentile(&distances, breakpoint_percentile_threshold);
 
                             // Initialize accumulators for indices above and below the threshold
-                            let (indices_above_thresh, indices_below_threshold): (
-                                Vec<usize>,
-                                Vec<usize>,
-                            ) = distances
-                                .iter()
-                                .enumerate()
-                                // Use fold to iterate once, separating indices based on the threshold
-                                .fold((vec![], vec![]), |(mut above, mut below), (i, &d)| {
-                                    if d >= breakpoint_distance_threshold {
-                                        above.push(i);
-                                    } else if d < breakpoint_distance_threshold {
-                                        below.push(i);
-                                    }
-                                    (above, below)
-                                });
+                            let (indices_above_thresh, indices_below_threshold): (Vec<usize>, Vec<usize>) =
+                                distances
+                                    .iter()
+                                    .enumerate()
+                                    // Use fold to iterate once, separating indices based on the threshold
+                                    .fold((vec![], vec![]), |(mut above, mut below), (i, &d)| {
+                                        if d >= breakpoint_distance_threshold {
+                                            above.push(i);
+                                        } else if d < breakpoint_distance_threshold {
+                                            below.push(i);
+                                        }
+                                        (above, below)
+                                    });
 
                             println!("Indices above threshold:  {:?}", &indices_above_thresh);
 
@@ -183,8 +180,10 @@ impl Chunker {
                                         .collect::<Vec<&str>>()
                                         .join(". ");
                                     // embed the new combined text and insert into document
+                                    let mongo_conn_clone = Arc::clone(&self.mongo_conn);
+                                    let datasource_id_clone = self.datasource_id.clone();
                                     let new_embedding =
-                                        embed_text(vec![&combined_text], &self.embedding_model)
+                                        embed_text(mongo_conn_clone, datasource_id_clone, vec![&combined_text], &self.embedding_model)
                                             .await
                                             .unwrap();
                                     let doc = Document::new(
