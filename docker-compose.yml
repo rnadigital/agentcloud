@@ -88,7 +88,9 @@ services:
       - STRIPE_TEAMS_PLAN_PRICE_ID=price_1P0xEGDxQ9GZKzvoTDfMJK6f
       - NEXT_PUBLIC_STORAGE_PROVIDER=local
       - NEXT_PUBLIC_SECRET_PROVIDER=local
-      - UPLOADS_BASE_PATH=./
+      - UPLOADS_BASE_PATH=/tmp
+    volumes:
+      - datasource_files:/tmp
 
   agent_backend:
     restart: always
@@ -143,6 +145,8 @@ services:
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - WEBAPP_HOST=webapp_next
+    volumes:
+      - datasource_files:/tmp
 
   qdrant:
     ports:
@@ -153,6 +157,7 @@ services:
 volumes:
   mongodb_data_container:
   redis_data:
+  datasource_files:
 
 networks:
   default:
