@@ -19,6 +19,7 @@ pub struct GlobalData {
     pub redis_port: String,
     pub openai_key: String,
     pub thread_percentage_utilisation: f64,
+    pub use_gpu: String,
 }
 
 impl GlobalData {
@@ -44,6 +45,7 @@ impl GlobalData {
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
             openai_key: dotenv::var("OPENAI_API_KEY").unwrap_or("".to_string()),
             thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION").unwrap().parse().unwrap_or(0.8),
+            use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
         }
     }
 }
