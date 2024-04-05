@@ -51,18 +51,19 @@ Note: By default, vector-db-proxy \`cargo build\`'s without the \`--release\` fl
       To specify a different dockerfile (i.e the non dev one), do \`VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...\`
 
 Options:
---kill-webapp-next               Kill webapp after startup (for developers)
---kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
---kill-agent-backend             Kill agent-backend after startup (for developers)
---project-id ID                  Specify the GCP project ID.
---service-account-json PATH      Specify the file path of your GCP service account json.
---gcs-bucket-name NAME           Specify the GCS bucket name to use.
---gcs-bucket-location LOCATION   Specify the GCS bucket location.
---openai-api-key KEY             Specify your OpenAI API key.
---stripe-pricing-table-id ID     Stripe pricing table ID.
---stripe-publishable-key KEY      Stripe publishable API key.
 
--h, --help                       Display this help message."""
+    -h, --help                       Display this help message.
+
+    --kill-webapp-next               Kill webapp after startup (for developers)
+    --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
+    --kill-agent-backend             Kill agent-backend after startup (for developers)
+
+    --project-id ID                  (OPTIONAL) Specify a GCP project ID (for Secret Manager, GCS, etc)
+    --service-account-json PATH      (OPTIONAL) Specify the file path of your GCP service account json.
+    --gcs-bucket-name NAME           (OPTIONAL) Specify the GCS bucket name to use.
+    --gcs-bucket-location LOCATION   (OPTIONAL) Specify the GCS bucket location.
+
+"""
 }
 
 docker_up() {
@@ -92,7 +93,6 @@ PROJECT_ID=""
 SERVICE_ACCOUNT_JSON_PATH=""
 GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
-OPENAI_API_KEY=""
 STRIPE_PRICING_TABLE_ID=""
 STRIPE_PUBLISHABLE_KEY=""
 
@@ -128,7 +128,6 @@ while [[ "$#" -gt 0 ]]; do
         --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
         --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
         --gcs-bucket-location) GCS_BUCKET_LOCATION="$2"; shift ;;
-        --openai-api-key) OPENAI_API_KEY="$2"; shift ;;
         --stripe-pricing-table-id) STRIPE_PRICING_TABLE_ID="$2"; shift ;;
         --stripe-publishable-key) STRIPE_PUBLISHABLE_KEY="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -137,30 +136,36 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-initialize_environment() {
-	# Initialize variables with defaults or arguments
-	PROJECT_ID="${PROJECT_ID:-}"
-	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
-	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
-	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
-	OPENAI_API_KEY="${OPENAI_API_KEY:-}"
-	# Check and ask for missing variables
-	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
-	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
-	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
-	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
-	[ -z "$OPENAI_API_KEY" ] && read -p "Enter your OpenAI API key: " OPENAI_API_KEY
-	export PROJECT_ID
-	export SERVICE_ACCOUNT_JSON_PATH
-	export GCS_BUCKET_LOCATION
-	export GCS_BUCKET_NAME
-	export OPENAI_API_KEY
-}
+# 
+# initialize_environment() {
+# 	# Initialize variables with defaults or arguments
+# 	PROJECT_ID="${PROJECT_ID:-}"
+# 	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
+# 	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
+# 	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
+# 	# Check and ask for missing variables
+# 	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
+# 	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
+# 	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
+# 	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+# 	export PROJECT_ID
+# 	export SERVICE_ACCOUNT_JSON_PATH
+# 	export GCS_BUCKET_LOCATION
+# 	export GCS_BUCKET_NAME
+# }
+# 
+# initialize_environment
 
-initialize_environment
-cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
-cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
-cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
+if [ -z "$SERVICE_ACCOUNT_JSON_PATH" ]; then
+	echo "The \$SERVICE_ACCOUNT_JSON_PATH variable is not set, continuing with local disk storage and .env secret providers."
+elif [ ! -f "$SERVICE_ACCOUNT_JSON_PATH" ]; then
+	echo "The file at \$SERVICE_ACCOUNT_JSON_PATH does not exist."
+else
+    cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
+    cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
+    cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
+fi
+
 
 print_logo "=> Starting airbyte"
 

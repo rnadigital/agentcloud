@@ -162,12 +162,12 @@ export default withRouter(function Layout(props) {
 										{resourceSlug && <nav className='flex flex-1 flex-col'>
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>
 											<ul role='list' className='flex flex-1 flex-col gap-y-7'>
-												<li>
+												<li key='orgselector'>
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														<OrgSelector orgs={orgs} />
 													</ul>
 												</li>
-												<li>
+												<li key='agentnavigation'>
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => (
@@ -195,6 +195,7 @@ export default withRouter(function Layout(props) {
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
 																<Link
+																	key={`link_${item.name}`}
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
 																	className={classNames(
@@ -310,7 +311,7 @@ export default withRouter(function Layout(props) {
 									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 									<ul role='list' className='-mx-2 space-y-1'>
 										{agentNavigation.map((item) => {
-											return (<>
+											return (
 												<li key={item.name}>
 													<Link
 														suppressHydrationWarning
@@ -326,7 +327,7 @@ export default withRouter(function Layout(props) {
 														{item.name}
 													</Link>
 												</li>
-											</>);
+											);
 										})}
 										<PreviewSessionList />
 									</ul>
@@ -529,7 +530,7 @@ export default withRouter(function Layout(props) {
 										leaveTo='transform opacity-0 scale-95'
 									>
 										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-											{account && <div className='px-4 py-3'>
+											{account && <div className='px-4 py-3' key='accountdetails'>
 												<p className='text-sm'>Signed in as</p>
 												<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>{account.email}</p>
 											</div>}

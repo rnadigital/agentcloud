@@ -1,5 +1,5 @@
-version: '3.7'
 name: agentcloud
+
 services:
 
   docker_rabbitmq:
@@ -131,7 +131,6 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=9001
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MONGO_URI=mongodb://docker_mongo:27017
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
@@ -143,7 +142,6 @@ services:
       - QDRANT_URI=http://qdrant:6334
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - WEBAPP_HOST=webapp_next
 
   qdrant:

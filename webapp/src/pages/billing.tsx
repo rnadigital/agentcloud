@@ -117,8 +117,8 @@ export default function Billing(props) {
 
 			<div className='flex flex-row gap-x-4 py-4'>
 				<SubscriptionCard title='Agent Cloud Free' price={0} plan={SubscriptionPlan.FREE} />
-				<SubscriptionCard title='Agent Cloud Pro' price={4} plan={SubscriptionPlan.PRO} />
-				<SubscriptionCard title='Agent Cloud Teams' price={8} isPopular={true} plan={SubscriptionPlan.TEAMS} />
+				<SubscriptionCard title='Agent Cloud Pro' price={99} plan={SubscriptionPlan.PRO} />
+				<SubscriptionCard title='Agent Cloud Teams' price={199} isPopular={true} plan={SubscriptionPlan.TEAMS} />
 				<SubscriptionCard title='Agent Cloud Enterprise' price={'Custom'} link={'https://www.agentcloud.dev/contact'} />
 			</div>
 			
