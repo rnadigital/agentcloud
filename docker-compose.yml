@@ -87,6 +87,7 @@ services:
       - STRIPE_PRO_PLAN_PRICE_ID=price_1OAMHSDxQ9GZKzvoBbDryhiZ
       - STRIPE_TEAMS_PLAN_PRICE_ID=price_1P0xEGDxQ9GZKzvoTDfMJK6f
       - NEXT_PUBLIC_STORAGE_PROVIDER=local
+      - NEXT_PUBLIC_SECRET_PROVIDER=local
       - UPLOADS_BASE_PATH=./
 
   agent_backend:

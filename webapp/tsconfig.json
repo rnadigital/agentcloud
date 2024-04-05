@@ -80,6 +80,9 @@
       ],
       "storage/*": [
         "lib/storage/*"
+      ],
+      "secret/*": [
+        "lib/secret/*"
       ]
     },
   },

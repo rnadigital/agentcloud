@@ -54,7 +54,7 @@ export default function Login() {
 							{verifysuccess && <SuccessAlert message='Email verified, you may now sign in.' />}
 							{changepassword && <SuccessAlert message='Password updated, you may now sign in.' />}
 							
-							{noverify && <InfoAlert message='Email verification skipped because you are missing secret manager credentials.' />}
+							{noverify && <InfoAlert message={`Email verification skipped because you are missing AMAZON_ACCESS_ID and/or AMAZON_SECRET_ACCESS_KEY in your current secret manager: "${process.env.NEXT_PUBLIC_SECRET_PROVIDER||'local'}"`} />}
 
 							<div>
 								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
