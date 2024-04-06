@@ -137,9 +137,11 @@ pub async fn embed_text(
                                 let backoff = backoff::ExponentialBackoffBuilder::new()
                                     .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                                     .build();
-                                let config = OpenAIConfig::new()
-                                    .with_api_key(k)
-                                    .with_org_id("rna-digital"); // todo: need to get this from mongo
+                                let mut config = OpenAIConfig::new()
+                                    .with_api_key(k);
+                                if let Some(org) = creds_obj.org {
+                                    config = config.with_org_id(org);
+                                }
                                 let client = async_openai::Client::with_config(config).with_backoff(backoff);
                                 let request = CreateEmbeddingRequestArgs::default()
                                     .model(m)

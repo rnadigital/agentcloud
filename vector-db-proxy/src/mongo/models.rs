@@ -77,6 +77,7 @@ pub struct Model {
 pub struct CredentialsObj {
     pub key: Option<String>,
     pub endpoint: Option<String>,
+    pub org: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
