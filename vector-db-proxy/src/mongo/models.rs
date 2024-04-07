@@ -3,7 +3,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
     pub syncCatalog: Value,
     pub scheduleType: String,
@@ -17,15 +17,15 @@ pub struct DatasourceConnectionSettings {
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DataSources {
     pub _id: ObjectId,
     pub orgId: ObjectId,
     pub teamId: ObjectId,
     pub modelId: Option<ObjectId>,
     pub name: String,
+    pub description: Option<String>,
     pub originalName: String,
-    pub gcsFilename: Option<String>,
     pub sourceType: String,
     pub sourceId: Option<String>,
     pub syncedCount: Option<i32>,
@@ -35,7 +35,6 @@ pub struct DataSources {
     pub connectionId: Option<String>,
     pub chunkStrategy: Option<String>,
     pub chunkCharacter: Option<String>,
-    pub connectionSettings: Option<DatasourceConnectionSettings>,
     pub lastSyncedDate: Option<DateTime>,
     pub embeddingField: Option<String>,
     pub createdDate: Option<DateTime>,
@@ -61,7 +60,7 @@ impl From<String> for ChunkingStrategy {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Model {
     pub _id: ObjectId,
     pub orgId: ObjectId,
@@ -71,4 +70,22 @@ pub struct Model {
     pub model: String,
     pub embeddingLength: i32,
     pub modelType: String,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CredentialsObj {
+    pub key: Option<String>,
+    pub endpoint: Option<String>,
+    pub org: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Credentials {
+    pub _id: ObjectId,
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub name: String,
+    pub createdDate: Option<DateTime>,
+    pub credentials: Option<CredentialsObj>,
 }
