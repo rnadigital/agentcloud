@@ -193,14 +193,7 @@ impl TextSplitting {
             None
         }
     }
-    /// this function aggregates the `text` and `metadata` into a `Document` record
-    /// ```rust
-    /// Document {
-    ///     page_content: String,
-    ///     metadata: Option<HashMap<String, String>>,
-    ///     embedding_vector: Option<Vec<f32>>
-    ///  }
-    /// ```
+    
     async fn chunk_text(
         &self,
         texts: Vec<String>,

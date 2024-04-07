@@ -60,7 +60,7 @@ impl From<String> for ChunkingStrategy {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Model {
     pub _id: ObjectId,
     pub orgId: ObjectId,

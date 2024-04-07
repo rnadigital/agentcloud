@@ -111,13 +111,13 @@ pub async fn subscribe_to_queue(
                                                             }
                                                         }
                                                     }
+                                                } else {
+                                                    // This is where data is coming from airbyte rather than a direct file upload
+                                                    let message_queue = Arc::clone(&queue);
+                                                    let qdrant_conn = Arc::clone(&qdrant_clone);
+                                                    let mongo_conn = Arc::clone(&mongo_client);
+                                                    let _ = add_message_to_embedding_upserting_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
                                                 }
-                                            } else {
-                                                // This is where data is coming from airbyte rather than a direct file upload
-                                                let message_queue = Arc::clone(&queue);
-                                                let qdrant_conn = Arc::clone(&qdrant_clone);
-                                                let mongo_conn = Arc::clone(&mongo_client);
-                                                let _ = add_message_to_embedding_upserting_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
                                             }
                                         } else {
                                             eprintln!(
