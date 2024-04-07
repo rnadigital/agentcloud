@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Adds the incoming task to the execution Queue to be processes when threads are available
-pub async fn add_message_to_embedding_queue(
+pub async fn add_message_to_embedding_upserting_queue(
     queue: Arc<RwLock<MyQueue<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
@@ -22,6 +22,16 @@ pub async fn add_message_to_embedding_queue(
 }
 
 pub async fn add_message_to_upsert_queue(
+    queue: Arc<RwLock<MyQueue<String>>>,
+    qdrant_conn: Arc<RwLock<QdrantClient>>,
+    mongo_conn: Arc<RwLock<Database>>,
+    vector: Vec<Vec<f32>>,
+    metadata: HashMap<String, String>,
+) {
+    todo!()
+}
+
+pub async fn add_message_to_embedding_queue(
     queue: Arc<RwLock<MyQueue<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,

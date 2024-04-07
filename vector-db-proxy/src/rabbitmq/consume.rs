@@ -13,7 +13,7 @@ use crate::llm::models::EmbeddingModels;
 use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::mongo::queries::get_datasource;
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
+use crate::queue::add_tasks_to_queues::add_message_to_embedding_upserting_queue;
 use crate::queue::queuing::MyQueue;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
@@ -117,7 +117,7 @@ pub async fn subscribe_to_queue(
                                                 let message_queue = Arc::clone(&queue);
                                                 let qdrant_conn = Arc::clone(&qdrant_clone);
                                                 let mongo_conn = Arc::clone(&mongo_client);
-                                                let _ = add_message_to_embedding_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
+                                                let _ = add_message_to_embedding_upserting_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
                                             }
                                         } else {
                                             eprintln!(

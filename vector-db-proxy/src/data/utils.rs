@@ -8,7 +8,8 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::RwLock;
 use crate::data::text_extraction::TextExtraction;
-use crate::data::models::{Document as DocumentModel, FileType, Sentence};
+use crate::data::models::{Document as DocumentModel, Document, FileType, Sentence};
+use crate::data::text_splitting::TextSplitting;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
 use crate::queue::queuing::MyQueue;
@@ -131,21 +132,22 @@ pub async fn apply_chunking_strategy_to_document(
     mongo_conn: Arc<RwLock<Database>>,
     datasource_id: String,
 ) -> anyhow::Result<Vec<DocumentModel>> {
-    let chunker = TextExtraction::default();
     let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
-    match chunker
-        .chunk(
-            document_text,
-            metadata,
-            chunking_strategy,
-            chunking_character,
-            embedding_model_choice,
-            mongo_conn,
-            datasource_id,
-        )
-        .await
-    {
-        Ok(c) => Ok(c),
-        Err(e) => Err(anyhow!("An error occurred: {}", e)),
-    }
+    let splitter = TextSplitting::new(
+        embedding_model_choice,
+        true,
+        Some(chunking_strategy),
+        chunking_character,
+        mongo_conn,
+        datasource_id,
+    );
+    let doc = Document {
+        page_content: document_text,
+        metadata,
+        embedding_vector: None,
+    };
+    let Ok(results) = splitter.split_documents(vec![doc]).await else {
+        return Err(anyhow!("Chunker returned an empty document!"));
+    };
+    Ok(results)
 }

@@ -92,6 +92,7 @@ impl TextSplitting {
             // we embed each of those sentences
             let mongo_conn_clone = Arc::clone(&self.mongo_conn);
             let datasource_id_clone = self.datasource_id.clone();
+            // todo: replace this with the embed queue
             match embed_text_chunks_async(mongo_conn_clone, datasource_id_clone, list_of_text, self.embedding_model).await {
                 Ok(embeddings) => {
                     // we match the index with the embedding index and insert the embedding vector into the sentence hashmap
@@ -200,7 +201,7 @@ impl TextSplitting {
     ///     embedding_vector: Option<Vec<f32>>
     ///  }
     /// ```
-    async fn create_documents(
+    async fn chunk_text(
         &self,
         texts: Vec<String>,
         metadata: Vec<Option<HashMap<String, String>>>,
@@ -208,6 +209,7 @@ impl TextSplitting {
         let mut documents = Vec::new();
         for (i, text) in texts.into_iter().enumerate() {
             let mut index: Option<usize> = None;
+            // Here is where we call split text
             if let Some(chunks) = self.split_text(&text).await {
                 for mut chunk in chunks {
                     let mut metadata = metadata[i].clone().unwrap();
@@ -236,8 +238,8 @@ impl TextSplitting {
         }
         documents
     }
-    
-    
+
+
     /// takes a `Vec<Document>` as an input and returns a `Result<Vec<Document>` as output
     /// collect `text` and `metadata` from each document and calls `create_document` method
     pub async fn split_documents(&self, documents: Vec<Document>) -> Result<Vec<Document>> {
@@ -245,7 +247,8 @@ impl TextSplitting {
             .into_iter()
             .map(|doc| (doc.page_content, doc.metadata))
             .unzip();
-        let results = self.create_documents(texts, metadata).await;
+        // `create_document()` calls `split_text()` which actually applies the chunking strategy
+        let results = self.chunk_text(texts, metadata).await;
         if !results.is_empty() {
             Ok(results)
         } else {

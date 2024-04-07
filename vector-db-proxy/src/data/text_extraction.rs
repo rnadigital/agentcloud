@@ -1,23 +1,17 @@
-use crate::data::{models::Document};
-use crate::mongo::models::ChunkingStrategy;
-use anyhow::{anyhow, Result};
+extern crate dotext;
 
+use anyhow::{anyhow, Result};
 use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
 use std::sync::Arc;
-
-extern crate dotext;
-
-use crate::llm::models::EmbeddingModels;
 use dotext::*;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
-use crate::data::text_splitting::TextSplitting;
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 
+use crate::queue::add_tasks_to_queues::add_message_to_embedding_upserting_queue;
 use crate::queue::queuing::MyQueue;
 
 pub struct TextExtraction;
@@ -180,7 +174,7 @@ impl TextExtraction {
                             let qdrant_conn = Arc::clone(&qdrant_conn);
                             let mongo_conn = Arc::clone(&mongo_conn);
                             let ds_clone = datasource_id.clone();
-                            add_message_to_embedding_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
+                            add_message_to_embedding_upserting_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
                         }
                         Err(e) => { println!("An error occurred {}", e); }
                     }
@@ -190,35 +184,5 @@ impl TextExtraction {
                 println!("An error occurred: {} ", e);
             }
         }
-    }
-
-
-    pub async fn chunk(
-        &self,
-        data: String,
-        metadata: Option<HashMap<String, String>>,
-        strategy: ChunkingStrategy,
-        chunking_character: Option<String>,
-        embedding_model: EmbeddingModels,
-        mongo_conn: Arc<RwLock<Database>>,
-        datasource_id: String,
-    ) -> Result<Vec<Document>> {
-        let chunker = TextSplitting::new(
-            embedding_model,
-            true,
-            Some(strategy),
-            chunking_character,
-            mongo_conn,
-            datasource_id,
-        );
-        let doc = Document {
-            page_content: data,
-            metadata,
-            embedding_vector: None,
-        };
-        let Ok(results) = chunker.split_documents(vec![doc]).await else {
-            return Err(anyhow!("Chunker returned an empty document!"));
-        };
-        Ok(results)
     }
 }

@@ -40,6 +40,14 @@ pub trait Control<T>
     fn upsert(
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String,
+    );
+    fn embed(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String,
     );
 }
 
@@ -127,7 +135,20 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
         true
     }
 
-    fn upsert(&mut self, qdrant_conn: Arc<RwLock<QdrantClient>>) {
+    fn upsert(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String,
+    ) {
+        todo!()
+    }
+
+    fn embed(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+        mongo_conn: Arc<RwLock<Database>>,
+        message: String) {
         todo!()
     }
 }
