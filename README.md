@@ -2,21 +2,24 @@
 # agentcloud
 
 https://www.agentcloud.dev/
-Watch our Intro video here
-https://youtu.be/POLdnrjsy9c
 
-Welcome to `agentcloud` repository! This project comprises three main components: 
+**🎥 Watch our [Intro video here](https://youtu.be/POLdnrjsy9c)**
 
-1. **Agent Backend**: A Python application running crewai, communicating LLM messages through socket.io
-2. **Webapp**: A UI built using next.js, tailwind, and an express custom server.
-3. **Vector Proxy:** A Rust application which communicates with Qdrant vector Database
+**👨‍💻 See our [docs here](https://docs.agentcloud.dev)**
+
+Welcome to `agentcloud` repository! An AI App builder platform for companies (like OAI GPTs) with some extra goodies.
+
+This project comprises three main components: 
+1. **Agent Backend**: A Python application running crewai, communicating LLM messages through socket.io, enabling single + multi agent apps.
+2. **Webapp**: A UI built using next.js, tailwind, and an express custom server which can communicate with Airbyte an ETL platform to extract data from hundreds of connectors.
+3. **Vector Proxy:** A Rust application which can split, chunk and locally embed and store embeddings in a local vector Database Qdrant.
+
+You can read more about Agent Cloud [high level concepts here](https://docs.agentcloud.dev/documentation/get-started/introduction).
 
 ## Getting Started
+Access a [detailed guide here](https://docs.agentcloud.dev/documentation/get-started/quickstart)
 
 To run this project up locally, clone this repo and run Docker.
-For now there is a reliance on GCP for Bucket storage to store files. (We will add AWS S3, Local Disk in future releases.)
-Follow the steps below to get started:
-
 1. **Start Services**: Simply run the following command:
 
 Mac & Linux:
@@ -34,7 +37,6 @@ Options:
     --service-account-json PATH      Specify the file path of your GCP service account json.
     --gcs-bucket-name NAME           Specify the GCS bucket name to use.
     --gcs-bucket-location LOCATION   Specify the GCS bucket location.
-    --openai-api-key KEY             Specify your OpenAI API key.
     -h, --help                       Display this help message.
 ```
 
