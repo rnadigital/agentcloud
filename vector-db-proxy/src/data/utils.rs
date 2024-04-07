@@ -6,12 +6,42 @@ use actix_web::dev::ResourcePath;
 use anyhow::anyhow;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use tokio::sync::{RwLock};
-use crate::data::chunking::{Chunking, TextChunker};
-use crate::data::models::{Document as DocumentModel, FileType};
+use tokio::sync::RwLock;
+use crate::data::text_extraction::TextExtraction;
+use crate::data::models::{Document as DocumentModel, FileType, Sentence};
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
 use crate::queue::queuing::MyQueue;
+
+pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
+    let mut distances = Vec::new();
+    println!("Sentence Length: {}", sentences.len());
+    let mut distance = 1.0;
+    if sentences.len() > 1 {
+        for i in 0..sentences.len() - 1 {
+            let embedding_current = &sentences[i].sentence_embedding;
+            let embedding_next = &sentences[i + 1].sentence_embedding;
+            println!("Embedding  next: {}", embedding_next);
+            // Calculate cosine similarity
+            let similarity = cosine_similarity(embedding_current, embedding_next);
+            println!("Similarity Score: {}", similarity);
+            // Convert to cosine distance
+            distance = 1.0 - similarity;
+
+            // Append cosine distance to the list
+            distances.push(distance);
+
+            // Store distance in the struct
+            sentences[i].distance_to_next = Some(distance);
+        }
+
+        // Optionally handle the last sentence
+        sentences.last_mut().unwrap().distance_to_next = None; // or a default value
+    } else {
+        distances.push(distance)
+    }
+    distances
+}
 
 pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
@@ -44,7 +74,7 @@ pub async fn extract_text_from_file(
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
     let path = file_path.trim_matches('"').path().to_string();
-    let chunker = TextChunker::default();
+    let chunker = TextExtraction::default();
     match file_type {
         FileType::PDF => {
             let path_clone = path.clone();
@@ -101,7 +131,7 @@ pub async fn apply_chunking_strategy_to_document(
     mongo_conn: Arc<RwLock<Database>>,
     datasource_id: String,
 ) -> anyhow::Result<Vec<DocumentModel>> {
-    let chunker = TextChunker::default();
+    let chunker = TextExtraction::default();
     let embedding_model_choice = EmbeddingModels::from(embedding_models.unwrap());
     match chunker
         .chunk(

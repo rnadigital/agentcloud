@@ -1,4 +1,4 @@
-use crate::data::{models::Document, text_splitting::Chunker};
+use crate::data::{models::Document};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 
@@ -15,48 +15,16 @@ use dotext::*;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
+use crate::data::text_splitting::TextSplitting;
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
+
 use crate::queue::queuing::MyQueue;
 
-pub trait Chunking {
-    type Item;
-    fn default() -> Self;
-    fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String>;
-    fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)>;
-    fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)>;
-    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)>;
-    fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String>;
-    async fn extract_text_from_csv(
-        &self,
-        path: String,
-        datasource_id: String,
-        queue: Arc<RwLock<MyQueue<String>>>,
-        qdrant_conn: Arc<RwLock<QdrantClient>>,
-        mongo_conn: Arc<RwLock<Database>>,
-        // redis_conn_pool: Arc<Mutex<RedisConnection>>,
-    );
-    async fn chunk(
-        &self,
-        data: String,
-        metadata: Option<HashMap<String, String>>,
-        strategy: ChunkingStrategy,
-        chunking_character: Option<String>,
-        embedding_model: EmbeddingModels,
-        mongo_conn: Arc<RwLock<Database>>,
-        datasource_id: String,
-    ) -> Result<Vec<Document>>;
-}
+pub struct TextExtraction;
 
-pub struct TextChunker;
-
-impl Chunking for TextChunker {
-    type Item = u8;
-
-    fn default() -> Self {
-        TextChunker
-    }
-
-    fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String> {
+impl TextExtraction {
+    pub fn default() -> Self { Self }
+    pub fn dictionary_to_hashmap(&self, dict: &Dictionary) -> HashMap<String, String> {
         let mut map = HashMap::new();
         for (key, value) in dict {
             let key_str = String::from_utf8_lossy(key).into_owned();
@@ -102,7 +70,7 @@ impl Chunking for TextChunker {
         map
     }
 
-    fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+    pub fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         match lopdf::Document::load(path.as_str()) {
             Ok(doc) => {
                 let mut metadata = self.detect_pdf_fonts(&doc);
@@ -138,7 +106,7 @@ impl Chunking for TextChunker {
         }
     }
     // this method covers docx, xlsx and pptx
-    fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+    pub fn extract_text_from_docx(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         let metadata = HashMap::new();
         let mut docx = String::new();
         let mut file = Docx::open(path.as_str()).expect("Cannot open file");
@@ -147,7 +115,7 @@ impl Chunking for TextChunker {
         let results = (docx, metadata);
         Ok(results)
     }
-    fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+    pub fn extract_text_from_txt(&self, path: String) -> Result<(String, HashMap<String, String>)> {
         let metadata = HashMap::new();
         let mut text = String::new();
 
@@ -162,7 +130,7 @@ impl Chunking for TextChunker {
         Ok(results)
     }
 
-    fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
+    pub fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
         let mut metadata = HashMap::new();
         // Iterate over all pages
         for page_id in doc.page_iter() {
@@ -193,7 +161,7 @@ impl Chunking for TextChunker {
         }
         metadata
     }
-    async fn extract_text_from_csv(
+    pub async fn extract_text_from_csv(
         &self,
         path: String,
         datasource_id: String,
@@ -225,7 +193,7 @@ impl Chunking for TextChunker {
     }
 
 
-    async fn chunk(
+    pub async fn chunk(
         &self,
         data: String,
         metadata: Option<HashMap<String, String>>,
@@ -235,7 +203,7 @@ impl Chunking for TextChunker {
         mongo_conn: Arc<RwLock<Database>>,
         datasource_id: String,
     ) -> Result<Vec<Document>> {
-        let chunker = Chunker::new(
+        let chunker = TextSplitting::new(
             embedding_model,
             true,
             Some(strategy),

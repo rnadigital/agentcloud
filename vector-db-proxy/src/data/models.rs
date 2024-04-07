@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use ndarray::Array1;
 
 #[derive(Debug, Clone, Default)]
 pub struct Document {
@@ -35,6 +36,7 @@ impl Hash for Document {
         self.page_content.hash(state);
     }
 }
+
 #[derive(Copy, Clone)]
 pub enum FileType {
     PDF,
@@ -43,6 +45,7 @@ pub enum FileType {
     DOCX,
     UNKNOWN,
 }
+
 impl From<String> for FileType {
     fn from(value: String) -> Self {
         match value.as_str() {
@@ -51,6 +54,25 @@ impl From<String> for FileType {
             "csv" => Self::CSV,
             "docx" | "pptx" | "xlsx" | "odt" | "ods" | "odp" => Self::DOCX,
             _ => Self::UNKNOWN,
+        }
+    }
+}
+
+// `Sentence` is a struct that holds the embedding and other metadata
+#[derive(Clone, Debug)]
+pub struct Sentence {
+    pub sentence_embedding: Array1<f32>,
+    pub distance_to_next: Option<f32>,
+    pub sentence: Option<String>,
+}
+
+// a sentence should also have the associated text
+impl Default for Sentence {
+    fn default() -> Self {
+        Sentence {
+            sentence_embedding: Array1::from_vec(vec![]),
+            distance_to_next: None,
+            sentence: None,
         }
     }
 }

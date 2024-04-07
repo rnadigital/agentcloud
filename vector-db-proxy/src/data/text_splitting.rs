@@ -1,66 +1,17 @@
-use crate::data::models::Document;
-use crate::data::utils::{cosine_similarity, percentile};
+use crate::data::models::{Document, Sentence};
+use crate::data::utils::percentile;
 use crate::llm::utils::embed_text;
 use crate::llm::{models::EmbeddingModels, utils::embed_text_chunks_async};
 use crate::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
 use ndarray::Array1;
 use std::collections::HashMap;
-use std::sync::{Arc};
+use std::sync::Arc;
 use mongodb::Database;
 use tokio::sync::RwLock;
+use crate::data::utils;
 
-// `Sentence` is a struct that holds the embedding and other metadata
-#[derive(Clone, Debug)]
-struct Sentence {
-    sentence_embedding: Array1<f32>,
-    distance_to_next: Option<f32>,
-    sentence: Option<String>,
-}
-
-// a sentence should also have the associated text
-impl Default for Sentence {
-    fn default() -> Self {
-        Sentence {
-            sentence_embedding: Array1::from_vec(vec![]),
-            distance_to_next: None,
-            sentence: None,
-        }
-    }
-}
-
-
-fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
-    let mut distances = Vec::new();
-    println!("Sentence Length: {}", sentences.len());
-    let mut distance = 1.0;
-    if sentences.len() > 1 {
-        for i in 0..sentences.len() - 1 {
-            let embedding_current = &sentences[i].sentence_embedding;
-            let embedding_next = &sentences[i + 1].sentence_embedding;
-            println!("Embedding  next: {}", embedding_next);
-            // Calculate cosine similarity
-            let similarity = cosine_similarity(embedding_current, embedding_next);
-            println!("Similarity Score: {}", similarity);
-            // Convert to cosine distance
-            distance = 1.0 - similarity;
-
-            // Append cosine distance to the list
-            distances.push(distance);
-
-            // Store distance in the struct
-            sentences[i].distance_to_next = Some(distance);
-        }
-
-        // Optionally handle the last sentence
-        sentences.last_mut().unwrap().distance_to_next = None; // or a default value
-    } else {
-        distances.push(distance)
-    }
-    distances
-}
-
-pub struct Chunker {
+pub struct TextSplitting {
     embedding_model: EmbeddingModels,
     add_start_index: bool,
     chunking_strategy: Option<ChunkingStrategy>,
@@ -69,7 +20,7 @@ pub struct Chunker {
     datasource_id: String,
 }
 
-impl Chunker {
+impl TextSplitting {
     pub fn new(
         embedding_model: EmbeddingModels,
         add_start_index: bool,
@@ -78,7 +29,7 @@ impl Chunker {
         mongo_conn: Arc<RwLock<Database>>,
         datasource_id: String,
     ) -> Self {
-        Chunker {
+        TextSplitting {
             embedding_model,
             add_start_index,
             chunking_strategy,
@@ -114,6 +65,19 @@ impl Chunker {
         sentences
     }
 
+    ///This is the main function that splits documents into the correct chunks
+    /// based on the chosen chunking strategy
+    ///This function accepts a string slice (&str) and returns a Vector of `Documents`
+    /// ```rust
+    /// Document {
+    ///     page_content: String,
+    ///     metadata: Option<HashMap<String, String>>,
+    ///     embedding_vector: Option<Vec<f32>>
+    ///  }
+    /// ```
+    /// At the moment this function support only 2 chunking strategies
+    /// 1. Character Chunking: Loops document and splits based on a user-defined character
+    /// 2. Semantic Chunking: This method aims to combine semantically similar sentences to form a chunk that represents a cohesive 'idea'
     async fn split_text(&self, text: &str) -> Option<Vec<Document>> {
         // here we instantiate all the vectors that we will use later on
         let mut chunks = Vec::new();
@@ -146,7 +110,7 @@ impl Chunker {
                     match &self.chunking_strategy.as_ref().unwrap() {
                         ChunkingStrategy::SEMANTIC_CHUNKING => {
                             // in the semantic chunking we iterate through each of the sentences and calculate their relative cosine similarity scores
-                            let distances = calculate_cosine_distances(&mut vector_of_sentences);
+                            let distances = utils::calculate_cosine_distances(&mut vector_of_sentences);
                             let breakpoint_percentile_threshold = 95;
                             let breakpoint_distance_threshold =
                                 percentile(&distances, breakpoint_percentile_threshold);
@@ -182,6 +146,7 @@ impl Chunker {
                                     // embed the new combined text and insert into document
                                     let mongo_conn_clone = Arc::clone(&self.mongo_conn);
                                     let datasource_id_clone = self.datasource_id.clone();
+                                    // todo: rather than push to chunks what we can do here is called `add_message_to_embedding_queue`
                                     let new_embedding =
                                         embed_text(mongo_conn_clone, datasource_id_clone, vec![&combined_text], &self.embedding_model)
                                             .await
@@ -220,19 +185,21 @@ impl Chunker {
                         _ => {}
                     }
                 }
-                Err(e) => {
-                    println!(
-                        "An error occurred while trying to embed text chunk. Error: {}",
-                        e
-                    );
-                }
+                Err(e) => { println!("An error occurred while trying to embed text chunk. Error: {}", e); }
             }
             Some(chunks)
         } else {
             None
         }
     }
-
+    /// this function aggregates the `text` and `metadata` into a `Document` record
+    /// ```rust
+    /// Document {
+    ///     page_content: String,
+    ///     metadata: Option<HashMap<String, String>>,
+    ///     embedding_vector: Option<Vec<f32>>
+    ///  }
+    /// ```
     async fn create_documents(
         &self,
         texts: Vec<String>,
@@ -269,8 +236,10 @@ impl Chunker {
         }
         documents
     }
-
-
+    
+    
+    /// takes a `Vec<Document>` as an input and returns a `Result<Vec<Document>` as output
+    /// collect `text` and `metadata` from each document and calls `create_document` method
     pub async fn split_documents(&self, documents: Vec<Document>) -> Result<Vec<Document>> {
         let (texts, metadata): (Vec<_>, Vec<_>) = documents
             .into_iter()

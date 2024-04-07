@@ -30,12 +30,17 @@ pub trait Control<T>
     fn optimised(thread_utilisation_percentage: f64) -> Self;
     fn default() -> Self;
     fn enqueue(&mut self, task: T);
-    fn embed_message(
+    fn embed_upsert_message(
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
     ) -> bool;
+
+    fn upsert(
+        &mut self,
+        qdrant_conn: Arc<RwLock<QdrantClient>>,
+    );
 }
 
 // This defines implementations of each of the methods in the class
@@ -97,12 +102,8 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
     /// The closure now has ownership of the cloned Arcs, which guarantees their existence for the entire lifetime of the closure.
     /// The original Arcs are still owned by the app_data object and will be dropped when app_data goes out of scope, but this won't affect the cloned Arcs.
 
-    fn embed_message(
-        &mut self,
-        qdrant_conn: Arc<RwLock<QdrantClient>>,
-        mongo_conn: Arc<RwLock<Database>>,
-        message: String,
-    ) -> bool {
+
+    fn embed_upsert_message(&mut self, qdrant_conn: Arc<RwLock<QdrantClient>>, mongo_conn: Arc<RwLock<Database>>, message: String) -> bool {
         while self.q.size() > 0 {
             let task = match self.q.remove() {
                 Ok(t) => t,
@@ -124,5 +125,9 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
             });
         }
         true
+    }
+
+    fn upsert(&mut self, qdrant_conn: Arc<RwLock<QdrantClient>>) {
+        todo!()
     }
 }
