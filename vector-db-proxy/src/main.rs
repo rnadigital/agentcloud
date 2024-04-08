@@ -86,7 +86,7 @@ async fn main() -> std::io::Result<()> {
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::default()));
+    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::optimised(global_data.thread_percentage_utilisation)));
     // let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
     let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
     let rabbitmq_connection_details = RabbitConnect {
