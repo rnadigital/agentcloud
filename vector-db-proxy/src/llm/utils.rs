@@ -6,7 +6,7 @@ use qdrant_client::client::QdrantClient;
 use std::sync::Arc as arc;
 use std::sync::Arc;
 use async_openai::config::OpenAIConfig;
-use ort::{CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
+use ort::{CoreMLExecutionProvider, CUDAExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
@@ -17,7 +17,10 @@ use crate::qdrant::utils::Qdrant;
 use crate::routes::models::FilterConditions;
 use crate::init::env_variables::GLOBAL_DATA;
 
-pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<Vec<Vec<f32>>> {
+pub async fn embed_text(
+    text: Vec<&String>,
+    model: &EmbeddingModels,
+) -> Result<Vec<Vec<f32>>> {
     match model {
         EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
         // Group all fast embed models together
@@ -28,22 +31,92 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
         | EmbeddingModels::ENTENCE_TRANSFORMERS_ALL_MINILM_L6_V2
         | EmbeddingModels::XENOVA_FAST_MULTILINGUAL_E5_LARGE => match model.to_str() {
             Some(m) => {
-                // let coreml = CoreMLExecutionProvider::default();
-                // if !coreml.is_available().unwrap() {
-                //     eprintln!("Please compile ONNX Runtime with CoreML!");
-                //     std::process::exit(1);
-                // }
+                let global_data = GLOBAL_DATA.read().await;
                 let model = FastEmbedModels::from(m.to_string());
                 match FastEmbedModels::translate(&model) {
                     Some(translation) => {
-                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
-                            model_name: translation,
-                            show_download_message: true,
-                            // execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
-                            ..Default::default()
-                        })?;
-                        let embeddings = model.passage_embed(text, None)?;
-                        Ok(embeddings)
+                        match global_data.use_gpu.as_str() {
+                            "false" => {
+                                let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                    model_name: translation,
+                                    show_download_message: true,
+                                    ..Default::default()
+                                })?;
+                                let embeddings = model.passage_embed(text, None)?;
+                                Ok(embeddings)
+                            }
+                            _ => {
+                                println!("Checking for hardware acceleration...");
+                                println!("Checking for CoreML...");
+                                let coreml = CoreMLExecutionProvider::default();
+                                match coreml.is_available() {
+                                    Ok(acceleration) => {
+                                        if acceleration {
+                                            println!("Found CoreML...");
+                                            let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                model_name: translation,
+                                                show_download_message: true,
+                                                execution_providers: vec![ExecutionProviderDispatch::CoreML(coreml)],
+                                                ..Default::default()
+                                            })?;
+                                            let embeddings = model.passage_embed(text, None)?;
+                                            Ok(embeddings)
+                                        } else {
+                                            println!("CoreML was not available");
+                                            println!("Looking for CUDA hardware...");
+                                            let cuda = CUDAExecutionProvider::default();
+                                            match cuda.is_available() {
+                                                Ok(acceleration) => {
+                                                    if acceleration {
+                                                        println!("Found CUDA...");
+                                                        let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                            model_name: translation,
+                                                            show_download_message: true,
+                                                            execution_providers: vec![ExecutionProviderDispatch::CUDA(cuda)],
+                                                            ..Default::default()
+                                                        })?;
+                                                        let embeddings = model.passage_embed(text, None)?;
+                                                        Ok(embeddings)
+                                                    } else {
+                                                        println!("CUDA was  not available");
+                                                        println!("Checking for ROCm...");
+                                                        let roc = ROCmExecutionProvider::default();
+                                                        match roc.is_available() {
+                                                            Ok(acceleration) => {
+                                                                if acceleration {
+                                                                    println!("Found ROCm...");
+                                                                    let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                                        model_name: translation,
+                                                                        show_download_message: true,
+                                                                        execution_providers: vec![ExecutionProviderDispatch::ROCm(roc)],
+                                                                        ..Default::default()
+                                                                    })?;
+                                                                    let embeddings = model.passage_embed(text, None)?;
+                                                                    Ok(embeddings)
+                                                                } else {
+                                                                    println!("No hardware acceleration found...falling back to CPU");
+                                                                    let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
+                                                                        model_name: translation,
+                                                                        show_download_message: true,
+                                                                        ..Default::default()
+                                                                    })?;
+                                                                    let embeddings = model.passage_embed(text, None)?;
+                                                                    Ok(embeddings)
+                                                                }
+                                                            }
+                                                            Err(e) => Err(anyhow!("Error occurred while looking for ROCm hardware: {}",e))
+                                                        }
+                                                    }
+                                                }
+                                                Err(e) => Err(anyhow!("Error occurred while looking for CUDA hardware: {}",e))
+                                            }
+                                        }
+                                    }
+                                    Err(e) =>
+                                        Err(anyhow!("An error occurred while looking for CoreML hardware: {}", e))
+                                }
+                            }
+                        }
                     }
                     None => Err(anyhow!(
                         "Model does not match any known fast embed model variants"
@@ -57,30 +130,39 @@ pub async fn embed_text(text: Vec<&String>, model: &EmbeddingModels) -> Result<V
         _ => match model.to_str() {
             Some(m) => {
                 let global_data = GLOBAL_DATA.read().await; // TODO: temp fix until we get key from mongo
-                let config = OpenAIConfig::new()
-                    .with_api_key(global_data.openai_key.as_str())
-                    .with_org_id("rna-digital"); // todo: need to get this from mongo
-
-                let backoff = backoff::ExponentialBackoffBuilder::new()
-                    .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                    .build();
-                let client = async_openai::Client::with_config(config).with_backoff(backoff);
-                let request = CreateEmbeddingRequestArgs::default()
-                    .model(m)
-                    .input(text)
-                    .build()?;
-                let response = client.embeddings().create(request).await?;
-                let embedding: Vec<Vec<f32>> = response
-                    .data
-                    .iter()
-                    .map(|data| data.clone().embedding)
-                    .collect();
-                Ok(embedding)
+                match &global_data.openai_key {
+                    Some(k) => {
+                        let backoff = backoff::ExponentialBackoffBuilder::new()
+                            .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                            .build();
+                        let mut config = OpenAIConfig::new()
+                            .with_api_key(k);
+                        if let Some(org) = &global_data.openai_orgid {
+                            config = config.with_org_id(org);
+                        }
+                        let client = async_openai::Client::with_config(config).with_backoff(backoff);
+                        let request = CreateEmbeddingRequestArgs::default()
+                            .model(m)
+                            .input(text)
+                            .build()?;
+                        let response = client.embeddings().create(request).await?;
+                        let embedding: Vec<Vec<f32>> = response
+                            .data
+                            .iter()
+                            .map(|data| data.clone().embedding)
+                            .collect();
+                        Ok(embedding)
+                    }
+                    None => {
+                        Err(anyhow!("No OpenAI key found"))
+                    }
+                }
             }
             None => Err(anyhow!("Model type is unknown")),
         },
     }
 }
+
 
 pub struct LLM;
 
