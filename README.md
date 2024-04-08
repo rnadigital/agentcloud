@@ -25,8 +25,8 @@
 <br />
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=vLpi6NPOXwU" target="_blank">
-       <img src="https://github.com/rnadigital/agentcloud/blob/master/assets/agent-cloud-introduction-RAG-google-gigquery-youtube.png">
+  <a href="https://youtu.be/POLdnrjsy9c?si=o88WMNHXEYkIiW0k" target="_blank">
+       <img src="https://github.com/rnadigital/agentcloud/blob/master/webapp/public/images/agent-cloud-introduction-RAG-google-gigquery-youtube.png">
   </a>
 </p>
 
