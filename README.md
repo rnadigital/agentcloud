@@ -31,13 +31,25 @@ The script will prompt for some details, or you can pass them as command line ar
 
 ```
 ~$ ./install.sh --help
+
 Usage: ./install.sh [options]
+
+Note: By default, vector-db-proxy `cargo build`'s without the `--release` flag, for faster builds during development.
+      To specify a different dockerfile (i.e the non dev one), do `VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...`
+
 Options:
-    --project-id ID                  Specify the GCP project ID.
-    --service-account-json PATH      Specify the file path of your GCP service account json.
-    --gcs-bucket-name NAME           Specify the GCS bucket name to use.
-    --gcs-bucket-location LOCATION   Specify the GCS bucket location.
+
     -h, --help                       Display this help message.
+
+    --kill-webapp-next               Kill webapp after startup (for developers)
+    --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
+    --kill-agent-backend             Kill agent-backend after startup (for developers)
+
+    --project-id ID                  (OPTIONAL) Specify a GCP project ID (for Secret Manager, GCS, etc)
+    --service-account-json PATH      (OPTIONAL) Specify the file path of your GCP service account json.
+    --gcs-bucket-name NAME           (OPTIONAL) Specify the GCS bucket name to use.
+    --gcs-bucket-location LOCATION   (OPTIONAL) Specify the GCS bucket location.
+
 ```
 
 Windows:
