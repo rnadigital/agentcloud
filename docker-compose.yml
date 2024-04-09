@@ -3,7 +3,7 @@ name: agentcloud
 services:
 
   docker_rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13.1-management
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
