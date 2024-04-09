@@ -211,6 +211,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					setFiles={setFiles}
 					modelId={modelId}
 					name={datasourceName}
+					description={datasourceDescription}
 					callback={() => {
 					//jank form reset (for now)
 						setStep(initialStep);

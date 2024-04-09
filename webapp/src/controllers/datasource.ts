@@ -6,6 +6,7 @@ import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
+import { addTool } from 'db/tool';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { sendMessage } from 'lib/rabbitmq/send';
@@ -19,6 +20,7 @@ import { PDFExtract } from 'pdf.js-extract';
 import StorageProviderFactory from 'storage/index';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
+import { ToolType } from 'struct/tool';
 import { promisify } from 'util';
 import VectorDBProxy from 'vectordb/proxy';
 
@@ -336,6 +338,26 @@ export async function addDatasourceApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
+	// Add a tool automatically for the datasource
+	let foundIcon; //TODO: icon/avatar id and upload
+	await addTool({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: `"${datasourceName}" RAG tool`,
+		description: datasourceDescription,
+		type: ToolType.RAG_TOOL,
+		datasourceId: toObjectId(datasourceId),
+		schema: null,
+		data: {
+			builtin: false,
+			name: toSnakeCase(datasourceName),
+		},
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+	});
+
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
 }
@@ -650,7 +672,7 @@ export async function deleteDatasourceApi(req, res, next) {
 export async function uploadFileApi(req, res, next) {
 
 	const { modelId, name, datasourceDescription } = req.body;
-
+	console.log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
 			|| !name || typeof name !== 'string') {
@@ -707,6 +729,26 @@ export async function uploadFileApi(req, res, next) {
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	// Add a tool automatically for the datasource
+	let foundIcon; //TODO: icon/avatar id and upload
+	await addTool({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: `"${name}" RAG tool`,
+		description: datasourceDescription,
+		type: ToolType.RAG_TOOL,
+		datasourceId: toObjectId(newDatasourceId),
+		schema: null,
+		data: {
+			builtin: false,
+			name: toSnakeCase(name),
+		},
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
 

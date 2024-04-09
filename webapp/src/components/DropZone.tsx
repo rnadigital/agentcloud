@@ -13,8 +13,8 @@ import formatSize from 'utils/formatsize';
 
 import * as API from '../api';
 
-export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback }:
-	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, callback?: Function }) {
+export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback, description }:
+	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -35,6 +35,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 			formData.set('chunkCharacter', chunkCharacter as string);
 			formData.set('resourceSlug', resourceSlug as string);
 			formData.set('modelId', modelId as string);
+			formData.set('datasourceDescription', description as string);
 			formData.set('name', name as string);
 			formData.set('_csrf', csrf as string);
 			acceptedFiles.forEach(file => {
