@@ -27,7 +27,7 @@ Mac & Linux:
 chmod +x install.sh && ./install.sh
 ```
 
-The script will prompt for some details, or you can pass them as command line arguments:
+The script will install agentcloud and bring it up on [http://localhost:3000](http://localhost:3000).
 
 ```
 ~$ ./install.sh --help
