@@ -139,6 +139,6 @@ pub async fn subscribe_to_queue(
                 }
             }
         }
-        Err(_) => { println!("e") }
+        Err(e) => { println!("Error consuming message from rabbit: {}", e) }
     }
 }
