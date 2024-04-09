@@ -15,6 +15,8 @@ export default function AgentList({ agents, fetchAgents }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 
+	console.log('perm', permissions, account.permissions);
+
 	async function deleteAgent(agentId) {
 		API.deleteAgent({
 			_csrf: csrf,

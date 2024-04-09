@@ -29,6 +29,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import Blockies from 'react-blockies';
 
@@ -77,7 +78,8 @@ export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching } = accountContext as any;
-	const { children, router } = props as any;
+	const { children } = props as any;
+	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
@@ -85,7 +87,6 @@ export default withRouter(function Layout(props) {
 	const orgs = account?.orgs || [];
 
 	if (!account) {
-		//from pages that aren't SSRd, account fetched async in context
 		// return 'Loading...'; //TODO: loader?
 	}
 
@@ -317,7 +318,7 @@ export default withRouter(function Layout(props) {
 														suppressHydrationWarning
 														href={`/${resourceSlug}${item.href}`}
 														className={classNames(
-															path.endsWith(item.href)
+															path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.href}`)
 																? 'bg-gray-800 text-white'
 																: 'text-gray-400 hover:text-white hover:bg-gray-800',
 															'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',

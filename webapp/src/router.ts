@@ -1,6 +1,6 @@
 'use strict';
 
-import checkResourceSlug from '@mw/auth/checkresourceslug';
+import { checkAccountQuery,checkResourceSlug } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionLimit,
@@ -77,7 +77,7 @@ export default function router(server, app) {
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
 	server.get('/billing', authedMiddlewareChain, accountController.billingPage.bind(null, app));
-	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
+	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs
 	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
