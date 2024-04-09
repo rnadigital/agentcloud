@@ -71,23 +71,23 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 				</thead>
 				<tbody className='bg-white divide-y divide-gray-200'>
 					{datasources.map((datasource) => (
-						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-							<td className='px-6 py-3 whitespace-nowrap flex items-center'>
+						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50'>
+							<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<div className='flex items-center'>
 									<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
 								</div>
 							</td>
-							<td className='px-6 py-3 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<div className='flex items-center'>
 									<div className='text-sm font-medium text-gray-900'>{datasource.originalName}</div>
 								</div>
 							</td>
-							<td className='px-6 py-3 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
 									{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) && <ButtonSpinner size={14} className='ms-2 -me-1' />}
 								</span>
 							</td>
-							<td className='px-6 py-3 whitespace-nowrap'>
+							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<span suppressHydrationWarning className='text-sm text-gray-900'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
@@ -97,11 +97,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
 		                        </a>*/}
 		                        <button
-		                        	onClick={(e) => {
-		                        		e.preventDefault();
-		                        		e.stopPropagation();
-		                        		deleteDatasource(datasource._id);
-		                        	}}
+		                        	onClick={() => deleteDatasource(datasource._id)}
 		                        	className='text-red-500 hover:text-red-700'
 		                        	disabled={deleting[datasource._id]}
 		                        >
