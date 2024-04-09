@@ -1,3 +1,21 @@
+### v1.1.0
+ - **Hardware Acceleration Support**: Added support for CoreML, CUDA, ROCm to cater to diverse deployment environments.
+ - **Docker-Compose and Install Script Improvements**: Updated `docker-compose` configurations and `install.sh` script for better setup experience and development workflow. Includes more specific version locking for reliability and easier automation.
+ - **Permission System**: Implemented a fine-grained permission system.
+ - **README and Usage Examples**: Updated documentation to enhance clarity and user guidance.
+ - **Secret Management Overhaul**: Redesigned secret management using a factory/provider pattern for Google Secrets and local `.env` configurations.
+ - **Storage Backend Overhaul**: Redesigned file storage using a factory/provider pattern for GCS or to simply store on local disk and share a volume between webapp & vector-db-proxy.
+ - **MongoDB Model Enhancements**: Added filename support for MongoDB models and optimized queries.
+ - **Vector Database Proxy Updates**: Updated Vector DB Proxy for better structure and maintainability, including production build optimizations.
+ - **Local Storage and Thread Utilization**: Enhanced local storage handling and introduced thread utilization control.
+ - **Code Quality and Dependency Management**: Addressed ESLint warnings, updated configurations, and removed unused dependencies.
+ - **Frontend Updates**: Enabled avatars for apps and agents, added markdown preview for app descriptions, and improved UI components.
+ - **Stripe Subscription and Billing**: Implemented Stripe functionalities for plan management and addon cross-selling.
+
+---
+
+Legacy changelog:
+
 ### 1.0.0
  - TODO
 
