@@ -47,6 +47,15 @@ export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 	]).toArray();
 }
 
+export function getAgents(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promise<Agent[]> {
+	return AgentCollection().find({
+		teamId: toObjectId(teamId),
+		_id: {
+			$in: agentIds.map(toObjectId)
+		},
+	}).toArray();
+}
+
 export async function addAgent(agent: Agent): Promise<InsertResult> {
 	return AgentCollection().insertOne(agent);
 }
@@ -91,4 +100,17 @@ export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promis
 		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId),
 	});
+}
+
+export async function getAgentNameMap(teamId: db.IdOrStr, agentIds: db.IdOrStr[] = []): Promise<Agent[]> {
+	const agents = await AgentCollection().find({
+		teamId: toObjectId(teamId),
+		_id: {
+			$in: agentIds.map(toObjectId)
+		},
+	}).toArray();
+	return (agents||[]).reduce((acc, x) => {
+		acc[x.name] = x?.icon?.filename;
+		return acc;
+	}, {});
 }

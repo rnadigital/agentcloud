@@ -33,6 +33,16 @@ export async function accountPage(app, req, res, next) {
 }
 
 /**
+ * GET /billing
+ * billing page html
+ */
+export async function billingPage(app, req, res, next) {
+	const data = await accountData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, '/billing');
+}
+
+/**
  * GET /account.json
  * account page json data
  */
@@ -64,7 +74,7 @@ export async function login(req, res) {
 	if (passwordMatch === true) {
 		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/playground`, token });
+		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
 	}
 
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });

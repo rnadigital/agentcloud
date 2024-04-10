@@ -1,4 +1,6 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
+import AppCard from 'components/AppCard';
+import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Head from 'next/head';
@@ -11,13 +13,21 @@ import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 
-	const [accountContext]: any = useAccountContext();
-	const { account, teamName } = accountContext as any;
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
+	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { apps } = state;
+
+	async function startSession(appId) {
+		await API.addSession({
+			_csrf: csrf,
+			resourceSlug,
+			id: appId,
+		}, null, setError, router);
+	}
 
 	async function fetchApps() {
 		await API.getApps({ resourceSlug }, dispatch, setError, router);
@@ -25,6 +35,7 @@ export default function Apps(props) {
 
 	useEffect(() => {
 		fetchApps();
+		refreshAccountContext();
 	}, [resourceSlug]);
 
 	if (!apps) {
@@ -38,6 +49,8 @@ export default function Apps(props) {
 		</Head>
 
 		<PageTitleWithNewButton list={apps} title='Apps' buttonText='New App' href='/app/add' />
+
+		{error && <ErrorAlert error={error} />}
 
 		{apps.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/app/add`}
@@ -58,10 +71,9 @@ export default function Apps(props) {
 			buttonMessage={'New App'}
 		/>}
 
-		{apps.map((a, ai) => (<Link key={`app_link_${ai}`} className='m-2 text-blue-500' href={`/${resourceSlug}/app/${a._id}/edit`} >{a.name}</Link>))}
-
-		{/*<pre>{JSON.stringify(apps, null, 2)}</pre>*/}
-
+		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
+			{apps.map((a, ai) => (<AppCard key={ai} app={a} startSession={startSession} />))}
+		</div>
 	</>);
 
 };

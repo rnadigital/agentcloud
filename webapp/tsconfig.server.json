@@ -66,6 +66,12 @@
       ],
       "context/*": [
         "context/*"
+      ],
+      "storage/*": [
+        "lib/storage/*"
+      ],
+      "secret/*": [
+        "lib/secret/*"
       ]
     }
   },

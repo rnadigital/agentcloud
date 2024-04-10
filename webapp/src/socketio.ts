@@ -165,19 +165,20 @@ export function initSocket(rawHttpServer) {
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
 			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage?.message?.tokens };
+			const updatedMessage = {
+				orgId: session.orgId,
+				teamId: session.teamId,
+				sessionId: session._id,
+				authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
+				authorName: finalMessage?.authorName || 'AgentCloud',
+				ts: finalMessage.ts || messageTimestamp,
+				isFeedback: finalMessage?.isFeedback || false,
+				chunkId: finalMessage.message.chunkId || null,
+				message: finalMessage,
+			};
 			await upsertOrUpdateChatMessage(
 				finalMessage.room,
-				{
-					orgId: session.orgId,
-					teamId: session.teamId,
-					sessionId: session._id,
-					authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
-					authorName: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?.name : 'AgentCloud',
-					ts: finalMessage.ts || messageTimestamp,
-					isFeedback: finalMessage?.isFeedback || false,
-					chunkId: finalMessage.message.chunkId || null,
-					message: finalMessage,
-				},
+				updatedMessage,
 				chunk,
 			);
 

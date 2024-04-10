@@ -1,9 +1,9 @@
-version: '3.7'
 name: agentcloud
+
 services:
 
   docker_rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13.1-management
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -37,6 +37,7 @@ services:
         - NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
         - NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH=
         - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
+        - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
         - POSTHOG_KEY=
     ports:
       - "127.0.0.1:3000:3000"
@@ -68,7 +69,7 @@ services:
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
       - STRIPE_PRICE_ID=
-      - NEXT_PUBLIC_NO_PAYMENT_REQUIRED=1
+      - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - OAUTH_GITHUB_CLIENT_ID=
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
@@ -82,6 +83,14 @@ services:
       - AIRBYTE_PASSWORD=password
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - GCS_BUCKET_LOCATION=${GCS_BUCKET_LOCATION}
+      - STRIPE_FREE_PLAN_PRICE_ID=price_1P0zlRDxQ9GZKzvoYUAzWMSv
+      - STRIPE_PRO_PLAN_PRICE_ID=price_1OAMHSDxQ9GZKzvoBbDryhiZ
+      - STRIPE_TEAMS_PLAN_PRICE_ID=price_1P0xEGDxQ9GZKzvoTDfMJK6f
+      - NEXT_PUBLIC_STORAGE_PROVIDER=local
+      - NEXT_PUBLIC_SECRET_PROVIDER=local
+      - UPLOADS_BASE_PATH=/tmp
+    volumes:
+      - datasource_files:/tmp
 
   agent_backend:
     restart: always
@@ -99,7 +108,6 @@ services:
     environment:
       - LOCAL=True
       - MAX_THREADS=50
-      - OAI_CONFIG_LIST=/app/config/OAI_CONFIG_LIST.json
       - BASE_PATH=/app
       - SOCKET_URL=http://webapp_next:3000/
       - DB_URL=mongodb://docker_mongo:27017/test
@@ -115,6 +123,7 @@ services:
       - docker_rabbitmq
     build:
       context: vector-db-proxy/
+      dockerfile: ${VECTOR_PROXY_DOCKERFILE:-Dockerfile.dev}
       args:
         - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
@@ -124,7 +133,6 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=9001
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MONGO_URI=mongodb://docker_mongo:27017
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
@@ -136,8 +144,9 @@ services:
       - QDRANT_URI=http://qdrant:6334
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - WEBAPP_HOST=webapp_next
+    volumes:
+      - datasource_files:/tmp
 
   qdrant:
     ports:
@@ -148,6 +157,7 @@ services:
 volumes:
   mongodb_data_container:
   redis_data:
+  datasource_files:
 
 networks:
   default:

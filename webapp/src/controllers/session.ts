@@ -1,7 +1,8 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentsById, getAgentsByTeam } from 'db/agent';
+import { getAgentById, getAgentNameMap,getAgentsById, getAgentsByTeam } from 'db/agent';
+import { getAppById } from 'db/app';
 import { addChatMessage, getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
@@ -34,24 +35,14 @@ export async function sessionsJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
-/**
- * GET /[resourceSlug]/playground
- * home page html
- */
-export async function sessionsPage(app, req, res, next) {
-	const data = await sessionsData(req, res, next);
-	res.locals.data = {
-		...data,
-		account: res.locals.account,
-	};
-	return app.render(req, res, `/${req.params.resourceSlug}/playground`);
-}
-
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
+	const foundCrew = await getCrewById(req.params.resourceSlug, session?.crewId);
+	const avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
 	return {
 		csrf: req.csrfToken(),
 		session,
+		avatarMap,
 	};
 }
 
@@ -103,8 +94,10 @@ export async function addSessionApi(req, res, next) {
 
 	let { rag, prompt, id }  = req.body;
 
+	const app = await getAppById(req.params.resourceSlug, id);
+
 	let crewId;
-	const crew = await getCrewById(req.params.resourceSlug, req.body.id);
+	const crew = await getCrewById(req.params.resourceSlug, app?.crewId || id);
 	if (crew) {
 		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
@@ -157,7 +150,7 @@ export async function deleteSessionApi(req, res, next) {
 	}
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/playground`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/apps`*/ });
 
 }
 
@@ -183,6 +176,6 @@ export async function cancelSessionApi(req, res, next) {
 	await setSessionStatus(req.params.resourceSlug, sessionId, SessionStatus.TERMINATED);
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/playground`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/apps`*/ });
 
 }

@@ -29,6 +29,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import Blockies from 'react-blockies';
 
@@ -45,7 +46,6 @@ const noNavPages = [
 
 const agentNavigation: any[] = [
 	// { name: 'Home', href: '/home', icon: HomeIcon },
-	// { name: 'Playground', href: '/playground', icon: <ChatBubbleLeftIcon className='h-6 w-6 shrink-0' aria-hidden='true' />, childComponent: <PreviewSessionList /> },
 	{ name: 'Apps', href: '/apps', icon: <PuzzlePieceIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 	{ name: 'Agents', href: '/agents', icon: <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
 		<path d='M22.125 11.85C21.7125 11.5875 21.225 11.7375 20.9625 12.1125L16.9875 18.4125C16.9125 18.4875 16.8375 18.6 16.8 18.7125C16.725 18.825 16.6875 18.9375 16.6875 19.05L15.375 22.5L18 19.8375C18.075 19.7625 18.15 19.6875 18.225 19.6125C18.3 19.5375 18.375 19.425 18.4125 19.3125L22.3875 13.0125C22.6125 12.6 22.5 12.075 22.125 11.85Z' fill='currentColor'/>
@@ -65,6 +65,7 @@ const teamNavigation = [
 
 const userNavigation = [
 	{ name: 'My Account', href: '/account' },
+	{ name: 'Billing', href: '/billing' },
 	{ name: 'Sign out', href: '#', logout: true },
 ];
 
@@ -77,7 +78,8 @@ export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching } = accountContext as any;
-	const { children, router } = props as any;
+	const { children } = props as any;
+	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
@@ -85,7 +87,6 @@ export default withRouter(function Layout(props) {
 	const orgs = account?.orgs || [];
 
 	if (!account) {
-		//from pages that aren't SSRd, account fetched async in context
 		// return 'Loading...'; //TODO: loader?
 	}
 
@@ -162,12 +163,12 @@ export default withRouter(function Layout(props) {
 										{resourceSlug && <nav className='flex flex-1 flex-col'>
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Teams</div>
 											<ul role='list' className='flex flex-1 flex-col gap-y-7'>
-												<li>
+												<li key='orgselector'>
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														<OrgSelector orgs={orgs} />
 													</ul>
 												</li>
-												<li>
+												<li key='agentnavigation'>
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => (
@@ -195,6 +196,7 @@ export default withRouter(function Layout(props) {
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
 																<Link
+																	key={`link_${item.name}`}
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
 																	className={classNames(
@@ -224,6 +226,23 @@ export default withRouter(function Layout(props) {
 																	aria-hidden='true'
 																/>
 																Account
+															</Link>
+														</li>
+														<li key='billing'>
+															<Link
+																href='/billing'
+																className={classNames(
+																	path.endsWith('/billing')
+																		? 'bg-gray-800 text-white'
+																		: 'text-gray-400 hover:text-white hover:bg-gray-800',
+																	'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																)}
+															>
+																<CreditCardIcon
+																	className='h-6 w-6 shrink-0'
+																	aria-hidden='true'
+																/>
+																Billing
 															</Link>
 														</li>
 														{/*<li>
@@ -293,13 +312,13 @@ export default withRouter(function Layout(props) {
 									{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 									<ul role='list' className='-mx-2 space-y-1'>
 										{agentNavigation.map((item) => {
-											return (<>
+											return (
 												<li key={item.name}>
 													<Link
 														suppressHydrationWarning
 														href={`/${resourceSlug}${item.href}`}
 														className={classNames(
-															path.endsWith(item.href)
+															path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.href}`)
 																? 'bg-gray-800 text-white'
 																: 'text-gray-400 hover:text-white hover:bg-gray-800',
 															'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
@@ -309,7 +328,7 @@ export default withRouter(function Layout(props) {
 														{item.name}
 													</Link>
 												</li>
-											</>);
+											);
 										})}
 										<PreviewSessionList />
 									</ul>
@@ -350,6 +369,23 @@ export default withRouter(function Layout(props) {
 													aria-hidden='true'
 												/>
 												Account
+											</Link>
+										</li>
+										<li key='billing'>
+											<Link
+												href='/billing'
+												className={classNames(
+													path.endsWith('/billing')
+														? 'bg-gray-800 text-white'
+														: 'text-gray-400 hover:text-white hover:bg-gray-800',
+													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+												)}
+											>
+												<CreditCardIcon
+													className='h-6 w-6 shrink-0'
+													aria-hidden='true'
+												/>
+												Billing
 											</Link>
 										</li>
 										{/*<li>
@@ -495,7 +531,7 @@ export default withRouter(function Layout(props) {
 										leaveTo='transform opacity-0 scale-95'
 									>
 										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-											{account && <div className='px-4 py-3'>
+											{account && <div className='px-4 py-3' key='accountdetails'>
 												<p className='text-sm'>Signed in as</p>
 												<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>{account.email}</p>
 											</div>}

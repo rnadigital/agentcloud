@@ -38,7 +38,7 @@ use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, create_collection, delete_collection, health_check,
-    list_collections, lookup_data_point, prompt, scroll_data, upsert_data_point_to_collection,
+    list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
 use crate::mongo::client::start_mongo_connection;
 use crate::queue::queuing::{MyQueue, Control};
@@ -63,7 +63,6 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
-            .service(prompt)
             .service(scroll_data),
     );
 }

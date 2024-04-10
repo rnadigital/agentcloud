@@ -31,7 +31,7 @@ export default function Redirect() {
 						<div className='w-16 mx-auto'>
 							<CheckCircleIcon />
 						</div>
-						<p className='text-center'>Login successful, redirecting...</p>
+						<p className='text-center'>Redirecting...</p>
 					</div>
 				</div>
 			</div>

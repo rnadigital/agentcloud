@@ -2,6 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
+import { getAssetById } from 'db/asset';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
@@ -88,7 +89,7 @@ export async function taskAddPage(app, req, res, next) {
 
 export async function addTaskApi(req, res, next) {
 
-	const { name, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
+	const { name, description, expectedOutput, toolIds, asyncExecution, agentId, iconId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 1, customError: 'Name must not be empty.' }},
@@ -108,6 +109,8 @@ export async function addTaskApi(req, res, next) {
 	if (!foundAgent) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+	
+	const foundIcon = await getAssetById(iconId);
 
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
@@ -118,6 +121,10 @@ export async function addTaskApi(req, res, next) {
 		toolIds: toolIds.map(toObjectId),
 		agentId: toObjectId(agentId),
 		asyncExecution: asyncExecution === true,
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedTask.insertedId, redirect: `/${req.params.resourceSlug}/tasks` });

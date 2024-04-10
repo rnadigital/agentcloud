@@ -11,10 +11,10 @@ use qdrant_client::qdrant::{
     VectorParamsMap, VectorsConfig,
 };
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use backoff::{ExponentialBackoff};
 use backoff::backoff::Backoff;
-use std::time::Duration;
 
 pub struct Qdrant {
     client: Arc<RwLock<QdrantClient>>,
@@ -292,7 +292,6 @@ impl Qdrant {
             }
         }
     }
-
 
     ///
     ///

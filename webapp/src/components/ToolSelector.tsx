@@ -15,7 +15,7 @@ const ToolSelector = ({ children, tools, toolState, setToolState }) => {
 				{tools.map(tool => (
 					<div
 						key={tool._id}
-						className={`tool-card flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-blue-100 ${toolState.some(ts => ts.value === tool._id) ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-200'} transition-all`}
+						className={`tool-card flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-blue-100 ${toolState.some(ts => ts.value === tool._id) ? 'bg-blue-100 border-blue-500' : 'bg-white border-gray-200'} transition-all overflow-hidden break-all`}
 						onClick={() => handleToolSelect({ value: tool._id, ...tool })}
 					>
 						<span className='text-gray-800 text-sm font-medium'>{tool.name}</span>

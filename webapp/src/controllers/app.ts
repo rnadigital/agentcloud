@@ -3,6 +3,7 @@
 import { dynamicResponse } from '@dr';
 import { getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
+import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getModelsByTeam } from 'db/model';
 import { getTasksByTeam } from 'db/task';
@@ -105,11 +106,13 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	const foundIcon = await getAssetById(iconId);
 
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,
@@ -118,7 +121,7 @@ export async function addAppApi(req, res, next) {
 		tasks: tasks.map(toObjectId),
 		agents: agents.map(toObjectId),
 		process,
-		managerModelId: toObjectId(managerModelId)
+		managerModelId: toObjectId(managerModelId),
 	});
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
@@ -130,7 +133,12 @@ export async function addAppApi(req, res, next) {
 			.filter(x => x),
 		capabilities,
 		crewId: addedCrew.insertedId,
-		appType
+		appType,
+		author: res.locals.matchingTeam.name,
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
 	});
 
 	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
@@ -146,7 +154,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId }  = req.body;
+	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -156,6 +164,8 @@ export async function editAppApi(req, res, next) {
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	const foundIcon = await getAssetById(iconId);
 
 	//const [updatedCrew, _] = 
 	await Promise.all([
@@ -175,7 +185,11 @@ export async function editAppApi(req, res, next) {
 				.map(t => t.trim())
 				.filter(t => t),
 			capabilities,
-			appType
+			appType,
+			icon: foundIcon ? {
+				id: foundIcon._id,
+				filename: foundIcon.filename,
+			} : null,
 		})
 	]);
 

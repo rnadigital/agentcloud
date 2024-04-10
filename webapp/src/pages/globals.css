@@ -209,6 +209,10 @@ body {
   pointer-events: none; /* Ensures the overlay doesn't interfere with clicks on the element */
 }
 
+.light.overlay-gradient::after {
+  background: linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(249,250,251, 1) 100%) !important;
+}
+
 .noscrollbar::-webkit-scrollbar {
   display: none;
 }

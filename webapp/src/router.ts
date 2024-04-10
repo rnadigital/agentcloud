@@ -1,10 +1,10 @@
 'use strict';
 
-import checkResourceSlug from '@mw/auth/checkresourceslug';
+import { checkAccountQuery,checkResourceSlug } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionLimit,
-	checkSubscriptionPlan, 
+	// checkSubscriptionPlan, 
 	setSubscriptionLocals,
 } from '@mw/auth/checksubscription';
 import csrfMiddleware from '@mw/auth/csrf';
@@ -29,9 +29,9 @@ import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
 import * as appController from 'controllers/app';
+import * as assetController from 'controllers/asset';
 import * as credentialController from 'controllers/credential';
 import * as datasourceController from 'controllers/datasource';
-import * as iconController from 'controllers/icon';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
 import * as sessionController from 'controllers/session';
@@ -76,13 +76,15 @@ export default function router(server, app) {
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get('/account', authedMiddlewareChain, accountController.accountPage.bind(null, app));
-	server.get('/account.json', authedMiddlewareChain, accountController.accountJson);
+	server.get('/billing', authedMiddlewareChain, accountController.billingPage.bind(null, app));
+	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs
 	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
 
 	server.post('/stripe-paymentlink', authedMiddlewareChain, stripeController.createPaymentLink);
 	server.post('/stripe-portallink', authedMiddlewareChain, stripeController.createPortalLink);
+	server.post('/stripe-plan', authedMiddlewareChain, stripeController.changePlanApi);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -108,7 +110,6 @@ export default function router(server, app) {
 	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
-	teamRouter.get('/playground', sessionController.sessionsPage.bind(null, app));
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24}).json', sessionController.sessionJson);
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})', sessionController.sessionPage.bind(null, app));
@@ -198,13 +199,13 @@ export default function router(server, app) {
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.addTeamApi);
 
-	//icons
-	teamRouter.get('/icons', hasPerms.one(Permissions.UPLOAD_ICON), datasourceController.datasourceAddPage.bind(null, app));
-	teamRouter.get('/icon/add', hasPerms.one(Permissions.UPLOAD_ICON), datasourceController.datasourceAddPage.bind(null, app));
-	teamRouter.post('/forms/icon/add', hasPerms.one(Permissions.UPLOAD_ICON), iconController.uploadIconApi);
-	// teamRouter.get('/icon/:iconId([a-f0-9]{24}).json', authedMiddlewareChain, iconController.getIcon);
-	// teamRouter.post('/icon/:iconId([a-f0-9]{24})/edit', authedMiddlewareChain, iconController.editIcon);
-	// teamRouter.delete('/forms/icon/:iconId([a-f0-9]{24})', authedMiddlewareChain, iconController.deleteIcon);
+	//assets
+	// teamRouter.get('/assets', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetPage.bind(null, app));
+	// teamRouter.get('/asset/add', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetAddPage.bind(null, app));
+	teamRouter.post('/forms/asset/add', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.uploadAssetApi);
+	// teamRouter.get('/asset/:assetId([a-f0-9]{24}).json', authedMiddlewareChain, assetController.getAsset);
+	// teamRouter.post('/asset/:assetId([a-f0-9]{24})/edit', authedMiddlewareChain, assetController.editAsset);
+	// teamRouter.delete('/forms/asset/:assetId([a-f0-9]{24})', authedMiddlewareChain, assetController.deleteAsset);
 
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);

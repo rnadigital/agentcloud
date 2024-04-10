@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
@@ -13,11 +14,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-import * as API from '../../api';
-
 export default function Datasources(props) {
 
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const [, notificationTrigger]: any = useSocketContext();
 	const { account, teamName } = accountContext as any;
 	const router = useRouter();
@@ -39,6 +38,7 @@ export default function Datasources(props) {
 
 	useEffect(() => {
 		fetchDatasources();
+		refreshAccountContext();
 	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {

@@ -37,7 +37,9 @@ pub async fn process_messages(
                                 println!("text field: {}", text_field.as_str());
                                 let text = metadata.remove(text_field.as_str()).unwrap();
                                 metadata.insert("page_content".to_string(), text.to_owned());
+                                let mongo_conn_clone = Arc::clone(&mongo_conn);
                                 match embed_payload(
+                                    mongo_conn_clone,
                                     &metadata,
                                     &text,
                                     Some(ds_clone),

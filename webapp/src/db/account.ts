@@ -187,6 +187,16 @@ export function setPlanDebug(userId: db.IdOrStr, plan: SubscriptionPlan): Promis
 	});
 }
 
+export function setStripePlan(stripeCustomerId: string, plan: SubscriptionPlan): Promise<any> {
+	return AccountCollection().updateOne({
+		'stripe.stripeCustomerId': stripeCustomerId,
+	}, {
+		$set: {
+			'stripe.stripePlan': plan,
+		},
+	});
+}
+
 export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string): Promise<any> {
 	return AccountCollection().updateOne({
 		_id: toObjectId(userId)
@@ -200,7 +210,7 @@ export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string
 export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number, stripeCancelled?: boolean): Promise<any> {
 	console.log('updateStripeCustomer', stripeCustomerId, stripeEndsAt);
 	return AccountCollection().updateOne({
-		stripeCustomerId,
+		'stripe.stripeCustomerId': stripeCustomerId,
 	}, {
 		$set: {
 			'stripe.stripeCustomerId': stripeCustomerId,

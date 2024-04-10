@@ -6,9 +6,9 @@ import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
+import { addTool } from 'db/tool';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
-import { deleteFile, uploadFile } from 'lib/google/gcs';
 import { sendMessage } from 'lib/rabbitmq/send';
 import convertStringToJsonl from 'misc/converttojsonl';
 import getFileFormat from 'misc/getfileformat';
@@ -17,10 +17,12 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import StorageProviderFactory from 'storage/index';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
+import { ToolType } from 'struct/tool';
 import { promisify } from 'util';
-import deleteCollectionFromQdrant from 'vectordb/proxy';
+import VectorDBProxy from 'vectordb/proxy';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 const ajv = new Ajv({ strict: 'log' });
@@ -118,7 +120,7 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function testDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName, datasourceName, sourceConfig }  = req.body;
+	const { connectorId, connectorName, datasourceName, datasourceDescription, sourceConfig }  = req.body;
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -190,7 +192,8 @@ export async function testDatasourceApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: datasourceName,
-	    gcsFilename: null,
+	    description: datasourceDescription,
+	    filename: null,
 	    originalName: datasourceName,
 	    sourceId: createdSource.sourceId,
 	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
@@ -216,6 +219,7 @@ export async function addDatasourceApi(req, res, next) {
 	const { 
 		datasourceId,
 		datasourceName,
+		datasourceDescription,
 		streams,
 		selectedFieldsMap,
 		scheduleType,
@@ -333,6 +337,26 @@ export async function addDatasourceApi(req, res, next) {
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	// Add a tool automatically for the datasource
+	let foundIcon; //TODO: icon/avatar id and upload
+	await addTool({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: `"${datasourceName}" RAG tool`,
+		description: datasourceDescription,
+		type: ToolType.RAG_TOOL,
+		datasourceId: toObjectId(datasourceId),
+		schema: null,
+		data: {
+			builtin: false,
+			name: toSnakeCase(datasourceName),
+		},
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+	});
 
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
 
@@ -585,11 +609,11 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the points in qdrant
-	// try {
-	await deleteCollectionFromQdrant(req.params.datasourceId);
-	// } catch (e) {
-	// 	return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
-	// }
+	try {
+		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
+	}
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
@@ -614,9 +638,10 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the source file in GCS if this is a file
-	if (datasource.sourceType === 'file') { //TODO: make an enum?
+	if (datasource.sourceType === 'file') {
 		try {
-			await deleteFile(datasource.gcsFilename);
+			const storageProvider = StorageProviderFactory.getStorageProvider();
+			await storageProvider.deleteFile(datasource.filename);
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
@@ -646,8 +671,8 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	const { modelId, name } = req.body;
-
+	const { modelId, name, datasourceDescription } = req.body;
+	console.log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
 			|| !name || typeof name !== 'string') {
@@ -674,7 +699,8 @@ export async function uploadFileApi(req, res, next) {
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
 	    name: name,
-	    gcsFilename: filename,
+	    filename: filename,
+	    description: datasourceDescription,
 	    originalName: uploadedFile.name,
 	    sourceId: null,
 	    connectionId: null,
@@ -691,16 +717,38 @@ export async function uploadFileApi(req, res, next) {
 	});
 	
 	// Send the gcs file path to rabbitmq
-	await uploadFile(filename, uploadedFile);
+	const storageProvider = StorageProviderFactory.getStorageProvider();
+	await storageProvider.addFile(filename, uploadedFile);
 	await sendMessage(JSON.stringify({
-		bucket: process.env.GCS_BUCKET_NAME,
+		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
+		file: `/tmp/${filename}`,
 	}), { 
 		stream: newDatasourceId.toString(), 
-		type: 'file', //TODO: make 'file' an num once there are more
+		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
+
+	// Add a tool automatically for the datasource
+	let foundIcon; //TODO: icon/avatar id and upload
+	await addTool({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: `"${name}" RAG tool`,
+		description: datasourceDescription,
+		type: ToolType.RAG_TOOL,
+		datasourceId: toObjectId(newDatasourceId),
+		schema: null,
+		data: {
+			builtin: false,
+			name: toSnakeCase(name),
+		},
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
 

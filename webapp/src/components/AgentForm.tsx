@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
@@ -9,6 +10,7 @@ import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import Blockies from 'react-blockies';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
@@ -25,6 +27,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const [callbackKey, setCallbackKey] = useState(null);
 	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || false);
 	const [verbose, setVerbose] = useState(agent.verbose || false);
+	const [icon, setIcon] = useState(agent?.icon);
 	const [agentState, setAgent] = useState(agent);
 	const [error, setError] = useState();
 	const { verifysuccess } = router.query;
@@ -66,6 +69,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
+			iconId: icon?._id,
 		};
 		if (editing) {			
 			await API.editAgent(agentState._id, body, () => {
@@ -101,6 +105,12 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		setToolState([{ label: `${body.name} (${body.type}) - ${body.description}`, value: addedToolId }]);
 	};
 
+	const iconCallback = async (addedIcon) => {
+		await fetchAgentFormData && fetchAgentFormData();
+		setModalOpen(false);
+		setIcon(addedIcon);
+	};
+
 	const handleToolSelect = (tool) => {
 		if (toolState.some(t => t.value === tool._id)) {
 			setToolState(oldTs => oldTs.filter(t => t.value !== tool._id));
@@ -108,11 +118,25 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			setToolState(oldTs => oldTs.concat([tool]));
 		}
 	};
+	let modal;
+	switch (modalOpen) {
+		case 'model':
+			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />;
+			break;
+		case 'tool':
+			modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />;
+			break;
+		// case 'icon':
+		// 	TODO: modal to pick from asset library
+		// 	modal = <AvatarUploader open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
+		// 	break;
+		default:
+			modal = null;
+			break;
+	}
 
 	return (<>
-		{modalOpen === 'model'
-			? <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
-			: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
+		{modal}		
 		<form onSubmit={agentPost}>
 			<input
 				type='hidden'
@@ -120,6 +144,17 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 				value={csrf}
 			/>
 			<div className='space-y-4'>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Avatar
+						</label>
+						<div className='mt-2'>
+							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+						</div>
+					</div>
+				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>

@@ -4,10 +4,12 @@ import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
+import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import { useAccountContext } from 'context/account';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -15,6 +17,11 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
 
+// @ts-ignore
+const Markdown = dynamic(() => import('react-markdown'), {
+	loading: () => <p className='markdown-content p-2'>Loading...</p>,
+	ssr: false,
+});
 import { ProcessImpl } from '../lib/struct/crew';
 
 export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
@@ -29,14 +36,16 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appState, setApp] = useState(app);
 	const [managerModels, setManagerModels] = useState(modelChoices.filter(model => model._id == crew.managerModelId).map(m => ({ label: m.name, value: m._id })));
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
+	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
-	const { description, tags } = appState; //TODO: make it take correct stuff from appstate
+	const { tags } = appState; //TODO: make it take correct stuff from appstate
 
 	const initialAgents = agents && agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
 		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
 	}).filter(n => n);
+	const [icon, setIcon] = useState(app?.icon);
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
 	
 	const initialTasks = tasks && tasks.map(t => {
@@ -51,12 +60,13 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.name.value,
-			description: e.target.description.value,
+			description,
 			process: e.target.process.value,
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
+			iconId: icon?._id,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
@@ -82,6 +92,12 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 		await fetchFormData && fetchFormData();
 		setModalOpen(false);
 	}
+
+	const iconCallback = async (addedIcon) => {
+		await fetchFormData && fetchFormData();
+		setModalOpen(false);
+		setIcon(addedIcon);
+	};
 
 	let modal;
 	switch (modalOpen) {
@@ -109,6 +125,17 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			/>
 
 			<div className='space-y-4'>
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Avatar
+						</label>
+						<div className='mt-2'>
+							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+						</div>
+					</div>
+				</div>			
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
@@ -154,17 +181,32 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								</label>
 							</div>
 						</div>
-						<div className='sm:col-span-12'>
-							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Description
-							</label>
-							<textarea
-								name='description'
-								id='description'
-								defaultValue={description}
-								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								rows={5}
-							/>
+						<div className='sm:col-span-12 flex flex-row gap-4'>
+							<div className='w-full'>
+								<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Description
+								</label>
+								<textarea
+									name='description'
+									id='description'
+									value={description}
+									onChange={e => {
+										setDescription(e.target.value);
+									}}
+									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									rows={5}
+								/>
+							</div>
+							<div className='rounded shadow-sm w-full'>
+								<span className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Preview
+								</span>
+								<Markdown
+									className={'markdown-content p-2'}
+								>
+									{description}
+								</Markdown>
+							</div>
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

@@ -8,11 +8,10 @@ import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification,VerificationTypes } from 'db/verification';
 import * as ses from 'lib/email/ses';
-import SecretKeys from 'lib/secret/secretkeys';
-import { getSecret } from 'lib/secret/secretmanager';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
+import SecretProviderFactory from 'secret/index';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
@@ -47,7 +46,8 @@ export default async function createAccount(email: string, name: string, passwor
 	const teamId = addedTeam.insertedId;
 
 	// Create account and verification token to be sent in email
-	const amazonKey = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const amazonKey = await secretProvider.getSecret('AMAZON_ACCESS_ID');
 	const emailVerified = amazonKey == null;
 	const passwordHash = password ? (await bcrypt.hash(password, 12)) : null;
 	const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;

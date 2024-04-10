@@ -1,6 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
+import { IconAttachment } from 'struct/asset';
 
 export type Tool = {
 	_id?: ObjectId;
@@ -24,6 +25,7 @@ export type Tool = {
 		openAPIMatchKey?: string;
 	},
 	credentialId?: ObjectId; //links to a credential 
+	icon?: IconAttachment;
 };
 
 export type FunctionProperty = {

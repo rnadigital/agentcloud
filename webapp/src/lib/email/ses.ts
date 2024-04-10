@@ -2,8 +2,7 @@
 
 import { SendEmailCommand,SESClient } from '@aws-sdk/client-ses';
 import debug from 'debug';
-import SecretKeys from 'secret/secretkeys';
-import { getSecret } from 'secret/secretmanager';
+import SecretProviderFactory from 'secret/index';
 const log = debug('webapp:email');
 
 let amazonAccessID;
@@ -12,10 +11,9 @@ let sesClient;
 
 export async function init() {
 	try {
-		amazonAccessID = await getSecret(SecretKeys.AMAZON_ACCESSKEYID);
-		amazonSecretAccessKey = await getSecret(SecretKeys.AMAZON_SECRETACCESSKEY);
-		log('amazonAccessID', amazonAccessID);
-		log('amazonSecretAccessKey', amazonSecretAccessKey);
+		const secretProvider = SecretProviderFactory.getSecretProvider();
+		amazonAccessID = await secretProvider.getSecret('AMAZON_ACCESS_ID');
+		amazonSecretAccessKey = await secretProvider.getSecret('grep');
 		if (!amazonAccessID) { return; }
 		sesClient = new SESClient({
 			region: 'us-east-1',
@@ -26,7 +24,7 @@ export async function init() {
 		});
 	} catch (e) {
 		console.error(e);
-		log('No aws ses keys found in gcp secret manager, emails disabled');
+		log('No aws ses keys found in secret manager, emails disabled');
 	}
 }
 

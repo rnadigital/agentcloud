@@ -8,13 +8,15 @@ if ! command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev
 fi
 command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
+
 if ! docker info &> /dev/null; then
     echo "Docker daemon is not running. Aborting."
     exit 1
 fi
 
 print_logo() {
-    #clear
+    clear
     if [ "$terminal_width" -gt 120 ]; then
         echo -e """
 \033[34m            ▓▓▓▓▓▓\033[97m ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
@@ -43,20 +45,27 @@ $1"""
     fi
 }
 
-
 # Function to show usage
 usage() {
     echo """Usage: $0 [options]
+
+Note: By default, vector-db-proxy \`cargo build\`'s without the \`--release\` flag, for faster builds during development.
+      To specify a different dockerfile (i.e the non dev one), do \`VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...\`
+
 Options:
---kill-webapp-next               Kill webapp after startup (for developers)
---kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
---kill-agent-backend             Kill agent-backend after startup (for developers)
---project-id ID                  Specify the GCP project ID.
---service-account-json PATH      Specify the file path of your GCP service account json.
---gcs-bucket-name NAME           Specify the GCS bucket name to use.
---gcs-bucket-location LOCATION   Specify the GCS bucket location.
---openai-api-key KEY             Specify your OpenAI API key.
--h, --help                       Display this help message."""
+
+    -h, --help                       Display this help message.
+
+    --kill-webapp-next               Kill webapp after startup (for developers)
+    --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
+    --kill-agent-backend             Kill agent-backend after startup (for developers)
+
+    --project-id ID                  (OPTIONAL) Specify a GCP project ID (for Secret Manager, GCS, etc)
+    --service-account-json PATH      (OPTIONAL) Specify the file path of your GCP service account json.
+    --gcs-bucket-name NAME           (OPTIONAL) Specify the GCS bucket name to use.
+    --gcs-bucket-location LOCATION   (OPTIONAL) Specify the GCS bucket location.
+
+"""
 }
 
 docker_up() {
@@ -86,7 +95,8 @@ PROJECT_ID=""
 SERVICE_ACCOUNT_JSON_PATH=""
 GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
-OPENAI_API_KEY=""
+STRIPE_PRICING_TABLE_ID=""
+STRIPE_PUBLISHABLE_KEY=""
 
 # Initialize variables to indicate whether to kill specific containers
 KILL_WEBAPP_NEXT=0
@@ -120,44 +130,76 @@ while [[ "$#" -gt 0 ]]; do
         --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
         --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
         --gcs-bucket-location) GCS_BUCKET_LOCATION="$2"; shift ;;
-        --openai-api-key) OPENAI_API_KEY="$2"; shift ;;
+        --stripe-pricing-table-id) STRIPE_PRICING_TABLE_ID="$2"; shift ;;
+        --stripe-publishable-key) STRIPE_PUBLISHABLE_KEY="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown parameter passed: $1"; usage; exit 1 ;;
     esac
     shift
 done
 
-initialize_environment() {
-	# Initialize variables with defaults or arguments
-	PROJECT_ID="${PROJECT_ID:-}"
-	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
-	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
-	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
-	OPENAI_API_KEY="${OPENAI_API_KEY:-}"
-	# Check and ask for missing variables
-	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
-	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
-	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
-	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
-	[ -z "$OPENAI_API_KEY" ] && read -p "Enter your OpenAI API key: " OPENAI_API_KEY
-	export PROJECT_ID
-	export SERVICE_ACCOUNT_JSON_PATH
-	export GCS_BUCKET_LOCATION
-	export GCS_BUCKET_NAME
-	export OPENAI_API_KEY
-}
+# 
+# initialize_environment() {
+# 	# Initialize variables with defaults or arguments
+# 	PROJECT_ID="${PROJECT_ID:-}"
+# 	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
+# 	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
+# 	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
+# 	# Check and ask for missing variables
+# 	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
+# 	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
+# 	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
+# 	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
+# 	export PROJECT_ID
+# 	export SERVICE_ACCOUNT_JSON_PATH
+# 	export GCS_BUCKET_LOCATION
+# 	export GCS_BUCKET_NAME
+# }
+# 
+# initialize_environment
 
-initialize_environment
-cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
-cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
-cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
+if [ -z "$SERVICE_ACCOUNT_JSON_PATH" ]; then
+	echo "The \$SERVICE_ACCOUNT_JSON_PATH variable is not set, continuing with local disk storage and .env secret providers."
+elif [ ! -f "$SERVICE_ACCOUNT_JSON_PATH" ]; then
+	echo "The file at \$SERVICE_ACCOUNT_JSON_PATH does not exist."
+else
+    cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
+    cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
+    cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
+fi
+
 
 print_logo "=> Starting airbyte"
 
-# clone and install airbyte
-if [ ! -d "airbyte" ] ; then
-	git clone --depth=1 https://github.com/airbytehq/airbyte.git
+# Define the target version
+AIRBYTE_TARGET_VERSION="v0.57.2"
+
+# Clone and install airbyte
+if [ ! -d "airbyte" ]; then
+    git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
+else
+    # Change to the airbyte directory to check the version
+    cd airbyte
+
+    # Check if the current tag matches the target version
+    CURRENT_VERSION=$(git tag --points-at HEAD)
+    if [ "$CURRENT_VERSION" == "$AIRBYTE_TARGET_VERSION" ]; then
+        echo "Airbyte is up-to-date on $AIRBYTE_TARGET_VERSION."
+        cd ..
+    else
+        echo "Warning: You have an outdated version of Airbyte ($CURRENT_VERSION). The target version is $AIRBYTE_TARGET_VERSION."
+        # Ask user if they want to delete the outdated version and re-clone
+        read -p "Would you like to delete the existing version and re-clone? (y/n): " user_response
+        if [[ "$user_response" == "y" ]]; then
+            # Move up a directory, delete the outdated version, and re-clone
+            cd ..
+            rm -rf airbyte
+            git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
+        fi
+    fi
+
 fi
+
 cd airbyte
 ./run-ab-platform.sh -b
 cd ..
@@ -169,48 +211,30 @@ docker_up vector_db_proxy
 
 # bypass airbyte setup sceeen
 INSTANCE_CONFIGURATION=$(curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST \
-	-H 'Accept: */*' \
-	-H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"email":"example@example.org","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"example","initialSetupComplete":true,"displaySetupWizard":false}')
 
-export AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $INSTANCE_CONFIGURATION | jq -r '.defaultWorkspaceId')
+WORKSPACES_LIST=$(curl 'http://localhost:8006/v1/workspaces' \
+    -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==')
+
+export AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $WORKSPACES_LIST | jq -r '.data[0].workspaceId')
 echo $INSTANCE_CONFIGURATION
+echo $WORKSPACES_LIST
 echo $AIRBYTE_ADMIN_WORKSPACE_ID
 
 # create rabbitmq destination
 CREATED_DESTINATION=$(curl 'http://localhost:8000/api/v1/destinations/create' --compressed -X POST \
-	-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0' \
-	-H 'Accept: */*' \
-	-H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'Content-Type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}')
 
 export AIRBYTE_ADMIN_DESTINATION_ID=$(echo $CREATED_DESTINATION | jq -r '.destinationId')
 
 # set the webhook urls for airbyte webhooks back to the webapp
 UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --compressed -X POST \
-	-H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0' \
-	-H 'Accept: */*' -H 'Accept-Language: en-US,en;q=0.5' \
-	-H 'Accept-Encoding: gzip, deflate, br' \
-	-H 'Referer: http://localhost:8000/' \
 	-H 'content-type: application/json' \
-	-H 'x-airbyte-analytic-source: webapp' \
-	-H 'Origin: http://localhost:8000' \
 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	-H 'Connection: keep-alive' \
 	--data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","notificationSettings":{"sendOnFailure":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSuccess":{"notificationType":["slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdate":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdateActionRequired":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabled":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabledWarning":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnBreakingChangeWarning":{"notificationType":["customerio"]},"sendOnBreakingChangeSyncsDisabled":{"notificationType":["customerio"]}}}')
 
 print_logo "=> Starting agentcloud backend..."
