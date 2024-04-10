@@ -46,9 +46,10 @@ use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_
 
 pub fn init(config: &mut web::ServiceConfig) {
     let webapp_url =
-        dotenv::var("webapp_url").unwrap_or("https://rapdev-app.getmonita.io".to_string());
+        dotenv::var("webapp_url").unwrap_or("https://127.0.0.1:3000".to_string());
     let cors = Cors::default()
-        .allowed_origin(webapp_url.as_str())
+        // .allowed_origin(webapp_url.as_str())
+        .allow_any_origin()
         .allowed_methods(["GET", "POST", "PUT", "OPTIONS"])
         .supports_credentials()
         .allow_any_header();
@@ -117,13 +118,16 @@ async fn main() -> std::io::Result<()> {
         )
             .await;
     });
-    env_logger::Builder::from_env(Env::default().default_filter_or("warn")).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
     let web_task = tokio::spawn(async move {
         println!("Running on http://{}:{}", host.clone(), port.clone());
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data((Data::new(Arc::clone(&app_qdrant_client)), Data::new(Arc::clone(&app_mongo_client))))
+                .app_data(Data::new((
+                    Arc::clone(&app_qdrant_client),
+                    Arc::clone(&app_mongo_client),
+                )))
                 .configure(init)
         })
             .bind(format!("{}:{}", host, port))?

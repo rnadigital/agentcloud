@@ -92,15 +92,13 @@ pub async fn list_collections(app_data: Data<Arc<RwLock<QdrantClient>>>) -> Resu
 #[wherr]
 #[post("/check-collection-exists/{collection_name}")]
 pub async fn check_collection_exists(
-    app_data: (Data<Arc<RwLock<QdrantClient>>>, Data<Arc<RwLock<Database>>>),
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(collection_name): Path<String>,
 ) -> Result<HttpResponse> {
-    let (qdrant_conn, mongo_conn) = app_data;
-    let qdrant_conn = qdrant_conn.get_ref().to_owned();
+    let (qdrant_conn, mongo_conn) = app_data.get_ref();
     let collection_name_clone = collection_name.clone();
-    let qdrant = Qdrant::new(qdrant_conn, collection_name);
-    let mongo = mongo_conn.get_ref().read().await;
-
+    let qdrant = Qdrant::new(qdrant_conn.to_owned(), collection_name);
+    let mongo = mongo_conn.read().await;
     return match get_embedding_model_and_embedding_key(&mongo, &collection_name_clone)
         .await
     {
