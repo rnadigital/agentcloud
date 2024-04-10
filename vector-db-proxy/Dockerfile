@@ -1,10 +1,14 @@
 FROM rust
+ARG RELEASE
 WORKDIR /usr/local/src/vector-db-proxy
 RUN mkdir -p src
+COPY src/dummy.rs src
 COPY Cargo.toml .
 COPY Cargo.lock .
+RUN sed -i 's#src/main.rs#src/dummy.rs#' Cargo.toml
+RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." && cargo build --release ; else echo "Running Debug.." && cargo build; fi
+RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
 COPY . .
-ARG RELEASE
 RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." && cargo build --release ; else echo "Running Debug.." && cargo build; fi
 
 RUN mkdir /onnxruntime \

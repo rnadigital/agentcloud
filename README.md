@@ -62,7 +62,7 @@ To run this project locally, follow these steps:
 Usage: ./install.sh [options]
 
 Note: By default, vector-db-proxy `cargo build`'s without the `--release` flag, for faster builds during development.
-      To specify a different dockerfile (i.e the non dev one), do `VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...`
+      To change this, set RELEASE=true` in your env before running install i.e `RELEASE=true ./install.sh ...`.
 
 Options:
 
