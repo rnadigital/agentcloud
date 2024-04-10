@@ -62,8 +62,8 @@ pub async fn health_check() -> Result<impl Responder> {
 /// ```
 #[wherr]
 #[get("/list-collections")]
-pub async fn list_collections(app_data: Data<Arc<RwLock<QdrantClient>>>) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref().clone();
+pub async fn list_collections(app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>) -> Result<impl Responder> {
+    let (qdrant_conn, _) = app_data.get_ref().clone();
     let qdrant = Qdrant::new(qdrant_conn, String::from(""));
     let results = qdrant.get_list_of_collections().await?;
     Ok(HttpResponse::Ok()
@@ -193,12 +193,11 @@ pub async fn check_collection_exists(
 #[wherr]
 #[post("/upsert-data-point/{collection_name}")]
 pub async fn upsert_data_point_to_collection(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(collection_name): Path<String>,
     data: web::Json<MyPoint>,
 ) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref().clone();
-
+    let (qdrant_conn, _) = app_data.get_ref().clone();
     let points = PointStruct::new(
         data.index.to_owned(),
         data.vector.to_owned(),
@@ -245,11 +244,11 @@ pub async fn upsert_data_point_to_collection(
 #[wherr]
 #[post("/bulk-upsert-data/{collection_name}")]
 pub async fn bulk_upsert_data_to_collection(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(collection_name): Path<String>,
     data: web::Json<Vec<MyPoint>>,
 ) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref().clone();
+    let (qdrant_conn, _) = app_data.get_ref().clone();
     let mut list_of_points: Vec<PointStruct> = vec![];
     for datum in data.0 {
         let point: PointStruct = PointStruct::new(
@@ -311,11 +310,11 @@ pub async fn bulk_upsert_data_to_collection(
 #[wherr]
 #[get("/lookup-data-point/{collection_name}")]
 pub async fn lookup_data_point(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(collection_name): Path<String>,
     data: web::Json<SearchRequest>,
 ) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref().clone();
+    let (qdrant_conn, _) = app_data.get_ref().clone();
     let qdrant_conn_lock = qdrant_conn.read().await;
     let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
     let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
@@ -369,11 +368,11 @@ pub async fn lookup_data_point(
 #[wherr]
 #[get("/scroll/{dataset_id}")]
 pub async fn scroll_data(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(dataset_id): Path<String>,
     data: web::Query<SearchRequest>,
 ) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref();
+    let (qdrant_conn, _) = app_data.get_ref().clone();
     // Initialise lists
     let mut response: Vec<ScrollResults> = vec![];
     // Create a hash map of all filters provided by the client
@@ -447,11 +446,11 @@ pub async fn scroll_data(
 #[wherr]
 #[delete("/collection/{dataset_id}")]
 pub async fn delete_collection(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(dataset_id): Path<String>,
 ) -> Result<impl Responder> {
     let dataset_id_clone = dataset_id.clone();
-    let qdrant_conn = app_data.get_ref();
+    let (qdrant_conn, _) = app_data.get_ref();
     let qdrant = Qdrant::new(Arc::clone(qdrant_conn), dataset_id_clone);
     match qdrant.delete_collection().await {
         Ok(()) => Ok(HttpResponse::Ok()

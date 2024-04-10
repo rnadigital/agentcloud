@@ -45,8 +45,8 @@ use crate::queue::queuing::{MyQueue, Control};
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 
 pub fn init(config: &mut web::ServiceConfig) {
-    let webapp_url =
-        dotenv::var("webapp_url").unwrap_or("https://127.0.0.1:3000".to_string());
+    // let webapp_url =
+    //     dotenv::var("webapp_url").unwrap_or("https://127.0.0.1:3000".to_string());
     let cors = Cors::default()
         // .allowed_origin(webapp_url.as_str())
         .allow_any_origin()
