@@ -4,7 +4,7 @@ RUN mkdir -p src
 COPY Cargo.toml .
 COPY Cargo.lock .
 COPY . .
-RUN cargo build --release
+RUN cargo build
 
 # TODO: make this work for all architectures
 RUN mkdir /onnxruntime \
