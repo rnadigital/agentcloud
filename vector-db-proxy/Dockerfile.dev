@@ -16,4 +16,4 @@ RUN mkdir /onnxruntime \
 	&& cp lib/libonnxruntime.so.1.17.1 /usr/lib
 
 EXPOSE 8001
-CMD ["target/release/vector-db-proxy"]
+CMD ["target/debug/vector-db-proxy"]
