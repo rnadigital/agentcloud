@@ -4,9 +4,9 @@ RUN mkdir -p src
 COPY Cargo.toml .
 COPY Cargo.lock .
 COPY . .
-RUN cargo build --release
+ARG RELEASE
+RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." && cargo build --release ; else echo "Running Debug.." && cargo build; fi
 
-# TODO: make this work for all architectures
 RUN mkdir /onnxruntime \
 	&& cd /onnxruntime \
 	&& wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz \
@@ -16,4 +16,4 @@ RUN mkdir /onnxruntime \
 	&& cp lib/libonnxruntime.so.1.17.1 /usr/lib
 
 EXPOSE 8001
-CMD ["target/release/vector-db-proxy"]
+CMD sh -c 'if [ $RELEASE = "true" ]; then echo "Running release.." && ./target/release/vector-db-proxy; else echo "Running Debug" && ./target/debug/vector-db-proxy; fi'
