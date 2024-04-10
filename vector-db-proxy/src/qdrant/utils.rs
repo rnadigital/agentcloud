@@ -217,80 +217,51 @@ impl Qdrant {
         vector_length: Option<u64>,
         vector_name: Option<String>,
     ) -> Result<bool> {
-        println!(
-            "Uploading data point to collection: {}",
-            &self.collection_name
-        );
         let qdrant_conn = &self.client.read().await;
-        match &self
-            .check_collection_exists(
-                CreateDisposition::CreateIfNeeded,
-                vector_length,
-                vector_name,
-            )
-            .await
-        {
-            Ok(result) => match result {
-                true => {
-                    let mut backoff = ExponentialBackoff {
-                        current_interval: Duration::from_millis(50),
-                        initial_interval: Duration::from_millis(50),
-                        max_interval: Duration::from_secs(3),
-                        max_elapsed_time: Some(Duration::from_secs(60)),
-                        multiplier: 1.5,
-                        randomization_factor: 0.5,
-                        ..ExponentialBackoff::default()
-                    };
-
-                    let retry_result = async {
-                        loop {
-                            match qdrant_conn
-                                .upsert_points_blocking(
-                                    &self.collection_name,
-                                    None,
-                                    vec![point.clone()], // Ensure point is Clone for retries
-                                    None,
-                                )
-                                .await
-                            {
-                                Ok(res) => match res.result {
-                                    Some(stat) => match stat.status {
-                                        2 => {
-                                            println!("Time taken: {}", res.time);
-                                            println!("Upload success");
-                                            return Ok(true);
-                                        }
-                                        _ => println!("Upload failed, retrying..."),
-                                    },
-                                    None => return Err(anyhow!("Results returned None")),
-                                },
-                                Err(e) => println!("Error upserting to Qdrant: {}, retrying...", e),
+        let mut backoff = ExponentialBackoff {
+            current_interval: Duration::from_millis(50),
+            initial_interval: Duration::from_millis(50),
+            max_interval: Duration::from_secs(3),
+            max_elapsed_time: Some(Duration::from_secs(60)),
+            multiplier: 1.5,
+            randomization_factor: 0.5,
+            ..ExponentialBackoff::default()
+        };
+        let retry_result = async {
+            loop {
+                match qdrant_conn
+                    .upsert_points_blocking(
+                        &self.collection_name,
+                        None,
+                        vec![point.clone()], // Ensure point is Clone for retries
+                        None,
+                    )
+                    .await
+                {
+                    Ok(res) => match res.result {
+                        Some(stat) => match stat.status {
+                            2 => {
+                                println!("Time taken: {}", res.time);
+                                println!("Upload success");
+                                return Ok(true);
                             }
-
-                            if backoff.next_backoff().is_none() {
-                                return Err(anyhow!("Reached maximum retry attempts"));
-                            }
-
-                            // Await until the next retry interval
-                            tokio::time::sleep(backoff.next_backoff().unwrap()).await;
-                        }
-                    }.await;
-
-                    retry_result
+                            _ => println!("Upload failed, retrying..."),
+                        },
+                        None => return Err(anyhow!("Results returned None")),
+                    },
+                    Err(e) => println!("Error upserting to Qdrant: {}, retrying...", e),
                 }
-                false => {
-                    println!("Collection: {} creation failed!", &self.collection_name);
-                    Err(anyhow!("Collection does not exist"))
+
+                if backoff.next_backoff().is_none() {
+                    return Err(anyhow!("Reached maximum retry attempts"));
                 }
-            },
-            Err(e) => {
-                println!("Error: {}", e);
-                Err(anyhow!(
-                "An error occurred while trying to create collection: {}",
-                e
-            ))
+
+                // Await until the next retry interval
+                tokio::time::sleep(backoff.next_backoff().unwrap()).await;
             }
-        }
+        }.await;
+
+        retry_result
     }
 
     ///

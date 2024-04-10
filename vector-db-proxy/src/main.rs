@@ -84,10 +84,11 @@ async fn main() -> std::io::Result<()> {
     };
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
+    let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
     let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::optimised(global_data.thread_percentage_utilisation)));
     // let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
-    let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
+    let mongo_client_clone = Arc::clone(&app_mongo_client);
     let rabbitmq_connection_details = RabbitConnect {
         host: global_data.rabbitmq_host.clone(),
         port: global_data.rabbitmq_port.clone(),
@@ -122,7 +123,7 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new(Arc::clone(&app_qdrant_client)))
+                .app_data((Data::new(Arc::clone(&app_qdrant_client)), Data::new(Arc::clone(&app_mongo_client))))
                 .configure(init)
         })
             .bind(format!("{}:{}", host, port))?

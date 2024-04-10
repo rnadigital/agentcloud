@@ -7,27 +7,24 @@ use std::sync::Arc;
 
 use crate::errors::types::Result;
 use crate::qdrant::helpers::{get_next_page, get_scroll_results};
-use crate::qdrant::models::{MyPoint, PointSearchResults, ScrollResults};
+use crate::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
 use crate::qdrant::utils::Qdrant;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
 
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
-use qdrant_client::qdrant::vectors_config::Config;
-use qdrant_client::qdrant::{
-    CreateCollection, Filter, PointId, PointStruct, ScrollPoints, VectorParams, VectorsConfig,
-    WithVectorsSelector,
-};
+use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVectorsSelector};
 
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
-use crate::mongo::queries::get_embedding_model;
+use crate::mongo::queries::{get_embedding_model, get_embedding_model_and_embedding_key};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
 use serde_json::json;
 use std::vec;
+use mongodb::Database;
 use tokio::sync::RwLock;
 use wherr::wherr;
 
@@ -93,38 +90,91 @@ pub async fn list_collections(app_data: Data<Arc<RwLock<QdrantClient>>>) -> Resu
 ///
 /// ```
 #[wherr]
-#[post("/create-collection/{collection_name}/{size}")]
+#[post("/create-collection/{collection_name}")]
 pub async fn create_collection(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
-    Path(params): Path<(String, u64)>,
+    app_data: (Data<Arc<RwLock<QdrantClient>>>, Data<Arc<RwLock<Database>>>),
+    Path(collection_name): Path<String>,
 ) -> Result<HttpResponse> {
-    let (collection_name, size) = params;
-    let qdrant_conn = app_data.get_ref().clone();
-    let qdrant_client = qdrant_conn.read().await;
-    let collection_creation_result = qdrant_client
-        .create_collection(&CreateCollection {
-            collection_name: collection_name.into(),
-            vectors_config: Some(VectorsConfig {
-                config: Some(Config::Params(VectorParams {
-                    size, // This is the number of dimensions in the collection (basically the number of columns)
-                    distance: Distance::Cosine.into(), // The distance metric we will use in this collection
-                    ..Default::default()
-                })),
-            }),
-            ..Default::default()
-        })
-        .await?;
-    println!(
-        "Collection Creation results: {:?}",
-        collection_creation_result
-    );
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::json())
-        .json(json!(ResponseBody {
-            status: Status::Success,
-            data: None,
-            error_message: None
-        })))
+    let (qdrant_conn, mongo_conn) = app_data;
+    let qdrant_conn = qdrant_conn.get_ref().to_owned();
+    let collection_name_clone = collection_name.clone();
+    let qdrant = Qdrant::new(qdrant_conn, collection_name);
+    let mongo = mongo_conn.get_ref().read().await;
+
+    return match get_embedding_model_and_embedding_key(&mongo, &collection_name_clone)
+        .await
+    {
+        Ok((model_parameter_result, _)) => match model_parameter_result {
+            Some(model_parameters) => {
+                let vector_length = model_parameters.embeddingLength as u64;
+                let embedding_model_name = model_parameters.model;
+                match qdrant.check_collection_exists(
+                    CreateDisposition::CreateIfNeeded,
+                    Some(vector_length),
+                    Some(embedding_model_name),
+                )
+                    .await {
+                    Ok(result) => {
+                        match result {
+                            true => {
+                                Ok(HttpResponse::Ok()
+                                    .content_type(ContentType::json())
+                                    .json(json!(ResponseBody {
+                                    status: Status::Success,
+                                    data: None,
+                                    error_message: None
+                                })))
+                            }
+                            false => {
+                                Ok(HttpResponse::InternalServerError()
+                                    .content_type(ContentType::json())
+                                    .json(json!(ResponseBody {
+                                        status: Status::Failure,
+                                        data: None,
+                                        error_message: Some(json!({
+                                            "errorMessage": "An error occurred attempting to create collection"
+                                        }))
+                                    })))
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        Ok(HttpResponse::InternalServerError()
+                            .content_type(ContentType::json())
+                            .json(json!(
+                        ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                 "errorMessage": format!("An error occurred while checking if collection exists: {}", e)}))
+                        })))
+                    }
+                }
+            }
+            None => {
+                Ok(HttpResponse::InternalServerError()
+                    .content_type(ContentType::json())
+                    .json(json!(
+                        ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                "errorMessage": "Datasource has no associated models...returned None!"}))
+                        })))
+            }
+        },
+        Err(e) => {
+            Ok(HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .json(json!(
+                        ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                 "errorMessage": format!("Model query returned an error: {}", e)}))
+                        })))
+        }
+    };
 }
 
 ///
@@ -173,7 +223,7 @@ pub async fn upsert_data_point_to_collection(
                 status: Status::Success,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": "Upsert failed"
+                    "errorMessage": "Point Upsert failed"
                 }))
             }))),
     }
@@ -239,7 +289,7 @@ pub async fn bulk_upsert_data_to_collection(
                 status: Status::Success,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": "Upsert failed"
+                    "errorMessage": "Bulk Upsert failed"
                 }))
             }))),
     }
