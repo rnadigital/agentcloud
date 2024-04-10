@@ -90,8 +90,8 @@ pub async fn list_collections(app_data: Data<Arc<RwLock<QdrantClient>>>) -> Resu
 ///
 /// ```
 #[wherr]
-#[post("/create-collection/{collection_name}")]
-pub async fn create_collection(
+#[post("/check-collection-exists/{collection_name}")]
+pub async fn check_collection_exists(
     app_data: (Data<Arc<RwLock<QdrantClient>>>, Data<Arc<RwLock<Database>>>),
     Path(collection_name): Path<String>,
 ) -> Result<HttpResponse> {
