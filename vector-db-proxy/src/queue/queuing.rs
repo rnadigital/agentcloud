@@ -29,7 +29,6 @@ pub trait Control<T>
     fn new(pool_size: usize) -> Self;
     fn optimised(thread_utilisation_percentage: f64) -> Self;
     fn default() -> Self;
-    fn optimised(thread_utilisation_percentage: f64) -> Self;
     fn enqueue(&mut self, task: T);
     fn embed_message(
         &mut self,
@@ -80,24 +79,6 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
                 q: Queue::new(),
                 pool: ThreadPool::new(t.get()),
             },
-            Err(_) => MyQueue {
-                q: Queue::new(),
-                pool: ThreadPool::new(1),
-            },
-        }
-    }
-
-    fn optimised(thread_utilisation_percentage: f64) -> Self {
-        match available_parallelism() {
-            Ok(t) => {
-                println!("Threads Available: {} ", t.get());
-                let threads_utilised = (t.get() as f64 * thread_utilisation_percentage) as usize;
-                println!("Threads used: {}", threads_utilised);
-                MyQueue {
-                    q: Queue::new(),
-                    pool: ThreadPool::new(threads_utilised),
-                }
-            }
             Err(_) => MyQueue {
                 q: Queue::new(),
                 pool: ThreadPool::new(1),
