@@ -214,8 +214,6 @@ impl Qdrant {
     pub async fn upsert_data_point_blocking(
         &self,
         point: PointStruct,
-        vector_length: Option<u64>,
-        vector_name: Option<String>,
     ) -> Result<bool> {
         let qdrant_conn = &self.client.read().await;
         let mut backoff = ExponentialBackoff {

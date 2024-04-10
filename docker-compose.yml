@@ -123,10 +123,11 @@ services:
       - docker_rabbitmq
     build:
       context: vector-db-proxy/
-      dockerfile: ${VECTOR_PROXY_DOCKERFILE:-Dockerfile.dev}
+      # dockerfile: ${VECTOR_PROXY_DOCKERFILE:-Dockerfile.dev}
       args:
         - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
+        - RELEASE=${RELEASE}
     ports:
       - '127.0.0.1:9001:9001'
     image: vector_db_proxy

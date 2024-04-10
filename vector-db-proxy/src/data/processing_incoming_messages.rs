@@ -26,9 +26,7 @@ pub async fn process_messages(
             {
                 Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
                     Some(model_parameters) => {
-                        let vector_length = model_parameters.embeddingLength as u64;
                         let embedding_model_name = model_parameters.model;
-                        let embedding_model_name_clone = embedding_model_name.clone();
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         if let Value::Object(data_obj) = message_data {
@@ -43,22 +41,9 @@ pub async fn process_messages(
                                     &metadata,
                                     &text,
                                     Some(ds_clone),
-                                    EmbeddingModels::from(embedding_model_name),
-                                )
-                                    .await
-                                {
+                                    EmbeddingModels::from(embedding_model_name)).await {
                                     Ok(point_struct) => {
-                                        if let Ok(_bulk_upload_result) =
-                                            qdrant
-                                                .upsert_data_point_blocking(
-                                                    point_struct,
-                                                    Some(vector_length),
-                                                    Some(embedding_model_name_clone),
-                                                )
-                                                .await
-                                        {
-                                            // let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
-                                        }
+                                        let _ = qdrant.upsert_data_point_blocking(point_struct).await;
                                     }
                                     Err(e) => {
                                         eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
