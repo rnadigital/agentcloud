@@ -12,5 +12,15 @@ RUN cargo build --release
 RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
 COPY . .
 RUN cargo build --release
+
+# TODO: make this work for all architectures
+RUN mkdir /onnxruntime \
+	&& cd /onnxruntime \
+	&& wget https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz \
+	&& tar -xvf onnxruntime-linux-x64-1.17.1.tgz \
+	&& cd onnxruntime-linux-x64-1.17.1 \
+	&& cp lib/libonnxruntime.so.1.17.1 /lib \
+	&& cp lib/libonnxruntime.so.1.17.1 /usr/lib
+
 EXPOSE 8001
 CMD ["target/release/vector-db-proxy"]
