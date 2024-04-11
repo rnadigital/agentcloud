@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 
-let socketio = io({ /* transports: ["websocket"] */ });
+let socketio = io();
 const SocketContext = createContext(socketio);
 
 export function SocketWrapper({ children }) {
