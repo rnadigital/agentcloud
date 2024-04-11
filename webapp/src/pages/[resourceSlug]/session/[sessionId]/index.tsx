@@ -156,19 +156,6 @@ export default function Session(props) {
 		});
 	}
 
-	function sendChatCancellation() {
-		socketContext.emit('terminate', {
-			room: sessionId,
-			authorName: account.name,
-			incoming: true,
-			displayMessage: false,
-			message: {
-				type: 'text',
-				text: '',
-			}
-		});
-	}
-
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
 		updateChat();
@@ -254,9 +241,13 @@ export default function Session(props) {
 	}, [router?.query?.sessionId]);
 
 	function stopGenerating() {
-		socketContext.emit('stop_generating', {
-			room: sessionId,
-		});
+		API.cancelSession({
+			_csrf: csrf,
+			resourceSlug,
+			sessionId: router?.query?.sessionId,
+		}, () => {
+			//generating stopped
+		}, setError, router);
 	}
 
 	function sendMessage(e, reset) {
@@ -318,7 +309,7 @@ export default function Session(props) {
 							className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
 						>
 							<StopIcon className={'w-5 me-1'} />
-							<span>Cancel</span>
+							<span>Stop Generating</span>
 						</button>
 					</div>}
 				</div>

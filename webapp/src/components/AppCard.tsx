@@ -16,20 +16,20 @@ export default function AppCard({ app, startSession }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	return (
-		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 px-6 py-4 flex flex-col space-between min-h-50'>
+		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<div className='flex items-center justify-center p-4'>
 					<AgentAvatar agent={app} />
 				</div>
 				<div>
 					<div className='font-bold text-xl mb-2'>{name}</div>
-					<p className={`text-gray-700 text-base max-h-20 overflow-hidden ${description?.length > 20 ? 'overlay-gradient light' : ''}`}>
+					<p className={'text-gray-700 text-base max-h-20 overflow-hidden dark:text-white'}>
 						{description}
 					</p>
 				</div>
 			</a>
 			<div className='flex flex-col lg:flex-row justify-between pt-5 gap-4 grid-cols-1 xl:grid-cols-2'>
-				<div className='w-full xl:w-min text-sm text-gray-600'>
+				<div className='w-full xl:w-min text-sm text-gray-600 dark:text-gray-400'>
 					{app.author ? `By ${app.author}` : 'AgentCloud App'}
 				</div>
 				<button
