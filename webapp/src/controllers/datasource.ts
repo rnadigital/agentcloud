@@ -186,6 +186,13 @@ export async function testDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
 
+	// Create the collection in qdrant
+	try {
+		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+	}
+
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
 	    _id: newDatasourceId,
@@ -316,6 +323,13 @@ export async function addDatasourceApi(req, res, next) {
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
 	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
+
+	// Create the collection in qdrant
+	try {
+		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+	}
 
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -529,6 +543,12 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	if (sync === true) {
+		// Create the collection in qdrant
+		try {
+			await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		} catch (e) {
+			return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+		}
 		// Create a job to trigger the connection to sync
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 		const jobBody = {
@@ -565,6 +585,13 @@ export async function syncDatasourceApi(req, res, next) {
 
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	// Create the collection in qdrant
+	try {
+		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
 
 	// Create a job to trigger the connection to sync
@@ -719,6 +746,15 @@ export async function uploadFileApi(req, res, next) {
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	await storageProvider.addFile(filename, uploadedFile);
+
+	// Create the collection in qdrant
+	try {
+		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+	}
+
+	// Tell the vector proxy to process it	
 	await sendMessage(JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
