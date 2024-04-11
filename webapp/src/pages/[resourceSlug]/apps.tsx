@@ -3,6 +3,7 @@ import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -39,7 +40,7 @@ export default function Apps(props) {
 	}, [resourceSlug]);
 
 	if (!apps) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

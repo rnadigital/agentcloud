@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 const CreateDatasourceForm = dynamic(() => import('components/CreateDatasourceForm'), {
 	ssr: false,
 });
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -27,9 +28,9 @@ export default function AddDatasource(props) {
 	useEffect(() => {
 		fetchDatasourceFormData();
 	}, [resourceSlug]);
-	
+
 	if (models == null) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

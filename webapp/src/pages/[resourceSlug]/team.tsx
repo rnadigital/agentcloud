@@ -2,6 +2,7 @@ import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import InviteForm from 'components/InviteForm';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import TeamMemberCard from 'components/TeamMemberCard';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -29,7 +30,7 @@ export default function Team(props) {
 	}, [resourceSlug]);
 
 	if (!team) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
@@ -49,7 +50,7 @@ export default function Team(props) {
 			))}
 		</div>}
 
-		{permissions.get(Permissions.ADD_TEAM_MEMBER) && <>	
+		{permissions.get(Permissions.ADD_TEAM_MEMBER) && <>
 			<div className='border-b pb-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
 			</div>

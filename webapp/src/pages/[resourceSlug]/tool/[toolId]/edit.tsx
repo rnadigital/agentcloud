@@ -1,3 +1,4 @@
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -23,13 +24,13 @@ export default function EditTool(props) {
 			agentId: router.query.agentId,
 		}, dispatch, setError, router);
 	}
-	
+
 	useEffect(() => {
 		fetchTools();
 	}, [resourceSlug]);
 
 	if (!tool) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
