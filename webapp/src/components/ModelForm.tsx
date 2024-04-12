@@ -128,8 +128,6 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 							>
 								<option disabled value=''>Select a type...</option>
 								<option value={CredentialType.OPENAI}>OpenAI</option>
-								<option value={CredentialType.AZURE}>Azure</option>
-								<option value={CredentialType.LMSTUDIO}>LMStudio</option>
 								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
 							</select>
 						</div>

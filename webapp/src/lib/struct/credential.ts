@@ -2,9 +2,6 @@
 
 export enum CredentialType {
 	OPENAI = 'open_ai',
-	AZURE = 'azure',
-	LMSTUDIO = 'lmstudio',
-	BEARER_TOKEN = 'bearer',
 	OAUTH = 'oauth',
 	FASTEMBED = 'fastembed',
 	// More here...
