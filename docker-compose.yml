@@ -145,6 +145,9 @@ services:
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - WEBAPP_HOST=webapp_next
+      - THREAD_PERCENTAGE_UTILISATION=0.8
+      - USE_GPU=false
+
     volumes:
       - datasource_files:/tmp
 
