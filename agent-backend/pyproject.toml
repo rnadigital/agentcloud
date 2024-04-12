@@ -22,7 +22,6 @@ bullmq = "*"
 diskcache = "^5.6.3"
 sse-starlette = "^1.8.2"
 chromadb = "^0.4.22"
-sentence-transformers = "^2.2.2"
 replicate = "^0.23.1"
 crewai = { git = "https://github.com/rnadigital/crewAI.git", branch = "develop" }
 onnxruntime = "1.17.0"
