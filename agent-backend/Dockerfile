@@ -1,23 +1,37 @@
 # Use the official Python image as the base image
-FROM python:3.11-slim AS base
+FROM python:3.11-slim as builder
 
 # Set the working directory inside the container
 WORKDIR /app
 
+# Set custom poetry env
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
 # Install Poetry with a fixed version for reproducibility
-RUN curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.1.11 python3 - && \
-    pip install poetry
-# Disabling virtualenv and install dependencies globally
-RUN poetry config virtualenvs.create false
+RUN pip install poetry==1.8.2
 
 # Copy only the files needed for installing dependencies
 COPY pyproject.toml poetry.lock /app/
 
-# Install project dependencies
-RUN poetry install --no-root
+RUN cat pyproject.toml
 
-# Use a second stage to keep the image lean
-FROM base AS final
+# Install dependencies and remove cache dir after finished for smaller image
+RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
+
+# TESTING: Uninstall poetry afterwards, no longer needed
+#RUN pip uninstall poetry
+
+# The runtime image, used to just run the code provided its virtual environment
+FROM python:3.11-slim as runtime
+
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Copy the rest of the application code into the container
 COPY ./src/ /app/
