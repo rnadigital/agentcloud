@@ -1,3 +1,4 @@
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -24,9 +25,9 @@ export default function AddAgent(props) {
 	useEffect(() => {
 		fetchAgentFormData();
 	}, [resourceSlug]);
-	
+
 	if (agents == null) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
