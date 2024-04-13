@@ -18,9 +18,12 @@ pub async fn process_messages(
 ) {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
+    let mut message_count: Vec<u8> = vec![];
     // let redis_connection = redis_connection_pool.lock().await;
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
+            message_count.push(1);
+            println!("'{}' messages arrived at process_messages module", message_count.len());
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
                 .await
             {

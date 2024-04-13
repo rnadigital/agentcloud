@@ -11,7 +11,7 @@ use crate::data::chunking::{Chunking, TextChunker};
 use crate::data::models::{Document as DocumentModel, FileType};
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
-use crate::queue::queuing::MyQueue;
+use crate::queue::queuing::Pool;
 
 pub fn cosine_similarity(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let dot_product = a.dot(b);
@@ -36,7 +36,7 @@ pub async fn extract_text_from_file(
     file_path: &str,
     document_name: String,
     datasource_id: String,
-    queue: Arc<RwLock<MyQueue<String>>>,
+    queue: Arc<RwLock<Pool<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
     // redis_conn_pool: Arc<Mutex<RedisConnection>>,

@@ -14,7 +14,7 @@ use crate::mongo::{models::ChunkingStrategy, queries::get_embedding_model};
 use crate::mongo::queries::get_datasource;
 use crate::qdrant::{helpers::construct_point_struct, utils::Qdrant};
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
-use crate::queue::queuing::MyQueue;
+use crate::queue::queuing::Pool;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
@@ -22,13 +22,14 @@ use crate::utils::webhook::send_webapp_embed_ready;
 pub async fn subscribe_to_queue(
     // redis_connection_pool: Arc<Mutex<RedisConnection>>,
     qdrant_clone: Arc<RwLock<QdrantClient>>,
-    queue: Arc<RwLock<MyQueue<String>>>,
+    queue: Arc<RwLock<Pool<String>>>,
     mongo_client: Arc<RwLock<Database>>,
     channel: &Channel,
     queue_name: &String,
 ) {
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
+    let mut message_count: Vec<u8> = vec![];
     match channel.basic_consume_rx(args.clone()).await {
         Ok((ctag, mut messages_rx)) => {
             loop {
@@ -37,6 +38,8 @@ pub async fn subscribe_to_queue(
                     let _ = channel.basic_ack(args).await;
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
                     if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+                        message_count.push(1);
+                        println!("'{}' messages arrived at consume module", message_count.len());
                         let stream_string: String = stream.to_string();
                         let stream_split: Vec<&str> = stream_string.split('_').collect();
                         let datasource_id = stream_split.to_vec()[0];

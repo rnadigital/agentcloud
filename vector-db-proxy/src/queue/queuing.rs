@@ -1,4 +1,3 @@
-//! This is queueing module that provides app wide capability to add tasks to a queue
 use mongodb::Database;
 use std::fmt::Debug;
 use std::marker::Send;
@@ -14,95 +13,57 @@ use qdrant_client::client::QdrantClient;
 
 use crate::data::processing_incoming_messages::process_messages;
 
-// This is essentially the Class
-// The requirement for T to be Clone is a constraint of the queues crate
-pub struct MyQueue<T: Clone> {
-    q: Queue<T>,
-    pool: ThreadPool,
-}
-
-// This list all the methods that are available in this class
-pub trait Control<T>
-    where
-        T: Debug,
-{
-    fn new(pool_size: usize) -> Self;
-    fn optimised(thread_utilisation_percentage: f64) -> Self;
-    fn default() -> Self;
-    fn enqueue(&mut self, task: T);
-    fn embed_message(
-        &mut self,
-        qdrant_conn: Arc<RwLock<QdrantClient>>,
-        mongo_conn: Arc<RwLock<Database>>,
-        message: String,
-    ) -> bool;
+pub struct Pool<T: Clone> {
+    pub q: Queue<T>,
+    pub pool: ThreadPool,
 }
 
 // This defines implementations of each of the methods in the class
 // This implementation is generic for all types that are both Send and Clone
 // T must be Send in order to be sent safely across threads
-impl<T: Clone + Send> Control<T> for MyQueue<T>
+impl<T: Clone + Send> Pool<T>
     where
         T: Debug,
         String: From<T>,
 {
-    // This is similar to the __init__ method in python. That instantiates an instance of the class
-    fn new(pool_size: usize) -> Self {
-        //Here, Self is used to mean "the type that this trait is implemented for."
-        MyQueue {
+    pub fn new(pool_size: usize) -> Self {
+        Pool {
             q: Queue::new(),
-            pool: ThreadPool::new(pool_size), // need to make this a dynamic number
+            pool: ThreadPool::new(pool_size),
         }
     }
 
-    fn optimised(thread_utilisation_percentage: f64) -> Self {
-        match available_parallelism() {
-            Ok(t) => {
-                println!("Threads Available: {} ", t.get());
-                let threads_utilised = (t.get() as f64 * thread_utilisation_percentage) as usize;
-                println!("Threads used: {}", threads_utilised);
-                MyQueue {
-                    q: Queue::new(),
-                    pool: ThreadPool::new(threads_utilised),
-                }
-            }
-            Err(_) => MyQueue {
-                q: Queue::new(),
-                pool: ThreadPool::new(1),
-            },
+    pub fn optimised(thread_utilisation_percentage: f64) -> Self {
+        let threads_utilised = available_parallelism()
+            .map(|t| (t.get() as f64 * thread_utilisation_percentage) as usize)
+            .unwrap_or(1);
+        println!("Threads used: {}", threads_utilised);
+        Pool {
+            q: Queue::new(),
+            pool: ThreadPool::new(threads_utilised),
         }
     }
 
-    fn default() -> Self {
-        match available_parallelism() {
-            Ok(t) => MyQueue {
-                q: Queue::new(),
-                pool: ThreadPool::new(t.get()),
-            },
-            Err(_) => MyQueue {
-                q: Queue::new(),
-                pool: ThreadPool::new(1),
-            },
+    pub fn default() -> Self {
+        let default_threads = available_parallelism().map(|t| t.get()).unwrap_or(1);
+        Pool {
+            q: Queue::new(),
+            pool: ThreadPool::new(default_threads),
         }
     }
 
-    fn enqueue(&mut self, task: T) {
-        match self.q.add(task) {
-            Ok(_) => {}
-            Err(_) => println!("Could not add task to queue"),
-        };
+    pub fn enqueue(&mut self, task: T) {
+        println!("Enqueueing task, current queue size before adding: {}", self.q.size());
+        self.q.add(task).unwrap_or_else(|_| None);
+        println!("Task added, current queue size after adding: {}", self.q.size());
     }
 
-    /// The reason this works is that you're cloning the Arc references before they're moved into the closure, thereby satisfying Rust's lifetime requirements.
-    /// The closure now has ownership of the cloned Arcs, which guarantees their existence for the entire lifetime of the closure.
-    /// The original Arcs are still owned by the app_data object and will be dropped when app_data goes out of scope, but this won't affect the cloned Arcs.
-
-    fn embed_message(
+    pub fn embed_message(
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
-    ) -> bool {
+    ) {
         while self.q.size() > 0 {
             let task = match self.q.remove() {
                 Ok(t) => t,
@@ -116,13 +77,13 @@ impl<T: Clone + Send> Control<T> for MyQueue<T>
             let data = message.clone();
             let qdrant_client = Arc::clone(&qdrant_conn);
             let mongo_client = Arc::clone(&mongo_conn);
+
             self.pool.execute(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    process_messages(qdrant_client, mongo_client, data, id).await;
+                    let _ = process_messages(qdrant_client, mongo_client, data, id).await;
                 })
             });
         }
-        true
     }
 }

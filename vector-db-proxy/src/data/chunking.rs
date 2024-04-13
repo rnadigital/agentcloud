@@ -16,7 +16,7 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
-use crate::queue::queuing::MyQueue;
+use crate::queue::queuing::Pool;
 
 pub trait Chunking {
     type Item;
@@ -30,7 +30,7 @@ pub trait Chunking {
         &self,
         path: String,
         datasource_id: String,
-        queue: Arc<RwLock<MyQueue<String>>>,
+        queue: Arc<RwLock<Pool<String>>>,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         // redis_conn_pool: Arc<Mutex<RedisConnection>>,
@@ -197,7 +197,7 @@ impl Chunking for TextChunker {
         &self,
         path: String,
         datasource_id: String,
-        queue: Arc<RwLock<MyQueue<String>>>,
+        queue: Arc<RwLock<Pool<String>>>,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         // redis_conn_pool: Arc<Mutex<RedisConnection>>,
