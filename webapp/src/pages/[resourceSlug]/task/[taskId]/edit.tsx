@@ -1,4 +1,5 @@
 import * as API from '@api';
+import Spinner from 'components/Spinner';
 import TaskForm from 'components/TaskForm'; // Assuming you have a TaskForm component
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -27,7 +28,7 @@ export default function EditTask(props) {
 	}, [resourceSlug]);
 
 	if (task == null) {
-		return 'Loading...'; //TODO: Implement a better loading indicator
+		return <Spinner/>;
 	}
 
 	return (

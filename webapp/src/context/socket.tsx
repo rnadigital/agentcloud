@@ -3,7 +3,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 
-let socketio = io({ /* transports: ["websocket"] */ });
+let socketio;
+if (typeof window !== 'undefined') {
+	socketio = io(/*{
+		transports: ["websocket", "polling"],
+	}*/);
+}
+
 const SocketContext = createContext(socketio);
 
 export function SocketWrapper({ children }) {
@@ -19,6 +25,10 @@ export function SocketWrapper({ children }) {
 		console.log('joined room');
 		// sharedSocket.onAny((eventName, ...args) => {
 		// 	console.log('Socket eventName:', eventName, args);
+		// });
+		// sharedSocket.on("connect_error", () => {
+		// 	// revert to classic upgrade
+		// 	sharedSocket.io.opts.transports = ["polling", "websocket"];
 		// });
 		sharedSocket.on('notification', msg => {
 			console.log('notification', msg);

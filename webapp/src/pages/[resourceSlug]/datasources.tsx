@@ -7,6 +7,7 @@ import DatasourceFileTable from 'components/DatasourceFileTable';
 import DatasourceTable from 'components/DatasourceTable';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Head from 'next/head';
@@ -42,7 +43,7 @@ export default function Datasources(props) {
 	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
@@ -56,7 +57,7 @@ export default function Datasources(props) {
 		<span className='pt-1 mb-3 w-full'>
 			<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasources} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
 		</span>
-		
+
 		<DatasourceFileTable datasources={datasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
 
 		<span className='py-8 h-1'></span>

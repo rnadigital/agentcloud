@@ -66,35 +66,35 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 	return (
 
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
-			<table className='min-w-full divide-y divide-gray-200'>
-				<thead className='bg-gray-50'>
+			<table className='min-w-full divide-y divide-gray-200 dark:!border-slate-700'>
+				<thead className='bg-gray-50 dark:bg-slate-800 dark:!border-slate-700'>
 					<tr>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Type
 						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Name
 						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Status
 						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Schedule Type
 						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Last Synced
 						</th>
-						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Date Uploaded
 						</th>
-						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase'>
+						<th scope='col' className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase dark:text-white'>
 							Actions
 						</th>
 					</tr>
 				</thead>
-				<tbody className='bg-white divide-y divide-gray-200'>
+				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
 					{datasources.map((datasource) => (
-						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50'>
+						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700'>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 me-1.5' />
 								<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
@@ -103,7 +103,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<div className='flex items-center'>
-									<div className='text-sm font-medium text-gray-900'>{datasource.name}</div>
+									<div className='text-sm font-medium text-gray-900 dark:text-white'>{datasource.name}</div>
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
@@ -117,12 +117,12 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 								</span>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-								<div className='text-sm text-gray-900' suppressHydrationWarning>
+								<div className='text-sm text-gray-900 dark:text-white' suppressHydrationWarning>
 									{datasource.sourceType === 'file' ? 'N/A' : (datasource.lastSyncedDate ? new Date(datasource.lastSyncedDate).toLocaleString() : 'Never')}
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-								<span suppressHydrationWarning className='text-sm text-gray-900'>
+								<span suppressHydrationWarning className='text-sm text-gray-900 dark:text-white'>
 									{new Date(datasource.createdDate).toLocaleString()}
 								</span>
 							</td>
@@ -133,7 +133,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 										|| deleting[datasource._id]
 										|| (datasource.status === DatasourceStatus.DRAFT && !datasource?.connectionSettings?.syncCatalog?.streams?.length)
 										|| [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status)}
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 								>
 								
 									{syncing[datasource._id] && <ButtonSpinner size={14} className='ms-2 -me-1' />}

@@ -1,5 +1,6 @@
 import * as API from '@api';
 import ErrorAlert from 'components/ErrorAlert';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -9,7 +10,7 @@ import { toast } from 'react-toastify';
 // import StripePricingTable from 'components/StripePricingTable';
 import { SubscriptionPlan } from 'struct/billing';
 
-function SubscriptionCard({ title, link=null, plan=null, price=null, description=null, icon=null, isPopular=false }) {
+function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null, isPopular = false }) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
@@ -93,9 +94,9 @@ export default function Billing(props) {
 	useEffect(() => {
 		fetchAccount();
 	}, [resourceSlug]);
-	
+
 	if (!account) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	const { stripeCustomerId, stripePlan /*, stripeEndsAt, stripeCancelled*/ } = account?.stripe || {};
@@ -121,7 +122,6 @@ export default function Billing(props) {
 				<SubscriptionCard title='Agent Cloud Teams' price={199} isPopular={true} plan={SubscriptionPlan.TEAMS} />
 				<SubscriptionCard title='Agent Cloud Enterprise' price={'Custom'} link={'https://www.agentcloud.dev/contact'} />
 			</div>
-			
 			{/*<form onSubmit={getPortalLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='mb-2 flex items-center justify-start gap-x-6'>
@@ -141,6 +141,6 @@ export default function Billing(props) {
 
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale}) {
+export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

@@ -1,5 +1,6 @@
 import * as API from '@api';
 import ErrorAlert from 'components/ErrorAlert';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -33,9 +34,9 @@ export default function Account(props) {
 	useEffect(() => {
 		fetchAccount();
 	}, [resourceSlug]);
-	
+
 	if (!account) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (
@@ -97,6 +98,6 @@ export default function Account(props) {
 
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale}) {
+export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

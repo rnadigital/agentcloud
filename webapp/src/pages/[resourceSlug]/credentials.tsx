@@ -2,6 +2,7 @@ import { PlusIcon } from '@heroicons/react/20/solid';
 import CredentialTable from 'components/CredentialTable';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ export default function Credentials(props) {
 	}, [resourceSlug]);
 
 	if (!credentials) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

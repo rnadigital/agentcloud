@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import AppForm from 'components/AppForm';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ export default function EditApp(props) {
 	}, [resourceSlug]);
 
 	if (app == null) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
@@ -42,11 +43,11 @@ export default function EditApp(props) {
 		</div>
 
 		<AppForm
-			editing={true} 
-			app={app} 
-			crew={app?.crew} 
-			agentChoices={agents} 
-			taskChoices={tasks} 
+			editing={true}
+			app={app}
+			crew={app?.crew}
+			agentChoices={agents}
+			taskChoices={tasks}
 			modelChoices={models}
 			// toolChoices={tools} 
 			fetchFormData={fetchAppFormData}

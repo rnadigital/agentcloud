@@ -2,6 +2,7 @@ import * as API from '@api';
 import Permission from '@permission';
 import ErrorAlert from 'components/ErrorAlert';
 import PermissionsEditor from 'components/PermissionsEditor';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -17,7 +18,7 @@ export default function EditTeamMember(props) {
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { resourceSlug,  memberId } = router.query;
+	const { resourceSlug, memberId } = router.query;
 	const { teamMember } = state;
 
 	async function fetchTeamMember() {
@@ -27,9 +28,9 @@ export default function EditTeamMember(props) {
 	useEffect(() => {
 		fetchTeamMember();
 	}, [resourceSlug]);
-	
+
 	if (!account) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe || {};
@@ -54,6 +55,6 @@ export default function EditTeamMember(props) {
 
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale}) {
+export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

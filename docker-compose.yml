@@ -123,11 +123,10 @@ services:
       - docker_rabbitmq
     build:
       context: vector-db-proxy/
-      # dockerfile: ${VECTOR_PROXY_DOCKERFILE:-Dockerfile.dev}
       args:
+        - RELEASE=${RELEASE}
         - GOOGLE_KEYPATH=keyfile.json
         - SHORT_COMMIT_HASH=${SHORT_COMMIT_HASH}
-        - RELEASE=${RELEASE}
     ports:
       - '127.0.0.1:9001:9001'
     image: vector_db_proxy
@@ -146,6 +145,9 @@ services:
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - WEBAPP_HOST=webapp_next
+      - THREAD_PERCENTAGE_UTILISATION=0.8
+      - USE_GPU=false
+
     volumes:
       - datasource_files:/tmp
 

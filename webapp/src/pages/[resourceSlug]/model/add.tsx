@@ -1,5 +1,6 @@
 import * as API from '@api';
 import ModelForm from 'components/ModelForm';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -25,7 +26,7 @@ export default function AddModel(props) {
 	}, [resourceSlug]);
 
 	if (!models) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

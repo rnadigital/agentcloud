@@ -9,12 +9,13 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import { StreamsList } from 'components/DatasourceStream';
 import DatasourceTabs from 'components/DatasourceTabs';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useReducer,useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
@@ -104,7 +105,7 @@ export default function Datasource(props) {
 	}
 
 	async function updateStreams(e, sync?: boolean) {
-		setSubmitting({ [`updateStreams${sync?'sync':''}`]: true });
+		setSubmitting({ [`updateStreams${sync ? 'sync' : ''}`]: true });
 		try {
 			const streams = e?.target?.form && Array.from(e.target.form.elements)
 				.filter(x => x['checked'] === true)
@@ -114,7 +115,7 @@ export default function Datasource(props) {
 				.filter(x => x['checked'] === true)
 				.filter(x => x['dataset']['parent'])
 				.reduce((acc, x) => {
-					acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+					acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([x['name']]);
 					return acc;
 				}, {});
 			const body = {
@@ -134,7 +135,7 @@ export default function Datasource(props) {
 				toast.error(res);
 			}, router);
 		} finally {
-			setSubmitting({ [`updateStreams${sync?'sync':''}`]: false });
+			setSubmitting({ [`updateStreams${sync ? 'sync' : ''}`]: false });
 		}
 	}
 
@@ -174,9 +175,9 @@ export default function Datasource(props) {
 			setTab(parseInt(matches[1]));
 		}
 	}, []);
-	
-	if (datasource == null) {
-		return 'Loading...'; //TODO: loader
+
+	if (datasource) {
+		return <Spinner />;
 	}
 
 	return (<>
@@ -201,7 +202,7 @@ export default function Datasource(props) {
 
 		{/*TODO: component that takes discoveredSchema and datasource*/}
 		{tab === 0 && <>
-		
+
 			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
 				<StreamsList
 					streams={discoveredSchema.discoveredSchema.catalog.streams}
@@ -347,11 +348,11 @@ export default function Datasource(props) {
 				</button>}
 			</div>
 		</div>}
-		
+
 		{tab === 3 && <div className='space-y-3'>
 			Visualisation
 		</div>}
-		
+
 		{tab === 4 && <div className='space-y-3'>
 			Settings
 		</div>}

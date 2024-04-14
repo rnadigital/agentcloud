@@ -1,5 +1,6 @@
 import * as API from '@api';
 import ModelForm from 'components/ModelForm';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -26,7 +27,7 @@ export default function EditModel(props) {
 	}, [resourceSlug]);
 
 	if (model == null) {
-		return 'Loading...'; //TODO: Implement a better loading indicator
+		return <Spinner/>;
 	}
 
 	return (
