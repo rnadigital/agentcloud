@@ -324,6 +324,13 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
+	// Update the datasource with the connection settings and sync date
+	await Promise.all([
+		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
+		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
+		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField),
+	]);
+
 	// Create the collection in qdrant
 	try {
 		await VectorDBProxy.createCollectionInQdrant(datasourceId);
@@ -343,14 +350,9 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 	console.log('createdJob', createdJob);
 
-	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
-		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
-		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField),
-		setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING),
-	]);
-
+	// Set status to processing after jub submission
+	await setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING);
+	
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
