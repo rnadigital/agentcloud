@@ -4,6 +4,8 @@
 docker-compose.yml
 airbyte/
 
+.env
+
 # Personal vscode settings
 agent-backend/src/.vscode/
 agent-backend/src/OAI_CONFIG_LIST
