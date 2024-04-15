@@ -1,4 +1,4 @@
-![AgentCloud Logo](https://github.com/rnadigital/agentcloud/blob/master/webapp/public/agentcloud-full-white-bg-trans.png)
+![AgentCloud Logo](https://github.com/rnadigital/agentcloud/assets/47853125/2ac68e33-16cd-47ea-b59e-2446b8d3711e)
 
 # AgentCloud
 <div align="center">
