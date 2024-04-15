@@ -35,7 +35,7 @@ impl<T: Clone + Send> Pool<T>
         let threads_utilised = available_parallelism()
             .map(|t| (t.get() as f64 * thread_utilisation_percentage) as usize)
             .unwrap_or(1);
-        println!("Threads used: {}", threads_utilised);
+        log::debug!("Threads used: {}", threads_utilised);
         Pool {
             q: ArrayQueue::new(threads_utilised),
             pool: ThreadPool::new(threads_utilised),
