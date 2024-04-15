@@ -136,9 +136,9 @@ pub async fn subscribe_to_queue(
                             log::warn!("There was no stream_id in message... can not upload data!");
                         }
                     }
-                    if let Err(e) = channel.basic_cancel(BasicCancelArguments::new(&ctag)).await {
-                        log::error!("Error {}", e);
-                    };
+                    // if let Err(e) = channel.basic_cancel(BasicCancelArguments::new(&ctag)).await {
+                    //     log::error!("Error {}", e);
+                    // };
                 }
             }
         }
