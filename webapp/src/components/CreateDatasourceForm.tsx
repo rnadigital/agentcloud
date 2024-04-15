@@ -5,6 +5,7 @@ import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
+import ErrorAlert from 'components/ErrorAlert';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
@@ -46,7 +47,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [error, setError] = useState();
+	const [error, setError]: any = useState(null);
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
@@ -120,6 +121,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 
 	async function datasourcePost(e) {
 		setSubmitting(true);
+		setError(null);
 		try {
 			if (step === 2) {
 				const body = {
@@ -138,14 +140,20 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					embeddingField,
 				};
 				//step 2, getting schema and testing connection
-				const stagedDatasource: any = await API.testDatasource(body, () => {
+				await API.testDatasource(body, (stagedDatasource) => {
+					console.log('stagedDatasource', stagedDatasource);
+					if (stagedDatasource) {
+						setDatasourceId(stagedDatasource.datasourceId);
+						setDiscoveredSchema(stagedDatasource.discoveredSchema);
+						setStep(3);
+					} else {
+						setError('Datasource connection test failed.'); //TODO: any better way to get error?
+					}
 					// nothing to toast here	
 				}, (res) => {
-					toast.error(res);
+					console.log(res);
+					setError(res);
 				}, compact ? null : router);
-				setDatasourceId(stagedDatasource.datasourceId);
-				setDiscoveredSchema(stagedDatasource.discoveredSchema);
-				setStep(3);
 				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
@@ -287,7 +295,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				</DropZone>;
 			case 2:
 				return <span className='flex'>
-					<div className='w-full md:w-2/3 xl:w-1/2 m-auto'>
+					<div className='w-full m-auto'>
 						<Select
 							isClearable
 							isSearchable
@@ -375,6 +383,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									}}
 									noHtml5Validate
 								>
+									{error && <div className='mb-4'><ErrorAlert error={error} /></div>}
 									<button
 										disabled={submitting}
 										type='submit'
