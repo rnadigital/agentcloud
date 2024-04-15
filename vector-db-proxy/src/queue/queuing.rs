@@ -37,7 +37,7 @@ impl<T: Clone + Send> Pool<T>
         let threads_utilised = available_parallelism()
             .map(|t| (t.get() as f64 * thread_utilisation_percentage) as usize)
             .unwrap_or(1);
-        println!("Threads used: {}", threads_utilised);
+        log::debug!("Threads used: {}", threads_utilised);
         Pool {
             q: Queue::new(),
             pool: ThreadPool::new(threads_utilised),
@@ -53,9 +53,9 @@ impl<T: Clone + Send> Pool<T>
     }
 
     pub fn enqueue(&mut self, task: T) {
-        println!("Enqueueing task, current queue size before adding: {}", self.q.size());
+        log::debug!("Enqueueing task, current queue size before adding: {}", self.q.size());
         self.q.add(task).unwrap_or_else(|_| None);
-        println!("Task added, current queue size after adding: {}", self.q.size());
+        log::debug!("Task added, current queue size after adding: {}", self.q.size());
     }
 
     pub fn embed_message(

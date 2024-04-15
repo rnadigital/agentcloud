@@ -39,7 +39,7 @@ pub async fn subscribe_to_queue(
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
                     if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
                         message_count.push(1);
-                        println!("'{}' messages arrived at consume module", message_count.len());
+                        log::debug!("'{}' messages arrived at consume module", message_count.len());
                         let stream_string: String = stream.to_string();
                         let stream_split: Vec<&str> = stream_string.split('_').collect();
                         let datasource_id = stream_split.to_vec()[0];
@@ -85,7 +85,7 @@ pub async fn subscribe_to_queue(
                                                                                     }
                                                                                 }
                                                                                 None => {
-                                                                                    println!("Embedding vector was empty!")
+                                                                                    log::warn!("Embedding vector was empty!")
                                                                                 }
                                                                             }
                                                                         }
@@ -94,11 +94,11 @@ pub async fn subscribe_to_queue(
                                                                         let qdrant = Qdrant::new(qdrant_conn_clone, datasource_id.to_string());
                                                                         match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name)).await {
                                                                             Ok(_) => {
-                                                                                println!("points uploaded successfully!");
+                                                                                log::debug!("points uploaded successfully!");
                                                                                 if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
                                                                                     log::error!("Error notifying webapp: {}", e);
                                                                                 } else {
-                                                                                    println!("Webapp notified successfully!");
+                                                                                    log::info!("Webapp notified successfully!");
                                                                                 }
                                                                             }
                                                                             Err(e) => {
@@ -110,7 +110,7 @@ pub async fn subscribe_to_queue(
                                                                 }
                                                             }
                                                             None => {
-                                                                println!("Could not read file from source...source returned NONE!")
+                                                                log::warn!("Could not read file from source...source returned NONE!")
                                                             }
                                                         }
                                                     }
@@ -133,7 +133,7 @@ pub async fn subscribe_to_queue(
                                 }
                             }
                         } else {
-                            println!("There was no stream_id in message... can not upload data!");
+                            log::warn!("There was no stream_id in message... can not upload data!");
                         }
                     }
                     if let Err(e) = channel.basic_cancel(BasicCancelArguments::new(&ctag)).await {

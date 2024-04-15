@@ -23,7 +23,7 @@ pub async fn process_messages(
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             message_count.push(1);
-            println!("'{}' messages arrived at process_messages module", message_count.len());
+            log::debug!("'{}' messages arrived at process_messages module", message_count.len());
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
                 .await
             {
@@ -35,7 +35,7 @@ pub async fn process_messages(
                         if let Value::Object(data_obj) = message_data {
                             let mut metadata = convert_serde_value_to_hashmap_string(data_obj);
                             if let Some(text_field) = embedding_field {
-                                println!("text field: {}", text_field.as_str());
+                                log::debug!("text field: {}", text_field.as_str());
                                 let text = metadata.remove(text_field.as_str()).unwrap();
                                 metadata.insert("page_content".to_string(), text.to_owned());
                                 let mongo_conn_clone = Arc::clone(&mongo_conn);

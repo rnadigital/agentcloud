@@ -32,16 +32,16 @@ impl Default for Sentence {
 
 fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
-    println!("Sentence Length: {}", sentences.len());
+    log::debug!("Sentence Length: {}", sentences.len());
     let mut distance = 1.0;
     if sentences.len() > 1 {
         for i in 0..sentences.len() - 1 {
             let embedding_current = &sentences[i].sentence_embedding;
             let embedding_next = &sentences[i + 1].sentence_embedding;
-            println!("Embedding  next: {}", embedding_next);
+            log::debug!("Embedding  next: {}", embedding_next);
             // Calculate cosine similarity
             let similarity = cosine_similarity(embedding_current, embedding_next);
-            println!("Similarity Score: {}", similarity);
+            log::debug!("Similarity Score: {}", similarity);
             // Convert to cosine distance
             distance = 1.0 - similarity;
 
@@ -166,7 +166,7 @@ impl Chunker {
                                         (above, below)
                                     });
 
-                            println!("Indices above threshold:  {:?}", &indices_above_thresh);
+                            log::debug!("Indices above threshold:  {:?}", &indices_above_thresh);
 
                             let mut start_index = 0;
                             for &index in &indices_above_thresh {
@@ -221,7 +221,7 @@ impl Chunker {
                     }
                 }
                 Err(e) => {
-                    println!(
+                    log::error!(
                         "An error occurred while trying to embed text chunk. Error: {}",
                         e
                     );

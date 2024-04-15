@@ -92,7 +92,7 @@ impl Chunking for TextChunker {
                 }
                 Object::Stream(ref stream) => {
                     // Handling stream, customize as needed
-                    println!("Stream Data: {:?}", stream);
+                    log::warn!("Stream Data not yet handled!: {:?}", stream);
                     "Stream Data".to_string()
                 }
                 _ => "Unknown Type".to_string(),
@@ -187,7 +187,7 @@ impl Chunking for TextChunker {
                     }
                 }
                 None => {
-                    println!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
+                    log::debug!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
                 }
             }
         }

@@ -81,7 +81,7 @@ pub async fn extract_text_from_file(
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
     let path_clone = path.clone();
     match fs::remove_file(path_clone) {
-        Ok(_) => println!("File: {:?} successfully deleted", file_path),
+        Ok(_) => log::debug!("File: {:?} successfully deleted", file_path),
         Err(e) => log::error!(
             "An error occurred while trying to delete file: {}. Error: {:?}",
             file_path, e

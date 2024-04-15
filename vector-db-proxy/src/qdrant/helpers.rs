@@ -173,7 +173,7 @@ pub async fn construct_point_struct(
                 None
             }
         } else {
-            println!("Embedding Model name is None");
+            log::warn!("Embedding Model name is None");
             None
         };
     }

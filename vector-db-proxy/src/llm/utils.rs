@@ -45,13 +45,13 @@ pub async fn embed_text(
                                 Ok(embeddings)
                             }
                             _ => {
-                                println!("Checking for hardware acceleration...");
-                                println!("Checking for CoreML...");
+                                log::debug!("Checking for hardware acceleration...");
+                                log::debug!("Checking for CoreML...");
                                 let coreml = CoreMLExecutionProvider::default();
                                 match coreml.is_available() {
                                     Ok(acceleration) => {
                                         if acceleration {
-                                            println!("Found CoreML...");
+                                            log::debug!("Found CoreML...");
                                             let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                 model_name: translation,
                                                 show_download_message: true,
@@ -61,13 +61,13 @@ pub async fn embed_text(
                                             let embeddings = model.passage_embed(text, None)?;
                                             Ok(embeddings)
                                         } else {
-                                            println!("CoreML was not available");
-                                            println!("Looking for CUDA hardware...");
+                                            log::debug!("CoreML was not available");
+                                            log::debug!("Looking for CUDA hardware...");
                                             let cuda = CUDAExecutionProvider::default();
                                             match cuda.is_available() {
                                                 Ok(acceleration) => {
                                                     if acceleration {
-                                                        println!("Found CUDA...");
+                                                        log::debug!("Found CUDA...");
                                                         let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                             model_name: translation,
                                                             show_download_message: true,
@@ -77,13 +77,13 @@ pub async fn embed_text(
                                                         let embeddings = model.passage_embed(text, None)?;
                                                         Ok(embeddings)
                                                     } else {
-                                                        println!("CUDA was  not available");
-                                                        println!("Checking for ROCm...");
+                                                        log::debug!("CUDA was  not available");
+                                                        log::debug!("Checking for ROCm...");
                                                         let roc = ROCmExecutionProvider::default();
                                                         match roc.is_available() {
                                                             Ok(acceleration) => {
                                                                 if acceleration {
-                                                                    println!("Found ROCm...");
+                                                                    log::debug!("Found ROCm...");
                                                                     let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                                         model_name: translation,
                                                                         show_download_message: true,
@@ -93,7 +93,7 @@ pub async fn embed_text(
                                                                     let embeddings = model.passage_embed(text, None)?;
                                                                     Ok(embeddings)
                                                                 } else {
-                                                                    println!("No hardware acceleration found...falling back to CPU");
+                                                                    log::debug!("No hardware acceleration found...falling back to CPU");
                                                                     let model: FlagEmbedding = FlagEmbedding::try_new(InitOptions {
                                                                         model_name: translation,
                                                                         show_download_message: true,

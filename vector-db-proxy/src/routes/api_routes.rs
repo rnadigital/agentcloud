@@ -205,7 +205,6 @@ pub async fn upsert_data_point_to_collection(
     );
     let qdrant = Qdrant::new(qdrant_conn, collection_name);
     let upsert_results = qdrant.upsert_data_point_non_blocking(points).await?;
-    println!("{:?}", upsert_results);
     match upsert_results {
         true => Ok(HttpResponse::Ok()
             .content_type(ContentType::json())
@@ -271,7 +270,6 @@ pub async fn bulk_upsert_data_to_collection(
     let bulk_upsert_results = qdrant
         .bulk_upsert_data(list_of_points, Some(vector_length), None)
         .await?;
-    println!("{:?}", bulk_upsert_results.to_owned());
     match bulk_upsert_results {
         true => Ok(HttpResponse::Ok()
             .content_type(ContentType::json())
