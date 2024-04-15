@@ -1,5 +1,6 @@
 import * as API from '@api';
 import AppForm from 'components/AppForm';
+import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -23,7 +24,7 @@ export default function AddApp(props) {
 	}, [resourceSlug]);
 
 	if (apps == null) {
-		return 'Loading...'; //TODO: Implement a better loading indicator
+		return <Spinner/>;
 	}
 
 	return (

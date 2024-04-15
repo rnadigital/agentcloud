@@ -37,18 +37,19 @@ use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
 use crate::rabbitmq::models::RabbitConnect;
 use routes::api_routes::{
-    bulk_upsert_data_to_collection, create_collection, delete_collection, health_check,
+    bulk_upsert_data_to_collection, check_collection_exists, delete_collection, health_check,
     list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
 use crate::mongo::client::start_mongo_connection;
-use crate::queue::queuing::{MyQueue, Control};
+use crate::queue::queuing::Pool;
 use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
 
 pub fn init(config: &mut web::ServiceConfig) {
-    let webapp_url =
-        dotenv::var("webapp_url").unwrap_or("https://rapdev-app.getmonita.io".to_string());
+    // let webapp_url =
+    //     dotenv::var("webapp_url").unwrap_or("https://127.0.0.1:3000".to_string());
     let cors = Cors::default()
-        .allowed_origin(webapp_url.as_str())
+        // .allowed_origin(webapp_url.as_str())
+        .allow_any_origin()
         .allowed_methods(["GET", "POST", "PUT", "OPTIONS"])
         .supports_credentials()
         .allow_any_header();
@@ -59,7 +60,7 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(health_check)
             .service(list_collections)
             .service(delete_collection)
-            .service(create_collection)
+            .service(check_collection_exists)
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
@@ -72,6 +73,7 @@ async fn main() -> std::io::Result<()> {
     log::info!("Starting Vector DB Proxy APP...");
     let global_data = GLOBAL_DATA.read().await;
     let _ = set_all_env_vars().await;
+    let logging_level = global_data.logging_level.clone();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
     // Set the default logging level
@@ -84,10 +86,11 @@ async fn main() -> std::io::Result<()> {
     };
     let mongo_connection = start_mongo_connection().await.unwrap();
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
+    let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
     let qdrant_connection_for_rabbitmq = Arc::clone(&app_qdrant_client);
-    let queue: Arc<RwLock<MyQueue<String>>> = Arc::new(RwLock::new(Control::optimised(global_data.thread_percentage_utilisation)));
+    let queue: Arc<RwLock<Pool<String>>> = Arc::new(RwLock::new(Pool::optimised(global_data.thread_percentage_utilisation)));
     // let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
-    let mongo_client_clone = Arc::new(RwLock::new(mongo_connection));
+    let mongo_client_clone = Arc::clone(&app_mongo_client);
     let rabbitmq_connection_details = RabbitConnect {
         host: global_data.rabbitmq_host.clone(),
         port: global_data.rabbitmq_port.clone(),
@@ -116,13 +119,16 @@ async fn main() -> std::io::Result<()> {
         )
             .await;
     });
-    env_logger::Builder::from_env(Env::default().default_filter_or("warn")).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
-        println!("Running on http://{}:{}", host.clone(), port.clone());
+        log::info!("Running on http://{}:{}", host.clone(), port.clone());
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new(Arc::clone(&app_qdrant_client)))
+                .app_data(Data::new((
+                    Arc::clone(&app_qdrant_client),
+                    Arc::clone(&app_mongo_client),
+                )))
                 .configure(init)
         })
             .bind(format!("{}:{}", host, port))?

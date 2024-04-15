@@ -15,6 +15,8 @@ if (typeof fs?.mkdir === 'function') {
 
 class LocalStorageProvider extends StorageProvider {
 
+	static allowedDeleteErorCodes: string[] = ['ENOENT'];
+
 	#basePath: string;
 
 	constructor() {
@@ -50,8 +52,10 @@ class LocalStorageProvider extends StorageProvider {
 			await unlink(filePath);
 			log(`File '${filename}' deleted successfully.`);
 		} catch (e) {
-			log(`Failed to delete file: ${e.message}`);
-			throw e;
+			if (!LocalStorageProvider.allowedDeleteErorCodes.includes(e?.code)) {
+				log(`Failed to delete file: ${e.message}`);
+				throw e;
+			}
 		}
 	}
 

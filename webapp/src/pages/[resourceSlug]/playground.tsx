@@ -1,5 +1,6 @@
 import * as API from '@api';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import StartSessionChatbox from 'components/StartSessionChatbox';
 import StartSessionForm from 'components/StartSessionForm';
 import { useAccountContext } from 'context/account';
@@ -28,7 +29,7 @@ export default function Playground(props) {
 	}, [resourceSlug]);
 
 	if (!sessions) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

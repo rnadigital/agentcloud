@@ -170,11 +170,11 @@ pub async fn construct_point_struct(
                 );
                 Some(qdrant_point_struct)
             } else {
-                eprintln!("Could not convert model to a string slice");
+                log::error!("Could not convert model to a string slice");
                 None
             }
         } else {
-            println!("Embedding Model name is None");
+            log::warn!("Embedding Model name is None");
             None
         };
     }

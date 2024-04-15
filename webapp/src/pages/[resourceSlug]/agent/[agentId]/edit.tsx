@@ -1,4 +1,5 @@
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -30,7 +31,7 @@ export default function EditAgent(props) {
 	}, [resourceSlug]);
 
 	if (agent == null) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

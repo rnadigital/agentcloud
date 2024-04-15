@@ -1,3 +1,4 @@
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -26,7 +27,7 @@ export default function AddTool(props) {
 	}, [resourceSlug]);
 
 	if (!tools) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

@@ -54,5 +54,26 @@ class RedisClass(RedisConnection):
             return False
 
 
+    def get(self, key: str) -> str:
+        """
+        Retrieves the value of a Redis key.
+
+        Args:
+            key (str): The key to retrieve the value for.
+
+        Returns:
+            str: The value of the key as a string, or None if the key does not exist.
+        """
+        try:
+            value = self.redis_client.get(key)
+            if value is not None:
+                return value.decode('utf-8')
+            else:
+                return None
+        except Exception as err:
+            logging.exception(err.args[0])
+            logging.exception(traceback.format_exc())
+            return None
+
 if __name__ == "__main__":
     print(f"Running {__name__}")

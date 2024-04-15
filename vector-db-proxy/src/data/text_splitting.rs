@@ -131,7 +131,7 @@ impl TextSplitting {
                                         (above, below)
                                     });
 
-                            println!("Indices above threshold:  {:?}", &indices_above_thresh);
+                            log::debug!("Indices above threshold:  {:?}", &indices_above_thresh);
 
                             let mut start_index = 0;
                             for &index in &indices_above_thresh {
@@ -186,14 +186,14 @@ impl TextSplitting {
                         _ => {}
                     }
                 }
-                Err(e) => { println!("An error occurred while trying to embed text chunk. Error: {}", e); }
+                Err(e) => { log::error!("An error occurred while trying to embed text chunk. Error: {}", e); }
             }
             Some(chunks)
         } else {
             None
         }
     }
-    
+
     async fn chunk_text(
         &self,
         texts: Vec<String>,

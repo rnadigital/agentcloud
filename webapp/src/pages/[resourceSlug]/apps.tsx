@@ -3,6 +3,7 @@ import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,7 +14,7 @@ import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -35,10 +36,11 @@ export default function Apps(props) {
 
 	useEffect(() => {
 		fetchApps();
+		refreshAccountContext();
 	}, [resourceSlug]);
 
 	if (!apps) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>

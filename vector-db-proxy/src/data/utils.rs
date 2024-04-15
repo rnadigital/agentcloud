@@ -12,20 +12,20 @@ use crate::data::models::{Document as DocumentModel, Document, FileType, Sentenc
 use crate::data::text_splitting::TextSplitting;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
-use crate::queue::queuing::MyQueue;
+use crate::queue::queuing::Pool;
 
 pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
-    println!("Sentence Length: {}", sentences.len());
+    log::debug!("Sentence Length: {}", sentences.len());
     let mut distance = 1.0;
     if sentences.len() > 1 {
         for i in 0..sentences.len() - 1 {
             let embedding_current = &sentences[i].sentence_embedding;
             let embedding_next = &sentences[i + 1].sentence_embedding;
-            println!("Embedding  next: {}", embedding_next);
+            log::debug!("Embedding  next: {}", embedding_next);
             // Calculate cosine similarity
             let similarity = cosine_similarity(embedding_current, embedding_next);
-            println!("Similarity Score: {}", similarity);
+            log::debug!("Similarity Score: {}", similarity);
             // Convert to cosine distance
             distance = 1.0 - similarity;
 
@@ -67,7 +67,7 @@ pub async fn extract_text_from_file(
     file_path: &str,
     document_name: String,
     datasource_id: String,
-    queue: Arc<RwLock<MyQueue<String>>>,
+    queue: Arc<RwLock<Pool<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
     // redis_conn_pool: Arc<Mutex<RedisConnection>>,
@@ -112,8 +112,8 @@ pub async fn extract_text_from_file(
     // Once we have extracted the text from the file we no longer need the file and there file we delete from disk
     let path_clone = path.clone();
     match fs::remove_file(path_clone) {
-        Ok(_) => println!("File: {:?} successfully deleted", file_path),
-        Err(e) => println!(
+        Ok(_) => log::debug!("File: {:?} successfully deleted", file_path),
+        Err(e) => log::error!(
             "An error occurred while trying to delete file: {}. Error: {:?}",
             file_path, e
         ),

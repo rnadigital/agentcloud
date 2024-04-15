@@ -18,22 +18,24 @@ pub async fn process_messages(
 ) {
     // initiate variables
     let mongodb_connection = mongo_conn.read().await;
+    let mut message_count: Vec<u8> = vec![];
     // let redis_connection = redis_connection_pool.lock().await;
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
+            message_count.push(1);
+            log::debug!("'{}' messages arrived at process_messages module", message_count.len());
             match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
                 .await
             {
                 Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
                     Some(model_parameters) => {
-                        let vector_length = model_parameters.embeddingLength as u64;
                         let embedding_model_name = model_parameters.model;
-                        let embedding_model_name_clone = embedding_model_name.clone();
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         if let Value::Object(data_obj) = message_data {
                             let mut metadata = convert_serde_value_to_hashmap_string(data_obj);
                             if let Some(text_field) = embedding_field {
+                                log::debug!("text field: {}", text_field.as_str());
                                 let text = metadata.remove(text_field.as_str()).unwrap();
                                 metadata.insert("page_content".to_string(), text.to_owned());
                                 let mongo_conn_clone = Arc::clone(&mongo_conn);
@@ -42,41 +44,28 @@ pub async fn process_messages(
                                     &metadata,
                                     &text,
                                     Some(ds_clone),
-                                    EmbeddingModels::from(embedding_model_name),
-                                )
-                                    .await
-                                {
+                                    EmbeddingModels::from(embedding_model_name)).await {
                                     Ok(point_struct) => {
-                                        if let Ok(_bulk_upload_result) =
-                                            qdrant
-                                                .upsert_data_point_blocking(
-                                                    point_struct,
-                                                    Some(vector_length),
-                                                    Some(embedding_model_name_clone),
-                                                )
-                                                .await
-                                        {
-                                            // let _ = redis_connection.increment_count(&"some_key".to_string(), 1);
-                                        }
+                                        let _ = qdrant.upsert_data_point_blocking(point_struct).await;
                                     }
                                     Err(e) => {
-                                        eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
+                                        log::error!("An error occurred while upserting  point structs to Qdrant: {}", e);
                                     }
                                 }
                             }
                         }
                     }
                     None => {
-                        eprintln!("Model mongo object returned None!");
+                        log::error!("Model mongo object returned None!");
                     }
                 },
                 Err(e) => {
-                    println!("An error occurred: {}", e);
+                    log::error!("An error occurred: {}", e);
                 }
             }
         }
         Err(e) => {
-            eprintln!(
+            log::error!(
                 "An error occurred while attempting to convert message to JSON: {}",
                 e
             );

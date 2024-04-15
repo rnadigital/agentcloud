@@ -1,5 +1,6 @@
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -27,9 +28,9 @@ export default function Agents(props) {
 	useEffect(() => {
 		fetchAgents();
 	}, [resourceSlug]);
-	
+
 	if (agents == null) {
-		return 'Loading...'; //TODO: loader
+		return <Spinner />;
 	}
 
 	return (<>
@@ -58,7 +59,6 @@ export default function Agents(props) {
 			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 			buttonMessage={'New Agent'}
 		/>}
-		
 		<AgentList agents={agents} fetchAgents={fetchAgents} />
 
 	</>);

@@ -19,7 +19,9 @@ from models.sockets import SocketMessage, SocketEvents, Message
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
 from tools.global_tools import CustomHumanInput, GlobalBaseTool, get_papers_from_arxiv, openapi_request
-
+from redisClient.utilities import RedisClass
+NTH_CHUNK_CANCEL_CHECK = 20
+redis_con = RedisClass()
 
 class CrewAIBuilder:
 
@@ -174,10 +176,20 @@ class CrewAIBuilder:
                     exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm", "verbose"}
                 ),
                 step_callback=self.send_to_sockets,
+                stop_generating_check=self.stop_generating_check,
                 llm=model_obj,
                 tools=agent_tools_objs.values(),
                 verbose=True
             )
+
+    def stop_generating_check(self, step):
+        print(f"step: {step}")
+        print(f"step % NTH_CHUNK_CANCEL_CHECK: {step % NTH_CHUNK_CANCEL_CHECK}")
+        if step % NTH_CHUNK_CANCEL_CHECK == 0:
+            stop_flag = redis_con.get(f"{self.session_id}_stop")
+            print(f"stop_flag: {stop_flag}")
+            return stop_flag == "1"
+        return False
 
     def build_tasks(self):
         for key, task in self.tasks_models.items():

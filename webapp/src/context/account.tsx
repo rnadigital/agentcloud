@@ -28,13 +28,16 @@ export function AccountWrapper({ children, pageProps }) {
 	function refreshAccountContext() {
 		API.getAccount({ resourceSlug, memberId }, (data) => {
 			console.log('refreshAccountContext data', data?.account?.permissions);
-			setSharedState({
+			const updatedState = {
 				...pageProps,
 				...data,
 				...getTeamAndOrgName(data),
 				switching: false,
-				permissions: new Permission(data?.account?.permissions)
-			});
+			};;
+			if (data?.account?.permissions) {
+				updatedState['permissions'] = new Permission(data?.account?.permissions);
+			}
+			setSharedState(updatedState);
 		}, null, null);
 	}
 
@@ -45,12 +48,16 @@ export function AccountWrapper({ children, pageProps }) {
 			switching,
 		});
 	}
-	
+
 	useEffect(() => {
 		if (!sharedState || !sharedState.account) {
 			refreshAccountContext();
 		}
 	}, [router.asPath]);
+
+	useEffect(() => {
+		refreshAccountContext();
+	}, [resourceSlug, memberId]);
 
 	useEffect(() => {
 		if (sharedState?.account?.name) {

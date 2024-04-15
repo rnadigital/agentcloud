@@ -11,8 +11,8 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
 
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_upserting_queue;
-use crate::queue::queuing::MyQueue;
+use crate::queue::queuing::Pool;
+use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 
 pub struct TextExtraction;
 
@@ -54,7 +54,7 @@ impl TextExtraction {
                 }
                 Object::Stream(ref stream) => {
                     // Handling stream, customize as needed
-                    println!("Stream Data: {:?}", stream);
+                    log::debug!("Stream Data: {:?}", stream);
                     "Stream Data".to_string()
                 }
                 _ => "Unknown Type".to_string(),
@@ -149,7 +149,7 @@ impl TextExtraction {
                     }
                 }
                 None => {
-                    println!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
+                    log::warn!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
                 }
             }
         }
@@ -159,7 +159,7 @@ impl TextExtraction {
         &self,
         path: String,
         datasource_id: String,
-        queue: Arc<RwLock<MyQueue<String>>>,
+        queue: Arc<RwLock<Pool<String>>>,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         // redis_conn_pool: Arc<Mutex<RedisConnection>>,
@@ -174,14 +174,14 @@ impl TextExtraction {
                             let qdrant_conn = Arc::clone(&qdrant_conn);
                             let mongo_conn = Arc::clone(&mongo_conn);
                             let ds_clone = datasource_id.clone();
-                            add_message_to_embedding_upserting_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
+                            add_message_to_embedding_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
                         }
-                        Err(e) => { println!("An error occurred {}", e); }
+                        Err(e) => { log::error!("An error occurred {}", e); }
                     }
                 }
             }
             Err(e) => {
-                println!("An error occurred: {} ", e);
+                log::error!("An error occurred: {} ", e);
             }
         }
     }

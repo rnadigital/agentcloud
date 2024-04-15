@@ -21,7 +21,7 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
         .await;
 
     while res.is_err() {
-        println!("trying to connect after error");
+        log::debug!("trying to connect after error");
         sleep(Duration::from_millis(2000)).await;
         res = Connection::open(&OpenConnectionArguments::new(
             &connection_details.host,
@@ -58,10 +58,10 @@ pub async fn bind_queue_to_exchange(
     routing_key: &str,
 ) {
     if !connection.is_open() {
-        println!("Connection not open");
+        log::warn!("Connection not open");
         *connection = connect_rabbitmq(connection_details).await;
         *channel = channel_rabbitmq(connection).await;
-        println!("{}", connection);
+        log::debug!("{}", connection);
     }
     // Declaring the exchange on startup
     channel
@@ -77,7 +77,7 @@ pub async fn bind_queue_to_exchange(
         })
         .await {
         Ok(_) => {}
-        Err(e) => { println!("An error occurred while setting up the channel:{}", e) }
+        Err(e) => { log::error!("An error occurred while setting up the channel:{}", e) }
     }
     // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
@@ -99,7 +99,7 @@ pub async fn bind_queue_to_exchange(
                 Some((queue, _, _)) => {
                     //check if the channel is open, if not then open it
                     if !channel.is_open() {
-                        println!(
+                        log::warn!(
                             "Channel is not open, does exchange {} exist on rabbitMQ?",
                             exchange
                         );
@@ -116,7 +116,7 @@ pub async fn bind_queue_to_exchange(
             }
         }
         Err(e) => {
-            println!("An error occurred while setting up the queue: {}", e)
+            log::error!("An error occurred while setting up the queue: {}", e)
         }
     }
 }

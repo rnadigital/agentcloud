@@ -3,7 +3,9 @@
 # Get the width of the terminal
 terminal_width=$(tput cols)
 
-command -v docker-compose >/dev/null 2>&1 || { echo >&2 "docker-compose is required but it's not installed. Aborting."; exit 1; }
+if ! command -v docker-compose >/dev/null 2>&1 && ! docker compose version >/dev/null 2>&1; then
+    echo >&2 "docker compose is required but it's not installed. Aborting."
+fi
 command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
@@ -48,7 +50,7 @@ usage() {
     echo """Usage: $0 [options]
 
 Note: By default, vector-db-proxy \`cargo build\`'s without the \`--release\` flag, for faster builds during development.
-      To specify a different dockerfile (i.e the non dev one), do \`VECTOR_PROXY_DOCKERFILE=Dockerfile ./install.sh ...\`
+      To change this, set \RELEASE=true\` in your env before running install i.e \`RELEASE=true ./install.sh ...\`.
 
 Options:
 

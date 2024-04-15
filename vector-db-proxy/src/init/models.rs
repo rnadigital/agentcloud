@@ -19,6 +19,7 @@ pub struct GlobalData {
     pub redis_port: String,
     pub thread_percentage_utilisation: f64,
     pub use_gpu: String,
+    pub logging_level: String
 }
 
 impl GlobalData {
@@ -37,13 +38,15 @@ impl GlobalData {
             rabbitmq_username: dotenv::var("RABBITMQ_USERNAME").unwrap_or("guest".to_string()),
             rabbitmq_password: dotenv::var("RABBITMQ_PASSWORD").unwrap_or("guest".to_string()),
             mongo_uri: dotenv::var("MONGO_URI").unwrap_or("mongodb://localhost:27017".to_string()),
-            qdrant_uri: dotenv::var("QDRANT_URI").unwrap_or("htttp://localhost:6334".to_string()),
+            qdrant_uri: dotenv::var("QDRANT_URI").unwrap_or("http://localhost:6334".to_string()),
             webapp_host: dotenv::var("WEBAPP_HOST").unwrap_or("localhost".to_string()),
             webapp_port: dotenv::var("WEBAPP_PORT").unwrap_or("3000".to_string()),
             redis_host: dotenv::var("REDIS_HOST").unwrap_or("localhost".to_string()),
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
-            thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION").unwrap().parse().unwrap_or(0.8),
+            thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION")
+                .unwrap_or("0.8".to_string()).parse().unwrap_or(0.8),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
+            logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("warn".to_string()),
         }
     }
 }
