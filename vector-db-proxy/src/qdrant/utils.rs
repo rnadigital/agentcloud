@@ -167,7 +167,7 @@ impl Qdrant {
                             }
                         },
                         Err(e) => {
-                            println!("Err: {}", e);
+                            log::error!("Error: {}", e);
                             Err(anyhow!(
                             "An error occurred while trying to create collection: {}",
                             e
@@ -247,7 +247,7 @@ impl Qdrant {
                         },
                         None => return Err(anyhow!("Results returned None")),
                     },
-                    Err(e) => println!("Error upserting to Qdrant: {}, retrying...", e),
+                    Err(e) => log::error!("Error upserting to Qdrant: {}, retrying...", e),
                 }
 
                 if backoff.next_backoff().is_none() {
@@ -328,7 +328,7 @@ impl Qdrant {
                 }
             },
             Err(e) => {
-                println!("Err: {}", e);
+                log::error!("Error: {}", e);
                 Err(anyhow!(
                     "An error occurred while trying to create collection: {}",
                     e

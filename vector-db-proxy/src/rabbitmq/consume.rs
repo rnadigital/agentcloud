@@ -96,17 +96,17 @@ pub async fn subscribe_to_queue(
                                                                             Ok(_) => {
                                                                                 println!("points uploaded successfully!");
                                                                                 if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
-                                                                                    println!("Error notifying webapp: {}", e);
+                                                                                    log::error!("Error notifying webapp: {}", e);
                                                                                 } else {
                                                                                     println!("Webapp notified successfully!");
                                                                                 }
                                                                             }
                                                                             Err(e) => {
-                                                                                println!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
+                                                                                log::error!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
                                                                             }
                                                                         }
                                                                     }
-                                                                    Err(e) => println!("Error: {}", e),
+                                                                    Err(e) => log::error!("Error: {}", e),
                                                                 }
                                                             }
                                                             None => {
@@ -123,13 +123,13 @@ pub async fn subscribe_to_queue(
                                                 }
                                             }
                                         } else {
-                                            eprintln!(
+                                            log::error!(
                                                 "There was no embedding model associated with datasource: {}",
                                                 datasource_id
                                             )
                                         }
                                     }
-                                    Err(e) => { println!("Could not find associated datasource: {}", e) }
+                                    Err(e) => { log::error!("Could not find associated datasource: {}", e) }
                                 }
                             }
                         } else {
@@ -137,11 +137,11 @@ pub async fn subscribe_to_queue(
                         }
                     }
                     if let Err(e) = channel.basic_cancel(BasicCancelArguments::new(&ctag)).await {
-                        println!("error {}", e);
+                        log::error!("Error {}", e);
                     };
                 }
             }
         }
-        Err(e) => { println!("Error consuming message from rabbit: {}", e) }
+        Err(e) => { log::error!("Error consuming message from rabbit: {}", e) }
     }
 }

@@ -44,14 +44,14 @@ pub async fn get_embedding_model(db: &Database, datasource_id: &str) -> Result<O
             {
                 Ok(model) => Ok(model), // Return the model if found (could be Some or None)
                 Err(e) => {
-                    println!("Error: {}", e);
+                    log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))
                 }
             }
         }
         Ok(None) => Ok(None), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
-            println!("Error: {}", e);
+            log::error!("Error: {}", e);
             Err(anyhow!("Failed to find datasource: {}", e))
         }
     }
@@ -80,14 +80,14 @@ pub async fn get_embedding_model_and_embedding_key(
             {
                 Ok(model) => Ok((model, datasource.embeddingField)), // Return the model if found (could be Some or None)
                 Err(e) => {
-                    println!("Error: {}", e);
+                    log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))
                 }
             }
         }
         Ok(None) => Ok((None, None)), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
-            println!("Error: {}", e);
+            log::error!("Error: {}", e);
             Err(anyhow!("Failed to find datasource: {}", e))
         }
     }
@@ -131,14 +131,14 @@ pub async fn get_model_credentials(
                 } // Return the model if found (could be Some or None)
                 Ok(None) => Ok(None),
                 Err(e) => {
-                    println!("Error: {}", e);
+                    log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))
                 }
             }
         }
         Ok(None) => Ok(None), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
-            println!("Error: {}", e);
+            log::error!("Error: {}", e);
             Err(anyhow!("Failed to find datasource: {}", e))
         }
     }

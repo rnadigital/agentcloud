@@ -214,12 +214,12 @@ impl Chunking for TextChunker {
                             let ds_clone = datasource_id.clone();
                             add_message_to_embedding_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
                         }
-                        Err(e) => { println!("An error occurred {}", e); }
+                        Err(e) => { log::error!("An error occurred {}", e); }
                     }
                 }
             }
             Err(e) => {
-                println!("An error occurred: {} ", e);
+                log::error!("An error occurred: {} ", e);
             }
         }
     }

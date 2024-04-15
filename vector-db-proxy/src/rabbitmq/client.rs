@@ -77,7 +77,7 @@ pub async fn bind_queue_to_exchange(
         })
         .await {
         Ok(_) => {}
-        Err(e) => { println!("An error occurred while setting up the channel:{}", e) }
+        Err(e) => { log::error!("An error occurred while setting up the channel:{}", e) }
     }
     // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
@@ -116,7 +116,7 @@ pub async fn bind_queue_to_exchange(
             }
         }
         Err(e) => {
-            println!("An error occurred while setting up the queue: {}", e)
+            log::error!("An error occurred while setting up the queue: {}", e)
         }
     }
 }

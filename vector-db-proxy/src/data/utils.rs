@@ -82,7 +82,7 @@ pub async fn extract_text_from_file(
     let path_clone = path.clone();
     match fs::remove_file(path_clone) {
         Ok(_) => println!("File: {:?} successfully deleted", file_path),
-        Err(e) => println!(
+        Err(e) => log::error!(
             "An error occurred while trying to delete file: {}. Error: {:?}",
             file_path, e
         ),

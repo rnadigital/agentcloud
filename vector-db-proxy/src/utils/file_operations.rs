@@ -49,7 +49,7 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
                                     Some(result)
                                 }
                                 Err(e) => {
-                                    println!("An error occurred while reading file from GCS: {}", e);
+                                    log::error!("An error occurred while reading file from GCS: {}", e);
                                     None
                                 }
                             }
@@ -69,7 +69,7 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
                                 Some(results)
                             }
                             Err(e) => {
-                                println!("An error occurred while reading file from DISK, {}", e);
+                                log::error!("An error occurred while reading file from DISK, {}", e);
                                 None
                             }
                         }

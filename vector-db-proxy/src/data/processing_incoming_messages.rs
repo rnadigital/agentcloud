@@ -49,23 +49,23 @@ pub async fn process_messages(
                                         let _ = qdrant.upsert_data_point_blocking(point_struct).await;
                                     }
                                     Err(e) => {
-                                        eprintln!("An error occurred while upserting  point structs to Qdrant: {}", e);
+                                        log::error!("An error occurred while upserting  point structs to Qdrant: {}", e);
                                     }
                                 }
                             }
                         }
                     }
                     None => {
-                        eprintln!("Model mongo object returned None!");
+                        log::error!("Model mongo object returned None!");
                     }
                 },
                 Err(e) => {
-                    println!("An error occurred: {}", e);
+                    log::error!("An error occurred: {}", e);
                 }
             }
         }
         Err(e) => {
-            eprintln!(
+            log::error!(
                 "An error occurred while attempting to convert message to JSON: {}",
                 e
             );
