@@ -73,6 +73,7 @@ async fn main() -> std::io::Result<()> {
     log::info!("Starting Vector DB Proxy APP...");
     let global_data = GLOBAL_DATA.read().await;
     let _ = set_all_env_vars().await;
+    let logging_level = global_data.logging_level.clone();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
     // Set the default logging level
@@ -118,7 +119,7 @@ async fn main() -> std::io::Result<()> {
         )
             .await;
     });
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
         log::info!("Running on http://{}:{}", host.clone(), port.clone());
         let server = HttpServer::new(move || {

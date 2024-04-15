@@ -19,6 +19,7 @@ pub struct GlobalData {
     pub redis_port: String,
     pub thread_percentage_utilisation: f64,
     pub use_gpu: String,
+    pub logging_level: String
 }
 
 impl GlobalData {
@@ -45,6 +46,7 @@ impl GlobalData {
             thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION")
                 .unwrap_or("0.8".to_string()).parse().unwrap_or(0.8),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
+            logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("warn".to_string()),
         }
     }
 }
