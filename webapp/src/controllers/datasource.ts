@@ -187,11 +187,11 @@ export async function testDatasourceApi(req, res, next) {
 	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
 
 	// Create the collection in qdrant
-	try {
-		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
-	} catch (e) {
-		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
-	}
+	// try {
+	// 	await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+	// } catch (e) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+	// }
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
