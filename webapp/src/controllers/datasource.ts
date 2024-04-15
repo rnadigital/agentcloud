@@ -7,6 +7,7 @@ import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool } from 'db/tool';
+import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { sendMessage } from 'lib/rabbitmq/send';
@@ -23,6 +24,7 @@ import { DatasourceScheduleType } from 'struct/schedule';
 import { ToolType } from 'struct/tool';
 import { promisify } from 'util';
 import VectorDBProxy from 'vectordb/proxy';
+const log = debug('webapp:controllers:datasource');
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 const ajv = new Ajv({ strict: 'log' });
@@ -125,7 +127,7 @@ export async function testDatasourceApi(req, res, next) {
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
 	if (!submittedConnector) {
@@ -133,58 +135,79 @@ export async function testDatasourceApi(req, res, next) {
 	}
 	const newDatasourceId = new ObjectId();
 	const spec = submittedConnector.spec_oss.connectionSpecification;
-	// console.log(JSON.stringify(spec, null, 2));
+	// log(JSON.stringify(spec, null, 2));
 	try {
 		const validate = ajv.compile(spec);
 		const validated = validate(req.body.sourceConfig);
 		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
-			console.log('validate.errors', validate?.errors);
+			log('validate.errors', validate?.errors);
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	} catch (e) {
-		console.log(e);
+		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	// Create source in airbyte based on the validated form
-	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
-	updateDateStrings(req.body.sourceConfig);
-	const sourceBody = {
-		configuration: {
-			//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
-			sourceType,
-			...req.body.sourceConfig,
-		},
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-		name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
-	};
-	console.log('sourceBody', sourceBody);	
-	const createdSource = await sourcesApi
-		.createSource(null, sourceBody)
-		.then(res => res.data);
-	console.log('createdSource', createdSource);
+	let createdSource;
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;		
+	try {
+		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+		updateDateStrings(req.body.sourceConfig);
+		const sourceBody = {
+			configuration: {
+				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
+				sourceType,
+				...req.body.sourceConfig,
+			},
+			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+			name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
+		};
+		log('sourceBody', sourceBody);	
+		createdSource = await sourcesApi
+			.createSource(null, sourceBody)
+			.then(res => res.data);
+		log('createdSource', createdSource);
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, { error: `Failed to create datasource: ${e?.response?.data?.detail || e}` });
+	}
 
 	// Test connection to the source
-	const internalApi = await getAirbyteInternalApi();
-	const checkConnectionBody = {
-		sourceId: createdSource.sourceId,
-	};
-	console.log('checkConnectionBody', checkConnectionBody);
-	const connectionTest = await internalApi
-		.checkConnectionToSource(null, checkConnectionBody)
-		.then(res => res.data);
-	console.log('connectionTest', connectionTest);
+	let internalApi;
+	try {
+		internalApi = await getAirbyteInternalApi();
+		const checkConnectionBody = {
+			sourceId: createdSource.sourceId,
+		};
+		log('checkConnectionBody', checkConnectionBody);
+		const connectionTest = await internalApi
+			.checkConnectionToSource(null, checkConnectionBody)
+			.then(res => res.data);
+		log('connectionTest', connectionTest);
+		if (connectionTest?.status === 'failed') {
+			return dynamicResponse(req, res, 400, { error: `Datasource connection test failed: ${connectionTest.message}` });
+		}
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, { error: `Datasource connection test failed: ${e?.response?.data?.detail || e}` });
+	}
 
 	// Discover the schema
-	const discoverSchemaBody = {
-		sourceId: createdSource.sourceId,
-	};
-	console.log('discoverSchemaBody', discoverSchemaBody);
-	const discoveredSchema = await internalApi
-		.discoverSchemaForSource(null, discoverSchemaBody)
-		.then(res => res.data);
-	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+	let discoveredSchema;
+	try {
+		const discoverSchemaBody = {
+			sourceId: createdSource.sourceId,
+		};
+		log('discoverSchemaBody', discoverSchemaBody);
+		discoveredSchema = await internalApi
+			.discoverSchemaForSource(null, discoverSchemaBody)
+			.then(res => res.data);
+		log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, { error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}` });
+	}
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
@@ -311,11 +334,11 @@ export async function addDatasourceApi(req, res, next) {
 			},
 		};
 	}
-	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
-	console.log('createdConnection', JSON.stringify(createdConnection, null, 2));
+	log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -326,7 +349,7 @@ export async function addDatasourceApi(req, res, next) {
 	const createdJob = await jobsApi
 		.createJob(null, jobBody)
 		.then(res => res.data);
-	console.log('createdJob', createdJob);
+	log('createdJob', createdJob);
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
@@ -409,11 +432,11 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	} else {
 		delete connectionBody['scheduleData'];
 	}
-	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
 		.updateConnection(null, connectionBody)
 		.then(res => res.data);
-	console.log('updatedConnection', updatedConnection);
+	log('updatedConnection', updatedConnection);
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
@@ -514,18 +537,18 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 			},
 		};
 	}
-	console.log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	let updatedConnection;
 	if (connectionBody?.connectionId) {
 		updatedConnection = await connectionsApi
 			.updateConnection(null, connectionBody)
 			.then(res => res.data);
-		console.log('updatedConnection', updatedConnection);
+		log('updatedConnection', updatedConnection);
 	} else {
 		updatedConnection = await connectionsApi
 			.createConnection(null, connectionBody)
 			.then(res => res.data);
-		console.log('createdConnection', JSON.stringify(updatedConnection, null, 2));
+		log('createdConnection', JSON.stringify(updatedConnection, null, 2));
 	}
 
 	if (sync === true) {
@@ -538,7 +561,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		const createdJob = await jobsApi
 			.createJob(null, jobBody)
 			.then(res => res.data);
-		console.log('createdJob', createdJob);
+		log('createdJob', createdJob);
 	}
 
 	// Update the datasource with the connection settings and sync date
@@ -578,7 +601,7 @@ export async function syncDatasourceApi(req, res, next) {
 		.createJob(null, jobBody)
 		.then(res => res.data)
 		.catch(err => err.data);
-	console.log('createdJob', createdJob);
+	log('createdJob', createdJob);
 
 	// Update the datasource with the connection settings and sync date
 	// await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());
@@ -625,7 +648,7 @@ export async function deleteDatasourceApi(req, res, next) {
 		const resetJob = await jobsApi
 			.createJob(null, jobBody)
 			.then(res => res.data);
-		console.log('resetJob', resetJob);
+		log('resetJob', resetJob);
 
 		// Delete the connection in airbyte
 		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -645,7 +668,7 @@ export async function deleteDatasourceApi(req, res, next) {
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
-				console.log(err);
+				log(err);
 				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
 			}
 		}
@@ -672,7 +695,7 @@ export async function deleteDatasourceApi(req, res, next) {
 export async function uploadFileApi(req, res, next) {
 
 	const { modelId, name, datasourceDescription } = req.body;
-	console.log(modelId, name, datasourceDescription);
+	log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
 			|| !name || typeof name !== 'string') {
