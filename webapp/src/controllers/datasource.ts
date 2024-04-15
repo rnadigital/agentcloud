@@ -328,6 +328,7 @@ export async function addDatasourceApi(req, res, next) {
 	try {
 		await VectorDBProxy.createCollectionInQdrant(datasourceId);
 	} catch (e) {
+		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
 
@@ -547,6 +548,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		try {
 			await VectorDBProxy.createCollectionInQdrant(datasourceId);
 		} catch (e) {
+			console.error(e);
 			return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 		}
 		// Create a job to trigger the connection to sync
@@ -591,6 +593,7 @@ export async function syncDatasourceApi(req, res, next) {
 	try {
 		await VectorDBProxy.createCollectionInQdrant(datasourceId);
 	} catch (e) {
+		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
 
@@ -639,6 +642,7 @@ export async function deleteDatasourceApi(req, res, next) {
 	try {
 		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
 	} catch (e) {
+		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to delete points from vector database, please try again later.' });
 	}
 
@@ -751,6 +755,7 @@ export async function uploadFileApi(req, res, next) {
 	try {
 		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
 	} catch (e) {
+		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
 
