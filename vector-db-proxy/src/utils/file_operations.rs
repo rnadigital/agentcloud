@@ -9,7 +9,7 @@ use crate::utils::models::FileSources;
 
 pub async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> anyhow::Result<()> {
     let file_path = file_name.trim_matches('"');
-    log::debug!("File path : {}", file_path);
+    log::info!("File path : {}", file_path);
     let mut file = File::create(file_path)?;
     file.write_all(&content)?; // handle errors
     Ok(())
@@ -74,14 +74,14 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
                             }
                         }
                     } else {
-                        log::warn!("No file path in message data...can not read file!");
+                        log::error!("No file path in message data");
                         None
                     }
                 }
                 FileSources::UNKNOWN => {
                     None
                 }
-            }
+            };
         }
         None => {
             None

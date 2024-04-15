@@ -23,7 +23,6 @@ log = "0.4.20"
 mongodb = "2.8.2"
 num-traits = "0.2.16"
 qdrant-client = "^1.8.0"
-queues = "1.1.0"
 serde = "1.0.185"
 serde_json = "1.0.105"
 thiserror = "1.0.47"
@@ -57,6 +56,7 @@ threadpool = "1.8.1"
 reqwest = { version = "0.12.0", features = ["json"] }
 redis = { version = "0.25.2", features = ["tokio-comp", "serde", "serde_json", "r2d2"] }
 r2d2_redis = "0.14.0"
+crossbeam = { version = "0.8.4", features = ["crossbeam-channel"] }
 
 [features]
 default = ["cuda_rocm"]
