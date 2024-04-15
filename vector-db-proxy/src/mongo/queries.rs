@@ -73,6 +73,7 @@ pub async fn get_embedding_model_and_embedding_key(
         .await
     {
         Ok(Some(datasource)) => {
+            log::debug!("Found datasource: {}", datasource._id);
             // If datasource is found, attempt to find the related model.
             match models_collection
                 .find_one(doc! {"_id": datasource.modelId}, None)
@@ -85,7 +86,10 @@ pub async fn get_embedding_model_and_embedding_key(
                 }
             }
         }
-        Ok(None) => Ok((None, None)), // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
+        Ok(None) => {
+            log::warn!("Query returned None");
+            Ok((None, None))
+        } // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
             log::error!("Error: {}", e);
             Err(anyhow!("Failed to find datasource: {}", e))
