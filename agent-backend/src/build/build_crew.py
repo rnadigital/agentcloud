@@ -148,7 +148,8 @@ class CrewAIBuilder:
                                    "id",
                                    "name",
                                    "embeddingLength",
-                                   "model_name"}),
+                                   "model_name",
+                                   "modelType"}),
             model_name=overwrite_model_name)
 
     def build_models_with_credentials(self):
