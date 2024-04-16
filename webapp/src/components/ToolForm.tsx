@@ -43,7 +43,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
-	const [toolName, setToolName] = useState(tool?.data?.name || '');
+	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
