@@ -383,7 +383,7 @@ export async function addDatasourceApi(req, res, next) {
 	await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-		name: `"${datasourceName}" RAG tool`,
+		name: datasourceName,
 		description: datasourceDescription,
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(datasourceId),
@@ -801,7 +801,7 @@ export async function uploadFileApi(req, res, next) {
 	await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-		name: `"${name}" RAG tool`,
+		name: name,
 		description: datasourceDescription,
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(newDatasourceId),
