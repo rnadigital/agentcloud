@@ -308,7 +308,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 2:
 				return <span className='flex'>
 					<div className='w-full m-auto'>
-						{error && <div className='mb-4'><ErrorAlert error={error} /></div>}
+						{error && !spec?.schema && <div className='mb-4'><ErrorAlert error={error} /></div>}
 						<Select
 							isClearable
 							isSearchable
