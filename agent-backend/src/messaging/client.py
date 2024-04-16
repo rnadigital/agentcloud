@@ -2,7 +2,6 @@ import logging
 import random
 import time
 from build.get_crew_components import construct_crew, looping_app, session_terminated
-from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
 import threading
@@ -33,7 +32,7 @@ def backoff(attempt, base_delay=1.0, max_delay=60):
 
 
 def execute_task(data: dict):
-    with log_exception():
+    try:
         session_id = data.get("sessionId")
         socket = None
         loop_max = 20
@@ -45,3 +44,5 @@ def execute_task(data: dict):
             loop_max = loop_max - 1
             if looping_app(app) == False or loop_max < 1 or session_terminated(session_id):
                 break
+    except Exception as e:
+        logging.exception(f"Error occurred during task execution: {e}")

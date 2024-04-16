@@ -11,17 +11,19 @@ import models.mongo
 from models.mongo import AppType, ToolType
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
-from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
+from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, SOCKET_URL
 from typing import Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from models.sockets import SocketMessage, SocketEvents, Message
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
-from tools.global_tools import CustomHumanInput, GlobalBaseTool, get_papers_from_arxiv, openapi_request
+from tools.global_tools import CustomHumanInput, GlobalBaseTool
 from redisClient.utilities import RedisClass
+
 NTH_CHUNK_CANCEL_CHECK = 20
 redis_con = RedisClass()
+
 
 class CrewAIBuilder:
 
@@ -211,8 +213,9 @@ class CrewAIBuilder:
             return "=== START of Current context: ===\n" + "\n".join(map(
                 lambda chat: f"""{chat["role"]}: {chat["content"]}""",
                 filter(
-                    lambda chat: "role" in chat and "content" in chat and len(chat["content"]) > 0 and len(chat["role"]) > 0,
-                       self.chat_history
+                    lambda chat: "role" in chat and "content" in chat and len(chat["content"]) > 0 and len(
+                        chat["role"]) > 0,
+                    self.chat_history
                 )
             )) + "\n=== END of Current context: ===\n"
         else:
@@ -298,11 +301,12 @@ class CrewAIBuilder:
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
+            manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
             verbose=True
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble", author_name="System"):
+    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
+                        author_name="System"):
 
         # test isnt string, its agentaction, etc
         if type(text) != str:
@@ -342,6 +346,3 @@ class CrewAIBuilder:
     def run_crew(self):
         self.crew.kickoff()
         print("FINISHED!")
-
-    
-    
