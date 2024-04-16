@@ -36,7 +36,7 @@ export default function ToolList({ tools, fetchTools }) {
 							<div className='flex items-center space-x-3'>
 								<h3 className='truncate text-sm font-medium text-gray-900 dark:text-white'>{tool.name}</h3>
 							</div>
-							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>{tool.type} - {tool.data.description}</p>
+							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>{tool.type} - {tool?.data?.description || tool?.description}</p>
 						</div>
 						<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold pt-1'>
 							<span>{tool.name.charAt(0).toUpperCase()}</span>
