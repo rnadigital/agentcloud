@@ -14,14 +14,17 @@ from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
 from typing import Dict
 from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from models.sockets import SocketMessage, SocketEvents, Message
 from tools import CodeExecutionTool, RagTool  # , RagToolFactory
 from messaging.send_message_to_socket import send
 from tools.global_tools import CustomHumanInput, GlobalBaseTool, get_papers_from_arxiv, openapi_request
 from redisClient.utilities import RedisClass
+
 NTH_CHUNK_CANCEL_CHECK = 20
 redis_con = RedisClass()
+
 
 class CrewAIBuilder:
 
@@ -87,6 +90,67 @@ class CrewAIBuilder:
                 )
             )
 
+    @staticmethod
+    def _build_openai_model_with_credential(credential, model):
+        if model.modelType == models.mongo.ModelType.embedding:
+            return OpenAIEmbeddings(
+                api_key=credential.credentials.api_key,
+                model=model.model_name,
+                **model.model_dump(
+                    exclude_none=True,
+                    exclude_unset=True,
+                    exclude={
+                        "id",
+                        "credentialId",
+                        "modelType",
+                        "model_name"
+                    }
+                )
+            )
+        else:
+            return ChatOpenAI(
+                api_key=credential.credentials.api_key,
+                **model.model_dump(
+                    exclude_none=True,
+                    exclude_unset=True,
+                    exclude={
+                        "id",
+                        "credentialId",
+                        "embeddingLength",
+                        "modelType"
+                    }
+                )
+            )
+
+    @staticmethod
+    def _build_azure_model_with_credential(credential, model):
+        return AzureChatOpenAI(
+            api_key=credential.credentials.api_key,
+            **model.model_dump(
+                exclude_none=True,
+                exclude_unset=True,
+                exclude={
+                    "id",
+                    "credentialId",
+                    "embeddingLength"
+                }
+            )
+        )
+
+    def _build_fastembed_model_with_credential(self, credential, model):
+        overwrite_model_name = self.fastembed_standard_doc_name_swap(
+            model.model_name,
+            from_standard_to_doc=True
+        )
+        return FastEmbedEmbeddings(
+            **model.model_dump(exclude_none=True, exclude_unset=True,
+                               exclude={
+                                   "id",
+                                   "name",
+                                   "embeddingLength",
+                                   "model_name"}),
+            model_name=overwrite_model_name)
+
     def build_models_with_credentials(self):
         for key, model in self.models_models.items():
             credential = match_key(self.credentials_models, key)
@@ -94,44 +158,11 @@ class CrewAIBuilder:
                 match credential.type:
                     # todo: need to find a way to load these class dynamically rather than having all these switch statements
                     case models.mongo.Platforms.ChatOpenAI:
-                        self.crew_models[key] = ChatOpenAI(
-                            api_key=credential.credentials.api_key,
-                            **model.model_dump(
-                                exclude_none=True,
-                                exclude_unset=True,
-                                exclude={
-                                    "id",
-                                    "credentialId",
-                                    "embeddingLength"
-                                }
-                            )
-                        )
+                        self.crew_models[key] = self._build_openai_model_with_credential(credential, model)
                     case models.mongo.Platforms.AzureChatOpenAI:
-                        self.crew_models[key] = AzureChatOpenAI(
-                            api_key=credential.credentials.api_key,
-                            **model.model_dump(
-                                exclude_none=True,
-                                exclude_unset=True,
-                                exclude={
-                                    "id",
-                                    "credentialId",
-                                    "embeddingLength"
-                                }
-                            )
-                        )
+                        self.crew_models[key] = self._build_azure_model_with_credential(credential, model)
                     case models.mongo.Platforms.FastEmbed:
-                        overwrite_model_name = self.fastembed_standard_doc_name_swap(
-                            model.model_name,
-                            from_standard_to_doc=True
-                        )
-                        self.crew_models[key] = FastEmbedEmbeddings(
-                            **model.model_dump(exclude_none=True, exclude_unset=True,
-                                               exclude={
-                                                   "id",
-                                                   "name",
-                                                   "embeddingLength",
-                                                   "model_name"}),
-                            model_name=overwrite_model_name)
+                        self.crew_models[key] = self._build_fastembed_model_with_credential(credential, model)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -211,8 +242,9 @@ class CrewAIBuilder:
             return "=== START of Current context: ===\n" + "\n".join(map(
                 lambda chat: f"""{chat["role"]}: {chat["content"]}""",
                 filter(
-                    lambda chat: "role" in chat and "content" in chat and len(chat["content"]) > 0 and len(chat["role"]) > 0,
-                       self.chat_history
+                    lambda chat: "role" in chat and "content" in chat and len(chat["content"]) > 0 and len(
+                        chat["role"]) > 0,
+                    self.chat_history
                 )
             )) + "\n=== END of Current context: ===\n"
         else:
@@ -298,11 +330,12 @@ class CrewAIBuilder:
                 exclude_none=True, exclude_unset=True,
                 exclude={"id", "tasks", "agents"}
             ),
-            manager_llm = match_key(self.crew_models, keyset(self.crew_model.id)),
+            manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
             verbose=True
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble", author_name="System"):
+    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
+                        author_name="System"):
 
         # test isnt string, its agentaction, etc
         if type(text) != str:
@@ -342,6 +375,3 @@ class CrewAIBuilder:
     def run_crew(self):
         self.crew.kickoff()
         print("FINISHED!")
-
-    
-    

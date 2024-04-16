@@ -26,7 +26,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
 
 
-class ModelType(str, Enum):
+class ModelVariant(str, Enum):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     GPT4 = "gpt-4"
     GPT4TURBO = "gpt-4-1106-preview"
@@ -93,11 +93,17 @@ class Credentials(BaseModel):
     credentials: Optional[ApiCredentials] = None
 
 
+class ModelType(str, Enum):
+    llm = 'llm'
+    embedding = 'embedding'
+
+
 class Model(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     name: str
-    model_name: Optional[str] = Field(default=ModelType.GPT4, alias="model")
+    model_name: Optional[str] = Field(default=ModelVariant.GPT4, alias="model")
+    modelType: ModelType
     credentialId: Optional[PyObjectId] = None
     credentials: Optional[PyObjectId] = None
     embeddingLength: Optional[int] = 384
@@ -112,7 +118,7 @@ class ChatModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     api_key: Optional[str] = None
-    model_name: Optional[ModelType] = Field(default=ModelType.GPT4, alias="model")
+    model_name: Optional[ModelVariant] = Field(default=ModelVariant.GPT4, alias="model")
     seed: Optional[int] = randint(1, 100)
     temperature: Optional[float] = 0
     timeout: Optional[int] = 300
@@ -158,13 +164,13 @@ class Agent(BaseModel):
     role: str
     goal: str
     backstory: str
-    llm: Optional[Model] = ModelType.GPT4
+    llm: Optional[Model] = ModelVariant.GPT4
     toolIds: Optional[List[PyObjectId]] = None
     taskIds: Optional[List[PyObjectId]] = None
     modelId: PyObjectId
     tools: Optional[List[Tool]] = None
     tasks: Optional[List[Task]] = None
-    functionCallingLLM: Optional[Model] = ModelType.GPT4
+    functionCallingLLM: Optional[Model] = ModelVariant.GPT4
     maxIter: Optional[int] = 10
     maxRPM: Optional[int] = 100
     verbose: Optional[bool] = False
