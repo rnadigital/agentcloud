@@ -42,7 +42,7 @@ pub struct DataSources {
     pub status: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum ChunkingStrategy {
     SEMANTIC_CHUNKING,
     CHARACTER_CHUNKING,

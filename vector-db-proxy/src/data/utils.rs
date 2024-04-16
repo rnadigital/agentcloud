@@ -22,7 +22,6 @@ pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
         for i in 0..sentences.len() - 1 {
             let embedding_current = &sentences[i].sentence_embedding;
             let embedding_next = &sentences[i + 1].sentence_embedding;
-            log::debug!("Embedding  next: {}", embedding_next);
             // Calculate cosine similarity
             let similarity = cosine_similarity(embedding_current, embedding_next);
             log::debug!("Similarity Score: {}", similarity);
@@ -65,33 +64,31 @@ pub fn percentile(values: &Vec<f32>, percentile: usize) -> f32 {
 pub async fn extract_text_from_file(
     file_type: FileType,
     file_path: &str,
-    document_name: String,
     datasource_id: String,
     queue: Arc<RwLock<Pool<String>>>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
     // redis_conn_pool: Arc<Mutex<RedisConnection>>,
-) -> Option<(String, Option<HashMap<String, String>>)> {
-    let mut document_text = String::new();
-    let mut metadata = HashMap::new();
+) -> Option<Vec<(String, HashMap<String, String>)>> {
     let path = file_path.trim_matches('"').path().to_string();
     let chunker = TextExtraction::default();
+    let mut document_data: Vec<(String, HashMap<String, String>)> = vec![];
     match file_type {
         FileType::PDF => {
             let path_clone = path.clone();
-            (document_text, metadata) = chunker
+            document_data = chunker
                 .extract_text_from_pdf(path_clone)
                 .expect("Could not extract text from PDF file");
         }
         FileType::TXT => {
             let path_clone = path.clone();
-            (document_text, metadata) = chunker
+            document_data = chunker
                 .extract_text_from_txt(path_clone)
                 .expect("Could not extract text from TXT file");
         }
         FileType::DOCX => {
             let path_clone = path.clone();
-            (document_text, metadata) = chunker
+            document_data = chunker
                 .extract_text_from_docx(path_clone)
                 .expect("Could not extract text from DOCX file");
         }
@@ -118,9 +115,7 @@ pub async fn extract_text_from_file(
             file_path, e
         ),
     }
-    metadata.insert(String::from("document name"), document_name);
-    let results = (document_text, Some(metadata));
-    Some(results)
+    Some(document_data)
 }
 
 pub async fn apply_chunking_strategy_to_document(

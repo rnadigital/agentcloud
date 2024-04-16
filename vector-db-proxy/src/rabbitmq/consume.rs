@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
 use mongodb::Database;
@@ -60,52 +59,53 @@ pub async fn subscribe_to_queue(
                                                             let mongo_conn = Arc::clone(&mongo_client);
                                                             // let redis_conn = Arc::clone(&redis_connection_pool);
                                                             let datasource_clone = ds.clone();
-                                                            let (document_text, metadata) =
-                                                                extract_text_from_file(file_type, file_path.as_str(), ds.originalName, datasource_id.to_string(), message_queue, qdrant_conn, mongo_conn).await.unwrap();
+                                                            let document_data = extract_text_from_file(file_type, file_path.as_str(), datasource_id.to_string(), message_queue, qdrant_conn, mongo_conn).await.unwrap();
                                                             // dynamically get user's chunking strategy of choice from the database
                                                             let model_obj_clone = model_parameters.clone();
                                                             let model_name = model_obj_clone.model;
                                                             let chunking_character = datasource_clone.chunkCharacter;
                                                             let chunking_method = datasource_clone.chunkStrategy.unwrap();
                                                             let chunking_strategy = ChunkingStrategy::from(chunking_method);
-                                                            let mongo_conn_clone = Arc::clone(&mongo_client);
-                                                            match apply_chunking_strategy_to_document(document_text, metadata, chunking_strategy, chunking_character, Some(model_parameters.model), mongo_conn_clone, datasource_id.to_string())
-                                                                .await {
-                                                                Ok(chunks) => {
-                                                                    let mut points_to_upload: Vec<PointStruct> = vec![];
-                                                                    for element in chunks.iter() {
-                                                                        let embedding_vector =
-                                                                            &element.embedding_vector;
-                                                                        match embedding_vector {
-                                                                            Some(val) => {
-                                                                                let model = EmbeddingModels::from(model_name.clone());
-                                                                                if let Some(point_struct) = construct_point_struct(val, element.metadata.clone().unwrap(), Some(model)).await {
-                                                                                    points_to_upload.push(point_struct)
+                                                            for (document_text, metadata) in document_data {
+                                                                let mongo_conn_clone = Arc::clone(&mongo_client);
+                                                                match apply_chunking_strategy_to_document(document_text, Some(metadata), chunking_strategy, chunking_character.clone(), Some(model_parameters.model.clone()), mongo_conn_clone, datasource_id.to_string())
+                                                                    .await {
+                                                                    Ok(chunks) => {
+                                                                        let mut points_to_upload: Vec<PointStruct> = vec![];
+                                                                        for element in chunks.iter() {
+                                                                            let embedding_vector =
+                                                                                &element.embedding_vector;
+                                                                            match embedding_vector {
+                                                                                Some(val) => {
+                                                                                    let model = EmbeddingModels::from(model_name.clone());
+                                                                                    if let Some(point_struct) = construct_point_struct(val, element.metadata.clone().unwrap(), Some(model)).await {
+                                                                                        points_to_upload.push(point_struct)
+                                                                                    }
+                                                                                }
+                                                                                None => {
+                                                                                    log::warn!("Embedding vector was empty!")
                                                                                 }
                                                                             }
-                                                                            None => {
-                                                                                log::warn!("Embedding vector was empty!")
+                                                                        }
+                                                                        let vector_length = model_parameters.embeddingLength as u64;
+                                                                        let qdrant_conn_clone = Arc::clone(&qdrant_clone);
+                                                                        let qdrant = Qdrant::new(qdrant_conn_clone, datasource_id.to_string());
+                                                                        match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name.clone())).await {
+                                                                            Ok(_) => {
+                                                                                log::debug!("points uploaded successfully!");
+                                                                                if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
+                                                                                    log::error!("Error notifying webapp: {}", e);
+                                                                                } else {
+                                                                                    log::info!("Webapp notified successfully!");
+                                                                                }
+                                                                            }
+                                                                            Err(e) => {
+                                                                                log::error!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
                                                                             }
                                                                         }
                                                                     }
-                                                                    let vector_length = model_parameters.embeddingLength as u64;
-                                                                    let qdrant_conn_clone = Arc::clone(&qdrant_clone);
-                                                                    let qdrant = Qdrant::new(qdrant_conn_clone, datasource_id.to_string());
-                                                                    match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name)).await {
-                                                                        Ok(_) => {
-                                                                            log::debug!("points uploaded successfully!");
-                                                                            if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
-                                                                                log::error!("Error notifying webapp: {}", e);
-                                                                            } else {
-                                                                                log::info!("Webapp notified successfully!");
-                                                                            }
-                                                                        }
-                                                                        Err(e) => {
-                                                                            log::error!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
-                                                                        }
-                                                                    }
+                                                                    Err(e) => log::error!("Error: {}", e),
                                                                 }
-                                                                Err(e) => log::error!("Error: {}", e),
                                                             }
                                                         }
                                                         None => {

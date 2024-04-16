@@ -266,7 +266,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "261a937a307ddc70a1605dec925987d7256adb00232161a1855ef9cc820bd8d5"
 dependencies = [
- "pom",
+ "pom 1.1.0",
 ]
 
 [[package]]
@@ -2421,26 +2421,11 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 
 [[package]]
 name = "lopdf"
-version = "0.30.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ab029c5cd5b0a292b05e3121b6bcf02f20e58e85ffe6d5417a38c1f8f24cbf7"
-dependencies = [
- "encoding_rs 0.8.33",
- "flate2",
- "itoa 1.0.11",
- "linked-hash-map",
- "log",
- "nom",
- "time 0.3.34",
- "weezl",
-]
-
-[[package]]
-name = "lopdf"
 version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e775e4ee264e8a87d50a9efef7b67b4aa988cf94e75630859875fc347e6c872b"
 dependencies = [
+ "chrono",
  "encoding_rs 0.8.33",
  "flate2",
  "itoa 1.0.11",
@@ -2448,6 +2433,9 @@ dependencies = [
  "log",
  "md5",
  "nom",
+ "pom 3.4.0",
+ "rayon",
+ "serde",
  "time 0.3.34",
  "weezl",
 ]
@@ -2935,14 +2923,13 @@ dependencies = [
 
 [[package]]
 name = "pdf-extract"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad17507d4bcf0d61d53fedd4942cff6beb77dfa9dd4e1c967a2410d82889c0ab"
+version = "0.7.5"
+source = "git+https://github.com/rnadigital/pdf-extract.git?branch=make-function-public#5f530ca50859f26fbe671bf988f5d2ebb060aae7"
 dependencies = [
  "adobe-cmap-parser",
  "encoding",
  "euclid",
- "lopdf 0.30.0",
+ "lopdf",
  "postscript",
  "type1-encoding-parser",
  "unicode-normalization",
@@ -3135,6 +3122,15 @@ name = "pom"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60f6ce597ecdcc9a098e7fddacb1065093a3d66446fa16c675e7e71d1b5c28e6"
+
+[[package]]
+name = "pom"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c972d8f86e943ad532d0b04e8965a749ad1d18bb981a9c7b3ae72fe7fd7744b"
+dependencies = [
+ "bstr",
+]
 
 [[package]]
 name = "postscript"
@@ -4809,7 +4805,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3d6cc09e1a99c7e01f2afe4953789311a1c50baebbdac5b477ecf78e2e92a5b"
 dependencies = [
- "pom",
+ "pom 1.1.0",
 ]
 
 [[package]]
@@ -5053,7 +5049,7 @@ dependencies = [
  "llm-chain",
  "llm-chain-openai",
  "log",
- "lopdf 0.32.0",
+ "lopdf",
  "mongodb",
  "ndarray",
  "num-traits",
