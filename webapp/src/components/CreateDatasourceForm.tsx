@@ -182,6 +182,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					streams: streamState.streams,
 					selectedFieldsMap: streamState.selectedFieldsMap,
 					datasourceName,
+					datasourceDescription,
 					embeddingField,
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
@@ -366,6 +367,20 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											id='name'
 											onChange={(e) => setDatasourceName(e.target.value)}
 											value={datasourceName}
+											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+										/>
+									</div>
+									<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										Description<span className='text-red-700'> *</span>
+									</label>
+									<div>
+										<input
+											required
+											type='text'
+											name='description'
+											id='description'
+											onChange={(e) => setDatasourceDescription(e.target.value)}
+											value={datasourceDescription}
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 										/>
 									</div>
