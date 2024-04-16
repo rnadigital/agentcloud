@@ -18,7 +18,15 @@ export async function specificationJson(req, res, next) {
 	if (!req?.query?.sourceDefinitionId || typeof req.query.sourceDefinitionId !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	const data = await getSpecification(req, res, next);
+	let data;
+	try {
+		data = await getSpecification(req, res, next);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: `Falied to fetch connector specification: ${e}` });
+	}
+	if (!data) {
+		return dynamicResponse(req, res, 400, { error: `No connector found for specification ID: ${req.query.sourceDefinitionId}` });
+	}
 	return res.json({ ...data, account: res.locals.account });
 }
 

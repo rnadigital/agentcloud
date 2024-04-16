@@ -1,10 +1,10 @@
 import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
-import getConnectors from 'airbyte/getconnectors';
 import CreateDatasourceForm from 'components/CreateDatasourceForm';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourceFileTable from 'components/DatasourceFileTable';
 import DatasourceTable from 'components/DatasourceTable';
+import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
@@ -23,19 +23,13 @@ export default function Datasources(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	const [error, setError] = useState();
+	const [error, setError] = useState(null);
 	const { datasources, models } = state;
 	const [open, setOpen] = useState(false);
 
 	async function fetchDatasources() {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
 	}
-
-	const [connectorList, setConnectorList] = useState([]);
-	useEffect(() => {
-		getConnectors()
-			.then(json => setConnectorList(json));
-	}, []);
 
 	useEffect(() => {
 		fetchDatasources();

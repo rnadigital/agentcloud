@@ -2,6 +2,7 @@
 
 import { TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
+import ErrorAlert from 'components/ErrorAlert';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -16,20 +17,41 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [deletingModel, setDeletingModel] = useState(null);
+	const [deletingMap, setDeletingMap] = useState({});
+	const [error, setError] = useState(null);
 	const [open, setOpen] = useState(false);
 
 	async function deleteModel() {
-		await API.deleteModel({
-			_csrf: csrf,
-			modelId: deletingModel._id,
-			resourceSlug,
-		}, () => {
-			fetchModels();
-			toast('Deleted model');
-		}, () => {
-			toast.error('Error deleting model');
-		}, router);
-		setOpen(false);
+		setDeletingMap(oldMap => {
+			oldMap[deletingModel._id] = true;
+			return oldMap;
+		});
+		const start = Date.now();
+		try {
+			await API.deleteModel({
+				_csrf: csrf,
+				modelId: deletingModel._id,
+				resourceSlug,
+			}, async () => {
+				await new Promise(res => setTimeout(res, 700-(Date.now()-start)));
+				fetchModels();
+				setDeletingMap(oldMap => {
+					delete oldMap[deletingModel._id];
+					return oldMap;
+				});
+			}, (err) => {
+				setError(`Error deleting model: ${err}`);
+				setDeletingMap(oldMap => {
+					delete oldMap[deletingModel._id];
+					return oldMap;
+				});
+			}, router);
+		} catch (e) {
+			console.error(e);
+			setError(e);
+		} finally {
+			setOpen(false);
+		}
 	}
 
 	useEffect(() => {
@@ -53,6 +75,7 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 				title={'Delete Model'}
 				message={`Are you sure you want to delete the model "${deletingModel?.name}". This action cannot be undone.`}
 			/>
+			{error && <div className='my-4'><ErrorAlert error={error} /></div>}
 			<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 				<table className='min-w-full divide-y divide-gray-200'>
 					<thead className='bg-gray-50'>
@@ -76,21 +99,20 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 						</tr>
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200'>
-						{models.map((model) => (
-							<tr key={model._id} className='cursor-pointer hover:bg-gray-50' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
-								<td className='px-6 py-4 whitespace-nowrap'>
+						{models.map((model) => {
+							return (<tr key={model._id} className={`transition-all opacity-1 duration-700 ${deletingMap[model._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`} style={{ borderColor: deletingMap[model._id] ? 'red' : '' }}>
+								<td className={'px-6 py-4 whitespace-nowrap'} onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 									<div className='text-sm text-gray-900'>{model.name}</div>
 								</td>
-								<td className='px-6 py-4 whitespace-nowrap'>
+								<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 									<div className='text-sm text-gray-900'>{model.model}</div>
 								</td>
-								<td className='px-6 py-4 whitespace-nowrap'>
+								<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 									<div className='text-sm text-gray-900'>{model.embeddingLength ? model.embeddingLength : '-'}</div>
 								</td>
-								<td className='px-6 py-4 whitespace-nowrap'>
+								<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 									<div className='text-sm text-gray-900'>{credentials.find(c => c._id === model.credentialId)?.name || '-'}</div>
 								</td>
-								{/* Add more columns as necessary */}
 								<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 									<button
 										onClick={() => {
@@ -102,8 +124,8 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 										<TrashIcon className='h-5 w-5' aria-hidden='true' />
 									</button>
 								</td>
-							</tr>
-						))}
+							</tr>);
+						})}
 					</tbody>
 				</table>
 			</div>

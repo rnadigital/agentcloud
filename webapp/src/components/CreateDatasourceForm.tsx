@@ -47,7 +47,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [error, setError]: any = useState(null);
+	const [error, setError] = useState(null);
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
@@ -96,13 +96,24 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
+	async function initConnectors() {
+		try {
+			const connectorsJson = await getConnectors();
+			if (!connectorsJson || !connectorsJson?.length) {
+				throw new Error('Falied to fetch connector list, please ensure Airbyte is running.');
+			}
+			setConnectors(connectorsJson);
+		} catch (e) {
+			console.error(e);
+			setError(e?.message || e);
+		}
+	}
 	useEffect(() => {
-		getConnectors()
-			.then(json => setConnectors(json))
-			.catch(e => {
-				toast.error('Failed to fetch source connector list');
-				setConnectors([]);
-			});
+		initConnectors();
+		return () => {
+			setConnectors([]);
+			setConnector(null);
+		};
 	}, []);
 	const connectorOptions = connectors ? Object.keys(connectors)
 		.filter(key => connectors[key]?.connector_type === 'source')
@@ -296,10 +307,11 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 2:
 				return <span className='flex'>
 					<div className='w-full m-auto'>
+						{error && <div className='mb-4'><ErrorAlert error={error} /></div>}
 						<Select
 							isClearable
 							isSearchable
-							loading={connectorOptions.length === 0}
+							loading={connectorOptions.length === 0 && !error}
 							primaryColor={'indigo'}
 							classNames={SelectClassNames}
 							value={connector}
@@ -337,7 +349,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 								</li>);
 							}}
 						/>
-		
 						{loading
 							? <div className='flex justify-center my-4'>
 								<ButtonSpinner size={24} />

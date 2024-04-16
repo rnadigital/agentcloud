@@ -27,6 +27,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 	const { resourceSlug } = router.query;
 	const [syncing, setSyncing] = useReducer(submittingReducer, {});
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
+	const [deletingMap, setDeletingMap] = useState({});
 
 	async function deleteDatasource(datasourceId) {
 		setDeleting({ [datasourceId]: true });
@@ -35,12 +36,20 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				_csrf: csrf,
 				resourceSlug,
 				datasourceId,
-			}, () => {
-				// toast.success('Datasource deleted successfully');
+			}, async () => {
+				setDeletingMap(oldMap => {
+					oldMap[datasourceId] = true;
+					return oldMap;
+				});
+				await new Promise(res => setTimeout(res, 700));
+				fetchDatasources();
+				setDeletingMap(oldMap => {
+					delete oldMap[datasourceId];
+					return oldMap;
+				});
 			}, () => {
 				toast.error('Error deleting datasource');
 			}, router);
-			await fetchDatasources();
 		} finally {
 			setDeleting({ [datasourceId]: false });
 		}
@@ -94,7 +103,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				</thead>
 				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
 					{datasources.map((datasource) => (
-						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700'>
+						<tr key={datasource._id} className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700 transition-all opacity-1 duration-700 ${deletingMap[datasource._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`} style={{ borderColor: deletingMap[datasource._id] ? 'red' : '' }}>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<img src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`} className='w-6 me-1.5' />
 								<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>

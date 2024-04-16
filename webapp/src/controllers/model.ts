@@ -197,7 +197,7 @@ export async function deleteModelApi(req, res, next) {
 	Promise.all([
 		removeAgentsModel(req.params.resourceSlug, modelId),
 		deleteModelById(req.params.resourceSlug, modelId),
-		model?.type === CredentialType.FASTEMBED ? deleteCredentialById(req.paarams.resourceSlug, model.credentialId) : void 0, //Delete dumym cred if this is a fastembed model
+		model?.type === CredentialType.FASTEMBED ? deleteCredentialById(req.params.resourceSlug, model.credentialId) : void 0, //Delete dumym cred if this is a fastembed model
 	]);
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/credentials`*/ });
