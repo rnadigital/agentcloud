@@ -382,7 +382,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setCronTimezone={setCronTimezone}
 									/>
 								</div>
-								<TailwindForm
+								{spec.schema.connectionSpecification && <TailwindForm
 									schema={spec.schema.connectionSpecification}
 									formData={formData}
 									onChange={(e) => setFormData(e.formData)}
@@ -403,7 +403,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										{submitting && <ButtonSpinner />}
 										{submitting ? 'Testing connection...' : 'Submit'}
 									</button>
-								</TailwindForm>
+								</TailwindForm>}
 							</>}
 		
 					</div>

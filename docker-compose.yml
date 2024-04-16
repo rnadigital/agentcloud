@@ -121,6 +121,7 @@ services:
     restart: always
     depends_on:
       - docker_rabbitmq
+      - qdrant
     build:
       context: vector-db-proxy/
       args:

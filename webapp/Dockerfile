@@ -16,7 +16,7 @@ COPY . .
 RUN npx next telemetry disable && npm run build
 
 # Second Stage: Runtime
-FROM node:alpine
+FROM node:latest
 
 WORKDIR /app
 
@@ -32,6 +32,7 @@ ENV NODE_ENV production
 # COPY --from=builder /app/tsconfig.server.json ./tsconfig.json
 # COPY --from=builder /app/dist ./dist
 # COPY --from=builder /app/package.json ./package.json
+
 COPY --from=builder /app ./
 
 # ARGs for environment variables that need to be passed at build time
