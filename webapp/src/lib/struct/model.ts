@@ -20,7 +20,7 @@ export const ModelEmbeddingLength = {
 	'fast-bge-small-en': 384,
 	'fast-bge-small-en-v1.5': 384,
 	'fast-bge-base-en': 768,
-	'fast-bge-base-en-v1.5': 786,
+	'fast-bge-base-en-v1.5': 768,
 	'fast-bge-small-zh-v1.5': 512,
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
