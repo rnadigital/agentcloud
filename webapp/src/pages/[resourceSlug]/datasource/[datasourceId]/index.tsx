@@ -176,7 +176,7 @@ export default function Datasource(props) {
 		}
 	}, []);
 
-	if (datasource) {
+	if (!datasource) {
 		return <Spinner />;
 	}
 
