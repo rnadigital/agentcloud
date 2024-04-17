@@ -148,6 +148,7 @@ services:
       - WEBAPP_HOST=webapp_next
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
+      - LOGGING_LEVEL=debug
 
     volumes:
       - datasource_files:/tmp
