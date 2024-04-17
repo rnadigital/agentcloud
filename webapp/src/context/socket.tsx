@@ -17,7 +17,10 @@ export function SocketWrapper({ children }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
+
+	//TODO: move these into a "trigger" context for global events, maybe switch to useReducer
 	const [notificationTrigger, setNotificationTrigger] = useState(false);
+	const [sessionTrigger, setSessionTrigger] = useState(false);
 
 	function joinRoomAndListen() {
 		if (!sharedSocket || !resourceSlug) { return; }
@@ -45,8 +48,14 @@ export function SocketWrapper({ children }) {
 		};
 	}, [sharedSocket, resourceSlug]);
 
+	useEffect(() => {
+		if (router.asPath.includes('/session/')) {
+			setSessionTrigger(!sessionTrigger);
+		}
+	}, [router.asPath]);
+
 	return (
-		<SocketContext.Provider value={[sharedSocket, notificationTrigger] as any}>
+		<SocketContext.Provider value={[sharedSocket, notificationTrigger, sessionTrigger] as any}>
 			{children}
 		</SocketContext.Provider>
 	);
