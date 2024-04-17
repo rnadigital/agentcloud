@@ -95,7 +95,7 @@ const agentNavigation: any[] = [
 ];
 
 const teamNavigation = [
-	{ name: 'Team Members', href: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Team Members', href: '/team', base: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const userNavigation = [
@@ -221,7 +221,7 @@ export default withRouter(function Layout(props) {
 																	{item.icon}
 																	{item.name}
 																</Link>
-															</li>)
+															</li>);
 														})}
 													</ul>
 												</li>
