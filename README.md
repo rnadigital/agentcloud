@@ -101,4 +101,4 @@ If you wish to contribute or provide feedback, please follow the contribution gu
 
 We welcome contributions and feedback from the community. Thank you for exploring `agentcloud`!
 
-⭐ If you find AgentCloud useful, please consider giving us a star on GitHub! Your support helps us continue to innovate and deliver exciting features.
+And If you find AgentCloud useful, please consider giving us a star ⭐ on GitHub. Your support helps us continue to innovate and deliver exciting features.
