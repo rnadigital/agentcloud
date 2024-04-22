@@ -91,6 +91,8 @@ export async function setDatasourceTotalRecordCount(teamId: db.IdOrStr, datasour
 	}, {
 		$set: {
 			'recordCount.total': total,
+			'recordCount.success': 0,
+			'recordCount.failure': 0,
 		},
 	});
 }

@@ -85,7 +85,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								{DatasourceStatus.EMBEDDING === datasource.status
-									? <ProgressBar />
+									? <ProgressBar total={datasource.recordCount?.total} success={datasource.recordCount?.success} failure={datasource.recordCount?.failure} />
 									: <div className={`max-w-[300px] px-3 py-1 text-sm text-white text-center rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
 										{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) && <ButtonSpinner size={14} className='ms-2 -me-1' />}
 									</div>}
