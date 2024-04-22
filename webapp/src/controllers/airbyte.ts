@@ -9,7 +9,8 @@ import { addNotification } from 'db/notification';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
-import { CollectionName } from 'struct/notification';
+import { CollectionName } from 'struct/db';
+import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
 
 import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecords } from '../db/datasource';
 const warn = debug('webapp:controllers:airbyte:warning');
@@ -172,10 +173,15 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					objectId: true,
 			    },
 			    title: 'Sync Successful',
-			    // description: req.body.text, // Note: req.body.text works but is inappropriate to show user that message
-			    description: `Your sync for datasource "${datasource.name}" has started and embedding is in progress.`,
 			    date: new Date(),
 			    seen: false,
+
+				// stuff specific to notification type
+			    description: `Your sync for datasource "${datasource.name}" has started and embedding is in progress.`,
+				type: NotificationType.Webhook,
+				details: {
+					webhookType: WebhookType.SuccessfulSync,
+				} as NotificationDetails,
 			};
 			await Promise.all([
 				addNotification(notification),
@@ -228,4 +234,3 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	return dynamicResponse(req, res, 200, { });
 
 }
-
