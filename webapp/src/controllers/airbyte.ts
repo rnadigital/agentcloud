@@ -1,15 +1,22 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 import { addNotification } from 'db/notification';
+import debug from 'debug';
+import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
+import { CollectionName } from 'struct/notification';
 
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced,setDatasourceStatus,setDatasourceSyncedCount } from '../db/datasource';
-import toObjectId from '../lib/misc/toobjectid';
-import { io } from '../socketio';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecords } from '../db/datasource';
+const warn = debug('webapp:controllers:airbyte:warning');
+warn.log = console.warn.bind(console); //set namespace to log
+const log = debug('webapp:controllers:airbyte');
+log.log = console.log.bind(console); //set namespace to log
+
 /**
  * GET /airbyte/schema
  * get the specification for an airbyte source
@@ -55,11 +62,11 @@ export async function listJobsApi(req, res, next) {
 		jobType: 'sync',
 		limit: 20, //TODO: expose on frontend, pagination, etc
 	};
-	// console.log('jobBody', jobBody);
+	// log('jobBody %O', jobBody);
 	const jobsRes = await jobsApi
 		.listJobs(jobBody)
 		.then(res => res.data);
-	// console.log('listJobs', jobsRes);
+	// log('listJobs %O', jobsRes);
 
 	return dynamicResponse(req, res, 200, {
 		jobs: (jobsRes?.data || []),
@@ -99,11 +106,11 @@ export async function discoverSchemaApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		// disable_cache: true, //Note: should this always be true?
 	};
-	console.log('discoverSchemaBody', discoverSchemaBody);
+	log('discoverSchemaBody %O', discoverSchemaBody);
 	const discoveredSchema = await internalApi
 		.discoverSchemaForSource(null, discoverSchemaBody)
 		.then(res => res.data);
-	console.log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+	log('discoveredSchema %O', discoveredSchema);
 
 	return dynamicResponse(req, res, 200, {
 		discoveredSchema,
@@ -111,52 +118,75 @@ export async function discoverSchemaApi(req, res, next) {
 
 }
 
+function extractWebhookSuccesfulDetails(data) {
+	// Initialize variables
+	let jobId = '';
+	let datasourceId = '';
+	let recordsLoaded = 0;
+
+	// Parse through each section to find relevant data
+	data.forEach(section => {
+		if (section.text && section.text.text) {
+			if (section.text.text.includes('Sync completed:')) {
+				const regex = /connections\/([\w-]+)\|([\w-]+)/;
+				const match = section.text.text.match(regex);
+				if (match) {
+					datasourceId = match[2]; // Changed to extract the ID after the pipe
+					jobId = match[1]; // Assuming the other ID is the job ID for clarity
+				}
+			}
+			if (section.text.text.includes('Sync Summary:')) {
+				const summaryRegex = /(\d+) record\(s\) loaded/;
+				const summaryMatch = section.text.text.match(summaryRegex);
+				if (summaryMatch) {
+					recordsLoaded = parseInt(summaryMatch[1], 10);
+				}
+			}
+		}
+	});
+
+	return { jobId, datasourceId, recordsLoaded };
+}
+
 export async function handleSuccessfulSyncWebhook(req, res, next) {
-	console.log('handleSuccessfulSyncWebhook body', req.body);
+	log('handleSuccessfulSyncWebhook body %O', req.body);
 
 	//TODO: validate some kind of webhook key
 
-	// TODO: TODO'nt
-	const regex = /Your connection ([\w-]+) from (\w+) to (\w+) succeeded.*sync started on (.*), running for (\d+ seconds).*logs here: (http:\/\/localhost:8000\/workspaces\/[\w-]+\/connections\/[\w-]+).*Job ID: (\d+)/s;
-
-	const match = req?.body?.text?.match(regex);
-
-	if (match) {
-		const datasourceId = match[1];
-		if (datasourceId) {
-			const datasource = await getDatasourceByIdUnsafe(datasourceId);
-			if (datasource) {
-				//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
-				const jobId = match[7];
-				const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-				const jobBody = {
-					jobId,
-				};
-				const jobData = await jobsApi
-					.getJob(jobBody)
-					.then(res => res.data)
-					.catch(res => {});
-				await Promise.all([
-					addNotification({
-					    orgId: toObjectId(datasource.orgId.toString()),
-					    teamId: toObjectId(datasource.teamId.toString()),
-					    target: {
-							id: datasourceId,
-							collection: 'notifications',
-							property: '_id',
-							objectId: true,
-					    },
-					    title: 'Sync Successful',
-					    description: req.body.text,
-					    date: new Date(),
-					    seen: false,
-					}),
-					setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-					setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
-					jobData ? setDatasourceSyncedCount(datasource.teamId, datasourceId, parseInt(jobData?.rowsSynced||0)) : void 0,
-				]);
-			}
+	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(req.body?.blocks || []);
+	if (jobId && datasourceId && recordsLoaded) {
+		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		if (datasource) {
+			//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
+			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+			const jobBody = {
+				jobId,
+			};
+			const notification = {
+			    orgId: toObjectId(datasource.orgId.toString()),
+			    teamId: toObjectId(datasource.teamId.toString()),
+			    target: {
+					id: datasourceId,
+					collection: CollectionName.Notifications,
+					property: '_id',
+					objectId: true,
+			    },
+			    title: 'Sync Successful',
+			    // description: req.body.text, // Note: req.body.text works but is inappropriate to show user that message
+			    description: `Your sync for datasource "${datasource.name}" has started and embedding is in progress.`,
+			    date: new Date(),
+			    seen: false,
+			};
+			await Promise.all([
+				addNotification(notification),
+				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
+				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
+				setDatasourceTotalRecords(datasource.teamId, datasourceId, recordsLoaded),
+			]);
+			io.to(datasource.teamId.toString()).emit('notification', notification);
 		}
+	} else {
+		warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
 	}
 
 	return dynamicResponse(req, res, 200, { });
@@ -164,7 +194,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 }
 
 export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
-	console.log('handleSuccessfulEmbeddingWebhook body', req.body);
+	log('handleSuccessfulEmbeddingWebhook body %O', req.body);
 
 	//TODO: validate some kind of webhook key
 
@@ -180,7 +210,7 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 				    teamId: toObjectId(datasource.teamId.toString()),
 				    target: {
 						id: datasourceId,
-						collection: 'notifications',
+						collection: CollectionName.Notifications,
 						property: '_id',
 						objectId: true,
 				    },
