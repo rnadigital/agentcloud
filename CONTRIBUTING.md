@@ -7,6 +7,26 @@ The purpose of this document is to provide simple guidelines to help make your c
 
 There are many types of issues you can take on when contributing to the project "AgentCloud". We try our best to provide a wide array of open issues that vary in levels of complexity. From beginners to seasoned developers, everyone should be able to find something to work on.
 
+## Developing AgentCloud
+
+- [How Can I Contribute?](#how-can-i-contribute)
+- [First let's find the perfect open issue for you.](#first-lets-find-the-perfect-open-issue-for-you)
+  - [Join the community](#join-the-community)
+- [🚨 Contributing best practices](#-contributing-best-practices)
+- [How to contribute? 👨‍💻](#how-to-contribute-)
+  - [Issue assignment](#issue-assignment)
+  - [Fork and Pull Request Flow ⏳](#fork-and-pull-request-flow-)
+- [Commit Message Format 💬](#commit-message-format-)
+- [Keeping your Fork Up-to-Date 🆕](#keeping-your-fork-up-to-date-)
+- [Opening PRs 📩](#opening-prs-)
+- [Reviewing Pull Requests 🕵️](#reviewing-pull-requests-)
+- [Reporting Bugs 🐛](#reporting-bugs-)
+- [Suggesting Enhancements 🗣️](#suggesting-enhancements-)
+- [Testing 🧪](#testing-)
+- [License](#license)
+
+
+
 ## How Can I Contribute?
 
 There are several ways to contribute to the project "AgentCloud". let's find out.
@@ -37,8 +57,14 @@ There are several ways to contribute to the project "AgentCloud". let's find out
 
 Following these steps will ensure that your contributions are well-received, reviewed, and integrated effectively into AgentCloud's codebase.
 
-### Issue assigning 
-1. Assign yourself to the issue, if you are working on it (if you are not a member of the organization, please leave a comment on the issue and we will assign you to it.)
+### Issue assignment
+We don't have a formal process for assigning issues to contributors. We invite everyone to feel free to jump into any issues in this repo that they are able to help with. Our aim is to foster a collaborative environment where anyone can help without feeling burdened by an assigned task. We understand that life can sometimes present unexpected challenges, and we want to ensure that contributors don't feel pressured to complete assigned issues when they may have limited availability.
+
+We also recognize that not having a formal process can sometimes lead to competing or duplicate PRs. There's no perfect solution here. We encourage everyone to communicate early and often on an Issue to indicate that they're actively working on it. If they see that an Issue already has a PR, try working with that author instead of drafting their own.
+
+We review PRs in the order of their submission. We try to accept the earliest one that is closest to being ready to merge.
+
+Assign yourself to the issue, if you are working on it (if you are not a member of the organization, please leave a comment on the issue and we will assign you to it.)
 
 ### Fork and Pull Request Flow ⏳
 
