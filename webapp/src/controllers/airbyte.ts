@@ -12,7 +12,7 @@ import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
 
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecords } from '../db/datasource';
+import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecordCount } from '../db/datasource';
 const warn = debug('webapp:controllers:airbyte:warning');
 warn.log = console.warn.bind(console); //set namespace to log
 const log = debug('webapp:controllers:airbyte');
@@ -186,7 +186,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 				addNotification(notification),
 				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
 				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
-				setDatasourceTotalRecords(datasource.teamId, datasourceId, recordsLoaded),
+				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded),
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);
 		}

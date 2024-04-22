@@ -234,6 +234,9 @@ export async function testDatasourceApi(req, res, next) {
 	    discoveredSchema,
 	    createdDate: new Date(),
 	    status: DatasourceStatus.DRAFT,
+	    recordCount: {
+			total: 0,
+	    }
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -763,13 +766,16 @@ export async function uploadFileApi(req, res, next) {
 	    destinationId: null,
 	    sourceType: 'file',
 	    workspaceId: null,
-	    lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedbackl
+	    lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
 	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
 	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
 	    modelId: toObjectId(modelId),
 	    createdDate: new Date(),
 	    embeddingField: 'document', //Note: always document for sourceType: file
-	    status: DatasourceStatus.EMBEDDING, //TODO: have a feedback message when actually READY/set this from vector db proxy
+	    status: DatasourceStatus.EMBEDDING,
+	    recordCount: {
+   			total: 0,
+   	    }
 	});
 	
 	// Send the gcs file path to rabbitmq

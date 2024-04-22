@@ -36,6 +36,12 @@ export const datasourceStatusColors = {
 	[DatasourceStatus.READY]: 'bg-green-500',
 };
 
+export type DatasourceRecordCount = {
+	total?: number;
+	success?: number;
+	failure?: number;
+};
+
 export type Datasource = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -49,8 +55,7 @@ export type Datasource = {
 	destinationId: string;
 	workspaceId: string;
 	connectionId: string;
-	totalRecords?: number;
-	embeddedCount?: number;
+	recordCount?: DatasourceRecordCount;
 	connectionSettings?: DatasourceConnectionSettings;
 	createdDate: Date;
 	lastSyncedDate?: Date | null; //Note: null = never synced
