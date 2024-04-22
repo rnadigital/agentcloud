@@ -81,6 +81,12 @@ Options:
 
 - **For Windows**: (Coming soon...)
 
+## Tutorials and Comparison
+
+[How to Build a RAG Chat App With Agent Cloud and BigQuery](https://www.agentcloud.dev/blog/a-rag-chat-app-with-agent-cloud-and-bigquery)<br>
+[Agent Cloud vs CrewAI](https://www.agentcloud.dev/blog/agent-cloud-vs-crewai-a-comparison)<br>
+[Agent Cloud VS OpenAI](https://www.agentcloud.dev/blog/agent-cloud-vs-openai)<br>
+
 ## License
 
 This project is licensed under the GNU Affero General Public License, version 3 only.
@@ -94,3 +100,5 @@ See [CHANGELOG.md](CHANGELOG.md) for the list of changes in each version.
 If you wish to contribute or provide feedback, please follow the contribution guidelines in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 We welcome contributions and feedback from the community. Thank you for exploring `agentcloud`!
+
+And If you find AgentCloud useful, please consider giving us a star ⭐ on GitHub. Your support helps us continue to innovate and deliver exciting features.
