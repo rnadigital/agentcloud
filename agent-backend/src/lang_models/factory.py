@@ -7,7 +7,8 @@ import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
 
 
-def model_factory(agentcloud_model: models.mongo.Model, credential: models.mongo.Credentials) -> BaseLanguageModel | Embeddings:
+def model_factory(agentcloud_model: models.mongo.Model,
+                  credential: models.mongo.Credentials) -> BaseLanguageModel | Embeddings:
     """
     Return a (llm or embedding) langchain model based on credentials and model specs in mongo
     """
@@ -17,7 +18,7 @@ def model_factory(agentcloud_model: models.mongo.Model, credential: models.mongo
         case models.mongo.Platforms.AzureChatOpenAI:
             return _build_azure_model_with_credential(agentcloud_model, credential)
         case models.mongo.Platforms.FastEmbed:
-            return _build_fastembed_model_with_credential(agentcloud_model, credential)
+            return _build_fastembed_model_with_credential(agentcloud_model)
 
 
 def _build_openai_model_with_credential(model: models.mongo.Model,
@@ -71,20 +72,12 @@ def _build_azure_model_with_credential(model: models.mongo.Model,
     )
 
 
-def _build_fastembed_model_with_credential(model: models.mongo.Model,
-                                           credential: models.mongo.Credentials) -> Embeddings:
+def _build_fastembed_model_with_credential(model: models.mongo.Model) -> Embeddings:
     overwrite_model_name = _fastembed_standard_doc_name_swap(
         model.model_name,
         from_standard_to_doc=True
     )
-    return FastEmbedEmbeddings(
-        **model.model_dump(exclude_none=True, exclude_unset=True,
-                           exclude={
-                               "id",
-                               "name",
-                               "embeddingLength",
-                               "model_name"}),
-        model_name=overwrite_model_name)
+    return FastEmbedEmbeddings(model_name=overwrite_model_name)
 
 
 def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_to_doc: bool):
