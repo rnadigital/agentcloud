@@ -172,10 +172,9 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					property: '_id',
 					objectId: true,
 			    },
-			    title: 'Sync Successful',
+			    title: 'Sync in progress',
 			    date: new Date(),
 			    seen: false,
-
 				// stuff specific to notification type
 			    description: `Your sync for datasource "${datasource.name}" has started and embedding is in progress.`,
 				type: NotificationType.Webhook,
