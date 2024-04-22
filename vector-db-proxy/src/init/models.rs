@@ -44,8 +44,8 @@ impl GlobalData {
             redis_host: dotenv::var("REDIS_HOST").unwrap_or("localhost".to_string()),
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
             thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION")
-                .unwrap_or("0.8".to_string()).parse().unwrap_or(0.8),
-            use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
+                .unwrap_or("1".to_string()).parse().unwrap_or(0.8),
+            use_gpu: dotenv::var("USE_GPU").unwrap_or("true".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
         }
     }
