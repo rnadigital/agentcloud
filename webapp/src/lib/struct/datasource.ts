@@ -31,7 +31,7 @@ export enum DatasourceStatus {
 
 export const datasourceStatusColors = {
 	[DatasourceStatus.DRAFT]: 'bg-yellow-500',
-	[DatasourceStatus.PROCESSING]: 'bg-orange-500',
+	[DatasourceStatus.PROCESSING]: 'bg-orange-300',
 	[DatasourceStatus.EMBEDDING]: 'bg-yellow-500',
 	[DatasourceStatus.READY]: 'bg-green-500',
 };

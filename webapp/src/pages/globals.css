@@ -262,3 +262,21 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 .invert-menu {
   transform: translateY(calc(-100% - 50px));
 }
+
+.barberpole {
+	height: 24px; /* Adjust height as needed */
+	width: 100%; /* Adjust width as needed */
+	background: linear-gradient(to left, rgba(0,0,0,0.05) 0%, white 50%, rgba(0,0,0,0.05) 100%);
+	background-size: 10% 100%;
+	animation: slide 6s linear infinite;
+	color: black;
+}
+
+@keyframes slide {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 300px 0; /* this value can be adjusted for different speeds/effects */
+	}
+}
