@@ -208,26 +208,30 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 
 	const datasource = await getDatasourceByIdUnsafe(datasourceId);
 	if (datasource) {
-		setTimeout(async () => {
-			await Promise.all([
-				addNotification({
-				    orgId: toObjectId(datasource.orgId.toString()),
-				    teamId: toObjectId(datasource.teamId.toString()),
-				    target: {
-						id: datasourceId,
-						collection: CollectionName.Notifications,
-						property: '_id',
-						objectId: true,
-				    },
-				    title: 'Embedding Successful',
-				    description: `Embedding completed for datasource "${datasource.name}".`,
-				    date: new Date(),
-				    seen: false,
-				}),
-				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
-			]);
-			io.to(datasource.teamId.toString()).emit('notification', datasourceId);
-		}, 5000); //TODO: remove hardcoded timeout and fix fo real
+		const notification = {
+		    orgId: toObjectId(datasource.orgId.toString()),
+		    teamId: toObjectId(datasource.teamId.toString()),
+		    target: {
+				id: datasourceId,
+				collection: CollectionName.Notifications,
+				property: '_id',
+				objectId: true,
+		    },
+		    title: 'Embedding Successful',
+		    date: new Date(),
+		    seen: false,
+			// stuff specific to notification type
+		    description: `Embedding completed for datasource "${datasource.name}".`,
+		    type: NotificationType.Webhook,
+			details: {
+				webhookType: WebhookType.EmbeddingCompleted,
+			} as NotificationDetails,
+		};
+		await Promise.all([
+			addNotification(notification),
+			setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+		]);
+		io.to(datasource.teamId.toString()).emit('notification', notification);
 	}
 
 	return dynamicResponse(req, res, 200, { });

@@ -16,7 +16,8 @@ export enum WebhookType {
     AutomaticConnectionUpdate = 'AutomaticConnectionUpdate',
     ConnectionUpdatesRequiringAction = 'ConnectionUpdatesRequiringAction',
     WarningRepeatedFailures = 'WarningRepeatedFailures',
-    SyncDisabledRepeatedFailures = 'SyncDisabledRepeatedFailures'
+    SyncDisabledRepeatedFailures = 'SyncDisabledRepeatedFailures',
+    EmbeddingCompleted = 'EmbeddingCompleted',
 }
 
 export type WebhookDetails = {
