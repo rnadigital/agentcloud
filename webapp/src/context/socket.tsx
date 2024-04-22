@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
+import { NotificationType, WebhookType } from 'struct/notification';
 
 let socketio;
 if (typeof window !== 'undefined') {
@@ -19,24 +20,21 @@ export function SocketWrapper({ children }) {
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
 
 	//TODO: move these into a "trigger" context for global events, maybe switch to useReducer
-	const [notificationTrigger, setNotificationTrigger] = useState(false);
+	const [notificationTrigger, setNotificationTrigger] = useState(null);
 	const [sessionTrigger, setSessionTrigger] = useState(false);
 
 	function joinRoomAndListen() {
 		if (!sharedSocket || !resourceSlug) { return; }
-		sharedSocket.emit('join_room', resourceSlug);
-		console.log('joined room');
-		// sharedSocket.onAny((eventName, ...args) => {
-		// 	console.log('Socket eventName:', eventName, args);
-		// });
-		// sharedSocket.on("connect_error", () => {
-		// 	// revert to classic upgrade
-		// 	sharedSocket.io.opts.transports = ["polling", "websocket"];
-		// });
-		sharedSocket.on('notification', msg => {
-			console.log('notification', msg);
-			toast('New Notification!');
-		    setNotificationTrigger(prevState => !prevState);
+		sharedSocket.emit('join_room', resourceSlug);		
+		sharedSocket.on('notification', notification => {
+
+			if (notification?.description
+				&& notification?.type === NotificationType.Webhook
+				&& notification?.details?.webhookType === WebhookType.SuccessfulSync) {
+				toast.success(notification?.description);
+			}
+		
+		    setNotificationTrigger(notification);
 		});
 	}
 

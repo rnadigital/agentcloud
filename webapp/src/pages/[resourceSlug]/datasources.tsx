@@ -14,6 +14,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { NotificationType, WebhookType } from 'struct/notification';
 
 export default function Datasources(props) {
 
@@ -32,8 +33,12 @@ export default function Datasources(props) {
 	}
 
 	useEffect(() => {
-		fetchDatasources();
-		refreshAccountContext();
+		if (!notificationTrigger
+			|| (notificationTrigger?.type === NotificationType.Webhook
+				&& notificationTrigger?.details?.webhookType === WebhookType.SuccessfulSync)) {
+			fetchDatasources();
+			refreshAccountContext();
+		}
 	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {
