@@ -3,7 +3,7 @@
 import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
-import { Datasource, DatasourceConnectionSettings,DatasourceStatus } from 'struct/datasource';
+import { Datasource, DatasourceConnectionSettings, DatasourceRecordCount,DatasourceStatus } from 'struct/datasource';
 import { InsertResult } from 'struct/db';
 
 const log = debug('webapp:db:datasources');
@@ -84,13 +84,15 @@ export async function setDatasourceStatus(teamId: db.IdOrStr, datasourceId: db.I
 	});
 }
 
-export async function setDatasourceSyncedCount(teamId: db.IdOrStr, datasourceId: db.IdOrStr, syncedCount: number): Promise<any> {
+export async function setDatasourceTotalRecordCount(teamId: db.IdOrStr, datasourceId: db.IdOrStr, total: number): Promise<any> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId),
 	}, {
 		$set: {
-			syncedCount,
+			'recordCount.total': total,
+			'recordCount.success': 0,
+			'recordCount.failure': 0,
 		},
 	});
 }

@@ -31,9 +31,15 @@ export enum DatasourceStatus {
 
 export const datasourceStatusColors = {
 	[DatasourceStatus.DRAFT]: 'bg-yellow-500',
-	[DatasourceStatus.PROCESSING]: 'bg-orange-500',
-	[DatasourceStatus.EMBEDDING]: 'bg-orange-500',
+	[DatasourceStatus.PROCESSING]: 'bg-orange-300',
+	[DatasourceStatus.EMBEDDING]: 'bg-yellow-500',
 	[DatasourceStatus.READY]: 'bg-green-500',
+};
+
+export type DatasourceRecordCount = {
+	total?: number;
+	success?: number;
+	failure?: number;
 };
 
 export type Datasource = {
@@ -49,8 +55,7 @@ export type Datasource = {
 	destinationId: string;
 	workspaceId: string;
 	connectionId: string;
-	syncedCount?: number;
-	embeddedCount?: number;
+	recordCount?: DatasourceRecordCount;
 	connectionSettings?: DatasourceConnectionSettings;
 	createdDate: Date;
 	lastSyncedDate?: Date | null; //Note: null = never synced

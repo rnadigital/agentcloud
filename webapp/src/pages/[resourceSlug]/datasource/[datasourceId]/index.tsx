@@ -275,7 +275,6 @@ export default function Datasource(props) {
 							<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Start Time</th>
 							<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Last Updated</th>
 							<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Duration</th>
-							<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Rows Synced</th>
 						</tr>
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200'>
@@ -288,7 +287,6 @@ export default function Datasource(props) {
 								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{new Date(job.startTime).toLocaleString()}</td>
 								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{new Date(job.lastUpdatedAt).toLocaleString()}</td>
 								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 lowercase'>{job.duration.substr(2)}</td>
-								<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{job.rowsSynced}</td>
 							</tr>
 						))}
 					</tbody>

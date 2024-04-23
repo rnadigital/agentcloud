@@ -14,6 +14,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { DatasourceStatus } from 'struct/datasource';
+import { NotificationType, WebhookType } from 'struct/notification';
 
 export default function Datasources(props) {
 
@@ -32,8 +34,34 @@ export default function Datasources(props) {
 	}
 
 	useEffect(() => {
+		if (!notificationTrigger
+			|| (notificationTrigger?.type === NotificationType.Webhook
+				&& notificationTrigger?.details?.webhookType === WebhookType.SuccessfulSync)) {
+			fetchDatasources();
+		}
 		fetchDatasources();
 		refreshAccountContext();
+	}, [resourceSlug, notificationTrigger]);
+
+	useEffect(() => {
+		if (!notificationTrigger
+			|| (notificationTrigger?.type === NotificationType.Webhook
+				&& notificationTrigger?.details?.webhookType === WebhookType.SuccessfulSync)) {
+			fetchDatasources();
+		}
+	}, [notificationTrigger]);
+
+	//Backup polling for refresing while datasources are embedding, to supplement socket or fallback in case of failed socket connection
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (datasources && datasources.some(d => d?.status === DatasourceStatus.EMBEDDING)) {
+				//If there are any embedding datasources, refresh periodically
+				fetchDatasources();
+			}
+		}, 30000);
+		return () => {
+			clearInterval(interval);
+		};
 	}, [resourceSlug, notificationTrigger]);
 
 	if (!datasources) {
