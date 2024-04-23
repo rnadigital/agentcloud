@@ -71,6 +71,27 @@ class ToolData(BaseModel):
     builtin: bool
 
 
+class Retriever(str, Enum):
+    DEFAULT = "default"  # vectorstore similarity search
+    SELF_QUERY = "self_query"
+    TIME_WEIGHTED = "time_weighted"
+
+
+# class MetadataFieldInfo(BaseModel):
+#     name: str
+#     description: str
+#     type: Union["string", "integer", "float"]
+#
+#
+# class SelfQueryRetrieverConfig(BaseModel):
+#     k: Optional[int]
+#     metadata_field_info: List[MetadataFieldInfo]
+#
+#
+# class TimeWeightedRetrieverConfig(BaseModel):
+#     decay_rate: Optional[float] = 0.5
+
+
 class Tool(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
@@ -79,6 +100,9 @@ class Tool(BaseModel):
     type: Optional[str] = "function"
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
+    # retriever: Optional[Retriever] = Retriever.DEFAULT
+    # retriever_config: Optional[Union[SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig]]
+
 
 
 class ApiCredentials(BaseModel):
