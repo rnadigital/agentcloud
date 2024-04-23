@@ -354,6 +354,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					            value={datasourceState}
 					            onChange={(v: any) => {
 					            	setDatasourceState(v);
+					            	setToolRetriever(Retriever.DEFAULT);
 				            	}}
 					            options={datasources
 					            	// .filter(t => t?.status === DatasourceStatus.READY)
@@ -393,8 +394,15 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 									onChange={(e) => setToolRetriever(e.target.value as ToolType)}
 								>
 									<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
-									<option value={Retriever.SELF_QUERY}>Self Query</option>
-									<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
+									{currentDatasource?.sourceType === 'file'
+										? <>
+											<option disabled value={Retriever.SELF_QUERY}>Self Query (coming soon...)</option>
+											<option disabled value={Retriever.TIME_WEIGHTED}>Time Weighted (coming soon...)</option>
+										</>
+										: <>
+											<option value={Retriever.SELF_QUERY}>Self Query</option>
+											<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
+										</>}
 								</select>
 							</div>
 						</div>

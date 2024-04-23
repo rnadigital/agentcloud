@@ -321,8 +321,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									onChange={(e) => setToolRetriever(e.target.value as Retriever)}
 								>
 									<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
-									<option value={Retriever.SELF_QUERY}>Self Query</option>
-									<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
+									<option disabled value={Retriever.SELF_QUERY}>Self Query (coming soon...)</option>
+									<option disabled value={Retriever.TIME_WEIGHTED}>Time Weighted (coming soon...)</option>
 								</select>
 							</div>
 						</div>
