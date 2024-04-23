@@ -8,7 +8,7 @@ import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
-import { ToolType, ToolTypes } from 'struct/tool';
+import { Retriever,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function toolsData(req, res, _next) {
@@ -91,6 +91,7 @@ function validateTool(tool) {
 	return chainValidations(tool, [
 		{ field: 'name', validation: { notEmpty: true }},
 		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes))}},
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever))}},
 		{ field: 'description', validation: { notEmpty: true, lengthMin: 2 }, validateIf: { field: 'type', condition: (value) => value === ToolType.RAG_TOOL }},
 		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL }},
 		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
@@ -103,6 +104,7 @@ function validateTool(tool) {
 		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
 	], { 
 		name: 'Name',
+		retriever: 'Retrieval Strategy',
 		type: 'Type',
 		credentialId: 'Credential',
 		'data.builtin': 'Is built-in',
@@ -115,7 +117,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -138,6 +140,7 @@ export async function addToolApi(req, res, next) {
 	    description,
 	 	type: type as ToolType,
 		datasourceId: toObjectId(datasourceId),
+	 	retriever: retriever || null,
 	 	schema: schema,
 		data: {
 			...data,
@@ -160,7 +163,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -180,6 +183,7 @@ export async function editToolApi(req, res, next) {
 	    description,
 	 	schema: schema,
 	 	datasourceId: toObjectId(datasourceId),
+	 	retriever: retriever || null,
 		data: {
 			...data,
 			builtin: false,

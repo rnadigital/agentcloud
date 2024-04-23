@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { DatasourceStatus } from 'struct/datasource';
-import { BaseOpenAPIParameters, ToolType } from 'struct/tool';
+import { BaseOpenAPIParameters, Retriever,ToolType } from 'struct/tool';
 
 import * as API from '../api';
 import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
@@ -45,6 +45,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
+	const [toolRetriever, setToolRetriever] = useState(tool?.retriever || Retriever.DEFAULT);
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
@@ -65,7 +66,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 
 	const initialDatasource = datasources.find(d => d._id === tool?.datasourceId);
 	const [datasourceState, setDatasourceState] = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
-
+	const currentDatasource = datasources.find(d => d._id === datasourceState?.value);
+	
 	function handleSearchChange(event) {
 		setSearchTerm(event.target.value.toLowerCase());
 	}
@@ -81,6 +83,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 			schema: null,
 			datasourceId: datasourceState ? datasourceState.value : null,
 			description: toolDescription,
+			retriever: toolRetriever,
 		};
 		switch (toolType) {
 			case ToolType.API_TOOL:
@@ -336,6 +339,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Datasources (Optional)
 						</label>
+						
 						<div className='mt-2'>
 							<Select
 								isSearchable
@@ -374,6 +378,27 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					            }}
 					        />
 						</div>
+						
+						<div className='mt-2'>
+							<label htmlFor='toolRetriever' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Retrieval Strategy
+							</label>
+							<div>
+								<select
+									required
+									id='toolRetriever'
+									name='toolRetriever'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									value={toolRetriever}
+									onChange={(e) => setToolRetriever(e.target.value as ToolType)}
+								>
+									<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
+									<option value={Retriever.SELF_QUERY}>Self Query</option>
+									<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
+								</select>
+							</div>
+						</div>
+				
 					</div>			
 				</>}
 

@@ -3,6 +3,12 @@
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
+export enum Retriever {
+	DEFAULT = 'default',        // vectorstore similarity search
+	SELF_QUERY = 'self_query',
+	TIME_WEIGHTED = 'time_weighted'
+}
+
 export type Tool = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -11,6 +17,7 @@ export type Tool = {
     description: string;
  	type: ToolType;
  	schema?: string;
+ 	retriever?: Retriever;
  	datasourceId?: ObjectId;
 	data?: {
 		builtin?: boolean;

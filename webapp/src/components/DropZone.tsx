@@ -9,12 +9,13 @@ import path from 'path';
 import React, { Fragment, useCallback, useRef,useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
+import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 
 import * as API from '../api';
 
-export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback, description }:
-	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, callback?: Function }) {
+export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback, description, retriever }:
+	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, retriever?: Retriever, callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -37,6 +38,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 			formData.set('modelId', modelId as string);
 			formData.set('datasourceDescription', description as string);
 			formData.set('name', name as string);
+			formData.set('retriever', retriever as string);
 			formData.set('_csrf', csrf as string);
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);

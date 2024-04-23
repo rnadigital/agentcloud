@@ -21,7 +21,7 @@ import { PDFExtract } from 'pdf.js-extract';
 import StorageProviderFactory from 'storage/index';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
-import { ToolType } from 'struct/tool';
+import { Retriever,ToolType } from 'struct/tool';
 import { promisify } from 'util';
 import VectorDBProxy from 'vectordb/proxy';
 const log = debug('webapp:controllers:datasource');
@@ -263,6 +263,7 @@ export async function addDatasourceApi(req, res, next) {
 		modelId,
 		name,
 		embeddingField,
+		retriever,
 	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
@@ -281,6 +282,10 @@ export async function addDatasourceApi(req, res, next) {
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	if (retriever && !Object.values(Retriever).includes(retriever)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
 	}
 
 	// Create a connection to our destination in airbyte
@@ -391,6 +396,7 @@ export async function addDatasourceApi(req, res, next) {
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
+		retriever: retriever || null,
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName),
@@ -730,7 +736,7 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	const { modelId, name, datasourceDescription } = req.body;
+	const { modelId, name, datasourceDescription, retriever } = req.body;
 	log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
@@ -748,6 +754,10 @@ export async function uploadFileApi(req, res, next) {
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	if (retriever && !Object.values(Retriever).includes(retriever)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
 	}
 
 	// Create the datasource in the db
@@ -812,6 +822,7 @@ export async function uploadFileApi(req, res, next) {
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(newDatasourceId),
 		schema: null,
+		retriever: retriever || null,
 		data: {
 			builtin: false,
 			name: toSnakeCase(name),
