@@ -28,6 +28,7 @@ onnxruntime = "1.17.0"
 fastembed = "^0.2.2"
 qdrant-client = "^1.8.0"
 arxiv = "^2.1.0"
+lark = "^1.1.9"
 
 
 [build-system]

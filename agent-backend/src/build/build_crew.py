@@ -108,8 +108,12 @@ class CrewAIBuilder:
             for model_key, model_object in tool_models_objects.items():
                 model_data = match_key(self.models_models, model_key)
                 tool_models_models.append((model_object, model_data))
+
+            # Use same llm as Crew's for retriever
+            retriever_llm = match_key(self.crew_models, keyset(self.crew_model.id))
+
             tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()),
-                                               models=tool_models_models)
+                                               models=tool_models_models, llm=retriever_llm)
             self.crew_tools[key] = tool_instance
 
     def build_agents(self):

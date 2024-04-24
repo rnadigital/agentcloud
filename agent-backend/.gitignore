@@ -168,6 +168,7 @@ keyfile.json
 src/output
 output
 src/tools/*
+!src/tools/retrievers/
 !src/tools/global_tools.py
 !src/tools/build_request_from_api_spec.py
 !src/tools/code_execution_docker_notebook_tool.py

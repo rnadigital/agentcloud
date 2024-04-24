@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Callable, Annotated
+from typing import Dict, List, Optional, Union, Callable, Annotated, Literal
 from random import randint
 from pydantic import BaseModel, BeforeValidator, Field, ConfigDict, AliasChoices
 from enum import Enum
@@ -6,6 +6,7 @@ from enum import Enum
 # Represents an ObjectId field in the database.
 # It will be represented as a `str` on the model so that it can be serialized to JSON.
 PyObjectId = Annotated[str, BeforeValidator(str)]
+
 
 # Enums
 class Process(str, Enum):
@@ -77,19 +78,20 @@ class Retriever(str, Enum):
     TIME_WEIGHTED = "time_weighted"
 
 
-# class MetadataFieldInfo(BaseModel):
-#     name: str
-#     description: str
-#     type: Union["string", "integer", "float"]
-#
-#
-# class SelfQueryRetrieverConfig(BaseModel):
-#     k: Optional[int]
-#     metadata_field_info: List[MetadataFieldInfo]
-#
-#
-# class TimeWeightedRetrieverConfig(BaseModel):
-#     decay_rate: Optional[float] = 0.5
+class MetadataFieldInfo(BaseModel):
+    name: str
+    description: str
+    type: Literal["string", "integer", "float"]
+
+
+class SelfQueryRetrieverConfig(BaseModel):
+    k: Optional[int] = Field(default=4)
+    metadata_field_info: List[MetadataFieldInfo]
+
+
+class TimeWeightedRetrieverConfig(BaseModel):
+    k: Optional[int] = Field(default=4)
+    decay_rate: Optional[float] = Field(default=0.5)
 
 
 class Tool(BaseModel):
@@ -100,9 +102,8 @@ class Tool(BaseModel):
     type: Optional[str] = "function"
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
-    # retriever: Optional[Retriever] = Retriever.DEFAULT
-    # retriever_config: Optional[Union[SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig]]
-
+    retriever_type: Optional[Retriever] = Retriever.DEFAULT
+    retriever_config: Optional[Union[SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig]] = None
 
 
 class ApiCredentials(BaseModel):
