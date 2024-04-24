@@ -91,7 +91,8 @@ class SelfQueryRetrieverConfig(BaseModel):
 
 class TimeWeightedRetrieverConfig(BaseModel):
     k: Optional[int] = Field(default=4)
-    decay_rate: Optional[float] = Field(default=0.5)
+    decay_rate: Optional[float] = Field(default=0.01)
+    timeWeightField: Optional[str] = Field(default="last_accessed_at")
 
 
 class Tool(BaseModel):

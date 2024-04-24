@@ -1,7 +1,7 @@
-from .base import BaseRetriever
+from .base import BaseToolRetriever
 
 
-class DefaultRetriever(BaseRetriever):
+class DefaultRetriever(BaseToolRetriever):
     def __init__(self, embedding, vector_store):
         self.embedding = embedding
         self.vector_store = vector_store

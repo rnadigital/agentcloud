@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseRetriever(ABC):
+class BaseToolRetriever(ABC):
     @abstractmethod
     def run(self, query):
         pass

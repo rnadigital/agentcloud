@@ -13,7 +13,7 @@ from init.env_variables import QDRANT_HOST
 from langchain_community.vectorstores.qdrant import Qdrant
 from qdrant_client import QdrantClient
 
-from .retrievers import BaseRetriever, retriever_factory
+from .retrievers import BaseToolRetriever, retriever_factory
 
 
 ###### INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT ######
@@ -49,7 +49,7 @@ class RagTool(GlobalBaseTool):
     name: str = Field(default=DEFAULT_NAME)
     description: str = Field(DEFAULT_DESCRIPTION)
     args_schema: Type[BaseModel] = RagToolArgsSchema
-    retriever: BaseRetriever
+    retriever: BaseToolRetriever
 
     @classmethod
     def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]],
