@@ -7,6 +7,7 @@ from models.mongo import Retriever, Tool
 from .default import DefaultRetriever
 from .self_query import SelfQueryRetriever
 from .time_weighted import TimeWeightedRetriever
+from .multi_query import MultiQueryRetriever
 
 
 def retriever_factory(tool: Tool, vector_store: VectorStore, embedding: Embeddings, llm: BaseLanguageModel):
@@ -17,3 +18,5 @@ def retriever_factory(tool: Tool, vector_store: VectorStore, embedding: Embeddin
             return SelfQueryRetriever(tool, llm, vector_store)
         case Retriever.TIME_WEIGHTED:
             return TimeWeightedRetriever(tool, vector_store)
+        case Retriever.MULTI_QUERY:
+            return MultiQueryRetriever(llm, vector_store)

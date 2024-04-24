@@ -1,12 +1,14 @@
 from langchain.chains.query_constructor.schema import AttributeInfo
 from langchain.retrievers import SelfQueryRetriever as LC_SelfQueryRetriever
+from langchain_core.language_models import BaseLanguageModel
+from langchain_core.vectorstores import VectorStore
 
-from models.mongo import SelfQueryRetrieverConfig
+from models.mongo import Tool
 from .base import BaseToolRetriever
 
 
 class SelfQueryRetriever(BaseToolRetriever):
-    def __init__(self, tool, llm, vector_store):
+    def __init__(self, tool: Tool, llm: BaseLanguageModel, vector_store: VectorStore):
         metadata_field_info = list(
             map(lambda x: AttributeInfo(**x.model_dump()), tool.retriever_config.metadata_field_info))
 

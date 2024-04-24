@@ -1,8 +1,11 @@
+from langchain_core.embeddings import Embeddings
+from langchain_core.vectorstores import VectorStore
+
 from .base import BaseToolRetriever
 
 
 class DefaultRetriever(BaseToolRetriever):
-    def __init__(self, embedding, vector_store):
+    def __init__(self, embedding: Embeddings, vector_store: VectorStore):
         self.embedding = embedding
         self.vector_store = vector_store
 

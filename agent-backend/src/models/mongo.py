@@ -76,6 +76,7 @@ class Retriever(str, Enum):
     DEFAULT = "default"  # vectorstore similarity search
     SELF_QUERY = "self_query"
     TIME_WEIGHTED = "time_weighted"
+    MULTI_QUERY = "multi_query"
 
 
 class MetadataFieldInfo(BaseModel):
