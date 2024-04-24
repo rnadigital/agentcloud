@@ -14,7 +14,7 @@ class TimeWeightedRetriever(BaseRetriever):
         results = self.retriever.get_relevant_documents(query)
 
         # Update timestamps
-        for document in results:
-            document.metadata.update({'last_accessed_at': datetime.datetime.now()})
-            self.retriever.add_documents(document)
+        # for document in results:
+        #     document.metadata.update({'last_accessed_at': datetime.datetime.now()})
+        #     self.retriever.add_documents(document)
         return "\n".join(map(lambda x: x if type(x) is str else x.page_content, results))
