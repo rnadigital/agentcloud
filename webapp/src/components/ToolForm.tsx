@@ -1,5 +1,7 @@
 'use strict';
 
+import InfoAlert from 'components/InfoAlert';
+import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import { dereferenceSync } from 'dereference-json-schema';
 import yaml from 'js-yaml';
 import Link from 'next/link';
@@ -45,8 +47,18 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
-	const [toolRetriever, setToolRetriever] = useState(tool?.retriever || Retriever.DEFAULT);
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
+
+	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
+	const [toolRetriever, setToolRetriever] = useState(tool?.retriever || Retriever.DEFAULT);
+	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
+	useEffect(() => {
+		if (toolRetriever !== Retriever.TIME_WEIGHTED) {
+			setToolDecayRate(undefined);
+		}
+	}, [toolRetriever]);
+	const [toolTimeWeightField, setToolTimeWeightField] = useState(tool?.retriever_config?.timeWeightField || null);
+	
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
@@ -84,6 +96,10 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 			datasourceId: datasourceState ? datasourceState.value : null,
 			description: toolDescription,
 			retriever: toolRetriever,
+			retriever_config: {
+				timeWeightField: toolTimeWeightField,
+				decay_rate: toolDecayRate,
+			}, //TODO
 		};
 		switch (toolType) {
 			case ToolType.API_TOOL:
@@ -137,7 +153,6 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 			}, (err) => { toast.error(err); }, null);
 		} else {
 			const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
-			console.log('addedTool', addedTool);
 			callback && addedTool && callback(addedTool._id, body);
 		}
 	}
@@ -379,34 +394,18 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					            }}
 					        />
 						</div>
-						
-						<div className='mt-2'>
-							<label htmlFor='toolRetriever' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Retrieval Strategy
-							</label>
-							<div>
-								<select
-									required
-									id='toolRetriever'
-									name='toolRetriever'
-									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									value={toolRetriever}
-									onChange={(e) => setToolRetriever(e.target.value as ToolType)}
-								>
-									<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
-									{currentDatasource?.sourceType === 'file'
-										? <>
-											<option disabled value={Retriever.SELF_QUERY}>Self Query (coming soon...)</option>
-											<option disabled value={Retriever.TIME_WEIGHTED}>Time Weighted (coming soon...)</option>
-										</>
-										: <>
-											<option value={Retriever.SELF_QUERY}>Self Query</option>
-											<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
-										</>}
-								</select>
-							</div>
-						</div>
-				
+
+						<RetrievalStrategyComponent
+						    toolRetriever={toolRetriever}
+						    setToolRetriever={setToolRetriever}
+						    toolDecayRate={toolDecayRate}
+						    setToolDecayRate={setToolDecayRate}
+							toolTimeWeightField={toolTimeWeightField}
+							setToolTimeWeightField={setToolTimeWeightField}
+							schema={currentDatasource?.connectionSettings?.syncCatalog}
+						    currentDatasource={currentDatasource}
+						/>
+
 					</div>			
 				</>}
 

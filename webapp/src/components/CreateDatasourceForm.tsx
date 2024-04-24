@@ -6,6 +6,7 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
 import ErrorAlert from 'components/ErrorAlert';
+import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
@@ -62,7 +63,17 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
+
+	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.DEFAULT);
+	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(0.5);
+	useEffect(() => {
+		if (toolRetriever !== Retriever.TIME_WEIGHTED) {
+			setToolDecayRate(0.5);
+		}
+	}, [toolRetriever]);
+	const [toolTimeWeightField, setToolTimeWeightField] = useState(null);
+
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -152,6 +163,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					datasourceDescription,
 					embeddingField,
 					retriever: toolRetriever,
+					retriever_config: {
+						timeWeightField: toolTimeWeightField,
+						decay_rate: toolDecayRate,
+					}, //TODO
 				};
 				//step 2, getting schema and testing connection
 				await API.testDatasource(body, (stagedDatasource) => {
@@ -188,6 +203,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					datasourceDescription,
 					embeddingField,
 					retriever: toolRetriever,
+					retriever_config:  {
+						toolTimeWeightField,
+						decay_rate: toolDecayRate,
+					}, //TODO
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
 					toast.success('Added datasource');
@@ -307,25 +326,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					            }}
 					        />
 						</div>
-						<div className='mt-2'>
-							<label htmlFor='toolRetriever' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Retrieval Strategy<span className='text-red-700'> *</span>
-							</label>
-							<div>
-								<select
-									required
-									id='toolRetriever'
-									name='toolRetriever'
-									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									value={toolRetriever}
-									onChange={(e) => setToolRetriever(e.target.value as Retriever)}
-								>
-									<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
-									<option disabled value={Retriever.SELF_QUERY}>Self Query (coming soon...)</option>
-									<option disabled value={Retriever.TIME_WEIGHTED}>Time Weighted (coming soon...)</option>
-								</select>
-							</div>
-						</div>
+						<RetrievalStrategyComponent
+							toolRetriever={toolRetriever}
+							setToolRetriever={setToolRetriever}
+							toolDecayRate={toolDecayRate}
+							setToolDecayRate={setToolDecayRate}
+							// toolTimeWeightField={toolTimeWeightField}
+							// setToolTimeWeightField={setToolTimeWeightField}
+							// schema={['example']}
+							currentDatasource={null}
+						/>
 					</div>
 				</DropZone>;
 			case 2:
@@ -407,25 +417,16 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 										/>
 									</div>
-									<div className='mt-2'>
-										<label htmlFor='toolRetriever' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-											Retrieval Strategy<span className='text-red-700'> *</span>
-										</label>
-										<div>
-											<select
-												required
-												id='toolRetriever'
-												name='toolRetriever'
-												className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-												value={toolRetriever}
-												onChange={(e) => setToolRetriever(e.target.value as Retriever)}
-											>
-												<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
-												<option value={Retriever.SELF_QUERY}>Self Query</option>
-												<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
-											</select>
-										</div>
-									</div>
+									<RetrievalStrategyComponent
+										toolRetriever={toolRetriever}
+										setToolRetriever={setToolRetriever}
+										toolDecayRate={toolDecayRate}
+										setToolDecayRate={setToolDecayRate}
+										currentDatasource={null}
+										// toolTimeWeightField={toolTimeWeightField}
+										// setToolTimeWeightField={setToolTimeWeightField}
+										// schema={['example']}
+									/>
 									<DatasourceScheduleForm
 										scheduleType={scheduleType}
 										setScheduleType={setScheduleType}
@@ -525,6 +526,31 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									</select>
 								</div>
 							</div>
+							{toolRetriever === Retriever.TIME_WEIGHTED && <div className='mt-2'>
+								<label htmlFor='toolTimeWeightField' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Time Weight Field
+								</label>
+								<div>
+									<select
+										required
+										id='toolTimeWeightField'
+										name='toolTimeWeightField'
+										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+										value={toolTimeWeightField}
+										onChange={(e) => setToolTimeWeightField(e.target.value)}
+									>
+										{streamState?.streams?.map((stream, ei) => {
+											const foundStreamSchema = discoveredSchema?.catalog?.streams?.find(st => st?.stream?.name === stream);
+											const foundSchemaKeys = streamState?.selectedFieldsMap[stream]
+												|| Object.keys(foundStreamSchema?.stream?.jsonSchema?.properties);
+											return <optgroup label={stream} key={`embeddingField_optgroup_${ei}`}>
+												{foundSchemaKeys
+													.map((sk, ski) => (<option key={`embeddingField_option_${ski}`} value={sk}>{sk}</option>))}
+											</optgroup>;
+										})}
+									</select>
+								</div>
+							</div>}
 							<div>
 								<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Embedding Model

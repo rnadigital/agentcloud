@@ -38,6 +38,7 @@ pub struct DataSources {
     pub chunkCharacter: Option<String>,
     pub lastSyncedDate: Option<DateTime>,
     pub embeddingField: Option<String>,
+    pub timeWeightField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
 }

@@ -64,5 +64,6 @@ export type Datasource = {
 	chunkStrategy?: DatasourceChunkStrategy;
 	chunkCharacter?: string | null;
 	embeddingField?: string;
+	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 };

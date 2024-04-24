@@ -9,16 +9,16 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = function ({ total=null, success=0, failure=0, text='Embedding' }) {
-	const successPercentage = total != null ? (success/total)*100 : 0;
-	const failurePercentage = total != null ? (failure/total)*100 : 0;
+	let successPercentage = (total != null ? (success/total)*100 : 0) || 0;
+	const failurePercentage = (total != null ? (failure/total)*100 : 0) || 0;
 	return (<div className='mb-6 h-6 max-w-[300px]'>
-		<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white'>
+		<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white px-2'>
 			<span className='tooltip z-100'>
 				{text}{' '}
 				({successPercentage.toFixed(1).endsWith('0') ? successPercentage : successPercentage.toFixed(1)}%)
-				<span className='tooltiptext capitalize !w-[150px] !-ml-[75px] whitespace-pre'>
+				{(successPercentage > 0 || failurePercentage > 0) && <span className='tooltiptext capitalize !w-[150px] !-ml-[75px] whitespace-pre'>
 					{total && `${(success||0)+(failure||0)}/${total} (${successPercentage.toFixed(1)}%)\nsuccess: ${success||0}\nfailure: ${failure||0}`}
-				</span>
+				</span>}
 			</span>
 			<ButtonSpinner size={14} className='ms-2 -me-1' />
 		</div>

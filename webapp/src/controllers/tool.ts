@@ -117,7 +117,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -141,6 +141,7 @@ export async function addToolApi(req, res, next) {
 	 	type: type as ToolType,
 		datasourceId: toObjectId(datasourceId),
 	 	retriever: retriever || null,
+	 	retriever_config: retriever_config || {}, //TODO: validation
 	 	schema: schema,
 		data: {
 			...data,
@@ -163,7 +164,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -184,6 +185,7 @@ export async function editToolApi(req, res, next) {
 	 	schema: schema,
 	 	datasourceId: toObjectId(datasourceId),
 	 	retriever: retriever || null,
+	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: {
 			...data,
 			builtin: false,

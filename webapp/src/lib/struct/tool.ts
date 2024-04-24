@@ -9,6 +9,23 @@ export enum Retriever {
 	TIME_WEIGHTED = 'time_weighted'
 }
 
+export type MetadataFieldInfo = {
+	name: string;
+	description: string;
+	type: 'string' | 'integer' | 'float';
+};
+
+export type SelfQueryRetrieverConfig = {
+	k?: number;
+	metadata_field_info: MetadataFieldInfo[];
+};
+
+export type TimeWeightedRetrieverConfig = {
+	decay_rate?: number;
+};
+
+export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
+
 export type Tool = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -18,6 +35,7 @@ export type Tool = {
  	type: ToolType;
  	schema?: string;
  	retriever?: Retriever;
+	retriever_config?: RetrieverConfig;
  	datasourceId?: ObjectId;
 	data?: {
 		builtin?: boolean;
