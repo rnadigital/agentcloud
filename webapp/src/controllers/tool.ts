@@ -104,7 +104,7 @@ function validateTool(tool) {
 		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
 	], { 
 		name: 'Name',
-		retriever: 'Retrieval Strategy',
+		retriever_type: 'Retrieval Strategy',
 		type: 'Type',
 		credentialId: 'Credential',
 		'data.builtin': 'Is built-in',
@@ -140,7 +140,7 @@ export async function addToolApi(req, res, next) {
 	    description,
 	 	type: type as ToolType,
 		datasourceId: toObjectId(datasourceId),
-	 	retriever: retriever || null,
+	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 	 	schema: schema,
 		data: {
@@ -184,7 +184,7 @@ export async function editToolApi(req, res, next) {
 	    description,
 	 	schema: schema,
 	 	datasourceId: toObjectId(datasourceId),
-	 	retriever: retriever || null,
+	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: {
 			...data,

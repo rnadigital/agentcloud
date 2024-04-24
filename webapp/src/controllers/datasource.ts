@@ -264,6 +264,7 @@ export async function addDatasourceApi(req, res, next) {
 		name,
 		embeddingField,
 		retriever,
+		retriever_config,
 	}  = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
@@ -396,7 +397,8 @@ export async function addDatasourceApi(req, res, next) {
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
-		retriever: retriever || null,
+		retriever_type: retriever || null,
+	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName),
@@ -736,7 +738,7 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
-	const { modelId, name, datasourceDescription, retriever } = req.body;
+	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
 	log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
 			|| !modelId || typeof modelId !== 'string'
@@ -822,7 +824,8 @@ export async function uploadFileApi(req, res, next) {
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(newDatasourceId),
 		schema: null,
-		retriever: retriever || null,
+		retriever_type: retriever || null,
+		retriever_config: retriever_config || {}, //TODO
 		data: {
 			builtin: false,
 			name: toSnakeCase(name),

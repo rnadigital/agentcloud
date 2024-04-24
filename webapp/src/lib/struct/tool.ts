@@ -6,7 +6,8 @@ import { IconAttachment } from 'struct/asset';
 export enum Retriever {
 	DEFAULT = 'default',        // vectorstore similarity search
 	SELF_QUERY = 'self_query',
-	TIME_WEIGHTED = 'time_weighted'
+	TIME_WEIGHTED = 'time_weighted',
+	MULTI_QUERY = 'multi_query'
 }
 
 export type MetadataFieldInfo = {
@@ -34,7 +35,7 @@ export type Tool = {
     description: string;
  	type: ToolType;
  	schema?: string;
- 	retriever?: Retriever;
+ 	retriever_type?: Retriever;
 	retriever_config?: RetrieverConfig;
  	datasourceId?: ObjectId;
 	data?: {
