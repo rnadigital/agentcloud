@@ -117,7 +117,6 @@ export async function addAgentApi(req, res, next) {
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		// { field: 'functionModelId', validation: { hasLength: 24 }},
 		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
@@ -204,7 +203,7 @@ export async function editAgentApi(req, res, next) {
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		// { field: 'functionModelId', validation: { hasLength: 24 }},
+		{ field: 'functionModelId', validation: { hasLength: 24 }},
 		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
