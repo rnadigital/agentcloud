@@ -7,6 +7,7 @@ from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
+from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
@@ -75,95 +76,11 @@ class CrewAIBuilder:
             logging.error(f"Connection error occurred: {ce}")
             raise
 
-    @staticmethod
-    def fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_to_doc: bool):
-        from_enum = models.mongo.FastEmbedModelsStandardFormat if from_standard_to_doc else models.mongo.FastEmbedModelsDocFormat
-        to_enum = models.mongo.FastEmbedModelsDocFormat if from_standard_to_doc else models.mongo.FastEmbedModelsStandardFormat
-        if in_enums(enums=[to_enum], value=fastembed_model_name):
-            return fastembed_model_name
-        elif in_enums(enums=[from_enum], value=fastembed_model_name):
-            return get_enum_value_from_str_key(
-                to_enum,
-                get_enum_key_from_value(
-                    from_enum,
-                    fastembed_model_name
-                )
-            )
-
-    @staticmethod
-    def _build_openai_model_with_credential(credential, model):
-        if model.modelType == models.mongo.ModelType.embedding:
-            return OpenAIEmbeddings(
-                api_key=credential.credentials.api_key,
-                model=model.model_name,
-                **model.model_dump(
-                    exclude_none=True,
-                    exclude_unset=True,
-                    exclude={
-                        "id",
-                        "credentialId",
-                        "modelType",
-                        "model_name"
-                    }
-                )
-            )
-        else:
-            return ChatOpenAI(
-                api_key=credential.credentials.api_key,
-                **model.model_dump(
-                    exclude_none=True,
-                    exclude_unset=True,
-                    exclude={
-                        "id",
-                        "credentialId",
-                        "embeddingLength",
-                        "modelType"
-                    }
-                )
-            )
-
-    @staticmethod
-    def _build_azure_model_with_credential(credential, model):
-        return AzureChatOpenAI(
-            api_key=credential.credentials.api_key,
-            **model.model_dump(
-                exclude_none=True,
-                exclude_unset=True,
-                exclude={
-                    "id",
-                    "credentialId",
-                    "embeddingLength"
-                }
-            )
-        )
-
-    def _build_fastembed_model_with_credential(self, credential, model):
-        overwrite_model_name = self.fastembed_standard_doc_name_swap(
-            model.model_name,
-            from_standard_to_doc=True
-        )
-        return FastEmbedEmbeddings(
-            **model.model_dump(exclude_none=True, exclude_unset=True,
-                               exclude={
-                                   "id",
-                                   "name",
-                                   "embeddingLength",
-                                   "model_name",
-                                   "modelType"}),
-            model_name=overwrite_model_name)
-
     def build_models_with_credentials(self):
         for key, model in self.models_models.items():
             credential = match_key(self.credentials_models, key)
             if credential:
-                match credential.type:
-                    # todo: need to find a way to load these class dynamically rather than having all these switch statements
-                    case models.mongo.Platforms.ChatOpenAI:
-                        self.crew_models[key] = self._build_openai_model_with_credential(credential, model)
-                    case models.mongo.Platforms.AzureChatOpenAI:
-                        self.crew_models[key] = self._build_azure_model_with_credential(credential, model)
-                    case models.mongo.Platforms.FastEmbed:
-                        self.crew_models[key] = self._build_fastembed_model_with_credential(credential, model)
+                self.crew_models[key] = language_model_factory(model, credential)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
