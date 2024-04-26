@@ -78,7 +78,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
-	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {} });
+	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {}, descriptionsMap: {} });
 	const [formData, setFormData] = useState(null);
 	const SubmitButton = (props: SubmitButtonProps) => {
 		const { uiSchema } = props;
@@ -199,6 +199,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					cronTimezone,
 					streams: streamState.streams,
 					selectedFieldsMap: streamState.selectedFieldsMap,
+					descriptionsMap: streamState.descriptionsMap,
 					datasourceName,
 					datasourceDescription,
 					embeddingField,
@@ -469,6 +470,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 3:
 				return discoveredSchema && <form onSubmit={(e: any) => {
 					e.preventDefault();
+					//todo: make the streamlist fully controlled
 					const streams = Array.from(e.target.elements)
 						.filter(x => x['checked'] === true)
 						.filter(x => !x['dataset']['parent'])
@@ -480,8 +482,15 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
 							return acc;
 						}, {});
-					setStreamState({ streams, selectedFieldsMap});
-					setStep(4);
+					const descriptionsMap = Array.from(e.target.elements)
+						.filter(x => x['type'] === 'text')
+						.reduce((acc, x) => {
+							acc[x['name']] = x['value'];
+							return acc;
+						}, {});
+					console.log(descriptionsMap);
+					setStreamState({ streams, selectedFieldsMap, descriptionsMap });
+					// setStep(4);
 				}}>
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}

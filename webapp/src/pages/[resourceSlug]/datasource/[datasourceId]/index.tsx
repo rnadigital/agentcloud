@@ -118,6 +118,12 @@ export default function Datasource(props) {
 					acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([x['name']]);
 					return acc;
 				}, {});
+			const descriptionsMap = Array.from(e.target.form.elements)
+				.filter(x => x['type'] === 'text')
+				.reduce((acc, x) => {
+					acc[x['name']] = x['value'];
+					return acc;
+				}, {});
 			const body = {
 				_csrf: csrf,
 				resourceSlug,
@@ -125,6 +131,7 @@ export default function Datasource(props) {
 				streams,
 				sync,
 				selectedFieldsMap,
+				descriptionsMap,
 			};
 			// console.log(body);
 			await API.updateDatasourceStreams(body, () => {

@@ -4,7 +4,7 @@ import {
 	ChevronDownIcon,
 	ChevronRightIcon
 } from '@heroicons/react/24/outline';
-import { useReducer,useState } from 'react';
+import { useReducer, useState } from 'react';
 
 export function StreamRow({ stream, existingStream, readonly }
 	: { stream?: any, existingStream?: any, readonly?: boolean }) {
@@ -28,6 +28,8 @@ export function StreamRow({ stream, existingStream, readonly }
 		return state.concat([action.name]);
 	}
 	const [checkedChildren, setCheckedChildren] = useReducer(handleCheckedChild, initialCheckedChildren);
+	
+	const [datasourceDescriptions, setDatasourceDescriptions] = useState({});
 
 	return (
 		<div className='border-b'>
@@ -56,36 +58,66 @@ export function StreamRow({ stream, existingStream, readonly }
 					<span className='ml-2'>{stream?.stream?.name || stream?.name}</span>
 				</div>
 			</div>
-			{stream?.stream?.jsonSchema && <div className={`p-4 bg-gray-100 rounded ${isExpanded ? '' : 'hidden'}`}>
-				<div>Fields:</div>
-				{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
-					<div key={key}>
-						<label className='switch'>
-							<input
-								onChange={() => setCheckedChildren({
-									name: key,
-									parent: stream?.stream?.name || stream?.name,
-								})}
-								type='checkbox'
-								className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
-								name={key}
-								data-parent={stream?.stream?.name || stream?.name}
-								disabled={readonly}
-								defaultChecked={existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'].includes(key))}
-								checked={checkedChildren.includes(key)}
-							/>
-							<span className='slider round'></span>
-						</label>
-						<span className='font-semibold'>{key}:</span> {value['type']}
-					</div>
-				))}
-			</div>}
+			{stream?.stream?.jsonSchema && (
+				<div className={`p-4 bg-gray-100 rounded ${isExpanded ? '' : 'hidden'}`}>
+					<table className='w-full'>
+						<thead>
+							<tr>
+								<th className='px-2 py-1 text-left w-1'></th>
+								<th className='px-2 py-1 text-left'>Field Name</th>
+								<th className='px-2 py-1 text-left'>Type</th>
+								<th className='px-2 py-1 text-left'>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
+								<tr key={key}>
+									<td className='p-2'>
+										<label className='switch'>
+											<input
+												onChange={() => setCheckedChildren({
+													name: key,
+													parent: stream?.stream?.name || stream?.name,
+												})}
+												type='checkbox'
+												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+												name={key}
+												data-parent={stream?.stream?.name || stream?.name}
+												disabled={readonly}
+												defaultChecked={existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'].includes(key))}
+												checked={checkedChildren.includes(key)}
+											/>
+											<span className='slider round'></span>
+										</label>
+									</td>
+									<td className='p-2 font-semibold'>{key}</td>
+									<td className='p-2'>{value['type']}</td>
+									<td className='p-2'>
+										<input
+											required
+											type='text'
+											name={key}
+											id={`${key}_description`}
+											disabled={readonly}
+											// disabled={!checkedChildren.includes(key)}
+											defaultValue={`${key} field`}
+											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+											placeholder='Enter description'
+										/>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
+
 		</div>
 	);
 }
 
 export function StreamsList({ streams, existingStreams, readonly }
-	: { streams?: any, existingStreams?: any, readonly?: boolean }) {
+: { streams?: any, existingStreams?: any, readonly?: boolean }) {
 	return (
 		<div className='my-4'>
 			{streams.map((stream, index) => (
