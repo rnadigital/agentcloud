@@ -9,6 +9,8 @@ import {
 	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
+import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
+import ProgressBar from 'components/ProgressBar';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
 import Link from 'next/link';
@@ -70,8 +72,9 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 					</tr>
 				</thead>
 				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
-					{datasources.map((datasource) => (
-						<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'>
+					{datasources.map((datasource) => {
+						const processingOrEmbedding = [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource?.status);
+						return (<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<div className='flex items-cente'>
 									<div className='text-sm font-medium text-gray-900 dark:text-white'>{datasource.name}</div>
@@ -83,9 +86,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-								<span className={`px-3 py-1 text-sm text-white rounded-full ${datasourceStatusColors[datasource.status] || 'bg-gray-500'} capitalize`}>
-									{datasource.status || 'Unknown'}{[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status) && <ButtonSpinner size={14} className='ms-2 -me-1' />}
-								</span>
+								<DatasourceStatusIndicator datasource={datasource} processingOrEmbedding={processingOrEmbedding} />
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<span suppressHydrationWarning className='text-sm text-gray-900 dark:text-white'>
@@ -104,8 +105,8 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 									{deleting[datasource._id] ? <ButtonSpinner size={14} /> : <TrashIcon className='h-5' aria-hidden='true' />}
 		                        </button>
 		                    </td>
-						</tr>
-					))}
+						</tr>);
+					})}
 				</tbody>
 			</table>
 		</div>

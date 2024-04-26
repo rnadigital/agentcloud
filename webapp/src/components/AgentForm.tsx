@@ -319,7 +319,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 
 					<div className='sm:col-span-12'>
 						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Function Calling Model
+							Function Calling Model (Optional)
 						</label>
 						<div className='mt-2'>
 							<Select

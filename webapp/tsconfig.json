@@ -24,6 +24,9 @@
       "@api": [
         "api.ts"
       ],
+      "@socketio": [
+        "socketio.ts"
+      ],
       "struct/*": [
         "lib/struct/*"
       ],

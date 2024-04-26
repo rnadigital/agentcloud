@@ -255,11 +255,11 @@ fi
 export AIRBYTE_ADMIN_DESTINATION_ID
 
 
-# # set the webhook urls for airbyte webhooks back to the webapp
-# UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --compressed -X POST \
-# 	-H 'content-type: application/json' \
-# 	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-# 	--data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","notificationSettings":{"sendOnFailure":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSuccess":{"notificationType":["slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdate":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdateActionRequired":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabled":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnSyncDisabledWarning":{"notificationType":["customerio","slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnBreakingChangeWarning":{"notificationType":["customerio"]},"sendOnBreakingChangeSyncsDisabled":{"notificationType":["customerio"]}}}')
+# set the webhook urls for airbyte webhooks back to the webapp
+UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --compressed -X POST \
+	-H 'content-type: application/json' \
+	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
+	--data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","notificationSettings":{"sendOnFailure":{"notificationType":["customerio","slack"]},"sendOnSuccess":{"notificationType":["slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdate":{"notificationType":["customerio","slack"]},"sendOnConnectionUpdateActionRequired":{"notificationType":["customerio","slack"]},"sendOnSyncDisabled":{"notificationType":["customerio","slack"]},"sendOnSyncDisabledWarning":{"notificationType":["customerio","slack"]},"sendOnBreakingChangeWarning":{"notificationType":["customerio"]},"sendOnBreakingChangeSyncsDisabled":{"notificationType":["customerio"]}}}')
 
 
 echo Airbyte setup values:
