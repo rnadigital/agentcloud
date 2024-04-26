@@ -158,11 +158,14 @@ services:
       - '127.0.0.1:6333:6333'
       - '127.0.0.1:6334:6334'
     image: qdrant/qdrant
+    volumes:
+      - qdrant_data:/qdrant_data
 
 volumes:
   mongodb_data_container:
   redis_data:
   datasource_files:
+  qdrant_data:
 
 networks:
   default:
