@@ -6,8 +6,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useReducer, useState } from 'react';
 
-export function StreamRow({ stream, existingStream, readonly }
-	: { stream?: any, existingStream?: any, readonly?: boolean }) {
+export function StreamRow({ stream, existingStream, readonly, descriptionsMap }
+	: { stream?: any, existingStream?: any, readonly?: boolean, descriptionsMap?: any }) {
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 
 	const initialCheckedChildren = stream?.stream?.jsonSchema && Object.entries(stream.stream.jsonSchema.properties)
@@ -29,7 +29,7 @@ export function StreamRow({ stream, existingStream, readonly }
 	}
 	const [checkedChildren, setCheckedChildren] = useReducer(handleCheckedChild, initialCheckedChildren);
 	
-	const [datasourceDescriptions, setDatasourceDescriptions] = useState({});
+	const [datasourceDescriptions, setDatasourceDescriptions] = useState(descriptionsMap||{});
 
 	return (
 		<div className='border-b'>
@@ -94,13 +94,14 @@ export function StreamRow({ stream, existingStream, readonly }
 									<td className='p-2'>{value['type']}</td>
 									<td className='p-2'>
 										<input
-											required
 											type='text'
 											name={key}
 											id={`${key}_description`}
 											disabled={readonly}
-											// disabled={!checkedChildren.includes(key)}
-											defaultValue={`${key} field`}
+											data-checked={existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'].includes(key)) || checkedChildren.includes(key)}
+											readOnly={true}
+											//Note: if you disable readonly it doesnt update the datasources retrieval_config
+											defaultValue={datasourceDescriptions[key]}
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 											placeholder='Enter description'
 										/>
@@ -116,8 +117,8 @@ export function StreamRow({ stream, existingStream, readonly }
 	);
 }
 
-export function StreamsList({ streams, existingStreams, readonly }
-: { streams?: any, existingStreams?: any, readonly?: boolean }) {
+export function StreamsList({ streams, existingStreams, readonly, descriptionsMap }
+: { streams?: any, existingStreams?: any, readonly?: boolean, descriptionsMap?: any }) {
 	return (
 		<div className='my-4'>
 			{streams.map((stream, index) => (
@@ -126,6 +127,7 @@ export function StreamsList({ streams, existingStreams, readonly }
 					key={index}
 					stream={stream}
 					existingStream={existingStreams?.find(es => es.stream.name === stream?.stream?.name)}
+					descriptionsMap={descriptionsMap}
 				/>
 			))}
 		</div>

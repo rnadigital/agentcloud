@@ -162,15 +162,9 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					datasourceName,
 					datasourceDescription,
 					embeddingField,
-					retriever: toolRetriever,
-					retriever_config: {
-						timeWeightField: toolTimeWeightField,
-						decay_rate: toolDecayRate,
-					}, //TODO
 				};
 				//step 2, getting schema and testing connection
 				await API.testDatasource(body, (stagedDatasource) => {
-					console.log('stagedDatasource', stagedDatasource);
 					if (stagedDatasource) {
 						setDatasourceId(stagedDatasource.datasourceId);
 						setDiscoveredSchema(stagedDatasource.discoveredSchema);
@@ -180,7 +174,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					}
 					// nothing to toast here	
 				}, (res) => {
-					console.log(res);
 					setError(res);
 				}, compact ? null : router);
 				// callback && stagedDatasource && callback(stagedDatasource._id);
@@ -205,9 +198,13 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					embeddingField,
 					retriever: toolRetriever,
 					retriever_config:  {
-						toolTimeWeightField,
+						timeWeightField: toolTimeWeightField,
 						decay_rate: toolDecayRate,
-					}, //TODO
+						metadata_field_info: Object.entries(discoveredSchema.catalog.streams[0].stream.jsonSchema.properties)
+							.map(([ek, ev]) => {
+								return { name: ek, description: streamState.descriptionsMap[ek], type: ev['airbyte_type'] || ev['type'] };
+							}),
+					},
 				};
 				const addedDatasource: any = await API.addDatasource(body, () => {
 					toast.success('Added datasource');
@@ -484,13 +481,15 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						}, {});
 					const descriptionsMap = Array.from(e.target.elements)
 						.filter(x => x['type'] === 'text')
+						.filter(x => x['dataset']['checked'] === 'true')
 						.reduce((acc, x) => {
-							acc[x['name']] = x['value'];
+							if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
+								acc[x['name']] = x['value'];
+							}
 							return acc;
 						}, {});
-					console.log(descriptionsMap);
 					setStreamState({ streams, selectedFieldsMap, descriptionsMap });
-					// setStep(4);
+					setStep(4);
 				}}>
 					<StreamsList
 						streams={discoveredSchema.catalog.streams}

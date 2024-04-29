@@ -120,8 +120,11 @@ export default function Datasource(props) {
 				}, {});
 			const descriptionsMap = Array.from(e.target.form.elements)
 				.filter(x => x['type'] === 'text')
+				.filter(x => x['dataset']['checked'] === 'true')
 				.reduce((acc, x) => {
-					acc[x['name']] = x['value'];
+					if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
+						acc[x['name']] = x['value'];
+					}
 					return acc;
 				}, {});
 			const body = {
@@ -214,6 +217,7 @@ export default function Datasource(props) {
 				<StreamsList
 					streams={discoveredSchema.discoveredSchema.catalog.streams}
 					existingStreams={datasource?.connectionSettings?.syncCatalog?.streams}
+					descriptionsMap={datasource?.connectionSettings?.descriptionsMap}
 				/>
 				<button
 					onClick={(e) => updateStreams(e)}
@@ -238,6 +242,7 @@ export default function Datasource(props) {
 			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <StreamsList
 				streams={datasource.connectionSettings.syncCatalog.streams}
 				existingStreams={datasource.connectionSettings.syncCatalog.streams}
+				descriptionsMap={datasource?.connectionSettings?.descriptionsMap}
 				readonly={true}
 			/>}
 			{!discoveredSchema && isDraft && numStreams === 0 && <>

@@ -255,6 +255,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceDescription,
 		streams,
 		selectedFieldsMap,
+		descriptionsMap,
 		scheduleType,
 		timeUnit,
 		units,
@@ -293,6 +294,7 @@ export async function addDatasourceApi(req, res, next) {
 	const connectionsApi = await getAirbyteInternalApi();
 	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
 	const connectionBody = {
+		descriptionsMap,
 		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
@@ -315,6 +317,7 @@ export async function addDatasourceApi(req, res, next) {
 				return {
 					stream: {
 						name: s,
+						description: descriptionsMap[s],
 						defaultCursorField: [],
 						sourceDefinedPrimaryKey: [],
 						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
@@ -484,6 +487,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		streams,
 		sync,
 		selectedFieldsMap,
+		descriptionsMap,
 		scheduleType,
 		timeUnit,
 		units,
@@ -508,6 +512,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	const connectionsApi = await getAirbyteInternalApi();
 	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
 	const connectionBody = {
+		descriptionsMap,
 		connectionId: datasource.connectionId,
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,

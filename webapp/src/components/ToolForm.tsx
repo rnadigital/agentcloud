@@ -50,7 +50,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
-	const [toolRetriever, setToolRetriever] = useState(tool?.retriever || Retriever.DEFAULT);
+	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.DEFAULT);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
 	useEffect(() => {
 		if (toolRetriever !== Retriever.TIME_WEIGHTED) {

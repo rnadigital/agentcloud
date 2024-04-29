@@ -111,11 +111,7 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 				</>
 			)}
 
-			{toolRetriever === Retriever.SELF_QUERY && (
-				<>
-					TODO: a form to input field descriptions
-				</>
-			)}
+			{/*toolRetriever === Retriever.SELF_QUERY && ... */}
 			
 		</div>
 	);
