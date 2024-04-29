@@ -88,7 +88,9 @@ export default function Billing(props) {
 	const [getPaymentLink, getPortalLink, changePlan, createPortalSession] = stripeMethods.map(createApiCallHandler);
 
 	function fetchAccount() {
-		API.getAccount({ resourceSlug }, dispatch, setError, router);
+		if (resourceSlug) {
+			API.getAccount({ resourceSlug }, dispatch, setError, router);
+		}
 	}
 
 	useEffect(() => {

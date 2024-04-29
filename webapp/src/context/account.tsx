@@ -26,7 +26,10 @@ export function AccountWrapper({ children, pageProps }) {
 	});
 
 	function refreshAccountContext() {
-		API.getAccount({ resourceSlug, memberId }, (data) => {
+		API.getAccount({
+			...(resourceSlug ? { resourceSlug } : {}),
+			...(memberId ? { memberId } : {}),
+		}, (data) => {
 			console.log('refreshAccountContext data', data?.account?.permissions);
 			const updatedState = {
 				...pageProps,

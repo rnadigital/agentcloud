@@ -9,6 +9,7 @@ import {
 	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
+import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
 import ProgressBar from 'components/ProgressBar';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
@@ -119,11 +120,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 									</div>
 								</td>
 								<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-									{DatasourceStatus.EMBEDDING === datasource.status
-										? <ProgressBar total={datasource.recordCount?.total} success={datasource.recordCount?.success} failure={datasource.recordCount?.failure} />
-										: <div className={`max-w-[300px] px-3 py-[2px] text-sm text-white text-center rounded-full capitalize ${processingOrEmbedding ? 'barberpole' : datasourceStatusColors[datasource.status]}`}>
-											{datasource.status || 'Unknown'}{processingOrEmbedding && <ButtonSpinner size={14} className='ms-2 -me-1' />}
-										</div>}
+									<DatasourceStatusIndicator datasource={datasource} processingOrEmbedding={processingOrEmbedding} />
 								</td>
 								<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 									<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>

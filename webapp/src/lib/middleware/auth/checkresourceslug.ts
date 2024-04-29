@@ -58,14 +58,15 @@ export async function checkAccountQuery(req, res, next) {
 		}, []);
 	if (req.query?.resourceSlug &&
 		!allowedSlugs.includes(req.query.resourceSlug.toString())) {
-		return res.status(403).send({ error: 'No permission' });
+		return res.status(403).send({ error: 'No permission 1' });
 	}
 
 	// Set org/team that we are currently acting within in res locals
 	const matchingOrg = res.locals.account.orgs
 		.find(o => o.teams.find(t => t.id.toString() === req.query.resourceSlug));
-	if (!matchingOrg) {
-		return res.status(403).send({ error: 'No permission' });
+	if (req.query?.resourceSlug
+		&& !matchingOrg) {
+		return res.status(403).send({ error: 'No permission 2' });
 	}
 	res.locals.matchingOrg = matchingOrg;
 
@@ -75,8 +76,9 @@ export async function checkAccountQuery(req, res, next) {
 	
 	const matchingTeam = matchingOrg.teams
 		.find(t => t.id.toString() === req.query.resourceSlug);
-	if (!matchingTeam) {
-		return res.status(403).send({ error: 'No permission' });
+	if (req.query?.resourceSlug
+		&& !matchingTeam) {
+		return res.status(403).send({ error: 'No permission 3' });
 	}
 	res.locals.matchingTeam = matchingTeam;
 

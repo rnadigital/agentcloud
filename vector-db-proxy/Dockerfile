@@ -1,4 +1,4 @@
-FROM rust as builder
+FROM rust:1.77.2 as builder
 ARG RELEASE
 WORKDIR /usr/local/src/vector-db-proxy
 RUN mkdir -p src
@@ -37,7 +37,7 @@ RUN mkdir /onnxruntime \
 	&& cp lib/libonnxruntime.so.1.17.1 /usr/lib
 
 # Final Stage (using rust image to be safe so we have important libs like libssl, etc)
-FROM rust
+FROM rust:1.77.2
 WORKDIR /app
 ARG RELEASE
 ENV IS_RELEASE=$RELEASE

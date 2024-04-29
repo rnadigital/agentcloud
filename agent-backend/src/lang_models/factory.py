@@ -18,7 +18,7 @@ def model_factory(agentcloud_model: models.mongo.Model,
         case models.mongo.Platforms.AzureChatOpenAI:
             return _build_azure_model_with_credential(agentcloud_model, credential)
         case models.mongo.Platforms.FastEmbed:
-            return _build_fastembed_model_with_credential(agentcloud_model)
+            return _build_fastembed_model(agentcloud_model)
 
 
 def _build_openai_model_with_credential(model: models.mongo.Model,
@@ -72,7 +72,7 @@ def _build_azure_model_with_credential(model: models.mongo.Model,
     )
 
 
-def _build_fastembed_model_with_credential(model: models.mongo.Model) -> Embeddings:
+def _build_fastembed_model(model: models.mongo.Model) -> Embeddings:
     overwrite_model_name = _fastembed_standard_doc_name_swap(
         model.model_name,
         from_standard_to_doc=True
