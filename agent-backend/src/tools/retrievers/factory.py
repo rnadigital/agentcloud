@@ -13,10 +13,10 @@ from .multi_query import MultiQueryRetriever
 def retriever_factory(tool: Tool, vector_store: VectorStore, embedding: Embeddings, llm: BaseLanguageModel):
     match tool.retriever_type:
         case Retriever.DEFAULT:
-            return DefaultRetriever(embedding, vector_store)
+            return DefaultRetriever(tool, embedding, vector_store)
         case Retriever.SELF_QUERY:
             return SelfQueryRetriever(tool, llm, vector_store)
         case Retriever.TIME_WEIGHTED:
             return TimeWeightedRetriever(tool, vector_store)
         case Retriever.MULTI_QUERY:
-            return MultiQueryRetriever(llm, vector_store)
+            return MultiQueryRetriever(tool, llm, vector_store)
