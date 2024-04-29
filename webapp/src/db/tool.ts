@@ -72,6 +72,15 @@ export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Too
 	});
 }
 
+export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, update: any): Promise<InsertResult> {
+	return ToolCollection().updateOne({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	}, {
+		$set: update, //Note: any type and not a Partial because we use a mongo dot notation update
+	});
+}
+
 export function deleteToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
 	return ToolCollection().deleteOne({
 		_id: toObjectId(toolId),

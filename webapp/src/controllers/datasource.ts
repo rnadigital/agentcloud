@@ -6,7 +6,7 @@ import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
-import { addTool } from 'db/tool';
+import { addTool, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
@@ -492,8 +492,9 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		timeUnit,
 		units,
 		cronExpression,
-		cronTimezone
-	}  = req.body;
+		cronTimezone,
+		metadata_field_info,
+	} = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
@@ -507,6 +508,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	//update the metadata map of tools if found
+	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
+	    'retriever_config.metadata_field_info': metadata_field_info,
+	});
 
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteInternalApi();

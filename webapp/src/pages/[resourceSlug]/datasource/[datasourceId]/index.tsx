@@ -135,6 +135,10 @@ export default function Datasource(props) {
 				sync,
 				selectedFieldsMap,
 				descriptionsMap,
+				metadata_field_info: Object.entries(discoveredSchema?.discoveredSchema.catalog.streams[0].stream.jsonSchema.properties)
+					.map(([ek, ev]) => {
+						return { name: ek, description: descriptionsMap[ek], type: ev['airbyte_type'] || ev['type'] };
+					}),
 			};
 			// console.log(body);
 			await API.updateDatasourceStreams(body, () => {
