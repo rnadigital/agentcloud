@@ -674,7 +674,7 @@ tools = ["crewai-tools (>=0.1.7,<0.2.0)"]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
 reference = "main"
-resolved_reference = "98b02c489c965af7447e3b8cbe6b517fb405e418"
+resolved_reference = "4e958ae7780b670c9c34cad257818d3a99284382"
 
 [[package]]
 name = "dataclasses-json"

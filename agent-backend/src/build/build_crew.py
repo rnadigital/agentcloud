@@ -68,7 +68,7 @@ class CrewAIBuilder:
     def init_socket(self):
         try:
             # Initialize the socket client and connect
-            print(f"Socket URL: {SOCKET_URL}")
+            logging.debug(f"Socket URL: {SOCKET_URL}")
             custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
             self.socket.connect(url=SOCKET_URL, headers=custom_headers)
             self.socket.emit("join_room", f"_{self.session_id}")
@@ -100,7 +100,7 @@ class CrewAIBuilder:
                     tool_class = CodeExecutionTool
             if tool.data.builtin:
                 tool_class = globals()[tool.data.name]
-                print(f"tool_class: {tool_class}")
+                logging.debug(f"tool_class: {tool_class}")
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
             tool_models_objects = search_subordinate_keys(self.crew_models, key)
@@ -136,11 +136,10 @@ class CrewAIBuilder:
             )
 
     def stop_generating_check(self, step):
-        print(f"step: {step}")
-        print(f"step % NTH_CHUNK_CANCEL_CHECK: {step % NTH_CHUNK_CANCEL_CHECK}")
+        logging.debug(f"stop_generating_check step % NTH_CHUNK_CANCEL_CHECK: {step % NTH_CHUNK_CANCEL_CHECK}")
         if step % NTH_CHUNK_CANCEL_CHECK == 0:
             stop_flag = redis_con.get(f"{self.session_id}_stop")
-            print(f"stop_flag: {stop_flag}")
+            logging.debug(f"stop_generating_check: {stop_flag}")
             return stop_flag == "1"
         return False
 
@@ -201,9 +200,10 @@ class CrewAIBuilder:
                                                 {self.make_current_context()}
                 """)
             elif len(crew_tasks) > 1:
+                return
                 crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
                 if crew_chat_model:
-                    # human_input_tool = CustomHumanInput(self.socket, self.session_id)
+                    human_input_tool = CustomHumanInput(self.socket, self.session_id)
                     chat_agent = Agent(
                         llm=crew_chat_model,
                         name='Human partner',
@@ -296,4 +296,4 @@ class CrewAIBuilder:
 
     def run_crew(self):
         self.crew.kickoff()
-        print("FINISHED!")
+        logging.debug("FINISHED!")
