@@ -1,7 +1,19 @@
-from abc import ABC, abstractmethod
+import logging
+from abc import ABC
+
+from langchain_core.retrievers import BaseRetriever
+
+from models.mongo import Tool
+from tools.retrievers.callback_handler import RetrieverCallbackHandler
 
 
 class BaseToolRetriever(ABC):
+    logger: logging.Logger
+    tool: Tool
+    retriever: BaseRetriever
+
+    def __init__(self):
+        self.init_logger()
 
     def run(self, query):
         # Perform the query and get results
@@ -14,9 +26,14 @@ class BaseToolRetriever(ABC):
         return formatted_results
 
     def perform_query(self, query):
-        # This method should be overridden by subclasses to perform the actual query
-        raise NotImplementedError
+        self.logger.debug(
+            f"{self.__class__.__name__} in tool: '{self.tool.name}', retriever_config: {self.tool.retriever_config}")
+        return self.retriever.invoke(query, config={'callbacks': [RetrieverCallbackHandler()]})
 
     def format_results(self, results):
-        # This method should be overridden by subclasses to format the results
-        raise NotImplementedError
+        self.logger.debug(f"{self.__class__.__name__} results: {results}")
+        return "\n".join(map(lambda x: x if type(x) is str else x.page_content, results))
+
+    def init_logger(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.DEBUG)

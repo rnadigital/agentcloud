@@ -104,7 +104,7 @@ class Tool(BaseModel):
     type: Optional[str] = "function"
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
-    retriever_type: Optional[Retriever] = Retriever.DEFAULT
+    retriever_type: Optional[Retriever] = Retriever.TIME_WEIGHTED
     retriever_config: Optional[Union[SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig]] = None
 
 

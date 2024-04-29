@@ -12,11 +12,5 @@ class MultiQueryRetriever(BaseToolRetriever):
     def __init__(self, tool: Tool, llm: BaseLanguageModel, vector_store: VectorStore):
         self.tool = tool
         self.retriever = LC_MultiQueryRetriever.from_llm(retriever=vector_store.as_retriever(), llm=llm)
-        logging.basicConfig()
-        logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.INFO)
-
-    def perform_query(self, query):
-        return self.retriever.invoke(query)
-
-    def format_results(self, results):
-        return "\n".join(map(lambda x: x if type(x) is str else x.page_content, results))
+        logging.getLogger("langchain.retrievers.multi_query").setLevel(logging.DEBUG)
+        super().__init__()
