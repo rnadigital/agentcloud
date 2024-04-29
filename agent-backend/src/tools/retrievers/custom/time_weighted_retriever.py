@@ -134,7 +134,7 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
     ) -> List[Document]:
         docs_and_scores = {
             doc.metadata["buffer_idx"]: (doc, self.default_salience)
-            for doc in self.memory_stream[-self.k :]
+            for doc in self.memory_stream[-self.k:]
         }
         # If a doc is considered salient, update the salience score
         docs_and_scores.update(self.get_salient_docs(query))
@@ -145,7 +145,7 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
     ) -> List[Document]:
         docs_and_scores = {
             doc.metadata["buffer_idx"]: (doc, self.default_salience)
-            for doc in self.memory_stream[-self.k :]
+            for doc in self.memory_stream[-self.k:]
         }
         # If a doc is considered salient, update the salience score
         docs_and_scores.update(await self.aget_salient_docs(query))

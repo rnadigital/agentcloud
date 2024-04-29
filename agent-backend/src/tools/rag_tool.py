@@ -83,12 +83,13 @@ class RagTool(GlobalBaseTool):
                        retriever=retriever_factory(tool, vector_store, embedding, llm))
 
     def _run(self, query):
+        print(f"{self.__class__.__name__} received {query}")
         processed_query = query
         try:
             json_obj = json.loads(query)
-            processed_query = json_obj["query"]
+            processed_query = json_obj["query"] if "query" in json_obj else json_obj["text"]
         except:
             pass
-        print("query => ", processed_query)
+        print("processed_query => ", processed_query)
         """ Returns search results via configured retriever """
         return self.retriever.run(processed_query)
