@@ -158,6 +158,8 @@ services:
       - '127.0.0.1:6333:6333'
       - '127.0.0.1:6334:6334'
     image: qdrant/qdrant
+    environment:
+      - QDRANT__LOG_LEVEL=DEBUG
     volumes:
       - qdrant_data:/qdrant_data
 
