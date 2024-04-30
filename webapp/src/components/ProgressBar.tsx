@@ -9,7 +9,7 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = function ({ total=null, success=0, failure=0, text='Embedding' }) {
-	let successPercentage = (total != null ? (success/total)*100 : 0) || 0;
+	const successPercentage = (total != null ? (success/total)*100 : 0) || 0;
 	const failurePercentage = (total != null ? (failure/total)*100 : 0) || 0;
 	return (<div className='mb-6 h-6 max-w-[300px]'>
 		<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white px-2'>

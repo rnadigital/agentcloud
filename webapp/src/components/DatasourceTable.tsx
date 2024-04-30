@@ -10,7 +10,6 @@ import {
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
-import ProgressBar from 'components/ProgressBar';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
 import Link from 'next/link';
