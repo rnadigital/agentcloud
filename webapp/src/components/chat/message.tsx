@@ -1,10 +1,11 @@
-import { ClipboardDocumentIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon, CheckCircleIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
 import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { FeedbackOption } from 'struct/session';
+import ButtonSpinner from 'components/ButtonSpinner';
 
 import { useChatContext } from '../../context/chat';
 
@@ -16,17 +17,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 import Blockies from 'react-blockies';
 import { toast } from 'react-toastify';
 
-const COLLAPSE_AFTER_LINES = 10
-	, feedbackLabels = {
-		// [FeedbackOption.EXIT]: 'Continue',
-		[FeedbackOption.CONTINUE]: 'Continue',
-		[FeedbackOption.CANCEL]: 'End session',
-	}
-	, feedbackMessages = {
-		// [FeedbackOption.EXIT]: 'Looks good!',
-		[FeedbackOption.CONTINUE]: '',
-		[FeedbackOption.CANCEL]: 'TERMINATE',
-	};
+const COLLAPSE_AFTER_LINES = 10;
 
 export function CopyToClipboardButton({ dataToCopy }) {
 
@@ -185,10 +176,12 @@ export function Message({
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
+
 	if (displayType === 'inline') { //TODO: enum and handle "other" types not just like bubble
 		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
+				{isLastMessage ? <ButtonSpinner size={16} /> : <CheckCircleIcon className='fill-green-600 h-5 w-5 mx-1' />}
 				{message}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
@@ -228,23 +221,6 @@ export function Message({
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</div>
-		{chatContext && isFeedback && isLastMessage && <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} bg-yellow-50 dark:bg-yellow-800 ${isLastSeen && !isLastMessage ? 'border-b border-red-500' : ''}`}>
-			<div className='invisible xl:visible col-span-1'></div>
-			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
-				{feedbackOptions && chatContext?.type && feedbackOptions.map((fo, oi) => feedbackMessages[fo] && (<div key={`feedbackOptions_${ts}_${oi}`}>
-					<button
-						className='p-1 px-2 btn bg-indigo-600 rounded-md text-white me-2 capitalize'
-						onClick={(e) => {
-							e.preventDefault();
-							sendMessage(feedbackMessages[fo], { message: feedbackLabels[fo]});
-						}}
-					>
-						{feedbackLabels[fo]}
-					</button>
-				</div>)).filter(n => n)}
-			</div>
-			<div className='invisible xl:visible col-span-1'></div>
-		</div>}
 	</>;
 
 }
