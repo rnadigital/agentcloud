@@ -1,6 +1,7 @@
 import datetime
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple
+from dateutil.parser import parse
 
 from langchain_core.callbacks import (
     AsyncCallbackManagerForRetrieverRun,
@@ -14,6 +15,13 @@ from langchain_core.vectorstores import VectorStore
 
 def _get_hours_passed(time: datetime.datetime, ref_time: datetime.datetime) -> float:
     """Get the hours passed between two datetimes."""
+    # Convert both datetimes to UTC if one or both are naive
+    if time.tzinfo is None:
+        time = time.replace(tzinfo=datetime.timezone.utc)
+    if ref_time.tzinfo is None:
+        ref_time = ref_time.replace(tzinfo=datetime.timezone.utc)
+
+    # Return the difference in hours
     return (time - ref_time).total_seconds() / 3600
 
 
@@ -57,9 +65,17 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
     def _document_get_date(self, field: str, document: Document) -> datetime.datetime:
         """Return the value of the date field of a document."""
         if field in document.metadata:
-            if isinstance(document.metadata[field], float):
-                return datetime.datetime.fromtimestamp(document.metadata[field])
-            return document.metadata[field]
+            value = document.metadata[field]
+            if isinstance(value, float):
+                return datetime.datetime.fromtimestamp(value)
+            elif isinstance(value, str):
+                # Try parsing the string as a datetime
+                try:
+                    return parse(value)
+                except (ValueError, TypeError):
+                    pass
+            return value
+        # Fallback to current datetime if the field is missing or not a valid date representation
         return datetime.datetime.now()
 
     def _get_combined_score(
@@ -87,12 +103,15 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         docs_and_scores = self.vectorstore.similarity_search_with_relevance_scores(
             query, **self.search_kwargs
         )
+        print(f"docs_and_scores: {docs_and_scores}")
         results = {}
-        for fetched_doc, relevance in docs_and_scores:
+        for idx, (fetched_doc, relevance) in enumerate(docs_and_scores):
             if "buffer_idx" in fetched_doc.metadata:
                 buffer_idx = fetched_doc.metadata["buffer_idx"]
                 doc = self.memory_stream[buffer_idx]
                 results[buffer_idx] = (doc, relevance)
+            else:
+                results[idx] = (fetched_doc, relevance)
         return results
 
     async def aget_salient_docs(self, query: str) -> Dict[int, Tuple[Document, float]]:
@@ -120,14 +139,15 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
             for doc, relevance in docs_and_scores.values()
         ]
         rescored_docs.sort(key=lambda x: x[1], reverse=True)
-        result = []
-        # Ensure frequently accessed memories aren't forgotten
-        for doc, _ in rescored_docs[: self.k]:
-            # TODO: Update vector store doc once `update` method is exposed.
-            buffered_doc = self.memory_stream[doc.metadata["buffer_idx"]]
-            buffered_doc.metadata[self.time_weight_field_name] = current_time
-            result.append(buffered_doc)
-        return result
+        return rescored_docs[: self.k]
+        # result = []
+        # # Ensure frequently accessed memories aren't forgotten
+        # for doc, _ in rescored_docs[: self.k]:
+        #     # TODO: Update vector store doc once `update` method is exposed.
+        #     buffered_doc = self.memory_stream[doc.metadata["buffer_idx"]]
+        #     buffered_doc.metadata[self.time_weight_field_name] = current_time
+        #     result.append(buffered_doc)
+        # return result
 
     def _get_relevant_documents(
             self, query: str, *, run_manager: CallbackManagerForRetrieverRun
