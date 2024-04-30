@@ -590,14 +590,15 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		log('createdConnection', JSON.stringify(updatedConnection, null, 2));
 	}
 
+	// Create the collection in qdrant
+	try {
+		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
+	}
+
 	if (sync === true) {
-		// Create the collection in qdrant
-		try {
-			await VectorDBProxy.createCollectionInQdrant(datasourceId);
-		} catch (e) {
-			console.error(e);
-			return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
-		}
 		// Create a job to trigger the connection to sync
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 		const jobBody = {
