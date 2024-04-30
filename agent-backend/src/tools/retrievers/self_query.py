@@ -87,4 +87,7 @@ class SelfQueryRetriever(BaseToolRetriever):
     def format_results(self, results):
         self.logger.debug(f"{self.__class__.__name__} results: {results}")
         return "\n".join(
-            map(lambda x: x if type(x) is str else str({'data': x.page_content, 'metadata': x.metadata}), results))
+            map(lambda x: x if type(x) is str else str({
+                'data': x.page_content,
+                'metadata': x.metadata
+            }), results))

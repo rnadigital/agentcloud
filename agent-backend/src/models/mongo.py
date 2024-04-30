@@ -87,13 +87,18 @@ class MetadataFieldInfo(BaseModel):
 
 class SelfQueryRetrieverConfig(BaseModel):
     k: Optional[int] = Field(default=4)
-    metadata_field_info: List[MetadataFieldInfo]
+    metadata_field_info: Optional[List[MetadataFieldInfo]] = Field(default={})
 
 
 class TimeWeightedRetrieverConfig(BaseModel):
     k: Optional[int] = Field(default=4)
     decay_rate: Optional[float] = Field(default=0.01)
     timeWeightField: Optional[str] = Field(default="last_accessed_at")
+
+
+# Allows me to be lazy in the webapp and include retriever_config keys from multiple types
+class CombinedRetrieverConfig(SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig):
+    pass
 
 
 class Tool(BaseModel):
@@ -105,7 +110,7 @@ class Tool(BaseModel):
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
     retriever_type: Optional[Retriever] = Retriever.DEFAULT
-    retriever_config: Optional[Union[SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig]] = None
+    retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
 
 
 class ApiCredentials(BaseModel):

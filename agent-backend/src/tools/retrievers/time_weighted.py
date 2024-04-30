@@ -8,6 +8,7 @@ from .custom.time_weighted_retriever import CustomTimeWeightedVectorStoreRetriev
 
 
 class TimeWeightedRetriever(BaseToolRetriever):
+
     def __init__(self, tool: Tool, vector_store: VectorStore):
         self.tool = tool
         self.retriever = CustomTimeWeightedVectorStoreRetriever(
@@ -15,3 +16,12 @@ class TimeWeightedRetriever(BaseToolRetriever):
             time_weight_field_name=tool.retriever_config.timeWeightField,
             decay_rate=tool.retriever_config.decay_rate)
         super().__init__()
+
+    def format_results(self, results):
+        self.logger.debug(f"{self.__class__.__name__} results: {results}")
+        return "\n".join(
+            map(lambda x: x if type(x) is str else str({
+                'data': x[0].page_content,
+                'metadata': x[0].metadata,
+                'time_weight_score': x[1]
+            }), results))
