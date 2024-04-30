@@ -172,7 +172,6 @@ else
     cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
 fi
 
-
 echo "=> Starting airbyte"
 
 # Define the target version
@@ -205,7 +204,10 @@ else
 fi
 
 cd airbyte
-./run-ab-platform.sh -b
+./run-ab-platform.sh -b &
+sleep 0.1
+print_logo
+wait
 cd ..
 
 echo "=> Starting rabbitmq and vector_db_proxy"
