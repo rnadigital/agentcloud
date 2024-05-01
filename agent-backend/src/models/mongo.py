@@ -133,7 +133,7 @@ class ModelType(str, Enum):
 class Model(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    name: Optional[str] = "Unknown Agent"
+    name: str
     model_name: Optional[str] = Field(default=ModelVariant.GPT4, alias="model")
     modelType: ModelType
     credentialId: Optional[PyObjectId] = None
