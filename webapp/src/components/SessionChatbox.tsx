@@ -58,9 +58,9 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 					<button
 						onClick={() => { stopGenerating(); }}
 						type='submit'
-						className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+						className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
-						<StopIcon className={'w-5 me-1'} />
+						<StopIcon className='w-4 h-4' />
 					</button>
 				</div> : <button
 					disabled={chatBusyState || promptValue.trim().length === 0}
