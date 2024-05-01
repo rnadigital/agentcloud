@@ -1,5 +1,6 @@
 import {
 	PaperAirplaneIcon,
+	StopIcon,
 } from '@heroicons/react/20/solid';
 import React, { useState } from 'react';
 import Blockies from 'react-blockies';
@@ -8,7 +9,7 @@ import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import classNames from './ClassNames';
 
-export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom }) { //TODO: just get scrolltobottom from chatcontext
+export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onSubmit, scrollToBottom, stopGenerating }) { //TODO: just get scrolltobottom from chatcontext
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -53,7 +54,15 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 				</div>
 			</div>*/}
 			<div className='flex-shrink-0'>
-				<button
+				{chatBusyState ? <div className='flex items-end basis-1/2'>
+					<button
+						onClick={() => { stopGenerating(); }}
+						type='submit'
+						className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
+					>
+						<StopIcon className={'w-5 me-1'} />
+					</button>
+				</div> : <button
 					disabled={chatBusyState || promptValue.trim().length === 0}
 					type='submit'
 					className={classNames('pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
@@ -62,7 +71,7 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 							: 'bg-indigo-400 cursor-wait')}
 				>
 					<PaperAirplaneIcon className='h-4 w-4' />
-				</button>
+				</button>}
 			</div>
 		</div>
 	</form>;

@@ -16,7 +16,7 @@ import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
 import { addAgents } from 'db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage, updateCompletedMessage,upsertOrUpdateChatMessage } from 'db/chat';
+import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage,upsertOrUpdateChatMessage } from 'db/chat';
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { ObjectId } from 'mongodb';
 import { taskQueue } from 'queue/bull';
@@ -66,7 +66,8 @@ export function initSocket(rawHttpServer) {
 		log('socket.id "%s" connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
+			//@ts-ignore
+			args[0]?.message?.displayType === 'inline' && log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {
@@ -96,40 +97,34 @@ export function initSocket(rawHttpServer) {
 			}
 		});
 
-		socket.on('terminate', async (data) => {
+		socket.on('stop_generating', async (data) => {
 			const socketRequest = socket.request as any;
 			const session = await (socketRequest.locals.isAgentBackend === true
 				? unsafeGetSessionById(data.room)
 				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
 			if (!session) {
-				return log('socket.id "%s" terminate invalid session %s', socket.id, data.room);
+				return log('socket.id "%s" stop_generating invalid session %O', socket.id, data);
 			}
-			const app = await getAppByCrewId(socketRequest?.locals?.account?.currentTeam, session.crewId);
-			if (!app) {
-				return log('socket.id "%s" terminate invalid app by crew %s', session.crewId);
-			}
-			if (app.appType != AppType.CHAT) {
-				await (socketRequest.locals.isAgentBackend === true
-					? unsafeSetSessionStatus(session._id, SessionStatus.TERMINATED)
-					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, SessionStatus.TERMINATED));
-				log('socket.id "%s" terminate %s', socket.id, session._id);
-				return io.to(data.room).emit('terminate', true);
-			} else {
-				return log('NOT terminating because CHAT app - socket.id "%s" terminate %s', socket.id, session);
-			}
+			client.set(`${data.room}_stop`, '1');
+			await (socketRequest.locals.isAgentBackend === true
+				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
+				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
+			return io.to(data.room).emit('terminate', true);
 		});
 
 		socket.on('message', async (data) => {
+
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
 			const messageTimestamp = data?.message?.timestamp || Date.now();
+
+			let message;
 			if (typeof data.message !== 'object') {
 				data.message = {
 					type: 'text',
 					text: data.message,
 				};
 			}
-			let message;
 			switch (data.message.type) {
 				case 'code':
 					if (data.message.language === 'json'
@@ -144,6 +139,7 @@ export function initSocket(rawHttpServer) {
 					message = data.message; //any processing?
 					break;
 			}
+
 			const finalMessage = {
 				...data,
 				message,
@@ -195,36 +191,7 @@ export function initSocket(rawHttpServer) {
 				log('socket.id "%s" relaying message %O to private room %s', socket.id, finalMessage, `_${data.room}`);
 				io.to(`_${data.room}`).emit(data.event, finalMessage.message.text);
 			}
-		});
 
-		socket.on('stop_generating', async (data) => {
-			const socketRequest = socket.request as any;
-			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(data.room)
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
-			if (!session) {
-				return log('socket.id "%s" stop_generating invalid session %O', socket.id, data);
-			}
-			client.set(`${data.room}_stop`, '1');
-			await (socketRequest.locals.isAgentBackend === true
-				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
-				: setSessionStatus(socketRequest?.locals?.account?.currentTeam, data.room, SessionStatus.TERMINATED));
-			io.to(`_${data.room}`).emit('terminate', '');
-			return io.to(data.room).emit('terminate', true);
-		});
-
-		socket.on('message_complete', async (data) => {
-			const socketRequest = socket.request as any;
-			if (socketRequest.locals.isAgentBackend !== true) {
-				return log('socket.id "%s" message_complete invalid session %s', socket.id, data?.room);
-			}
-			if (data?.message?.text) {
-				await updateCompletedMessage(data.room, data.message.chunkId, data.message.text, data.message.codeBlocks, data.message.deltaTokens || 0);
-				if (data?.message?.deltaTokens != null && data?.message?.deltaTokens > 0) {
-					const updatedSession = await unsafeIncrementTokens(data.room, data.message.deltaTokens);
-					io.to(data.room).emit('tokens', updatedSession.tokensUsed);
-				}
-			}
 		});
 
 	});

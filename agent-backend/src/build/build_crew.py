@@ -252,13 +252,14 @@ class CrewAIBuilder:
                 exclude={"id", "tasks", "agents"}
             ),
             manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
-            verbose=True
+            verbose=True,
+            # memory=True
         )
 
     def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
-                        author_name="System"):
+                        author_name="System", overwrite=False):
 
-        # test isnt string, its agentaction, etc
+        # text isnt string, its agentaction, etc
         if type(text) != str:
             text = "NON STRING MESSAGE"
 
@@ -288,6 +289,7 @@ class CrewAIBuilder:
                     tokens=1,
                     timestamp=timestamp,
                     displayType=display_type,
+                    overwrite=overwrite,
                 )
             ),
             "both"

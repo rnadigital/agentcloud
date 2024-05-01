@@ -136,6 +136,7 @@ export function Message({
 	chunking,
 	displayType,
 	tokens,
+	completed,
 }: {
 		prevMessage?: any,
 		message?: any,
@@ -153,6 +154,7 @@ export function Message({
 		chunking?: boolean,
 		displayType?: string,
 		tokens?: number,
+		completed?: boolean,
 	}) {
 
 	const [chatContext]: any = useChatContext();
@@ -181,7 +183,7 @@ export function Message({
 		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
-				{isLastMessage ? <ButtonSpinner size={16} /> : <CheckCircleIcon className='fill-green-600 h-5 w-5 mx-1' />}
+				{completed ? <CheckCircleIcon className='fill-green-600 h-5 w-5 mx-1' /> : <ButtonSpinner size={18} className='me-2' />}
 				{message}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>

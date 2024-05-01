@@ -40,7 +40,7 @@ export default function Session(props) {
 	const [loading, setLoading] = useState(false);
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
-	const [terminated, setTerminated] = useState(state?.status === SessionStatus.TERMINATED);
+	const [terminated, setTerminated] = useState(state?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
@@ -91,6 +91,12 @@ export default function Session(props) {
 				&& m?.authorName === message?.authorName);
 			console.log(message?.message?.chunkId, `'${newMessage.message.text}'`, 'matching', matchingMessage != undefined);
 			if (matchingMessage && message?.incoming !== true) {
+				if (message?.message?.overwrite === true) {
+					//TODO: revisit
+					matchingMessage.message.text = message?.message?.text;
+					matchingMessage.completed = true;
+					return [...oldMessages];
+				}
 				const newChunk = { chunk: message.message.text, ts: message.ts, tokens: message?.message?.tokens };
 				const newChunks = (matchingMessage?.chunks||[{ ts: 0, chunk: matchingMessage.message.text || '' }])
 					.concat([newChunk])
@@ -290,7 +296,8 @@ export default function Session(props) {
 						sendMessage={sendFeedbackMessage}
 						displayType={m?.displayType || m?.message?.displayType}
 						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
-						chunking={m?.chunks?.length > 0 && mi === marr.length-1}
+						chunking={m?.chunks?.length > 0}
+						completed={m?.completed}
 						avatar={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
 					/>;
 				})}
@@ -300,19 +307,7 @@ export default function Session(props) {
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 				</div>}
 			</div>
-			<div className='flex flex-col mt-auto'>
-				<div className='flex flex-row justify-center border-t pt-3 dark:border-slate-600'>
-					{!terminated && messages &&  <div className='flex items-end basis-1/2'>
-						<button
-							onClick={() => { stopGenerating(); }}
-							type='submit'
-							className={'whitespace-nowrap pointer-events-auto inline-flex items-center rounded-md ms-auto mb-2 px-3 ps-2 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'}
-						>
-							<StopIcon className={'w-5 me-1'} />
-							<span>Stop Generating</span>
-						</button>
-					</div>}
-				</div>
+			<div className='flex flex-col mt-auto pt-4 border-t'>
 				<div className='flex flex-row justify-center pb-3'>
 					<div className='flex items-start space-x-4 basis-1/2'>
 						{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
@@ -328,6 +323,7 @@ export default function Session(props) {
 										scrollToBottom={scrollToBottom}
 										lastMessageFeedback={lastMessageFeedback}
 										chatBusyState={chatBusyState}
+										stopGenerating={stopGenerating}
 										onSubmit={sendMessage}
 									/>
 								: <ContentLoader

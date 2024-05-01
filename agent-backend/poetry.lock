@@ -673,8 +673,8 @@ tools = ["crewai-tools (>=0.1.7,<0.2.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "main"
-resolved_reference = "ef203168421fe429891c2ec64041d96f8af332a0"
+reference = "develop"
+resolved_reference = "053973e72ebd522a0b4348d981c30e1cb4d249a0"
 
 [[package]]
 name = "dataclasses-json"
@@ -5018,4 +5018,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "d5d93253dcee17f9be681c72f222acad69c15c8a46154f39760b7f530c1b5fe4"
+content-hash = "2068b4085d9bbb896d9885b66d1afc9ac5d80ce40393042a7de71c03f9d3ec56"

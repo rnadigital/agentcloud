@@ -75,34 +75,22 @@ export async function upsertOrUpdateChatMessage(sessionId: db.IdOrStr, chatMessa
 	return ChatCollection().updateOne({
 		sessionId: toObjectId(sessionId),
 		chunkId: chatMessage.chunkId,
-		completed: { $ne: true } //this may be a mistake
+		// completed: { $ne: true } //this may be a mistake
 	}, {
-		$setOnInsert: chatMessage,
-		...(chunk ? {
-			$push: { chunks: chunk }, // Push new chunk if provided
-			$inc: { tokens: chunk.tokens || 0 }, // Increment token count
-		} : {}),
-	}, { upsert: true });
-}
-
-export async function updateCompletedMessage(sessionId: db.IdOrStr, chunkId: string, text: string, codeBlocks: ChatCodeBlock, tokens: number) {
-	const update = {
-		$unset: {
-			chunks: '',
-		},
-		$set: {
-			'message.message.text': text,
-			completed: true,
-			codeBlocks,
-		},
-		$inc: {
-			tokens: tokens || 0,
-		}
-	};
-	return ChatCollection().updateOne({
-		sessionId: toObjectId(sessionId),
-		chunkId,
-	}, update);
+		...(chatMessage.message?.message?.overwrite === true ? {
+			'$set': {
+				'message.message.text':chatMessage.message?.message?.text,
+				'message.completed': true,
+			},
+			'$unset': { chunks: ''},
+		} : { 
+			...(chunk ? {
+				$push: { chunks: chunk }, // Push new chunk if provided
+				$inc: { tokens: chunk.tokens || 0 }, // Increment token count
+			} : {}),
+			$setOnInsert: chatMessage,
+		}),
+	}, { upsert: chatMessage.message?.message?.overwrite !== true });
 }
 
 export async function addChatMessage(chatMessage: ChatMessage): Promise<InsertResult> {
