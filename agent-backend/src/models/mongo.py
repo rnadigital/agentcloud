@@ -219,6 +219,7 @@ class Crew(BaseModel):
     managerLLM: Optional[Model] = None
     functionCallingLLM: Optional[Callable] = None
     verbose: Optional[bool] = False
+    memory: Optional[bool] = False
     config: Optional[Dict] = {}
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
