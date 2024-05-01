@@ -66,8 +66,7 @@ export function initSocket(rawHttpServer) {
 		log('socket.id "%s" connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			//@ts-ignore
-			args[0]?.message?.displayType === 'inline' && log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
+			log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {
