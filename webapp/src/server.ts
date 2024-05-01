@@ -84,7 +84,7 @@ app.prepare()
 				log('SENT READY SIGNAL TO PM2');
 				process.send('ready');
 			}
-			log('Ready on http://0.0.0.0:3000');
+			log(`Ready on http${dev?'':'s'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`);
 		});
 
 		//graceful stop handling
