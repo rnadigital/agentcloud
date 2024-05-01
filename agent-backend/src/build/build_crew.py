@@ -61,6 +61,7 @@ class CrewAIBuilder:
         self.crew_tasks = dict()
         self.crew_chat_tasks = list()
         self.crew_chat_agents = list()
+        self.num_tasks = len(tasks)
         if socket is None:
             self.socket = SimpleClient()
             self.init_socket()
@@ -120,9 +121,12 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-            # human = CustomHumanInput(self.socket, self.session_id)
-            # agent_tools_objs["human_input"] = human
-            # print(agent_tools_objs.values())
+
+            if self.num_tasks > 1:
+                human = CustomHumanInput(self.socket, self.session_id)
+                agent_tools_objs["human_input"] = human
+                # print(agent_tools_objs.values())
+
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -212,6 +216,7 @@ class CrewAIBuilder:
                         tools=[human_input_tool],
                         allow_delegation=True,
                         step_callback=self.send_to_sockets,
+                        verbose=True
                     )
                     chat_task = Task(
                         description=dedent(f"""
