@@ -42,6 +42,8 @@ import * as toolController from 'controllers/tool';
 
 export default function router(server, app) {
 
+	server.use('/static', express.static('static'));
+
 	// Stripe webhook handler
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
