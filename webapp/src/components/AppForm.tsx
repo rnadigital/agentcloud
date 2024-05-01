@@ -66,7 +66,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			appType: appTypeState,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon?._id,
+			iconId: icon?._id || icon?.id,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {

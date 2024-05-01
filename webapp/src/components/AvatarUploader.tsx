@@ -4,7 +4,6 @@ import {
 	CameraIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
-import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -80,7 +79,6 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 					? <CameraIcon className='h-full transition-all hover:stroke-gray-600 stroke-gray-400 w-8 inline-flex align-center justify-center' />
 					: <AgentAvatar agent={{ icon: existingAvatar }} fill={true} />}
 			</label>
-			<small>TODO: button to remove avatar and a modal of aset library and click to pick one</small>
 		</div>
 	</>);
 }
