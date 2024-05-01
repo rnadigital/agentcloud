@@ -56,8 +56,10 @@ export default function SessionChatbox({ lastMessageFeedback, chatBusyState, onS
 			<div className='flex-shrink-0'>
 				{chatBusyState ? <div className='flex items-end basis-1/2'>
 					<button
-						onClick={() => { stopGenerating(); }}
-						type='submit'
+						onClick={(e) => {
+							e.preventDefault();
+							stopGenerating();
+						}}
 						className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 					>
 						<StopIcon className='w-4 h-4' />
