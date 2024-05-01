@@ -82,7 +82,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 }
 
 function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
-	const messageContent = messageLanguage === 'json'
+	let messageContent = messageLanguage === 'json'
 		? JSON.stringify(message, null, '\t')
 		: message.toString();
 	return useMemo(() => {
@@ -173,28 +173,31 @@ export function Message({
 	
 	if (!style) { return null; }
 
-	const sameAuthorAsPrevious = prevMessage && prevMessage.authorName === authorName;
+	const sameAuthorAsPrevious = prevMessage && (prevMessage.authorName === authorName || prevMessage.authorName.toLowerCase() === 'system');
 	const messageDate = new Date(ts);
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
-
-	if (displayType === 'inline') { //TODO: enum and handle "other" types not just like bubble
-		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
-			<div className='invisible xl:visible col-span-1'></div>
-			<div className={`text-sm text-gray-500 m-auto flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3 pt-4 pb-2`}>
-				{completed ? <CheckCircleIcon className='fill-green-600 h-5 w-5 mx-1' /> : <ButtonSpinner size={18} className='me-2' />}
-				{message}
-			</div>
-			<div className='invisible xl:visible col-span-1'></div>
-		</div>;
-	}
+	const isThought = message?.split('\n').slice(-8).some(line => line.toLowerCase().startsWith('action input:')) || (message?.startsWith('Thought:') && !message.includes('Final Answer:'));
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
 			{!sameAuthorAsPrevious && avatar && <AgentAvatar agent={avatar} size={8} />}
 		</span>
 	</div>;
+
+	if (displayType === 'inline') { //TODO: enum and handle "other" types not just like bubble
+		return <div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-700 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
+			<div className='invisible xl:visible col-span-1'></div>
+			<div className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}>
+				<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
+					{completed ? <CheckCircleIcon className='fill-green-600 h-5 me-2' /> : <ButtonSpinner size={18} className='ms-1 me-2' />}
+					{message}
+				</div>
+			</div>
+			<div className='invisible xl:visible col-span-1'></div>
+		</div>;
+	}
 
 	const authorNameSection = !sameAuthorAsPrevious && <div className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t dark:border-slate-600' : ''} ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}>
 		<div className='invisible xl:visible col-span-1'></div>
@@ -204,21 +207,28 @@ export function Message({
 		<div className='invisible xl:visible col-span-1'></div>
 	</div>;
 
+	const messageBodySection = <div className={`shadow-sm flex max-w-96 transition-colors ${incoming ? 'bg-indigo-500' : isThought ? 'bg-slate-700 text-white' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
+		<div className={`${incoming ? 'text-white' : ''} w-full`}>
+			{isThought
+				? <details>
+					<summary className='cursor-pointer'>Thought Process:</summary>
+					<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
+				</details>		
+				: <MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />}
+			<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : isThought ? 'text-gray-300' : 'text-gray-500 dark:text-white'}`}>
+				{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
+				<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
+			</small>
+		</div>
+	</div>;
+
 	return <>
 		{authorNameSection}
 		<div className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-white dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<div className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 				{!incoming && profilePicture}
-				<div className={`shadow-sm flex max-w-96 ${incoming ? 'bg-indigo-500' : 'bg-white dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}>
-					<div className={`${incoming ? 'text-white' : ''} w-full`}>
-						<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
-						<small className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : 'text-gray-500 dark:text-white'}`}>
-							{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
-							<time className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
-						</small>
-					</div>
-				</div>
+				{messageBodySection}
 				{incoming && profilePicture}
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>

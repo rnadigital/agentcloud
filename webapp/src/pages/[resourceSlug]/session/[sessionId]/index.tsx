@@ -321,7 +321,6 @@ export default function Session(props) {
 								? terminated
 									? <p id='session-terminated' className='text-center h-full me-14 pt-3'>This session was terminated.</p>
 									: <SessionChatbox
-										terminated={terminated}
 										scrollToBottom={scrollToBottom}
 										lastMessageFeedback={lastMessageFeedback}
 										chatBusyState={chatBusyState}
