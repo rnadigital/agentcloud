@@ -126,13 +126,12 @@ class CrewAIBuilder:
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm", "verbose"}
+                    exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
                 step_callback=self.send_to_sockets,
                 stop_generating_check=self.stop_generating_check,
                 llm=model_obj,
                 tools=agent_tools_objs.values(),
-                verbose=True
             )
 
     def stop_generating_check(self, step):
@@ -253,7 +252,6 @@ class CrewAIBuilder:
             ),
             manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
             verbose=True,
-            # memory=True
         )
 
     def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
