@@ -216,16 +216,14 @@ class CrewAIBuilder:
                     )
                     chat_task = Task(
                         description=dedent(f"""
-                                        You need to use the human tool. ALWAYS use the human tool.
                                         step 1: Prompt the user by saying "{self.make_user_question()}"
-                                        step 2: use the human tool to get the human answer.
-                                        step 3: Wait for that answer.
-                                        step 4: Once you get the answer from the human, that's your final answer.
+                                        step 2: Use the human input tool to get a response from the user.
+                                        step 3: Once you get a response from the human, that's your final answer.
                                         """),
                                         # {self.make_current_context()}
                                         # """),
                         agent=chat_agent,
-                        expected_output="Human request"
+                        expected_output="Verbatim output the response that the user provided to the human input tool."
                     )
                     self.crew_chat_tasks = [chat_task]
                     self.crew_chat_agents = [chat_agent]
