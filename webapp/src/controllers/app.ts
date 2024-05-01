@@ -106,7 +106,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -128,6 +128,7 @@ export async function addAppApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
+		memory: memory === true,
 		tags: (tags||[])
 			.map(tag => tag.trim()) // Assuming tags is an array of strings
 			.filter(x => x),
@@ -154,7 +155,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -181,6 +182,7 @@ export async function editAppApi(req, res, next) {
 		updateApp(req.params.resourceSlug, req.params.appId, {
 		    name,
 			description,
+			memory: memory === true,
 			tags: (tags||[]) //TODO
 				.map(t => t.trim())
 				.filter(t => t),

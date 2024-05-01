@@ -36,6 +36,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appState, setApp] = useState(app);
 	const [managerModels, setManagerModels] = useState(modelChoices.filter(model => model._id == crew.managerModelId).map(m => ({ label: m.name, value: m._id })));
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
+	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
@@ -64,6 +65,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			process: e.target.process.value,
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
+			memory: appMemory,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
@@ -365,6 +367,23 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						        />
 							</div>
 						</div>}
+
+						<div className='sm:col-span-12'>
+							<div className='mt-2'>
+								<label htmlFor='appMemory' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<input
+										id='appMemory'
+										type='checkbox'
+										name='memory'
+										checked={appMemory}
+										onChange={(e) => setAppMemory(e.target.checked)}
+										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+									/>
+									<span className='ml-2'>Enable Memory (Experimental)</span>
+								</label>
+							</div>
+						</div>
+
 					</div>
 				</div>			
 

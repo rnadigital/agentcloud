@@ -8,6 +8,7 @@ export type App = {
 	orgId?: ObjectId;
 	teamId?: ObjectId;
 	name: string;
+	memory?: boolean;
 	description?: string;
 	author?: string;
 	tags?: string[];
