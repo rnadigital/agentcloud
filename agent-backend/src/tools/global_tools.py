@@ -123,50 +123,6 @@ class GlobalBaseTool(BaseTool, ABC):
         pass
 
 
-class get_papers_from_arxiv(GlobalBaseTool):
-    """
-get_papers_from_arxiv
-This function takes a string query as input and fetches related research papers from the arXiv repository.
-The function connects to the arXiv API, submits the query, and retrieves a list of papers matching the query criteria.
-The returned data includes essential details like the paper's title, authors, abstract, and arXiv ID.
-    Args:
-        query (str): The query to send to arxiv to search for papers with.
-    """
-    name: str = "get_papers_from_arxiv"
-    description: str = "This function takes a string query as input and fetches related research papers from the arXiv repository. The function connects to the arXiv API, submits the query, and retrieves a list of papers matching the query criteria. The returned data includes essential details like the paper's title, authors, abstract, and arXiv ID."
-    code: str
-    function_name: str
-    properties_dict: dict = None
-    args_schema: Type = None
-
-    @classmethod
-    def factory(cls, tool: Tool, **kargs):
-        return get_papers_from_arxiv(
-            name=tool.name,
-            description=tool.description,
-            function_name=tool.data.name,
-            code=tool.data.code,
-            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
-        )
-
-    def _run(
-        self,
-        query: str
-    ) -> str:
-        try:
-            import arxiv
-            search = arxiv.Search(
-                query=query, max_results=10, sort_by=arxiv.SortCriterion.SubmittedDate
-            )
-            results = []
-            for result in arxiv.Client().results(search):
-                results.append(result.title)
-            return results
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return f"An error occurred: {str(e)}"
-
-
 class openapi_request:
     @staticmethod
     @tool("Open AI request")

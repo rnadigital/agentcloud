@@ -14,13 +14,11 @@ from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
 from typing import Dict
-from langchain_openai.chat_models import ChatOpenAI, AzureChatOpenAI
-from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from models.sockets import SocketMessage, SocketEvents, Message
-from tools import CodeExecutionTool, RagTool  # , RagToolFactory
+from tools import CodeExecutionTool, RagTool
 from messaging.send_message_to_socket import send
-from tools.global_tools import CustomHumanInput, GlobalBaseTool, get_papers_from_arxiv, openapi_request
+from tools.global_tools import CustomHumanInput, GlobalBaseTool
+from tools.builtin_tools import BuiltinTools
 from redisClient.utilities import RedisClass
 
 NTH_CHUNK_CANCEL_CHECK = 20
@@ -100,7 +98,7 @@ class CrewAIBuilder:
                     # TODO: use more secure option tools.CodeExecutionUsingDockerNotebookTool
                     tool_class = CodeExecutionTool
             if tool.data.builtin:
-                tool_class = globals()[tool.data.name]
+                tool_class = BuiltinTools.get_tool_class(tool.data.name)
                 logging.debug(f"tool_class: {tool_class}")
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
