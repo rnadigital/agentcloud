@@ -29,6 +29,9 @@ fastembed = "^0.2.2"
 qdrant-client = "^1.8.0"
 arxiv = "^2.1.0"
 lark = "^1.1.9"
+wikipedia = "^1.4.0"
+mediawikiapi = "^1.2"
+wikibase-rest-api-client = "^0.1.3"
 
 
 [build-system]
