@@ -1,7 +1,7 @@
 import Blockies from 'react-blockies';
 import StorageProviderFactory from 'storage/index';
 
-export default function AgentAvatar({ agent, fill=false, size=8 }) {
+export default function AgentAvatar({ agent, fill=false, size=10 }) {
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	return <span className='rounded-full overflow-hidden'>
 		{agent?.icon?.filename

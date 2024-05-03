@@ -42,7 +42,7 @@ export default function AgentList({ agents, fetchAgents }) {
 							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>{agent.model}</p>
 						</div>
 						<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold overflow-hidden'>
-							<AgentAvatar agent={agent} />
+							<AgentAvatar agent={agent} fill={true} />
 						</div>
 					</div>
 					<div>
