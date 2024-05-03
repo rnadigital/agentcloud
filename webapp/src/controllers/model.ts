@@ -74,7 +74,7 @@ export async function modelAddPage(app, req, res, next) {
 
 export async function modelAddApi(req, res, next) {
 
-	let { name, model, credentialId }  = req.body;
+	let { name, model, credentialId, config, type }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
@@ -100,22 +100,6 @@ export async function modelAddApi(req, res, next) {
 	}
 
 	// Insert model to db
-	const type = credential?.type || CredentialType.FASTEMBED;
-	// if (type === CredentialType.FASTEMBED) {
-	// 	// Insert dummy cred for agent-backend
-	// 	const dummyCred = await addCredential({
-	// 		orgId: res.locals.matchingOrg.id,
-	// 		teamId: toObjectId(req.params.resourceSlug),
-	// 	    name: '-',
-	// 	    createdDate: new Date(),
-	// 	    type,
-	// 	    credentials: {
-	// 			key: null,
-	// 			endpointURL: null
-	// 	    },
-	// 	});
-	// 	credentialId = dummyCred.insertedId;
-	// }
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -123,7 +107,8 @@ export async function modelAddApi(req, res, next) {
 		model,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
-		type,
+		type: credential?.type || type || CredentialType.FASTEMBED,
+		config: config || {}, //TODO: validation
 		...(credentialId ? { credentialId: toObjectId(credentialId) } : {}),
 	});
 
@@ -133,7 +118,7 @@ export async function modelAddApi(req, res, next) {
 
 export async function editModelApi(req, res, next) {
 
-	let { name, model, credentialId }  = req.body;
+	let { name, model, credentialId, config, type }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
@@ -147,6 +132,7 @@ export async function editModelApi(req, res, next) {
 	const update = {
 		name,
 		model,
+		config,
 		embeddingLength: ModelEmbeddingLength[model] || 0,
 		modelType: ModelEmbeddingLength[model] ? 'embedding' : 'llm',
 	};
@@ -165,7 +151,7 @@ export async function editModelApi(req, res, next) {
 		}
 		update['credentialId'] = credentialId ? toObjectId(credentialId) : null;
 	}
-	update['type'] = credential?.type || CredentialType.FASTEMBED;
+	update['type'] = credential?.type || type || CredentialType.FASTEMBED;
 
 	// Insert model to db
 	const updatedModel = await updateModel(req.params.resourceSlug, req.params.modelId, update);

@@ -10,7 +10,11 @@ export const ModelList = {
 		'fast-bge-base-en',
 		'fast-bge-base-en-v1.5',
 		'fast-all-MiniLM-L6-v2',
-		'fast-multilingual-e5-large']
+		'fast-multilingual-e5-large'
+	],
+	[CredentialType.OLLAMA]: [
+		'llama2' // TODO: more
+	]
 };
 
 export const ModelEmbeddingLength = {

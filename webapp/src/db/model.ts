@@ -16,6 +16,7 @@ export type Model = {
 	modelType: string; //'embedding' | 'llm'
 	embeddingLength: number;
 	type?: CredentialType; //redundant
+	config?: Record<string,any>;
 }
 
 export function ModelCollection(): any {

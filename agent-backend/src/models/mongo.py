@@ -25,6 +25,7 @@ class Platforms(str, Enum):
     ChatOpenAI = "open_ai"
     AzureChatOpenAI = "azure"
     FastEmbed = "fastembed"
+    Ollama = "ollama"
 
 
 class ModelVariant(str, Enum):
@@ -144,6 +145,8 @@ class Model(BaseModel):
     timeout: Optional[int] = 300
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
+    type: Optional[Platforms] = None
+    config: Optional[Dict] = None
 
 
 class ChatModel(BaseModel):

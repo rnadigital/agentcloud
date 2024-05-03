@@ -204,7 +204,7 @@ export default withRouter(function Layout(props) {
 													</ul>
 												</li>
 												<li key='agentnavigation'>
-													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>e</div>}
+													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => {
 															return (<li key={item.name} className='ps-4'>
@@ -223,6 +223,7 @@ export default withRouter(function Layout(props) {
 																</Link>
 															</li>);
 														})}
+														<PreviewSessionList />
 													</ul>
 												</li>
 												{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}

@@ -12,13 +12,27 @@ def model_factory(agentcloud_model: models.mongo.Model,
     """
     Return a (llm or embedding) langchain model based on credentials and model specs in mongo
     """
-    match credential.type:
+    match agentcloud_model.type:
         case models.mongo.Platforms.ChatOpenAI:
             return _build_openai_model_with_credential(agentcloud_model, credential)
         case models.mongo.Platforms.AzureChatOpenAI:
             return _build_azure_model_with_credential(agentcloud_model, credential)
         case models.mongo.Platforms.FastEmbed:
             return _build_fastembed_model(agentcloud_model)
+        case models.mongo.Platforms.Ollama:
+            return _build_openai_compatible_model_with_credential(agentcloud_model)
+
+
+def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
+    if model.modelType == models.mongo.ModelType.embedding:
+        raise # figure this out later
+    else:
+        return ChatOpenAI(
+            **model.model_dump(
+                exclude_none=True,
+                exclude_unset=True,
+            ).get('config') # config key will hold the raw openai format arguments
+        )
 
 
 def _build_openai_model_with_credential(model: models.mongo.Model,

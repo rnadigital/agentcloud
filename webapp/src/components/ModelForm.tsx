@@ -2,16 +2,23 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useReducer } from 'react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { CredentialType } from 'struct/credential';
+import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
 import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import * as API from '../api';
 import CreateCredentialModal from '../components/CreateCredentialModal';
 import { useAccountContext } from '../context/account';
+
+const initialConfigState = {
+	base_url: '',
+	api_key: '',
+	// model: ''
+};
 
 export default function ModelForm({ _model = { type: CredentialType.OPENAI }, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
 
@@ -23,6 +30,14 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const [modalOpen, setModalOpen] = useState(false);
+	const [config, setConfig] = useReducer(configReducer, modelState?.config || initialConfigState);
+
+	function configReducer(state, action) {
+		return {
+			...state,
+			[action.name]: action.value
+		};
+	}
 
 	const { _id, name, credentialId, model, type } = modelState;
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
@@ -34,7 +49,9 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 			name: e.target.modelName.value,
 			model: modelState.model,
 			modelId: modelState._id,
+			config: config,
 			credentialId: modelState.credentialId,
+			type: modelState?.type,
 		};
 		if (editing) {			
 			await API.editModel(body, () => {
@@ -128,11 +145,12 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 							>
 								<option disabled value=''>Select a type...</option>
 								<option value={CredentialType.OPENAI}>OpenAI</option>
+								<option value={CredentialType.OLLAMA}>Ollama</option>
 								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
 							</select>
 						</div>
 					</div>
-					{type !== CredentialType.FASTEMBED && <div className='sm:col-span-12'>
+					{type === CredentialType.OPENAI && <div className='sm:col-span-12'>
 						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Credential
 						</label>
@@ -172,6 +190,24 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 					        />
 						</div>
 					</div>}
+					{Object.entries(CredentialTypeRequirements[type]).filter(e => e[1]).map(([key, _], ei) => {
+						return (<div key={`modelName_${ei}`}>
+							<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								{key}
+							</label>
+							<div className='mt-2'>
+								<input
+									type='text'
+									name={key}
+									id={key}
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+									onChange={e => setConfig(e.target)}
+									required
+									defaultValue={config[key]}
+								/>
+							</div>
+						</div>);
+					})}
 					{ModelList[type]?.length > 0 && <div className='sm:col-span-12'>
 						<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Model
@@ -183,6 +219,10 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 					            classNames={SelectClassNames}
 					            value={model ? { label: model, value: model } : null}
 					            onChange={(v: any) => {
+			            			setConfig({
+										name: 'model',
+										value: v?.value,
+			            			})
 					            	setModelState(oldModel => {
   											return {
   												...oldModel,
