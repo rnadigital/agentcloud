@@ -220,6 +220,7 @@ class Crew(BaseModel):
     functionCallingLLM: Optional[Callable] = None
     verbose: Optional[bool] = False
     memory: Optional[bool] = False
+    cache: Optional[bool] = False
     config: Optional[Dict] = {}
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
@@ -244,7 +245,7 @@ class Datasource(BaseModel):
     name: str
     sourceId: PyObjectId
     sourceType: str
-    embeddingField : Optional[str] = Field(default="page_content")
+    embeddingField: Optional[str] = Field(default="page_content")
     workspaceId: PyObjectId
     connectionId: PyObjectId
     destinationId: PyObjectId

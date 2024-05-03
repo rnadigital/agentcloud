@@ -9,6 +9,7 @@ export type App = {
 	teamId?: ObjectId;
 	name: string;
 	memory?: boolean;
+	cache?: boolean;
 	description?: string;
 	author?: string;
 	tags?: string[];

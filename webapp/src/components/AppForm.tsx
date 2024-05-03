@@ -37,6 +37,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [managerModels, setManagerModels] = useState(modelChoices.filter(model => model._id == crew.managerModelId).map(m => ({ label: m.name, value: m._id })));
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
+	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
@@ -66,6 +67,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
 			memory: appMemory,
+			cache: appCache,
 			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
@@ -370,6 +372,22 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 						<div className='sm:col-span-12'>
 							<div className='mt-2'>
+								<label htmlFor='appCache' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<input
+										id='appCache'
+										type='checkbox'
+										name='cache'
+										checked={appCache}
+										onChange={(e) => setAppCache(e.target.checked)}
+										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+									/>
+									<span className='ml-2'>Cache Tool Results</span>
+								</label>
+							</div>
+						</div>
+
+						<div className='sm:col-span-12'>
+							<div className='mt-2'>
 								<label htmlFor='appMemory' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									<input
 										id='appMemory'
@@ -380,6 +398,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 									/>
 									<span className='ml-2'>Enable Memory (Experimental)</span>
+									<p className='text-sm'></p>
 								</label>
 							</div>
 						</div>
