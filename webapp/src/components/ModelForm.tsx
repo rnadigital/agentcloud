@@ -17,7 +17,7 @@ import { useAccountContext } from '../context/account';
 const initialConfigState = {
 	base_url: '',
 	api_key: '',
-	// model: ''
+	model: '',
 };
 
 export default function ModelForm({ _model = { type: CredentialType.OPENAI }, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
@@ -39,7 +39,8 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 		};
 	}
 
-	const { _id, name, credentialId, model, type } = modelState;
+	const { _id, name, credentialId, type } = modelState;
+	const { model } = config;
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 	async function modelPost(e) {
 		e.preventDefault();
@@ -47,10 +48,10 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.modelName.value,
-			model: modelState.model,
+			model: model,
 			modelId: modelState._id,
 			config: config,
-			credentialId: modelState.credentialId,
+			credentialId: type === CredentialType.OPENAI ? modelState.credentialId : null,
 			type: modelState?.type,
 		};
 		if (editing) {			
@@ -135,10 +136,13 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								value={type}
 								onChange={(e: any) => {
+									setConfig({
+										name: 'model',
+										value: '',
+			            			});
 									setModelState(oldModel => ({
 										...oldModel,
 										credentialId: null,
-										model: '',
 										type: e.target.value,
 									}));
 								}}
@@ -222,13 +226,7 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 			            			setConfig({
 										name: 'model',
 										value: v?.value,
-			            			})
-					            	setModelState(oldModel => {
-  											return {
-  												...oldModel,
-  												model: v?.value,
-  											};
-  										});
+			            			});
 				            	}}
 					            options={ModelList && ModelList[type] && ModelList[type].map(m => ({ label: m, value: m }))}
 					            formatOptionLabel={data => {

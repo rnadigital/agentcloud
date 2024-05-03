@@ -149,8 +149,8 @@ export async function editModelApi(req, res, next) {
 		if (!credential) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid credential ID' });
 		}
-		update['credentialId'] = credentialId ? toObjectId(credentialId) : null;
 	}
+	update['credentialId'] = credentialId ? toObjectId(credentialId) : null;
 	update['type'] = credential?.type || type || CredentialType.FASTEMBED;
 
 	// Insert model to db
