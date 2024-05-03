@@ -15,8 +15,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
-import ContentLoader from 'react-content-loader';
 import AgentAvatar from 'components/AgentAvatar';
+import ContentLoader from 'react-content-loader';
 
 export default function Session(props) {
 

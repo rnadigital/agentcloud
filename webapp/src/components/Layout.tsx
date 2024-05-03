@@ -19,6 +19,7 @@ import {
 	WrenchScrewdriverIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
+import AgentAvatar from 'components/AgentAvatar';
 import classNames from 'components/ClassNames';
 // import DebugLogs from 'components/DebugLogs';
 import NotificationBell from 'components/NotificationBell';
@@ -31,7 +32,6 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
-import AgentAvatar from 'components/AgentAvatar';
 
 import packageJson from '../../package.json';
 
