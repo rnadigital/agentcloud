@@ -178,7 +178,7 @@ export function Message({
 	const today = Date.now() - ts < 86400000;
 	const dateString = messageDate.toLocaleString();
 	const relativeDateString = relativeString(new Date(), messageDate);
-	const isThought = message?.split('\n').slice(-8).some(line => line.toLowerCase().startsWith('action input:')) || (message?.startsWith('Thought:') && !message.includes('Final Answer:'));
+	const isThought = !isFeedback && message?.split('\n').slice(-8).some(line => line.toLowerCase().startsWith('action input:')) || (message?.startsWith('Thought:') && !message.includes('Final Answer:'));
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>

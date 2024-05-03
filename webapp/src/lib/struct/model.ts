@@ -13,7 +13,9 @@ export const ModelList = {
 		'fast-multilingual-e5-large'
 	],
 	[CredentialType.OLLAMA]: [
-		'llama2' // TODO: more
+		'llama2',
+		'llama3', // TODO: more
+		'llama3:70b',
 	]
 };
 
