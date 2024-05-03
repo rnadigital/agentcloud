@@ -63,6 +63,54 @@ The returned data includes essential details like the paper's title, authors, ab
 			},
 			builtin: true
 		}
+	},
+	{
+		name: 'Search DuckDuckGo',
+		description: 'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'search_duckduckgo',
+			description: 'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {query: {type: 'string', description: 'The search query to send to DuckDuckGo'}}
+			},
+			builtin: true
+		}
+	},
+	{
+		name: 'Search StackExchange',
+		description: 'This tool takes a string query as input and fetches relevant data from StackExchange.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'search_stackexchange',
+			description: 'This tool takes a string query as input and fetches relevant data from StackExchange.',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {query: {type: 'string', description: 'The search query to send to StackExchange'}}
+			},
+			builtin: true
+		}
+	},
+	{
+		name: 'Search YouTube',
+		description: 'This tool takes a string query as input and fetches relevant data from YouTube.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'search_youtube',
+			description: 'This tool takes a string query as input and fetches relevant data from YouTube.',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {query: {type: 'string', description: 'The search query to send to YouTube'}}
+			},
+			builtin: true
+		}
 	}
 ].map((t: Tool) => {
 	t.data.builtin = true;

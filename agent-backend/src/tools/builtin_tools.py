@@ -10,7 +10,10 @@ class BuiltinTools:
     tools = {
         'get_papers_from_arxiv': ArxivTool,
         'search_wikipedia': WikipediaTool,
-        'search_wikidata': WikidataTool
+        'search_wikidata': WikidataTool,
+        'search_duckduckgo': DuckDuckGoSearchTool,
+        'search_stackexchange': StackExchangeTool,
+        'search_youtube': YoutubeSearchTool
     }
 
     @classmethod
