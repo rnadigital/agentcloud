@@ -13,10 +13,10 @@ import debug from 'debug';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
-import Blockies from 'react-blockies';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import ContentLoader from 'react-content-loader';
+import AgentAvatar from 'components/AgentAvatar';
 
 export default function Session(props) {
 
@@ -299,7 +299,7 @@ export default function Session(props) {
 						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
 						chunking={m?.chunks?.length > 0}
 						completed={m?.completed}
-						avatar={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
+						agent={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
 					/>;
 				})}
 				{((chatBusyState && messages?.length === 0 && !terminated) || loading || (messages && messages.length === 0)) && <div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
@@ -313,7 +313,7 @@ export default function Session(props) {
 					<div className='flex items-start space-x-4 basis-1/2'>
 						{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
 							<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
-								<Blockies seed={account.name} />
+								<AgentAvatar agent={{ name: account.email, icon: { /* TODO */ } }} />
 							</span>
 						</div>}
 						<div className='min-w-0 flex-1 h-full'>

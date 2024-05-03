@@ -3,7 +3,6 @@ import {
 	StopIcon,
 } from '@heroicons/react/20/solid';
 import React, { useState } from 'react';
-import Blockies from 'react-blockies';
 
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';

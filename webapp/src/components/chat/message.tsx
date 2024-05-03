@@ -130,7 +130,7 @@ export function Message({
 	isLastSeen,
 	ts,
 	authorName,
-	avatar,
+	agent,
 	incoming,
 	sendMessage,
 	chunking,
@@ -148,7 +148,7 @@ export function Message({
 		isLastSeen?: boolean,
 		ts?: number,
 		authorName?: string,
-		avatar?: any,
+		agent?: any,
 		incoming?: boolean,
 		sendMessage?: Function,
 		chunking?: boolean,
@@ -182,7 +182,8 @@ export function Message({
 
 	const profilePicture = <div className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}>
 		<span className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}>
-			{!sameAuthorAsPrevious && avatar && <AgentAvatar agent={avatar} size={8} />}
+			{/*(incoming || !sameAuthorAsPrevious) && <AgentAvatar agent={avatar} size={8} />*/}
+			<AgentAvatar agent={agent} size={8} />
 		</span>
 	</div>;
 
@@ -211,7 +212,9 @@ export function Message({
 		<div className={`${incoming ? 'text-white' : ''} w-full`}>
 			{isThought
 				? <details>
-					<summary className='cursor-pointer'>Thought Process:</summary>
+					<summary className='cursor-pointer'>
+						Thought Process:
+					</summary>
 					<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 				</details>		
 				: <MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />}

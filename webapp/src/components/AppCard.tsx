@@ -19,7 +19,7 @@ export default function AppCard({ app, startSession }) {
 		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<div className='flex items-center justify-center p-4'>
-					<AgentAvatar agent={app} />
+					<AgentAvatar agent={app} size={20} />
 				</div>
 				<div>
 					<div className='font-bold text-xl mb-2'>{name}</div>

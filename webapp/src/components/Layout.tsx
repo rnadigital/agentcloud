@@ -31,7 +31,7 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
-import Blockies from 'react-blockies';
+import AgentAvatar from 'components/AgentAvatar';
 
 import packageJson from '../../package.json';
 
@@ -542,7 +542,7 @@ export default withRouter(function Layout(props) {
 											width={64}
 											height={64}
 										/>*/}
-										<Blockies className='rounded-full' seed={account.name} />
+										<AgentAvatar agent={{ name: account.email, icon: { /* TODO */ } }} />
 										<span className='hidden lg:flex lg:items-center ps-2'>
 											<span
 												className='text-sm font-semibold leading-6 text-gray-900 dark:text-white'
