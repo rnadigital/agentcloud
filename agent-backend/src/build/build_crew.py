@@ -75,11 +75,10 @@ class CrewAIBuilder:
             logging.error(f"Connection error occurred: {ce}")
             raise
 
-    def build_models_with_credentials(self):
+    def build_models(self):
         for key, model in self.models_models.items():
             credential = match_key(self.credentials_models, key)
-            if credential:
-                self.crew_models[key] = language_model_factory(model, credential)
+            self.crew_models[key] = language_model_factory(model, credential)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -232,7 +231,7 @@ class CrewAIBuilder:
 
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
-        self.build_models_with_credentials()
+        self.build_models()
 
         # 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
         self.build_tools_and_their_datasources()
