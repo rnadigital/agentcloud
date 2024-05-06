@@ -9,6 +9,8 @@ use amqprs::{
 use tokio::time::{sleep, Duration};
 
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Option<Connection> {
+    println!("RabbitMQ Host: {}", connection_details.host);
+    println!("RabbitMQ Port: {}", connection_details.port);
     let max_connection_attempts = 50;
     let mut res = Connection::open(
         OpenConnectionArguments::new(
@@ -22,6 +24,7 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Option<Conn
         .await;
     let mut connection_attempts = 0;
     while let Err(ref e) = res {
+        println!("Error while connecting to rabbitMQ. Error: {}", e);
         log::error!("An error occurred while attempting to connect to RabbitMQ: {}",e);
         while connection_attempts <= max_connection_attempts {
             log::debug!("Will try to re-connect...");

@@ -119,7 +119,7 @@ async fn main() -> std::io::Result<()> {
         )
             .await;
     });
-    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
     let web_task = tokio::spawn(async move {
         log::info!("Running on http://{}:{}", host.clone(), port.clone());
         let server = HttpServer::new(move || {
