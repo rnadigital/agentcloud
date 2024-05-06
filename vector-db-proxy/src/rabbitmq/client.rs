@@ -8,10 +8,10 @@ use amqprs::{
 };
 use tokio::time::{sleep, Duration};
 
-pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Option<Connection> {
+pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     println!("RabbitMQ Host: {}", connection_details.host);
     println!("RabbitMQ Port: {}", connection_details.port);
-    let max_connection_attempts = 50;
+    let max_connection_attempts = 100;
     let mut res = Connection::open(
         OpenConnectionArguments::new(
             &connection_details.host,
@@ -23,13 +23,12 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Option<Conn
     )
         .await;
     let mut connection_attempts = 0;
-    while let Err(ref e) = res {
-        println!("Error while connecting to rabbitMQ. Error: {}", e);
-        log::error!("An error occurred while attempting to connect to RabbitMQ: {}",e);
+    while res.is_err() {
         while connection_attempts <= max_connection_attempts {
-            log::debug!("Will try to re-connect...");
             connection_attempts += 1;
-            sleep(Duration::from_millis(2000 + (connection_attempts * 2))).await;
+            let time_to_sleep = 2 + (connection_attempts * 2);
+            println!("Going to sleep for '{}' seconds then will try to re-connect...", time_to_sleep);
+            sleep(Duration::from_secs(time_to_sleep)).await;
             res = Connection::open(&OpenConnectionArguments::new(
                 &connection_details.host,
                 connection_details.port,
@@ -37,15 +36,14 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Option<Conn
                 &connection_details.password,
             ))
                 .await;
-            let connection = res.unwrap();
-            connection
-                .register_callback(DefaultConnectionCallback)
-                .await
-                .unwrap();
-            return Some(connection);
         }
     }
-    return None;
+    let connection = res.unwrap();
+    connection
+        .register_callback(DefaultConnectionCallback)
+        .await
+        .unwrap();
+    connection
 }
 
 pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
@@ -67,7 +65,7 @@ pub async fn bind_queue_to_exchange(
 ) {
     if !connection.is_open() {
         log::warn!("Connection not open");
-        *connection = connect_rabbitmq(connection_details).await.unwrap();
+        *connection = connect_rabbitmq(connection_details).await;
         *channel = channel_rabbitmq(connection).await;
         log::debug!("{}", connection);
     }

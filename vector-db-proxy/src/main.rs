@@ -73,6 +73,7 @@ async fn main() -> std::io::Result<()> {
     log::info!("Starting Vector DB Proxy APP...");
     let global_data = GLOBAL_DATA.read().await;
     let _ = set_all_env_vars().await;
+    // Set the logging level based on the env variable that is set
     let logging_level = global_data.logging_level.clone();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
@@ -97,7 +98,7 @@ async fn main() -> std::io::Result<()> {
         username: global_data.rabbitmq_username.clone(),
         password: global_data.rabbitmq_password.clone(),
     };
-    let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await.unwrap();
+    let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await;
     let mut channel = channel_rabbitmq(&connection).await;
     bind_queue_to_exchange(
         &mut connection,
@@ -119,7 +120,7 @@ async fn main() -> std::io::Result<()> {
         )
             .await;
     });
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
         log::info!("Running on http://{}:{}", host.clone(), port.clone());
         let server = HttpServer::new(move || {
