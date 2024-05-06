@@ -97,7 +97,7 @@ async fn main() -> std::io::Result<()> {
         username: global_data.rabbitmq_username.clone(),
         password: global_data.rabbitmq_password.clone(),
     };
-    let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await;
+    let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await.unwrap();
     let mut channel = channel_rabbitmq(&connection).await;
     bind_queue_to_exchange(
         &mut connection,
