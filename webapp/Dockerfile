@@ -54,7 +54,7 @@ ENV NEXT_PUBLIC_SHORT_COMMIT_HASH=$SHORT_COMMIT_HASH \
     GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
 
 # Copy the Google credentials file from the build context
-COPY $GOOGLE_KEYPATH /app/keyfile.json
+# COPY $GOOGLE_KEYPATH /app/keyfile.json
 
 # Expose the port the app runs on
 EXPOSE 3000
