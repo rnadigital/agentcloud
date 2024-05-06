@@ -5,6 +5,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 
 pub async fn start_mongo_connection() -> Result<Database, CustomErrorType> {
     let global_data = GLOBAL_DATA.read().await;
+    log::debug!("Mongo URI: {}", global_data.mongo_uri);
     let client_options = ClientOptions::parse(global_data.mongo_uri.as_str())
         .await
         .unwrap();
