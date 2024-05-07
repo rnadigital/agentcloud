@@ -13,7 +13,6 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
     println!("RabbitMQ Port: {}", connection_details.port);
     println!("RabbitMQ Username: {}", connection_details.username);
     println!("RabbitMQ Password: {}", connection_details.password);
-    let max_connection_attempts = 100;
     let mut res = Connection::open(
         OpenConnectionArguments::new(
             &connection_details.host,
@@ -26,19 +25,17 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
         .await;
     let mut connection_attempts = 0;
     while res.is_err() {
-        while connection_attempts <= max_connection_attempts {
-            connection_attempts += 1;
-            let time_to_sleep = 2 + (connection_attempts * 2);
-            println!("Going to sleep for '{}' seconds then will try to re-connect...", time_to_sleep);
-            sleep(Duration::from_secs(time_to_sleep)).await;
-            res = Connection::open(&OpenConnectionArguments::new(
-                &connection_details.host,
-                connection_details.port,
-                &connection_details.username,
-                &connection_details.password,
-            ))
-                .await;
-        }
+        connection_attempts += 1;
+        let time_to_sleep = 2 + (connection_attempts * 2);
+        println!("Going to sleep for '{}' seconds then will try to re-connect...", time_to_sleep);
+        sleep(Duration::from_secs(time_to_sleep)).await;
+        res = Connection::open(&OpenConnectionArguments::new(
+            &connection_details.host,
+            connection_details.port,
+            &connection_details.username,
+            &connection_details.password,
+        ))
+            .await;
     }
     let connection = res.unwrap();
     connection
