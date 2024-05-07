@@ -14,8 +14,17 @@ export const ModelList = {
 	],
 	[CredentialType.OLLAMA]: [
 		'llama2',
-		'llama3', // TODO: more
+		'llama3',
+		'llama3:8b',
 		'llama3:70b',
+		'llama3:70b-instruct',
+		'dolphin-llama3:256k',
+		'dolphin-llama3:70b',
+		'dolphin-llama3:8b-256k',
+		'phi3',
+		'phi3:instruct',
+		'llama3:8b-instruct-fp16',
+		'mixtral:instruct',
 	]
 };
 

@@ -63,7 +63,7 @@ export async function addTool(tool: Tool): Promise<InsertResult> {
 	return ToolCollection().insertOne(tool);
 }
 
-export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Tool): Promise<InsertResult> {
+export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Partial<Tool>): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		_id: toObjectId(toolId),
 		teamId: toObjectId(teamId),

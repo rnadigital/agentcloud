@@ -97,6 +97,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 			description: toolDescription,
 			retriever: toolRetriever,
 			retriever_config: {
+				...(tool?.retriever_config||{}),
 				timeWeightField: toolTimeWeightField,
 				decay_rate: toolDecayRate,
 			}, //TODO
