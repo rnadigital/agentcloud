@@ -86,10 +86,17 @@ class RagTool(GlobalBaseTool):
         print(f"{self.__class__.__name__} received {query}")
         processed_query = query
         try:
-            json_obj = json.loads(query)
-            processed_query = json_obj["query"] if "query" in json_obj else json_obj["text"]
+            processed_query = json.loads(query)
         except:
-            pass
+            if query.startswith("{"):
+                if not query.endswith('"}'):
+                    query += '"}'
+                elif not query.endswith('}'):
+                    query += '}'
+            try:
+                processed_query = json.loads(query)
+            except:
+                processed_query = query
         print("processed_query => ", processed_query)
         """ Returns search results via configured retriever """
         return self.retriever.run(processed_query)

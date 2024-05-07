@@ -26,7 +26,7 @@ class CustomHumanInput(BaseTool):
     This class initializes with a socket client and a session identifier to manage messages
     for a specific connection session."""
     name = "human_input"
-    description = """Sends input to the user. The parameter of the input is called "text". It then waits for the human to respond. It returns the human response."""
+    description = """Sends input to the user. The parameter of the input is called "text". Finish your message and the human will respond. It returns the human response."""
     args_schema: Type[BaseModel] = HumanInputParams
     session_id: str = None
     socket_client: SimpleClient = None
@@ -42,13 +42,22 @@ class CustomHumanInput(BaseTool):
             if isinstance(text, str) and text.startswith('{'):
                 text_json = json.loads(text)
                 if len(text_json) > 1:
-                    return text # not a single key object
-                return next((value for value in text_json.values() if value is not None),
-                    None)  # get the first key, which is usually "question" or "message"
-            return text
+                    return json.dumps(text_json)  # return the stringified JSON object
+                return next((value for value in text_json.values() if value is not None), None)
         except Exception as e:
-            logging.exception(e)
-            return text
+            if text.startswith('{'):
+                if not text.endswith('"}'):
+                    text += '"}'
+                elif not text.endswith('}'):
+                    text += '}'
+            try:
+                text_json = json.loads(text)
+                if len(text_json) > 1:
+                    return json.dumps(text_json)  # return the stringified JSON object
+                return next((value for value in text_json.values() if value is not None), None)
+            except Exception as ex:
+                logging.exception(ex)
+        return text
 
     def _run(
             self,
