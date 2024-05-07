@@ -189,6 +189,7 @@ class Task(BaseModel):
     outputPydantic: Optional[BaseModel] = None
     outputFile: Optional[str] = None
     callback: Optional[Callable] = None
+    requiresHumanInput: bool = False
 
 
 class Agent(BaseModel):
