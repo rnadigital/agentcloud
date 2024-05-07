@@ -25,6 +25,7 @@ export const ModelList = {
 		'phi3:instruct',
 		'llama3:8b-instruct-fp16',
 		'mixtral:instruct',
+		'nomic-embed-text',
 	]
 };
 
@@ -39,4 +40,5 @@ export const ModelEmbeddingLength = {
 	'fast-bge-small-zh-v1.5': 512,
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
+	'nomic-embed-text': 8192,
 };
