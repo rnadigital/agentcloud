@@ -13,8 +13,8 @@ class GoogleSecretProvider extends SecretProvider {
 	async init() {
 		if (process.env.PROJECT_ID) {
 			const secretClientOptions = { projectId: process.env.PROJECT_ID };
-			if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-				secretClientOptions['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+			if (process.env.LOCAL && process.env.GOOGLE_APPLICATION_CREDENTIALS ) {
+				secretClientOptions['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;			
 			}
 			this.#secretClient = new SecretManagerServiceClient(secretClientOptions);
 		}
