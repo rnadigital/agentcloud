@@ -14,8 +14,18 @@ export const ModelList = {
 	],
 	[CredentialType.OLLAMA]: [
 		'llama2',
-		'llama3', // TODO: more
+		'llama3',
+		'llama3:8b',
 		'llama3:70b',
+		'llama3:70b-instruct',
+		'dolphin-llama3:256k',
+		'dolphin-llama3:70b',
+		'dolphin-llama3:8b-256k',
+		'phi3',
+		'phi3:instruct',
+		'llama3:8b-instruct-fp16',
+		'mixtral:instruct',
+		'nomic-embed-text',
 	]
 };
 
@@ -30,4 +40,5 @@ export const ModelEmbeddingLength = {
 	'fast-bge-small-zh-v1.5': 512,
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
+	'nomic-embed-text': 8192,
 };

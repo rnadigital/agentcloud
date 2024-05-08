@@ -34,6 +34,7 @@ import debug from 'debug';
 import * as ses from 'lib/email/ses';
 import { initRabbit } from 'lib/rabbitmq/send';
 import * as redis from 'lib/redis/redis';
+import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -47,11 +48,13 @@ app.prepare()
 		//do a bunch of tasks on initing the server
 		await db.connect();
 		await migrate();
+		const storageProvider = StorageProviderFactory.getStorageProvider();
+		await storageProvider.init();
+		const secretProvider = SecretProviderFactory.getSecretProvider();
+		await secretProvider.init();
 		await initGlobalTools();
 		await ses.init();
 		await initRabbit();
-		const storageProvider = StorageProviderFactory.getStorageProvider();
-		await storageProvider.init();
 
 		// const ia = await getAirbyteInternalApi();
 		// console.log(ia);

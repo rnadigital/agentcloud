@@ -119,7 +119,7 @@ class CrewAIBuilder:
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
 
-            if self.num_tasks > 1:
+            if any([x.requiresHumanInput for x in self.tasks_models.values()]):
                 human = CustomHumanInput(self.socket, self.session_id)
                 agent_tools_objs["human_input"] = human
                 # print(agent_tools_objs.values())
@@ -243,7 +243,8 @@ class CrewAIBuilder:
         self.build_tasks()
 
         # 5. Build chat Agent + Task
-        self.build_chat()
+        # self.build_chat()
+
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
             agents=self.crew_chat_agents + list(self.crew_agents.values()),

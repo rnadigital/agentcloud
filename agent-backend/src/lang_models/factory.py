@@ -50,7 +50,9 @@ def _build_openai_model_with_credential(model: models.mongo.Model,
                     "modelType",
                     "model_name",
                     "name",
-                    "embeddingLength"
+                    "embeddingLength",
+                    "type",
+                    "config"
                 }
             )
         )
@@ -64,7 +66,9 @@ def _build_openai_model_with_credential(model: models.mongo.Model,
                     "id",
                     "credentialId",
                     "embeddingLength",
-                    "modelType"
+                    "modelType",
+                    "type",
+                    "config"
                 }
             )
         )
@@ -80,7 +84,9 @@ def _build_azure_model_with_credential(model: models.mongo.Model,
             exclude={
                 "id",
                 "credentialId",
-                "embeddingLength"
+                "embeddingLength",
+                "type",
+                "config"
             }
         )
     )

@@ -13,7 +13,7 @@ export async function init() {
 	try {
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		amazonAccessID = await secretProvider.getSecret('AMAZON_ACCESS_ID');
-		amazonSecretAccessKey = await secretProvider.getSecret('grep');
+		amazonSecretAccessKey = await secretProvider.getSecret('AMAZON_SECRET_ACCESS_KEY');
 		if (!amazonAccessID) { return; }
 		sesClient = new SESClient({
 			region: 'us-east-1',
