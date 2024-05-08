@@ -29,26 +29,24 @@ pub async fn subscribe_to_queue(
 ) {
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
-    let mut message_count: Vec<u8> = vec![];
     match channel.basic_consume_rx(args.clone()).await {
         Ok((_, mut messages_rx)) => {
             while let Some(message) = messages_rx.recv().await {
                 let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                 let _ = channel.basic_ack(args).await;
                 let headers = message.basic_properties.unwrap().headers().unwrap().clone();
+                println!("RabbitMQ Message Headers: {:?}", headers);
                 if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
-                    message_count.push(1);
-                    log::debug!("'{}' messages arrived at consume module", message_count.len());
                     let stream_string: String = stream.to_string();
                     let stream_split: Vec<&str> = stream_string.split('_').collect();
                     let datasource_id = stream_split.to_vec()[0];
                     if let Some(msg) = message.content {
-                        // if the header 'type' is present then assume that it is a file upload. pull from gcs
                         if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
                             match get_datasource(&mongodb_connection, datasource_id).await {
                                 Ok(datasource) => {
                                     if let Some(ds) = datasource {
                                         if let Ok(Some(model_parameters)) = get_embedding_model(&mongodb_connection, datasource_id).await {
+                                            // if the header 'type' is present then assume that it is a file upload. pull from gcs
                                             if headers.get(&ShortStr::try_from("type").unwrap()).is_some() {
                                                 if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                                                     let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
