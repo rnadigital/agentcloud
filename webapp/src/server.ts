@@ -37,6 +37,7 @@ import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
 import { v4 as uuidv4 } from 'uuid';
+import * as airbyteSetup from 'lib/airbyte/setup';
 
 import router from './router';
 import { initSocket } from './socketio';
@@ -46,6 +47,7 @@ app.prepare()
 	.then(async () => {
 
 		//do a bunch of tasks on initing the server
+		await airbyteSetup.init();
 		await db.connect();
 		await migrate();
 		const storageProvider = StorageProviderFactory.getStorageProvider();
