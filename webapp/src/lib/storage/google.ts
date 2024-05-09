@@ -11,9 +11,9 @@ class GoogleStorageProvider extends StorageProvider {
 	constructor() {
 		super();		
 		const options: any = { projectId: process.env.PROJECT_ID };
-		if (process.env.SECRET_KEYFILE) {
-			options.keyFilename = process.env.SECRET_KEYFILE;
-		}
+		// if (process.env.SECRET_KEYFILE) {
+		// 	options.keyFilename = process.env.SECRET_KEYFILE;
+		// }
 		this.#storageClient = new Storage(options);
 	}
 
