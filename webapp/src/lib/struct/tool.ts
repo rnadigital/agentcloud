@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
 export enum Retriever {
-	DEFAULT = 'default',        // vectorstore similarity search
+	RAW = 'raw',
 	SELF_QUERY = 'self_query',
 	TIME_WEIGHTED = 'time_weighted',
 	MULTI_QUERY = 'multi_query'

@@ -38,17 +38,10 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 						value={toolRetriever}
 						onChange={(e) => setToolRetriever(e.target.value as Retriever)}
 					>
-						<option value={Retriever.DEFAULT}>Similarity Search (Default)</option>
+						<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
 						<option value={Retriever.MULTI_QUERY}>Multi Query</option>
-						{currentDatasource?.sourceType === 'file'
-							? <>
-								<option disabled value={Retriever.SELF_QUERY}>Self Query (coming soon...)</option>
-								<option disabled value={Retriever.TIME_WEIGHTED}>Time Weighted (coming soon...)</option>
-							</>
-							: <>
-								<option value={Retriever.SELF_QUERY}>Self Query</option>
-								<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
-							</>}
+						<option disabled={currentDatasource?.sourceType === 'file'} value={Retriever.TIME_WEIGHTED}>Time Weighted {currentDatasource?.sourceType === 'file' ? 'Coming soon' : ''}</option>
+						<option value={Retriever.RAW}>Raw Similarity Search</option>
 					</select>
 				</div>
 			</div>

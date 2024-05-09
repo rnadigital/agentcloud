@@ -65,7 +65,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
-	const [toolRetriever, setToolRetriever] = useState(Retriever.DEFAULT);
+	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(0.5);
 	useEffect(() => {
 		if (toolRetriever !== Retriever.TIME_WEIGHTED) {
