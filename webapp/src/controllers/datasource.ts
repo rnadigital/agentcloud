@@ -813,7 +813,7 @@ export async function uploadFileApi(req, res, next) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
-
+	console.log('NEXT_PUBLIC_STORAGE_PROVIDER: %s', process.env.NEXT_PUBLIC_STORAGE_PROVIDER);
 	// Tell the vector proxy to process it	
 	await sendMessage(JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
