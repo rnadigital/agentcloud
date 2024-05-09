@@ -12,7 +12,7 @@ from .multi_query import MultiQueryRetriever
 
 def retriever_factory(tool: Tool, vector_store: VectorStore, embedding: Embeddings, llm: BaseLanguageModel):
     match tool.retriever_type:
-        case Retriever.DEFAULT:
+        case Retriever.RAW:
             return DefaultRetriever(tool, embedding, vector_store)
         case Retriever.SELF_QUERY:
             return SelfQueryRetriever(tool, llm, vector_store)
