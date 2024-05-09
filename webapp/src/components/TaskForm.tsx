@@ -53,6 +53,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: e.target.asyncExecution.checked,
+			requiresHumanInput: e.target.requiresHumanInput.checked,
 		};
 		if (editing) {
 			await API.editTask(taskState._id, body, () => {
@@ -270,6 +271,32 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 										/>
 										Async Execution
+									</label>
+								</div>
+							</div>
+						</div>
+						
+						{/* human_input tool checkbox */}
+						<div className='col-span-full'>
+							<div className='mt-2'>
+								<div className='sm:col-span-12'>
+									<label htmlFor='requiresHumanInput' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										<input
+											type='checkbox'
+											id='requiresHumanInput'
+											name='requiresHumanInput'
+											checked={taskState?.requiresHumanInput === true}
+											onChange={e => {
+												setTask(oldTask => {
+													return {
+														...oldTask,
+														requiresHumanInput: e.target.checked,
+													};
+												});
+											}}
+											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										/>
+										Allow Human Input
 									</label>
 								</div>
 							</div>

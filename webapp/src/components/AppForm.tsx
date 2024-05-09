@@ -63,7 +63,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			resourceSlug,
 			name: e.target.name.value,
 			description,
-			process: e.target.process.value,
+			process: ProcessImpl.SEQUENTIAL, //e.target.process.value,
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
 			memory: appMemory,
@@ -303,7 +303,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						        />
 							</div>
 						</div>
-						<div className='sm:col-span-12'>
+						{/*<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Process
 							</label>
@@ -331,7 +331,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 									<span className='ml-2'>Hirarchial</span>
 								</label>
 							</div>
-						</div>
+						</div>*/}
 						{(appTypeState === AppType.CHAT || crewState.process === ProcessImpl.HIERARCHICAL) && <div className='sm:col-span-12'>
 							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Chat Manager Model
