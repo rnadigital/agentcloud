@@ -12,6 +12,7 @@ import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
+import SecretKeys from 'secret/secretkeys';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
@@ -47,7 +48,7 @@ export default async function createAccount(email: string, name: string, passwor
 
 	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
-	const amazonKey = await secretProvider.getSecret('AMAZON_ACCESS_ID');
+	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
 	const emailVerified = amazonKey == null;
 	const passwordHash = password ? (await bcrypt.hash(password, 12)) : null;
 	const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;

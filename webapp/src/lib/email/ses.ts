@@ -2,6 +2,7 @@
 
 import { SendEmailCommand,SESClient } from '@aws-sdk/client-ses';
 import debug from 'debug';
+import SecretKeys from 'lib/secret/secretkeys';
 import SecretProviderFactory from 'secret/index';
 const log = debug('webapp:email');
 
@@ -12,8 +13,8 @@ let sesClient;
 export async function init() {
 	try {
 		const secretProvider = SecretProviderFactory.getSecretProvider();
-		amazonAccessID = await secretProvider.getSecret('AMAZON_ACCESS_ID');
-		amazonSecretAccessKey = await secretProvider.getSecret('AMAZON_SECRET_ACCESS_KEY');
+		amazonAccessID = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
+		amazonSecretAccessKey = await secretProvider.getSecret(SecretKeys.AMAZON_SECRET_ACCESS_KEY);
 		if (!amazonAccessID) { return; }
 		sesClient = new SESClient({
 			region: 'us-east-1',
