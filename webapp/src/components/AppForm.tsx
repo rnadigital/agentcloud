@@ -34,7 +34,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
-	const [managerModels, setManagerModels] = useState(modelChoices.filter(model => model._id == crew.managerModelId).map(m => ({ label: m.name, value: m._id })));
+	const [managerModel, setManagerModel] = useState(modelChoices.find(model => model._id == crew.managerModelId));
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
@@ -68,7 +68,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			appType: appTypeState,
 			memory: appMemory,
 			cache: appCache,
-			managerModelId: managerModels && managerModels.length > 0 ? managerModels[0].value : undefined,
+			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
 		};
@@ -338,7 +338,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							</label>
 							<div className='mt-2'>
 								<Select
-									isMultiple
 									isSearchable
 						            primaryColor={'indigo'}
 						            classNames={{
@@ -348,13 +347,13 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
-						            value={managerModels}
+						            value={managerModel ? { name: managerModel._id, label: managerModel.name, ...managerModel } : null}
 						            onChange={(v: any) => {
-										setManagerModels(v);
+										setManagerModel(v);
         						   	}}
 						            options={modelChoices.filter(model => model.modelType == undefined || model.modelType == 'llm')
-						            	.map(m => ({ label: m.name, value: m._id }))} // map to options
-						            	// .concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+						            	.map(m => ({ label: m.name, value: m._id }))}
+						            	// .concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])}
 						            formatOptionLabel={(data: any) => {
 						                return (<li
 						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
