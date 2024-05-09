@@ -177,6 +177,7 @@ class Data(BaseModel):
 class Task(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
+    name: Optional[str] = ''
     description: str
     expected_output: Optional[str] = Field(validation_alias=AliasChoices('expectedOutput', 'expected_output'))
     expectedOutput: Optional[str] = None
