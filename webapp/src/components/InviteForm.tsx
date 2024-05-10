@@ -1,13 +1,12 @@
 'use strict';
 
 import * as API from '@api';
+import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import { SubscriptionPlan } from 'struct/billing';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import SubscriptionModal from 'components/SubscriptionModal';
-
+import { SubscriptionPlan } from 'struct/billing';
 
 export default function InviteToTeamForm({ callback }: { callback?: Function }) {
 

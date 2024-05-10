@@ -94,7 +94,7 @@ export const pricingMatrix: PricingMatrix = {
 		embeddingModels: [],
 	},
 	[SubscriptionPlan.TEAMS]: {
-		users: 5,
+		users: 100,
 		orgs: 1,
 		teams: -1,
 		fileUploads: true,

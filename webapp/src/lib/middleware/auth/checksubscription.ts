@@ -2,7 +2,7 @@ import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
 import debug from 'debug';
-import { PlanLimitsKeys, SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:middleware:auth:checksubscription');
 
 const cache = {};
@@ -61,22 +61,23 @@ export async function setSubscriptionLocals(req, res, next) {
 export function checkSubscriptionPlan(plans: SubscriptionPlan[]) {
 	// @ts-ignore
 	return cache[plans] || (cache[plans] = async function(req, res, next) {
-
 		const { stripePlan } = (res.locals?.subscription || {});
-		
 		if (!plans.includes(stripePlan)) {
 			return dynamicResponse(req, res, 400, { error: `This feature is only available on plans: ${plans.join('\n')}` });
 		}
-
 		next();
-
 	});
 }
 
 export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
+	// @ts-ignore
 	return cache[limit] || (cache[limit] = async function(req, res, next) {
+		const { stripePlan } = (res.locals?.subscription || {});
 		const usage = res.locals.usage;
-		if (usage && usage[limit] > res.locals.subscription[limit]) {
+		log(`plan: ${stripePlan}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}`);
+		// @ts-ignore
+		if ((!usage || !stripePlan)
+			|| (usage && stripePlan && usage[limit] > pricingMatrix[stripePlan][limit])) {
 			return dynamicResponse(req, res, 400, { error: `Usage for "${limit}" exceeded (${usage[limit]}/${res.locals.subscription[limit]}).` });
 		}
 		next();
