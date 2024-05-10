@@ -134,11 +134,13 @@ export async function init() {
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
+		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
 		let airbyteAdminDestinationId = destinationsList.destinations[0]?.destinationId;
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
+		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
 		if (!airbyteAdminDestinationId) {
 			log('Creating destination');
