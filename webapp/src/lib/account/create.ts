@@ -15,6 +15,7 @@ import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
+import { SubscriptionPlan } from 'struct/billing';
 
 export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {
@@ -73,6 +74,10 @@ export default async function createAccount(email: string, name: string, passwor
 			emailVerified,
 			oauth,
 			permissions: new Binary(Roles.REGISTERED_USER.array),
+			stripe: {
+				stripeCustomerId: null,
+				stripePlan: SubscriptionPlan.FREE,
+			}
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

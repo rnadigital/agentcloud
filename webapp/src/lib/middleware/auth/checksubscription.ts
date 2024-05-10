@@ -1,9 +1,38 @@
 import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
+import debug from 'debug';
 import { PlanLimitsKeys, SubscriptionPlan } from 'struct/billing';
+const log = debug('webapp:middleware:auth:checksubscription');
 
 const cache = {};
+
+export async function fetchUsage(req, res, next) {
+	const currentOrg = res.locals?.matchingOrg;
+	const currentTeam = res.locals?.matchingTeam;
+
+	if (!currentOrg || !currentTeam) {
+		return dynamicResponse(req, res, 400, { error: 'Missing org or team in usage check context' });
+	}
+
+	try {
+	
+		// Count the number of members in the team
+		const teamMembersCount = currentTeam.members?.length || 0;
+
+		// Add usage data to the response locals
+		res.locals.usage = {
+			...(res.locals.usage || {}),
+			[PlanLimitsKeys.users]: teamMembersCount,
+		};
+
+		next();
+
+	} catch (error) {
+		log('Error fetching usage:', error);
+		return dynamicResponse(req, res, 500, { error: 'Error fetching usage data' });
+	}
+}
 
 export async function setSubscriptionLocals(req, res, next) {
 
@@ -29,13 +58,14 @@ export async function setSubscriptionLocals(req, res, next) {
 
 }
 
-export function checkSubscriptionPlan(plan: SubscriptionPlan) {
-	return cache[plan] || (cache[plan] = async function(req, res, next) {
+export function checkSubscriptionPlan(plans: SubscriptionPlan[]) {
+	// @ts-ignore
+	return cache[plans] || (cache[plans] = async function(req, res, next) {
 
 		const { stripePlan } = (res.locals?.subscription || {});
 		
-		if (!stripePlan || stripePlan !== plan) {
-			return dynamicResponse(req, res, 400, { error: 'Please upgrade to access this feature' });
+		if (!plans.includes(stripePlan)) {
+			return dynamicResponse(req, res, 400, { error: `This feature is only available on plans: ${plans.join('\n')}` });
 		}
 
 		next();
@@ -47,12 +77,9 @@ export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 	return cache[limit] || (cache[limit] = async function(req, res, next) {
 		const usage = res.locals.usage;
 		if (usage && usage[limit] > res.locals.subscription[limit]) {
-			return dynamicResponse(req, res, 400, { error: `Limit for ${limit} exceeded. Please upgrade your plan.` });
+			return dynamicResponse(req, res, 400, { error: `Usage for "${limit}" exceeded (${usage[limit]}/${res.locals.subscription[limit]}).` });
 		}
 		next();
 	});
 }
 
-export function checkSubscriptionValue() {
-	//todo: check a value of a plan limit i.e greater than, less than
-}

@@ -15,6 +15,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
+	console.log(stripePlan)
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	return <div className={` cursor-pointer w-max min-w-[300px] rounded-lg p-6 ${isPopular ? 'shadow-lg border border-gray-300' : ''} ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : ''}`} style={{ backgroundColor: isPopular ? '#f2f2f2' : '' }}>
