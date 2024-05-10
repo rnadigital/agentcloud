@@ -52,7 +52,7 @@ export default function Account(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Account Settings</h3>
 			</div>
 
-			<p>Nothing here... yet.</p>
+			<p>{/* TODO */}</p>
 
 			<div className='my-2 flex flex-wrap items-center justify-start gap-x-6 gap-y-2'>
 				<button

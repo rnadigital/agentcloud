@@ -614,7 +614,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	}
 
 	return (<div>
-		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ more data connections' buttonText='Upgrade' />
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ data connections.' buttonText='Upgrade' />
 		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
 		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
