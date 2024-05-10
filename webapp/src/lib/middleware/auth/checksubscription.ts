@@ -2,29 +2,37 @@ import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
 import debug from 'debug';
-import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:middleware:auth:checksubscription');
 
 const cache = {};
 
 export async function fetchUsage(req, res, next) {
+
 	const currentOrg = res.locals?.matchingOrg;
 	const currentTeam = res.locals?.matchingTeam;
 
 	if (!currentOrg || !currentTeam) {
-		return dynamicResponse(req, res, 400, { error: 'Missing org or team in usage check context' });
+		return dynamicResponse(req, res, 400, { error: 'Missing org or team in usage check' });
+	}
+
+	const { stripePlan } = (res.locals?.subscription || {});
+	if (!stripePlan) {
+		return dynamicResponse(req, res, 400, { error: 'Missing stripe plan in usage check' });
 	}
 
 	try {
 	
 		// Count the number of members in the team
-		const teamMembersCount = currentTeam.members?.length || 0;
+		const teamMembersCount = Object.keys(currentTeam.permissions).length || 0;
 
 		// Add usage data to the response locals
 		res.locals.usage = {
 			...(res.locals.usage || {}),
 			[PlanLimitsKeys.users]: teamMembersCount,
 		};
+
+		res.locals.limits = pricingMatrix[stripePlan];
 
 		next();
 
@@ -73,11 +81,12 @@ export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 	// @ts-ignore
 	return cache[limit] || (cache[limit] = async function(req, res, next) {
 		const { stripePlan } = (res.locals?.subscription || {});
-		const usage = res.locals.usage;
-		log(`plan: ${stripePlan}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}`);
+		const usage = res.locals.usage||{};
+		const limits = res.locals.limits||{};
+		log(`plan: ${stripePlan}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}, limits[limit]: ${limits[limit]}`);
 		// @ts-ignore
 		if ((!usage || !stripePlan)
-			|| (usage && stripePlan && usage[limit] > pricingMatrix[stripePlan][limit])) {
+			|| (usage && stripePlan && usage[limit] >= limits[limit])) {
 			return dynamicResponse(req, res, 400, { error: `Usage for "${limit}" exceeded (${usage[limit]}/${res.locals.subscription[limit]}).` });
 		}
 		next();

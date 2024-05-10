@@ -6,6 +6,7 @@ import {
 	checkSubscriptionLimit,
 	checkSubscriptionPlan,
 	setSubscriptionLocals,
+	fetchUsage,
 } from '@mw/auth/checksubscription';
 import csrfMiddleware from '@mw/auth/csrf';
 import fetchSession from '@mw/auth/fetchsession';
@@ -197,7 +198,7 @@ export default function router(server, app) {
 	teamRouter.get('/team/:memberId([a-f0-9]{24}).json', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.teamMemberJson);
 	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
-	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
+	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), fetchUsage, checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.deleteTeamMemberApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.addTeamApi);
 

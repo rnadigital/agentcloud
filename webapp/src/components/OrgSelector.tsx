@@ -50,6 +50,7 @@ export default function OrgSelector({ orgs }) {
 				redirect,
 			}, (res) => {
 				dispatch(res);
+				router.push(redirect);
 			}, setError, router);
 			refreshAccountContext();
 		} finally {
@@ -99,7 +100,7 @@ export default function OrgSelector({ orgs }) {
 											href='#'
 											className={classNames(
 												active ? 'bg-gray-100' : 'text-gray-100',
-												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700'
+												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700 font-semibold cursor-default'
 											)}
 										>
 											{org.name}
@@ -127,8 +128,7 @@ export default function OrgSelector({ orgs }) {
 						<hr className='border-t border-2 border-slate-700 w-full' />
 						<a
 							onClick={() => {
-								const planAllowed = [SubscriptionPlan.FREE, SubscriptionPlan.PRO].includes(stripePlan);
-								setModalOpen(!planAllowed ? 'subscribe' : 'team');
+								setModalOpen('team');
 							}}
 							href='#'
 							className='text-gray-100 group flex items-center px-3 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
@@ -139,7 +139,6 @@ export default function OrgSelector({ orgs }) {
 				</Menu.Items>
 			</Transition>
 		</Menu>
-		<SubscriptionModal open={modalOpen === 'subscribe'} setOpen={setModalOpen} title='Upgrade Required' text='To create additional teams, upgrade to the teams plan.' buttonText='Upgrade' />
 		<CreateTeamModal open={modalOpen === 'team'} setOpen={setModalOpen} callback={callback} />
 	</>);
 }

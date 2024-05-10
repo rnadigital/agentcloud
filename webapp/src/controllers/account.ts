@@ -219,7 +219,7 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	return res.json({ redirect: redirect || `/${teamId}/playground` });
+	return res.json({});
 
 }
 
