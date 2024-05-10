@@ -52,7 +52,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			expectedOutput: e.target.expectedOutput.value,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
-			asyncExecution: e.target.asyncExecution.checked,
+			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
 		};
 		if (editing) {
@@ -250,7 +250,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 							</div>
 						</div>
 						
-						{/* Async execution checkbox */}
+						{/* Async execution checkbox 
 						<div className='col-span-full'>
 							<div className='mt-2'>
 								<div className='sm:col-span-12'>
@@ -274,7 +274,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 									</label>
 								</div>
 							</div>
-						</div>
+						</div>*/}
 						
 						{/* human_input tool checkbox */}
 						<div className='col-span-full'>
