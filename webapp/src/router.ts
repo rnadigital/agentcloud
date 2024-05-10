@@ -4,7 +4,8 @@ import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam } from '@mw/
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionLimit,
-	// checkSubscriptionPlan, 
+	checkSubscriptionPlan,
+	fetchUsage,
 	setSubscriptionLocals,
 } from '@mw/auth/checksubscription';
 import csrfMiddleware from '@mw/auth/csrf';
