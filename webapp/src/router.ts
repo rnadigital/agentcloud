@@ -5,8 +5,8 @@ import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionLimit,
 	checkSubscriptionPlan,
-	setSubscriptionLocals,
 	fetchUsage,
+	setSubscriptionLocals,
 } from '@mw/auth/checksubscription';
 import csrfMiddleware from '@mw/auth/csrf';
 import fetchSession from '@mw/auth/fetchsession';
