@@ -689,7 +689,7 @@ files = [
 
 [[package]]
 name = "crewai"
-version = "0.30.0rc6"
+version = "0.30.0rc7"
 description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
 optional = false
 python-versions = ">=3.10,<=3.13"
@@ -711,13 +711,13 @@ python-dotenv = "^1.0.0"
 regex = "^2023.12.25"
 
 [package.extras]
-tools = ["crewai-tools (>=0.2.3,<0.3.0)"]
+tools = ["crewai-tools (>=0.2.5,<0.3.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
 reference = "develop"
-resolved_reference = "97ff6b7132cc2b8ff387436a74745b96cecd4c5f"
+resolved_reference = "22c2b6cc007432ffe013c73abb0e8d082ecdb610"
 
 [[package]]
 name = "curl-cffi"
