@@ -95,10 +95,6 @@ export default function router(server, app) {
 	//TODO: remove
 	accountRouter.post('/admin', authedMiddlewareChain, accountController.adminApi);
 
-/*
-const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
-const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, setSubscriptionLocals, csrfMiddleware];
-*/
 	accountRouter.post('/register', unauthedMiddlewareChain, accountController.register);
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
