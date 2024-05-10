@@ -15,6 +15,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever } from 'struct/tool';
@@ -47,6 +48,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState(null);
@@ -348,6 +350,9 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							classNames={SelectClassNames}
 							value={connector}
 							onChange={(v: any) => {
+								if (!stripePlan || !pricingMatrix[stripePlan].dataConnections) {
+									return setSubscriptionModalOpen(true);
+								}
 								setLoading(v != null);
 								setConnector(v);
 								if (v) {

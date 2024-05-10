@@ -13,9 +13,9 @@ import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
+import { SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
-import { SubscriptionPlan } from 'struct/billing';
 
 export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {

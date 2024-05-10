@@ -76,7 +76,7 @@ export const pricingMatrix: PricingMatrix = {
 		orgs: 1,
 		teams: 1,
 		fileUploads: true,
-		dataConnections: true,
+		dataConnections: false,
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
 		llmModels: [],
