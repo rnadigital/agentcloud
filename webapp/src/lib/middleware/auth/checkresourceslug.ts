@@ -1,9 +1,11 @@
 'use strict';
 
+import { dynamicResponse } from '@dr';
 import { getOrgById } from 'db/org';
 import { getTeamById } from 'db/team';
 
 export async function checkResourceSlug(req, res, next) {
+
 	if (!req.params?.resourceSlug
 		|| req.params.resourceSlug.length === 0
 		|| !res?.locals?.account?.orgs) {
@@ -44,6 +46,7 @@ export async function checkResourceSlug(req, res, next) {
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
 
 	next();
+
 }
 
 export async function checkAccountQuery(req, res, next) {
@@ -87,6 +90,43 @@ export async function checkAccountQuery(req, res, next) {
 
 	//TODO: cache in redis
 	const foundTeam = await getTeamById(matchingTeam.id);
+	res.locals.matchingTeam.permissions = foundTeam.permissions;
+
+	next();
+
+}
+
+export async function setDefaultOrgAndTeam(req, res, next) {
+
+	const { currentOrg, currentTeam } = res.locals.account;
+	if (!currentOrg) {
+		// return res.status(403).send({ error: 'No current organization available' });
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+
+	//TODO: cache in redis
+	const foundOrg = await getOrgById(currentOrg);
+	if (!foundOrg) {
+		// return res.status(403).send({ error: 'No permission' });
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+
+	res.locals.matchingOrg = foundOrg;
+	res.locals.matchingOrg.permissions = foundOrg.permissions;
+
+	const matchingTeamId = foundOrg.teamIds
+		.find(tid => tid.toString() === currentTeam);
+
+	//TODO: cache in redis
+	const foundTeam = await getTeamById(matchingTeamId);
+	if (!foundTeam) {
+		// return res.status(403).send({ error: 'No permission' });
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+	res.locals.matchingTeam = foundTeam;
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
 
 	next();
