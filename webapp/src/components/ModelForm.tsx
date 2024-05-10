@@ -1,11 +1,13 @@
 'use strict';
 
+import SubscriptionModal from 'components/SubscriptionModal';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
 import { ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -24,6 +26,8 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
+	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modelState, setModelState] = useState(_model);
@@ -44,6 +48,9 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	const foundCredential = credentials && credentials.find(c => c._id === credentialId);
 	async function modelPost(e) {
 		e.preventDefault();
+		if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+			return setSubscriptionModalOpen(true);
+		}
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -93,6 +100,7 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	}, []);
 
 	return (<>
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text={`Your current plan does not support adding the model "${model}"`} buttonText='Upgrade' />
 		<CreateCredentialModal open={modalOpen} setOpen={setModalOpen} callback={credentialCallback} />
 		<form onSubmit={modelPost}>
 			<input
@@ -178,7 +186,9 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 										};
 									});
 				            	}}
-					            options={credentials.filter(c => c.type === type).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
+					            options={credentials
+					            	.filter(c => c.type === type)
+					            	.map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new credential', value: null }])}
 					            formatOptionLabel={data => {
 									const optionCred = credentials.find(oc => oc._id === data.value);
 					                return (<li

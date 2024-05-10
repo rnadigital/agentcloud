@@ -1,4 +1,5 @@
 import Permissions from 'permissions/permissions';
+import { CredentialType, CredentialTypes } from 'struct/credential';
 
 type SubscriptionPlanConfig = {
     plan: SubscriptionPlan;
@@ -17,7 +18,7 @@ export const subscriptionPlans: SubscriptionPlanConfig[] = [
 	{ plan: SubscriptionPlan.PRO, priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID },
 	{ plan: SubscriptionPlan.TEAMS, priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID },
 ];
-	
+
 export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	acc[plan] = priceId;
 	return acc;
@@ -79,8 +80,8 @@ export const pricingMatrix: PricingMatrix = {
 		dataConnections: false,
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: [CredentialType.OPENAI],
+		embeddingModels: [CredentialType.OPENAI],
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -90,29 +91,29 @@ export const pricingMatrix: PricingMatrix = {
 		dataConnections: true,
 		maxFileUploadBytes: (25 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 100,
 		orgs: 1,
-		teams: -1,
+		teams: 1000,
 		fileUploads: true,
 		dataConnections: true,
 		maxFileUploadBytes: (50 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	},
 	[SubscriptionPlan.ENTERPRISE]: { //TODO
-		users: 'Custom',
-		orgs: 'Custom', // Enterprise plans may offer custom configurations for organizations
-		teams: 'Custom', // Similarly, the number of teams is customizable for Enterprise plans
+		users: 10**6,
+		orgs: 10**6, // Enterprise plans may offer custom configurations for organizations
+		teams: 10**6, // Similarly, the number of teams is customizable for Enterprise plans
 		fileUploads: true,
 		dataConnections: true,
 		maxFileUploadBytes: (1024 * 1024 * 1024), //1GB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	}
 };

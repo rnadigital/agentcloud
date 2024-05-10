@@ -22,7 +22,6 @@ export default function TeamForm({ teamName = '', editing, compact = false, call
 
 	async function teamPost(e) {
 		e.preventDefault();
-		console.log(stripePlan, pricingMatrix[stripePlan]);
 		if (!stripePlan || pricingMatrix[stripePlan].users === 1) {
 			return setSubscriptionModalOpen(true);
 		}
