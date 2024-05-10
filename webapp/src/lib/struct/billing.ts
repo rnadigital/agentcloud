@@ -40,6 +40,7 @@ export type PlanLimits = {
 		then apply them in setpermissions middleware */
 	fileUploads: boolean;
 	dataConnections: boolean;
+	allowedConnectors: string[];
 	maxFileUploadBytes: number;
 	storageLocations: string[];
 	llmModels: string[];
@@ -60,6 +61,7 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	teams: 'teams',
 	fileUploads: 'fileUploads',
 	dataConnections: 'dataConnections',
+	allowedConnectors: 'allowedConnectors',
 	maxFileUploadBytes: 'maxFileUploadBytes',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
@@ -71,6 +73,17 @@ export type PricingMatrix = {
     [key in SubscriptionPlan]: PlanLimits;
 }
 
+//TODO: change this
+enum Connectors {
+	ONEDRIVE = '01d1c685-fd4a-4837-8f4c-93fe5a0d2188',
+	GOOGLE_DRIVE = '9f8dda77-1048-4368-815b-269bf54ee9b8',
+	POSTGRES = 'decd338e-5647-4c0b-adf4-da0e75f5a750',
+	HUBSPOT = '36c891d9-4bd9-43ac-bad2-10e12756272c',
+	GOOGLE_BIGQUERY = 'bfd1ddf8-ae8a-4620-b1d7-55597d2ba08c',
+	AIRTABLE = '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212',
+	NOTION = '6e00b415-b02e-4160-bf02-58176a0ae687',
+}
+
 export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.FREE]: {
 		users: 1,
@@ -78,6 +91,7 @@ export const pricingMatrix: PricingMatrix = {
 		teams: 1,
 		fileUploads: true,
 		dataConnections: false,
+		allowedConnectors: [],
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
 		llmModels: [CredentialType.OPENAI],
@@ -89,6 +103,14 @@ export const pricingMatrix: PricingMatrix = {
 		teams: 1,
 		fileUploads: true,
 		dataConnections: true,
+		allowedConnectors: [
+			Connectors.ONEDRIVE,
+			Connectors.POSTGRES,
+			Connectors.HUBSPOT,
+			Connectors.GOOGLE_BIGQUERY,
+			Connectors.AIRTABLE,
+			Connectors.NOTION,
+		],
 		maxFileUploadBytes: (25 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
@@ -100,6 +122,7 @@ export const pricingMatrix: PricingMatrix = {
 		teams: 1000,
 		fileUploads: true,
 		dataConnections: true,
+		allowedConnectors: [],
 		maxFileUploadBytes: (50 * 1024 * 1024), //5MB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
@@ -111,6 +134,7 @@ export const pricingMatrix: PricingMatrix = {
 		teams: 10**6, // Similarly, the number of teams is customizable for Enterprise plans
 		fileUploads: true,
 		dataConnections: true,
+		allowedConnectors: [],
 		maxFileUploadBytes: (1024 * 1024 * 1024), //1GB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,

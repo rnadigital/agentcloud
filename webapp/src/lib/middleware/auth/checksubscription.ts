@@ -93,3 +93,16 @@ export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 	});
 }
 
+export function checkSubscriptionBoolean(limit: keyof typeof PlanLimitsKeys) {
+	// @ts-ignore
+	return cache[limit] || (cache[limit] = async function(req, res, next) {
+		const { stripePlan } = (res.locals?.subscription || {});
+		const limits = res.locals.limits||{};
+		// @ts-ignore
+		if (!stripePlan || !limits || limits[limit] !== true) {
+			return dynamicResponse(req, res, 400, { error: `Plan does not include feature "${limit}".` });
+		}
+		next();
+	});
+}
+

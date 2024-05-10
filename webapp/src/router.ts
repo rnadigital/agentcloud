@@ -3,6 +3,7 @@
 import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
+	checkSubscriptionBoolean,
 	checkSubscriptionLimit,
 	checkSubscriptionPlan,
 	fetchUsage,
@@ -185,8 +186,8 @@ export default function router(server, app) {
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.datasourceEditPage.bind(null, app));
 	teamRouter.post('/forms/datasource/upload', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.uploadFileApi);
-	teamRouter.post('/forms/datasource/test', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.testDatasourceApi);
-	teamRouter.post('/forms/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.addDatasourceApi);
+	teamRouter.post('/forms/datasource/test', hasPerms.one(Permissions.CREATE_DATASOURCE), fetchUsage, checkSubscriptionBoolean(PlanLimitsKeys.dataConnections), datasourceController.testDatasourceApi);
+	teamRouter.post('/forms/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), fetchUsage, checkSubscriptionBoolean(PlanLimitsKeys.dataConnections), datasourceController.addDatasourceApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceStreamsApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceScheduleApi);
 	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', hasPerms.one(Permissions.SYNC_DATASOURCE), datasourceController.syncDatasourceApi);

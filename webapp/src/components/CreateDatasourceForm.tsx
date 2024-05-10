@@ -350,7 +350,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							classNames={SelectClassNames}
 							value={connector}
 							onChange={(v: any) => {
-								if (!stripePlan || !pricingMatrix[stripePlan].dataConnections) {
+								if (!stripePlan 
+									|| !pricingMatrix[stripePlan].dataConnections
+									|| (pricingMatrix[stripePlan].allowedConnectors.length > 0
+										&& !pricingMatrix[stripePlan].allowedConnectors.includes(v.value))) {
 									return setSubscriptionModalOpen(true);
 								}
 								setLoading(v != null);
