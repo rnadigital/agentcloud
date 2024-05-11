@@ -130,7 +130,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			setConnector(null);
 		};
 	}, []);
-	let connectorOptions = connectors ? Object.keys(connectors).filter(key => connectors[key]?.connector_type === 'source') : [];
+	let connectorOptions: any = connectors ? Object.keys(connectors).filter(key => connectors[key]?.connector_type === 'source') : [];
 	//Note: uncomment if you want to hide unavailable due to plan connectors
 	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
 	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
