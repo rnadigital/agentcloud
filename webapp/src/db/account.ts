@@ -207,8 +207,8 @@ export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string
 	});
 }
 
-export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number, stripeCancelled?: boolean): Promise<any> {
-	console.log('updateStripeCustomer', stripeCustomerId, stripeEndsAt);
+export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: number, stripeCancelled?: boolean, stripePlan?: SubscriptionPlan): Promise<any> {
+	console.log('updateStripeCustomer', stripeCustomerId, stripeEndsAt, stripeCancelled, stripePlan);
 	return AccountCollection().updateOne({
 		'stripe.stripeCustomerId': stripeCustomerId,
 	}, {
@@ -216,7 +216,7 @@ export function updateStripeCustomer(stripeCustomerId: string, stripeEndsAt: num
 			'stripe.stripeCustomerId': stripeCustomerId,
 			'stripe.stripeEndsAt': stripeEndsAt,
 			'stripe.stripeCancelled': stripeCancelled || false,
-			'stripe.stripePlan': 'TEST', // TODO
+			...(stripePlan != null ? { 'stripe.stripePlan': stripePlan } : {}),
 		}
 	});
 }

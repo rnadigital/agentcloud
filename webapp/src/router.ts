@@ -79,16 +79,16 @@ export default function router(server, app) {
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
-	server.get('/account', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
-	server.get('/billing', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
+	server.get('/account', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
+	server.get('/billing', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs
 	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
 
-	server.post('/stripe-paymentlink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPaymentLink);
-	server.post('/stripe-portallink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
-	server.post('/stripe-plan', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.changePlanApi);
+	server.post('/stripe-paymentlink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPaymentLink);
+	server.post('/stripe-portallink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
+	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.changePlanApi);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -101,8 +101,8 @@ export default function router(server, app) {
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
 	accountRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
-	accountRouter.post('/logout', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.logout);
-	accountRouter.post('/switch', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
+	accountRouter.post('/logout', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.logout);
+	accountRouter.post('/switch', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });

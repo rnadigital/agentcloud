@@ -2,7 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import Stripe from 'stripe';
-import { planToPriceMap, priceToPlanMap,SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 
 import { setStripeCustomerId, setStripePlan, unsetStripeCustomer, updateStripeCustomer } from '../db/account';
 import { addCheckoutSession, getCheckoutSessionByAccountId } from '../db/checkoutsession';
@@ -74,8 +74,18 @@ export async function webhookHandler(req, res, next) {
 			});
 			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
 			const activeSub = await getFirstActiveSubscription(checkoutSession.customer);
+			// console.log('activeSub', JSON.stringify(activeSub, null, 2));
 			if (activeSub) {
 				await updateStripeCustomer(activeSub.customer as string, activeSub.current_period_end*1000);
+				for (let item of activeSub?.items?.data) {
+					const itemPriceId = item?.plan?.id;
+					if (priceToPlanMap[itemPriceId]) {
+						log(`Found plan with itemPriceId: ${itemPriceId}, Plan: ${priceToPlanMap[itemPriceId]}`);
+						await setStripePlan(activeSub.customer as string, priceToPlanMap[itemPriceId]);
+					} else {
+						log(`No plan with itemPriceId: ${itemPriceId}`);
+					}
+				}
 			}
 			break;
 //		case 'customer.subscription.created':
@@ -104,7 +114,6 @@ export async function webhookHandler(req, res, next) {
 			if (subscriptionUpdated?.items?.data?.length > 0) {
 				let planId;
 				for (let item of subscriptionUpdated?.items?.data) {
-					console.log(item);
 					const itemPriceId = item?.plan?.id;
 					if (priceToPlanMap[itemPriceId]) {
 						log(`Found plan with itemPriceId: ${itemPriceId}, Plan: ${priceToPlanMap[itemPriceId]}`);

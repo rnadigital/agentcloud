@@ -16,6 +16,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const { csrf, account } = accountContext as any;
 	const { stripeCustomerId, stripePlan, stripeEndsAt } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
+	console.log(plan);
 	const numberPrice = typeof price === 'number';
 	return <div className={`cursor-pointer w-max min-w-[300px] rounded-lg p-6 border-2 border-transparent-300 ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : 'hover:shadow-lg hover:border-gray-300 hover:bg-gray-100'}`}>
 		{!currentPlan && isPopular && <span className='px-2 py-[0.5px] bg-yellow-100 text-yellow-800 border border-yellow-300 text-sm rounded-lg'>
@@ -24,9 +25,6 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 		{currentPlan && <div className='flex items-center mt-4'>
 			<span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-300 text-sm rounded-lg'>
 				Current Plan
-			</span>
-			<span suppressHydrationWarning className='text-sm px-2 py-[0.5px] me-2 bg-white text-green-800 border border-green-300 text-sm rounded-lg'>
-				Renews {new Date(stripeEndsAt).toLocaleDateString()}
 			</span>
 		</div>}
 		<div className={`flex items-center mt-4 ${!currentPlan && !isPopular ? 'pt-6' : ''}`}>
@@ -37,6 +35,9 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 		</div>
 		<p className='mt-1 min-h-[60px]'>
 			{description}
+			{currentPlan && price > 0 && <span suppressHydrationWarning className='text-sm px-2 py-[0.5px] me-2 bg-white text-green-800 border border-green-300 text-sm rounded-lg'>
+				Renews {new Date(stripeEndsAt).toDateString()}
+			</span>}
 		</p>
 		<div className='mt-4 flex flex-row'>
 			<span className='text-4xl font-bold'>{numberPrice && '$'}{price}</span>

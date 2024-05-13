@@ -113,6 +113,7 @@ export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching } = accountContext as any;
+	const { stripeEndsAt, stripePlan } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
@@ -463,7 +464,15 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					{showNavs && <div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
+					{stripePlan && stripeEndsAt && (stripeEndsAt > Date.now()) && <div suppressHydrationWarning className='block top-0 text-center space-y-2 -ml-[140px] text-sm py-1 w-full bg-indigo-500 fixed top-0 text-white'>
+						<span className='me-2'>
+							Your free trial of {stripePlan} ends in {((stripeEndsAt-Date.now())/86400000).toFixed(0)} days ({new Date(stripeEndsAt).toDateString()}).
+						</span>	
+						<Link href={'/billing'} className='px-2 py-[0.5px] me-2 bg-indigo-200 text-indigo-700 border border-indigo-400 text-sm rounded-lg'>
+							Manage Subscription
+						</Link>
+					</div>}
+					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'
 							className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
