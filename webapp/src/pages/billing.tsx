@@ -14,16 +14,21 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripeCustomerId, stripePlan } = account?.stripe || {};
+	const { stripeCustomerId, stripePlan, stripeEndsAt } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	return <div className={`cursor-pointer w-max min-w-[300px] rounded-lg p-6 border-2 border-transparent-300 ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : 'hover:shadow-lg hover:border-gray-300 hover:bg-gray-100'}`}>
 		{!currentPlan && isPopular && <span className='px-2 py-[0.5px] bg-yellow-100 text-yellow-800 border border-yellow-300 text-sm rounded-lg'>
 			{!currentPlan && isPopular && 'Most popular'}
 		</span>}
-		{currentPlan && <span className='px-2 py-[0.5px] bg-white text-blue-800 border border-blue-300 text-sm rounded-lg'>
-			Current Plan
-		</span>}
+		{currentPlan && <div className='flex items-center mt-4'>
+			<span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-300 text-sm rounded-lg'>
+				Current Plan
+			</span>
+			<span suppressHydrationWarning className='text-sm px-2 py-[0.5px] me-2 bg-white text-green-800 border border-green-300 text-sm rounded-lg'>
+				Renews {new Date(stripeEndsAt).toLocaleDateString()}
+			</span>
+		</div>}
 		<div className={`flex items-center mt-4 ${!currentPlan && !isPopular ? 'pt-6' : ''}`}>
 			<img className='rounded-md w-48 h-48 lg:w-64 lg:h-64 ' src={`/images/agentcloud-mark-white-bg-black-${plan}.png`} />
 		</div>
