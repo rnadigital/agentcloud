@@ -9,6 +9,7 @@ import path from 'path';
 import React, { Fragment, useCallback, useRef,useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 
