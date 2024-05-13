@@ -4,6 +4,10 @@ import path from 'path';
 dotenv.config({ path: '.env' });
 import debug from 'debug';
 const log = debug('webapp:airbyte:setup');
+
+//Note: is there an idiomatic way to do this?
+const logdebug = debug('webapp:airbyte:setup:debug');
+logdebug.log = console.debug.bind(console);
 const logerror = debug('webapp:airbyte:setup:error');
 logerror.log = console.error.bind(console);
 
@@ -131,6 +135,7 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
+		logdebug('workspacesList: %O', workspacesList);
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
@@ -138,15 +143,16 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
+		logdebug('destinationsList: %O', destinationsList);
 		let airbyteAdminDestinationId = destinationsList.destinations[0]?.destinationId;
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
 		if (!airbyteAdminDestinationId) {
-			log('Creating destination');
+			logdebug('Creating destination');
 			const createdDestination = await createDestination(airbyteAdminWorkspaceId);
 			airbyteAdminDestinationId = createdDestination.destinationId;
-			log('Created destination:', createdDestination);
+			logdebug('Created destination:', createdDestination);
 		}
 
 		// Update webhook URLs
