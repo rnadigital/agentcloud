@@ -34,7 +34,8 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
-	const [managerModel, setManagerModel] = useState(modelChoices.find(model => model._id == crew.managerModelId));
+	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
+	const [managerModel, setManagerModel] = useState({ label: initialModel.name, value: initialModel._id });
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
@@ -63,7 +64,8 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			resourceSlug,
 			name: e.target.name.value,
 			description,
-			process: ProcessImpl.SEQUENTIAL, //e.target.process.value,
+			// process: e.target.process.value, 
+			process: ProcessImpl.SEQUENTIAL,
 			agents: agentsState.map(a => a.value),
 			appType: appTypeState,
 			memory: appMemory,
@@ -328,7 +330,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.HIERARCHICAL }; }); }}
 										className='form-radio'
 									/>
-									<span className='ml-2'>Hirarchial</span>
+									<span className='ml-2'>Flexible</span>
 								</label>
 							</div>
 						</div>*/}
