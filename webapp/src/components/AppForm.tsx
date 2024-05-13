@@ -349,6 +349,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
+						            //@ts-ignore
 						            value={managerModel ? { name: managerModel._id, label: managerModel.name, ...managerModel } : null}
 						            onChange={(v: any) => {
 										setManagerModel(v);

@@ -65,12 +65,12 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 	}, [files]);
 
 	const onDropRejected = useCallback((fileRejection) => {
-		if ([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
+		if ([SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
 			toast.error(`Maximum file size exceeded (${formatSize(maxSize)}).`);
 		} else {
 			setSubscriptionModalOpen(true);
 		}
-	});
+	}, []);
 
 	// @ts-ignore
 	let { isDragActive, getRootProps, getInputProps, isDragReject, acceptedFiles, rejectedFiles } = useDropzone({
