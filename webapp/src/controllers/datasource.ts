@@ -133,6 +133,12 @@ export async function testDatasourceApi(req, res, next) {
 	if (!submittedConnector) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
 	}
+
+	if (res.locals.limits.allowedConnectors.length > 0
+		&& !res.locals.limits.allowedConnectors.includes(connectorId)) {
+		return dynamicResponse(req, res, 400, { error: 'You need to upgrade to access 260+ data connections.' });
+	}
+	
 	const newDatasourceId = new ObjectId();
 	const spec = submittedConnector.spec_oss.connectionSpecification;
 	// log(JSON.stringify(spec, null, 2));

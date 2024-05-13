@@ -210,68 +210,6 @@ print_logo
 wait
 cd ..
 
-echo "=> Starting rabbitmq and vector_db_proxy"
-
-# startup rqbbitmq, qdrant, and vector proxy in advance
-docker_up vector_db_proxy 
-
-# get instance configuration for setup status
-INSTANCE_CONFIGURATION=$(curl -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' 'http://localhost:8000/api/v1/instance_configuration')
-INITIAL_SETUP_COMPLETE=$(echo $INSTANCE_CONFIGURATION | jq -r '.initialSetupComplete')
-echo INITIAL_SETUP_COMPLETE $INITIAL_SETUP_COMPLETE
-if [ "$INITIAL_SETUP_COMPLETE" != "true" ]; then
-    # if not setup yet, bypass setup screen
-    echo Skipping airbyte setup screen...
-    INSTANCE_CONFIGURATION=$(curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST \
-        -H 'Content-Type: application/json' \
-        -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-        --data-raw '{"email":"example@example.org","anonymousDataCollection":false,"securityCheck":"succeeded","organizationName":"example","initialSetupComplete":true,"displaySetupWizard":false}')
-fi
-
-# get the first workspace from list (default workspace)
-WORKSPACES_LIST=$(curl 'http://localhost:8006/v1/workspaces' \
-    -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==')
-AIRBYTE_ADMIN_WORKSPACE_ID=$(echo $WORKSPACES_LIST | jq -r '.data[0].workspaceId')
-export AIRBYTE_ADMIN_WORKSPACE_ID
-# NOTE: no need to create if doesnt exist, one is already created/existing by default.
-echo AIRBYTE_ADMIN_WORKSPACE_ID $AIRBYTE_ADMIN_WORKSPACE_ID
-
-# get list of destinations and take first one if already exists
-DESTINATIONS_LIST=$(curl 'http://localhost:8000/api/v1/destinations/list' -X POST \
-        -H 'Content-Type: application/json' \
-        -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-        --data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'"}')
-AIRBYTE_ADMIN_DESTINATION_ID=$(echo $DESTINATIONS_LIST | jq -r '.destinations[0].destinationId')
-# else create the destination
-
-echo AIRBYTE_ADMIN_DESTINATION_ID $AIRBYTE_ADMIN_DESTINATION_ID
-if [ "$AIRBYTE_ADMIN_DESTINATION_ID" == "null" ] || [ -z "$AIRBYTE_ADMIN_DESTINATION_ID" ]; then
-    echo Creating destination
-    CREATED_DESTINATION=$(curl 'http://localhost:8000/api/v1/destinations/create' --compressed -X POST \
-        -H 'Content-Type: application/json' \
-        -H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-        --data-raw '{"name":"RabbitMQ","destinationDefinitionId":"e06ad785-ad6f-4647-b2e8-3027a5c59454","workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","connectionConfiguration":{"routing_key":"key","username":"guest","password":"guest","exchange":"agentcloud","port":5672,"host":"0.0.0.0","ssl":false}}')
-    echo Created destination: $CREATED_DESTINATION
-    AIRBYTE_ADMIN_DESTINATION_ID=$(echo $CREATED_DESTINATION | jq -r '.destinationId')
-fi
-export AIRBYTE_ADMIN_DESTINATION_ID
-
-
-# set the webhook urls for airbyte webhooks back to the webapp
-UPDATED_WEBHOOK_URLS=$(curl 'http://localhost:8000/api/v1/workspaces/update' --compressed -X POST \
-	-H 'content-type: application/json' \
-	-H 'Authorization: Basic YWlyYnl0ZTpwYXNzd29yZA==' \
-	--data-raw '{"workspaceId":"'"$AIRBYTE_ADMIN_WORKSPACE_ID"'","notificationSettings":{"sendOnFailure":{"notificationType":["customerio","slack"]},"sendOnSuccess":{"notificationType":["slack"],"slackConfiguration":{"webhook":"http://webapp_next:3000/webhook/sync-successful"}},"sendOnConnectionUpdate":{"notificationType":["customerio","slack"]},"sendOnConnectionUpdateActionRequired":{"notificationType":["customerio","slack"]},"sendOnSyncDisabled":{"notificationType":["customerio","slack"]},"sendOnSyncDisabledWarning":{"notificationType":["customerio","slack"]},"sendOnBreakingChangeWarning":{"notificationType":["customerio"]},"sendOnBreakingChangeSyncsDisabled":{"notificationType":["customerio"]}}}')
-
-
-echo Airbyte setup values:
-echo Instance configuration: $INSTANCE_CONFIGURATION
-echo Workspaces list: $WORKSPACES_LIST
-echo Destinations list: $DESTINATIONS_LIST
-echo Airbyte Workspace ID: $AIRBYTE_ADMIN_WORKSPACE_ID
-echo Airbyte Destination ID: $AIRBYTE_ADMIN_DESTINATION_ID
-
-
 echo "=> Starting agentcloud backend..."
 
 docker compose up --build -d

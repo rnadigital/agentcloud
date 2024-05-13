@@ -193,7 +193,7 @@ export function Message({
 			<div className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}>
 				<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
 					{completed ? <CheckCircleIcon className='fill-green-600 h-5 me-2' /> : <ButtonSpinner size={18} className='ms-1 me-2' />}
-					{message}
+					<MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />
 				</div>
 			</div>
 			<div className='invisible xl:visible col-span-1'></div>

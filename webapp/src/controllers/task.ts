@@ -89,7 +89,7 @@ export async function taskAddPage(app, req, res, next) {
 
 export async function addTaskApi(req, res, next) {
 
-	const { name, description, expectedOutput, toolIds, asyncExecution, agentId, iconId }  = req.body;
+	const { name, description, requiresHumanInput, expectedOutput, toolIds, asyncExecution, agentId, iconId }  = req.body;
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 1, customError: 'Name must not be empty.' }},
@@ -121,6 +121,7 @@ export async function addTaskApi(req, res, next) {
 		toolIds: toolIds.map(toObjectId),
 		agentId: toObjectId(agentId),
 		asyncExecution: asyncExecution === true,
+		requiresHumanInput: requiresHumanInput === true,
 		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
@@ -133,7 +134,7 @@ export async function addTaskApi(req, res, next) {
 
 export async function editTaskApi(req, res, next) {
 
-	const { name, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
+	const { name, requiresHumanInput, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -146,6 +147,7 @@ export async function editTaskApi(req, res, next) {
 		expectedOutput,
 		toolIds: toolIds ? toolIds.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
+		requiresHumanInput: requiresHumanInput === true,
 		agentId: toObjectId(agentId)
 	});
 

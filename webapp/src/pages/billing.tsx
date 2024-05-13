@@ -134,9 +134,9 @@ export default function Billing(props) {
 						Manage subscription
 					</button>
 				</div>
-			</form>*/}
+			</form>
 
-			<pre>{JSON.stringify(account?.stripe, null, '\t')}</pre>
+			<pre>{JSON.stringify(account?.stripe, null, '\t')}</pre>*/}
 
 		</>
 	);

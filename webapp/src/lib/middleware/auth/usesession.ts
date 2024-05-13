@@ -20,7 +20,7 @@ const sessionStore = session({
 	rolling: true,
 	cookie: {
 		httpOnly: true,
-		secure: dev ? false : true, //TODO: check https
+		secure: false, //TODO: check https
 		sameSite: 'strict',
 		maxAge: 1000 * 60 * 60 * 24 * 30, //1 month
 	}

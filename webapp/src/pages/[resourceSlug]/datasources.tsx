@@ -14,6 +14,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
 import { NotificationType, WebhookType } from 'struct/notification';
 
@@ -21,7 +22,9 @@ export default function Datasources(props) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const [, notificationTrigger]: any = useSocketContext();
+	
 	const { account, teamName } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
@@ -82,6 +85,7 @@ export default function Datasources(props) {
 
 		<DatasourceFileTable datasources={datasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
 
+		{/*(stripePlan && pricingMatrix[stripePlan].dataConnections) && <>*/}
 		<span className='py-8 h-1'></span>
 
 		<PageTitleWithNewButton list={datasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
@@ -96,6 +100,7 @@ export default function Datasources(props) {
 		/>
 
 		<DatasourceTable datasources={datasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
+		{/*</>*/}
 
 	</>);
 

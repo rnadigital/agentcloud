@@ -31,6 +31,7 @@ import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
+import * as airbyteSetup from 'lib/airbyte/setup';
 import * as ses from 'lib/email/ses';
 import { initRabbit } from 'lib/rabbitmq/send';
 import * as redis from 'lib/redis/redis';
@@ -46,6 +47,7 @@ app.prepare()
 	.then(async () => {
 
 		//do a bunch of tasks on initing the server
+		await airbyteSetup.init();
 		await db.connect();
 		await migrate();
 		const storageProvider = StorageProviderFactory.getStorageProvider();

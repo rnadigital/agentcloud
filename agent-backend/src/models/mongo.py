@@ -74,7 +74,7 @@ class ToolData(BaseModel):
 
 
 class Retriever(str, Enum):
-    DEFAULT = "default"  # vectorstore similarity search
+    RAW = "raw" # no structured query formatting
     SELF_QUERY = "self_query"
     TIME_WEIGHTED = "time_weighted"
     MULTI_QUERY = "multi_query"
@@ -110,7 +110,7 @@ class Tool(BaseModel):
     type: Optional[str] = "function"
     datasourceId: Optional[PyObjectId] = None
     data: Optional[ToolData] = None
-    retriever_type: Optional[Retriever] = Retriever.DEFAULT
+    retriever_type: Optional[Retriever] = Retriever.SELF_QUERY
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
 
 
@@ -177,6 +177,7 @@ class Data(BaseModel):
 class Task(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
+    name: Optional[str] = ''
     description: str
     expected_output: Optional[str] = Field(validation_alias=AliasChoices('expectedOutput', 'expected_output'))
     expectedOutput: Optional[str] = None

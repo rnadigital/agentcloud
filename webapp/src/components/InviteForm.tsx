@@ -1,23 +1,31 @@
 'use strict';
 
 import * as API from '@api';
+import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { SubscriptionPlan } from 'struct/billing';
 
 export default function InviteToTeamForm({ callback }: { callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const { csrf, account } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [email, setEmail] = useState('');
 	const [name, setName] = useState('');
 	const [error, setError] = useState('');
+	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
 	async function handleSubmit(e) {
 		e.preventDefault();
+		console.log(stripePlan);
+		if (!stripePlan || ![SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
+			return setSubscriptionModalOpen(true);
+		}
 		if (!email || !name) {
 			return;
 		}
@@ -40,7 +48,8 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 		}
 	}
 
-	return (
+	return (<>
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You must be on the Teams plan to invite team members.' buttonText='Upgrade' />
 		<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
 			<div className='space-y-4'>
 				<div>
@@ -89,5 +98,5 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 				</div>
 			</div>
 		</form>
-	);
+	</>);
 }
