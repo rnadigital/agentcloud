@@ -39,6 +39,7 @@ services:
         - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
         - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
         - POSTHOG_KEY=
+        - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -46,6 +47,7 @@ services:
       - docker_mongo
       - docker_redis
     environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
