@@ -26,6 +26,8 @@ class Platforms(str, Enum):
     AzureChatOpenAI = "azure"
     FastEmbed = "fastembed"
     Ollama = "ollama"
+    GoogleVertex = "google_vertex"
+    # Cohere = "cohere"
 
 
 class ModelVariant(str, Enum):
@@ -146,7 +148,7 @@ class Model(BaseModel):
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
     type: Optional[Platforms] = None
-    config: Optional[Dict] = None
+    config: Optional[Dict] = Field(default={})
 
 
 class ChatModel(BaseModel):
