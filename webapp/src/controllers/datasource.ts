@@ -32,7 +32,7 @@ import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById,
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-	dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
+	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
 	return dateFormatRegex.test(dateTimeStr);
 }
 function updateDateStrings(obj) {
