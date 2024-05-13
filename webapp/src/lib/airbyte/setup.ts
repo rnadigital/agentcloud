@@ -7,7 +7,7 @@ const log = debug('webapp:airbyte:setup');
 const logerror = debug('webapp:airbyte:setup:error');
 logerror.log = console.error.bind(console);
 
-const authorizationHeader = 'Basic YWlyYnl0ZTpwYXNzd29yZA=='; //TODO: allow customisation
+const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64')}`;
 
 // Function to fetch instance configuration
 async function fetchInstanceConfiguration() {
