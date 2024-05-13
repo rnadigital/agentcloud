@@ -88,7 +88,7 @@ Options:
 - **For Windows**: (Coming soon...)
 
 ## Tutorials
-
+[How to Build a RAG Chatbot Using Agent Cloud and PostgreSQL](https://www.agentcloud.dev/blog/build-chat-app-postgresql-agentcloud)<br>
 [How to Build a RAG Chatbot Using Agent Cloud and BigQuery](https://www.agentcloud.dev/blog/a-rag-chat-app-with-agent-cloud-and-bigquery)<br>
 [How to Build a RAG Chatbot Using Agent Cloud and MongoDB](https://www.agentcloud.dev/blog/build-rag-chatbot-agentcloud-mongodb)<br>
 
