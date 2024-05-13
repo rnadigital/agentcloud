@@ -17,7 +17,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
-	return <div className={` cursor-pointer w-max min-w-[300px] rounded-lg p-6 ${isPopular ? 'shadow-lg border border-gray-300' : ''} ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : ''}`} style={{ backgroundColor: isPopular ? '#f2f2f2' : '' }}>
+	return <div className={`cursor-pointer w-max min-w-[300px] rounded-lg p-6 border-2 border-transparent-300 ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : 'hover:shadow-lg hover:border-gray-300 hover:bg-gray-100'}`}>
 		{!currentPlan && isPopular && <span className='px-2 py-[0.5px] bg-yellow-100 text-yellow-800 border border-yellow-300 text-sm rounded-lg'>
 			{!currentPlan && isPopular && 'Most popular'}
 		</span>}
@@ -25,7 +25,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			Current Plan
 		</span>}
 		<div className={`flex items-center mt-4 ${!currentPlan && !isPopular ? 'pt-6' : ''}`}>
-			<img className='rounded-md' src='https://img.stripecdn.com/cdn-cgi/image/format=auto,height=120,dpr=1/https://d1wqzb5bdbcre6.cloudfront.net/36e781f597cce399b4abf2ed9a7b279b7519671c0568a2fea27bb19a684d00e1/68747470733a2f2f66696c65732e7374726970652e636f6d2f6c696e6b732f4d44423859574e6a64463878526d5671546d6445654645355231704c656e5a7666475a735833526c63335266636b74595157784459337042546e55305230355a53576c714f456c6b624531363030396876446d514330' />
+			<img className='rounded-md w-48 h-48 lg:w-64 lg:h-64 ' src={`/images/agentcloud-mark-white-bg-black-${plan}.png`} />
 		</div>
 		<div className='flex items-center mt-4'>
 			<h2 className='text-lg font-semibold'>{title}</h2>
@@ -60,7 +60,10 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 						_csrf: csrf,
 					}, null, toast.error, router);
 				}
-			}} className='w-full mt-6 bg-indigo-600 text-white px-4 py-2 font-semibold rounded-md'>
+			}}
+			className='mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+
+			>
 				{numberPrice ? (stripeCustomerId && currentPlan ? 'Manage Subscription' : 'Subscribe') : 'Contact us'}
 			</button>}
 	</div>;
@@ -118,11 +121,11 @@ export default function Billing(props) {
 
 			{/*<StripePricingTable />*/}
 
-			<div className='flex flex-row gap-x-4 py-4'>
+			<div className='flex flex-row flex-wrap gap-4 py-4 items-center'>
 				<SubscriptionCard title='Agent Cloud Free' price={0} plan={SubscriptionPlan.FREE} />
 				<SubscriptionCard title='Agent Cloud Pro' price={99} plan={SubscriptionPlan.PRO} />
 				<SubscriptionCard title='Agent Cloud Teams' price={199} isPopular={true} plan={SubscriptionPlan.TEAMS} />
-				<SubscriptionCard title='Agent Cloud Enterprise' price={'Custom'} link={'https://www.agentcloud.dev/contact'} />
+				<SubscriptionCard title='Agent Cloud Enterprise' price={'Custom'} plan={SubscriptionPlan.ENTERPRISE} link={process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK} />
 			</div>
 			{/*<form onSubmit={getPortalLink}>
 				<input type='hidden' name='_csrf' value={csrf} />

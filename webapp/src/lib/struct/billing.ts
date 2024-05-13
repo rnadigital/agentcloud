@@ -111,7 +111,7 @@ export const pricingMatrix: PricingMatrix = {
 			Connectors.AIRTABLE,
 			Connectors.NOTION,
 		],
-		maxFileUploadBytes: (25 * 1024 * 1024), //5MB
+		maxFileUploadBytes: (25 * 1024 * 1024), //25MB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,
@@ -123,19 +123,19 @@ export const pricingMatrix: PricingMatrix = {
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],
-		maxFileUploadBytes: (50 * 1024 * 1024), //5MB
+		maxFileUploadBytes: (50 * 1024 * 1024), //50MB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,
 	},
 	[SubscriptionPlan.ENTERPRISE]: { //TODO
 		users: 10**6,
-		orgs: 10**6, // Enterprise plans may offer custom configurations for organizations
-		teams: 10**6, // Similarly, the number of teams is customizable for Enterprise plans
+		orgs: 10**6,
+		teams: 10**6,
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],
-		maxFileUploadBytes: (1024 * 1024 * 1024), //1GB
+		maxFileUploadBytes: (1 * 1024 * 1024 * 1024), //1GB (until we have "custom")
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,

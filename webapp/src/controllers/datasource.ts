@@ -19,10 +19,12 @@ import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import StorageProviderFactory from 'storage/index';
+import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever,ToolType } from 'struct/tool';
 import { promisify } from 'util';
+import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
 const log = debug('webapp:controllers:datasource');
 
@@ -769,6 +771,11 @@ export async function uploadFileApi(req, res, next) {
 	const fileFormat = getFileFormat(fileExtension);
 	if (!fileFormat) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
+	}
+
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	if (uploadedFile?.size > pricingMatrix[currentPlan].maxFileUploadBytes) {
+		return dynamicResponse(req, res, 400, { error: `Uploaded file exceeds maximum size for your plan "${currentPlan}" (${formatSize(uploadedFile.size)})` });
 	}
 
 	const model = await getModelById(req.params.resourceSlug, modelId);

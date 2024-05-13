@@ -18,10 +18,11 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, retriever?: Retriever, callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const { csrf, account } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const maxSize = 10*1024*1024;//10MB
+	const maxSize = pricingMatrix[stripePlan].maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
 	const [chunkStrategy, setChunkStrategy] = useState('semantic');
 	const [chunkCharacter, setChunkCharacter] = useState('');

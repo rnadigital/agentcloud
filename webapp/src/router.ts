@@ -22,7 +22,7 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
-import { PlanLimitsKeys, SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, setSubscriptionLocals, csrfMiddleware];
@@ -72,7 +72,7 @@ export default function router(server, app) {
 	server.use(bodyParser.json({limit: '10mb'}));
 	server.use(bodyParser.urlencoded({ extended: false }));
 	// Default options for express-fileupload
-	server.use(fileUpload());
+	server.use(fileUpload({ limits: { fileSize: pricingMatrix[SubscriptionPlan.ENTERPRISE].maxFileUploadBytes }}));
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
