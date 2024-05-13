@@ -4,8 +4,8 @@ import path from 'path';
 dotenv.config({ path: '.env' });
 import debug from 'debug';
 const log = debug('webapp:airbyte:setup');
-const error = debug('webapp:airbyte:setup:error');
-error.log = console.error.bind(console);
+const logerror = debug('webapp:airbyte:setup:error');
+logerror.log = console.error.bind(console);
 
 const authorizationHeader = 'Basic YWlyYnl0ZTpwYXNzd29yZA=='; //TODO: allow customisation
 
@@ -154,7 +154,7 @@ export async function init() {
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 
 	} catch (error) {
-		error('Error during Airbyte configuration:', error);
+		logerror('Error during Airbyte configuration:', error);
 	}
 }
 
