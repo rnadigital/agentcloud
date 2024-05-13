@@ -20,7 +20,7 @@ export default function PageTitleWithNewButton({ onClick, list, title, buttonTex
 		<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>{title}</h3>
 		{buttonText
 			? href
-				?	<Link href={`/${resourceSlug}/${href}`}>
+				?	<Link href={`/${resourceSlug}${href}`}>
 					{b}	
 				</Link>
 				: b

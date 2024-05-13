@@ -1,5 +1,4 @@
 import * as API from '@api';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import StartSessionForm from 'components/StartSessionForm';
 import { useAccountContext } from 'context/account';
