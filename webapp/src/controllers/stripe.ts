@@ -1,30 +1,48 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import Stripe from 'stripe';
-import { planToPriceMap, priceToPlanMap, SubscriptionPlan } from 'struct/billing';
-
-import { setStripeCustomerId, setStripePlan, unsetStripeCustomer, updateStripeCustomer } from '../db/account';
-import { addCheckoutSession, getCheckoutSessionByAccountId } from '../db/checkoutsession';
-import { addPaymentLink, unsafeGetPaymentLinkById } from '../db/paymentlink';
-import { addPortalLink } from '../db/portallink';
-import toObjectId from '../lib/misc/toobjectid';
-const stripe = new Stripe(process.env['STRIPE_ACCOUNT_SECRET']);
+import { setStripeCustomerId, setStripePlan, updateStripeCustomer } from 'db/account';
+import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutsession';
+import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
+import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
+import { stripe } from 'lib/stripe';
+import toObjectId from 'misc/toobjectid';
+import { planToPriceMap, priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 
-async function getFirstActiveSubscription(stripeCustomerId: string) {
+function destructureSubscription(sub) {
+	let planSub
+		, addonUsersSub
+		, addonStorageSub;
+	// for (let sub of subscriptionData) {
+	if (Array.isArray(sub?.items?.data) && sub.items.data[0]?.price?.id) {
+		switch (sub.items.data[0]?.price?.id) {
+			case process.env.STRIPE_FREE_PLAN_PRICE_ID:
+			case process.env.STRIPE_PRO_PLAN_PRICE_ID:
+			case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
+				planSub = sub;
+				break;
+			case process.env.STRIPE_ADDON_USERS_PRICE_ID:
+				addonUsersSub = sub;
+				break;
+			case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
+				addonStorageSub = sub;
+				break;
+		}
+	}
+	// }
+	return { planSub, addonUsersSub, addonStorageSub };
+} 
+
+async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
 		const subscriptions = await stripe.subscriptions.list({
 			customer: stripeCustomerId,
 			status: 'active',
 			limit: 1 // fetch only the first subscription
 		});
-		if (subscriptions.data.length > 0) {
-			return subscriptions.data[0]; // return the first active subscription
-		} else {
-			return null; // no active subscriptions found
-		}
+		return destructureSubscription(subscriptions.data[0]);
 	} catch (error) {
 		console.error('Error fetching subscriptions:', error);
 		throw error;
@@ -54,7 +72,8 @@ export async function webhookHandler(req, res, next) {
 
 	// Handle the event
 	switch (event.type) {
-		case 'checkout.session.completed':
+
+		case 'checkout.session.completed': {
 			const checkoutSession = event.data.object;
 			const paymentLink = checkoutSession.payment_link;
 			if (!paymentLink) {
@@ -73,64 +92,68 @@ export async function webhookHandler(req, res, next) {
 				createdDate: new Date(),
 			});
 			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const activeSub = await getFirstActiveSubscription(checkoutSession.customer);
-			// console.log('activeSub', JSON.stringify(activeSub, null, 2));
-			if (activeSub) {
-				await updateStripeCustomer(activeSub.customer as string, activeSub.current_period_end*1000);
-				for (let item of activeSub?.items?.data) {
-					const itemPriceId = item?.plan?.id;
-					if (priceToPlanMap[itemPriceId]) {
-						log(`Found plan with itemPriceId: ${itemPriceId}, Plan: ${priceToPlanMap[itemPriceId]}`);
-						await setStripePlan(activeSub.customer as string, priceToPlanMap[itemPriceId]);
-					} else {
-						log(`No plan with itemPriceId: ${itemPriceId}`);
-					}
-				}
-			}
+			const { planSub, addonUsersSub, addonStorageSub } = await getSubscriptionsDetails(checkoutSession.customer);
+			//Note: 0 to set them on else case
+			await updateStripeCustomer(checkoutSession.customer, {
+				stripePlan: planToPriceMap[planSub?.items.data[0].price.id],
+				stripeAddons: {
+					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : 0,
+					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : 0,
+				},
+				stripeEndsAt: planSub?.current_period_end*1000,
+			});
 			break;
-//		case 'customer.subscription.created':
-//			const subscriptionCreated = event.data.object;
-//			const activeSub = await getFirstActiveSubscription(subscriptionCreated.customer);
-//			console.log('activeSub', activeSub)
-//			if (activeSub) {
-//				await updateStripeCustomer(activeSub.customer as string, activeSub.current_period_end*1000);
-//			}
-//			break;
-		case 'customer.subscription.updated':
+		}
+
+		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
-			//TODO: check if its the PLAN and update them, if its an addon don't bother
-			if (subscriptionUpdated.current_period_end) {
-				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.current_period_end*1000);
-			}
+			const { planSub, addonUsersSub, addonStorageSub } = destructureSubscription(subscriptionUpdated);
+			//Note: null to not update them unless required
+			const update = {
+				stripePlan: planToPriceMap[planSub?.items.data[0].price.id],
+				stripeAddons: {
+					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : null,
+					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : null,
+				},
+				stripeEndsAt: planSub?.current_period_end ? planSub.current_period_end*1000 : null,
+				stripeTrial: planSub?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				await updateStripeCustomer(subscriptionUpdated.customer, subscriptionUpdated.cancel_at, true);
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeCancelled'] = true;
 			}
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
-				// await unsetStripeCustomer(subscriptionUpdated.customer);
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeCancelled'] = true;
 			}
-			//WIP
-			if (subscriptionUpdated?.items?.data?.length > 0) {
-				let planId;
-				for (let item of subscriptionUpdated?.items?.data) {
-					const itemPriceId = item?.plan?.id;
-					if (priceToPlanMap[itemPriceId]) {
-						log(`Found plan with itemPriceId: ${itemPriceId}, Plan: ${priceToPlanMap[itemPriceId]}`);
-						await setStripePlan(subscriptionUpdated.customer, priceToPlanMap[itemPriceId]);
-					} else {
-						log(`No plan with itemPriceId: ${itemPriceId}`);
-					}
-				}
-			}
+			log('Customer subscription update %O', update);
+			await updateStripeCustomer(subscriptionUpdated.customer, update);
 			break;
-		case 'customer.subscription.deleted':
-			//TODO: check if its the PLAN or addons being unsubbed
-			const subscriptionDeleted = event.data.object;
-			await unsetStripeCustomer(subscriptionDeleted.customer);
+		}
+
+		case 'customer.subscription.created': {
+			const subscriptionCreated = event.data.object;
+			//TODO: check we actually need this
+			await updateStripeCustomer(subscriptionCreated.customer, {
+				stripeEndsAt: subscriptionCreated.current_period_end,
+			});
 			break;
-		default:
+		}
+		
+		// case 'customer.subscription.trial_will_end': {
+		// 	break;
+		// }
+		
+		//TODO:
+		// case 'customer.subscription.deleted': {
+		// 	break;
+		// }
+
+		default: {
 			log(`Unhandled stripe webhook event type "${event.type}"`);
+		}
 	}
 
 	// Return a 200 response to acknowledge receipt of the event
@@ -148,8 +171,8 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
-	const activeSub = await getFirstActiveSubscription(res.locals.account?.stripe?.stripeCustomerId);
-	if (!activeSub) {
+	const { planSub } = await getSubscriptionsDetails(res.locals.account?.stripe?.stripeCustomerId);
+	if (!planSub) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
@@ -214,51 +237,3 @@ export async function createPaymentLink(req, res, next) {
 
 }
 
-export async function changePlanApi(req, res, next) {
-
-	const { priceId } = req.body;
-	if (!priceId) { //TODO: check if valid priceId
-		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
-	}
-
-	const stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
-	
-	const currentSubscription = await getFirstActiveSubscription(stripeCustomerId);
-	if (!currentSubscription) {
-		const paymentLink = await stripe.paymentLinks.create({
-			line_items: [
-				{
-					price: priceId,
-					quantity: 1,
-				},
-			],
-			after_completion: {
-				type: 'redirect',
-				redirect: {
-					url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-				},
-			},
-		});
-		await addPaymentLink({
-			accountId: toObjectId(res.locals.account._id),
-			paymentLinkId: paymentLink.id,
-			url: paymentLink.url,
-			payload: paymentLink,
-			createdDate: new Date(),
-		});
-		return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
-	}
-
-	// Update the subscription with the new plan, handling pro-rated charges
-	const updatedSubscription = await stripe.subscriptions.update(currentSubscription.id, {
-		items: [{
-			id: currentSubscription.items.data[0].id,
-			price: priceId,
-		}],
-		proration_behavior: 'always_invoice', // Ensure pro-ration is billed
-	});
-
-	// TODO: respond with the updated subscription details??
-	return dynamicResponse(req, res, 200, { /**/ });
-
-}
