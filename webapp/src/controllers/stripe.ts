@@ -176,6 +176,8 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
+	//TODO: create a custom billingportal configuration https://docs.stripe.com/api/customer_portal/configurations/create
+
 	const portalLink = await stripe.billingPortal.sessions.create({
 		customer: res.locals.account?.stripe?.stripeCustomerId,
 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
@@ -190,50 +192,6 @@ export async function createPortalLink(req, res, next) {
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
-
-}
-
-export async function createPaymentLink(req, res, next) {
-
-	const { plan } = req.body;
-	if (!Object.values(SubscriptionPlan).includes(plan)) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
-	}
-
-	const priceId = planToPriceMap[plan]; //TODO: wheres the best place to store this?
-
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
-		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
-	}
-
-	if (res.locals.account?.stripe?.stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'Already subscribed' });
-	}
-
-	const paymentLink = await stripe.paymentLinks.create({
-		line_items: [
-			{
-				price: priceId,
-				quantity: 1,
-			},
-		],
-		after_completion: {
-			type: 'redirect',
-			redirect: {
-				url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-			},
-		},
-	});
-
-	await addPaymentLink({
-		accountId: toObjectId(res.locals.account._id),
-		paymentLinkId: paymentLink.id,
-		url: paymentLink.url,
-		payload: paymentLink,
-		createdDate: new Date(),
-	});
-
-	return dynamicResponse(req, res, 302, { redirect: paymentLink.url });
 
 }
 
