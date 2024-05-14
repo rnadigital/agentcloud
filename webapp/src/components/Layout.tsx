@@ -20,13 +20,13 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
+// import DebugLogs from 'components/DebugLogs';
+import BillingBanner from 'components/BillingBanner';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
 import { SessionStatus } from 'components/SessionCards';
-// import DebugLogs from 'components/DebugLogs';
-import TrialNotification from 'components/TrialNotification';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -466,7 +466,7 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					<TrialNotification stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} />
+					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} />
 					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'

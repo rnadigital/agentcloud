@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import React from 'react';
 
-function TrialNotification({ stripePlan, stripeEndsAt }) {
+export default function BillingBanner({ stripePlan, stripeEndsAt }) {
 	const now = Date.now();
 	const daysRemaining = Math.floor((stripeEndsAt - now) / 86400000);
 
@@ -20,5 +20,3 @@ function TrialNotification({ stripePlan, stripeEndsAt }) {
 		</div>
 	);
 }
-
-export default TrialNotification;
