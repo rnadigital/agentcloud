@@ -811,7 +811,7 @@ export async function uploadFileApi(req, res, next) {
 	    embeddingField: 'document', //Note: always document for sourceType: file
 	    status: DatasourceStatus.EMBEDDING,
 	    recordCount: {
-   			total: 0,
+   			total: null,
    	    }
 	});
 	
