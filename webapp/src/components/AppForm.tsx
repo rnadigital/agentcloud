@@ -35,7 +35,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
-	const [managerModel, setManagerModel] = useState({ label: initialModel.name, value: initialModel._id });
+	const [managerModel, setManagerModel] = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
 	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
