@@ -1,6 +1,19 @@
 import Permissions from 'permissions/permissions';
 import { CredentialType, CredentialTypes } from 'struct/credential';
 
+// account.stripe data
+export type AccountStripeData = {
+	stripeCustomerId?: string;
+	stripeEndsAt?: number;
+	stripeCancelled?: boolean;
+	stripePlan?: SubscriptionPlan;
+	stripeAddons?: {
+		users?: number;
+		storage?: number;
+	}
+	stripeTrial?: boolean;
+}
+
 type SubscriptionPlanConfig = {
     plan: SubscriptionPlan;
     priceId: string | undefined;

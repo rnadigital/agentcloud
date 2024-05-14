@@ -3,19 +3,20 @@
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
-import { addAccount,OAuthRecordType } from 'db/account';
+import { addAccount, OAuthRecordType, setStripePlan, updateStripeCustomer } from 'db/account';
 import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
-import { addVerification,VerificationTypes } from 'db/verification';
+import { addVerification, VerificationTypes } from 'db/verification';
 import * as ses from 'lib/email/ses';
+import { stripe } from 'lib/stripe';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { SubscriptionPlan } from 'struct/billing';
+import { priceToPlanMap,SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
-import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
+import { OAUTH_PROVIDER } from 'struct/oauth';
 
 export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {
@@ -52,7 +53,8 @@ export default async function createAccount(email: string, name: string, passwor
 	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
 	const emailVerified = amazonKey == null;
 	const passwordHash = password ? (await bcrypt.hash(password, 12)) : null;
-	const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
+	const oauth = provider ? { [provider]: { id: profileId } } : {} as OAuthRecordType;
+	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
 		addAccount({
 			_id: newAccountId,
@@ -67,7 +69,7 @@ export default async function createAccount(email: string, name: string, passwor
 					id: teamId,
 					name: `${name}'s Team`,
 					ownerId: newAccountId,
-				}]
+				}],
 			}],
 			currentOrg: orgId,
 			currentTeam: teamId,
@@ -77,10 +79,34 @@ export default async function createAccount(email: string, name: string, passwor
 			stripe: {
 				stripeCustomerId: null,
 				stripePlan: SubscriptionPlan.FREE,
-			}
+				stripeAddons: {
+					users: 0,
+					storage: 0,
+				},
+				stripeTrial: false,
+			},
 		}),
-		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
+		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL),
 	]);
+
+	// Create Stripe customer
+	const stripeCustomer = await stripe.customers.create({
+		email,
+		name,
+	});
+
+	// Subscribe customer to 'Pro' plan with a 30-day trial
+	const subscription = await stripe.subscriptions.create({
+		customer: stripeCustomer.id,
+		items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
+		trial_period_days: 30,
+	});
+
+	await updateStripeCustomer(stripeCustomer.id, {
+		stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
+		stripeEndsAt: subscription.current_period_end,
+		stripeTrial: true,
+	});
 
 	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
@@ -99,6 +125,6 @@ export default async function createAccount(email: string, name: string, passwor
 		});
 	}
 
-	return { emailVerified, addedAccount }; //Can add more to return if necessary
-
+	return { emailVerified, addedAccount }; // Can add more to return if necessary
 }
+
