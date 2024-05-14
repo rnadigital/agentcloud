@@ -1,5 +1,5 @@
 import InfoAlert from 'components/InfoAlert';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Retriever, ToolType } from 'struct/tool';
 
 interface RetrievalStrategyProps {
@@ -25,6 +25,11 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	schema,
 	defaultRetriever,
 }) => {
+	useEffect(() => {
+		if (defaultRetriever) {
+			setToolRetriever(defaultRetriever || Retriever.SELF_QUERY);
+		}
+	}, []);
 	return (
 		<div>
 			<div className='mt-2'>
@@ -44,8 +49,8 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 							<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
 							<option value={Retriever.RAW}>Raw Similarity Search</option>
 						</> : <>
-							<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
-							<option value={Retriever.RAW}>Raw Similarity Search</option>
+							<option value={Retriever.RAW}>Raw Similarity Search (Default)</option>
+							<option value={Retriever.SELF_QUERY}>Self Query</option>
 						</> }
 						<option value={Retriever.MULTI_QUERY}>Multi Query</option>
 						{currentDatasource?.sourceType !== 'file' && <option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>}
