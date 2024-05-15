@@ -622,7 +622,7 @@ export default withRouter(function Layout(props) {
 			<div className={`transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
 			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
-				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
+				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH && `-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}</div>
 			</footer>
 		</>
 	);
