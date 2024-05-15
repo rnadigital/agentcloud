@@ -80,7 +80,6 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	const credentialCallback = async (addedCredentialId) => {
 		await fetchModelFormData && fetchModelFormData();
 		setModalOpen(false);
-		console.log(addedCredentialId);
 		setModelState(oldModel => {
 			return {
 				...oldModel,

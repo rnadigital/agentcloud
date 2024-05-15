@@ -61,7 +61,6 @@ export default function OrgSelector({ orgs }) {
 	}
 
 	async function callback(newTeamId, newOrgId) {
-		console.log(newTeamId, newOrgId);
 		await refreshAccountContext();
 		switchTeam(newOrgId, newTeamId);
 		setModalOpen(false);

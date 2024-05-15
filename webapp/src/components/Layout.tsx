@@ -115,7 +115,6 @@ export default withRouter(function Layout(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching } = accountContext as any;
 	const { stripeEndsAt, stripePlan } = account?.stripe || {};
-	console.log(stripePlan);
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
