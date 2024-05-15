@@ -78,7 +78,7 @@ export default async function createAccount(email: string, name: string, passwor
 			permissions: new Binary(Roles.REGISTERED_USER.array),
 			stripe: {
 				stripeCustomerId: null,
-				stripePlan: SubscriptionPlan.FREE,
+				stripePlan: process.env['STRIPE_ACCOUNT_SECRET'] ? SubscriptionPlan.FREE : SubscriptionPlan.ENTERPRISE,
 				stripeAddons: {
 					users: 0,
 					storage: 0,
@@ -89,25 +89,27 @@ export default async function createAccount(email: string, name: string, passwor
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL),
 	]);
 
-	// Create Stripe customer
-	const stripeCustomer = await stripe.customers.create({
-		email,
-		name,
-	});
+	if (process.env['STRIPE_ACCOUNT_SECRET']) {
+		// Create Stripe customer
+		const stripeCustomer = await stripe.customers.create({
+			email,
+			name,
+		});
 
-	// Subscribe customer to 'Pro' plan with a 30-day trial
-	const subscription = await stripe.subscriptions.create({
-		customer: stripeCustomer.id,
-		items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
-		trial_period_days: 30,
-	});
+		// Subscribe customer to 'Pro' plan with a 30-day trial
+		const subscription = await stripe.subscriptions.create({
+			customer: stripeCustomer.id,
+			items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
+			trial_period_days: 30,
+		});
 
-	await updateStripeCustomer(stripeCustomer.id, {
-		stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
-		stripeEndsAt: subscription.current_period_end,
-		stripeTrial: true,
-	});
-
+		await updateStripeCustomer(stripeCustomer.id, {
+			stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
+			stripeEndsAt: subscription.current_period_end,
+			stripeTrial: true,
+		});
+	}
+		
 	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
 		await ses.sendEmail({
