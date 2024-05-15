@@ -116,7 +116,7 @@ export async function webhookHandler(req, res, next) {
 			const { planSub, addonUsersSub, addonStorageSub } = destructureSubscription(subscriptionUpdated);
 			//Note: null to not update them unless required
 			const update = {
-				stripePlan: planToPriceMap[planSub?.items.data[0].price.id],
+				stripePlan: priceToPlanMap[planSub?.items.data[0].price.id],
 				stripeAddons: {
 					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : null,
 					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : null,
