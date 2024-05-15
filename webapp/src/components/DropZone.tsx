@@ -42,7 +42,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 			formData.set('modelId', modelId as string);
 			formData.set('datasourceDescription', description as string);
 			formData.set('name', name as string);
-			formData.set('retriever_type', retriever as string);
+			formData.set('retriever', retriever as string);
 			formData.set('_csrf', csrf as string);
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);
