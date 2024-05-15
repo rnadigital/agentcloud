@@ -27,7 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
-    # Cohere = "cohere"
+    Cohere = "cohere"
 
 
 class ModelVariant(str, Enum):
@@ -35,6 +35,8 @@ class ModelVariant(str, Enum):
     GPT4 = "gpt-4"
     GPT4TURBO = "gpt-4-1106-preview"
     GPT3TURBO = "gpt-3.5-turbo"
+    GeminiPro = "gemini-pro"
+    CommandRPlus = "command-r-plus"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):

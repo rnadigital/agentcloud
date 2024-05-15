@@ -84,7 +84,7 @@ class RagTool(GlobalBaseTool):
 
     @staticmethod
     def extract_query_value(query):
-        res = re.findall('"?(?:query|text)"?:\s*"?([\w\s]+)"?', query)
+        res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', query)
         return res[0] if res else query
 
     def _run(self, query):
