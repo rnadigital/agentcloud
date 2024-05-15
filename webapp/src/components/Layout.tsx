@@ -192,7 +192,7 @@ export default withRouter(function Layout(props) {
 										<div className='flex mt-4 h-16 shrink-0 items-center'>
 											<img
 												src='/images/agentcloud-full-white-bg-trans.png'
-												alt='Your Company'
+												alt='Agentcloud'
 												width={200}
 												height={150}
 											/>
@@ -228,8 +228,8 @@ export default withRouter(function Layout(props) {
 														<PreviewSessionList />
 													</ul>
 												</li>
-												{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
-												<li className='mt-auto'>
+												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4'>
+													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin </div>}
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
@@ -371,95 +371,95 @@ export default withRouter(function Layout(props) {
 										<PreviewSessionList />
 									</ul>
 								</li>
-								<li className='absolute bottom-0 left-0 bg-gray-900 p-4 ps-6 w-full'>
-									
-									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
-									<ul role='list' className='-mx-2 mt-2 space-y-1'>
-										{teamNavigation.map((item) => (
-											<li key={item.name}>
-												<Link
-													suppressHydrationWarning
-													href={`/${resourceSlug}${item.href}`}
-													className={classNames(
-														(path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.base}`))
-															? 'bg-gray-800 text-white'
-															: 'text-gray-400 hover:text-white hover:bg-gray-800',
-														'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-													)}
-												>
-													{item.icon}
-													{item.name}
-												</Link>
-											</li>
-										))}
-										<li>
-											<Link
-												href='/account'
-												className={classNames(
-													path.endsWith('/account')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<UserIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Account
-											</Link>
-										</li>
-										<li key='billing'>
-											<Link
-												href='/billing'
-												className={classNames(
-													path.endsWith('/billing')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<CreditCardIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Billing
-											</Link>
-										</li>
-										{/*<li>
-											<Link
-												href='/settings'
-												className={classNames(
-													path.endsWith('/settings')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<Cog6ToothIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Settings
-											</Link>
-										</li>*/}
-										<li>
-											<form className='w-full' action='/forms/account/logout' method='POST'>
-												<input type='hidden' name='_csrf' value={csrf} />
-												<button
-													className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-													type='submit'>
-													<ArrowRightOnRectangleIcon
-														className='h-6 w-6 shrink-0'
-														aria-hidden='true'
-													/>
-													Log out
-												</button>
-											</form>
-										</li>
-									</ul>
-								</li>
 							</ul>
+
+							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600'>
+								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
+								<ul role='list' className='-mx-2 mt-2 space-y-1'>
+									{teamNavigation.map((item) => (
+										<li key={item.name}>
+											<Link
+												suppressHydrationWarning
+												href={`/${resourceSlug}${item.href}`}
+												className={classNames(
+													(path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.base}`))
+														? 'bg-gray-800 text-white'
+														: 'text-gray-400 hover:text-white hover:bg-gray-800',
+													'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+												)}
+											>
+												{item.icon}
+												{item.name}
+											</Link>
+										</li>
+									))}
+									<li>
+										<Link
+											href='/account'
+											className={classNames(
+												path.endsWith('/account')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<UserIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Account
+										</Link>
+									</li>
+									<li key='billing'>
+										<Link
+											href='/billing'
+											className={classNames(
+												path.endsWith('/billing')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<CreditCardIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Billing
+										</Link>
+									</li>
+									{/*<li>
+										<Link
+											href='/settings'
+											className={classNames(
+												path.endsWith('/settings')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<Cog6ToothIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Settings
+										</Link>
+									</li>*/}
+									<li>
+										<form className='w-full' action='/forms/account/logout' method='POST'>
+											<input type='hidden' name='_csrf' value={csrf} />
+											<button
+												className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+												type='submit'>
+												<ArrowRightOnRectangleIcon
+													className='h-6 w-6 shrink-0'
+													aria-hidden='true'
+												/>
+												Log out
+											</button>
+										</form>
+									</li>
+								</ul>
+							</span>
 						</nav>}
 					</div>
 				</div>}

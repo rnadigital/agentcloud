@@ -94,7 +94,7 @@ export default function PreviewSessionList(props) {
 
 	//TODO: sesion infinite scrolling/loading
 
-	return <li className='overflow-hidden'>
+	return <li className='overflow-y-scroll pb-[220px]'>
 		{sessions?.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Session History</div>}	
 		{(!sessions || loading)
 			? <div className='py-2 flex items-center justify-center'>
