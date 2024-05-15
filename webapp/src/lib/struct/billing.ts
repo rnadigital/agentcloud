@@ -17,6 +17,7 @@ export type AccountStripeData = {
 type SubscriptionPlanConfig = {
     plan: SubscriptionPlan;
     priceId: string | undefined;
+    productId: string | undefined;
 };
 
 export enum SubscriptionPlan {
@@ -27,9 +28,9 @@ export enum SubscriptionPlan {
 }
 
 export const subscriptionPlans: SubscriptionPlanConfig[] = [
-	{ plan: SubscriptionPlan.FREE, priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID },
-	{ plan: SubscriptionPlan.PRO, priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID },
-	{ plan: SubscriptionPlan.TEAMS, priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID },
+	{ plan: SubscriptionPlan.FREE, priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID, productId: process.env.STRIPE_FREE_PLAN_PRODUCT_ID },
+	{ plan: SubscriptionPlan.PRO, priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID, productId: process.env.STRIPE_PRO_PLAN_PRODUCT_ID },
+	{ plan: SubscriptionPlan.TEAMS, priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID, productId: process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID },
 ];
 
 export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
@@ -39,10 +40,17 @@ export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subs
 
 export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	if (priceId) {
-		acc[priceId] = plan; // Check for undefined to ensure type safety
+		acc[priceId] = plan;
 	}
 	return acc;
 }, {} as Record<string, SubscriptionPlan>);
+
+export const priceToProductMap: Record<string, string> = subscriptionPlans.reduce((acc, { priceId, productId }) => {
+	if (productId) {
+		acc[priceId] = productId;
+	}
+	return acc;
+}, {} as Record<string, string>);
 
 export type PlanLimits = {
 	users: number | 'Custom';

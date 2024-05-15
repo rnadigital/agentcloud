@@ -3,7 +3,7 @@
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
-import { addAccount, OAuthRecordType, setStripePlan, updateStripeCustomer } from 'db/account';
+import { addAccount, OAuthRecordType, setStripeCustomerId,setStripePlan, updateStripeCustomer } from 'db/account';
 import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
@@ -102,10 +102,10 @@ export default async function createAccount(email: string, name: string, passwor
 			items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
 			trial_period_days: 30,
 		});
-
+		await setStripeCustomerId(newAccountId, stripeCustomer.id);
 		await updateStripeCustomer(stripeCustomer.id, {
 			stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
-			stripeEndsAt: subscription.current_period_end,
+			stripeEndsAt: subscription.current_period_end*1000,
 			stripeTrial: true,
 		});
 	}

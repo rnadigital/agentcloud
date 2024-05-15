@@ -8,7 +8,7 @@ import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import { stripe } from 'lib/stripe';
 import toObjectId from 'misc/toobjectid';
-import { planToPriceMap, priceToPlanMap, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 
 function destructureSubscription(sub) {
@@ -37,11 +37,17 @@ function destructureSubscription(sub) {
 
 async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
-		const subscriptions = await stripe.subscriptions.list({
+		const body: any = {
 			customer: stripeCustomerId,
-			status: 'active',
+			status: 'trialing',
 			limit: 1 // fetch only the first subscription
-		});
+		};
+		let subscriptions = await stripe.subscriptions.list(body);
+		if (!subscriptions || subscriptions?.data?.length === 0) {
+			//They are not on a trial
+			body.status = 'active';
+			subscriptions = await stripe.subscriptions.list(body);
+		}
 		return destructureSubscription(subscriptions.data[0]);
 	} catch (error) {
 		console.error('Error fetching subscriptions:', error);
@@ -175,12 +181,46 @@ export async function createPortalLink(req, res, next) {
 	if (!planSub) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
-
-	//TODO: create a custom billingportal configuration https://docs.stripe.com/api/customer_portal/configurations/create
+	
+	// const configurationData: any = {
+	// 	business_profile: {
+	// 		//TODO: envs
+	// 		headline: 'RNA Digital makers of Agentcloud',
+	// 		privacy_policy_url: 'https://www.getmonita.io/legal',
+	// 		terms_of_service_url: 'https://www.getmonita.io/legal',
+	// 	},
+	// 	features: {
+	// 		subscription_update: {
+	// 			enabled: true,
+	// 			default_allowed_updates: ['quantity'],
+	// 			products: [
+	// 				{
+	// 					product: priceToProductMap[planToPriceMap[res.locals.account.stripe.stripePlan]],
+	// 					prices: [planToPriceMap[res.locals.account.stripe.stripePlan]],
+	// 				}
+	// 			]
+	// 		},
+	// 		payment_method_update: {
+	// 			enabled: true,
+	// 		},
+	// 	}
+	// };
+	// const users = req.body.users || 0;
+	// const storage = req.body.storage || 0;
+	// users > 0 && configurationData.features.subscription_update.products.push({
+	// 	prices: [process.env.STRIPE_ADDON_USERS_PRICE_ID],
+	// 	product: process.env.STRIPE_ADDON_USERS_PRODUCT_ID,
+	// });
+	// storage > 0 && configurationData.features.subscription_update.products.push({
+	// 	prices: [process.env.STRIPE_ADDON_STORAGE_PRICE_ID],
+	// 	product: process.env.STRIPE_ADDON_STORAGE_PRODUCT_ID,
+	// });
+	// const customConfiguration = await stripe.billingPortal.configurations.create(configurationData);
 
 	const portalLink = await stripe.billingPortal.sessions.create({
 		customer: res.locals.account?.stripe?.stripeCustomerId,
 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		// configuration: customConfiguration.id
 	});
 
 	await addPortalLink({
@@ -192,6 +232,4 @@ export async function createPortalLink(req, res, next) {
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
-
 }
-

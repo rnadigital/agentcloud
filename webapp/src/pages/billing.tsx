@@ -96,7 +96,10 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			</div>
 			<div className='mt-1 min-h-[80px]'>
 				{description}
-				{selectedPlan === plan && renderAddons(addons)}
+				{selectedPlan === plan	//show if current plan
+					&& price > 0		//and not free plan
+					&& plan !== SubscriptionPlan.ENTERPRISE //and not customisable on enterprise
+					&& renderAddons(addons)}
 			</div>
 			<div className='mt-4 flex flex-row'>
 				<span className='text-4xl font-bold'>{numberPrice && '$'}{price}</span>

@@ -14,7 +14,9 @@ class GoogleStorageProvider extends StorageProvider {
 		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 			options['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 		}
-		log('GoogleStorageProvider options:', options);
+		if (typeof window !== 'undefined') {
+			log('GoogleStorageProvider options:', options);
+		}
 		this.#storageClient = new Storage(options);
 	}
 
