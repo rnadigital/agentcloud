@@ -50,16 +50,16 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 				<p>Addons:</p>
 				{addons.users !== null && (
 					<div className='flex flex-row justify-between w-full'>
-						<button onClick={() => handleDecrement('users')} className='bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
+						<button onClick={() => handleDecrement('users')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
 						<span>Extra Team Members: {addons.users}</span>
-						<button onClick={() => handleIncrement('users')} className='bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
+						<button onClick={() => handleIncrement('users')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
 					</div>
 				)}
 				{addons.storage !== null && (
-					<div className='flex flex-row space-between w-full'>
-						<button onClick={() => handleDecrement('storage')} className='bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
+					<div className='flex flex-row justify-between w-full'>
+						<button onClick={() => handleDecrement('storage')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
 						<span>Extra GB Vector Storage: {addons.storage}</span>
-						<button onClick={() => handleIncrement('storage')} className='bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
+						<button onClick={() => handleIncrement('storage')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
 					</div>
 				)}
 			</div>
@@ -68,7 +68,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 
 	return (
 		<div
-			className={`transition-all cursor-pointer w-max min-w-[250px] rounded-lg p-4 border border-transparent-300 ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 border-2' : 'hover:shadow-lg hover:border-gray-300 hover:bg-gray-100'}`}
+			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 borde ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-2' : 'border hover:shadow-lg hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
 			// onClick={() => setSelectedPlan(plan)}
 		>
 			{!currentPlan && isPopular && (
@@ -109,7 +109,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			</div>
 			{link ? (
 				<Link
-					className='block text-center w-full bg-indigo-600 text-white px-4 py-2 font-semibold rounded-md'
+					className='block text-center w-full bg-indigo-600 text-white px-4 py-2 font-semibold rounded-md mt-2'
 					href={link}
 					rel='noopener noreferrer'
 					target='_blank'
