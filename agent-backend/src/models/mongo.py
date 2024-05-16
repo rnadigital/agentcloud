@@ -28,6 +28,7 @@ class Platforms(str, Enum):
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
     Cohere = "cohere"
+    Anthropic = "anthropic"
 
 
 class ModelVariant(str, Enum):
@@ -37,6 +38,9 @@ class ModelVariant(str, Enum):
     GPT3TURBO = "gpt-3.5-turbo"
     GeminiPro = "gemini-pro"
     CommandRPlus = "command-r-plus"
+    Opus = "claude-3-opus-20240229"
+    Sonnet = "claude-3-sonnet-20240229"
+    Haiku = "claude-3-haiku-20240307"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):

@@ -4,6 +4,7 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
 from langchain_google_vertexai import ChatVertexAI
 from langchain_cohere import ChatCohere
+from langchain_anthropic import ChatAnthropic
 
 import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
@@ -27,6 +28,8 @@ def model_factory(agentcloud_model: models.mongo.Model,
             return _build_google_vertex_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
             return _build_cohere_model_with_credential(agentcloud_model, credential)
+        case models.mongo.Platforms.Anthropic:
+            return _build_anthropic_model_with_credential(agentcloud_model, credential)
 
 
 def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
@@ -135,3 +138,11 @@ def _build_cohere_model_with_credential(model: models.mongo.Model,
     return ChatCohere(model=model_name,
                       cohere_api_key=credential.credentials.api_key,
                       temperature=model.temperature)
+
+
+def _build_anthropic_model_with_credential(model: models.mongo.Model,
+                                           credential: models.mongo.Credentials) -> BaseLanguageModel:
+    model_name = model.config.get('model', models.mongo.ModelVariant.Opus)
+    return ChatAnthropic(model_name=model_name,
+                         api_key=credential.credentials.api_key,
+                         temperature=model.temperature)
