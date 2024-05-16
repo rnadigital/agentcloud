@@ -12,27 +12,27 @@ import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } fr
 const log = debug('webapp:stripe');
 
 function destructureSubscription(sub) {
-	let planSub
-		, addonUsersSub
-		, addonStorageSub;
+	let planItem, addonUsersItem, addonStorageItem;
 	// for (let sub of subscriptionData) {
-	if (Array.isArray(sub?.items?.data) && sub.items.data[0]?.price?.id) {
-		switch (sub.items.data[0]?.price?.id) {
-			case process.env.STRIPE_FREE_PLAN_PRICE_ID:
-			case process.env.STRIPE_PRO_PLAN_PRICE_ID:
-			case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
-				planSub = sub;
-				break;
-			case process.env.STRIPE_ADDON_USERS_PRICE_ID:
-				addonUsersSub = sub;
-				break;
-			case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
-				addonStorageSub = sub;
-				break;
+	if (Array.isArray(sub?.items?.data) && sub.items.data.length > 0) {
+		for (let item of sub.items.data) {
+			switch (item.price.id) {
+				case process.env.STRIPE_FREE_PLAN_PRICE_ID:
+				case process.env.STRIPE_PRO_PLAN_PRICE_ID:
+				case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
+					planItem = item;
+					break;
+				case process.env.STRIPE_ADDON_USERS_PRICE_ID:
+					addonUsersItem = item;
+					break;
+				case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
+					addonStorageItem = item;
+					break;
+			}
 		}
 	}
 	// }
-	return { planSub, addonUsersSub, addonStorageSub };
+	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
 } 
 
 async function getSubscriptionsDetails(stripeCustomerId: string) {
@@ -98,31 +98,31 @@ export async function webhookHandler(req, res, next) {
 				createdDate: new Date(),
 			});
 			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const { planSub, addonUsersSub, addonStorageSub } = await getSubscriptionsDetails(checkoutSession.customer);
+			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
 			//Note: 0 to set them on else case
 			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: planToPriceMap[planSub?.items.data[0].price.id],
+				stripePlan: planToPriceMap[planItem.price.id],
 				stripeAddons: {
-					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : 0,
-					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : 0,
+					users: addonUsersItem ? addonUsersItem.quantity : 0,
+					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: planSub?.current_period_end*1000,
+				stripeEndsAt: checkoutSession?.current_period_end*1000,
 			});
 			break;
 		}
 
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
-			const { planSub, addonUsersSub, addonStorageSub } = destructureSubscription(subscriptionUpdated);
+			const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
 			//Note: null to not update them unless required
 			const update = {
-				stripePlan: priceToPlanMap[planSub?.items.data[0].price.id],
+				stripePlan: planToPriceMap[planItem.price.id],
 				stripeAddons: {
-					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : null,
-					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : null,
+					users: addonUsersItem ? addonUsersItem.quantity : 0,
+					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: planSub?.current_period_end ? planSub.current_period_end*1000 : null,
-				stripeTrial: planSub?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end*1000 : null,
+				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
@@ -177,59 +177,59 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
 	}
 
-	const { planSub } = await getSubscriptionsDetails(res.locals.account?.stripe?.stripeCustomerId);
-	if (!planSub) {
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(res.locals.account?.stripe?.stripeCustomerId);
+	if (!planItem) {
 		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
+		//TODO: create a subscription here, instead of "updating"
 	}
-	
-	// const configurationData: any = {
-	// 	business_profile: {
-	// 		//TODO: envs
-	// 		headline: 'RNA Digital makers of Agentcloud',
-	// 		privacy_policy_url: 'https://www.getmonita.io/legal',
-	// 		terms_of_service_url: 'https://www.getmonita.io/legal',
-	// 	},
-	// 	features: {
-	// 		subscription_update: {
-	// 			enabled: true,
-	// 			default_allowed_updates: ['quantity'],
-	// 			products: [
-	// 				{
-	// 					product: priceToProductMap[planToPriceMap[res.locals.account.stripe.stripePlan]],
-	// 					prices: [planToPriceMap[res.locals.account.stripe.stripePlan]],
-	// 				}
-	// 			]
-	// 		},
-	// 		payment_method_update: {
-	// 			enabled: true,
-	// 		},
-	// 	}
-	// };
-	// const users = req.body.users || 0;
-	// const storage = req.body.storage || 0;
-	// users > 0 && configurationData.features.subscription_update.products.push({
-	// 	prices: [process.env.STRIPE_ADDON_USERS_PRICE_ID],
-	// 	product: process.env.STRIPE_ADDON_USERS_PRODUCT_ID,
-	// });
-	// storage > 0 && configurationData.features.subscription_update.products.push({
-	// 	prices: [process.env.STRIPE_ADDON_STORAGE_PRICE_ID],
-	// 	product: process.env.STRIPE_ADDON_STORAGE_PRODUCT_ID,
-	// });
-	// const customConfiguration = await stripe.billingPortal.configurations.create(configurationData);
 
-	const portalLink = await stripe.billingPortal.sessions.create({
-		customer: res.locals.account?.stripe?.stripeCustomerId,
-		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-		// configuration: customConfiguration.id
+	const users = req.body.users || 0;
+	const storage = req.body.storage || 0;
+
+	const planItemId = planItem?.id;
+	const items: any[] = [
+		{
+			// price: planToPriceMap[res.locals.account.stripe.stripePlan],
+			id: planItemId,
+			quantity: 1
+		}
+	];
+
+	// if (users > 0) {
+	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
+	const usersItemId = addonUsersItem?.id;
+	items.push({
+		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
+		quantity: users,
 	});
+	// }
 
-	await addPortalLink({
-		accountId: toObjectId(res.locals.account._id),
-		portalLinkId: portalLink.id,
-		url: portalLink.url,
-		payload: portalLink,
-		createdDate: new Date(),
+	// if (storage > 0) {
+	const storageItemId = addonStorageItem?.id;
+	items.push({
+		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		quantity: storage,
 	});
+	// }
+	console.log(items);
+	const subscription = await stripe.subscriptions.update(subscriptionId, {
+		items
+	});
+	console.log(subscription);
 
-	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
+// 	const portalLink = await stripe.billingPortal.sessions.create({
+// 		customer: res.locals.account?.stripe?.stripeCustomerId,
+// 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+// 		// configuration: customConfiguration.id
+// 	});
+// 
+// 	await addPortalLink({
+// 		accountId: toObjectId(res.locals.account._id),
+// 		portalLinkId: portalLink.id,
+// 		url: portalLink.url,
+// 		payload: portalLink,
+// 		createdDate: new Date(),
+// 	});
+
+	return dynamicResponse(req, res, 302, {  });
 }

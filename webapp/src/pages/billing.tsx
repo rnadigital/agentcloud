@@ -7,14 +7,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { SubscriptionPlan } from 'struct/billing';
+import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 
-function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null, isPopular = false }) {
+function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
+	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon }) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { stripeCustomerId, stripePlan, stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
-	const [selectedPlan, setSelectedPlan] = useState(stripePlan || SubscriptionPlan.PRO);
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
@@ -46,19 +46,18 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 
 	const renderAddons = (addons) => {
 		return (
-			<div className='space-y-2'>
-				<p>Addons:</p>
-				{addons.users !== null && (
+			<div className={`space-y-2 opacity-0 overflow-hidden transition-all ${selectedPlan === plan ? 'opacity-100' : 'opacity-0'}`}>
+				{usersAddon === true && (
 					<div className='flex flex-row justify-between w-full'>
 						<button onClick={() => handleDecrement('users')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
-						<span>Extra Team Members: {addons.users}</span>
+						<span>Extra Team Members: {addons.users || 0}</span>
 						<button onClick={() => handleIncrement('users')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
 					</div>
 				)}
-				{addons.storage !== null && (
+				{storageAddon === true && (
 					<div className='flex flex-row justify-between w-full'>
 						<button onClick={() => handleDecrement('storage')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>-</button>
-						<span>Extra GB Vector Storage: {addons.storage}</span>
+						<span>Extra GB Vector Storage: {addons.storage || 0}</span>
 						<button onClick={() => handleIncrement('storage')} className='bg-gray-300 dark:bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center'>+</button>
 					</div>
 				)}
@@ -68,8 +67,10 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 
 	return (
 		<div
-			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 borde ${currentPlan ? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-2' : 'border hover:shadow-lg hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
-			// onClick={() => setSelectedPlan(plan)}
+			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 border ${selectedPlan === plan
+				? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-1'
+				: 'border hover:shadow-lg hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
+			onClick={() => setSelectedPlan(plan)}
 		>
 			{!currentPlan && isPopular && (
 				<span className='px-2 py-[0.5px] bg-yellow-100 text-yellow-800 border border-yellow-300 text-sm rounded-lg'>
@@ -96,8 +97,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			</div>
 			<div className='mt-1 min-h-[80px]'>
 				{description}
-				{selectedPlan === plan	//show if current plan
-					&& price > 0		//and not free plan
+				{price > 0		//and not free plan
 					&& plan !== SubscriptionPlan.ENTERPRISE //and not customisable on enterprise
 					&& renderAddons(addons)}
 			</div>
@@ -129,9 +129,10 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 						};
 						API.getPortalLink(payload, null, toast.error, router);
 					}}
-					className='mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					disabled={selectedPlan !== plan}
+					className={'mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
-					{numberPrice ? (stripeCustomerId && currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Subscribe') : 'Contact us'}
+					{currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Change Plan'}
 				</button>
 			)}
 		</div>
@@ -139,10 +140,10 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 }
 
 export default function Billing(props) {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
+	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
@@ -176,7 +177,6 @@ export default function Billing(props) {
 
 	return (
 		<>
-
 			<Head>
 				<title>Billing</title>
 			</Head>
@@ -188,10 +188,20 @@ export default function Billing(props) {
 			</div>
 
 			<div className='flex flex-row flex-wrap gap-4 py-4 items-center'>
-				<SubscriptionCard title='Agent Cloud Free' price={0} plan={SubscriptionPlan.FREE} />
-				<SubscriptionCard title='Agent Cloud Pro' price={99} plan={SubscriptionPlan.PRO} />
-				<SubscriptionCard title='Agent Cloud Teams' price={199} isPopular={true} plan={SubscriptionPlan.TEAMS} />
-				<SubscriptionCard title='Agent Cloud Enterprise' price={'Custom'} plan={SubscriptionPlan.ENTERPRISE} link={process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK} />
+				{plans.map((plan) => (
+					<SubscriptionCard
+						key={plan.plan}
+						title={plan.title}
+						price={plan.price}
+						plan={plan.plan}
+						isPopular={plan.isPopular}
+						link={plan.link}
+						storageAddon={plan.storageAddon}
+						usersAddon={plan.usersAddon}
+						selectedPlan={selectedPlan}
+						setSelectedPlan={setSelectedPlan}
+					/>
+				))}
 			</div>
 			{/*<form onSubmit={getPortalLink}>
 				<input type='hidden' name='_csrf' value={csrf} />
@@ -206,10 +216,8 @@ export default function Billing(props) {
 			</form>
 
 			<pre>{JSON.stringify(account?.stripe, null, '\t')}</pre>*/}
-			
 		</>
 	);
-
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {

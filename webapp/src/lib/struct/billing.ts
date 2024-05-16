@@ -14,12 +14,6 @@ export type AccountStripeData = {
 	stripeTrial?: boolean;
 }
 
-type SubscriptionPlanConfig = {
-    plan: SubscriptionPlan;
-    priceId: string | undefined;
-    productId: string | undefined;
-};
-
 export enum SubscriptionPlan {
     FREE = 'Free',
     PRO = 'Pro',
@@ -27,11 +21,64 @@ export enum SubscriptionPlan {
     ENTERPRISE = 'Enterprise'
 }
 
+export interface SubscriptionPlanConfig {
+	plan: SubscriptionPlan;
+	priceId: string | undefined;
+	productId: string | undefined;
+	storageAddon: boolean;
+	usersAddon: boolean;
+	title: string;
+	price: number | string;
+	isPopular?: boolean;
+	link?: string;
+}
+
 export const subscriptionPlans: SubscriptionPlanConfig[] = [
-	{ plan: SubscriptionPlan.FREE, priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID, productId: process.env.STRIPE_FREE_PLAN_PRODUCT_ID },
-	{ plan: SubscriptionPlan.PRO, priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID, productId: process.env.STRIPE_PRO_PLAN_PRODUCT_ID },
-	{ plan: SubscriptionPlan.TEAMS, priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID, productId: process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID },
+	{
+		plan: SubscriptionPlan.FREE,
+		priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_FREE_PLAN_PRODUCT_ID,
+		storageAddon: false,
+		usersAddon: false,
+		title: 'Agent Cloud Free',
+		price: 0
+	},
+	{
+		plan: SubscriptionPlan.PRO,
+		priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_PRO_PLAN_PRODUCT_ID,
+		storageAddon: true,
+		usersAddon: false,
+		title: 'Agent Cloud Pro',
+		price: 99
+	},
+	{
+		plan: SubscriptionPlan.TEAMS,
+		priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID,
+		storageAddon: true,
+		usersAddon: true,
+		title: 'Agent Cloud Teams',
+		price: 199,
+		isPopular: true
+	},
+	{
+		plan: SubscriptionPlan.ENTERPRISE,
+		priceId: undefined,
+		productId: undefined,
+		storageAddon: false,
+		usersAddon: false,
+		title: 'Agent Cloud Enterprise',
+		price: 'Custom',
+		link: process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK
+	}
 ];
+
+// Convert subscriptionPlans to a map where the plan is the key and the object is the value
+export const subscriptionPlansMap: Record<SubscriptionPlan, SubscriptionPlanConfig> = subscriptionPlans.reduce((acc, planConfig) => {
+	acc[planConfig.plan] = planConfig;
+	return acc;
+}, {} as Record<SubscriptionPlan, SubscriptionPlanConfig>);
 
 export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	acc[plan] = priceId;
