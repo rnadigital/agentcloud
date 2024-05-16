@@ -95,7 +95,6 @@ export default async function createAccount(email: string, name: string, passwor
 			email,
 			name,
 		});
-
 		// Subscribe customer to 'Pro' plan with a 30-day trial
 		const subscription = await stripe.subscriptions.create({
 			customer: stripeCustomer.id,

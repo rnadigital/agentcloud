@@ -167,20 +167,40 @@ export async function webhookHandler(req, res, next) {
 
 }
 
-export async function createPortalLink(req, res, next) {
+export async function changePlan(req, res, next) {
 
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	if (!res.locals.account?.stripe?.stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
+	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+		/* Note: it shouldn't be impossible to end up here and it definitely shouldn't be possible that they have an existing
+		 customer without having it set on their account -- nowhere in this webapp unsets stripe.stripeCustomerId
+		const stripeCustomer = await stripe.customers.create({
+			email: res.locals.account.email,
+			name: res.locals.account.name,
+		});
+		const subscription = await stripe.subscriptions.create({
+			customer: stripeCustomer.id,
+			items: [{ price: process.env.STRIPE_FREE_PLAN_PRICE_ID }],
+		});
+		stripeCustomerId = stripeCustomer.id;
+		await setStripeCustomerId(res.locals.account._id, stripeCustomer.id);
+		await updateStripeCustomer(stripeCustomer.id, {
+			stripePlan: priceToPlanMap[process.env.STRIPE_FREE_PLAN_PRICE_ID],
+			stripeEndsAt: subscription.current_period_end*1000,
+			stripeTrial: false,
+		});
+		*/
 	}
 
-	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(res.locals.account?.stripe?.stripeCustomerId);
-	if (!planItem) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
-		//TODO: create a subscription here, instead of "updating"
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+
+	if (!subscriptionId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
 	}
 
 	const users = req.body.users || 0;
@@ -195,41 +215,51 @@ export async function createPortalLink(req, res, next) {
 		}
 	];
 
-	// if (users > 0) {
 	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
 	const usersItemId = addonUsersItem?.id;
 	items.push({
 		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
 		quantity: users,
 	});
-	// }
-
-	// if (storage > 0) {
+	
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
 		quantity: storage,
 	});
-	// }
-	console.log(items);
+	
 	const subscription = await stripe.subscriptions.update(subscriptionId, {
 		items
 	});
-	console.log(subscription);
 
-// 	const portalLink = await stripe.billingPortal.sessions.create({
-// 		customer: res.locals.account?.stripe?.stripeCustomerId,
-// 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-// 		// configuration: customConfiguration.id
-// 	});
-// 
-// 	await addPortalLink({
-// 		accountId: toObjectId(res.locals.account._id),
-// 		portalLinkId: portalLink.id,
-// 		url: portalLink.url,
-// 		payload: portalLink,
-// 		createdDate: new Date(),
-// 	});
-
-	return dynamicResponse(req, res, 302, {  });
+	return dynamicResponse(req, res, 302, { redirect: '/billing' });
 }
+
+export async function createPortalLink(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	const customerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	if (!customerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const portalLink = await stripe.billingPortal.sessions.create({
+		customer: customerId,
+		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+	});
+
+	await addPortalLink({
+		accountId: toObjectId(res.locals.account._id),
+		portalLinkId: portalLink.id,
+		url: portalLink.url,
+		payload: portalLink,
+		createdDate: new Date(),
+	});
+
+	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
+}
+
