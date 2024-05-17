@@ -88,6 +88,7 @@ export default function router(server, app) {
 
 	server.post('/stripe-portallink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
 	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.requestChangePlan);
+	server.post('/stripe-plan-confirm', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.confirmChangePlan);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });

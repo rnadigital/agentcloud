@@ -7,9 +7,12 @@ import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import { stripe } from 'lib/stripe';
-import toObjectId from 'misc/toobjectid';
 import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
+import { io } from '@socketio';
+import { addNotification } from 'db/notification';
+import toObjectId from 'misc/toobjectid';
+import { NotificationType } from 'struct/notification';
 
 async function getPaymentMethods(stripeCustomerId: string) {
 	const paymentMethods = await stripe.paymentMethods.list({
@@ -21,9 +24,8 @@ async function getPaymentMethods(stripeCustomerId: string) {
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
-	// for (let sub of subscriptionData) {
-	if (Array.isArray(sub?.items?.data) && sub.items.data.length > 0) {
-		for (let item of sub.items.data) {
+	if (Array.isArray(sub?.items?.data) && sub?.items?.data.length > 0) {
+		for (let item of sub?.items?.data) {
 			switch (item.price.id) {
 				case process.env.STRIPE_FREE_PLAN_PRICE_ID:
 				case process.env.STRIPE_PRO_PLAN_PRICE_ID:
@@ -39,7 +41,6 @@ function destructureSubscription(sub) {
 			}
 		}
 	}
-	// }
 	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
 } 
 
@@ -109,7 +110,7 @@ export async function webhookHandler(req, res, next) {
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
 			//Note: 0 to set them on else case
 			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: planToPriceMap[planItem.price.id],
+				stripePlan: priceToPlanMap[planItem.price.id],
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -121,10 +122,15 @@ export async function webhookHandler(req, res, next) {
 
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
-			const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
+
+			//NOTE: when updating plans, only UPDATED items come through, not the original plan, so we need to get the plan regardless
+			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
+
+			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
+			
 			//Note: null to not update them unless required
 			const update = {
-				stripePlan: planToPriceMap[planItem.price.id],
+				stripePlan: priceToPlanMap[planItem.price.id],
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -209,12 +215,20 @@ export async function requestChangePlan(req, res, next) {
 
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
+	const plan = req.body.plan;
+	const planPrice = planToPriceMap[plan];
+
+	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
 
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
 			// id: planItemId,
-			price: planToPriceMap[req.body.plan],
+			price: planPrice,
 			quantity: 1
 		}
 	];
@@ -248,10 +262,16 @@ export async function requestChangePlan(req, res, next) {
 	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
 		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
 	});
+	console.log(JSON.stringify(checkoutSession, null, 2));
 
-	//TODO: project checkoutsession to only include required props
-
-	return dynamicResponse(req, res, 302, { checkoutSession });
+	return dynamicResponse(req, res, 302, {
+		checkoutSession: {
+			id: checkoutSession.id, //for useEffect
+			line_items: checkoutSession.line_items,
+			amount_total: checkoutSession.amount_total,
+			plan, users, storage,
+		}
+	});
 }
 
 export async function confirmChangePlan(req, res, next) {
@@ -261,10 +281,6 @@ export async function confirmChangePlan(req, res, next) {
 	}
 
 	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
-
-	const session = await stripe.checkout.sessions.retrieve(
-	  'cs_test_a11YYufWQzNY63zpQ6QSNRQhkUpVph4WRmzW0zWJO2znZKdVujZ0N0S22u'
-	);
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -276,17 +292,30 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
 	}
 
+	const plan = req.body.plan;
+	const planPrice = planToPriceMap[plan];
+	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
+	
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
-
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
-			// id: planItemId,
-			price: planToPriceMap[req.body.plan],
+			...(planItem?.price?.id === planToPriceMap[req.body.plan] ? { id: planItemId } : { price: planToPriceMap[req.body.plan] }),
 			quantity: 1
 		}
 	];
+	if (planItem?.price?.id !== planToPriceMap[req.body.plan]) {
+		/* Ensure we delete the old plan (if different id from current) to not have 2 "plans" in the subscription
+		because setting quantity to 0  on the old plan doesn't remove it from the subscription */
+		const deleted = await stripe.subscriptionItems.del(planItemId);
+		console.log('deleted', deleted);
+		
+	}
 
 	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
 	const usersItemId = addonUsersItem?.id;
@@ -297,24 +326,50 @@ export async function confirmChangePlan(req, res, next) {
 	
 	const storageItemId = addonStorageItem?.id;
 	items.push({
-		// ...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
 		quantity: storage,
 	});
 
-	// const subscription = await stripe.subscriptions.update(subscriptionId, {
-	// 	items
-	// });
+	console.log('items', items);
 
-	const portalLink = await stripe.checkout.sessions.create({
-		customer: stripeCustomerId,
-		// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-		line_items: items.filter(i => i.quantity > 0),
-		currency: 'USD',
-		mode: 'subscription',
+	//TODO: if they dont have a payment method, open portal link to payment details
+	const subscription = await stripe.subscriptions.update(subscriptionId, {
+		items
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
+	const notification = {
+	    orgId: toObjectId(res.locals.matchingOrg.id.toString()),
+	    teamId: toObjectId(res.locals.matchingTeam.id.toString()),
+	    target: {
+		    //what to do for subscriptions?
+			id: null,
+			collection: null,
+			property: null,
+			objectId: null,
+	    },
+	    title: 'Subscription updated',
+	    date: new Date(),
+	    seen: false,
+		// stuff specific to notification type
+	    description: 'Your subscription was updated successfully.',
+		type: NotificationType.UserAction,
+		details: null,
+	};
+	await addNotification(notification);
+	io.to(res.locals.matchingTeam.id).emit('notification', notification);
+	
+	console.log('subscription', subscription);
+
+// 	const portalLink = await stripe.checkout.sessions.create({
+// 		customer: stripeCustomerId,
+// 		// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+// 		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+// 		line_items: items.filter(i => i.quantity > 0),
+// 		currency: 'USD',
+// 		mode: 'subscription',
+// 	});
+
+	return dynamicResponse(req, res, 200, { });
 }
 
 export async function createPortalLink(req, res, next) {

@@ -1,15 +1,15 @@
 import * as API from '@api';
+import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
+import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import ButtonSpinner from 'components/ButtonSpinner';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
-import Invoice from 'components/Invoice';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange }) {
@@ -140,7 +140,8 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 						const payload = {
 							_csrf: csrf,
 							plan,
-							...addons,
+							...(usersAddon ? { users: addons.users } : {}),
+							...(storageAddon ? { storage: addons.storage } : {}),
 						};
 						await API.requestChangePlan(payload, res => {
 							if (res && res?.checkoutSession) {
@@ -150,7 +151,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 						setTimeout(() => setSubmitting(false), 500);
 					}}		
 					disabled={selectedPlan !== plan || submitting}
-					className={editedAddons 
+					className={editedAddons || (!currentPlan && selectedPlan === plan)
 						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
 						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
@@ -239,7 +240,31 @@ export default function Billing(props) {
 				))}
 			</div>
 
-			<Invoice session={stagedChange} show={show} cancelFunction={() => setShow(false)} />
+			<Invoice
+				session={stagedChange}
+				show={show}
+				cancelFunction={() => setShow(false)}
+				confirmFunction={async () => {
+					const payload = {
+						_csrf: csrf,
+						plan: selectedPlan,
+						...(stagedChange?.users ? { users: stagedChange.users } : {}),
+						...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
+					};
+					try {
+						await API.confirmChangePlan(payload, res => {
+							console.log('confirmChangePlan res', res);
+							setShow(false);
+							setStagedChange(null);
+							refreshAccountContext();
+							toast.success('Subscription updated successfully');
+						}, toast.error, router);
+					} catch (e) {
+						console.error(e);
+						toast.success('Error updating subscription - please contact support');
+					}
+				}}
+			/>
 			
 			<div className='border-b dark:border-slate-400 mt-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Payment Methods & Invoice History</h3>
