@@ -14,14 +14,6 @@ import { addNotification } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
 import { NotificationType } from 'struct/notification';
 
-async function getPaymentMethods(stripeCustomerId: string) {
-	const paymentMethods = await stripe.paymentMethods.list({
-		customer: stripeCustomerId,
-		type: 'card'
-	});
-	return paymentMethods?.data;
-}
-
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
 	if (Array.isArray(sub?.items?.data) && sub?.items?.data.length > 0) {
@@ -130,7 +122,7 @@ export async function webhookHandler(req, res, next) {
 			
 			//Note: null to not update them unless required
 			const update = {
-				stripePlan: priceToPlanMap[planItem.price.id],
+				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : {}),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -189,9 +181,11 @@ export async function hasPaymentMethod(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
 
-	const paymentMethods = await getPaymentMethods(stripeCustomerId);
+	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+		limit: 3
+	});
 
-	return dynamicResponse(req, res, 200, { paymentMethods });
+	return dynamicResponse(req, res, 200, { ok: paymentMethods?.data?.length > 0 });
 
 } 
 
@@ -227,7 +221,6 @@ export async function requestChangePlan(req, res, next) {
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
-			// id: planItemId,
 			price: planPrice,
 			quantity: 1
 		}
@@ -236,21 +229,15 @@ export async function requestChangePlan(req, res, next) {
 	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
 	const usersItemId = addonUsersItem?.id;
 	items.push({
-		// ...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
 		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
 		quantity: users,
 	});
 	
 	const storageItemId = addonStorageItem?.id;
 	items.push({
-		// ...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
 		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
 		quantity: storage,
 	});
-
-	// const subscription = await stripe.subscriptions.update(subscriptionId, {
-	// 	items
-	// });
 
 	const createdCheckoutSession = await stripe.checkout.sessions.create({
 		customer: stripeCustomerId,
@@ -309,12 +296,10 @@ export async function confirmChangePlan(req, res, next) {
 			quantity: 1
 		}
 	];
-	if (planItem?.price?.id !== planToPriceMap[req.body.plan]) {
+	if (planItemId && planItem?.price?.id !== planToPriceMap[req.body.plan]) {
 		/* Ensure we delete the old plan (if different id from current) to not have 2 "plans" in the subscription
 		because setting quantity to 0  on the old plan doesn't remove it from the subscription */
 		const deleted = await stripe.subscriptionItems.del(planItemId);
-		console.log('deleted', deleted);
-		
 	}
 
 	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
@@ -330,45 +315,48 @@ export async function confirmChangePlan(req, res, next) {
 		quantity: storage,
 	});
 
-	console.log('items', items);
+	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+		limit: 3
+	});
 
-	//TODO: if they dont have a payment method, open portal link to payment details
+	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
+		const checkoutSession = await stripe.checkout.sessions.create({
+			ui_mode: 'embedded',
+			customer: stripeCustomerId,
+			redirect_on_completion: 'never',
+			currency: 'USD',
+			mode: 'setup',
+			// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent(`/billing?changePlan=${plan}&storage=${storage}$users=${users}`)}`,
+			// line_items: items.filter(i => i.quantity > 0),
+		});
+		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
+	}
+
 	const subscription = await stripe.subscriptions.update(subscriptionId, {
 		items
 	});
 
-	const notification = {
-	    orgId: toObjectId(res.locals.matchingOrg.id.toString()),
-	    teamId: toObjectId(res.locals.matchingTeam.id.toString()),
-	    target: {
-		    //what to do for subscriptions?
-			id: null,
-			collection: null,
-			property: null,
-			objectId: null,
-	    },
-	    title: 'Subscription updated',
-	    date: new Date(),
-	    seen: false,
-		// stuff specific to notification type
-	    description: 'Your subscription was updated successfully.',
-		type: NotificationType.UserAction,
-		details: null,
-	};
-	await addNotification(notification);
-	io.to(res.locals.matchingTeam.id).emit('notification', notification);
+	// const notification = {
+	//     orgId: toObjectId(res.locals.matchingOrg.id.toString()),
+	//     teamId: toObjectId(res.locals.matchingTeam.id.toString()),
+	//     target: {
+	// 	    //what to do for subscriptions?
+	// 		id: null,
+	// 		collection: null,
+	// 		property: null,
+	// 		objectId: null,
+	//     },
+	//     title: 'Subscription updated',
+	//     date: new Date(),
+	//     seen: false,
+	// 	// stuff specific to notification type
+	//     description: 'Your subscription was updated successfully.',
+	// 	type: NotificationType.UserAction,
+	// 	details: null,
+	// };
+	// await addNotification(notification);
+	// io.to(res.locals.matchingTeam.id).emit('notification', notification);
 	
-	console.log('subscription', subscription);
-
-// 	const portalLink = await stripe.checkout.sessions.create({
-// 		customer: stripeCustomerId,
-// 		// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-// 		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-// 		line_items: items.filter(i => i.quantity > 0),
-// 		currency: 'USD',
-// 		mode: 'subscription',
-// 	});
-
 	return dynamicResponse(req, res, 200, { });
 }
 

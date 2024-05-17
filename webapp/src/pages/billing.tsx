@@ -7,9 +7,16 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+	EmbeddedCheckoutProvider,
+	EmbeddedCheckout
+} from '@stripe/react-stripe-js';
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange }) {
@@ -174,6 +181,7 @@ export default function Billing(props) {
 	const { resourceSlug } = router.query;
 	const [stagedChange, setStagedChange] = useState(null);
 	const [show, setShow] = useState(false);
+	const [showPaymentModal, setShowPaymentModal] = useState(false);
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -192,6 +200,15 @@ export default function Billing(props) {
 			API.getAccount({ resourceSlug }, dispatch, setError, router);
 		}
 	}
+
+	const getPayload = () => {
+		return {
+			_csrf: csrf,
+			plan: selectedPlan,
+			...(stagedChange?.users ? { users: stagedChange.users } : {}),
+			...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
+		};
+	};
 
 	useEffect(() => {
 		fetchAccount();
@@ -240,29 +257,40 @@ export default function Billing(props) {
 				))}
 			</div>
 
+			<StripeCheckoutModal
+				showPaymentModal={showPaymentModal}
+				getPayload={getPayload}
+				setShow={setShowPaymentModal}
+				setStagedChange={setStagedChange}
+			/>
+
 			<Invoice
 				session={stagedChange}
 				show={show}
 				cancelFunction={() => setShow(false)}
 				confirmFunction={async () => {
-					const payload = {
-						_csrf: csrf,
-						plan: selectedPlan,
-						...(stagedChange?.users ? { users: stagedChange.users } : {}),
-						...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
-					};
-					try {
-						await API.confirmChangePlan(payload, res => {
-							console.log('confirmChangePlan res', res);
-							setShow(false);
-							setStagedChange(null);
-							refreshAccountContext();
-							toast.success('Subscription updated successfully');
-						}, toast.error, router);
-					} catch (e) {
-						console.error(e);
-						toast.success('Error updating subscription - please contact support');
-					}
+					return new Promise((resolve, reject) => {
+						try {
+							API.hasPaymentMethod(res => {
+								if (res && res?.ok === true)  {
+									API.confirmChangePlan(getPayload(), res => {
+										setShow(false);
+										refreshAccountContext();
+										toast.success('Subscription updated successfully');
+										setTimeout(() => setStagedChange(null), 500);
+										resolve(null);
+									}, toast.error, router);
+								} else {
+									resolve(null);
+									setShowPaymentModal(true);
+								}
+							}, toast.error, router);
+						} catch (e) {
+							console.error(e);
+							toast.success('Error updating subscription - please contact support');
+							reject(e);
+						}
+					});
 				}}
 			/>
 			

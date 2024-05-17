@@ -38,6 +38,9 @@ export function requestChangePlan(body, dispatch, errorCallback, router) {
 export function confirmChangePlan(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-plan-confirm', 'POST', body, dispatch, errorCallback, router);
 }
+export function hasPaymentMethod(dispatch, errorCallback, router) {
+	return ApiCall('/stripe-has-paymentmethod', 'GET', null, dispatch, errorCallback, router);
+}
 export function adminEditAccount(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/admin', 'POST', body, dispatch, errorCallback, router);
 }
