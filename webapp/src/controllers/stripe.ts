@@ -326,8 +326,6 @@ export async function confirmChangePlan(req, res, next) {
 			redirect_on_completion: 'never',
 			currency: 'USD',
 			mode: 'setup',
-			// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent(`/billing?changePlan=${plan}&storage=${storage}$users=${users}`)}`,
-			// line_items: items.filter(i => i.quantity > 0),
 		});
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
