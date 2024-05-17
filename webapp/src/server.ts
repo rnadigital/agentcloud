@@ -25,7 +25,6 @@ const dev = process.env.NODE_ENV !== 'production'
 	, app = next({ dev, hostname, port })
 	, handle = app.getRequestHandler();
 
-// import getAirbyteInternalApi from 'lib/airbyte/internal';
 import { dynamicResponse } from '@dr';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
@@ -57,9 +56,6 @@ app.prepare()
 		await initGlobalTools();
 		await ses.init();
 		await initRabbit();
-
-		// const ia = await getAirbyteInternalApi();
-		// console.log(ia);
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

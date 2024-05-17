@@ -5,12 +5,14 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import ButtonSpinner from 'components/ButtonSpinner';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+import Invoice from 'components/Invoice';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
-	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon }) {
+	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange }) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
@@ -18,17 +20,29 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 
+	//Set addon state to initial value from stripeAddons
 	const [addons, setAddons] = useState({
-		users: stripeAddons?.users || 0,
-		storage: stripeAddons?.storage || 0,
+		users: stripeAddons?.users,
+		storage: stripeAddons?.storage,
 	});
-	
+
+	//When changing them, check whether edited from the initial state
 	useEffect(() => {
 		const edited = addons?.users != stripeAddons.users
 			|| addons?.storage != stripeAddons.storage;
 		setEditedAddons(edited);
 	}, [addons?.users, addons?.storage]);
+
+	//When selecting a different plan, set edited to false and set back initial addon quantities
+	useEffect(() => {
+		setEditedAddons(false);
+		setAddons({
+			users: stripeAddons.users ,
+			storage: stripeAddons.storage,
+		});
+	}, [plan, selectedPlan]);
 
 	const handleIncrement = (key) => {
 		setAddons((prev) => ({
@@ -121,18 +135,27 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 				</Link>
 			) : (
 				<button
-					onClick={() => {
+					onClick={async () => {
+						setSubmitting(true);
 						const payload = {
 							_csrf: csrf,
 							plan,
 							...addons,
 						};
-						API.changePlan(payload, null, toast.error, router);
-					}}
-					disabled={selectedPlan !== plan}
-					className={'mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+						await API.requestChangePlan(payload, res => {
+							if (res && res?.checkoutSession) {
+								setStagedChange(res?.checkoutSession);
+							}
+						}, toast.error, router);
+						setTimeout(() => setSubmitting(false), 500);
+					}}		
+					disabled={selectedPlan !== plan || submitting}
+					className={editedAddons 
+						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
+						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
-					{currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Change Plan'}
+					{submitting && <ButtonSpinner className='mt-1 me-2' />}
+					{submitting ? 'Loading...' : currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Change Plan'}
 				</button>
 			)}
 		</div>
@@ -148,6 +171,8 @@ export default function Billing(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
+	const [stagedChange, setStagedChange] = useState(null);
+	const [show, setShow] = useState(false);
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -170,6 +195,15 @@ export default function Billing(props) {
 	useEffect(() => {
 		fetchAccount();
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		let timeout = setTimeout(() => {
+			setShow(stagedChange != null);
+		}, 500);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [stagedChange?.id]);
 
 	if (!account) {
 		return <Spinner />;
@@ -200,9 +234,13 @@ export default function Billing(props) {
 						usersAddon={plan.usersAddon}
 						selectedPlan={selectedPlan}
 						setSelectedPlan={setSelectedPlan}
+						setStagedChange={setStagedChange}
 					/>
 				))}
 			</div>
+
+			<Invoice session={stagedChange} show={show} cancelFunction={() => setShow(false)} />
+			
 			<div className='border-b dark:border-slate-400 mt-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Payment Methods & Invoice History</h3>
 			</div>

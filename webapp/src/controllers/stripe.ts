@@ -11,6 +11,14 @@ import toObjectId from 'misc/toobjectid';
 import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 
+async function getPaymentMethods(stripeCustomerId: string) {
+	const paymentMethods = await stripe.paymentMethods.list({
+		customer: stripeCustomerId,
+		type: 'card'
+	});
+	return paymentMethods?.data;
+}
+
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
 	// for (let sub of subscriptionData) {
@@ -167,7 +175,21 @@ export async function webhookHandler(req, res, next) {
 
 }
 
-export async function changePlan(req, res, next) {
+export async function hasPaymentMethod(req, res, next) {
+
+	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const paymentMethods = await getPaymentMethods(stripeCustomerId);
+
+	return dynamicResponse(req, res, 200, { paymentMethods });
+
+} 
+
+export async function requestChangePlan(req, res, next) {
 
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
@@ -177,24 +199,6 @@ export async function changePlan(req, res, next) {
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
-		/* Note: it shouldn't be impossible to end up here and it definitely shouldn't be possible that they have an existing
-		 customer without having it set on their account -- nowhere in this webapp unsets stripe.stripeCustomerId
-		const stripeCustomer = await stripe.customers.create({
-			email: res.locals.account.email,
-			name: res.locals.account.name,
-		});
-		const subscription = await stripe.subscriptions.create({
-			customer: stripeCustomer.id,
-			items: [{ price: process.env.STRIPE_FREE_PLAN_PRICE_ID }],
-		});
-		stripeCustomerId = stripeCustomer.id;
-		await setStripeCustomerId(res.locals.account._id, stripeCustomer.id);
-		await updateStripeCustomer(stripeCustomer.id, {
-			stripePlan: priceToPlanMap[process.env.STRIPE_FREE_PLAN_PRICE_ID],
-			stripeEndsAt: subscription.current_period_end*1000,
-			stripeTrial: false,
-		});
-		*/
 	}
 
 	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
@@ -209,8 +213,77 @@ export async function changePlan(req, res, next) {
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
-			// price: planToPriceMap[res.locals.account.stripe.stripePlan],
-			id: planItemId,
+			// id: planItemId,
+			price: planToPriceMap[req.body.plan],
+			quantity: 1
+		}
+	];
+
+	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
+	const usersItemId = addonUsersItem?.id;
+	items.push({
+		// ...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
+		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
+		quantity: users,
+	});
+	
+	const storageItemId = addonStorageItem?.id;
+	items.push({
+		// ...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
+		quantity: storage,
+	});
+
+	// const subscription = await stripe.subscriptions.update(subscriptionId, {
+	// 	items
+	// });
+
+	const createdCheckoutSession = await stripe.checkout.sessions.create({
+		customer: stripeCustomerId,
+		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		line_items: items.filter(i => i.quantity > 0),
+		currency: 'USD',
+		mode: 'subscription',
+	});
+	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
+		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
+	});
+
+	//TODO: project checkoutsession to only include required props
+
+	return dynamicResponse(req, res, 302, { checkoutSession });
+}
+
+export async function confirmChangePlan(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	const session = await stripe.checkout.sessions.retrieve(
+	  'cs_test_a11YYufWQzNY63zpQ6QSNRQhkUpVph4WRmzW0zWJO2znZKdVujZ0N0S22u'
+	);
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+
+	if (!subscriptionId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	}
+
+	const users = req.body.users || 0;
+	const storage = req.body.storage || 0;
+
+	const planItemId = planItem?.id;
+	const items: any[] = [
+		{
+			// id: planItemId,
+			price: planToPriceMap[req.body.plan],
 			quantity: 1
 		}
 	];
@@ -224,15 +297,24 @@ export async function changePlan(req, res, next) {
 	
 	const storageItemId = addonStorageItem?.id;
 	items.push({
-		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		// ...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
 		quantity: storage,
 	});
-	
-	const subscription = await stripe.subscriptions.update(subscriptionId, {
-		items
+
+	// const subscription = await stripe.subscriptions.update(subscriptionId, {
+	// 	items
+	// });
+
+	const portalLink = await stripe.checkout.sessions.create({
+		customer: stripeCustomerId,
+		// return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		line_items: items.filter(i => i.quantity > 0),
+		currency: 'USD',
+		mode: 'subscription',
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: '/billing' });
+	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 }
 
 export async function createPortalLink(req, res, next) {
