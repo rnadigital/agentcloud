@@ -1,4 +1,8 @@
 import * as API from '@api';
+import {
+	EmbeddedCheckout,
+	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import Invoice from 'components/Invoice';
@@ -10,11 +14,6 @@ import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
-import { loadStripe } from '@stripe/stripe-js';
-import {
-	EmbeddedCheckoutProvider,
-	EmbeddedCheckout
-} from '@stripe/react-stripe-js';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 

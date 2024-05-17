@@ -1,13 +1,12 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { useCallback, Fragment, useRef } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import * as API from '@api';
+import { Dialog, Transition } from '@headlessui/react';
 import {
-	EmbeddedCheckoutProvider,
-	EmbeddedCheckout
-} from '@stripe/react-stripe-js';
-import { useRouter } from 'next/router';
+	EmbeddedCheckout,
+	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { useAccountContext } from 'context/account';
+import { useRouter } from 'next/router';
+import { Fragment, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -35,7 +34,7 @@ const StripeCheckoutModal = ({
 				reject(null);
 			}, reject, router);
 		});
-	});
+	}, []);
 
 	const onComplete = () => {
 		API.confirmChangePlan(getPayload(), res => {
@@ -84,6 +83,7 @@ const StripeCheckoutModal = ({
 								<EmbeddedCheckoutProvider
 									stripe={stripePromise}
 									options={{
+										// @ts-ignore
 										fetchClientSecret,
 										onComplete,
 									}}
