@@ -13,14 +13,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import ConfirmModal from 'components/ConfirmModal';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
-	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange }) {
+	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal }) {
 	const router = useRouter();
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { stripeCustomerId, stripePlan, stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
@@ -40,6 +41,13 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			|| addons?.storage != stripeAddons.storage;
 		setEditedAddons(edited);
 	}, [addons?.users, addons?.storage]);
+
+	useEffect(() => {
+		if (!showConfirmModal) {
+			setEditedAddons(false);
+			refreshAccountContext();
+		}
+	}, [showConfirmModal]);
 
 	//When selecting a different plan, set edited to false and set back initial addon quantities
 	useEffect(() => {
@@ -142,27 +150,33 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 			) : (
 				<button
 					onClick={async () => {
-						setSubmitting(true);
-						const payload = {
-							_csrf: csrf,
-							plan,
-							...(usersAddon ? { users: addons.users } : {}),
-							...(storageAddon ? { storage: addons.storage } : {}),
-						};
-						await API.requestChangePlan(payload, res => {
-							if (res && res?.checkoutSession) {
-								setStagedChange(res?.checkoutSession);
-							}
-						}, toast.error, router);
-						setTimeout(() => setSubmitting(false), 500);
+						if (currentPlan && !editedAddons) {
+							API.getPortalLink({
+								_csrf: csrf,
+							}, null, toast.error, router);
+						} else {
+							setSubmitting(true);
+							const payload = {
+								_csrf: csrf,
+								plan,
+								...(usersAddon ? { users: addons.users } : {}),
+								...(storageAddon ? { storage: addons.storage } : {}),
+							};
+							await API.requestChangePlan(payload, res => {
+								if (res && res?.checkoutSession) {
+									setStagedChange(res?.checkoutSession);
+								}
+							}, toast.error, router);
+							setTimeout(() => setSubmitting(false), 500);
+						}
 					}}		
-					disabled={selectedPlan !== plan || submitting}
+					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons)}
 					className={editedAddons || (!currentPlan && selectedPlan === plan)
 						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
 						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
 					{submitting && <ButtonSpinner className='mt-1 me-2' />}
-					{submitting ? 'Loading...' : currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Change Plan'}
+					{submitting ? 'Loading...' : currentPlan ? 'Update Subscription' : 'Change Plan'}
 				</button>
 			)}
 		</div>
@@ -181,6 +195,9 @@ export default function Billing(props) {
 	const [stagedChange, setStagedChange] = useState(null);
 	const [show, setShow] = useState(false);
 	const [showPaymentModal, setShowPaymentModal] = useState(false);
+	const [showConfirmModal, setShowConfirmModal] = useState(false);
+	const [continued, setContinued] = useState(false);
+	const [last4, setLast4] = useState(null);
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -211,6 +228,11 @@ export default function Billing(props) {
 
 	useEffect(() => {
 		fetchAccount();
+		API.hasPaymentMethod(res => {
+			if (res && res?.ok === true && res?.last4)  {
+				setLast4(res?.last4);
+			}
+		}, toast.error, router);
 	}, [resourceSlug]);
 
 	useEffect(() => {
@@ -252,33 +274,66 @@ export default function Billing(props) {
 						selectedPlan={selectedPlan}
 						setSelectedPlan={setSelectedPlan}
 						setStagedChange={setStagedChange}
+						showConfirmModal={showConfirmModal}
 					/>
 				))}
 			</div>
+
+			<ConfirmModal
+				open={showConfirmModal}
+				setOpen={setShowConfirmModal}
+				confirmFunction={async () => {
+					await API.confirmChangePlan(getPayload(), res => {
+						setTimeout(() => {
+							toast.success('Subscription updated successfully');
+							setStagedChange(null);
+							setShowConfirmModal(false);
+							setShowPaymentModal(false);
+							setShow(false);
+							refreshAccountContext();
+						}, 500);
+					}, toast.error, router);
+				}}
+				cancelFunction={async () => {
+					setShowConfirmModal(false);
+					setShowPaymentModal(false);
+					setShow(false);
+					setTimeout(() => setStagedChange(null), 500);
+				}}
+				title='Confirm Subscription Change'
+				message='Are you sure you want to change your subscription? Changes will apply immediately.'
+			/>
 
 			<StripeCheckoutModal
 				showPaymentModal={showPaymentModal}
 				getPayload={getPayload}
 				setShow={setShowPaymentModal}
 				setStagedChange={setStagedChange}
+				onComplete={() => {
+					setShowPaymentModal(false);
+					API.hasPaymentMethod(res => {
+						if (res && res?.ok === true && res?.last4)  {
+							setLast4(res?.last4);
+						}
+					}, toast.error, router);
+					setContinued(true);
+				}}
 			/>
 
 			<Invoice
+				continued={continued}
 				session={stagedChange}
 				show={show}
+				last4={last4}
 				cancelFunction={() => setShow(false)}
 				confirmFunction={async () => {
 					return new Promise((resolve, reject) => {
 						try {
 							API.hasPaymentMethod(res => {
 								if (res && res?.ok === true)  {
-									API.confirmChangePlan(getPayload(), res => {
-										setShow(false);
-										refreshAccountContext();
-										toast.success('Subscription updated successfully');
-										setTimeout(() => setStagedChange(null), 500);
-										resolve(null);
-									}, toast.error, router);
+									setLast4(res?.last4);
+									setContinued(true);
+									setShowConfirmModal(true);
 								} else {
 									resolve(null);
 									setShowPaymentModal(true);

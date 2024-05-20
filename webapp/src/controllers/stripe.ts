@@ -182,12 +182,15 @@ export async function hasPaymentMethod(req, res, next) {
 	}
 
 	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
-		limit: 3
+		limit: 3, //Just 1??
 	});
 
-	return dynamicResponse(req, res, 200, { ok: paymentMethods?.data?.length > 0 });
+	const hasPaymentMethods = paymentMethods?.data?.length > 0;
+	const last4 = hasPaymentMethods ? paymentMethods.data[0].card.last4 : null;
 
-} 
+	return dynamicResponse(req, res, 200, { ok: hasPaymentMethods, last4 });
+
+}
 
 export async function requestChangePlan(req, res, next) {
 
