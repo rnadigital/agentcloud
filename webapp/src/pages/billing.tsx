@@ -33,8 +33,8 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 
 	//Set addon state to initial value from stripeAddons
 	const [addons, setAddons] = useState({
-		users: stripeAddons?.users,
-		storage: stripeAddons?.storage,
+		users: currentPlan ? stripeAddons?.users : 0,
+		storage: currentPlan ? stripeAddons?.storage : 0,
 	});
 
 	//When changing them, check whether edited from the initial state
@@ -55,8 +55,8 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	useEffect(() => {
 		setEditedAddons(false);
 		setAddons({
-			users: stripeAddons.users ,
-			storage: stripeAddons.storage,
+			users: currentPlan ? stripeAddons.users : 0,
+			storage: currentPlan ? stripeAddons.storage : 0,
 		});
 	}, [plan, selectedPlan]);
 
