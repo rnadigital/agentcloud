@@ -269,7 +269,7 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+	let { stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -294,14 +294,17 @@ export async function confirmChangePlan(req, res, next) {
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
+			//TODO: check might be redundant now
 			...(planItem?.price?.id === planToPriceMap[req.body.plan] ? { id: planItemId } : { price: planToPriceMap[req.body.plan] }),
 			quantity: 1
 		}
 	];
+
 	if (planItemId && planItem?.price?.id !== planToPriceMap[req.body.plan]) {
-		/* Ensure we delete the old plan (if different id from current) to not have 2 "plans" in the subscription
-		because setting quantity to 0  on the old plan doesn't remove it from the subscription */
-		const deleted = await stripe.subscriptionItems.del(planItemId);
+		items.push({
+			id: planItemId,
+			deleted: true,
+		});
 	}
 
 	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
