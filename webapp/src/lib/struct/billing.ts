@@ -131,6 +131,7 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	dataConnections: 'dataConnections',
 	allowedConnectors: 'allowedConnectors',
 	maxFileUploadBytes: 'maxFileUploadBytes',
+	maxVectorStorageBytes: 'maxVectorStorageBytes',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
 	embeddingModels: 'embeddingModels',
@@ -161,6 +162,7 @@ export const pricingMatrix: PricingMatrix = {
 		dataConnections: false,
 		allowedConnectors: [],
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
+		maxVectorStorageBytes: (100 * 1024 * 1024), //100MB
 		storageLocations: ['US'],
 		llmModels: [CredentialType.OPENAI],
 		embeddingModels: [CredentialType.OPENAI],
@@ -180,6 +182,7 @@ export const pricingMatrix: PricingMatrix = {
 			Connectors.NOTION,
 		],
 		maxFileUploadBytes: (25 * 1024 * 1024), //25MB
+		maxVectorStorageBytes: (1 * 1024 * 1024 * 1024), //1GB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,
@@ -192,6 +195,7 @@ export const pricingMatrix: PricingMatrix = {
 		dataConnections: true,
 		allowedConnectors: [],
 		maxFileUploadBytes: (50 * 1024 * 1024), //50MB
+		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,
@@ -204,6 +208,7 @@ export const pricingMatrix: PricingMatrix = {
 		dataConnections: true,
 		allowedConnectors: [],
 		maxFileUploadBytes: (1 * 1024 * 1024 * 1024), //1GB (until we have "custom")
+		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
 		llmModels: CredentialTypes,
 		embeddingModels: CredentialTypes,
