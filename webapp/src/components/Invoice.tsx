@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
-import { Fragment, useRef, useState, useEffect } from 'react';
+import { Fragment, useEffect,useRef, useState } from 'react';
 
 const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, last4 }) => {
 	const [submitting, setSubmitting] = useState(false);

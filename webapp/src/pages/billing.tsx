@@ -4,6 +4,7 @@ import {
 	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
+import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
 import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
@@ -13,7 +14,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import ConfirmModal from 'components/ConfirmModal';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import StripeCheckoutModal from 'components/StripeCheckoutModal';

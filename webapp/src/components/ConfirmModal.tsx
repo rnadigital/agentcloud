@@ -1,8 +1,8 @@
 'use strict';
 
 import { Dialog, Transition } from '@headlessui/react';
-import { useState, Fragment } from 'react';
 import ButtonSpinner from 'components/ButtonSpinner';
+import { Fragment,useState } from 'react';
 
 export default function ConfirmModal({ open, setOpen, confirmFunction, cancelFunction, title, message }) {
 	const [submitting, setSubmitting] = useState(false);

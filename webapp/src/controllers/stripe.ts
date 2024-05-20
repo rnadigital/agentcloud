@@ -36,7 +36,7 @@ function destructureSubscription(sub) {
 	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
 } 
 
-async function getSubscriptionsDetails(stripeCustomerId: string) {
+export async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
 		const body: any = {
 			customer: stripeCustomerId,
@@ -146,11 +146,10 @@ export async function webhookHandler(req, res, next) {
 		}
 
 		case 'customer.subscription.created': {
-			const subscriptionCreated = event.data.object;
-			//TODO: check we actually need this
-			await updateStripeCustomer(subscriptionCreated.customer, {
-				stripeEndsAt: subscriptionCreated.current_period_end,
-			});
+			// const subscriptionCreated = event.data.object;
+			// await updateStripeCustomer(subscriptionCreated.customer, {
+			// 	stripeEndsAt: subscriptionCreated.current_period_end*1000,
+			// });
 			break;
 		}
 		

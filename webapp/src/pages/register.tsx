@@ -5,16 +5,25 @@ import {
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import * as API from '../api';
 import ErrorAlert from '../components/ErrorAlert';
+import InfoAlert from '../components/InfoAlert';
 
 export default function Register() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [showPassword, setShowPassword] = useState(false);
+	const [checkoutSession, setCheckoutSession]: any = useState('');
+
+	useEffect(() => {
+		const { checkoutSession } = router.query;
+		if (checkoutSession) {
+			setCheckoutSession(checkoutSession);
+		}
+	}, [router.query]);
 
 	async function register(e) {
 		e.preventDefault();
@@ -22,6 +31,7 @@ export default function Register() {
 			name: e.target.name.value,
 			email: e.target.email.value,
 			password: e.target.password.value,
+			checkoutSession,
 		}, null, setError, router);
 	}
 
@@ -47,9 +57,15 @@ export default function Register() {
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
 					<div className='bg-white dark:bg-slate-800 px-6 py-12 shadow sm:rounded-lg sm:px-12'>
+						{checkoutSession && (
+							<InfoAlert
+								message='Thanks for subscribing, please create the primary billing account for this org.'
+								color='green'
+							/>
+						)}
 						<form className='space-y-6' onSubmit={register} action='/forms/register' method='POST'>
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					Name
 								</label>
 								<div className='mt-2'>

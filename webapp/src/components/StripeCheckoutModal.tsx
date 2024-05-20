@@ -74,7 +74,7 @@ const StripeCheckoutModal = ({
 										onComplete,
 									}}
 								>
-									<EmbeddedCheckout style={{height:'100vh'}} />
+									<EmbeddedCheckout />
 								</EmbeddedCheckoutProvider>
 							</Dialog.Panel>
 						</Transition.Child>
