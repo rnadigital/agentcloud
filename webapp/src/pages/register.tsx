@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
-import * as API from '../api';
-import ErrorAlert from '../components/ErrorAlert';
-import InfoAlert from '../components/InfoAlert';
+import * as API from '@api';
+import ErrorAlert from 'components/ErrorAlert';
+import InfoAlert from 'components/InfoAlert';
 
 export default function Register() {
 
