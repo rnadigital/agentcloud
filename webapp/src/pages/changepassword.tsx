@@ -8,8 +8,8 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import * as API from '../api';
-import ErrorAlert from '../components/ErrorAlert';
 import ButtonSpinner from '../components/ButtonSpinner';
+import ErrorAlert from '../components/ErrorAlert';
 
 export default function ChangePassword() {
 
