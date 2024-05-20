@@ -110,6 +110,7 @@ export type PlanLimits = {
 	dataConnections: boolean;
 	allowedConnectors: string[];
 	maxFileUploadBytes: number;
+	maxVectorStorageBytes: number;
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
