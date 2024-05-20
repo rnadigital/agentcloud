@@ -19,11 +19,11 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
-	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal }) {
+	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
 	const router = useRouter();
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripeCustomerId, stripePlan, stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
+	const { stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
@@ -43,7 +43,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	}, [addons?.users, addons?.storage]);
 
 	useEffect(() => {
-		if (!showConfirmModal) {
+		if (!showConfirmModal === false) {
 			setEditedAddons(false);
 			refreshAccountContext();
 		}
@@ -236,6 +236,15 @@ export default function Billing(props) {
 	}, [resourceSlug]);
 
 	useEffect(() => {
+		const timeout = setTimeout(() => {
+			refreshAccountContext();
+		}, 500);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [showConfirmModal]);
+
+	useEffect(() => {
 		let timeout = setTimeout(() => {
 			setShow(stagedChange != null);
 		}, 500);
@@ -275,6 +284,7 @@ export default function Billing(props) {
 						setSelectedPlan={setSelectedPlan}
 						setStagedChange={setStagedChange}
 						showConfirmModal={showConfirmModal}
+						stripePlan={stripePlan}
 					/>
 				))}
 			</div>
@@ -290,7 +300,6 @@ export default function Billing(props) {
 							setShowConfirmModal(false);
 							setShowPaymentModal(false);
 							setShow(false);
-							refreshAccountContext();
 						}, 500);
 					}, toast.error, router);
 				}}
