@@ -95,6 +95,7 @@ Options:
 ## Comparisons
 [Agent Cloud vs CrewAI](https://www.agentcloud.dev/blog/agent-cloud-vs-crewai-a-comparison)<br>
 [Agent Cloud VS OpenAI](https://www.agentcloud.dev/blog/agent-cloud-vs-openai)<br>
+[Agent Cloud vs Qdrant](https://www.agentcloud.dev/blog/agentcloud-vs-qdrant)<br>
 [Agent Cloud VS Google Cloud Agents](https://www.agentcloud.dev/blog/agentcloud-vs-google-cloud-agents)<br>
 
 ## Documentation
