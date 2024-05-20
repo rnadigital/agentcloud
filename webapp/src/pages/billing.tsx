@@ -17,6 +17,8 @@ import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
+import InfoAlert from '../components/InfoAlert';
+
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
@@ -265,6 +267,27 @@ export default function Billing(props) {
 
 			{error && <ErrorAlert error={error} />}
 
+			<div className='border-b dark:border-slate-400 mt-2 mb-4'>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Manage Subscription</h3>
+			</div>
+			<InfoAlert
+				message='Click the button below to manage or remove payment methods, cancel your subscription, or view invoice history.'
+				color='blue'
+			/>
+			<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
+				<button
+					onClick={() => {
+						API.getPortalLink({
+							_csrf: csrf,
+						}, null, toast.error, router);
+					}}
+					disabled={!stripeCustomerId}
+					className={'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+				>
+					Open Customer Portal
+				</button>
+			</div>
+
 			<div className='border-b dark:border-slate-400 pb-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Plan Selection</h3>
 			</div>
@@ -357,22 +380,6 @@ export default function Billing(props) {
 				}}
 			/>
 			
-			<div className='border-b dark:border-slate-400 mt-2'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Payment Methods & Invoice History</h3>
-			</div>
-			<div className='flex flex-row flex-wrap gap-4 mb-2 items-center'>
-				<button
-					onClick={() => {
-						API.getPortalLink({
-							_csrf: csrf,
-						}, null, toast.error, router);
-					}}
-					disabled={!stripeCustomerId}
-					className={'mt-4 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
-				>
-					Manage Subscription
-				</button>
-			</div>
 		</>
 	);
 }
