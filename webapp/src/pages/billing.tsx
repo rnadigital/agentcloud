@@ -16,9 +16,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-import StripeCheckoutModal from 'components/StripeCheckoutModal';
-
 import InfoAlert from 'components/InfoAlert';
+import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {

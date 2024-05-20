@@ -1,15 +1,14 @@
+import * as API from '@api';
 import {
 	EyeIcon,
 	EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import ErrorAlert from 'components/ErrorAlert';
+import InfoAlert from 'components/InfoAlert';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
-import * as API from '@api';
-import ErrorAlert from 'components/ErrorAlert';
-import InfoAlert from 'components/InfoAlert';
 
 export default function Register() {
 
