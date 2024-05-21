@@ -50,7 +50,15 @@ export const ModelList = {
 		'llama3:8b-instruct-fp16',
 		'mixtral:instruct',
 		'nomic-embed-text',
-	]
+	],
+	[CredentialType.COHERE]: [
+		'command-r-plus',
+	],
+	[CredentialType.ANTHROPIC]: [
+		'claude-3-opus-20240229',
+		'claude-3-sonnet-20240229',
+		'claude-3-haiku-20240307',
+	],
 };
 
 export const ModelEmbeddingLength = {
