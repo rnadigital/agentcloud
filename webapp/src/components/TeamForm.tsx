@@ -1,18 +1,22 @@
 'use strict';
 
 import * as API from '@api';
+import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 
 export default function TeamForm({ teamName = '', editing, compact = false, callback }
 	: { teamName?: string, editing?: boolean, compact?: boolean, callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
 	const [teamState, setTeamState] = useState(teamName);
+	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 
@@ -34,7 +38,8 @@ export default function TeamForm({ teamName = '', editing, compact = false, call
 		callback && addedTeam && callback(addedTeam._id, addedTeam.orgId);
 	}
 
-	return (
+	return (<>
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You must be on the teams plan to create new teams.' buttonText='Upgrade' />
 		<form onSubmit={teamPost}>
 			<div className={`space-y-${compact ? '6' : '12'}`}>
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
@@ -70,5 +75,5 @@ export default function TeamForm({ teamName = '', editing, compact = false, call
 				</button>
 			</div>
 		</form>
-	);
+	</>);
 }

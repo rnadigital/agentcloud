@@ -29,17 +29,17 @@ export function verifyToken(body, dispatch, errorCallback, router) {
 export function switchTeam(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/switch', 'POST', body, dispatch, errorCallback, router);
 }
-export function getPaymentLink(body, dispatch, errorCallback, router) {
-	return ApiCall('/stripe-paymentlink', 'POST', body, dispatch, errorCallback, router);
-}
 export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
-export function changePlan(body, dispatch, errorCallback, router) {
+export function requestChangePlan(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-plan', 'POST', body, dispatch, errorCallback, router);
 }
-export function createPortalSession(body, dispatch, errorCallback, router) {
-	return ApiCall('/stripe-portal', 'POST', body, dispatch, errorCallback, router);
+export function confirmChangePlan(body, dispatch, errorCallback, router) {
+	return ApiCall('/stripe-plan-confirm', 'POST', body, dispatch, errorCallback, router);
+}
+export function hasPaymentMethod(dispatch, errorCallback, router) {
+	return ApiCall('/stripe-has-paymentmethod', 'GET', null, dispatch, errorCallback, router);
 }
 export function adminEditAccount(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/admin', 'POST', body, dispatch, errorCallback, router);

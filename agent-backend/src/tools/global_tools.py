@@ -39,6 +39,9 @@ class CustomHumanInput(BaseTool):
     @staticmethod
     def extract_message(text):
         try:
+            #NOTE: testing
+            return text
+            
             if isinstance(text, str) and text.startswith('{'):
                 text_json = json.loads(text)
                 if len(text_json) > 1:

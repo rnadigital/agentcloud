@@ -1,5 +1,5 @@
 import InfoAlert from 'components/InfoAlert';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Retriever, ToolType } from 'struct/tool';
 
 interface RetrievalStrategyProps {
@@ -11,6 +11,7 @@ interface RetrievalStrategyProps {
 	toolTimeWeightField?: string;
 	setToolTimeWeightField?: (value: string) => void;
 	schema?: any;
+	defaultRetriever?: Retriever;
 }
 
 const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
@@ -21,8 +22,14 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	currentDatasource,
 	toolTimeWeightField,
 	setToolTimeWeightField,
-	schema
+	schema,
+	defaultRetriever,
 }) => {
+	useEffect(() => {
+		if (defaultRetriever) {
+			setToolRetriever(defaultRetriever || Retriever.SELF_QUERY);
+		}
+	}, []);
 	return (
 		<div>
 			<div className='mt-2'>
@@ -38,10 +45,15 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 						value={toolRetriever}
 						onChange={(e) => setToolRetriever(e.target.value as Retriever)}
 					>
-						<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
+						{defaultRetriever === Retriever.SELF_QUERY ? <>
+							<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
+							<option value={Retriever.RAW}>Raw Similarity Search</option>
+						</> : <>
+							<option value={Retriever.RAW}>Raw Similarity Search (Default)</option>
+							<option value={Retriever.SELF_QUERY}>Self Query</option>
+						</> }
 						<option value={Retriever.MULTI_QUERY}>Multi Query</option>
-						<option disabled={currentDatasource?.sourceType === 'file'} value={Retriever.TIME_WEIGHTED}>Time Weighted {currentDatasource?.sourceType === 'file' ? 'Coming soon' : ''}</option>
-						<option value={Retriever.RAW}>Raw Similarity Search</option>
+						{currentDatasource?.sourceType !== 'file' && <option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>}
 					</select>
 				</div>
 			</div>

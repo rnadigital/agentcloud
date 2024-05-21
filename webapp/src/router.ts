@@ -3,6 +3,7 @@
 import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
+	checkSubscriptionBoolean,
 	checkSubscriptionLimit,
 	checkSubscriptionPlan,
 	fetchUsage,
@@ -21,7 +22,7 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
-import { PlanLimitsKeys } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, setSubscriptionLocals, csrfMiddleware];
@@ -71,23 +72,25 @@ export default function router(server, app) {
 	server.use(bodyParser.json({limit: '10mb'}));
 	server.use(bodyParser.urlencoded({ extended: false }));
 	// Default options for express-fileupload
-	server.use(fileUpload());
+	server.use(fileUpload({ limits: { fileSize: pricingMatrix[SubscriptionPlan.ENTERPRISE].maxFileUploadBytes }}));
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
-	server.get('/account', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
-	server.get('/billing', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
+	server.get('/account', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
+	server.get('/billing', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs
 	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
 
-	server.post('/stripe-paymentlink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPaymentLink);
-	server.post('/stripe-portallink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
-	server.post('/stripe-plan', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.changePlanApi);
+	//TODO: move and rename all these
+	server.post('/stripe-portallink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
+	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.requestChangePlan);
+	server.post('/stripe-plan-confirm', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.confirmChangePlan);
+	server.get('/stripe-has-paymentmethod', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.hasPaymentMethod);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -100,8 +103,8 @@ export default function router(server, app) {
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
 	accountRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
-	accountRouter.post('/logout', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.logout);
-	accountRouter.post('/switch', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
+	accountRouter.post('/logout', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.logout);
+	accountRouter.post('/switch', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -185,8 +188,8 @@ export default function router(server, app) {
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24}).json', datasourceController.datasourceJson);
 	teamRouter.get('/datasource/:datasourceId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.datasourceEditPage.bind(null, app));
 	teamRouter.post('/forms/datasource/upload', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.uploadFileApi);
-	teamRouter.post('/forms/datasource/test', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.testDatasourceApi);
-	teamRouter.post('/forms/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), datasourceController.addDatasourceApi);
+	teamRouter.post('/forms/datasource/test', hasPerms.one(Permissions.CREATE_DATASOURCE), fetchUsage, checkSubscriptionBoolean(PlanLimitsKeys.dataConnections), datasourceController.testDatasourceApi);
+	teamRouter.post('/forms/datasource/add', hasPerms.one(Permissions.CREATE_DATASOURCE), fetchUsage, checkSubscriptionBoolean(PlanLimitsKeys.dataConnections), datasourceController.addDatasourceApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/streams', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceStreamsApi);
 	teamRouter.patch('/forms/datasource/:datasourceId([a-f0-9]{24})/schedule', hasPerms.one(Permissions.EDIT_DATASOURCE), datasourceController.updateDatasourceScheduleApi);
 	teamRouter.post('/forms/datasource/:datasourceId([a-f0-9]{24})/sync', hasPerms.one(Permissions.SYNC_DATASOURCE), datasourceController.syncDatasourceApi);
@@ -198,9 +201,9 @@ export default function router(server, app) {
 	teamRouter.get('/team/:memberId([a-f0-9]{24}).json', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.teamMemberJson);
 	teamRouter.get('/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.memberEditPage.bind(null, app));
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
-	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
-	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.deleteTeamMemberApi);
-	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), teamController.addTeamApi);
+	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), fetchUsage, checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
+	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.deleteTeamMemberApi);
+	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.addTeamApi);
 
 	//assets
 	// teamRouter.get('/assets', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetPage.bind(null, app));

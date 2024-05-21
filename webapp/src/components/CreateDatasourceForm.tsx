@@ -15,6 +15,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever } from 'struct/tool';
@@ -47,6 +48,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const { stripePlan } = (account?.stripe||{});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState(null);
@@ -128,14 +130,17 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			setConnector(null);
 		};
 	}, []);
-	const connectorOptions = connectors ? Object.keys(connectors)
-		.filter(key => connectors[key]?.connector_type === 'source')
-		.map(key => ({
-		  value: connectors[key]?.definitionId,
-		  label: connectors[key]?.name_oss || 'test',
-		  icon: connectors[key]?.iconUrl_oss,
-		  supportLevel: connectors[key]?.supportLevel_oss,
-		})) : [];
+	let connectorOptions: any = connectors ? Object.keys(connectors).filter(key => connectors[key]?.connector_type === 'source') : [];
+	//Note: uncomment if you want to hide unavailable due to plan connectors
+	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
+	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
+	// }
+	connectorOptions = connectorOptions.map(key => ({
+	  value: connectors[key]?.definitionId,
+	  label: connectors[key]?.name_oss || 'test',
+	  icon: connectors[key]?.iconUrl_oss,
+	  supportLevel: connectors[key]?.supportLevel_oss,
+	}));
 
 	const modelCallback = async (addedModelId) => {
 		await fetchDatasourceFormData && fetchDatasourceFormData();
@@ -332,6 +337,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							// toolTimeWeightField={toolTimeWeightField}
 							// setToolTimeWeightField={setToolTimeWeightField}
 							// schema={['example']}
+							defaultRetriever={Retriever.RAW}
 							currentDatasource={null}
 						/>
 					</div>
@@ -348,6 +354,12 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							classNames={SelectClassNames}
 							value={connector}
 							onChange={(v: any) => {
+								if (!stripePlan 
+									|| !pricingMatrix[stripePlan].dataConnections
+									|| (pricingMatrix[stripePlan].allowedConnectors.length > 0
+										&& !pricingMatrix[stripePlan].allowedConnectors.includes(v.value))) {
+									return setSubscriptionModalOpen(true);
+								}
 								setLoading(v != null);
 								setConnector(v);
 								if (v) {
@@ -421,6 +433,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										toolDecayRate={toolDecayRate}
 										setToolDecayRate={setToolDecayRate}
 										currentDatasource={null}
+										defaultRetriever={Retriever.SELF_QUERY}
 										// toolTimeWeightField={toolTimeWeightField}
 										// setToolTimeWeightField={setToolTimeWeightField}
 										// schema={['example']}
@@ -609,7 +622,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	}
 
 	return (<div>
-		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ more data connections' buttonText='Upgrade' />
+		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ data connections.' buttonText='Upgrade' />
 		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
 		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>

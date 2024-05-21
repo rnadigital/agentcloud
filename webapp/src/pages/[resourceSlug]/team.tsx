@@ -1,7 +1,6 @@
 import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import InviteForm from 'components/InviteForm';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import TeamMemberCard from 'components/TeamMemberCard';
 import { useAccountContext } from 'context/account';

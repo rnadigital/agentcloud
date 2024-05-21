@@ -4,10 +4,14 @@ import path from 'path';
 dotenv.config({ path: '.env' });
 import debug from 'debug';
 const log = debug('webapp:airbyte:setup');
-const error = debug('webapp:airbyte:setup:error');
-error.log = console.error.bind(console);
 
-const authorizationHeader = 'Basic YWlyYnl0ZTpwYXNzd29yZA=='; //TODO: allow customisation
+//Note: is there an idiomatic way to do this?
+const logdebug = debug('webapp:airbyte:setup:debug');
+logdebug.log = console.debug.bind(console);
+const logerror = debug('webapp:airbyte:setup:error');
+logerror.log = console.error.bind(console);
+
+const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64')}`;
 
 // Function to fetch instance configuration
 async function fetchInstanceConfiguration() {
@@ -131,6 +135,7 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
+		logdebug('workspacesList: %O', workspacesList);
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
@@ -138,15 +143,16 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
+		logdebug('destinationsList: %O', destinationsList);
 		let airbyteAdminDestinationId = destinationsList.destinations[0]?.destinationId;
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
 		if (!airbyteAdminDestinationId) {
-			log('Creating destination');
+			logdebug('Creating destination');
 			const createdDestination = await createDestination(airbyteAdminWorkspaceId);
 			airbyteAdminDestinationId = createdDestination.destinationId;
-			log('Created destination:', createdDestination);
+			logdebug('Created destination:', createdDestination);
 		}
 
 		// Update webhook URLs
@@ -154,7 +160,7 @@ export async function init() {
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 
 	} catch (error) {
-		error('Error during Airbyte configuration:', error);
+		logerror('Error during Airbyte configuration:', error);
 	}
 }
 

@@ -6,19 +6,19 @@ from typing import List, Optional
 import json
 
 
-class SocketEvents(Enum):
+class SocketEvents(str, Enum):
     MESSAGE = "message"
     MESSAGES_COMPLETE = "message_complete"
     TERMINATE = "terminate"
     HUMAN_INPUT = "isFeedback"
 
 
-class MessageType(Enum):
+class MessageType(str, Enum):
     TEXT = "text"
     CODE = "code"
 
 
-class MessageDisplayType(Enum):
+class MessageDisplayType(str, Enum):
     BUBBLE = "bubble"
     INLINE = "inline"
 
@@ -31,8 +31,8 @@ class Message(BaseModel):
     deltaTokens: Optional[int] = None
     first: Optional[bool] = False
     single: Optional[bool] = False
-    type: Optional[MessageType] = MessageType.TEXT.value
-    displayType: Optional[str] = MessageDisplayType.BUBBLE.value
+    type: Optional[MessageType] = MessageType.TEXT
+    displayType: Optional[MessageDisplayType] = MessageDisplayType.BUBBLE
     timestamp: Optional[float] = datetime.now().timestamp() * 1000
     overwrite: Optional[bool] = False
 

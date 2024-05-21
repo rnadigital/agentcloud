@@ -20,8 +20,9 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
-import classNames from 'components/ClassNames';
 // import DebugLogs from 'components/DebugLogs';
+import BillingBanner from 'components/BillingBanner';
+import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
@@ -113,6 +114,7 @@ export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching } = accountContext as any;
+	const { stripeEndsAt, stripePlan } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
@@ -190,7 +192,7 @@ export default withRouter(function Layout(props) {
 										<div className='flex mt-4 h-16 shrink-0 items-center'>
 											<img
 												src='/images/agentcloud-full-white-bg-trans.png'
-												alt='Your Company'
+												alt='Agentcloud'
 												width={200}
 												height={150}
 											/>
@@ -207,7 +209,7 @@ export default withRouter(function Layout(props) {
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => {
-															return (<li key={item.name} className='ps-4'>
+															return (<li key={item.name}>
 																<Link
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
@@ -226,8 +228,8 @@ export default withRouter(function Layout(props) {
 														<PreviewSessionList />
 													</ul>
 												</li>
-												{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'></div>}
-												<li className='mt-auto'>
+												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4 ps-6'>
+													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin </div>}
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
 															<li key={item.name}>
@@ -369,101 +371,102 @@ export default withRouter(function Layout(props) {
 										<PreviewSessionList />
 									</ul>
 								</li>
-								<li className='absolute bottom-0 left-0 bg-gray-900 p-4 ps-6 w-full'>
-									
-									{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
-									<ul role='list' className='-mx-2 mt-2 space-y-1'>
-										{teamNavigation.map((item) => (
-											<li key={item.name}>
-												<Link
-													suppressHydrationWarning
-													href={`/${resourceSlug}${item.href}`}
-													className={classNames(
-														(path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.base}`))
-															? 'bg-gray-800 text-white'
-															: 'text-gray-400 hover:text-white hover:bg-gray-800',
-														'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
-													)}
-												>
-													{item.icon}
-													{item.name}
-												</Link>
-											</li>
-										))}
-										<li>
-											<Link
-												href='/account'
-												className={classNames(
-													path.endsWith('/account')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<UserIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Account
-											</Link>
-										</li>
-										<li key='billing'>
-											<Link
-												href='/billing'
-												className={classNames(
-													path.endsWith('/billing')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<CreditCardIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Billing
-											</Link>
-										</li>
-										{/*<li>
-											<Link
-												href='/settings'
-												className={classNames(
-													path.endsWith('/settings')
-														? 'bg-gray-800 text-white'
-														: 'text-gray-400 hover:text-white hover:bg-gray-800',
-													'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-												)}
-											>
-												<Cog6ToothIcon
-													className='h-6 w-6 shrink-0'
-													aria-hidden='true'
-												/>
-												Settings
-											</Link>
-										</li>*/}
-										<li>
-											<form className='w-full' action='/forms/account/logout' method='POST'>
-												<input type='hidden' name='_csrf' value={csrf} />
-												<button
-													className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-													type='submit'>
-													<ArrowRightOnRectangleIcon
-														className='h-6 w-6 shrink-0'
-														aria-hidden='true'
-													/>
-													Log out
-												</button>
-											</form>
-										</li>
-									</ul>
-								</li>
 							</ul>
+
+							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
+								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
+								<ul role='list' className='-mx-2 mt-2 space-y-1'>
+									{teamNavigation.map((item) => (
+										<li key={item.name}>
+											<Link
+												suppressHydrationWarning
+												href={`/${resourceSlug}${item.href}`}
+												className={classNames(
+													(path.endsWith(item.href) || path.startsWith(`/${resourceSlug}${item.base}`))
+														? 'bg-gray-800 text-white'
+														: 'text-gray-400 hover:text-white hover:bg-gray-800',
+													'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold',
+												)}
+											>
+												{item.icon}
+												{item.name}
+											</Link>
+										</li>
+									))}
+									<li>
+										<Link
+											href='/account'
+											className={classNames(
+												path.endsWith('/account')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<UserIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Account
+										</Link>
+									</li>
+									<li key='billing'>
+										<Link
+											href='/billing'
+											className={classNames(
+												path.endsWith('/billing')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<CreditCardIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Billing
+										</Link>
+									</li>
+									{/*<li>
+										<Link
+											href='/settings'
+											className={classNames(
+												path.endsWith('/settings')
+													? 'bg-gray-800 text-white'
+													: 'text-gray-400 hover:text-white hover:bg-gray-800',
+												'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+											)}
+										>
+											<Cog6ToothIcon
+												className='h-6 w-6 shrink-0'
+												aria-hidden='true'
+											/>
+											Settings
+										</Link>
+									</li>*/}
+									<li>
+										<form className='w-full' action='/forms/account/logout' method='POST'>
+											<input type='hidden' name='_csrf' value={csrf} />
+											<button
+												className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+												type='submit'>
+												<ArrowRightOnRectangleIcon
+													className='h-6 w-6 shrink-0'
+													aria-hidden='true'
+												/>
+												Log out
+											</button>
+										</form>
+									</li>
+								</ul>
+							</span>
 						</nav>}
 					</div>
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					{showNavs && <div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
+					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} />
+					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'
 							className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
@@ -618,7 +621,7 @@ export default withRouter(function Layout(props) {
 			<div className={`transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
 			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
-				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}-{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}</div>
+				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH && `-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}</div>
 			</footer>
 		</>
 	);

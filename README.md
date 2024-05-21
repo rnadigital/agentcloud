@@ -3,6 +3,14 @@
 # AgentCloud
 <div align="center">
   <p>AgentCloud is an open-source platform enabling companies to build and deploy private LLM chat apps (like ChatGPT), empowering teams to securely interact with their data.</p>
+
+[![Number of GitHub issues that are open](https://img.shields.io/github/issues/rnadigital%2Fagentcloud)](https://github.com/rnadigital/agentcloud/issues)
+[![Number of GitHub stars](https://img.shields.io/github/stars/rnadigital%2Fagentcloud)](https://github.com/rnadigital/agentcloud)
+![Number of GitHub pull requests that are open](https://img.shields.io/github/issues-pr-raw/rnadigital%2Fagentcloud)
+[![GitHub license which is GNU Affero General Public License](https://img.shields.io/github/license/rnadigital/agentcloud)](https://github.com/rnadigital/agentcloud)
+[![Follow us on X, formerly Twitter](https://img.shields.io/twitter/follow/agentcloud_dev)](https://twitter.com/agentcloud_dev)
+[![Let's Chat on Discord](https://img.shields.io/discord/1165866460745314304)](https://discord.gg/82BWMRHVpy)
+  
 </div>
 
 <p align="center">
@@ -11,15 +19,13 @@
   <br />
 
   <br/>
-    <a href="https://docs.agentcloud.dev/documentation/get-started/quickstart">Get Started with AgentCloud</a>
+    <a href="https://docs.agentcloud.dev/documentation/get-started/quickstart">Quickstart with AgentCloud</a>
     ·
     <a href="https://docs.agentcloud.dev/documentation/get-started/quickstart">Run Locally</a>
     ·
-    <a href="https://docs.agentcloud.dev/documentation/get-started/demo-chat-rag-bigquery">Demo - RAG Google Bigquery</a>
+    <a href="https://docs.agentcloud.dev/documentation/get-started/demo-chat-rag-bigquery">Tutorial - RAG Google Bigquery</a>
     ·
-    <a href="https://discord.gg/82BWMRHVpy">Join Our Discord Community</a>
-    ·
-    <a href="https://www.agentcloud.dev/blog">Read our Blog</a>
+    <a href="https://www.agentcloud.dev/blog">Start Reading Blog</a>
   </p>
 
 <br />
@@ -81,12 +87,26 @@ Options:
 
 - **For Windows**: (Coming soon...)
 
-## Tutorials and Comparison
+## Tutorials
+[How to Build a RAG Chatbot Using Agent Cloud and PostgreSQL](https://www.agentcloud.dev/blog/build-chat-app-postgresql-agentcloud)<br>
+[How to Build a RAG Chatbot Using Agent Cloud and BigQuery](https://www.agentcloud.dev/blog/a-rag-chat-app-with-agent-cloud-and-bigquery)<br>
+[How to Build a RAG Chatbot Using Agent Cloud and MongoDB](https://www.agentcloud.dev/blog/build-rag-chatbot-agentcloud-mongodb)<br>
 
-[How to Build a RAG Chat App With Agent Cloud and BigQuery](https://www.agentcloud.dev/blog/a-rag-chat-app-with-agent-cloud-and-bigquery)<br>
+## Comparisons
 [Agent Cloud vs CrewAI](https://www.agentcloud.dev/blog/agent-cloud-vs-crewai-a-comparison)<br>
 [Agent Cloud VS OpenAI](https://www.agentcloud.dev/blog/agent-cloud-vs-openai)<br>
+[Agent Cloud vs Qdrant](https://www.agentcloud.dev/blog/agentcloud-vs-qdrant)<br>
 [Agent Cloud VS Google Cloud Agents](https://www.agentcloud.dev/blog/agentcloud-vs-google-cloud-agents)<br>
+
+## Documentation
+Documentation is available at [Agent Cloud - Talk to Your Data](https://docs.agentcloud.dev/documentation/get-started/introduction) 
+
+- [Introduction](https://docs.agentcloud.dev/documentation/get-started/introduction)<br>
+- [Data sources](https://www.agentcloud.dev/integrations)<br>
+- [RAG Examples](https://docs.agentcloud.dev/documentation/guides/demo-chat-rag-bigquery)
+
+## Public Roadmap
+Check out our [roadmap](https://github.com/orgs/rnadigital/projects/8/views/1) to stay updated on recently released features and learn about what's coming next.
 
 ## License
 

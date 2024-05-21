@@ -80,14 +80,14 @@ export default function FieldTemplate<
 						{required ? <span className='text-red-700'> *</span> : null}
 					</label>
 					{rawDescription && 
-            <span className='tooltip'>
+            <span className='tooltip text-sm ms-1 pt-1'>
         			<span className='text-gray-400 hover:text-gray-600 cursor-pointer'>
-        				<InformationCircleIcon className='ms-1 h-4 w-4' />
+        				<InformationCircleIcon className='h-4 w-4' />
         			</span>
         			<span className='tooltiptext'>
         				<Markdown
         					rehypePlugins={[rehypeRaw as any]}
-        					className={'markdown-content'}
+        					className={'markdown-content p-1'}
         				>
         					{rawDescription}
         				</Markdown>

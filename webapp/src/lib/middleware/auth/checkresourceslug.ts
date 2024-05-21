@@ -98,9 +98,7 @@ export async function checkAccountQuery(req, res, next) {
 
 }
 
-export async function setDefaultOrgAndTeam(req, res, next) {
-
-	console.log(req.session, res.locals);
+export async function setDefaultOrgAndTeam(req, res, next) { //TODO: project any sensitive org props away here
 
 	const { currentOrg, currentTeam } = (res?.locals?.account||{});
 	if (!currentOrg) {
@@ -118,7 +116,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
-
+	foundOrg['id'] = foundOrg._id;
 	res.locals.matchingOrg = foundOrg;
 	res.locals.matchingOrg.permissions = foundOrg.permissions;
 
@@ -139,6 +137,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
+	foundTeam['id'] = foundTeam._id;
 	res.locals.matchingTeam = foundTeam;
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
 

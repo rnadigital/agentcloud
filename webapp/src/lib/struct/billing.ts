@@ -1,9 +1,18 @@
 import Permissions from 'permissions/permissions';
+import { CredentialType, CredentialTypes } from 'struct/credential';
 
-type SubscriptionPlanConfig = {
-    plan: SubscriptionPlan;
-    priceId: string | undefined;
-};
+// account.stripe data
+export type AccountStripeData = {
+	stripeCustomerId?: string;
+	stripeEndsAt?: number;
+	stripeCancelled?: boolean;
+	stripePlan?: SubscriptionPlan;
+	stripeAddons?: {
+		users?: number;
+		storage?: number;
+	}
+	stripeTrial?: boolean;
+}
 
 export enum SubscriptionPlan {
     FREE = 'Free',
@@ -12,12 +21,65 @@ export enum SubscriptionPlan {
     ENTERPRISE = 'Enterprise'
 }
 
+export interface SubscriptionPlanConfig {
+	plan: SubscriptionPlan;
+	priceId: string | undefined;
+	productId: string | undefined;
+	storageAddon: boolean;
+	usersAddon: boolean;
+	title: string;
+	price: number | string;
+	isPopular?: boolean;
+	link?: string;
+}
+
 export const subscriptionPlans: SubscriptionPlanConfig[] = [
-	{ plan: SubscriptionPlan.FREE, priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID },
-	{ plan: SubscriptionPlan.PRO, priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID },
-	{ plan: SubscriptionPlan.TEAMS, priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID },
+	{
+		plan: SubscriptionPlan.FREE,
+		priceId: process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_FREE_PLAN_PRODUCT_ID,
+		storageAddon: false,
+		usersAddon: false,
+		title: 'Agent Cloud Free',
+		price: 0
+	},
+	{
+		plan: SubscriptionPlan.PRO,
+		priceId: process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_PRO_PLAN_PRODUCT_ID,
+		storageAddon: true,
+		usersAddon: false,
+		title: 'Agent Cloud Pro',
+		price: 99
+	},
+	{
+		plan: SubscriptionPlan.TEAMS,
+		priceId: process.env.STRIPE_TEAMS_PLAN_PRICE_ID,
+		productId: process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID,
+		storageAddon: true,
+		usersAddon: true,
+		title: 'Agent Cloud Teams',
+		price: 199,
+		isPopular: true
+	},
+	{
+		plan: SubscriptionPlan.ENTERPRISE,
+		priceId: undefined,
+		productId: undefined,
+		storageAddon: false,
+		usersAddon: false,
+		title: 'Agent Cloud Enterprise',
+		price: 'Custom',
+		link: process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK
+	}
 ];
-	
+
+// Convert subscriptionPlans to a map where the plan is the key and the object is the value
+export const subscriptionPlansMap: Record<SubscriptionPlan, SubscriptionPlanConfig> = subscriptionPlans.reduce((acc, planConfig) => {
+	acc[planConfig.plan] = planConfig;
+	return acc;
+}, {} as Record<SubscriptionPlan, SubscriptionPlanConfig>);
+
 export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	acc[plan] = priceId;
 	return acc;
@@ -25,10 +87,17 @@ export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subs
 
 export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	if (priceId) {
-		acc[priceId] = plan; // Check for undefined to ensure type safety
+		acc[priceId] = plan;
 	}
 	return acc;
 }, {} as Record<string, SubscriptionPlan>);
+
+export const priceToProductMap: Record<string, string> = subscriptionPlans.reduce((acc, { priceId, productId }) => {
+	if (productId) {
+		acc[priceId] = productId;
+	}
+	return acc;
+}, {} as Record<string, string>);
 
 export type PlanLimits = {
 	users: number | 'Custom';
@@ -39,7 +108,9 @@ export type PlanLimits = {
 		then apply them in setpermissions middleware */
 	fileUploads: boolean;
 	dataConnections: boolean;
+	allowedConnectors: string[];
 	maxFileUploadBytes: number;
+	maxVectorStorageBytes: number;
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
@@ -59,7 +130,9 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	teams: 'teams',
 	fileUploads: 'fileUploads',
 	dataConnections: 'dataConnections',
+	allowedConnectors: 'allowedConnectors',
 	maxFileUploadBytes: 'maxFileUploadBytes',
+	maxVectorStorageBytes: 'maxVectorStorageBytes',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
 	embeddingModels: 'embeddingModels',
@@ -70,17 +143,30 @@ export type PricingMatrix = {
     [key in SubscriptionPlan]: PlanLimits;
 }
 
+//TODO: change this
+enum Connectors {
+	ONEDRIVE = '01d1c685-fd4a-4837-8f4c-93fe5a0d2188',
+	GOOGLE_DRIVE = '9f8dda77-1048-4368-815b-269bf54ee9b8',
+	POSTGRES = 'decd338e-5647-4c0b-adf4-da0e75f5a750',
+	HUBSPOT = '36c891d9-4bd9-43ac-bad2-10e12756272c',
+	GOOGLE_BIGQUERY = 'bfd1ddf8-ae8a-4620-b1d7-55597d2ba08c',
+	AIRTABLE = '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212',
+	NOTION = '6e00b415-b02e-4160-bf02-58176a0ae687',
+}
+
 export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.FREE]: {
 		users: 1,
 		orgs: 1,
 		teams: 1,
 		fileUploads: true,
-		dataConnections: true,
+		dataConnections: false,
+		allowedConnectors: [],
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
+		maxVectorStorageBytes: (100 * 1024 * 1024), //100MB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: [CredentialType.OPENAI],
+		embeddingModels: [CredentialType.OPENAI],
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -88,31 +174,44 @@ export const pricingMatrix: PricingMatrix = {
 		teams: 1,
 		fileUploads: true,
 		dataConnections: true,
-		maxFileUploadBytes: (25 * 1024 * 1024), //5MB
+		allowedConnectors: [
+			Connectors.ONEDRIVE,
+			Connectors.POSTGRES,
+			Connectors.HUBSPOT,
+			Connectors.GOOGLE_BIGQUERY,
+			Connectors.AIRTABLE,
+			Connectors.NOTION,
+		],
+		maxFileUploadBytes: (25 * 1024 * 1024), //25MB
+		maxVectorStorageBytes: (1 * 1024 * 1024 * 1024), //1GB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	},
 	[SubscriptionPlan.TEAMS]: {
-		users: 5,
+		users: 100,
 		orgs: 1,
-		teams: -1,
+		teams: 1000,
 		fileUploads: true,
 		dataConnections: true,
-		maxFileUploadBytes: (50 * 1024 * 1024), //5MB
+		allowedConnectors: [],
+		maxFileUploadBytes: (50 * 1024 * 1024), //50MB
+		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	},
 	[SubscriptionPlan.ENTERPRISE]: { //TODO
-		users: 'Custom',
-		orgs: 'Custom', // Enterprise plans may offer custom configurations for organizations
-		teams: 'Custom', // Similarly, the number of teams is customizable for Enterprise plans
+		users: 10**6,
+		orgs: 10**6,
+		teams: 10**6,
 		fileUploads: true,
 		dataConnections: true,
-		maxFileUploadBytes: (1024 * 1024 * 1024), //1GB
+		allowedConnectors: [],
+		maxFileUploadBytes: (1 * 1024 * 1024 * 1024), //1GB (until we have "custom")
+		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
-		llmModels: [],
-		embeddingModels: [],
+		llmModels: CredentialTypes,
+		embeddingModels: CredentialTypes,
 	}
 };

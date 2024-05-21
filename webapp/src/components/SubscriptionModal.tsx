@@ -2,6 +2,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
@@ -14,9 +15,9 @@ export default function SubscriptionModal({ open, setOpen, title = 'Upgrade Requ
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
-		API.getPaymentLink({
+		API.getPortalLink({
 			_csrf: csrf,
-		}, null, null, router);
+		}, null, toast.error, router);
 	}
 
 	return (

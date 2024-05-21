@@ -30,7 +30,6 @@ export function AccountWrapper({ children, pageProps }) {
 			...(resourceSlug ? { resourceSlug } : {}),
 			...(memberId ? { memberId } : {}),
 		}, (data) => {
-			console.log('refreshAccountContext data', data?.account?.permissions);
 			const updatedState = {
 				...pageProps,
 				...data,

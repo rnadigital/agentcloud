@@ -39,7 +39,6 @@ export default function CredentialForm({ credential = { type: CredentialType.OPE
 			}, setError, null);*/
 		} else {
 			const addedCredential = await API.addCredential(body, null, setError, compact ? null : router);
-			console.log('addedCredential', addedCredential);
 			callback && addedCredential && callback(addedCredential._id);
 		}
 	}

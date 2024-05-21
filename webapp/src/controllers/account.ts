@@ -90,9 +90,11 @@ export async function register(req, res) {
 	const email = req.body.email.toLowerCase();
 	const name = req.body.name;
 	const password = req.body.password;
+	const checkoutSession = req.body.checkoutSession;
 
 	if (!email || typeof email !== 'string' || email.length === 0 || !/^\S+@\S+\.\S+$/.test(email)
 		|| !password || typeof password !== 'string' || password.length === 0
+		|| (checkoutSession && (typeof checkoutSession !== 'string' || checkoutSession.length === 0))
 		|| !name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -102,7 +104,7 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const { emailVerified } = await createAccount(email, name, password);
+	const { emailVerified } = await createAccount(email, name, password, checkoutSession);
 	
 	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 
@@ -178,13 +180,10 @@ export async function verifyToken(req, res) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
 	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
-	console.log('deletedVerification', deletedVerification);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
 	const foundAccount = await getAccountById(deletedVerification.accountId);
-	console.log('deletedVerification', deletedVerification);
-	console.log('foundAccount', foundAccount);
 	if (!foundAccount.passwordHash) {
 		const password = req.body.password;
 		if (!password || typeof password !== 'string' || password.length === 0) {
@@ -219,7 +218,7 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	return res.json({ redirect: redirect || `/${teamId}/playground` });
+	return res.json({});
 
 }
 

@@ -34,11 +34,11 @@ export default async function useJWT(req, res, next): Promise<void> {
 	} else if (req.headers && req.headers['Authorization']?.startsWith('Bearer ')) {
 		token = req.headers['Authorization'].substring(7);
 	}
-	log('useJWT token: %s', token);
+	// log('useJWT token: %s', token);
 	if (token && token.length > 0) {
 		try {
 			const verifiedToken: JWTData = await verifyJwt(token);
-			log('useJWT verifiedToken: %s', verifiedToken);
+			// log('useJWT verifiedToken: %s', verifiedToken);
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
 				if (account) {
