@@ -251,7 +251,6 @@ export async function requestChangePlan(req, res, next) {
 	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
 		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
 	});
-	console.log(JSON.stringify(checkoutSession, null, 2));
 
 	return dynamicResponse(req, res, 302, {
 		checkoutSession: {
