@@ -75,26 +75,10 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
-			name: e.target.name.value,
-			description,
-			// process: e.target.process.value, 
-			process: ProcessImpl.SEQUENTIAL,
-			agents: agentsState.map(a => a.value),
-			appType: appTypeState,
-			memory: appMemory,
-			cache: appCache,
-			managerModelId: managerModel?.value,
-			tasks: tasksState.map(x => x.value),
-			iconId: icon?._id || icon?.id,
+			modelType: modelType,
+			config: config,
 		};
-		if (editing === true) {
-			await API.editApp(appState._id, body, () => {
-				toast.success('App Updated');
-			}, setError, null);
-		} else {
-			const addedApp: any = await API.addApp(body, null, toast.error, compact ? null : router);
-			callback && addedApp && callback(addedApp._id);
-		}
+		API.addApp2(body, null, toast.error, compact ? null : router);
 	}
 
 	async function createAgentCallback() {
@@ -145,7 +129,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 			<div className='space-y-4'>
 
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+				{/*<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								App Icon
@@ -154,11 +138,11 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
 						</div>
 					</div>
-				</div>			
+				</div>*/}
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-						<div className='sm:col-span-12'>
+						{/*<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									App Name
 							</label>
@@ -187,7 +171,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 									rows={3}
 								/>
 							</div>
-						</div>
+						</div>*/}
 
 						<div className='sm:col-span-12'>
 							<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

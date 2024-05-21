@@ -147,6 +147,24 @@ export async function addAppApi(req, res, next) {
 
 }
 
+
+/**
+ * @api {post} /forms/app/add Add an app
+ * @apiName add
+ * @apiGroup App
+ *
+ * @apiParam {String} name App name
+ * @apiParam {String[]} tags Tags for the app
+ */
+export async function addAppApi2(req, res, next) {
+
+	const { modelType, config }  = req.body;
+
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/apps` });
+
+}
+
+
 /**
  * @api {post} /forms/app/[appId]/edit Edit an app
  * @apiName edit
