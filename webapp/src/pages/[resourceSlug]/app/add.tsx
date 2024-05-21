@@ -1,5 +1,6 @@
 import * as API from '@api';
 import AppForm from 'components/AppForm';
+import AppForm2 from 'components/AppForm2';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -33,7 +34,7 @@ export default function AddApp(props) {
 				<title>{`New App - ${teamName}`}</title>
 			</Head>
 
-			<AppForm
+			<AppForm2
 				agentChoices={agents}
 				taskChoices={tasks}
 					// toolChoices={tools}
