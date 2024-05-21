@@ -5,6 +5,7 @@ export enum CredentialType {
 	FASTEMBED = 'fastembed',
 	OLLAMA = 'ollama',
 	COHERE = 'cohere',
+	ANTHROPIC = 'anthropic',
 }
 
 export const CredentialTypes = Object.values(CredentialType);
