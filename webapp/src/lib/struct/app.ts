@@ -14,13 +14,6 @@ export type App = {
 	author?: string;
 	tags?: string[];
 	visibility?: any; //TODO: perms
-	capabilities?: string;
 	crewId?: ObjectId;
-	appType: AppType;
 	icon: IconAttachment;
 };
-
-export enum AppType {
-	CHAT = 'chat',
-	PROCESS = 'process',
-}

@@ -43,7 +43,7 @@ export default function EditApp(props) {
 			<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
 		</div>
 
-		<AppForm2
+		<AppForm
 			editing={true}
 			app={app}
 			crew={app?.crew}

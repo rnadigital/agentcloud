@@ -1,16 +1,16 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentsByTeam } from 'db/agent';
+import { addAgent,getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
-import { getModelsByTeam } from 'db/model';
-import { getTasksByTeam } from 'db/task';
+import { addModel,getModelsByTeam } from 'db/model';
+import { addTask,getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
-import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
+import { ModelEmbeddingLength } from 'struct/model';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models] = await Promise.all([
@@ -106,7 +106,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -133,9 +133,7 @@ export async function addAppApi(req, res, next) {
 		tags: (tags||[])
 			.map(tag => tag.trim()) // Assuming tags is an array of strings
 			.filter(x => x),
-		capabilities,
 		crewId: addedCrew.insertedId,
-		appType,
 		author: res.locals.matchingTeam.name,
 		icon: foundIcon ? {
 			id: foundIcon._id,
@@ -146,7 +144,6 @@ export async function addAppApi(req, res, next) {
 	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
 
 }
-
 
 /**
  * @api {post} /forms/app/add Add an app
@@ -160,10 +157,68 @@ export async function addAppApi2(req, res, next) {
 
 	const { modelType, config }  = req.body;
 
+	const addedModel = await addModel({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'Chat model',
+		model: config?.model,
+		embeddingLength: ModelEmbeddingLength[config?.model] || 0,
+		modelType: ModelEmbeddingLength[config?.model] ? 'embedding' : 'llm',
+		type: modelType,
+		config: config, //TODO: validation
+	});
+	const addedAgent = await addAgent({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+	    name: 'Chat agent',
+	    role: 'A helpful assistant',
+	    goal: 'Follow instructions and assist the user in completing all the tasks.',
+	    backstory: ' .',
+		modelId: toObjectId(addedModel.insertedId),
+		functionModelId: toObjectId(addedModel.insertedId),
+		maxIter: null,
+		maxRPM: null,
+		verbose: true,
+		allowDelegation: false,
+		toolIds: [], //TODO: allow attaching 1 datasource
+		icon : null,
+	});
+	const addedTask = await addTask({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'Chat task',
+		description : 'Chat back and forth with the user, get human input each time.',
+		expectedOutput: '',
+		toolIds: [],
+		agentId: toObjectId(addedAgent.insertedId),
+		asyncExecution: false,
+		requiresHumanInput: true,
+		icon : null,
+	});
+	const addedCrew = await addCrew({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'chat crew',
+		tasks: [addedTask.insertedId].map(toObjectId),
+		agents: [addedAgent.insertedId].map(toObjectId),
+		process: ProcessImpl.SEQUENTIAL,
+		managerModelId: toObjectId(addedModel.insertedId),
+	});
+	const addedApp = await addApp({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'Chat app',
+		description: 'A simple conversation.',
+		memory: false,
+		cache: false,
+		crewId: addedCrew.insertedId,
+		author: res.locals.matchingTeam.name,
+		icon: null,
+	});
+
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/apps` });
 
 }
-
 
 /**
  * @api {post} /forms/app/[appId]/edit Edit an app
@@ -174,7 +229,7 @@ export async function addAppApi2(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -206,8 +261,6 @@ export async function editAppApi(req, res, next) {
 			tags: (tags||[]) //TODO
 				.map(t => t.trim())
 				.filter(t => t),
-			capabilities,
-			appType,
 			icon: foundIcon ? {
 				id: foundIcon._id,
 				filename: foundIcon.filename,

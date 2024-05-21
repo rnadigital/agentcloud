@@ -23,7 +23,6 @@ import { taskQueue } from 'queue/bull';
 import { SessionStatus } from 'struct/session';
 
 import { getAppByCrewId } from './db/app';
-import { AppType } from './lib/struct/app';
 
 export const io = new Server();
 

@@ -15,7 +15,6 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -36,7 +35,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appState, setApp] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
 	const [managerModel, setManagerModel] = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
-	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
@@ -67,7 +65,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			// process: e.target.process.value, 
 			process: ProcessImpl.SEQUENTIAL,
 			agents: agentsState.map(a => a.value),
-			appType: appTypeState,
 			memory: appMemory,
 			cache: appCache,
 			managerModelId: managerModel?.value,
@@ -158,35 +155,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
-						{/*<div className='sm:col-span-12'>
-							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								App Type
-							</label>
-							<div className='mt-2'>
-								<label className='inline-flex items-center mr-6 text-sm'>
-									<input
-										type='radio'
-										name='appType'
-										value={AppType.CHAT}
-										defaultChecked={appTypeState === AppType.CHAT}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.CHAT); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Conversation Chat App</span>
-								</label>
-								<label className='inline-flex items-center text-sm'>
-									<input
-										type='radio'
-										name='appType'
-										value={AppType.PROCESS}
-										defaultChecked={appTypeState === AppType.PROCESS}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.PROCESS); e.target.checked && setManagerModels([]); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Process App (multi-agent)</span>
-								</label>
-							</div>
-						</div>*/}
 						<div className='sm:col-span-12 flex flex-row gap-4'>
 							<div className='w-full'>
 								<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -334,7 +302,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								</label>
 							</div>
 						</div>*/}
-						{(appTypeState === AppType.CHAT || crewState.process === ProcessImpl.HIERARCHICAL) && <div className='sm:col-span-12'>
+						<div className='sm:col-span-12'>
 							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Chat Manager Model
 							</label>
@@ -370,7 +338,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						            }}
 						        />
 							</div>
-						</div>}
+						</div>
 
 						<div className='sm:col-span-12'>
 							<div className='mt-2'>

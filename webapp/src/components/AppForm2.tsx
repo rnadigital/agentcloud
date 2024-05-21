@@ -12,14 +12,12 @@ import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState, useReducer } from 'react';
+import React, { useReducer,useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AppType } from 'struct/app';
 import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
-import { ModelList, ModelEmbeddingLength } from 'struct/model';
+import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
-
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -39,8 +37,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
-	const [managerModel, setManagerModel] = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
-	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
+	const [managerModel, setManagerModel] = useState(null);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
@@ -227,7 +224,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 									isClearable
 						            primaryColor={'indigo'}
 						            classNames={SelectClassNames}
-						            value={false ? { label: model, value: model } : null}
+						            value={null}
 						            onChange={(v: any) => {
 				            			setConfig({
 											name: 'model',
