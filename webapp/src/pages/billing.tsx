@@ -1,34 +1,63 @@
 import * as API from '@api';
+import {
+	EmbeddedCheckout,
+	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import ButtonSpinner from 'components/ButtonSpinner';
+import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
+import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import InfoAlert from 'components/InfoAlert';
+import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
-	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon }) {
+	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
 	const router = useRouter();
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripeCustomerId, stripePlan, stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
+	const { stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 
+	//Set addon state to initial value from stripeAddons
 	const [addons, setAddons] = useState({
-		users: stripeAddons?.users || 0,
-		storage: stripeAddons?.storage || 0,
+		users: currentPlan ? stripeAddons?.users : 0,
+		storage: currentPlan ? stripeAddons?.storage : 0,
 	});
-	
+
+	//When changing them, check whether edited from the initial state
 	useEffect(() => {
 		const edited = addons?.users != stripeAddons.users
 			|| addons?.storage != stripeAddons.storage;
 		setEditedAddons(edited);
 	}, [addons?.users, addons?.storage]);
+
+	useEffect(() => {
+		if (!showConfirmModal === false) {
+			setEditedAddons(false);
+			refreshAccountContext();
+		}
+	}, [showConfirmModal]);
+
+	//When selecting a different plan, set edited to false and set back initial addon quantities
+	useEffect(() => {
+		setEditedAddons(false);
+		setAddons({
+			users: currentPlan ? stripeAddons.users : 0,
+			storage: currentPlan ? stripeAddons.storage : 0,
+		});
+	}, [plan, selectedPlan]);
 
 	const handleIncrement = (key) => {
 		setAddons((prev) => ({
@@ -121,18 +150,34 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 				</Link>
 			) : (
 				<button
-					onClick={() => {
-						const payload = {
-							_csrf: csrf,
-							plan,
-							...addons,
-						};
-						API.getPortalLink(payload, null, toast.error, router);
-					}}
-					disabled={selectedPlan !== plan}
-					className={'mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+					onClick={async () => {
+						if (currentPlan && !editedAddons) {
+							API.getPortalLink({
+								_csrf: csrf,
+							}, null, toast.error, router);
+						} else {
+							setSubmitting(true);
+							const payload = {
+								_csrf: csrf,
+								plan,
+								...(usersAddon ? { users: addons.users } : {}),
+								...(storageAddon ? { storage: addons.storage } : {}),
+							};
+							await API.requestChangePlan(payload, res => {
+								if (res && res?.checkoutSession) {
+									setStagedChange(res?.checkoutSession);
+								}
+							}, toast.error, router);
+							setTimeout(() => setSubmitting(false), 500);
+						}
+					}}		
+					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons)}
+					className={editedAddons || (!currentPlan && selectedPlan === plan)
+						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
+						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
-					{currentPlan ? (editedAddons ? 'Update Subscription' : 'Manage Subscription') : 'Change Plan'}
+					{submitting && <ButtonSpinner className='mt-1 me-2' />}
+					{submitting ? 'Loading...' : currentPlan ? 'Update Subscription' : 'Change Plan'}
 				</button>
 			)}
 		</div>
@@ -148,6 +193,12 @@ export default function Billing(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
+	const [stagedChange, setStagedChange] = useState(null);
+	const [show, setShow] = useState(false);
+	const [showPaymentModal, setShowPaymentModal] = useState(false);
+	const [showConfirmModal, setShowConfirmModal] = useState(false);
+	const [continued, setContinued] = useState(false);
+	const [last4, setLast4] = useState(null);
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -167,9 +218,41 @@ export default function Billing(props) {
 		}
 	}
 
+	const getPayload = () => {
+		return {
+			_csrf: csrf,
+			plan: selectedPlan,
+			...(stagedChange?.users ? { users: stagedChange.users } : {}),
+			...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
+		};
+	};
+
 	useEffect(() => {
 		fetchAccount();
+		API.hasPaymentMethod(res => {
+			if (res && res?.ok === true && res?.last4)  {
+				setLast4(res?.last4);
+			}
+		}, toast.error, router);
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			refreshAccountContext();
+		}, 500);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [showConfirmModal]);
+
+	useEffect(() => {
+		let timeout = setTimeout(() => {
+			setShow(stagedChange != null);
+		}, 500);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [stagedChange?.id]);
 
 	if (!account) {
 		return <Spinner />;
@@ -183,8 +266,29 @@ export default function Billing(props) {
 
 			{error && <ErrorAlert error={error} />}
 
-			<div className='border-b dark:border-slate-400 pb-2 my-2'>
+			<div className='border-b dark:border-slate-400 mt-2 mb-4'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Manage Subscription</h3>
+			</div>
+			<InfoAlert
+				message='Click the button below to manage or remove payment methods, cancel your subscription, or view invoice history.'
+				color='blue'
+			/>
+			<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
+				<button
+					onClick={() => {
+						API.getPortalLink({
+							_csrf: csrf,
+						}, null, toast.error, router);
+					}}
+					disabled={!stripeCustomerId}
+					className={'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+				>
+					Open Customer Portal
+				</button>
+			</div>
+
+			<div className='border-b dark:border-slate-400 pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Plan Selection</h3>
 			</div>
 
 			<div className='flex flex-row flex-wrap gap-4 py-4 items-center'>
@@ -200,22 +304,81 @@ export default function Billing(props) {
 						usersAddon={plan.usersAddon}
 						selectedPlan={selectedPlan}
 						setSelectedPlan={setSelectedPlan}
+						setStagedChange={setStagedChange}
+						showConfirmModal={showConfirmModal}
+						stripePlan={stripePlan}
 					/>
 				))}
 			</div>
-			{/*<form onSubmit={getPortalLink}>
-				<input type='hidden' name='_csrf' value={csrf} />
-				<div className='mb-2 flex items-center justify-start gap-x-6'>
-					<button
-						type='submit'
-						className='inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
-						Manage subscription
-					</button>
-				</div>
-			</form>
 
-			<pre>{JSON.stringify(account?.stripe, null, '\t')}</pre>*/}
+			<ConfirmModal
+				open={showConfirmModal}
+				setOpen={setShowConfirmModal}
+				confirmFunction={async () => {
+					await API.confirmChangePlan(getPayload(), res => {
+						setTimeout(() => {
+							toast.success('Subscription updated successfully');
+							setStagedChange(null);
+							setShowConfirmModal(false);
+							setShowPaymentModal(false);
+							setShow(false);
+						}, 500);
+					}, toast.error, router);
+				}}
+				cancelFunction={async () => {
+					setShowConfirmModal(false);
+					setShowPaymentModal(false);
+					setShow(false);
+					setTimeout(() => setStagedChange(null), 500);
+				}}
+				title='Confirm Subscription Change'
+				message='Are you sure you want to change your subscription? Changes will apply immediately.'
+			/>
+
+			<StripeCheckoutModal
+				showPaymentModal={showPaymentModal}
+				getPayload={getPayload}
+				setShow={setShowPaymentModal}
+				setStagedChange={setStagedChange}
+				onComplete={() => {
+					setShowPaymentModal(false);
+					API.hasPaymentMethod(res => {
+						if (res && res?.ok === true && res?.last4)  {
+							setLast4(res?.last4);
+						}
+					}, toast.error, router);
+					setContinued(true);
+				}}
+			/>
+
+			<Invoice
+				continued={continued}
+				session={stagedChange}
+				show={show}
+				last4={last4}
+				cancelFunction={() => setShow(false)}
+				confirmFunction={async () => {
+					return new Promise((resolve, reject) => {
+						try {
+							API.hasPaymentMethod(res => {
+								if (res && res?.ok === true)  {
+									setLast4(res?.last4);
+									setContinued(true);
+									setShowConfirmModal(true);
+								} else {
+									resolve(null);
+									setShowPaymentModal(true);
+								}
+							}, toast.error, router);
+						} catch (e) {
+							console.error(e);
+							toast.success('Error updating subscription - please contact support');
+							reject(e);
+						}
+					});
+				}}
+			/>
+			
 		</>
 	);
 }

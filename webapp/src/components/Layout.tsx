@@ -209,7 +209,7 @@ export default withRouter(function Layout(props) {
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => {
-															return (<li key={item.name} className='ps-4'>
+															return (<li key={item.name}>
 																<Link
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
@@ -228,7 +228,7 @@ export default withRouter(function Layout(props) {
 														<PreviewSessionList />
 													</ul>
 												</li>
-												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4'>
+												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4 ps-6'>
 													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin </div>}
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
@@ -373,7 +373,7 @@ export default withRouter(function Layout(props) {
 								</li>
 							</ul>
 
-							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600'>
+							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
 								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
 								<ul role='list' className='-mx-2 mt-2 space-y-1'>
 									{teamNavigation.map((item) => (
