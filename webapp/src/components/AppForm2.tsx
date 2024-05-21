@@ -12,7 +12,7 @@ import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
@@ -48,6 +48,14 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
+
+	const [config, setConfig] = useReducer(configReducer, {});
+	function configReducer(state, action) {
+		return {
+			...state,
+			[action.name]: action.value
+		};
+	}
 
 	const initialAgents = agents && agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
@@ -206,24 +214,26 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							</div>
 						</div>	
 
-						{Object.entries(CredentialTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
-							return (<div key={`modelName_${ei}`}>
-								<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									{key}
-								</label>
-								<div className='mt-2'>
-									<input
-										type='text'
-										name={key}
-										id={key}
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-										onChange={e => setConfig(e.target)}
-										required
-										defaultValue={config[key]}
-									/>
-								</div>
-							</div>);
-						})}
+						{CredentialTypeRequirements[modelType] && Object.keys(CredentialTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
+							{Object.entries(CredentialTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
+								return (<div key={`modelName_${ei}`}>
+									<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										{key}
+									</label>
+									<div className='mt-2'>
+										<input
+											type='text'
+											name={key}
+											id={key}
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+											onChange={e => setConfig(e.target)}
+											required
+											defaultValue={config[key]}
+										/>
+									</div>
+								</div>);
+							})}
+						</div>}
 						{ModelList[modelType]?.length > 0 && <div className='sm:col-span-12'>
 							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Model
