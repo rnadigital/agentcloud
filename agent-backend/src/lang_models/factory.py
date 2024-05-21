@@ -27,7 +27,7 @@ def model_factory(agentcloud_model: models.mongo.Model,
         case models.mongo.Platforms.GoogleVertex:
             return _build_google_vertex_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
-            return _build_cohere_model_with_credential(agentcloud_model)
+            return _build_cohere_model(agentcloud_model)
         case models.mongo.Platforms.Anthropic:
             return _build_anthropic_model(agentcloud_model)
 
@@ -138,7 +138,6 @@ def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
             exclude_none=True,
             exclude_unset=True,
         ).get('config'),
-        model=model.config.get('model', models.mongo.ModelVariant.CommandRPlus) # You can probably remove this
     )
 
 def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
@@ -147,5 +146,4 @@ def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
             exclude_none=True,
             exclude_unset=True,
         ).get('config'),
-        model=model.config.get('model', models.mongo.ModelVariant.Opus) # You can probably remove this
     )
