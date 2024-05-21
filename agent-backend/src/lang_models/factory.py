@@ -27,9 +27,9 @@ def model_factory(agentcloud_model: models.mongo.Model,
         case models.mongo.Platforms.GoogleVertex:
             return _build_google_vertex_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
-            return _build_cohere_model_with_credential(agentcloud_model, credential)
+            return _build_cohere_model_with_credential(agentcloud_model)
         case models.mongo.Platforms.Anthropic:
-            return _build_anthropic_model_with_credential(agentcloud_model, credential)
+            return _build_anthropic_model(agentcloud_model)
 
 
 def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
@@ -132,17 +132,20 @@ def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageMode
                         temperature=model.temperature)
 
 
-def _build_cohere_model_with_credential(model: models.mongo.Model,
-                                        credential: models.mongo.Credentials) -> BaseLanguageModel:
-    model_name = model.config.get('model', models.mongo.ModelVariant.CommandRPlus)
-    return ChatCohere(model=model_name,
-                      cohere_api_key=credential.credentials.api_key,
-                      temperature=model.temperature)
+def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatCohere(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config'),
+        model=model.config.get('model', models.mongo.ModelVariant.CommandRPlus) # You can probably remove this
+    )
 
-
-def _build_anthropic_model_with_credential(model: models.mongo.Model,
-                                           credential: models.mongo.Credentials) -> BaseLanguageModel:
-    model_name = model.config.get('model', models.mongo.ModelVariant.Opus)
-    return ChatAnthropic(model_name=model_name,
-                         api_key=credential.credentials.api_key,
-                         temperature=model.temperature)
+def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatAnthropic(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config'),
+        model=model.config.get('model', models.mongo.ModelVariant.Opus) # You can probably remove this
+    )
