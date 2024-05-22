@@ -58,8 +58,9 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 	}
 
 	async function createDatasourceCallback(createdDatasource) {
+		console.log('createDatasourceCallback', createdDatasource);
 		await fetchFormData && fetchFormData();
-		setDatasourceState({ label: createdDatasource});
+		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(false);
 	}
 

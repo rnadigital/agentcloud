@@ -49,7 +49,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 			});
 			await API.uploadDatasourceFileTemp(formData, (res) => {
 				toast.success('Datasource created successfully');
-				callback && callback();
+				callback && callback(res);
 			}, (res) => {
 				toast.error(res);
 			}, router);

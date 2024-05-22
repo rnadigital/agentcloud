@@ -790,7 +790,7 @@ export async function uploadFileApi(req, res, next) {
 	// Create the datasource in the db
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	await addDatasource({
+	const createdDatasource = await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
@@ -861,6 +861,9 @@ export async function uploadFileApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
+	return dynamicResponse(req, res, 302, { 
+		datasourceId: createdDatasource.insertedId,
+		name,
+	});
 
 }
