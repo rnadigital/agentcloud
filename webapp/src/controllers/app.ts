@@ -8,7 +8,7 @@ import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { addModel,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
-import { getToolsById, getToolsByTeam } from 'db/tool';
+import { getToolsById, getToolsByTeam, getToolForDatasource } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import { ProcessImpl } from 'struct/crew';
 import { ModelEmbeddingLength } from 'struct/model';
@@ -160,14 +160,19 @@ export async function addAppApi(req, res, next) {
  */
 export async function addAppApi2(req, res, next) {
 
-	const { modelType, config, toolIds }  = req.body;
+	const { modelType, config, datasourceId }  = req.body;
 
 	//todo: validation
 
-    // Check for foundTools
+	let toolIds = req.body.toolIds || [];
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
+	}
+
+	const datasourceTool = await getToolForDatasource(req.params.resourceSlug, datasourceId);
+	if (datasourceTool) {
+		toolIds.push(datasourceTool._id);
 	}
 
 	const addedModel = await addModel({

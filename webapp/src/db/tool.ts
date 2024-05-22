@@ -72,6 +72,13 @@ export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Par
 	});
 }
 
+export async function getToolForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<Tool> {
+	return ToolCollection().findOne({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	});
+}
+
 export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, update: any): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		teamId: toObjectId(teamId),

@@ -54,6 +54,7 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 			modelType: modelType,
 			config: config,
 			datasourceId: datasourceState ? datasourceState?.value : null,
+			toolIds: [], //TODO
 		};
 		API.addApp2(body, null, toast.error, router);
 	}
