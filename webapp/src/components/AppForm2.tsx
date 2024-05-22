@@ -53,6 +53,7 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 			resourceSlug,
 			modelType: modelType,
 			config: config,
+			datasourceId: datasourceState ? datasourceState?.value : null,
 		};
 		API.addApp2(body, null, toast.error, router);
 	}

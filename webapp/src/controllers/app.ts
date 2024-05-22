@@ -8,7 +8,7 @@ import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { addModel,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
-import { getToolsByTeam } from 'db/tool';
+import { getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import { ProcessImpl } from 'struct/crew';
 import { ModelEmbeddingLength } from 'struct/model';
@@ -160,7 +160,15 @@ export async function addAppApi(req, res, next) {
  */
 export async function addAppApi2(req, res, next) {
 
-	const { modelType, config }  = req.body;
+	const { modelType, config, toolIds }  = req.body;
+
+	//todo: validation
+
+    // Check for foundTools
+	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
+	if (!foundTools || foundTools.length !== toolIds.length) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
+	}
 
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
@@ -185,7 +193,7 @@ export async function addAppApi2(req, res, next) {
 		maxRPM: null,
 		verbose: true,
 		allowDelegation: false,
-		toolIds: [], //TODO: allow attaching 1 datasource
+		toolIds: toolIds.map(toObjectId),
 		icon : null,
 	});
 	const addedTask = await addTask({
@@ -193,8 +201,9 @@ export async function addAppApi2(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name: 'Chat task',
 		description : 'Chat back and forth with the user, get human input each time.',
+		//TODO maybe include tool names in prompt?: foundTools.map(x => x.name).join(', ')
 		expectedOutput: '',
-		toolIds: [],
+		toolIds: toolIds.map(toObjectId),
 		agentId: toObjectId(addedAgent.insertedId),
 		asyncExecution: false,
 		requiresHumanInput: true,
