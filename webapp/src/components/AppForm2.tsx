@@ -57,8 +57,9 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 		API.addApp2(body, null, toast.error, router);
 	}
 
-	async function createDatasourceCallback() {
+	async function createDatasourceCallback(createdDatasource) {
 		await fetchFormData && fetchFormData();
+		setDatasourceState({ label: createdDatasource});
 		setModalOpen(false);
 	}
 
@@ -86,17 +87,6 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 			/>
 
 			<div className='space-y-4'>
-
-				{/*<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='sm:col-span-12'>
-						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								App Icon
-						</label>
-						<div className='mt-2'>
-							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
-						</div>
-					</div>
-				</div>*/}
 
 				<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>

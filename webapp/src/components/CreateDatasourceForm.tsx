@@ -260,6 +260,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					name={datasourceName}
 					description={datasourceDescription}
 					retriever={toolRetriever}
+					compact={compact}
 					callback={() => {
 					//jank form reset (for now)
 						setStep(initialStep);
