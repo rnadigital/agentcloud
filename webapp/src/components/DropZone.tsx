@@ -25,7 +25,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const maxSize = pricingMatrix[stripePlan].maxFileUploadBytes;
+	const maxSize = pricingMatrix[stripePlan]?.maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
 	const [chunkStrategy, setChunkStrategy] = useState('semantic');
 	const [chunkCharacter, setChunkCharacter] = useState('');
