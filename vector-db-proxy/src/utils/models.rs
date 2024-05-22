@@ -7,7 +7,7 @@ pub enum FileSources {
 impl From<String> for FileSources {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "gcs" => FileSources::GCS,
+            "google" => FileSources::GCS,
             "local" => FileSources::LOCAL,
             _ => FileSources::UNKNOWN
         }
