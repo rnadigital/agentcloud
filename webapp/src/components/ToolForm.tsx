@@ -1,5 +1,6 @@
 'use strict';
 
+import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import { dereferenceSync } from 'dereference-json-schema';
@@ -19,8 +20,6 @@ import FunctionCard from '../components/FunctionCard';
 import ParameterForm from '../components/ParameterForm';
 import { useAccountContext } from '../context/account';
 import { generateOpenAPIMatchKey } from '../lib/utils/toolsUtils';
-import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
-
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },

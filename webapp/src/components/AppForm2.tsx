@@ -5,6 +5,8 @@ import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
+import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -15,8 +17,6 @@ import { toast } from 'react-toastify';
 import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
-import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
