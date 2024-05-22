@@ -22,7 +22,6 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 
 	async function handleSubmit(e) {
 		e.preventDefault();
-		console.log(stripePlan);
 		if (!stripePlan || ![SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
 			return setSubscriptionModalOpen(true);
 		}

@@ -70,14 +70,13 @@ export default function Session(props) {
 		await API.getSessions({ resourceSlug }, setSessionData, setError, router);
 	}
 	async function joinSessionRoom() {
-		console.log('joinSessionRoom', joinSessionRoom, sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom() {
 		socketContext.emit('leave_room', sessionId);
 	}
 	function handleSocketMessage(message) {
-		console.log('Received chat message %O', JSON.stringify(message, null, 2));
+		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) { return; }
 		if (isAtBottom && message?._id) {
 			setLastSeenMessageId(message._id);
@@ -89,7 +88,6 @@ export default function Session(props) {
 			// There are existing messages
 			const matchingMessage = oldMessages.find(m => m?.message?.chunkId != undefined && m?.message?.chunkId === message?.message?.chunkId
 				&& m?.authorName === message?.authorName);
-			console.log(message?.message?.chunkId, `'${newMessage.message.text}'`, 'matching', matchingMessage != undefined);
 			if (matchingMessage && message?.incoming !== true) {
 				if (message?.message?.overwrite === true) {
 					//TODO: revisit

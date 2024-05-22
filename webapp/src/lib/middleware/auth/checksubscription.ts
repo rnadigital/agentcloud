@@ -60,6 +60,10 @@ export async function setSubscriptionLocals(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Account error' });
 		}
 		res.locals.subscription = parentOrgOwner.stripe;
+		if (res.locals?.account?.stripe) {
+			res.locals.account._stripe = res.locals.account.stripe;
+			res.locals.account.stripe = parentOrgOwner.stripe; //TODO: think about this some more
+		}
 	}
 
 	next();
@@ -80,10 +84,20 @@ export function checkSubscriptionPlan(plans: SubscriptionPlan[]) {
 export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 	// @ts-ignore
 	return cache[limit] || (cache[limit] = async function(req, res, next) {
-		const { stripePlan } = (res.locals?.subscription || {});
+		const { stripePlan, stripeAddons } = (res.locals?.subscription || {});
 		const usage = res.locals.usage||{};
 		const limits = res.locals.limits||{};
-		log(`plan: ${stripePlan}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}, limits[limit]: ${limits[limit]}`);
+
+		//TODO: move this logic elsewhere
+		//TODO: take enterprise subscription metadata fields to set custom limit/addon amounts
+		if (limits.users && stripeAddons?.users > 0) {
+			limits.users += stripeAddons?.users;
+		}
+		if (limits.maxVectorStorageSize && stripeAddons?.storage > 0) {
+			limits.maxVectorStorageBytes += (stripeAddons?.storage * (1024*1024*1024));
+		}
+		
+		log(`plan: ${stripePlan}, addons: ${stripeAddons}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}, limits[limit]: ${limits[limit]}`);
 		// @ts-ignore
 		if ((!usage || !stripePlan)
 			|| (usage && stripePlan && usage[limit] >= limits[limit])) {

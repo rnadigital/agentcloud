@@ -337,6 +337,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							// toolTimeWeightField={toolTimeWeightField}
 							// setToolTimeWeightField={setToolTimeWeightField}
 							// schema={['example']}
+							defaultRetriever={Retriever.RAW}
 							currentDatasource={null}
 						/>
 					</div>
@@ -432,6 +433,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										toolDecayRate={toolDecayRate}
 										setToolDecayRate={setToolDecayRate}
 										currentDatasource={null}
+										defaultRetriever={Retriever.SELF_QUERY}
 										// toolTimeWeightField={toolTimeWeightField}
 										// setToolTimeWeightField={setToolTimeWeightField}
 										// schema={['example']}

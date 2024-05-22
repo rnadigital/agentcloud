@@ -16,12 +16,6 @@ import * as API from '../api';
 import CreateCredentialModal from '../components/CreateCredentialModal';
 import { useAccountContext } from '../context/account';
 
-const initialConfigState = {
-	base_url: '',
-	api_key: '',
-	model: '',
-};
-
 export default function ModelForm({ _model = { type: CredentialType.OPENAI }, credentials = [], editing, compact, fetchModelFormData, callback }: { _model?: any, credentials?: any[], editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
@@ -34,7 +28,7 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const [modalOpen, setModalOpen] = useState(false);
-	const [config, setConfig] = useReducer(configReducer, modelState?.config || initialConfigState);
+	const [config, setConfig] = useReducer(configReducer, modelState?.config || {});
 
 	function configReducer(state, action) {
 		return {
@@ -80,7 +74,6 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 	const credentialCallback = async (addedCredentialId) => {
 		await fetchModelFormData && fetchModelFormData();
 		setModalOpen(false);
-		console.log(addedCredentialId);
 		setModelState(oldModel => {
 			return {
 				...oldModel,
@@ -159,6 +152,8 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 								<option value={CredentialType.OPENAI}>OpenAI</option>
 								<option value={CredentialType.OLLAMA}>Ollama</option>
 								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
+								<option value={CredentialType.COHERE}>Cohere</option>
+								<option value={CredentialType.ANTHROPIC}>Anthropic</option>
 							</select>
 						</div>
 					</div>

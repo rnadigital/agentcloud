@@ -26,6 +26,9 @@ class Platforms(str, Enum):
     AzureChatOpenAI = "azure"
     FastEmbed = "fastembed"
     Ollama = "ollama"
+    GoogleVertex = "google_vertex"
+    Cohere = "cohere"
+    Anthropic = "anthropic"
 
 
 class ModelVariant(str, Enum):
@@ -33,6 +36,11 @@ class ModelVariant(str, Enum):
     GPT4 = "gpt-4"
     GPT4TURBO = "gpt-4-1106-preview"
     GPT3TURBO = "gpt-3.5-turbo"
+    GeminiPro = "gemini-pro"
+    CommandRPlus = "command-r-plus"
+    Opus = "claude-3-opus-20240229"
+    Sonnet = "claude-3-sonnet-20240229"
+    Haiku = "claude-3-haiku-20240307"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):
@@ -146,7 +154,7 @@ class Model(BaseModel):
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
     type: Optional[Platforms] = None
-    config: Optional[Dict] = None
+    config: Optional[Dict] = Field(default={})
 
 
 class ChatModel(BaseModel):

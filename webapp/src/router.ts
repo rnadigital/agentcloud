@@ -22,7 +22,7 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
-import { PlanLimitsKeys, SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, setSubscriptionLocals, csrfMiddleware];
@@ -72,23 +72,25 @@ export default function router(server, app) {
 	server.use(bodyParser.json({limit: '10mb'}));
 	server.use(bodyParser.urlencoded({ extended: false }));
 	// Default options for express-fileupload
-	server.use(fileUpload());
+	server.use(fileUpload({ limits: { fileSize: pricingMatrix[SubscriptionPlan.ENTERPRISE].maxFileUploadBytes }}));
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
 	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
 	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
-	server.get('/account', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
-	server.get('/billing', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
+	server.get('/account', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.accountPage.bind(null, app));
+	server.get('/billing', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
 	//Remove: for debug/testing, docker logs
 	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
 
-	server.post('/stripe-paymentlink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPaymentLink);
-	server.post('/stripe-portallink', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
-	server.post('/stripe-plan', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, stripeController.changePlanApi);
+	//TODO: move and rename all these
+	server.post('/stripe-portallink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
+	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.requestChangePlan);
+	server.post('/stripe-plan-confirm', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.confirmChangePlan);
+	server.get('/stripe-has-paymentmethod', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.hasPaymentMethod);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -101,8 +103,8 @@ export default function router(server, app) {
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
 	accountRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
-	accountRouter.post('/logout', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.logout);
-	accountRouter.post('/switch', unauthedMiddlewareChain, checkSession, setDefaultOrgAndTeam, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
+	accountRouter.post('/logout', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.logout);
+	accountRouter.post('/switch', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });

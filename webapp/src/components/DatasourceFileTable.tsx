@@ -50,7 +50,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 	return (
 
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
-			<table className='min-w-full divide-y divide-gray-200'>
+			{datasources?.length > 0 && <table className='min-w-full divide-y divide-gray-200'>
 				<thead className='bg-gray-50 dark:bg-slate-800 dark:!border-slate-700'>
 					<tr>
 						<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'>
@@ -107,7 +107,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 						</tr>);
 					})}
 				</tbody>
-			</table>
+			</table>}
 		</div>
 
 	);

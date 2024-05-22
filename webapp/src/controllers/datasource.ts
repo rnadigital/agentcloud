@@ -19,10 +19,12 @@ import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
 import StorageProviderFactory from 'storage/index';
+import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever,ToolType } from 'struct/tool';
 import { promisify } from 'util';
+import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
 const log = debug('webapp:controllers:datasource');
 
@@ -30,7 +32,7 @@ import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById,
 const ajv = new Ajv({ strict: 'log' });
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-	dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
+	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
 	return dateFormatRegex.test(dateTimeStr);
 }
 function updateDateStrings(obj) {
@@ -771,6 +773,11 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid file format' });
 	}
 
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	if (uploadedFile?.size > pricingMatrix[currentPlan].maxFileUploadBytes) {
+		return dynamicResponse(req, res, 400, { error: `Uploaded file exceeds maximum size for your plan "${currentPlan}" (${formatSize(uploadedFile.size)})` });
+	}
+
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -804,7 +811,7 @@ export async function uploadFileApi(req, res, next) {
 	    embeddingField: 'document', //Note: always document for sourceType: file
 	    status: DatasourceStatus.EMBEDDING,
 	    recordCount: {
-   			total: 0,
+   			total: null,
    	    }
 	});
 	

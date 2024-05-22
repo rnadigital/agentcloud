@@ -27,7 +27,6 @@ function PermissionsEditor({ editingPermission }) {
 
 	async function permissionsPost(e) {
 		e.preventDefault();
-		console.log(e, e.target.elements);
 		const body = new FormData();
 		body.set('resourceSlug', resourceSlug as string);
 		body.set('memberId', memberId as string);

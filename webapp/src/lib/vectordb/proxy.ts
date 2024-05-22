@@ -13,6 +13,13 @@ class VectorDBProxy {
 		});
 	}
 
+	// Method to get collection details
+	static async getCollectionFromQdrant(collectionId: IdOrStr) {
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/collection/${collectionId}`, {
+			method: 'GET',
+		});
+	}
+
 	// Method to delete a collection from Qdrant
 	static async deleteCollectionFromQdrant(collectionId: IdOrStr) {
 		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/collection/${collectionId}`, {

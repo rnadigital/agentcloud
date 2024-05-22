@@ -2,6 +2,9 @@ from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
+from langchain_google_vertexai import ChatVertexAI
+from langchain_cohere import ChatCohere
+from langchain_anthropic import ChatAnthropic
 
 import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
@@ -21,6 +24,12 @@ def model_factory(agentcloud_model: models.mongo.Model,
             return _build_fastembed_model(agentcloud_model)
         case models.mongo.Platforms.Ollama:
             return _build_openai_compatible_model_with_credential(agentcloud_model)
+        case models.mongo.Platforms.GoogleVertex:
+            return _build_google_vertex_ai_model(agentcloud_model)
+        case models.mongo.Platforms.Cohere:
+            return _build_cohere_model(agentcloud_model)
+        case models.mongo.Platforms.Anthropic:
+            return _build_anthropic_model(agentcloud_model)
 
 
 def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
@@ -113,3 +122,28 @@ def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_t
                 fastembed_model_name
             )
         )
+
+
+def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
+    model_name = model.config.get('model', models.mongo.ModelVariant.GeminiPro)
+
+    # credentials taken from GOOGLE_ACCOUNT_CREDENTIALS env var
+    return ChatVertexAI(model=model_name,
+                        temperature=model.temperature)
+
+
+def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatCohere(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config'),
+    )
+
+def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatAnthropic(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config'),
+    )

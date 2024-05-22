@@ -100,8 +100,6 @@ export async function checkAccountQuery(req, res, next) {
 
 export async function setDefaultOrgAndTeam(req, res, next) { //TODO: project any sensitive org props away here
 
-	console.log(req.session, res.locals);
-
 	const { currentOrg, currentTeam } = (res?.locals?.account||{});
 	if (!currentOrg) {
 		// return res.status(403).send({ error: 'No current organization available' });

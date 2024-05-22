@@ -4,6 +4,8 @@ export enum CredentialType {
 	OPENAI = 'open_ai',
 	FASTEMBED = 'fastembed',
 	OLLAMA = 'ollama',
+	COHERE = 'cohere',
+	ANTHROPIC = 'anthropic',
 }
 
 export const CredentialTypes = Object.values(CredentialType);
@@ -23,6 +25,12 @@ export const CredentialTypeRequirements: Record<CredentialType, CredentialRequir
 	},
 	[CredentialType.OLLAMA]: {
 		base_url: 'string',
+		api_key: 'string',
+	},
+	[CredentialType.COHERE]: {
+		cohere_api_key: 'string',
+	},
+	[CredentialType.ANTHROPIC]: {
 		api_key: 'string',
 	},
     // Add more types here if needed
