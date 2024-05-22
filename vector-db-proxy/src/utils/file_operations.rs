@@ -37,6 +37,7 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
             let file_source = FileSources::from(t.to_string());
             return match file_source {
                 FileSources::GCS => {
+                    println!("Rabbit Message Data: {}", message_data);
                     if let Some(bucket_name) =
                         message_data.get("bucket")
                     {
@@ -54,9 +55,11 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
                                 }
                             }
                         } else {
+                            log::warn!("Filename not in message");
                             None
                         }
                     } else {
+                        log::warn!("bucket not in message");
                         None
                     }
                 }
@@ -79,6 +82,7 @@ pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> 
                     }
                 }
                 FileSources::UNKNOWN => {
+                    log::warn!("File source unknown");
                     None
                 }
             };
