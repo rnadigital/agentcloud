@@ -4,10 +4,7 @@ import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
-import AvatarUploader from 'components/AvatarUploader';
-import CreateAgentModal from 'components/CreateAgentModal';
-// import CreateToolModal from 'components/CreateToolModal';
-import CreateTaskModal from 'components/CreateTaskModal';
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -18,6 +15,8 @@ import { toast } from 'react-toastify';
 import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -26,26 +25,19 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
-	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function AppForm({ datasourceChoices=[], callback, fetchFormData }
+	: { datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
-	const [crewState, setCrew] = useState(crew);
-	const [appState, setApp] = useState(app);
-	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
-	const [managerModel, setManagerModel] = useState(null);
-	const [appMemory, setAppMemory] = useState(app.memory === true);
-	const [appCache, setAppCache] = useState(app.cache === true);
-	const [description, setDescription] = useState(app.description || '');
+	const [description, setDescription] = useState('');
 	const [modelType, setModelType] = useState(CredentialType.OPENAI);
 	const [error, setError] = useState();
-	const { name, agents, tasks, tools } = crewState;
-	const { tags } = appState; //TODO: make it take correct stuff from appstate
-
+	const [datasourceState, setDatasourceState] = useState(null);
+ 
 	const [config, setConfig] = useReducer(configReducer, {});
 	function configReducer(state, action) {
 		return {
@@ -53,19 +45,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			[action.name]: action.value
 		};
 	}
-
-	const initialAgents = agents && agents.map(a => {
-		const oa = agentChoices.find(ai => ai._id === a);
-		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
-	}).filter(n => n);
-	const [icon, setIcon] = useState(app?.icon);
-	const [agentsState, setAgentsState] = useState(initialAgents || []);
-	
-	const initialTasks = tasks && tasks.map(t => {
-		const ot = taskChoices.find(at => at._id === t);
-		return ot ? { label: ot.name, value: t } : null;
-	}).filter(n => n);
-	const [tasksState, setTasksState] = useState(initialTasks || []);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -75,41 +54,23 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			modelType: modelType,
 			config: config,
 		};
-		API.addApp2(body, null, toast.error, compact ? null : router);
+		API.addApp2(body, null, toast.error, router);
 	}
 
-	async function createAgentCallback() {
+	async function createDatasourceCallback() {
 		await fetchFormData && fetchFormData();
 		setModalOpen(false);
 	}
-
-	// async function createToolCallback() { // TODO:
-	// 	await fetchFormData && fetchFormData();
-	// 	setModalOpen(false);
-	// }
-
-	async function createTaskCallback() { // TODO:
-		await fetchFormData && fetchFormData();
-		setModalOpen(false);
-	}
-
-	const iconCallback = async (addedIcon) => {
-		await fetchFormData && fetchFormData();
-		setModalOpen(false);
-		setIcon(addedIcon);
-	};
 
 	let modal;
 	switch (modalOpen) {
-		case 'agent':
-			modal = <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={createAgentCallback} />;
+		case 'datasource':
+			modal = <CreateDatasourceModal
+				open={modalOpen !== false}
+				setOpen={setModalOpen}
+				callback={createDatasourceCallback}
+			/>;
 			break;
-		case 'task':
-			modal = <CreateTaskModal open={modalOpen !== false} setOpen={setModalOpen} callback={createTaskCallback} />;
-			break;
-		// case 'tool':
-		// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
-		// 	break;
 		default:
 			modal = null;
 			break;
@@ -137,7 +98,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					</div>
 				</div>*/}
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
+				<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 						{/*<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -247,13 +208,46 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							</div>
 						</div>}
 
+						<div className='sm:col-span-12'>
+							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Datasources
+							</label>
+							
+							<div className='mt-2'>
+								<Select
+									isSearchable
+						            primaryColor={'indigo'}
+						            classNames={{
+										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+						            }}
+						            value={datasourceState}
+						            onChange={(v: any) => {
+							            if (v?.value === null) {
+											//Create new pressed
+											return setModalOpen('datasource');
+										}
+						            	setDatasourceState(v);
+					            	}}
+						            options={datasourceChoices
+						            	// .filter(t => t?.status === DatasourceStatus.READY)
+						            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
+						            	.concat([{ label: '+ New Datasource', value: null }])}
+						            formatOptionLabel={formatDatasourceOptionLabel}
+						        />
+							</div>
+						</div>			
+
 					</div>
 				</div>			
 
 			</div>
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
-				{!compact && <button
+				<button
 					className='text-sm font-semibold leading-6 text-gray-900'
 					onClick={(e) => {
 						e.preventDefault();
@@ -265,10 +259,10 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					}}
 				>
 					Back
-				</button>}
+				</button>
 				<button
 					type='submit'
-					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
 						Save
 				</button>

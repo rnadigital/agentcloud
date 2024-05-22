@@ -14,7 +14,7 @@ export default function AddApp(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { apps, tools, agents, tasks, models } = state;
+	const { apps, tools, agents, tasks, models, datasources } = state;
 
 	async function fetchAppFormData() {
 		await API.getApps({ resourceSlug }, dispatch, setError, router);
@@ -35,10 +35,7 @@ export default function AddApp(props) {
 			</Head>
 
 			<AppForm2
-				agentChoices={agents}
-				taskChoices={tasks}
-					// toolChoices={tools}
-				modelChoices={models}
+				datasourceChoices={datasources}
 				fetchFormData={fetchAppFormData}
 			/>
 		</>

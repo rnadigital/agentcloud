@@ -10,15 +10,17 @@ import { addTask,getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
 import { ProcessImpl } from 'struct/crew';
+import { getDatasourcesByTeam } from 'db/datasource';
 import { ModelEmbeddingLength } from 'struct/model';
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models] = await Promise.all([
-		 getAppsByTeam(req.params.resourceSlug),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
+	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppsByTeam(req.params.resourceSlug),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -27,16 +29,18 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
+		datasources,
 	};
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models] = await Promise.all([
-		 getAppById(req.params.resourceSlug, req.params.appId),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
+	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppById(req.params.resourceSlug, req.params.appId),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
 	 ]);
 	 return {
 		csrf: req.csrfToken(),
@@ -44,7 +48,8 @@ export async function appData(req, res, _next) {
 		tasks,
 		tools,
 		agents,
-		models
+		models,
+		datasources,
 	};
 }
 

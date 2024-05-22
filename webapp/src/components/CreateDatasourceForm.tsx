@@ -24,6 +24,7 @@ const TailwindForm = dynamic(() => import('components/rjsf'), {
 	ssr: false,
 });
 import validator from '@rjsf/validator-ajv8';
+import formatModelOptionLabel from 'components/FormatModelOptionLabel';
 const DynamicForm = dynamic(() => import('components/DynamicForm'), {
 	ssr: false,
 });
@@ -314,19 +315,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									}
 									setModelId(v?.value);
 				            	}}
-					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new embedding model', value: null }])}
-					            formatOptionLabel={data => {
-									const m = models.find(m => m._id === data?.value);
-					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    {data.label} {m ? `(${m?.model})` : null}
-					                </li>);
-					            }}
+					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
+					            formatOptionLabel={formatModelOptionLabel}
 					        />
 						</div>
 						<RetrievalStrategyComponent
@@ -589,19 +579,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											}
 											setModelId(v?.value);
 						            	}}
-							            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ Create new model', value: null }])}
-							            formatOptionLabel={data => {
-											const m = models.find(m => m._id === data?.value);
-							                return (<li
-							                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-							                        data.isSelected
-							                            ? 'bg-blue-100 text-blue-500'
-							                            : 'dark:text-white'
-							                    }`}
-							                >
-							                    {data.label} {m ? `(${m?.model})` : null}
-							                </li>);
-							            }}
+							            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new model', value: null }])}
+							            formatOptionLabel={formatModelOptionLabel}
 							        />
 								</div>
 							</div>

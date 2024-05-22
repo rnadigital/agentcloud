@@ -19,6 +19,8 @@ import FunctionCard from '../components/FunctionCard';
 import ParameterForm from '../components/ParameterForm';
 import { useAccountContext } from '../context/account';
 import { generateOpenAPIMatchKey } from '../lib/utils/toolsUtils';
+import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
+
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -375,24 +377,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					            options={datasources
 					            	// .filter(t => t?.status === DatasourceStatus.READY)
 					            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
-					            formatOptionLabel={(data: any) => {
-					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    <span>
-											<img
-												src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${data.sourceType}/latest/icon.svg`}
-												loading='lazy'
-												className='inline-flex me-2 w-4 h-4'
-											/>
-											{data.label}
-										</span>
-					                </li>);
-					            }}
+					            formatOptionLabel={formatDatasourceOptionLabel}
 					        />
 						</div>
 
