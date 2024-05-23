@@ -8,6 +8,8 @@ import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import { useAccountContext } from 'context/account';
+import { useStepContext } from 'context/stepwrapper';
+
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -28,6 +30,7 @@ import { ProcessImpl } from 'struct/crew';
 export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFormData }
 	: { datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
+	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -244,11 +247,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 					className='text-sm font-semibold leading-6 text-gray-900'
 					onClick={(e) => {
 						e.preventDefault();
-						if (window.history.length > 1) {
-							router.back();
-						} else {
-							router.push(`/${resourceSlug}/apps`);
-						}
+						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
 					}}
 				>
 					Back
@@ -264,3 +263,4 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	</>);
 
 }
+

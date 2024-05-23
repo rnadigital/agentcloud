@@ -8,6 +8,7 @@ import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
+import { useStepContext } from 'context/stepwrapper';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -28,6 +29,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const { step, setStep }: any = useStepContext();
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -383,7 +385,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					className='text-sm font-semibold leading-6 text-gray-900'
 					onClick={(e) => {
 						e.preventDefault();
-						router.push(`/${resourceSlug}/app/add#step1`);
+						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
 					}}
 				>
 					Back

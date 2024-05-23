@@ -5,6 +5,7 @@ import SimpleAppForm from 'components/SimpleAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -54,9 +55,9 @@ export default function AddApp(props) {
 								<CogIcon className='h-16 w-16 mx-auto text-green-500' />
 								<h3 className='mt-4 text-xl font-semibold text-gray-700'>Custom</h3>
 							</div>
-						</div>
+						</div>						
 						<button
-							className='mt-6 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center'
+							className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 							onClick={() => router.push(`/${resourceSlug}/apps`)}
 						>
 							<svg className='h-4 w-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
