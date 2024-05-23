@@ -19,6 +19,12 @@ export function StepWrapper({ children }) {
 		window.location.hash = `#step${step + 1}`;
 	}, [step]);
 
+	useEffect(() => {
+		if (!router?.asPath?.includes('/app/add')) {
+			setStep(0);
+		}
+	}, [router?.asPath]);
+
 	return (
 		<StepContext.Provider value={{ step, setStep }}>
 			{children}
