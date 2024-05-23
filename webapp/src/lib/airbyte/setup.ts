@@ -43,7 +43,8 @@ async function skipSetupScreen() {
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const response = await fetch(`${process.env.AIRBYTE_API_URL}/v1/workspaces`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/list`, {
+		method: 'POST',
 		headers: { Authorization: authorizationHeader }
 	});
 	return response.json();
