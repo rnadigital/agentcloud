@@ -18,15 +18,13 @@ function classNames(...classes) {
 export default function OrgSelector({ orgs }) {
 
 	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
+	const { account, csrf, teamName } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
-	const teamName = orgs?.find(o => o.teams.find(t => t.id === resourceSlug))?.name;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
-
 	async function switchTeam(orgId, teamId) {
 		const splitLocation = location.pathname.split('/').filter(n => n);
 		const foundResourceSlug = account.orgs
@@ -50,13 +48,11 @@ export default function OrgSelector({ orgs }) {
 				redirect,
 			}, (res) => {
 				dispatch(res);
+				refreshAccountContext();
 				router.push(redirect);
 			}, setError, router);
-			refreshAccountContext();
-		} finally {
-			setTimeout(() => {
-				setSwitchingContext(false);
-			}, 300+(Date.now()-start));
+		} catch(e) {
+			console.error(e);
 		}
 	}
 
@@ -85,9 +81,6 @@ export default function OrgSelector({ orgs }) {
 				leaveTo='transform opacity-0 scale-95'
 			>
 				<Menu.Items className='absolute left-0 z-10 mt-2 w-56 origin-top-left divide-y divide-gray-700 rounded-md bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
-					{/*<div className='py-1'>
-						
-					</div>*/}
 					<div className='py-1'>
 						{orgs
 							.filter(o => o?.teams?.length > 0)
