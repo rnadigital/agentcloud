@@ -69,12 +69,17 @@ export async function login(req, res) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
-	const passwordMatch = await bcrypt.compare(password, account.passwordHash);
+	try {
+		const passwordMatch = await bcrypt.compare(password, account.passwordHash);
 
-	if (passwordMatch === true) {
-		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
-		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
+		if (passwordMatch === true) {
+			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
+			req.session.token = token; //jwt (cookie)
+			return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
+		}
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });

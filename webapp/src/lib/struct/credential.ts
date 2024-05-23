@@ -16,11 +16,9 @@ interface CredentialRequirements {
 
 export const CredentialTypeRequirements: Record<CredentialType, CredentialRequirements> = {
 	[CredentialType.OPENAI]: {
-	
+		api_key: 'string',
 	},
-	[CredentialType.FASTEMBED]: {
-	
-	},
+	[CredentialType.FASTEMBED]: null,
 	[CredentialType.OLLAMA]: {
 		base_url: 'string',
 		api_key: 'string',

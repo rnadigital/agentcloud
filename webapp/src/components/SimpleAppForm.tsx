@@ -25,7 +25,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function AppForm({ datasourceChoices=[], callback, fetchFormData }
+export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFormData }
 	: { datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
@@ -56,7 +56,7 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 			datasourceId: datasourceState ? datasourceState?.value : null,
 			toolIds: [], //TODO
 		};
-		API.addApp2(body, null, toast.error, router);
+		API.addAppSimple(body, null, toast.error, router);
 	}
 
 	async function createDatasourceCallback(createdDatasource) {
@@ -142,7 +142,7 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 									<option disabled value=''>Select a type...</option>
 									<option value={CredentialType.OPENAI}>OpenAI</option>
 									<option value={CredentialType.OLLAMA}>Ollama</option>
-									<option value={CredentialType.FASTEMBED}>FastEmbed</option>
+									{/*<option value={CredentialType.FASTEMBED}>FastEmbed</option>*/}
 									<option value={CredentialType.COHERE}>Cohere</option>
 									<option value={CredentialType.ANTHROPIC}>Anthropic</option>
 								</select>
@@ -178,7 +178,7 @@ export default function AppForm({ datasourceChoices=[], callback, fetchFormData 
 									isClearable
 						            primaryColor={'indigo'}
 						            classNames={SelectClassNames}
-						            value={null}
+						            value={config?.model ? { label: config?.model, value: config?.model } : null}
 						            onChange={(v: any) => {
 				            			setConfig({
 											name: 'model',
