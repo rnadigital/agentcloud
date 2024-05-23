@@ -137,7 +137,7 @@ export async function init() {
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %O', workspacesList);
-		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
+		const airbyteAdminWorkspaceId = workspacesList.workspaces[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
 		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
