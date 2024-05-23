@@ -43,7 +43,8 @@ async function skipSetupScreen() {
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/list`, {
+		method: 'POST',
 		headers: { Authorization: authorizationHeader }
 	});
 	return response.json();
@@ -135,7 +136,7 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
-		logdebug('workspacesList: %O', workspacesList);
+		log('workspacesList: %O', workspacesList);
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
@@ -143,16 +144,16 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
-		logdebug('destinationsList: %O', destinationsList);
+		log('destinationsList: %O', destinationsList);
 		let airbyteAdminDestinationId = destinationsList.destinations[0]?.destinationId;
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
 		if (!airbyteAdminDestinationId) {
-			logdebug('Creating destination');
+			log('Creating destination');
 			const createdDestination = await createDestination(airbyteAdminWorkspaceId);
 			airbyteAdminDestinationId = createdDestination.destinationId;
-			logdebug('Created destination:', createdDestination);
+			log('Created destination:', createdDestination);
 		}
 
 		// Update webhook URLs
