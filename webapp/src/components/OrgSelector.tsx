@@ -51,7 +51,7 @@ export default function OrgSelector({ orgs }) {
 				refreshAccountContext();
 				router.push(redirect);
 			}, setError, router);
-		} catch(e) {
+		} catch (e) {
 			console.error(e);
 		}
 	}
