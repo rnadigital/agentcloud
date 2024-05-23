@@ -70,7 +70,7 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 	};
 
 	if (!process.env.NEXT_PUBLIC_STORAGE_PROVIDER) {
-		return <ErrorAlert error={`Avatar uploader disabled because NEXT_PUBLIC_STORAGE_PROVIDER is: "${process.env.NEXT_PUBLIC_STORAGE_PROVIDER}"`} />
+		return <ErrorAlert error={`Avatar uploader disabled because NEXT_PUBLIC_STORAGE_PROVIDER is: "${process.env.NEXT_PUBLIC_STORAGE_PROVIDER}"`} />;
 	}
 	
 	return (<>
