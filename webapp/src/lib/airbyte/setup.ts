@@ -127,6 +127,9 @@ export async function init() {
 		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
 
 		log('INITIAL_SETUP_COMPLETE', initialSetupComplete);
+		if (!initialSetupComplete) {
+			throw new Error('Failed to skip airbyte initlal setup screen');
+		}
 
 		if (!initialSetupComplete) {
 			log('Skipping airbyte setup screen...');
@@ -160,7 +163,8 @@ export async function init() {
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 
 	} catch (error) {
-		logerror('Error during Airbyte configuration:', error);
+		logerror('Error during Airbyte configuration, aborting:', error);
+		process.exit(1);
 	}
 }
 
