@@ -20,6 +20,7 @@ export default function Models(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { models, credentials } = state;
+	const filteredModels = models?.filter(x => !x.hidden);
 	function fetchModels() {
 		API.getModels({ resourceSlug }, dispatch, setError, router);
 	}
@@ -38,9 +39,9 @@ export default function Models(props) {
 			<title>{`Models - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={models} title='Models' buttonText='New Model' href='/model/add' />
+		<PageTitleWithNewButton list={filteredModels} title='Models' buttonText='New Model' href='/model/add' />
 
-		<ModelTable models={models} fetchModels={fetchModels} credentials={credentials} />
+		<ModelTable models={filteredModels} fetchModels={fetchModels} credentials={credentials} />
 
 		{models.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/model/add`}

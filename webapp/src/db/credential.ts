@@ -25,6 +25,7 @@ export type Credential = {
 	};
     name: string;
     createdDate: Date;
+	hidden?: boolean;
 }
 
 export function CredentialCollection(): any {

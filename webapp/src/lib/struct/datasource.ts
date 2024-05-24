@@ -66,4 +66,5 @@ export type Datasource = {
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
+	hidden?: boolean;
 };

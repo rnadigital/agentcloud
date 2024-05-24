@@ -16,4 +16,5 @@ export type App = {
 	visibility?: any; //TODO: perms
 	crewId?: ObjectId;
 	icon: IconAttachment;
+	hidden?: boolean;
 };

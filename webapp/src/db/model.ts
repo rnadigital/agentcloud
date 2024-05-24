@@ -17,6 +17,7 @@ export type Model = {
 	embeddingLength: number;
 	type?: CredentialType; //redundant
 	config?: Record<string,any>;
+	hidden?: boolean;
 }
 
 export function ModelCollection(): any {

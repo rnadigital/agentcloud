@@ -185,10 +185,11 @@ export async function addAppApiSimple(req, res, next) {
 		    name: config?.model,
 		    createdDate: new Date(),
 		    type: modelType as CredentialType,
-		    credentials: {
-	    		key: config?.api_key,
-	    		endpointURL: null,
-	    	},
+			credentials: {
+				key: config?.api_key,
+				endpointURL: null,
+			},
+			hidden: true,
 		});
 	}
 	const addedModel = await addModel({
@@ -201,6 +202,7 @@ export async function addAppApiSimple(req, res, next) {
 		type: modelType,
 		config: config, //TODO: validation
 		credentialId: addedCredential ? toObjectId(addedCredential?.insertedId) : null,
+		hidden: true,
 	});
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
@@ -217,6 +219,7 @@ export async function addAppApiSimple(req, res, next) {
 		allowDelegation: false,
 		toolIds: toolIds.map(toObjectId),
 		icon : null,
+		hidden: true,
 	});
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
@@ -230,6 +233,7 @@ export async function addAppApiSimple(req, res, next) {
 		asyncExecution: false,
 		requiresHumanInput: true,
 		icon : null,
+		hidden: true,
 	});
 	const addedCrew = await addCrew({
 		orgId: res.locals.matchingOrg.id,
@@ -239,6 +243,7 @@ export async function addAppApiSimple(req, res, next) {
 		agents: [addedAgent.insertedId].map(toObjectId),
 		process: ProcessImpl.SEQUENTIAL,
 		managerModelId: toObjectId(addedModel.insertedId),
+		hidden: true,
 	});
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
@@ -250,6 +255,7 @@ export async function addAppApiSimple(req, res, next) {
 		crewId: addedCrew.insertedId,
 		author: res.locals.matchingTeam.name,
 		icon: null,
+		// hidden: true,
 	});
 
 	return dynamicResponse(req, res, 302, (run ? { _id: addedApp?.insertedId } : { redirect: `/${req.params.resourceSlug}/apps` }));

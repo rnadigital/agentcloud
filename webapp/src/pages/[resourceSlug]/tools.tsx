@@ -31,6 +31,7 @@ export default function Tools(props) {
 	}, [resourceSlug]);
 
 	const { tools, credentials } = state;
+	const filteredTools = tools?.filter(x => !x.hidden);
 
 	if (!tools) {
 		return <Spinner />;
@@ -42,7 +43,7 @@ export default function Tools(props) {
 			<title>{`Tools - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={tools} title='Tools' buttonText='New Tool' href='/tool/add' />
+		<PageTitleWithNewButton list={filteredTools} title='Tools' buttonText='New Tool' href='/tool/add' />
 
 		{tools.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/tool/add`}
@@ -62,7 +63,7 @@ export default function Tools(props) {
 			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 			buttonMessage={'New Tool'}
 		/>}
-		<ToolList tools={tools} fetchTools={fetchTools} />
+		<ToolList tools={filteredTools} fetchTools={fetchTools} />
 
 	</>);
 

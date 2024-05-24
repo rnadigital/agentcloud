@@ -20,4 +20,5 @@ export type Task = {
 	// callback: any;
 	icon?: IconAttachment;
 	requiresHumanInput?: boolean;
+	hidden?: boolean;
 };

@@ -52,6 +52,7 @@ export type Tool = {
 	},
 	credentialId?: ObjectId; //links to a credential 
 	icon?: IconAttachment;
+	hidden?: boolean;
 };
 
 export type FunctionProperty = {
