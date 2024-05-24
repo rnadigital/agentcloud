@@ -40,7 +40,9 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
  
-	const [config, setConfig] = useReducer(configReducer, {});
+	const [config, setConfig] = useReducer(configReducer, {
+		model: 'gpt-4o',
+	});
 	function configReducer(state, action) {
 		return {
 			...state,
