@@ -31,6 +31,39 @@ export default function AddApp(props) {
 		return <Spinner />;
 	}
 
+	const stepOptions = [
+		{
+			icon: ChatBubbleLeftIcon,
+			step: 1,
+			text: 'Chat',
+			color: 'blue'
+		},
+		{
+			icon: CogIcon,
+			step: 2,
+			text: 'Custom',
+			color: 'green'
+		}
+	];
+
+	const renderStepOptions = () => (
+		<div className='grid grid-cols-2 gap-4'>
+			{stepOptions.map((option, index) => {
+				const Icon = option.icon;
+				return (
+					<div
+						key={index}
+						className='p-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer rounded-lg text-center'
+						onClick={() => setStep(option.step)}
+					>
+						<Icon className={`h-16 w-16 mx-auto text-${option.color}-500`} />
+						<h3 className='mt-4 text-xl font-semibold text-gray-700'>{option.text}</h3>
+					</div>
+				);
+			})}
+		</div>
+	);
+
 	const renderStepContent = () => {
 		switch (step) {
 			case 0:
@@ -39,22 +72,7 @@ export default function AddApp(props) {
 						<h2 className='text-2xl font-bold text-center mb-6'>
 							What type of app would you like to make?
 						</h2>
-						<div className='grid grid-cols-2 gap-4'>
-							<div
-								className='p-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer rounded-lg text-center'
-								onClick={() => setStep(1)}
-							>
-								<ChatBubbleLeftIcon className='h-16 w-16 mx-auto text-blue-500' />
-								<h3 className='mt-4 text-xl font-semibold text-gray-700'>Chat</h3>
-							</div>
-							<div
-								className='p-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer rounded-lg text-center'
-								onClick={() => setStep(2)}
-							>
-								<CogIcon className='h-16 w-16 mx-auto text-green-500' />
-								<h3 className='mt-4 text-xl font-semibold text-gray-700'>Custom</h3>
-							</div>
-						</div>						
+						{renderStepOptions()}
 						<button
 							className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 							onClick={() => router.push(`/${resourceSlug}/apps`)}
@@ -78,7 +96,6 @@ export default function AddApp(props) {
 					<AppForm
 						agentChoices={agents}
 						taskChoices={tasks}
-						// toolChoices={tools}
 						modelChoices={models}
 						fetchFormData={fetchAppFormData}
 					/>
@@ -88,12 +105,14 @@ export default function AddApp(props) {
 		}
 	};
 
-	return (<>
-		<Head>
-			<title>{`New App - ${teamName}`}</title>
-		</Head>
-		{renderStepContent()}
-	</>);
+	return (
+		<>
+			<Head>
+				<title>{`New App - ${teamName}`}</title>
+			</Head>
+			{renderStepContent()}
+		</>
+	);
 }
 
 export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {

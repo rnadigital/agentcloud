@@ -84,6 +84,9 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 
 	return (<>
 		{modal}
+		<h2 className='text-xl font-bold mb-6'>
+			Chat App
+		</h2>
 		<form onSubmit={appPost}>
 			<input
 				type='hidden'
@@ -243,13 +246,16 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
 				<button
-					className='text-sm font-semibold leading-6 text-gray-900'
+					className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 					onClick={(e) => {
 						e.preventDefault();
 						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
 					}}
 				>
-					Back
+					<svg className='h-4 w-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
+						<path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7'></path>
+					</svg>
+					<span>Back</span>
 				</button>
 				<button
 					type='submit'
@@ -262,4 +268,3 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	</>);
 
 }
-
