@@ -3,6 +3,7 @@
 import * as API from '@api';
 import {
 	HandRaisedIcon,
+	PlayIcon,
 } from '@heroicons/react/20/solid';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
@@ -43,6 +44,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
+	const [run, setRun] = useState(false);
 
 	const initialAgents = agents && agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
@@ -72,13 +74,22 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
+			run,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
 				toast.success('App Updated');
 			}, setError, null);
 		} else {
-			const addedApp: any = await API.addApp(body, null, toast.error, compact ? null : router);
+			const addedApp: any = await API.addApp(body, res => {
+				if (run === true) {
+					API.addSession({
+						_csrf: e.target._csrf.value,
+						resourceSlug,
+						id: res._id,
+					}, toast.error, setError, router);
+				}
+			}, toast.error, compact ? null : router);
 			callback && addedApp && callback(addedApp._id);
 		}
 	}
@@ -398,10 +409,19 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 				</button>}
 				<button
 					type='submit'
+					onClick={() => setRun(false)}
 					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 				>
 						Save
 				</button>
+				{!editing && <button
+					type='submit'
+					onClick={() => setRun(true)}
+					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+				>
+					<PlayIcon className='h-4 w-4 mr-2' />
+					Save and Run
+				</button>}
 			</div>
 		</form>
 	</>);

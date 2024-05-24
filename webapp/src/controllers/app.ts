@@ -113,7 +113,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId, run }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -148,7 +148,7 @@ export async function addAppApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
+	return dynamicResponse(req, res, 302, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
 
 }
 

@@ -64,7 +64,6 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 			run,
 		};
 		API.addAppSimple(body, (res) => {
-			console.log(run, res);
 			if (run === true) {
 				API.addSession({
 					_csrf: e.target._csrf.value,
