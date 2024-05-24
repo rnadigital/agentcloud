@@ -49,7 +49,8 @@ export async function setSubscriptionLocals(req, res, next) {
 	if (!ownerId) {
 		const currentOrgId = res.locals?.matchingOrg?.id || res.locals?.account?.currentOrg;
 		if (!currentOrgId) {
-			return dynamicResponse(req, res, 400, { error: 'Missing org in subscription check context' });
+			// return dynamicResponse(req, res, 400, { error: 'Missing org in subscription check context' });
+			return dynamicResponse(req, res, 302, { redirect: '/account' });
 		}
 		const parentOrg = await getOrgById(currentOrgId);
 		if (!parentOrg) {

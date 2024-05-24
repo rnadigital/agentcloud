@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { PencilIcon,TrashIcon } from '@heroicons/react/20/solid';
+import { PencilIcon,StarIcon,TrashIcon } from '@heroicons/react/20/solid';
 import InviteForm from 'components/InviteForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -32,7 +32,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md'>
 			<p className='mb-2 font-bold tracking-tight text-gray-900 flex space-x-4'>
 				<span>{member.name}</span>
-				{permissions.get(Permissions.EDIT_TEAM_MEMBER) && <Link href={`/${resourceSlug}/team/${member._id}/edit`}>
+				{!isOwner && permissions.get(Permissions.EDIT_TEAM_MEMBER) && <Link href={`/${resourceSlug}/team/${member._id}/edit`}>
 					<PencilIcon className='h-5 w-5 text-gray-400 dark:text-white' aria-hidden='true' />
 				</Link>}
 			</p>
@@ -41,6 +41,9 @@ export default function TeamMemberCard({ team, member, callback }) {
 				<span className={`px-3 py-1 text-sm font-semibold text-white rounded-full ${isOwner || member.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`}>
 					{isOwner || member.emailVerified ? 'Active' : 'Pending'}
 				</span>
+				{isOwner && <span className='px-3 py-1 text-sm font-semibold text-white rounded-full bg-orange-500 flex'>
+					<StarIcon className='w-4 h-4' /> Team Owner
+				</span>}
 				{team && !isOwner && permissions.get(Permissions.REMOVE_TEAM_MEMBER) && <button type='button' onClick={deleteMember}
 					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0 h-full'
 				>
