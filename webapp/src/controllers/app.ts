@@ -182,7 +182,7 @@ export async function addAppApiSimple(req, res, next) {
 		addedCredential = await addCredential({
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
-		    name: 'openai cred',
+		    name: config?.model,
 		    createdDate: new Date(),
 		    type: modelType as CredentialType,
 		    credentials: {
@@ -194,7 +194,7 @@ export async function addAppApiSimple(req, res, next) {
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-		name: 'Chat model',
+		name: config?.model,
 		model: config?.model,
 		embeddingLength: ModelEmbeddingLength[config?.model] || 0,
 		modelType: ModelEmbeddingLength[config?.model] ? 'embedding' : 'llm',
