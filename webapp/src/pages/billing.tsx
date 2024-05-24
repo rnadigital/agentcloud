@@ -185,6 +185,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 }
 
 export default function Billing(props) {
+
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};

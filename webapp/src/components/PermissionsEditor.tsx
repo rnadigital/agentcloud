@@ -8,21 +8,20 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 // Helper function to check if a permission is allowed
-const isPermissionAllowed = (editingPermission, permissionKey) => {
+const isPermissionAllowed = (currentPermission, permissionKey) => {
 	const metadata = Metadata[permissionKey];
 	if (!metadata || metadata?.blocked === true) { return false; }
 	if (!metadata.parent) { return true; }
 	// Check if the current permission includes the parent permission
-	return editingPermission && editingPermission.get(metadata.parent);
+	return currentPermission && currentPermission.get(metadata.parent);
 };
 
-function PermissionsEditor({ editingPermission }) {
+function PermissionsEditor({ editingPermission, filterBits }) {
 
 	const [accountContext]: any = useAccountContext();
-	const { csrf, permission: currentPermission } = accountContext as any;
+	const { csrf, permissions: currentPermission } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug, memberId } = router.query;
-
 	const [_state, _updateState] = useState(Date.now());
 
 	async function permissionsPost(e) {
@@ -46,7 +45,7 @@ function PermissionsEditor({ editingPermission }) {
 	return (
 		<form onSubmit={permissionsPost} className='max-w-full'>
 			<div className='grid gap-4 grid-cols-3'>
-				{Object.entries(Metadata).map(([key, { title, label, desc, heading }], index) => {
+				{Object.entries(Metadata).filter(e => !filterBits || filterBits.includes(parseInt(e[0]))).map(([key, { title, label, desc, heading }], index) => {
 					const isEnabled = isPermissionAllowed(currentPermission, key);
 					return (<>
 						{heading && <h2 className='font-semibold mt-4 col-span-3'>{heading}</h2>}
@@ -54,8 +53,9 @@ function PermissionsEditor({ editingPermission }) {
 							<div className='flex'>
 								<label>
 									<input
-										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										className={`mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 ${!isEnabled?'cursor-not-allowed':''}`}
 										type='checkbox'
+										disabled={!isEnabled}
 										name={`permission_bit_${key}`}
 										value='true'
 										checked={editingPermission.get(parseInt(key))}

@@ -1,10 +1,12 @@
 'use strict';
 
 import Permission from '@permission';
+import debug from 'debug';
 import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
+const log = debug('webapp:middleware:auth:setpermissions');
 
 export default function setPermissions(req, res, next) {
 	const { account, matchingOrg, matchingTeam } = res.locals;
@@ -23,7 +25,8 @@ export function calcPerms(account, matchingOrg, matchingTeam) {
 			: Math.max(...Object.values(Permissions)); //If empty, get highest permission bit to use as bitfield size.
 		calculatedPermissions = new Permission(userPerms);
 
-		calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER);
+		// calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER);
+		// console.log('account', account)
 		// console.log('matchingOrg', matchingOrg);
 		// console.log('matchingTeam', matchingTeam);
 

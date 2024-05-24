@@ -54,7 +54,7 @@ export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Promis
 			members: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
 		},
 		$set: {
-			[`permissions.${accountId}`]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+			[`permissions.${accountId}`]: new Binary(Roles.REGISTERED_USER.array),
 		}
 	});
 }
@@ -73,6 +73,7 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 }
 
 export function setMemberPermissions(teamId: db.IdOrStr, accountId: db.IdOrStr, permissions: Permission): Promise<any> {
+	console.log(permissions);
 	return TeamCollection().updateOne({
 		_id: toObjectId(teamId)
 	}, {

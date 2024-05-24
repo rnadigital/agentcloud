@@ -10,19 +10,52 @@ const NOT_LOGGED_IN = new Permission();
 const REGISTERED_USER = new Permission();
 REGISTERED_USER.setAll([Permissions.EDIT_ORG, Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
 
-const ORG_ADMIN = new Permission();
-ORG_ADMIN.setAll([Permissions.ORG_ADMIN, ...ORG_BITS]);
-//TODO: various org roles
+const ORG_MEMBER = new Permission();
+ORG_MEMBER.setAll([
+	Permissions.CREATE_TEAM,
+	Permissions.EDIT_TEAM,
+	Permissions.DELETE_TEAM,
+]);
 
-const TEAM_ADMIN = new Permission();
-TEAM_ADMIN.setAll([Permissions.TEAM_ADMIN, ...TEAM_BITS]);
-//TODO: various team roles
+const TEAM_MEMBER = new Permission();
+TEAM_MEMBER.setAll([
+	// Permissions.ADD_TEAM_MEMBER,
+	// Permissions.EDIT_TEAM_MEMBER,
+	// Permissions.REMOVE_TEAM_MEMBER,
+	Permissions.CREATE_APP,
+	Permissions.EDIT_APP,
+	Permissions.DELETE_APP,
+	Permissions.CREATE_DEPLOYMENT,
+	Permissions.EDIT_DEPLOYMENT,
+	Permissions.DELETE_DEPLOYMENT,
+	Permissions.CREATE_AGENT,
+	Permissions.EDIT_AGENT,
+	Permissions.DELETE_AGENT,
+	Permissions.CREATE_MODEL,
+	Permissions.EDIT_MODEL,
+	Permissions.DELETE_MODEL,
+	Permissions.CREATE_CREDENTIAL,
+	Permissions.EDIT_CREDENTIAL,
+	Permissions.DELETE_CREDENTIAL,
+	Permissions.CREATE_TASK,
+	Permissions.EDIT_TASK,
+	Permissions.DELETE_TASK,
+	Permissions.CREATE_TOOL,
+	Permissions.EDIT_TOOL,
+	Permissions.DELETE_TOOL,
+	Permissions.CREATE_DATASOURCE,
+	Permissions.EDIT_DATASOURCE,
+	Permissions.SYNC_DATASOURCE,
+	Permissions.DELETE_DATASOURCE,
+	Permissions.UPLOAD_ASSET,
+	Permissions.DELETE_ASSET
+]);
 
 const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT, NOT_LOGGED_IN, REGISTERED_USER,
 
-	ORG_ADMIN, TEAM_ADMIN
+	ORG_MEMBER, TEAM_MEMBER
 
 })));
 
