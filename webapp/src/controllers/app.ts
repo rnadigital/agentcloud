@@ -4,12 +4,14 @@ import { dynamicResponse } from '@dr';
 import { addAgent,getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
+import { addCredential } from 'db/credential';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { addModel,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
 import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
+import { CredentialType } from 'struct/credential';
 import { ProcessImpl } from 'struct/crew';
 import { ModelEmbeddingLength } from 'struct/model';
 
@@ -158,7 +160,7 @@ export async function addAppApi(req, res, next) {
  * @apiParam {String} name App name
  * @apiParam {String[]} tags Tags for the app
  */
-export async function addAppApi2(req, res, next) {
+export async function addAppApiSimple(req, res, next) {
 
 	const { modelType, config, datasourceId }  = req.body;
 
@@ -175,6 +177,20 @@ export async function addAppApi2(req, res, next) {
 		toolIds.push(datasourceTool._id);
 	}
 
+	let addedCredential;
+	if (modelType === CredentialType.OPENAI) {
+		addedCredential = await addCredential({
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+		    name: 'openai cred',
+		    createdDate: new Date(),
+		    type: modelType as CredentialType,
+		    credentials: {
+	    		key: config?.api_key,
+	    		endpointURL: null,
+	    	},
+		});
+	}
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -184,6 +200,7 @@ export async function addAppApi2(req, res, next) {
 		modelType: ModelEmbeddingLength[config?.model] ? 'embedding' : 'llm',
 		type: modelType,
 		config: config, //TODO: validation
+		credentialId: addedCredential ? toObjectId(addedCredential?.insertedId) : null,
 	});
 	const addedAgent = await addAgent({
 		orgId: res.locals.matchingOrg.id,
