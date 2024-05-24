@@ -162,7 +162,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function addAppApiSimple(req, res, next) {
 
-	const { modelType, config, datasourceId }  = req.body;
+	const { modelType, config, datasourceId, run }  = req.body;
 
 	//todo: validation
 
@@ -252,7 +252,7 @@ export async function addAppApiSimple(req, res, next) {
 		icon: null,
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/apps` });
+	return dynamicResponse(req, res, 302, (run ? { _id: addedApp?.insertedId } : { redirect: `/${req.params.resourceSlug}/apps` }));
 
 }
 
