@@ -10,8 +10,8 @@ const NOT_LOGGED_IN = new Permission();
 const REGISTERED_USER = new Permission();
 REGISTERED_USER.setAll([Permissions.EDIT_ORG, Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
 
-const ORG_MEMBER = new Permission();
-ORG_MEMBER.setAll([
+const ORG_ADMIN = new Permission();
+ORG_ADMIN.setAll([
 	Permissions.CREATE_TEAM,
 	Permissions.EDIT_TEAM,
 	Permissions.DELETE_TEAM,
@@ -58,8 +58,14 @@ const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT, NOT_LOGGED_IN, REGISTERED_USER,
 
-	ORG_MEMBER, TEAM_MEMBER, TEAM_ADMIN
+	ORG_ADMIN, TEAM_MEMBER, TEAM_ADMIN
 
 })));
 
+export const RoleOptions = [
+	{ label: 'Team Member', value: 'TEAM_MEMBER' },
+	{ label: 'Team Admin', value: 'TEAM_ADMIN' }
+];
+
 export default Roles;
+
