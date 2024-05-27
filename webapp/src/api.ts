@@ -254,6 +254,9 @@ export function addTeam(body, dispatch, errorCallback, router) {
 export function editTeamMember(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.get('resourceSlug')}/forms/team/${body.get('memberId')}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
+export function transferTeamOwnership(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/transfer-ownership`, 'POST', body, dispatch, errorCallback, router);
+}
 
 function buildOptions(_route, method, body) {
 

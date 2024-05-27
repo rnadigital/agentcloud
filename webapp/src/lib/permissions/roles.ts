@@ -51,11 +51,14 @@ TEAM_MEMBER.setAll([
 	Permissions.DELETE_ASSET
 ]);
 
+const TEAM_ADMIN = new Permission();
+TEAM_ADMIN.setAll(TEAM_BITS);
+
 const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
 
 	ROOT, NOT_LOGGED_IN, REGISTERED_USER,
 
-	ORG_MEMBER, TEAM_MEMBER
+	ORG_MEMBER, TEAM_MEMBER, TEAM_ADMIN
 
 })));
 
