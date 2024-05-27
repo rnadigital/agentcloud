@@ -8,9 +8,6 @@ export function getAccount(body, dispatch, errorCallback, router) {
 	}).toString();
 	return ApiCall(`/account.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
-export function getDockerLogs(dispatch, errorCallback, router) {
-	return ApiCall('/logs.json', 'GET', null, dispatch, errorCallback, router);
-}
 export function login(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/login', 'POST', body, dispatch, errorCallback, router);
 }

@@ -227,36 +227,6 @@ export async function switchTeam(req, res, _next) {
 
 }
 
-async function dockerLogsData(containerId) {
-
-	const response = await fetch(`http://localhost:2375/containers/${containerId}/logs?stdout=true&stderr=true&timestamps=true`);
-	if (!response.ok) {
-		throw new Error(`Error fetching logs for container ${containerId}: ${response.statusText}`);
-	}
-	const data = await response.text();
-	return data.split('\n').filter(line => line).slice(-100);
-
-}
-
-export async function dockerLogsJson(req, res, next) {
-
-	return res.json({});
-// 	const containersResponse = await fetch('http://localhost:2375/containers/json');
-// 	if (!containersResponse.ok) {
-// 		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
-// 	}
-// 	const containers = await containersResponse.json();
-// 
-// 	// Fetch logs from all containers
-// 	const logsPromises = containers.map(container => dockerLogsData(container.Id));
-// 	const logsArrays = await Promise.all(logsPromises);
-// 
-// 	// Flatten, sort by timestamp, and then join back into a single string
-// 	const sortedLogs = logsArrays.flat().sort().join('\n');
-// 	return res.json({ logs: sortedLogs });
-
-}
-
 export async function adminApi(req, res, next) {
 
 	const { action } = req.body;
