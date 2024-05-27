@@ -18,6 +18,7 @@
   "license": "",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.465.0",
+    "@google-cloud/pubsub": "^4.4.0",
     "@google-cloud/secret-manager": "^5.0.1",
     "@google-cloud/storage": "^7.7.0",
     "@headlessui/react": "^1.7.17",

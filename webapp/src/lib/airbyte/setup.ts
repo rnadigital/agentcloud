@@ -1,17 +1,23 @@
-
-import dotenv from 'dotenv';
-import path from 'path';
-dotenv.config({ path: '.env' });
 import debug from 'debug';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
+import path from 'path';
+
+dotenv.config({ path: '.env' });
+
 const log = debug('webapp:airbyte:setup');
 
-//Note: is there an idiomatic way to do this?
+// Note: is there an idiomatic way to do this?
 const logdebug = debug('webapp:airbyte:setup:debug');
 logdebug.log = console.debug.bind(console);
 const logerror = debug('webapp:airbyte:setup:error');
 logerror.log = console.error.bind(console);
 
 const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64')}`;
+const provider = process.env.MESSAGE_QUEUE_PROVIDER;
+const destinationDefinitionId = provider === 'rabbitmq'
+	? 'e06ad785-ad6f-4647-b2e8-3027a5c59454' // RabbitMQ destination id
+	: '356668e2-7e34-47f3-a3b0-67a8a481b692'; // Google Pub/Sub destination id
 
 // Function to fetch instance configuration
 async function fetchInstanceConfiguration() {
@@ -51,7 +57,7 @@ async function fetchWorkspaces() {
 }
 
 // Function to fetch the destination list
-async function fetchDestinationList(workspaceId) {
+async function fetchDestinationList(workspaceId: string) {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/list`, {
 		method: 'POST',
 		headers: {
@@ -64,7 +70,8 @@ async function fetchDestinationList(workspaceId) {
 }
 
 // Function to create a destination
-async function createDestination(workspaceId) {
+async function createDestination(workspaceId: string, provider: 'rabbitmq' | 'google') {
+	const destinationConfiguration = getDestinationConfiguration(provider);
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/create`, {
 		method: 'POST',
 		headers: {
@@ -72,25 +79,36 @@ async function createDestination(workspaceId) {
 			Authorization: authorizationHeader
 		},
 		body: JSON.stringify({
-			name: 'RabbitMQ',
-			destinationDefinitionId: 'e06ad785-ad6f-4647-b2e8-3027a5c59454', //Note: rabbitmq destinaion id
+			name: provider === 'rabbitmq' ? 'RabbitMQ' : 'Google Pub/Sub',
+			destinationDefinitionId,
 			workspaceId,
-			connectionConfiguration: { //TODO: creds for this??
-				routing_key: 'key',
-				username: 'guest',
-				password: 'guest',
-				exchange: 'agentcloud',
-				port: 5672,
-				host: '0.0.0.0',
-				ssl: false
-			}
+			connectionConfiguration: destinationConfiguration
 		})
 	});
 	return response.json();
 }
 
+function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
+	if (provider === 'rabbitmq') {
+		return {
+			routing_key: 'key',
+			username: process.env.RABBITMQ_USERNAME || 'guest',
+			password: process.env.RABBITMQ_PASSWORD || 'guest',
+			exchange: 'agentcloud',
+			port: process.env.RABBITMQ_PORT || 5672,
+			host: process.env.RABBITMQ_HOST || '0.0.0.0',
+			ssl: false
+		};
+	} else {
+		return {
+			projectId: process.env.PROJECT_ID,
+			topicId: process.env.STREAM_NAME,
+		};
+	}
+}
+
 // Function to update webhook URLs
-async function updateWebhookUrls(workspaceId) {
+async function updateWebhookUrls(workspaceId: string) {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/update`, {
 		method: 'POST',
 		headers: {
@@ -100,19 +118,12 @@ async function updateWebhookUrls(workspaceId) {
 		body: JSON.stringify({
 			workspaceId,
 			notificationSettings: {
-				// sendOnFailure: { notificationType: ['customerio', 'slack'] },
 				sendOnSuccess: {
 					notificationType: ['slack'],
 					slackConfiguration: {
 						webhook: 'http://webapp_next:3000/webhook/sync-successful'
 					}
-				},
-				// sendOnConnectionUpdate: { notificationType: ['customerio', 'slack'] },
-				// sendOnConnectionUpdateActionRequired: { notificationType: ['customerio', 'slack'] },
-				// sendOnSyncDisabled: { notificationType: ['customerio', 'slack'] },
-				// sendOnSyncDisabledWarning: { notificationType: ['customerio', 'slack'] },
-				// sendOnBreakingChangeWarning: { notificationType: ['customerio'] },
-				// sendOnBreakingChangeSyncsDisabled: { notificationType: ['customerio'] }
+				}
 			}
 		})
 	});
@@ -122,7 +133,6 @@ async function updateWebhookUrls(workspaceId) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
-
 		// Get instance configuration
 		const instanceConfiguration = await fetchInstanceConfiguration();
 		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
@@ -145,13 +155,18 @@ export async function init() {
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
 		log('destinationsList: %O', destinationsList);
-		let airbyteAdminDestinationId = destinationsList.destinations[0]?.destinationId;
+
+		let airbyteAdminDestinationId = destinationsList.destinations?.find(d => d?.destinationId === destinationDefinitionId);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
 		if (!airbyteAdminDestinationId) {
-			log('Creating destination');
-			const createdDestination = await createDestination(airbyteAdminWorkspaceId);
+			if (!provider) {
+				console.error('Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
+				process.exit(1);
+			}
+			log(`Creating ${provider} destination`);
+			const createdDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
 			airbyteAdminDestinationId = createdDestination.destinationId;
 			log('Created destination:', createdDestination);
 		}
@@ -164,4 +179,3 @@ export async function init() {
 		logerror('Error during Airbyte configuration:', error);
 	}
 }
-

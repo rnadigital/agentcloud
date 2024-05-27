@@ -6,7 +6,7 @@ const log = debug('webapp:storage:google');
 
 class GoogleStorageProvider extends StorageProvider {
 
-	#storageClient: any; // private property of storageClient
+	#storageClient: any;
 
 	constructor() {
 		super();		
