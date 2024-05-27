@@ -3,9 +3,9 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
 from langchain_google_vertexai import ChatVertexAI
-from langchain_cohere import ChatCohere
 from langchain_anthropic import ChatAnthropic
 
+from .cohere import CustomChatCohere
 import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
 
@@ -133,12 +133,13 @@ def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageMode
 
 
 def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
-    return ChatCohere(
+    return CustomChatCohere(
         **model.model_dump(
             exclude_none=True,
             exclude_unset=True,
-        ).get('config'),
+        ).get('config')
     )
+
 
 def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
     return ChatAnthropic(
