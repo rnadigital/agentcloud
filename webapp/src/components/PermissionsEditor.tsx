@@ -4,7 +4,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import Roles from 'permissions/roles';
+import Roles, { RoleOptions } from 'permissions/roles';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -73,9 +73,12 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 					value={selectedRole}
 					onChange={(e) => setSelectedRole(e.target.value)}
 				>
-					<option value=''>--Select Role--</option>
-					<option value='TEAM_MEMBER'>Team Member</option>
-					<option value='TEAM_ADMIN'>Team Admin</option>
+					<option value='' disabled>Select Role</option>
+					{RoleOptions.map((role) => (
+						<option key={role.value} value={role.value}>
+							{role.label}
+						</option>
+					))}
 				</select>
 				<button onClick={updateRole}
 					className='mt-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'

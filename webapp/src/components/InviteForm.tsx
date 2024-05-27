@@ -4,21 +4,26 @@ import * as API from '@api';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
+import { RoleOptions } from 'permissions/roles';
 import React, { useState } from 'react';
+import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan } from 'struct/billing';
+import SelectClassNames from 'styles/SelectClassNames';
 
-export default function InviteToTeamForm({ callback }: { callback?: Function }) {
+export default function InviteForm({ callback }: { callback?: Function }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripePlan } = (account?.stripe||{});
+	const { stripePlan } = (account?.stripe || {});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [email, setEmail] = useState('');
 	const [name, setName] = useState('');
+	const [role, setRole] = useState(RoleOptions[0]);
 	const [error, setError] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+	const [selectedRole, setSelectedRole] = useState(RoleOptions[0].value);
 
 	async function handleSubmit(e) {
 		e.preventDefault();
@@ -34,6 +39,7 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 				email,
 				name,
 				resourceSlug,
+				permissions: role.value,
 			}, () => {
 				toast.success('Invitation sent');
 				setName('');
@@ -52,7 +58,7 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 		<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
 			<div className='space-y-4'>
 				<div>
-					<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+					<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900'>
 						Name
 					</label>
 					<div className='mt-1'>
@@ -83,6 +89,26 @@ export default function InviteToTeamForm({ callback }: { callback?: Function }) 
 							className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50'
 						/>
 					</div>
+				</div>
+
+				<div>
+					<label htmlFor='role' className='block text-sm font-medium text-gray-700'>
+						Role
+					</label>
+					<select
+						className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md'
+						name='role'
+						id='role'
+						value={selectedRole}
+						onChange={(e) => setSelectedRole(e.target.value)}
+					>
+						<option value='' disabled>Select Role</option>
+						{RoleOptions.map((role) => (
+							<option key={role.value} value={role.value}>
+								{role.label}
+							</option>
+						))}
+					</select>
 				</div>
 
 				{error && <p className='text-sm text-red-600'>{error}</p>}

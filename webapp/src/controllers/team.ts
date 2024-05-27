@@ -57,15 +57,16 @@ export async function teamJson(req, res, next) {
  * @apiParam {String} email Email of person to invite
  */
 export async function inviteTeamMemberApi(req, res) {
-	const { name, email } = req.body;
-	if (!email || typeof email !== 'string' || email.length === 0) {
+	const { name, email, template } = req.body;
+	if (!email || typeof email !== 'string' || email.length === 0
+		|| (template && !Roles[template])) {
 		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
 	}
 	let foundAccount = await getAccountByEmail(email);
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const { addedAccount } = await createAccount(email, name, null, true);
+		const { addedAccount } = await createAccount(email, name, null, true, null, null, null, template);
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
 		foundAccount = await getAccountByEmail(email);
 	} else {

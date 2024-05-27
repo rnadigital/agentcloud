@@ -62,6 +62,8 @@ const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
 
 })));
 
+export type RoleKey = keyof typeof Roles;
+
 export const RoleOptions = [
 	{ label: 'Team Member', value: 'TEAM_MEMBER' },
 	{ label: 'Team Admin', value: 'TEAM_ADMIN' }
