@@ -159,20 +159,21 @@ export async function init() {
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
 		log('destinationsList: %O', destinationsList);
 
-		let airbyteAdminDestinationId = destinationsList.destinations?.find(d => d?.destinationDefinition === destinationDefinitionId);
-		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
-		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
+		let airbyteAdminDestination = destinationsList.destinations?.find(d => d?.destinationDefinitionId === destinationDefinitionId);
+		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
-		if (!airbyteAdminDestinationId) {
+		if (!airbyteAdminDestination) {
 			if (!provider) {
 				console.error('Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
 				process.exit(1);
 			}
 			log(`Creating ${provider} destination`);
-			const createdDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
-			airbyteAdminDestinationId = createdDestination.destinationId;
-			log('Created destination:', createdDestination);
+			airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
+			log('Created destination:', airbyteAdminDestination);
 		}
+
+		//Set admin destination ID
+		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestination.destinationId;
 
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
