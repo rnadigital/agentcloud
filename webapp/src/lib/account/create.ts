@@ -46,7 +46,6 @@ export default async function createAccount(
 			[newAccountId.toString()]: new Binary(new Permission(Roles.ORG_ADMIN.base64).array),
 		},
 	});
-	console.log('roleTemplate', roleTemplate);
 	const addedTeam = await addTeam({
 		ownerId: newAccountId,
 		name: `${name}'s Team`,
@@ -54,7 +53,8 @@ export default async function createAccount(
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			[newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
+			// [newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
+			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array),
 		},
 	});
 	const orgId = addedOrg.insertedId;

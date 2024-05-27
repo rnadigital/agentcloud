@@ -67,7 +67,7 @@ export async function inviteTeamMemberApi(req, res) {
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
 		const { addedAccount } = await createAccount(email, name, null, template, true);
-		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
+		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
 	} else {
 		//account with that email was found
@@ -75,7 +75,7 @@ export async function inviteTeamMemberApi(req, res) {
 		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
 			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
 		}
-		await addTeamMember(req.params.resourceSlug, foundAccount._id);
+		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
 	}
 	if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
 		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
@@ -144,7 +144,7 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.TEAM_ADMIN.base64).array)),
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
