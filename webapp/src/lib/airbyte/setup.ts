@@ -1,6 +1,7 @@
 import debug from 'debug';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
+import fs from 'fs';
 import path from 'path';
 
 dotenv.config({ path: '.env' });
@@ -100,10 +101,16 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 			ssl: false
 		};
 	} else {
+		const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+		const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+		if (!credentialsContent) {
+			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS)
+			process.exit(1);
+		}
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
-			credentials_json: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+			credentials_json: credentialsContent,
 			ordering_enabled: false,
 			batching_enabled: false,
 		};
@@ -170,6 +177,9 @@ export async function init() {
 			log(`Creating ${provider} destination`);
 			airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
 			log('Created destination:', airbyteAdminDestination);
+			if (!airbyteAdminDestination.destinationId) {
+				process.exit(1);
+			}
 		}
 
 		//Set admin destination ID
