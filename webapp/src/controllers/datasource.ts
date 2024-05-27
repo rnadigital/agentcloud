@@ -6,7 +6,7 @@ import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
-import { addTool, editToolsForDatasource } from 'db/tool';
+import { addTool, deleteToolsForDatasource,editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
@@ -748,7 +748,10 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the datasourcein the db
-	await deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+	await Promise.all([
+		deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId),
+		deleteToolsForDatasource(req.params.resourceSlug, req.params.datasourceId),
+	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction	
 
