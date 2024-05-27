@@ -22,15 +22,10 @@ use std::sync::{Arc};
 
 use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
-use actix_web::rt::System;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use env_logger::Env;
-use tokio::join;
-#[cfg(unix)]
-use tokio::signal::unix::{signal, SignalKind};
-#[cfg(windows)]
-use tokio::signal::windows::ctrl_c;
+use tokio::{join, signal};
 use tokio::sync::{RwLock};
 
 use crate::init::env_variables::set_all_env_vars;
@@ -134,14 +129,7 @@ async fn main() -> std::io::Result<()> {
             .run();
 
         // Handle SIGINT to manually kick-off graceful shutdown
-        tokio::spawn(async move {
-            #[cfg(unix)]
-                let mut stream = signal(SignalKind::interrupt()).unwrap();
-            #[cfg(windows)]
-                let mut stream = ctrl_c().unwrap();
-            stream.recv().await;
-            System::current().stop();
-        });
+        signal::ctrl_c().await.expect("Failed to listen to shutdown signal");
         server.await.context("server error!")
     });
 
