@@ -88,6 +88,13 @@ export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: d
 	});
 }
 
+export function deleteToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<any> {
+	return ToolCollection().deleteMany({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	});
+}
+
 export function deleteToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
 	return ToolCollection().deleteOne({
 		_id: toObjectId(toolId),
