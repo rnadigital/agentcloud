@@ -155,6 +155,10 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									value={modelType}
 									onChange={(e: any) => {
 										setModelType(e.target.value);
+										setConfig({
+											name: 'model',
+											value: null,
+										});
 									}}
 								>
 									<option disabled value=''>Select a type...</option>
@@ -169,7 +173,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 
 						{CredentialTypeRequirements[modelType] && Object.keys(CredentialTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
 							{Object.entries(CredentialTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
-								return (<div key={`modelName_${ei}`}>
+								return (<div key={`modelName_${modelType}_${ei}`}>
 									<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										{key}
 									</label>
