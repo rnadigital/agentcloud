@@ -30,6 +30,7 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 		const body = new FormData();
 		body.set('resourceSlug', resourceSlug as string);
 		body.set('memberId', memberId as string);
+		body.set('template', selectedRole as string);
 		body.set('_csrf', csrf as string);
 		for (let elem of Array.from(e.target.elements).filter((z: any) => z.name.startsWith('permission_bit'))) {
 			if (elem['checked']) {

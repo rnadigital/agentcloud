@@ -21,7 +21,15 @@ import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 const log = debug('webapp:middleware:lib:account:create');
 
-export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number, checkoutSession?: string, roleTemplate?: string)
+export default async function createAccount(
+	email: string,
+	name: string,
+	password: string,
+	roleTemplate: RoleKey,
+	invite?: boolean,
+	provider?: OAUTH_PROVIDER,
+	profileId?: string | number,
+	checkoutSession?: string)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {
 
 	// Create mongo id or new account
@@ -38,6 +46,7 @@ export default async function createAccount(email: string, name: string, passwor
 			[newAccountId.toString()]: new Binary(new Permission(Roles.ORG_ADMIN.base64).array),
 		},
 	});
+	console.log('roleTemplate', roleTemplate);
 	const addedTeam = await addTeam({
 		ownerId: newAccountId,
 		name: `${name}'s Team`,

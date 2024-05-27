@@ -66,7 +66,7 @@ export async function inviteTeamMemberApi(req, res) {
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const { addedAccount } = await createAccount(email, name, null, true, null, null, null, template);
+		const { addedAccount } = await createAccount(email, name, null, template, true);
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
 		foundAccount = await getAccountByEmail(email);
 	} else {

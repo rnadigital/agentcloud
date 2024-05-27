@@ -39,7 +39,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 				email,
 				name,
 				resourceSlug,
-				permissions: role.value,
+				template: selectedRole,
 			}, () => {
 				toast.success('Invitation sent');
 				setName('');
