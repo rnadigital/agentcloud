@@ -65,9 +65,10 @@ impl TextExtraction {
     }
 
     pub fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        let mut metadata = HashMap::new();
         match lopdf::Document::load(path.as_str()) {
             Ok(doc) => {
-                let mut metadata = self.detect_pdf_fonts(&doc);
+                // metadata = self.detect_pdf_fonts(&doc);
                 let mut res = (String::new(), metadata);
                 let pages = doc.get_pages();
                 if let Some((_, page)) = pages.into_iter().next() {
@@ -124,37 +125,43 @@ impl TextExtraction {
         Ok(results)
     }
 
-    pub fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
-        let mut metadata = HashMap::new();
-        // Iterate over all pages
-        for page_id in doc.page_iter() {
-            let (resources, _) = doc.get_page_resources(page_id);
-            match resources {
-                Some(r) => {
-                    let fonts = r.get(b"Font").unwrap().as_dict().unwrap();
-                    // Iterate over fonts in the resources
-                    for (_, font_dict) in fonts {
-                        let font_dict = font_dict.as_reference().unwrap();
-                        let font_obj = doc.get_object(font_dict).unwrap();
-
-                        if let Object::Dictionary(dict) = font_obj {
-                            // Extract font name and encoding
-                            let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
-                            let encoding = dict
-                                .get(b"Encoding")
-                                .map_or("Unknown", |e| e.as_name_str().unwrap());
-
-                            metadata.insert(base_font.to_string(), encoding.to_string());
-                        }
-                    }
-                }
-                None => {
-                    log::warn!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
-                }
-            }
-        }
-        metadata
-    }
+    // pub fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> Result<HashMap<String, String>> {
+    //     let mut metadata = HashMap::new();
+    //     // Iterate over all pages
+    //     for page_id in doc.page_iter() {
+    //         let (resources, _) = doc.get_page_resources(page_id);
+    //         match resources {
+    //             Some(r) => {
+    //                 match r.get("bFont") {
+    //                     Ok(font_obj) => {
+    //                         if let Ok(fonts) = font_obj {
+    //                             // Iterate over fonts in the resources
+    //                             for (_, font_dict) in fonts {
+    //                                 let font_dict = font_dict.as_reference().unwrap();
+    //                                 let font_obj = doc.get_object(font_dict).unwrap();
+    //
+    //                                 if let Object::Dictionary(dict) = font_obj {
+    //                                     // Extract font name and encoding
+    //                                     let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
+    //                                     let encoding = dict
+    //                                         .get(b"Encoding")
+    //                                         .map_or("Unknown", |e| e.as_name_str().unwrap());
+    //
+    //                                     metadata.insert(base_font.to_string(), encoding.to_string());
+    //                                 }
+    //                             }
+    //                         }
+    //                         None => {
+    //                             log::warn!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
+    //                         }
+    //                     }
+    //                 }
+    //                 metadata
+    //             }
+    //         },
+    //         Err(e) => return Err(anyhow!("An error occurred: {}", e));
+    //     }
+    // }
     pub async fn extract_text_from_csv(
         &self,
         path: String,
