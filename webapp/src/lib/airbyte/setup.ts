@@ -101,8 +101,11 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 		};
 	} else {
 		return {
-			projectId: process.env.PROJECT_ID,
-			topicId: process.env.STREAM_NAME,
+			project_id: process.env.PROJECT_ID,
+			topic_id: process.env.QUEUE_NAME,
+			credentials_json: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+			ordering_enabled: false,
+			batching_enabled: false,
 		};
 	}
 }
@@ -156,7 +159,7 @@ export async function init() {
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
 		log('destinationsList: %O', destinationsList);
 
-		let airbyteAdminDestinationId = destinationsList.destinations?.find(d => d?.destinationId === destinationDefinitionId);
+		let airbyteAdminDestinationId = destinationsList.destinations?.find(d => d?.destinationDefinition === destinationDefinitionId);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestinationId);
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestinationId;
 
