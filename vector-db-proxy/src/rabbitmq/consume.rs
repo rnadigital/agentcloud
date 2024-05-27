@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use amqp_serde::types::ShortStr;
-use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
+use amqprs::channel::{BasicAckArguments, BasicConsumeArguments};
+use amqprs::connection::Connection;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
@@ -18,15 +19,19 @@ use crate::queue::queuing::Pool;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
+use crate::rabbitmq::client::ensure_connection;
+use crate::rabbitmq::models::RabbitConnect;
 
 pub async fn subscribe_to_queue(
     // redis_connection_pool: Arc<Mutex<RedisConnection>>,
     qdrant_clone: Arc<RwLock<QdrantClient>>,
     queue: Arc<RwLock<Pool<String>>>,
     mongo_client: Arc<RwLock<Database>>,
-    channel: &Channel,
+    connection: &mut Connection,
+    connection_details: &RabbitConnect,
     queue_name: &String,
 ) {
+    let channel = ensure_connection(connection, connection_details).await;
     let mongodb_connection = mongo_client.read().await;
     let args = BasicConsumeArguments::new(queue_name, "");
     match channel.basic_consume_rx(args.clone()).await {

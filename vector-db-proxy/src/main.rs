@@ -42,7 +42,7 @@ use routes::api_routes::{
 };
 use crate::mongo::client::start_mongo_connection;
 use crate::queue::queuing::Pool;
-use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
+use crate::rabbitmq::client::{bind_queue_to_exchange, connect_rabbitmq};
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =
@@ -99,10 +99,8 @@ async fn main() -> std::io::Result<()> {
         password: global_data.rabbitmq_password.clone(),
     };
     let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await;
-    let mut channel = channel_rabbitmq(&connection).await;
     bind_queue_to_exchange(
         &mut connection,
-        &mut channel,
         &rabbitmq_connection_details,
         &global_data.rabbitmq_exchange,
         &global_data.rabbitmq_stream,
@@ -114,8 +112,8 @@ async fn main() -> std::io::Result<()> {
             Arc::clone(&qdrant_connection_for_rabbitmq),
             Arc::clone(&queue),
             Arc::clone(&mongo_client_clone),
-            // Arc::clone(&redis_connection_pool),
-            &channel,
+            &mut connection,
+            &rabbitmq_connection_details,
             &global_data.rabbitmq_stream,
         )
             .await;

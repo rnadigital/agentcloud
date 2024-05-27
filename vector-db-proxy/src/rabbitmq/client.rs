@@ -8,6 +8,18 @@ use amqprs::{
 };
 use tokio::time::{sleep, Duration};
 
+pub async fn ensure_connection(connection: &mut Connection, connection_details: &RabbitConnect) -> Channel {
+    while !connection.is_open() {
+        log::warn!("Connection lost. Attempting to reconnect...");
+        *connection = connect_rabbitmq(connection_details).await;
+        sleep(Duration::from_secs(2)).await;
+    }
+
+    let channel = connection.open_channel(None).await.unwrap();
+    channel.register_callback(DefaultChannelCallback).await.unwrap();
+    channel
+}
+
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     println!("RabbitMQ Host: {}", connection_details.host);
     println!("RabbitMQ Port: {}", connection_details.port);
@@ -56,18 +68,13 @@ pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
 
 pub async fn bind_queue_to_exchange(
     connection: &mut Connection,
-    channel: &mut Channel,
     connection_details: &RabbitConnect,
     exchange: &str,
     queue: &str,
     routing_key: &str,
-) {
-    if !connection.is_open() {
-        log::warn!("Connection not open");
-        *connection = connect_rabbitmq(connection_details).await;
-        *channel = channel_rabbitmq(connection).await;
-        log::debug!("{}", connection);
-    }
+) -> Channel {
+    let channel = ensure_connection(connection, connection_details).await;
+
     // Declaring the exchange on startup
     channel
         .exchange_declare(ExchangeDeclareArguments::new(exchange, "direct"))
@@ -102,16 +109,7 @@ pub async fn bind_queue_to_exchange(
         Ok(queue_option) => {
             match queue_option {
                 Some((queue, _, _)) => {
-                    //check if the channel is open, if not then open it
-                    if !channel.is_open() {
-                        log::warn!(
-                            "Channel is not open, does exchange {} exist on rabbitMQ?",
-                            exchange
-                        );
-                        *channel = channel_rabbitmq(connection).await;
-                    }
-
-                    // bind the queue to the exchange using this channel
+                    // Bind the queue to the exchange using this channel
                     channel
                         .queue_bind(QueueBindArguments::new(&queue, exchange, routing_key))
                         .await
@@ -124,4 +122,6 @@ pub async fn bind_queue_to_exchange(
             log::error!("An error occurred while setting up the queue: {}", e)
         }
     }
+
+    channel
 }
