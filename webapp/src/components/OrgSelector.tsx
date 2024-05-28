@@ -47,9 +47,11 @@ export default function OrgSelector({ orgs }) {
 				_csrf: csrf,
 				redirect,
 			}, (res) => {
-				dispatch(res);
-				refreshAccountContext();
-				router.push(redirect);
+				setTimeout(async () => {
+					await refreshAccountContext();
+					dispatch(res);
+					router.push(redirect);
+				}, 600+(Date.now()-start));
 			}, setError, router);
 		} catch (e) {
 			console.error(e);
