@@ -26,7 +26,7 @@ use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use env_logger::Env;
-use tokio::{join, signal};
+use tokio::signal;
 use tokio::sync::{RwLock};
 
 use crate::init::env_variables::set_all_env_vars;
@@ -34,11 +34,10 @@ use routes::api_routes::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, health_check,
     list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
-use crate::gcp::models::PubSubConnect;
-use crate::messages::models::{MessageQueue, MessageQueueProvider};
+use crate::messages::models::MessageQueueProvider;
 use crate::mongo::client::start_mongo_connection;
 use crate::queue::queuing::Pool;
-use crate::rabbitmq::models::RabbitConnect;
+use crate::messages::tasks::get_message_queue;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =
@@ -87,41 +86,11 @@ async fn main() -> std::io::Result<()> {
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
     let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
     let queue: Arc<RwLock<Pool<String>>> = Arc::new(RwLock::new(Pool::optimised(global_data.thread_percentage_utilisation)));
-    // let redis_connection_pool: Arc<Mutex<RedisConnection>> = Arc::new(Mutex::new(redis_pool));
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
 
     let subscribe_to_message_stream = tokio::spawn(async move {
-        match message_queue_provider {
-            MessageQueueProvider::RABBITMQ => {
-                let rabbitmq_connection = RabbitConnect {
-                    host: global_data.rabbitmq_host.clone(),
-                    port: global_data.rabbitmq_port.clone(),
-                    username: global_data.rabbitmq_username.clone(),
-                    password: global_data.rabbitmq_password.clone(),
-                };
-                match rabbitmq_connection.connect(message_queue_provider).await {
-                    Some(channel) => {
-                        rabbitmq_connection.consume(channel, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await;
-                    }
-                    None => {}
-                }
-            }
-            MessageQueueProvider::PUBSUB => {
-                let pubsub_connection = PubSubConnect {
-                    topic: global_data.rabbitmq_stream.clone(),
-                    subscription: global_data.rabbitmq_stream.clone(),
-                };
-                match pubsub_connection.connect(message_queue_provider).await {
-                    Some(mesasge_stream) => {
-                        pubsub_connection.consume(mesasge_stream, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await;
-                    }
-                    None => {}
-                }
-            }
-
-            MessageQueueProvider::UNKNOWN => panic!("Unknown message Queue provider specified. Aborting application!")
-        }
+        let _ = get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await.unwrap();
     });
 
 
@@ -140,11 +109,15 @@ async fn main() -> std::io::Result<()> {
             .bind(format!("{}:{}", host, port))?
             .run();
 
-        // Handle SIGINT to manually kick-off graceful shutdown
-        signal::ctrl_c().await.expect("Failed to handle SIGINT call");
         server.await.context("server error!")
     });
 
-    let _ = join!(web_task, subscribe_to_message_stream);
+    tokio::select! {
+        _ = web_task => log::info!("Web server task completed"),
+        _ = subscribe_to_message_stream => log::info!("Message stream task completed"),
+        _ = signal::ctrl_c() => {
+            log::info!("Received Ctrl+C, shutting down");
+        }
+    }
     Ok(())
 }

@@ -4,7 +4,6 @@ use qdrant_client::client::QdrantClient;
 use tokio::sync::RwLock;
 use crate::queue::queuing::Pool;
 
-
 pub enum MessageQueueProvider {
     PUBSUB,
     RABBITMQ,

@@ -67,35 +67,37 @@ impl MessageQueue for RabbitConnect {
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, queue_name: &str) {
         let channel = streaming_queue;
         let args = BasicConsumeArguments::new(queue_name, "");
-        while let Ok((_, mut messages_rx)) = channel.basic_consume_rx(args.clone()).await {
-            while let Some(message) = messages_rx.recv().await {
-                let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
-                let _ = channel.basic_ack(args).await;
-                let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-                println!("RabbitMQ Message Headers: {:?}", headers);
-                if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
-                    let stream_string: String = stream.to_string();
-                    let stream_split: Vec<&str> = stream_string.split('_').collect();
-                    let datasource_id = stream_split.to_vec()[0];
-                    if let Some(msg) = message.content {
-                        if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                            let mut stream_type: Option<String> = None;
-                            let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
-                            {
-                                match stream_type_field_value {
-                                    Some(s) => {
-                                        stream_type = Some(s.to_string());
+        loop{
+            while let Ok((_, mut messages_rx)) = channel.basic_consume_rx(args.clone()).await {
+                while let Some(message) = messages_rx.recv().await {
+                    let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+                    let _ = channel.basic_ack(args).await;
+                    let headers = message.basic_properties.unwrap().headers().unwrap().clone();
+                    println!("RabbitMQ Message Headers: {:?}", headers);
+                    if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
+                        let stream_string: String = stream.to_string();
+                        let stream_split: Vec<&str> = stream_string.split('_').collect();
+                        let datasource_id = stream_split.to_vec()[0];
+                        if let Some(msg) = message.content {
+                            if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                                let mut stream_type: Option<String> = None;
+                                let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
+                                {
+                                    match stream_type_field_value {
+                                        Some(s) => {
+                                            stream_type = Some(s.to_string());
+                                        }
+                                        _ => {}
                                     }
-                                    _ => {}
+                                    let queue = Arc::clone(&queue);
+                                    let qdrant_client = Arc::clone(&qdrant_client);
+                                    let mongo_client = Arc::clone(&mongo_client);
+                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
                                 }
-                                let queue = Arc::clone(&queue);
-                                let qdrant_client = Arc::clone(&qdrant_client);
-                                let mongo_client = Arc::clone(&mongo_client);
-                                process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
                             }
+                        } else {
+                            log::warn!("There was no stream_id in message... can not upload data!");
                         }
-                    } else {
-                        log::warn!("There was no stream_id in message... can not upload data!");
                     }
                 }
             }

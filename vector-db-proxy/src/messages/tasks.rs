@@ -5,16 +5,50 @@ use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
 use tokio::sync::RwLock;
 use crate::data::utils::{apply_chunking_strategy_to_document, extract_text_from_file};
+use crate::gcp::models::PubSubConnect;
 use crate::llm::models::EmbeddingModels;
+use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::mongo::models::ChunkingStrategy;
 use crate::mongo::queries::{get_datasource, get_embedding_model};
 use crate::qdrant::helpers::construct_point_struct;
 use crate::qdrant::utils::Qdrant;
 use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
 use crate::queue::queuing::Pool;
+use crate::rabbitmq::models::RabbitConnect;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
+use crate::init::env_variables::GLOBAL_DATA;
+use anyhow::Result;
+
+pub async fn get_message_queue(message_queue_provider: MessageQueueProvider, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, _queue_name: &str) -> Result<()> {
+    let global_data = GLOBAL_DATA.read().await;
+    match message_queue_provider {
+        MessageQueueProvider::RABBITMQ => {
+            println!("Using RabbitMQ as the streaming Queue!");
+            let rabbitmq_connection = RabbitConnect {
+                host: global_data.rabbitmq_host.clone(),
+                port: global_data.rabbitmq_port.clone(),
+                username: global_data.rabbitmq_username.clone(),
+                password: global_data.rabbitmq_password.clone(),
+            };
+            let channel = rabbitmq_connection.connect(message_queue_provider).await.unwrap();
+            let _ = rabbitmq_connection.consume(channel, qdrant_client, mongo_client, queue, global_data.rabbitmq_stream.as_str()).await;
+        }
+        MessageQueueProvider::PUBSUB => {
+            println!("Using PubSub as the streaming Queue!");
+            let pubsub_connection = PubSubConnect {
+                topic: global_data.rabbitmq_stream.clone(),
+                subscription: global_data.rabbitmq_stream.clone(),
+            };
+            let message_stream = pubsub_connection.connect(message_queue_provider).await.unwrap();
+            let _ = pubsub_connection.consume(message_stream, qdrant_client, mongo_client, queue, global_data.rabbitmq_stream.as_str()).await;
+        }
+
+        MessageQueueProvider::UNKNOWN => panic!("Unknown message Queue provider specified. Aborting application!")
+    }
+    Ok(())
+}
 
 pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>) {
     let mongodb_connection = mongo_client.read().await;
