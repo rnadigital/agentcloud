@@ -35,7 +35,7 @@ class LocalStorageProvider extends StorageProvider {
 		}
 	}
 
-	async addFile(filename, uploadedFile, isPublic = false) {
+	async addFile(filename, uploadedFile, contentType, isPublic = false) {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, uploadedFile.data);

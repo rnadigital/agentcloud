@@ -820,7 +820,7 @@ export async function uploadFileApi(req, res, next) {
 	
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
-	await storageProvider.addFile(filename, uploadedFile);
+	await storageProvider.addFile(filename, uploadedFile, uploadedFile.mimetype);
 
 	// Create the collection in qdrant
 	try {
@@ -829,9 +829,12 @@ export async function uploadFileApi(req, res, next) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
-
-	// Tell the vector proxy to process it	
-	await sendMessage(JSON.stringify({
+	
+	// Fetch the appropriate message queue providerpse
+	const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+	
+	// Prepare the message and metadata
+	const message = JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 		file: `/tmp/${filename}`,
