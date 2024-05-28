@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::Write;
-use amqp_serde::types::{FieldTable, ShortStr};
 use serde_json::Value;
 use tokio::fs;
 use crate::data::models::FileType;
@@ -30,12 +29,11 @@ pub async fn determine_file_type(file_path: &str) -> FileType {
     file_type
 }
 
-pub async fn read_file_from_source(headers: FieldTable, message_data: Value) -> Option<(FileType, Vec<u8>, String)> {
+pub async fn read_file_from_source(stream_type: Option<String>, message_data: Value) -> Option<(FileType, Vec<u8>, String)> {
     // If the type field is present in the headers then we assume it is a file of sorts
-    match headers.get(&ShortStr::try_from("type").unwrap()) {
+    match stream_type {
         Some(t) => {
-            let file_source = FileSources::from(t.to_string());
-            return match file_source {
+            return match FileSources::from(t) {
                 FileSources::GCS => {
                     if let Some(bucket_name) =
                         message_data.get("bucket")
