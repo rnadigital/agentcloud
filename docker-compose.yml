@@ -51,7 +51,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_STREAM=streaming
+      - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
       - RABBITMQ_ROUTING_KEY=key
       - RABBITMQ_USERNAME=guest
@@ -98,6 +98,7 @@ services:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
       - NEXT_PUBLIC_STORAGE_PROVIDER=local
       - NEXT_PUBLIC_SECRET_PROVIDER=local
+      - MESSAGE_QUEUE_PROVIDER=rabbitmq
       - UPLOADS_BASE_PATH=/tmp
     volumes:
       - datasource_files:/tmp

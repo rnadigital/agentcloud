@@ -62,7 +62,6 @@ app.prepare()
 
 		await initGlobalTools();
 		await ses.init();
-		await initRabbit();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);
