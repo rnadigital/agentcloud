@@ -13,7 +13,7 @@ pub enum MessageQueueProvider {
 impl From<String> for MessageQueueProvider {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "pubsub" => MessageQueueProvider::PUBSUB,
+            "google" => MessageQueueProvider::PUBSUB,
             "rabbitmq" => MessageQueueProvider::RABBITMQ,
             _ => MessageQueueProvider::UNKNOWN
         }
