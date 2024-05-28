@@ -19,7 +19,7 @@ class GoogleStorageProvider extends StorageProvider {
 	}
 
 	async init() {
-		this.createBucket();
+		// this.createBucket();
 	}
 
 	async createBucket(bucketName = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME, options = {}) {
