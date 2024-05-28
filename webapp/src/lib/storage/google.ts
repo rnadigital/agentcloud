@@ -64,6 +64,27 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
+	async uploadBuffer(filename: string, content: Buffer, contentType: string, isPublic = false): Promise<any> {
+		log('Uploading buffer to file %s', filename);
+		const file = this.#storageClient
+			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.file(filename);
+		try {
+			await file.save(content, {
+				metadata: {
+					contentType,
+				},
+			});
+			log('Buffer uploaded successfully.');
+			if (isPublic) {
+				await file.makePublic();
+			}
+		} catch (err) {
+			log('Buffer upload error:', err);
+			throw err;
+		}
+	}
+
 	async deleteFile(filename: string): Promise<any> {
 		log('Deleting file %s', filename);
 		const file = this.#storageClient
