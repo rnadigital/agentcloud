@@ -57,6 +57,8 @@ reqwest = { version = "0.12.0", features = ["json"] }
 redis = { version = "0.25.2", features = ["tokio-comp", "serde", "serde_json", "r2d2"] }
 r2d2_redis = "0.14.0"
 crossbeam = { version = "0.8.4", features = ["crossbeam-channel"] }
+google-cloud-gax = "0.17.0"
+google-cloud-pubsub = "0.25.0"
 
 [features]
 default = ["cuda_rocm"]

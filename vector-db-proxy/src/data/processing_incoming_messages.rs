@@ -10,7 +10,7 @@ use crate::qdrant::helpers::embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 
-pub async fn process_messages(
+pub async fn process_streaming_messages(
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
     message: String,

@@ -8,8 +8,10 @@ export default class StorageProviderFactory {
 			case 'google':
 				return GoogleStorageProvider;
 			case 'local':
-			default:
 				return LocalStorageProvider;
+			default:
+				console.error('Invalid process.env.NEXT_PUBLIC_STORAGE_PROVIDER env value:', process.env.NEXT_PUBLIC_STORAGE_PROVIDER);
+				process.exit(1);
 		}
 	}
 }

@@ -20,6 +20,7 @@ export default function Credentials(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { credentials } = state;
+	const filteredCredentials = credentials?.filter(x => !x.hidden);
 	function fetchCredentials() {
 		API.getCredentials({ resourceSlug }, dispatch, setError, router);
 	}
@@ -38,9 +39,9 @@ export default function Credentials(props) {
 			<title>{`Credentials - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={credentials} title='Credentials' buttonText='New Credential' href='/credential/add' />
+		<PageTitleWithNewButton list={filteredCredentials} title='Credentials' buttonText='New Credential' href='/credential/add' />
 
-		<CredentialTable credentials={credentials} fetchCredentials={fetchCredentials} />
+		<CredentialTable credentials={filteredCredentials} fetchCredentials={fetchCredentials} />
 
 		{credentials.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/credential/add`}

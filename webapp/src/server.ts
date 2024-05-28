@@ -32,7 +32,7 @@ import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
 import * as airbyteSetup from 'lib/airbyte/setup';
 import * as ses from 'lib/email/ses';
-import { initRabbit } from 'lib/rabbitmq/send';
+import MessageQueueProviderFactory from 'lib/queue';
 import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
@@ -53,9 +53,10 @@ app.prepare()
 		await storageProvider.init();
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		await secretProvider.init();
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+		await messageQueueProvider.init();
 		await initGlobalTools();
 		await ses.init();
-		await initRabbit();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

@@ -69,12 +69,17 @@ export async function login(req, res) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
-	const passwordMatch = await bcrypt.compare(password, account.passwordHash);
+	try {
+		const passwordMatch = await bcrypt.compare(password, account.passwordHash);
 
-	if (passwordMatch === true) {
-		const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
-		req.session.token = token; //jwt (cookie)
-		return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
+		if (passwordMatch === true) {
+			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
+			req.session.token = token; //jwt (cookie)
+			return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
+		}
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
@@ -104,7 +109,7 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const { emailVerified } = await createAccount(email, name, password, checkoutSession);
+	const { emailVerified } = await createAccount(email, name, password, 'TEAM_MEMBER', checkoutSession);
 	
 	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 
@@ -219,36 +224,6 @@ export async function switchTeam(req, res, _next) {
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
 	return res.json({});
-
-}
-
-async function dockerLogsData(containerId) {
-
-	const response = await fetch(`http://localhost:2375/containers/${containerId}/logs?stdout=true&stderr=true&timestamps=true`);
-	if (!response.ok) {
-		throw new Error(`Error fetching logs for container ${containerId}: ${response.statusText}`);
-	}
-	const data = await response.text();
-	return data.split('\n').filter(line => line).slice(-100);
-
-}
-
-export async function dockerLogsJson(req, res, next) {
-
-	return res.json({});
-// 	const containersResponse = await fetch('http://localhost:2375/containers/json');
-// 	if (!containersResponse.ok) {
-// 		throw new Error(`Error fetching containers list: ${containersResponse.statusText}`);
-// 	}
-// 	const containers = await containersResponse.json();
-// 
-// 	// Fetch logs from all containers
-// 	const logsPromises = containers.map(container => dockerLogsData(container.Id));
-// 	const logsArrays = await Promise.all(logsPromises);
-// 
-// 	// Flatten, sort by timestamp, and then join back into a single string
-// 	const sortedLogs = logsArrays.flat().sort().join('\n');
-// 	return res.json({ logs: sortedLogs });
 
 }
 

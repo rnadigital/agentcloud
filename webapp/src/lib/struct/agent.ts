@@ -25,4 +25,5 @@ export type Agent = {
 	toolIds?: ObjectId[];
 	icon?: IconAttachment;
 	// stepCallback: Function;
+	hidden?: boolean;
 };

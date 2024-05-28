@@ -20,7 +20,6 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
-// import DebugLogs from 'components/DebugLogs';
 import BillingBanner from 'components/BillingBanner';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
@@ -96,7 +95,7 @@ const agentNavigation: any[] = [
 ];
 
 const teamNavigation = [
-	{ name: 'Team Members', href: '/team', base: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Team', href: '/team', base: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const userNavigation = [
@@ -526,9 +525,6 @@ export default withRouter(function Layout(props) {
 								{/* Notification Bell */}
 								<NotificationBell />
 
-								{/* debug logs
-								<DebugLogs />*/}
-								
 								{/* Separator */}
 								<div
 									className='hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10'

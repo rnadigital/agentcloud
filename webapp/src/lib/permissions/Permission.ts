@@ -43,7 +43,7 @@ export default class Permission extends BigBitfield {
 		}
 	}
 
-	applyInheritance() { //write custom inheritance logic here? or find a way to put a flag in the metadata or permissions
+	applyInheritance() {
 		if (this.get(Permissions.ROOT)) {
 			this.setAll(Permission.allPermissions);
 			return;
@@ -52,7 +52,7 @@ export default class Permission extends BigBitfield {
 			this.setAll(ORG_BITS);
 			this.set(Permissions.TEAM_OWNER, true); // Naturally, org owner has all team owner perms too
 		}
-		if (this.get(Permissions.TEAM_OWNER)) {
+		if (this.get(Permissions.TEAM_OWNER) || this.get(Permissions.TEAM_ADMIN)) {
 			this.setAll(TEAM_BITS);
 		}
 	}

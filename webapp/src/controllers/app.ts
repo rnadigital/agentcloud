@@ -1,24 +1,28 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentsByTeam } from 'db/agent';
+import { addAgent,getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
+import { addCredential } from 'db/credential';
 import { addCrew, updateCrew } from 'db/crew';
-import { getModelsByTeam } from 'db/model';
-import { getTasksByTeam } from 'db/task';
-import { getToolsByTeam } from 'db/tool';
+import { getDatasourcesByTeam } from 'db/datasource';
+import { addModel,getModelsByTeam } from 'db/model';
+import { addTask,getTasksByTeam } from 'db/task';
+import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
-import { AppType } from 'struct/app';
+import { CredentialType } from 'struct/credential';
 import { ProcessImpl } from 'struct/crew';
+import { ModelEmbeddingLength } from 'struct/model';
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models] = await Promise.all([
-		 getAppsByTeam(req.params.resourceSlug),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
+	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppsByTeam(req.params.resourceSlug),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -27,16 +31,18 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
+		datasources,
 	};
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models] = await Promise.all([
-		 getAppById(req.params.resourceSlug, req.params.appId),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
+	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppById(req.params.resourceSlug, req.params.appId),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
 	 ]);
 	 return {
 		csrf: req.csrfToken(),
@@ -44,7 +50,8 @@ export async function appData(req, res, _next) {
 		tasks,
 		tools,
 		agents,
-		models
+		models,
+		datasources,
 	};
 }
 
@@ -106,7 +113,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId, run }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -133,9 +140,7 @@ export async function addAppApi(req, res, next) {
 		tags: (tags||[])
 			.map(tag => tag.trim()) // Assuming tags is an array of strings
 			.filter(x => x),
-		capabilities,
 		crewId: addedCrew.insertedId,
-		appType,
 		author: res.locals.matchingTeam.name,
 		icon: foundIcon ? {
 			id: foundIcon._id,
@@ -143,7 +148,117 @@ export async function addAppApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
+	return dynamicResponse(req, res, 302, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
+
+}
+
+/**
+ * @api {post} /forms/app/add Add an app
+ * @apiName add
+ * @apiGroup App
+ *
+ * @apiParam {String} name App name
+ * @apiParam {String[]} tags Tags for the app
+ */
+export async function addAppApiSimple(req, res, next) {
+
+	const { modelType, config, datasourceId, run }  = req.body;
+
+	//todo: validation
+
+	let toolIds = req.body.toolIds || [];
+	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
+	if (!foundTools || foundTools.length !== toolIds.length) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
+	}
+
+	const datasourceTool = await getToolForDatasource(req.params.resourceSlug, datasourceId);
+	if (datasourceTool) {
+		toolIds.push(datasourceTool._id);
+	}
+
+	let addedCredential;
+	if (modelType === CredentialType.OPENAI) {
+		addedCredential = await addCredential({
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+		    name: config?.model,
+		    createdDate: new Date(),
+		    type: modelType as CredentialType,
+			credentials: {
+				key: config?.api_key,
+				endpointURL: null,
+			},
+			hidden: true,
+		});
+	}
+	const addedModel = await addModel({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: config?.model,
+		model: config?.model,
+		embeddingLength: ModelEmbeddingLength[config?.model] || 0,
+		modelType: ModelEmbeddingLength[config?.model] ? 'embedding' : 'llm',
+		type: modelType,
+		config: config, //TODO: validation
+		credentialId: addedCredential ? toObjectId(addedCredential?.insertedId) : null,
+		hidden: true,
+	});
+	const addedAgent = await addAgent({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+	    name: 'Chat agent',
+	    role: 'A helpful assistant',
+	    goal: 'Follow instructions and assist the user in completing all the tasks.',
+	    backstory: ' .',
+		modelId: toObjectId(addedModel.insertedId),
+		functionModelId: toObjectId(addedModel.insertedId),
+		maxIter: null,
+		maxRPM: null,
+		verbose: true,
+		allowDelegation: false,
+		toolIds: toolIds.map(toObjectId),
+		icon : null,
+		hidden: true,
+	});
+	const addedTask = await addTask({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'Chat task',
+		description : 'Chat back and forth with the user, get human input each time.',
+		//TODO maybe include tool names in prompt?: foundTools.map(x => x.name).join(', ')
+		expectedOutput: '',
+		toolIds: toolIds.map(toObjectId),
+		agentId: toObjectId(addedAgent.insertedId),
+		asyncExecution: false,
+		requiresHumanInput: true,
+		icon : null,
+		hidden: true,
+	});
+	const addedCrew = await addCrew({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'chat crew',
+		tasks: [addedTask.insertedId].map(toObjectId),
+		agents: [addedAgent.insertedId].map(toObjectId),
+		process: ProcessImpl.SEQUENTIAL,
+		managerModelId: toObjectId(addedModel.insertedId),
+		hidden: true,
+	});
+	const addedApp = await addApp({
+		orgId: res.locals.matchingOrg.id,
+		teamId: toObjectId(req.params.resourceSlug),
+		name: 'Chat app',
+		description: 'A simple conversation.',
+		memory: false,
+		cache: false,
+		crewId: addedCrew.insertedId,
+		author: res.locals.matchingTeam.name,
+		icon: null,
+		// hidden: true,
+	});
+
+	return dynamicResponse(req, res, 302, (run ? { _id: addedApp?.insertedId } : { redirect: `/${req.params.resourceSlug}/apps` }));
 
 }
 
@@ -156,7 +271,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -188,8 +303,6 @@ export async function editAppApi(req, res, next) {
 			tags: (tags||[]) //TODO
 				.map(t => t.trim())
 				.filter(t => t),
-			capabilities,
-			appType,
 			icon: foundIcon ? {
 				id: foundIcon._id,
 				filename: foundIcon.filename,

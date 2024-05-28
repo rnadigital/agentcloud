@@ -21,6 +21,7 @@ export default function Tasks(props) {
 	const [error, setError] = useState();
 	const [open, setOpen] = useState(false);
 	const { tasks } = state;
+	const filteredTasks = tasks?.filter(x => !x.hidden);
 
 	async function fetchTasks() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
@@ -41,9 +42,9 @@ export default function Tasks(props) {
 				
 			</Head>
 
-			<PageTitleWithNewButton list={tasks} title='Tasks' buttonText='New Task' href='/task/add' />
+			<PageTitleWithNewButton list={filteredTasks} title='Tasks' buttonText='New Task' href='/task/add' />
 
-			<TaskCards tasks={tasks} fetchTasks={fetchTasks} />
+			<TaskCards tasks={filteredTasks} fetchTasks={fetchTasks} />
 
 			{tasks.length === 0 && <NewButtonSection
 				link={`/${resourceSlug}/task/add`}

@@ -21,7 +21,8 @@ pub struct GlobalData {
     pub redis_port: String,
     pub thread_percentage_utilisation: f64,
     pub use_gpu: String,
-    pub logging_level: String
+    pub logging_level: String,
+    pub message_queue_provider: String,
 }
 
 impl GlobalData {
@@ -51,6 +52,7 @@ impl GlobalData {
                 .unwrap_or("1".to_string()).parse().unwrap_or(0.8),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("true".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
+            message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER").unwrap_or("rabbitmq".to_string()),
         }
     }
 }

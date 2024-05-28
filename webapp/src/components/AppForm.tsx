@@ -3,19 +3,20 @@
 import * as API from '@api';
 import {
 	HandRaisedIcon,
+	PlayIcon,
 } from '@heroicons/react/20/solid';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import { useAccountContext } from 'context/account';
+import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -29,6 +30,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const { step, setStep }: any = useStepContext();
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -36,13 +38,13 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appState, setApp] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
 	const [managerModel, setManagerModel] = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
-	const [appTypeState, setAppTypeState] = useState(app.appType || AppType.CHAT);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
 	const { name, agents, tasks, tools } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
+	const [run, setRun] = useState(false);
 
 	const initialAgents = agents && agents.map(a => {
 		const oa = agentChoices.find(ai => ai._id === a);
@@ -67,19 +69,27 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			// process: e.target.process.value, 
 			process: ProcessImpl.SEQUENTIAL,
 			agents: agentsState.map(a => a.value),
-			appType: appTypeState,
 			memory: appMemory,
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
+			run,
 		};
 		if (editing === true) {
 			await API.editApp(appState._id, body, () => {
 				toast.success('App Updated');
 			}, setError, null);
 		} else {
-			const addedApp: any = await API.addApp(body, null, toast.error, compact ? null : router);
+			const addedApp: any = await API.addApp(body, res => {
+				if (run === true) {
+					API.addSession({
+						_csrf: e.target._csrf.value,
+						resourceSlug,
+						id: res._id,
+					}, toast.error, setError, router);
+				}
+			}, toast.error, compact ? null : router);
 			callback && addedApp && callback(addedApp._id);
 		}
 	}
@@ -123,6 +133,9 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 	return (<>
 		{modal}
+		{!editing && <h2 className='text-xl font-bold mb-6'>
+			Custom App
+		</h2>}
 		<form onSubmit={appPost}>
 			<input
 				type='hidden'
@@ -132,7 +145,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 			<div className='space-y-4'>
 
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Avatar
@@ -143,7 +156,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					</div>
 				</div>			
 
-				<div className={`grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
+				<div className={`grid grid-cols-1 gap-x-8 gap-y-4 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -158,35 +171,6 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
-						{/*<div className='sm:col-span-12'>
-							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								App Type
-							</label>
-							<div className='mt-2'>
-								<label className='inline-flex items-center mr-6 text-sm'>
-									<input
-										type='radio'
-										name='appType'
-										value={AppType.CHAT}
-										defaultChecked={appTypeState === AppType.CHAT}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.CHAT); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Conversation Chat App</span>
-								</label>
-								<label className='inline-flex items-center text-sm'>
-									<input
-										type='radio'
-										name='appType'
-										value={AppType.PROCESS}
-										defaultChecked={appTypeState === AppType.PROCESS}
-										onChange={(e) => { e.target.checked && setAppTypeState(AppType.PROCESS); e.target.checked && setManagerModels([]); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Process App (multi-agent)</span>
-								</label>
-							</div>
-						</div>*/}
 						<div className='sm:col-span-12 flex flex-row gap-4'>
 							<div className='w-full'>
 								<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -200,10 +184,10 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										setDescription(e.target.value);
 									}}
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									rows={5}
+									rows={3}
 								/>
 							</div>
-							<div className='rounded shadow-sm w-full'>
+							{/*<div className='rounded shadow-sm w-full'>
 								<span className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Preview
 								</span>
@@ -212,7 +196,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								>
 									{description}
 								</Markdown>
-							</div>
+							</div>*/}
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -334,7 +318,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 								</label>
 							</div>
 						</div>*/}
-						{(appTypeState === AppType.CHAT || crewState.process === ProcessImpl.HIERARCHICAL) && <div className='sm:col-span-12'>
+						<div className='sm:col-span-12'>
 							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Chat Manager Model
 							</label>
@@ -370,7 +354,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 						            }}
 						        />
 							</div>
-						</div>}
+						</div>
 
 						<div className='sm:col-span-12'>
 							<div className='mt-2'>
@@ -412,24 +396,32 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
 				{!compact && <button
-					className='text-sm font-semibold leading-6 text-gray-900'
+					className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 					onClick={(e) => {
 						e.preventDefault();
-						if (window.history.length > 1) {
-							router.back();
-						} else {
-							router.push(`/${resourceSlug}/apps`);
-						}
+						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
 					}}
 				>
-					Back
+					<svg className='h-4 w-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
+						<path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M15 19l-7-7 7-7'></path>
+					</svg>
+					<span>Back</span>
 				</button>}
 				<button
 					type='submit'
+					onClick={() => setRun(false)}
 					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 				>
 						Save
 				</button>
+				{!editing && <button
+					type='submit'
+					onClick={() => setRun(true)}
+					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+				>
+					<PlayIcon className='h-4 w-4 mr-2' />
+					Save and Run
+				</button>}
 			</div>
 		</form>
 	</>);

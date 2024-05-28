@@ -8,9 +8,6 @@ export function getAccount(body, dispatch, errorCallback, router) {
 	}).toString();
 	return ApiCall(`/account.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
-export function getDockerLogs(dispatch, errorCallback, router) {
-	return ApiCall('/logs.json', 'GET', null, dispatch, errorCallback, router);
-}
 export function login(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/login', 'POST', body, dispatch, errorCallback, router);
 }
@@ -57,6 +54,9 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 }
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/app/add`, 'POST', body, dispatch, errorCallback, router);
+}
+export function addAppSimple(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/app/add2`, 'POST', body, dispatch, errorCallback, router);
 }
 export function deleteApp(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/app/${body.appId}`, 'DELETE', body, dispatch, errorCallback, router);
@@ -253,6 +253,9 @@ export function addTeam(body, dispatch, errorCallback, router) {
 }
 export function editTeamMember(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.get('resourceSlug')}/forms/team/${body.get('memberId')}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function transferTeamOwnership(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/transfer-ownership`, 'POST', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

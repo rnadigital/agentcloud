@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import AppForm from 'components/AppForm';
+// import SimpleAppForm from 'components/SimpleAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';

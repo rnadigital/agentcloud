@@ -10,7 +10,7 @@ const AccountContext = createContext({});
 function getTeamAndOrgName(data) {
 	return {
 		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name || 'Loading...',
-		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id === data?.account?.currentTeam)?.name || 'Loading...',
+		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id == data?.account?.currentTeam)?.name || 'Loading...',
 	};
 }
 
@@ -27,7 +27,7 @@ export function AccountWrapper({ children, pageProps }) {
 
 	function refreshAccountContext() {
 		API.getAccount({
-			...(resourceSlug ? { resourceSlug } : {}),
+			...(resourceSlug ? { resourceSlug } : { resourceSlug: sharedState?.account?.currentTeam }),
 			...(memberId ? { memberId } : {}),
 		}, (data) => {
 			const updatedState = {

@@ -6,11 +6,10 @@ import getConnectors from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import { getModelById, getModelsByTeam } from 'db/model';
-import { addTool, editToolsForDatasource } from 'db/tool';
+import { addTool, deleteToolsForDatasource,editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
-import { sendMessage } from 'lib/rabbitmq/send';
 import convertStringToJsonl from 'misc/converttojsonl';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
@@ -18,6 +17,7 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
@@ -748,7 +748,10 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the datasourcein the db
-	await deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+	await Promise.all([
+		deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId),
+		deleteToolsForDatasource(req.params.resourceSlug, req.params.datasourceId),
+	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction	
 
@@ -790,7 +793,7 @@ export async function uploadFileApi(req, res, next) {
 	// Create the datasource in the db
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	await addDatasource({
+	const createdDatasource = await addDatasource({
 	    _id: newDatasourceId,
 	    orgId: toObjectId(res.locals.matchingOrg.id),
 	    teamId: toObjectId(req.params.resourceSlug),
@@ -826,17 +829,24 @@ export async function uploadFileApi(req, res, next) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
-	console.log('NEXT_PUBLIC_STORAGE_PROVIDER: %s', process.env.NEXT_PUBLIC_STORAGE_PROVIDER);
-	// Tell the vector proxy to process it	
-	await sendMessage(JSON.stringify({
+	
+	// Fetch the appropriate message queue provider
+	const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+	
+	// Prepare the message and metadata
+	const message = JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 		file: `/tmp/${filename}`,
-	}), { 
+	});
+	const metadata = { 
 		stream: newDatasourceId.toString(), 
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
-	});
-
+	};
+	
+	// Send the message using the provider
+	await messageQueueProvider.sendMessage(message, metadata);
+	
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
@@ -861,6 +871,9 @@ export async function uploadFileApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
+	return dynamicResponse(req, res, 302, { 
+		datasourceId: createdDatasource.insertedId,
+		name,
+	});
 
 }
