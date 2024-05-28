@@ -80,18 +80,11 @@ impl MessageQueue for RabbitConnect {
                             if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
                                 let mut stream_type: Option<String> = None;
                                 let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
-                                {
-                                    match stream_type_field_value {
-                                        Some(s) => {
-                                            stream_type = Some(s.to_string());
-                                        }
-                                        _ => {}
-                                    }
-                                    let queue = Arc::clone(&queue);
-                                    let qdrant_client = Arc::clone(&qdrant_client);
-                                    let mongo_client = Arc::clone(&mongo_client);
-                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
-                                }
+                                if let Some(s) = stream_type_field_value { stream_type = Some(s.to_string()); }
+                                let queue = Arc::clone(&queue);
+                                let qdrant_client = Arc::clone(&qdrant_client);
+                                let mongo_client = Arc::clone(&mongo_client);
+                                process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
                             }
                         } else {
                             log::warn!("There was no stream_id in message... can not upload data!");
