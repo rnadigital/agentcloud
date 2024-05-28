@@ -70,7 +70,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 				{isOwner && <span className='px-3 py-1 text-sm font-semibold text-white rounded-full bg-orange-500 flex'>
 					<StarIcon className='w-5 h-5 me-1' /> Team Owner
 				</span>}
-				{team && !isOwner && permissions.get(Permissions.REMOVE_TEAM_MEMBER) && <button type='button' onClick={deleteMember}
+				{team && !me && permissions.get(Permissions.REMOVE_TEAM_MEMBER) && <button type='button' onClick={deleteMember}
 					className='rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 absolute right-0 h-full'
 				>
 					<TrashIcon className='h-5 w-5' aria-hidden='true' />
@@ -81,7 +81,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 					</span>
 				</button>}
 				{team && !isOwner && (account._id.toString() === team[0].ownerId.toString() || permissions.get(Permissions.ORG_OWNER)) && <button type='button' onClick={() => openConfirmModal(member)}
-					className='rounded-full bg-blue-600 p-1 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 absolute right-0 h-full'
+					className='rounded-full bg-blue-600 p-1 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 absolute right-8 h-full'
 				>
 					<StarIcon className='h-5 w-5' aria-hidden='true' />
 					<span className='tooltip z-100'>

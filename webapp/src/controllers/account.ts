@@ -109,7 +109,7 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const { emailVerified } = await createAccount(email, name, password, checkoutSession);
+	const { emailVerified } = await createAccount(email, name, password, 'TEAM_MEMBER', checkoutSession);
 	
 	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 

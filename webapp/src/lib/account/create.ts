@@ -13,7 +13,7 @@ import * as ses from 'lib/email/ses';
 import { stripe } from 'lib/stripe';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
+import Roles, { RoleKey } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap,SubscriptionPlan } from 'struct/billing';
@@ -21,7 +21,15 @@ import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 const log = debug('webapp:middleware:lib:account:create');
 
-export default async function createAccount(email: string, name: string, password: string, invite?: boolean, provider?: OAUTH_PROVIDER, profileId?: string | number, checkoutSession?: string)
+export default async function createAccount(
+	email: string,
+	name: string,
+	password: string,
+	roleTemplate: RoleKey,
+	invite?: boolean,
+	provider?: OAUTH_PROVIDER,
+	profileId?: string | number,
+	checkoutSession?: string)
 	: Promise<{ emailVerified: boolean; addedAccount: InsertResult; }> {
 
 	// Create mongo id or new account
@@ -45,7 +53,8 @@ export default async function createAccount(email: string, name: string, passwor
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_MEMBER.base64).array),
+			// [newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
+			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array),
 		},
 	});
 	const orgId = addedOrg.insertedId;
