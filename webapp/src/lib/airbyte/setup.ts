@@ -1,7 +1,7 @@
 import debug from 'debug';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 import fs from 'fs';
+import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 import path from 'path';
 
 dotenv.config({ path: '.env' });
@@ -104,7 +104,7 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 		const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 		const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
 		if (!credentialsContent) {
-			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS)
+			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
 			process.exit(1);
 		}
 		return {

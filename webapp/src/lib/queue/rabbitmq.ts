@@ -28,9 +28,10 @@ class RabbitMQProvider extends MessageQueueProvider {
 	}
 
 	async sendMessage(message: string, metadata: any) {
-		log({ message, metadata });
+		log('message %O', message);
+		log('metadata %O', metadata);
 		try {
-			await this.#channel?.publish('agentcloud', 'key', Buffer.from(message), { headers: metadata });
+			await this.#channel?.publish(process.env.RABBITMQ_EXCHANGE, process.env.RABBITMQ_ROUTING_KEY, Buffer.from(message), { headers: metadata });
 			log('Message sent successfully.');
 		} catch (error) {
 			log(`Error in sending message: ${error.message}`);

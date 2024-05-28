@@ -21,6 +21,8 @@ class GooglePubSubProvider extends MessageQueueProvider {
 	}
 
 	async sendMessage(message: string, metadata: any) {
+		log('message %O', message);
+		log('metadata %O', metadata);
 		const dataBuffer = Buffer.from(message);
 		try {
 			const messageId = await this.#pubsubClient
