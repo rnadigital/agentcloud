@@ -820,7 +820,7 @@ export async function uploadFileApi(req, res, next) {
 	
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
-	await storageProvider.addFile(filename, uploadedFile, uploadedFile.mimetype);
+	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype);
 
 	// Create the collection in qdrant
 	try {

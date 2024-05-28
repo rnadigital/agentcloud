@@ -32,8 +32,8 @@ class GoogleFunctionProvider extends FunctionProvider {
 		const requirementsBuffer = Buffer.from(requirements);
 
 		// Upload the files to GCS
-		await this.#storageProvider.addFile(`${functionPath}/main.py`, codeBuffer, 'text/x-python');
-		await this.#storageProvider.addFile(`${functionPath}/requirements.txt`, requirementsBuffer, 'text/plain');
+		await this.#storageProvider.uploadBuffer(`${functionPath}/main.py`, codeBuffer, 'text/x-python');
+		await this.#storageProvider.uploadBuffer(`${functionPath}/requirements.txt`, requirementsBuffer, 'text/plain');
 
 		// Construct the fully qualified location
 		const location = `projects/${this.#projectId}/locations/${this.#location}`;

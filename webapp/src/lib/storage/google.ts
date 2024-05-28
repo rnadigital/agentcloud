@@ -43,7 +43,7 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
-	async addFile(filename, uploadedFile, contentType, isPublic = false): Promise<any> {
+	async uploadLocalFile(filename, uploadedFile, contentType, isPublic = false): Promise<any> {
 		log('Uploading file %s', filename);
 		const file = this.#storageClient
 			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
