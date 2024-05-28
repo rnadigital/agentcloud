@@ -21,10 +21,6 @@ pub async fn ensure_connection(connection: &mut Connection, connection_details: 
 }
 
 pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
-    println!("RabbitMQ Host: {}", connection_details.host);
-    println!("RabbitMQ Port: {}", connection_details.port);
-    println!("RabbitMQ Username: {}", connection_details.username);
-    println!("RabbitMQ Password: {}", connection_details.password);
     let mut res = Connection::open(
         OpenConnectionArguments::new(
             &connection_details.host,

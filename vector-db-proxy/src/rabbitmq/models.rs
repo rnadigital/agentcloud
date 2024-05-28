@@ -8,7 +8,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::tasks::process_message;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::queue::queuing::Pool;
-use crate::rabbitmq::client::{bind_queue_to_exchange, channel_rabbitmq, connect_rabbitmq};
+use crate::rabbitmq::client::{bind_queue_to_exchange, connect_rabbitmq};
 
 pub struct RabbitConnect {
     pub host: String,
@@ -46,10 +46,8 @@ impl MessageQueue for RabbitConnect {
                     password: global_data.rabbitmq_password.clone(),
                 };
                 let mut connection = connect_rabbitmq(&rabbitmq_connection_details).await;
-                let mut channel = channel_rabbitmq(&connection).await;
-                bind_queue_to_exchange(
+                let channel = bind_queue_to_exchange(
                     &mut connection,
-                    &mut channel,
                     &rabbitmq_connection_details,
                     &global_data.rabbitmq_exchange,
                     &global_data.rabbitmq_stream,
@@ -67,7 +65,7 @@ impl MessageQueue for RabbitConnect {
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, queue_name: &str) {
         let channel = streaming_queue;
         let args = BasicConsumeArguments::new(queue_name, "");
-        loop{
+        loop {
             while let Ok((_, mut messages_rx)) = channel.basic_consume_rx(args.clone()).await {
                 while let Some(message) = messages_rx.recv().await {
                     let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
