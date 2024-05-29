@@ -26,7 +26,7 @@ use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use env_logger::Env;
-use tokio::signal;
+use tokio::{join, signal};
 use tokio::sync::{RwLock};
 
 use crate::init::env_variables::set_all_env_vars;
@@ -65,6 +65,7 @@ pub fn init(config: &mut web::ServiceConfig) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    
     log::info!("Starting Vector DB Proxy APP...");
     let global_data = GLOBAL_DATA.read().await;
     let _ = set_all_env_vars().await;
@@ -119,5 +120,6 @@ async fn main() -> std::io::Result<()> {
             log::info!("Received Ctrl+C, shutting down");
         }
     }
+    // let _ = join!(web_task, subscribe_to_message_stream);
     Ok(())
 }

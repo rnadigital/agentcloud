@@ -5200,6 +5200,7 @@ dependencies = [
  "google-cloud-gax",
  "google-cloud-pubsub",
  "google-cloud-storage",
+ "lazy_static",
  "llm-chain",
  "llm-chain-openai",
  "log",

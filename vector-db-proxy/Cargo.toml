@@ -59,6 +59,7 @@ r2d2_redis = "0.14.0"
 crossbeam = { version = "0.8.4", features = ["crossbeam-channel"] }
 google-cloud-gax = "0.17.0"
 google-cloud-pubsub = "0.25.0"
+lazy_static = "1.4.0"
 
 [features]
 default = ["cuda_rocm"]
