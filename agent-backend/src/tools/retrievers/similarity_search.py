@@ -1,3 +1,4 @@
+from langchain_community.vectorstores import Qdrant
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.embeddings import Embeddings
 from langchain_core.retrievers import BaseRetriever
@@ -13,4 +14,6 @@ class SimilaritySearchRetriever(BaseRetriever):
 
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun):
         embedded_question = self.embedding.embed_query(query)
+        if isinstance(self.vector_store, Qdrant):
+            return self.vector_store.similarity_search_with_score_by_vector(embedded_question, k=4)
         return self.vector_store.similarity_search_by_vector(embedded_question, k=4)

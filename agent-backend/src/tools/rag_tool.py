@@ -82,6 +82,12 @@ class RagTool(GlobalBaseTool):
                        description=tool.description,
                        retriever=retriever_factory(tool, vector_store, embedding, llm))
 
+    def __init__(self, **kwargs):
+        # Monkey-patching `similarity_search` because that's what's called by
+        # self_query and multi_query retrievers internally, but we want scores too
+        Qdrant.similarity_search = Qdrant.similarity_search_with_score
+        super().__init__(**kwargs)
+
     @staticmethod
     def extract_query_value(query):
         res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', query)
@@ -94,3 +100,7 @@ class RagTool(GlobalBaseTool):
         print("query_value => ", query_value)
         """ Returns search results via configured retriever """
         return self.retriever.run(query_value)
+
+    def __del__(self):
+        # Restore to earlier state
+        Qdrant.similarity_search = Qdrant.similarity_search
