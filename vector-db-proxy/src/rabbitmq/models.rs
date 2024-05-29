@@ -76,37 +76,33 @@ impl MessageQueue for RabbitConnect {
                         let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                         let _ = channel.basic_ack(args).await;
                         let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-                        println!("RabbitMQ Message Headers: {:?}", headers);
-                        if let Some(stream) = headers.get(&ShortStr::try_from("stream").unwrap()) {
-                            let stream_string: String = stream.to_string();
-                            let stream_split: Vec<&str> = stream_string.split('_').collect();
-                            let datasource_id = stream_split.to_vec()[0];
-                            if let Some(msg) = message.content {
-                                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
-                                    let mut stream_type: Option<String> = None;
-                                    let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
-                                    if let Some(s) = stream_type_field_value {
-                                        stream_type = Some(s.to_string());
+                        match headers.get(&ShortStr::try_from("stream").unwrap()) {
+                            Some(stream) => {
+                                let stream_string: String = stream.to_string();
+                                let stream_split: Vec<&str> = stream_string.split('_').collect();
+                                let datasource_id = stream_split.to_vec()[0];
+                                if let Some(msg) = message.content {
+                                    if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                                        let mut stream_type: Option<String> = None;
+                                        let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
+                                        if let Some(s) = stream_type_field_value { stream_type = Some(s.to_string()); }
+                                        let queue = Arc::clone(&queue);
+                                        let qdrant_client = Arc::clone(&qdrant_client);
+                                        let mongo_client = Arc::clone(&mongo_client);
+                                        process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
                                     }
-                                    let queue = Arc::clone(&queue);
-                                    let qdrant_client = Arc::clone(&qdrant_client);
-                                    let mongo_client = Arc::clone(&mongo_client);
-                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
                                 }
-                            } else {
-                                warn!("There was no stream_id in message... cannot upload data!");
                             }
+                            None => { warn!("There was no stream ID present in message headers...can not proceed!") }
                         }
                     }
                 }
                 Err(e) => {
-                    error!("Consumption error: {}", e);
-                    // Reconnect on error
+                    error!("There was an error when consuming messages from rabbitMQ. Error: {}", e);
                     break; // Break out of the loop to reconnect
                 }
             }
         }
-
         // Reconnect on error
         self.connect(MessageQueueProvider::RABBITMQ).await;
         // Sleep before retrying to avoid tight loop in case of persistent issues
