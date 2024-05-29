@@ -1,5 +1,6 @@
 'use strict';
 
+import ButtonSpinner from 'components/ButtonSpinner'; // Import ButtonSpinner
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
@@ -12,7 +13,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { DatasourceStatus } from 'struct/datasource';
-import { BaseOpenAPIParameters, Retriever,ToolType } from 'struct/tool';
+import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
 
 import * as API from '../api';
 import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
@@ -36,7 +37,7 @@ const authorizationMethods = [
 export default function ToolForm({ tool = {}, credentials = [], datasources=[], editing, callback, compact }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
+	const { account, csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [toolState, setToolState] = useState(tool);
@@ -50,8 +51,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
+	const [submitting, setSubmitting] = useState(false); // Add submitting state
 
-	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
+	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
 	useEffect(() => {
@@ -60,10 +62,10 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 		}
 	}, [toolRetriever]);
 	const [toolTimeWeightField, setToolTimeWeightField] = useState(tool?.retriever_config?.timeWeightField || null);
-	
+
 	const [authenticationMethodState, setAuthenticationMethod] = useState(authenticationMethods[0].value);
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
-	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); //todo: array like ^ ?
+	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); // todo: array like ^ ?
 	const [searchTerm, setSearchTerm] = useState('');
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
@@ -79,105 +81,113 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 
 	const initialDatasource = datasources.find(d => d._id === tool?.datasourceId);
-	const [datasourceState, setDatasourceState] = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
+	const [datasourceState, setDatasourceState]: any = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
 	const currentDatasource = datasources.find(d => d._id === datasourceState?.value);
-	
+
 	function handleSearchChange(event) {
 		setSearchTerm(event.target.value.toLowerCase());
 	}
 
 	async function toolPost(e) {
 		e.preventDefault();
-		const body = {
-			_csrf: e.target._csrf.value,
-			resourceSlug,
-			name: toolName,
-			type: toolType,
-			data: null,
-			schema: null,
-			datasourceId: datasourceState ? datasourceState.value : null,
-			description: toolDescription,
-			retriever: toolRetriever,
-			retriever_config: {
-				...(tool?.retriever_config||{}),
-				timeWeightField: toolTimeWeightField,
-				decay_rate: toolDecayRate,
-			}, //TODO
-		};
-		switch (toolType) {
-			case ToolType.API_TOOL:
-				body.schema = toolAPISchema;
-				body.data = {
-					code: '',
-					description: toolDescription,
-					parameters: {
-						type: 'object',
-						required: parameters.filter(x => x.required).map(x => x.name.trim()),
-						properties: parameters.reduce((acc, par) => {
-							acc[par.name.trim()] = {
-								type: par.type,
-								description: par.description,
-							};
-							return acc;
-						}, {}),
-						openAPIMatchKey: selectedOpenAPIMatchKey
-					},
-				};
-				break;
-			case ToolType.FUNCTION_TOOL:
-				body.data = {
-					code: toolCode,
-					requirements: requirementsTxt,
-					description: toolDescription,
-					parameters: {
-						type: 'object',
-						required: parameters.filter(x => x.required).map(x => x.name.trim()),
-						properties: parameters.reduce((acc, par) => {
-							acc[par.name.trim()] = {
-								type: par.type,
-								description: par.description,
-							};
-							return acc;
-						}, {}),
-					},
-				};
-				break;
-			case ToolType.RAG_TOOL:
-				//TODO: anything? or nah
-				break;
-			default:
-				return;
-		}
-		if (editing) {
-			await API.editTool(toolState._id, {
-				...body,
-				toolId: toolState._id,
-			}, () => {
-				toast.success('Tool Updated');
-			}, (err) => { toast.error(err); }, null);
-		} else {
-			const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
-			callback && addedTool && callback(addedTool._id, body);
+		setSubmitting(true); // Set submitting to true
+		try {
+			const body = {
+				_csrf: e.target._csrf.value,
+				resourceSlug,
+				name: toolName,
+				type: toolType,
+				data: null,
+				schema: null,
+				datasourceId: datasourceState ? datasourceState.value : null,
+				description: toolDescription,
+				retriever: toolRetriever,
+				retriever_config: {
+					...(tool?.retriever_config || {}),
+					timeWeightField: toolTimeWeightField,
+					decay_rate: toolDecayRate,
+				}, // TODO
+			};
+			switch (toolType) {
+				case ToolType.API_TOOL:
+					body.schema = toolAPISchema;
+					body.data = {
+						code: '',
+						description: toolDescription,
+						parameters: {
+							type: 'object',
+							required: parameters.filter(x => x.required).map(x => x.name.trim()),
+							properties: parameters.reduce((acc, par) => {
+								acc[par.name.trim()] = {
+									type: par.type,
+									description: par.description,
+								};
+								return acc;
+							}, {}),
+							openAPIMatchKey: selectedOpenAPIMatchKey
+						},
+					};
+					break;
+				case ToolType.FUNCTION_TOOL:
+					body.data = {
+						code: toolCode,
+						requirements: requirementsTxt,
+						description: toolDescription,
+						parameters: {
+							type: 'object',
+							required: parameters.filter(x => x.required).map(x => x.name.trim()),
+							properties: parameters.reduce((acc, par) => {
+								acc[par.name.trim()] = {
+									type: par.type,
+									description: par.description,
+								};
+								return acc;
+							}, {}),
+						},
+					};
+					break;
+				case ToolType.RAG_TOOL:
+					// TODO: anything? or nah
+					break;
+				default:
+					return;
+			}
+			if (editing) {
+				await API.editTool(toolState._id, {
+					...body,
+					toolId: toolState._id,
+				}, () => {
+					toast.success('Tool Updated');
+				}, (err) => {
+					toast.error(err);
+					setSubmitting(false);
+				}, null);
+			} else {
+				const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
+				callback && addedTool && callback(addedTool._id, body);
+			}
+		} finally {
+			setSubmitting(false); // Set submitting to false
 		}
 	}
 
 	async function openApiToParams() {
-		const apiOptions: any = {}; //TODO: see if openapi client axios has a typing
+		const apiOptions: any = {}; // TODO: see if openapi client axios has a typing
 		let loadedDocument;
 		if (importValue) {
-			apiOptions.definition = importValue; //URL import
+			apiOptions.definition = importValue; // URL import
 		} else if (toolAPISchema) {
 			try {
-				//Try json parse (detect json schema)
+				// Try json parse (detect json schema)
 				loadedDocument = JSON.parse(toolAPISchema);
 			} catch (e) {
-				console.warn(e); //just a warning
-				//Try yaml parse (detect yaml schema)
+				console.warn(e); // just a warning
+				// Try yaml parse (detect yaml schema)
 				try {
 					loadedDocument = yaml.load(toolAPISchema) as Document;
-		        } catch (e2) {
+				} catch (e2) {
 					console.warn(e2);
-		        }
+				}
 			}
 			if (!loadedDocument) {
 				setFunctionsList(null);
@@ -212,7 +222,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 				if (op.summary) {
 					return true;
 				}
-				newInvalidFuns+=1;
+				newInvalidFuns += 1;
 				return false;
 			})
 			.forEach(op => {
@@ -230,17 +240,17 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 						description: 'The request method, e.g. GET or POST',
 					}
 				};
-				const functionProps = op?.parameters?.reduce((acc, par: any) => {
+				const functionProps = op?.parameters?.reduce((acc, par) => {
 					acc[par.name] = {
 						type: par.schema.type,
-						description: `${par.description||''}, e.g. ${par.schema.example}`,
+						description: `${par.description || ''}, e.g. ${par.schema.example}`,
 					};
 					return acc;
 				}, baseParams) || baseParams;
 				funs.push({
 					name: op.summary,
-					description: `${op.description ? (op.description+'.\n\n') : ''}The ${BaseOpenAPIParameters.PATH} for this function is "${op.path}",` +
-					` the ${BaseOpenAPIParameters.METHOD} is "${op.method}", and the ${BaseOpenAPIParameters.BASE_URL} is "${client.api.instance.defaults.baseURL}".`,
+					description: `${op.description ? (op.description + '.\n\n') : ''}The ${BaseOpenAPIParameters.PATH} for this function is "${op.path}",` +
+						` the ${BaseOpenAPIParameters.METHOD} is "${op.method}", and the ${BaseOpenAPIParameters.BASE_URL} is "${client.api.instance.defaults.baseURL}".`,
 					parameters: {
 						type: 'object',
 						properties: functionProps,
@@ -293,463 +303,448 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 		};
 	}, [searchTerm, functionsList]);
 
-	return (<form onSubmit={toolPost}>
-		<input
-			type='hidden'
-			name='_csrf'
-			value={csrf}
-		/>
-		<div className='space-y-12'>
-		
-			<div className='space-y-6'>
-				<div>
-					<label className='text-base font-semibold text-gray-900'>Name</label>
+	return (
+		<form onSubmit={toolPost}>
+			<input
+				type='hidden'
+				name='_csrf'
+				value={csrf}
+			/>
+			<div className='space-y-12'>
+
+				<div className='space-y-6'>
 					<div>
-						<input
-							required
-							readOnly={isBuiltin}
-							type='text'
-							name='toolName'
-							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-							onChange={e => setToolName(e.target.value)}
-							value={toolName}
-						/>
-						{/*<p className='text-sm text-gray-900'>
+						<label className='text-base font-semibold text-gray-900'>Name</label>
+						<div>
+							<input
+								required
+								readOnly={isBuiltin}
+								type='text'
+								name='toolName'
+								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								onChange={e => setToolName(e.target.value)}
+								value={toolName}
+							/>
+							{/*<p className='text-sm text-gray-900'>
 							{toolName && `Function name: ${toSnakeCase(toolName)}`}
 						</p>*/}
+						</div>
 					</div>
-				</div>
-				
-				{!isBuiltin && <div>
-					<label className='text-base font-semibold text-gray-900'>Tool Type</label>
+
+					{!isBuiltin && <div>
+						<label className='text-base font-semibold text-gray-900'>Tool Type</label>
+						<div>
+							<select
+								required
+								name='toolType'
+								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								value={toolType}
+								onChange={(e) => setToolType(e.target.value as ToolType)}
+							>
+								<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
+								<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
+								<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>
+							</select>
+						</div>
+					</div>}
+
 					<div>
-						<select
-							required
-							name='toolType'
-							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-							value={toolType}
-							onChange={(e) => setToolType(e.target.value as ToolType)}
-						>
-							<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
-							<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-							<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>
-						</select>
-					</div>
-				</div>}
-
-				<div>
-					<label className='text-base font-semibold text-gray-900'>Description</label>
-					<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
-					<div>
-						<textarea
-							required
-							readOnly={isBuiltin}
-							name='toolName'
-							className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-							onChange={e => setToolDescription(e.target.value)}
-							rows={3}
-							value={toolDescription}
-						/>
-					</div>
-				</div>
-
-				{toolType === ToolType.RAG_TOOL && <>
-					<div className='sm:col-span-12'>
-						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Datasources (Optional)
-						</label>
-						
-						<div className='mt-2'>
-							<Select
-								isSearchable
-					            primaryColor={'indigo'}
-					            classNames={{
-									menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-									menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-									list: 'dark:bg-slate-700',
-									listGroupLabel: 'dark:bg-slate-700',
-									listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-					            }}
-					            value={datasourceState}
-					            onChange={(v: any) => {
-					            	setDatasourceState(v);
-					            	setToolRetriever(Retriever.SELF_QUERY);
-				            	}}
-					            options={datasources
-					            	// .filter(t => t?.status === DatasourceStatus.READY)
-					            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
-					            formatOptionLabel={formatDatasourceOptionLabel}
-					        />
-						</div>
-
-						<RetrievalStrategyComponent
-						    toolRetriever={toolRetriever}
-						    setToolRetriever={setToolRetriever}
-						    toolDecayRate={toolDecayRate}
-						    setToolDecayRate={setToolDecayRate}
-							toolTimeWeightField={toolTimeWeightField}
-							setToolTimeWeightField={setToolTimeWeightField}
-							schema={currentDatasource?.connectionSettings?.syncCatalog}
-						    currentDatasource={currentDatasource}
-						/>
-
-					</div>			
-				</>}
-
-				{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
-					<div className='border-gray-900/10'>
-						<div className='flex justify-between'>
-							<h2 className='text-base font-semibold leading-7 text-gray-900'>
-								Python code
-							</h2>
-						</div>
-						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-							<div className='col-span-full'>
-								<div className='mt-2'>
-									<InfoAlert message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the parameters specified below (if any)</p>} />
-									<ScriptEditor
-										height='40em'
-										code={toolCode}
-										setCode={setToolCode}
-										editorOptions={{
-											stopRenderingLineAfter: 1000,
-										}}
-										onInitializePane={onInitializePane}
-									/>
-								</div>
-							</div>
+						<label className='text-base font-semibold text-gray-900'>Description</label>
+						<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
+						<div>
+							<textarea
+								required
+								readOnly={isBuiltin}
+								name='toolName'
+								className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+								onChange={e => setToolDescription(e.target.value)}
+								rows={3}
+								value={toolDescription}
+							/>
 						</div>
 					</div>
-					<div className='border-gray-900/10'>
-						<div className='flex justify-between'>
-							<h2 className='text-base font-semibold leading-7 text-gray-900'>
-								requirements.txt
-							</h2>
-						</div>
-						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-							<div className='col-span-full'>
-								<div className='mt-2'>
-									<ScriptEditor
-										height='10em'
-										code={requirementsTxt}
-										setCode={setRequirementsTxt}
-										editorOptions={{
-											stopRenderingLineAfter: 1000,
-										}}
-										onInitializePane={onInitializePane}
-									/>
-								</div>
-							</div>
-						</div>
-					</div>					
 
-				</>}
+					{toolType === ToolType.RAG_TOOL && <>
+						<div className='sm:col-span-12'>
+							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Datasources (Optional)
+							</label>
 
-				{/* api call tool */}
-				{toolType === ToolType.API_TOOL && <>
-					<div className='border-gray-900/10'>
-						<div className='flex justify-between'>
-							<h2 className='text-base font-semibold leading-7 text-gray-900'>
-								Schema
-							</h2>
-							<span>
-								{!importOpen && <button
-									className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-									onClick={(e) => {
-										e.preventDefault();
-										setImportOpen(true);
+							<div className='mt-2'>
+								<Select
+									isSearchable
+									primaryColor={'indigo'}
+									classNames={{
+										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 									}}
-								>Import from URL</button>}
-								{importOpen && <div className='flex items-center gap-2'>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										onChange={e => setImportValue(e.target.value)}
-										value={importValue}
-										placeholder='https://api.example.com/specification.json'
-									/>
-									<button
+									value={datasourceState}
+									onChange={(v) => {
+										setDatasourceState(v);
+										setToolRetriever(Retriever.SELF_QUERY);
+									}}
+									options={datasources
+										// .filter(t => t?.status === DatasourceStatus.READY)
+										.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
+									formatOptionLabel={formatDatasourceOptionLabel}
+								/>
+							</div>
+
+							<RetrievalStrategyComponent
+								toolRetriever={toolRetriever}
+								setToolRetriever={setToolRetriever}
+								toolDecayRate={toolDecayRate}
+								setToolDecayRate={setToolDecayRate}
+								toolTimeWeightField={toolTimeWeightField}
+								setToolTimeWeightField={setToolTimeWeightField}
+								schema={currentDatasource?.connectionSettings?.syncCatalog}
+								currentDatasource={currentDatasource}
+							/>
+
+						</div>
+					</>}
+
+					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
+						<div className='border-gray-900/10'>
+							<div className='flex justify-between'>
+								<h2 className='text-base font-semibold leading-7 text-gray-900'>
+									Python code
+								</h2>
+							</div>
+							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+								<div className='col-span-full'>
+									<div className='mt-2'>
+										<InfoAlert message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the parameters specified below (if any)</p>} />
+										<ScriptEditor
+											height='40em'
+											code={toolCode}
+											setCode={setToolCode}
+											editorOptions={{
+												stopRenderingLineAfter: 1000,
+											}}
+											onInitializePane={onInitializePane}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div className='border-gray-900/10'>
+							<div className='flex justify-between'>
+								<h2 className='text-base font-semibold leading-7 text-gray-900'>
+									requirements.txt
+								</h2>
+							</div>
+							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+								<div className='col-span-full'>
+									<div className='mt-2'>
+										<ScriptEditor
+											height='10em'
+											code={requirementsTxt}
+											setCode={setRequirementsTxt}
+											editorOptions={{
+												stopRenderingLineAfter: 1000,
+											}}
+											onInitializePane={onInitializePane}
+										/>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</>}
+
+					{/* api call tool */}
+					{toolType === ToolType.API_TOOL && <>
+						<div className='border-gray-900/10'>
+							<div className='flex justify-between'>
+								<h2 className='text-base font-semibold leading-7 text-gray-900'>
+									Schema
+								</h2>
+								<span>
+									{!importOpen && <button
 										className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-										onClick={async (e) => {
-											e.preventDefault();
-											openApiToParams();
-										}}
-									>Import</button>
-									<button
-										className='rounded-md bg-slate-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 										onClick={(e) => {
 											e.preventDefault();
-											setImportOpen(false);
-											setImportValue('');
-											setFunctionsList(null);
-											setInvalidFuns(0);
-											setSelectedOpenAPIMatchKey(null);
+											setImportOpen(true);
 										}}
-									>Cancel</button>
-								</div>}
-							</span>
-						</div>
-						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-							<div className='col-span-full'>
-								<div className='mt-2'>
-									<ScriptEditor
-										code={toolAPISchema}
-										setCode={setToolAPISchema}
-										editorOptions={{
-											stopRenderingLineAfter: 1000,
-										}}
-										onInitializePane={onInitializePane}
-									/>
+									>Import from URL</button>}
+									{importOpen && <div className='flex items-center gap-2'>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+											onChange={e => setImportValue(e.target.value)}
+											value={importValue}
+											placeholder='https://api.example.com/specification.json'
+										/>
+										<button
+											className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+											onClick={async (e) => {
+												e.preventDefault();
+												openApiToParams();
+											}}
+										>Import</button>
+										<button
+											className='rounded-md bg-slate-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+											onClick={(e) => {
+												e.preventDefault();
+												setImportOpen(false);
+												setImportValue('');
+												setFunctionsList(null);
+												setInvalidFuns(0);
+												setSelectedOpenAPIMatchKey(null);
+											}}
+										>Cancel</button>
+									</div>}
+								</span>
+							</div>
+							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+								<div className='col-span-full'>
+									<div className='mt-2'>
+										<ScriptEditor
+											code={toolAPISchema}
+											setCode={setToolAPISchema}
+											editorOptions={{
+												stopRenderingLineAfter: 1000,
+											}}
+											onInitializePane={onInitializePane}
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<div className='border-gray-900/10'>
-						<div>
-							<label className='text-base font-semibold text-gray-900'>Authentication</label>
-							<fieldset className='mt-2'>
-								<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
-									{authenticationMethods.map((authenticationMethod) => (
-										<div key={authenticationMethod.value} className='flex items-center'>
-											<input
-												id={authenticationMethod.value}
-												value={authenticationMethod.value}
-												name='authenticationMethod'
-												type='radio'
-												onChange={e => setAuthenticationMethod(e.target.value)}
-												defaultChecked={authenticationMethod.value === authenticationMethodState}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											/>
-											<label htmlFor={authenticationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
-												{authenticationMethod.label}
-											</label>
-										</div>
-									))}
-								</div>
-							</fieldset>
-						</div>
-
-						{/* api key authentication */}
-						{authenticationMethodState === 'api' && <div className='mt-4 flex flex-col space-y-3'>
+						<div className='border-gray-900/10'>
 							<div>
-								<label className='text-base font-semibold text-gray-900'>API Key</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Authorization</label>
+								<label className='text-base font-semibold text-gray-900'>Authentication</label>
 								<fieldset className='mt-2'>
 									<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
-										{authorizationMethods.map((authorizationMethod) => (
-											<div key={authorizationMethod.value} className='flex items-center'>
+										{authenticationMethods.map((authenticationMethod) => (
+											<div key={authenticationMethod.value} className='flex items-center'>
 												<input
-													id={authorizationMethod.value}
-													value={authorizationMethod.value}
-													name='authorizationMethod'
+													id={authenticationMethod.value}
+													value={authenticationMethod.value}
+													name='authenticationMethod'
 													type='radio'
-													onChange={e => setAuthorizationMethod(e.target.value)}
-													defaultChecked={authorizationMethod.value === authorizationMethodState}
+													onChange={e => setAuthenticationMethod(e.target.value)}
+													defaultChecked={authenticationMethod.value === authenticationMethodState}
 													className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
 												/>
-												<label htmlFor={authorizationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
-													{authorizationMethod.label}
+												<label htmlFor={authenticationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+													{authenticationMethod.label}
 												</label>
 											</div>
 										))}
 									</div>
 								</fieldset>
 							</div>
-							{authorizationMethodState === 'custom' && <div>
-								<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										placeholder='X-Api-Token'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>}
-						</div>}
 
-						{/* oauth authentication */}
-						{authenticationMethodState === 'oauth' && <div className='mt-4 flex flex-col space-y-3'>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Client ID</label>
+							{/* api key authentication */}
+							{authenticationMethodState === 'api' && <div className='mt-4 flex flex-col space-y-3'>
 								<div>
-									<input
-										type='password'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Client Secret</label>
-								<div>
-									<input
-										type='password'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Authorization URL</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Token URL</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Scope</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
-								</div>
-							</div>
-							<div>
-								<label className='text-base font-semibold text-gray-900'>Token Exchange Method</label>
-								<fieldset className='mt-2'>
-									<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
-										<div className='flex items-center'>
-											<input
-												id='post'
-												value='post'
-												name='tokenExchangeMethod'
-												type='radio'
-												onChange={e => setAuthorizationMethod(e.target.value)}
-												defaultChecked={tokenExchangeMethod === 'post'}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											/>
-											<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
-												POST request (default)
-											</label>
-										</div>
-										<div className='flex items-center'>
-											<input
-												id='basic'
-												value='basic'
-												name='tokenExchangeMethod'
-												type='radio'
-												onChange={e => setAuthorizationMethod(e.target.value)}
-												defaultChecked={tokenExchangeMethod === 'basic'}
-												className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
-											/>
-											<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
-												Basic authorization header
-											</label>
-										</div>
+									<label className='text-base font-semibold text-gray-900'>API Key</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
 									</div>
-								</fieldset>
-							</div>
-							{authorizationMethodState === 'custom' && <div>
-								<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
-								<div>
-									<input
-										type='text'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
-										placeholder='X-Api-Token'
-										// onChange={e => setImportValue(e.target.value)}
-										// value={importValue}
-									/>
 								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Authorization</label>
+									<fieldset className='mt-2'>
+										<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+											{authorizationMethods.map((authorizationMethod) => (
+												<div key={authorizationMethod.value} className='flex items-center'>
+													<input
+														id={authorizationMethod.value}
+														value={authorizationMethod.value}
+														name='authorizationMethod'
+														type='radio'
+														onChange={e => setAuthorizationMethod(e.target.value)}
+														defaultChecked={authorizationMethod.value === authorizationMethodState}
+														className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+													/>
+													<label htmlFor={authorizationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+														{authorizationMethod.label}
+													</label>
+												</div>
+											))}
+										</div>
+									</fieldset>
+								</div>
+								{authorizationMethodState === 'custom' && <div>
+									<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+											placeholder='X-Api-Token'
+										/>
+									</div>
+								</div>}
 							</div>}
-						</div>}					
-						
-					</div>
-				</>}
 
-				{functionsList && <div>
-					<div className='mb-4'>
-						{/* TODO: add a debounce to this filter/search */}
-						<label className='text-base font-semibold text-gray-900'>Select an OpenAPI Endpoint:</label>
-						<div className='pt-2'>
-							<input
-								type='text' 
-								placeholder='Search by name or description...' 
-								onChange={handleSearchChange}
-								value={searchTerm}
-								className='p-2 border rounded'
-							/>
-							{invalidFuns > 0 && <span className='ms-4 rounded-md bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800'>
-								{invalidFuns} endpoint{invalidFuns > 1 ? 's are not shown because they are' : ' is not shown because it is'} missing a <code className='text-xs'>name</code> property in the api definition
-							</span>}
+							{/* oauth authentication */}
+							{authenticationMethodState === 'oauth' && <div className='mt-4 flex flex-col space-y-3'>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Client ID</label>
+									<div>
+										<input
+											type='password'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
+									</div>
+								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Client Secret</label>
+									<div>
+										<input
+											type='password'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
+									</div>
+								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Authorization URL</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
+									</div>
+								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Token URL</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
+									</div>
+								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Scope</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+										/>
+									</div>
+								</div>
+								<div>
+									<label className='text-base font-semibold text-gray-900'>Token Exchange Method</label>
+									<fieldset className='mt-2'>
+										<div className='space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0'>
+											<div className='flex items-center'>
+												<input
+													id='post'
+													value='post'
+													name='tokenExchangeMethod'
+													type='radio'
+													onChange={e => setAuthorizationMethod(e.target.value)}
+													defaultChecked={tokenExchangeMethod === 'post'}
+													className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+												/>
+												<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+													POST request (default)
+												</label>
+											</div>
+											<div className='flex items-center'>
+												<input
+													id='basic'
+													value='basic'
+													name='tokenExchangeMethod'
+													type='radio'
+													onChange={e => setAuthorizationMethod(e.target.value)}
+													defaultChecked={tokenExchangeMethod === 'basic'}
+													className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
+												/>
+												<label htmlFor='post' className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+													Basic authorization header
+												</label>
+											</div>
+										</div>
+									</fieldset>
+								</div>
+								{authorizationMethodState === 'custom' && <div>
+									<label className='text-base font-semibold text-gray-900'>Custom Header Name</label>
+									<div>
+										<input
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'
+											placeholder='X-Api-Token'
+										/>
+									</div>
+								</div>}
+							</div>}
+
 						</div>
-					</div>
-					<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
-						{filteredFunctionsList && filteredFunctionsList
-							// .filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm))
-							.map((item, index) => (
-								<FunctionCard
-									key={`functionList_${index}`}
-									{...item}
-									highlighted={selectedOpenAPIMatchKey === item.openAPIMatchKey}
-									onClickFunction={() => {
-										// setFunctionList(null);
-										setSelectedOpenAPIMatchKey(item?.openAPIMatchKey);
-										setToolName(item?.name);
-										setToolDescription(item?.description);
-										const functionParameters = item?.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
-											const [parname, par]: any = entry;
-											acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
-											return acc;
-										}, []);
-										setParameters(functionParameters || []);
-									}}
+					</>}
+
+					{functionsList && <div>
+						<div className='mb-4'>
+							{/* TODO: add a debounce to this filter/search */}
+							<label className='text-base font-semibold text-gray-900'>Select an OpenAPI Endpoint:</label>
+							<div className='pt-2'>
+								<input
+									type='text'
+									placeholder='Search by name or description...'
+									onChange={handleSearchChange}
+									value={searchTerm}
+									className='p-2 border rounded'
 								/>
-							))
-						}
-					</div>
-				</div>}
+								{invalidFuns > 0 && <span className='ms-4 rounded-md bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800'>
+									{invalidFuns} endpoint{invalidFuns > 1 ? 's are not shown because they are' : ' is not shown because it is'} missing a <code className='text-xs'>name</code> property in the api definition
+								</span>}
+							</div>
+						</div>
+						<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
+							{filteredFunctionsList && filteredFunctionsList
+								.map((item, index) => (
+									<FunctionCard
+										key={`functionList_${index}`}
+										{...item}
+										highlighted={selectedOpenAPIMatchKey === item.openAPIMatchKey}
+										onClickFunction={() => {
+											setSelectedOpenAPIMatchKey(item?.openAPIMatchKey);
+											setToolName(item?.name);
+											setToolDescription(item?.description);
+											const functionParameters = item?.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
+												const [parname, par]: any = entry;
+												acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
+												return acc;
+											}, []);
+											setParameters(functionParameters || []);
+										}}
+									/>
+								))
+							}
+						</div>
+					</div>}
 
-				{toolType !== ToolType.RAG_TOOL && <ParameterForm readonly={isBuiltin} parameters={parameters} setParameters={setParameters} />}
+					{toolType !== ToolType.RAG_TOOL && <ParameterForm readonly={isBuiltin} parameters={parameters} setParameters={setParameters} />}
 
+				</div>
 			</div>
-		</div>
-		<div className='mt-6 flex items-center justify-between gap-x-6'>
-			{!compact && <Link
-				className='text-sm font-semibold leading-6 text-gray-900'
-				href={`/${resourceSlug}/tools`}
-			>
-				Back
-			</Link>}
-			{!isBuiltin && <button
-				type='submit'
-				className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-			>
-				Save
-			</button>}
-		</div>
-	</form>);
-
+			<div className='mt-6 flex items-center justify-between gap-x-6'>
+				{!compact && <Link
+					className='text-sm font-semibold leading-6 text-gray-900'
+					href={`/${resourceSlug}/tools`}
+				>
+					Back
+				</Link>}
+				{!isBuiltin && <button
+					type='submit'
+					disabled={submitting}
+					className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+				>
+					{submitting && <ButtonSpinner className='mr-2' />}
+					Save
+				</button>}
+			</div>
+		</form>
+	);
 }
