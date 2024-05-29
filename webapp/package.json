@@ -35,6 +35,7 @@
     "ajv": "^8.12.0",
     "amqplib": "^0.10.3",
     "apidoc": "^1.2.0",
+    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",

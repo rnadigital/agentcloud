@@ -6,6 +6,7 @@ import { getAssetById } from 'db/asset';
 import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
+import FunctionProviderFactory from 'lib/function';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { Retriever,ToolType, ToolTypes } from 'struct/tool';
@@ -133,6 +134,15 @@ export async function addToolApi(req, res, next) {
 
 	const foundIcon = await getAssetById(iconId);
 
+	const toolData = {
+		...data,
+		builtin: false,
+		name: (type as ToolType) === ToolType.API_TOOL
+			? 'openapi_request'
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+				? toSnakeCase(name)
+				: name),
+	};
 	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -143,20 +153,18 @@ export async function addToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 	 	schema: schema,
-		data: {
-			...data,
-			builtin: false,
-			name: (type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: ((type as ToolType) === ToolType.FUNCTION_TOOL 
-					? toSnakeCase(name)
-					: name),
-		},
+		data: toolData,
 		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
 		} : null,
 	});
+
+	if (type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		const addedToolId = addedTool.insertedId.toString();
+		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, addedToolId);
+	}
 
 	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
 
@@ -178,6 +186,15 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
+	const toolData = {
+		...data,
+		builtin: false,
+		name: (type as ToolType) === ToolType.API_TOOL
+			? 'openapi_request'
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+				? toSnakeCase(name)
+				: name),
+	};
 	await editTool(req.params.resourceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
@@ -186,16 +203,13 @@ export async function editToolApi(req, res, next) {
 	 	datasourceId: toObjectId(datasourceId),
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
-		data: {
-			...data,
-			builtin: false,
-			name: (type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: ((type as ToolType) === ToolType.FUNCTION_TOOL 
-					? toSnakeCase(name)
-					: name),
-		},
+		data: toolData,
 	});
+
+	if (type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, toolId);
+	}
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });
 

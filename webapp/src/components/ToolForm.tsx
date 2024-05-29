@@ -45,6 +45,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [importOpen, setImportOpen] = useState(false);
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
+	const [requirementsTxt, setRequirementsTxt] = useState(tool?.data?.requirements || '');
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
@@ -126,6 +127,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 			case ToolType.FUNCTION_TOOL:
 				body.data = {
 					code: toolCode,
+					requirements: requirementsTxt,
 					description: toolDescription,
 					parameters: {
 						type: 'object',
@@ -345,7 +347,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 							name='toolName'
 							className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 							onChange={e => setToolDescription(e.target.value)}
-							rows={8}
+							rows={3}
 							value={toolDescription}
 						/>
 					</div>
@@ -404,7 +406,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 							<div className='col-span-full'>
 								<div className='mt-2'>
+									<InfoAlert message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the parameters specified below (if any)</p>} />
 									<ScriptEditor
+										height='40em'
 										code={toolCode}
 										setCode={setToolCode}
 										editorOptions={{
@@ -415,7 +419,30 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 								</div>
 							</div>
 						</div>
+					</div>
+					<div className='border-gray-900/10'>
+						<div className='flex justify-between'>
+							<h2 className='text-base font-semibold leading-7 text-gray-900'>
+								requirements.txt
+							</h2>
+						</div>
+						<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+							<div className='col-span-full'>
+								<div className='mt-2'>
+									<ScriptEditor
+										height='10em'
+										code={requirementsTxt}
+										setCode={setRequirementsTxt}
+										editorOptions={{
+											stopRenderingLineAfter: 1000,
+										}}
+										onInitializePane={onInitializePane}
+									/>
+								</div>
+							</div>
+						</div>
 					</div>					
+
 				</>}
 
 				{/* api call tool */}
