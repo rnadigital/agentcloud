@@ -3,7 +3,6 @@
 #![allow(non_snake_case)]
 #![allow(unused_assignments)]
 
-
 mod data;
 mod errors;
 mod gcp;
@@ -31,7 +30,7 @@ use tokio::join;
 use tokio::signal::unix::{signal, SignalKind};
 #[cfg(windows)]
 use tokio::signal::windows::ctrl_c;
-use tokio::sync::{RwLock};
+use tokio::sync::{RwLock, watch};
 
 use crate::init::env_variables::set_all_env_vars;
 use crate::rabbitmq::consume::subscribe_to_queue;
@@ -108,44 +107,58 @@ async fn main() -> std::io::Result<()> {
         &global_data.rabbitmq_routing_key,
     )
         .await;
-    let rabbitmq_stream = tokio::spawn(async move {
-        let _ = subscribe_to_queue(
-            Arc::clone(&qdrant_connection_for_rabbitmq),
-            Arc::clone(&queue),
-            Arc::clone(&mongo_client_clone),
-            // Arc::clone(&redis_connection_pool),
-            &channel,
-            &global_data.rabbitmq_stream,
-        )
+
+    let (shutdown_tx, shutdown_rx) = watch::channel(false);
+
+    let rabbitmq_stream = {
+        let shutdown_rx = shutdown_rx.clone();
+        tokio::spawn(async move {
+            let _ = subscribe_to_queue(
+                Arc::clone(&qdrant_connection_for_rabbitmq),
+                Arc::clone(&queue),
+                Arc::clone(&mongo_client_clone),
+                &channel,
+                &global_data.rabbitmq_stream,
+                shutdown_rx,
+            )
             .await;
-    });
-    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
-    let web_task = tokio::spawn(async move {
-        log::info!("Running on http://{}:{}", host.clone(), port.clone());
-        let server = HttpServer::new(move || {
-            App::new()
-                .wrap(Logger::default())
-                .app_data(Data::new((
-                    Arc::clone(&app_qdrant_client),
-                    Arc::clone(&app_mongo_client),
-                )))
-                .configure(init)
         })
+    };
+
+    env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
+
+    let web_task = {
+        let shutdown_rx = shutdown_rx.clone();
+        tokio::spawn(async move {
+            log::info!("Running on http://{}:{}", host.clone(), port.clone());
+            let server = HttpServer::new(move || {
+                App::new()
+                    .wrap(Logger::default())
+                    .app_data(Data::new((
+                        Arc::clone(&app_qdrant_client),
+                        Arc::clone(&app_mongo_client),
+                    )))
+                    .configure(init)
+            })
             .bind(format!("{}:{}", host, port))?
             .run();
 
-        // Handle SIGINT to manually kick-off graceful shutdown
-        tokio::spawn(async move {
-            #[cfg(unix)]
+            // Handle SIGINT to manually kick-off graceful shutdown
+            tokio::spawn(async move {
+                #[cfg(unix)]
                 let mut stream = signal(SignalKind::interrupt()).unwrap();
-            #[cfg(windows)]
+                #[cfg(windows)]
                 let mut stream = ctrl_c().unwrap();
-            stream.recv().await;
-            System::current().stop();
-        });
-        server.await.context("server error!")
-    });
+                stream.recv().await;
+                let _ = shutdown_tx.send(true);
+                System::current().stop();
+            });
+
+            server.await.context("server error!")
+        })
+    };
 
     let _ = join!(web_task, rabbitmq_stream);
     Ok(())
 }
+
