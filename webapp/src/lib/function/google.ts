@@ -1,10 +1,11 @@
 import { CloudFunctionsServiceClient } from '@google-cloud/functions';
 import { Storage } from '@google-cloud/storage';
-import debug from 'debug';
 import archiver from 'archiver';
-import { Readable } from 'stream';
+import debug from 'debug';
+import { StandardRequirements,WrapToolCode } from 'function/base';
 import StorageProviderFactory from 'lib/storage';
-import { WrapToolCode, StandardRequirements } from 'function/base';
+import { Readable } from 'stream';
+
 import FunctionProvider from './provider';
 
 const log = debug('webapp:function:google');
@@ -69,8 +70,8 @@ class GoogleFunctionProvider extends FunctionProvider {
 		const request: any = {
 			function: {
 				name: functionName,
-				entryPoint: 'hello_world',
-				runtime: 'python39',
+				entryPoint: 'hello_http', // Note: see functions/base.ts to understand why this is hello_http
+				runtime: 'python39', //TODO: allow user to select
 				sourceArchiveUrl: `gs://${this.#bucket}/${functionPath}/function.zip`,
 				httpsTrigger: {},
 			},
