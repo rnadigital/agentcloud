@@ -1,8 +1,10 @@
 import debug from 'debug';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import getGoogleCredentials from 'misc/getgooglecredentials';
 import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 import path from 'path';
+const { GoogleAuth } = require('google-auth-library');
 
 dotenv.config({ path: '.env' });
 
@@ -72,7 +74,7 @@ async function fetchDestinationList(workspaceId: string) {
 
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: 'rabbitmq' | 'google') {
-	const destinationConfiguration = getDestinationConfiguration(provider);
+	const destinationConfiguration = await getDestinationConfiguration(provider);
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/create`, {
 		method: 'POST',
 		headers: {
@@ -89,7 +91,7 @@ async function createDestination(workspaceId: string, provider: 'rabbitmq' | 'go
 	return response.json();
 }
 
-function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
+async function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 	if (provider === 'rabbitmq') {
 		return {
 			routing_key: 'key',
@@ -102,22 +104,25 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 		};
 	} else {
 		let credentialsContent;
-		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-			if (!credentialsPath) {
-				log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-				process.exit(1);
-			}
-			log('credentialsContent %s', credentialsPath);
-			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
-			if (!credentialsContent) {
-				log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-				process.exit(1);
-			}
-		} else {
-			log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-		}
+		// if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+		// 	const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+		// 	if (!credentialsPath) {
+		// 		log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+		// 		process.exit(1);
+		// 	}
+		// 	log('credentialsContent %s', credentialsPath);
+		// 	credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+		// 	if (!credentialsContent) {
+		// 		log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+		// 		process.exit(1);
+		// 	}
+		// } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+		// 	log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+		// 	credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+		// } else {
+		log('No GOOGLE_APPLICATION_CREDENTIALS(_JSON), ysing getGoogleCredentials()');
+		credentialsContent = await getGoogleCredentials();
+		// }
 		log('credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,

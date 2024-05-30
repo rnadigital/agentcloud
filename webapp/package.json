@@ -52,6 +52,7 @@
     "express-fileupload": "^1.4.3",
     "express-session": "^1.17.3",
     "fs-extra": "^10.1.0",
+    "google-auth-library": "^9.10.0",
     "ioredis": "^5.3.2",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
