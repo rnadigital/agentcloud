@@ -154,6 +154,7 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 								<option value={CredentialType.FASTEMBED}>FastEmbed</option>
 								<option value={CredentialType.COHERE}>Cohere</option>
 								<option value={CredentialType.ANTHROPIC}>Anthropic</option>
+								<option value={CredentialType.GROQ}>Groq</option>
 							</select>
 						</div>
 					</div>
