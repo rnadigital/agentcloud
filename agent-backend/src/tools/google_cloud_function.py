@@ -50,16 +50,16 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():
-            args_schema_pydantic[k] = ((str, None))
+            args_schema_pydantic[k] = (str, None)
         return args_schema_pydantic
-    
+
     def convert_str_args_to_correct_type(self, args):
         typed_args = dict()
         for k, v in args.items():
-            prop = self.properties_dict[k]
+            prop = self.properties_dict.get(k)
             if prop:
-                typed_args[k] = bool(v) if prop['type'] == "boolean" else (int(v) if prop['type'] == "integer" else str(v))
-        return typed_args
+                typed_args[k] = bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
+                return typed_args
     
     def _run(self, args_str: Dict):
         args = json.loads(args_str)
@@ -92,8 +92,11 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
                     }
                 return r.text or "No data"
             return r.text or "No data"
+        except google.auth.exceptions.DefaultCredentialsError:
+            return "Default credentials error. Please ensure the service account has appropriate permissions."
+        except google.auth.exceptions.RefreshError:
+            return "Authentication error. Unable to refresh credentials."
         except TimeoutError:
             return "No data returned because the function call timed out."
         except Exception as e:
             return str(e)
-
