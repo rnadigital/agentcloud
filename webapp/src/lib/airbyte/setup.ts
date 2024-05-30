@@ -101,18 +101,28 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 			ssl: false
 		};
 	} else {
-		const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-		log('credentialsContent %s', credentialsPath);
-		const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
-		if (!credentialsContent) {
-			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-			process.exit(1);
+		let credentialsContent;
+		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+			if (!credentialsPath) {
+				log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+			log('credentialsContent %s', credentialsPath);
+			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+			if (!credentialsContent) {
+				log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+		} else {
+			log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 		}
 		log('credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
-			credentials_json: JSON.parse(credentialsContent),
+			credentials_json: credentialsContent,
 			ordering_enabled: false,
 			batching_enabled: false,
 		};
