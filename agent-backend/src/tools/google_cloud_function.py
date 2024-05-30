@@ -10,9 +10,10 @@ from models.mongo import Tool
 
 import requests
 import os
-import json
 import google.oauth2.id_token
 import google.auth.transport.requests
+import google.cloud.logging
+from google.cloud.logging import DESCENDING
 
 class GoogleCloudFunctionTool(GlobalBaseTool):
     """
@@ -20,7 +21,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
     Args:
         function_name (str): function name used for the args schema model name
         function_id (str): datasource ID (used as the function name)
-        properties_dict (dict): dictionary of tool.data.parameters.properties { proeprty_name: { type: string | number | boolean, ... } }
+        properties_dict (dict): dictionary of tool.data.parameters.properties { property_name: { type: string | number | boolean, ... } }
                                 this dict is used to create a dynamic pydantic model for "args_schema"
     """
     name: str = ""
@@ -32,7 +33,6 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
 
     def post_init(self):
         self.args_schema = create_model(f"{self.function_name}_model", **self.convert_args_dict_to_type(self.properties_dict))
-
 
     @classmethod
     def factory(cls, tool: Tool, **kargs):
@@ -50,7 +50,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():
-            args_schema_pydantic[k]=((str, None))
+            args_schema_pydantic[k] = ((str, None))
         return args_schema_pydantic
     
     def convert_str_args_to_correct_type(self, args):
@@ -58,7 +58,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
         for k, v in args.items():
             prop = self.properties_dict[k]
             if prop:
-                typed_args[k]=bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
+                typed_args[k] = bool(v) if prop['type'] == "boolean" else (int(v) if prop['type'] == "integer" else str(v))
         return typed_args
     
     def _run(self, args_str: Dict):
@@ -78,6 +78,22 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             )
             print(f"status code: {r.status_code}")
             print(f"response body: {r.text}")
+
+            if r.status_code != 200:
+                # Fetch logs for the function to get detailed error information
+                log_client = google.cloud.logging.Client()
+                logger = log_client.logger(f"cloudfunctions.googleapis.com%2Fcloud-functions%2F{self.function_id}")
+                log_entries = list(logger.list_entries(order_by=DESCENDING))
+                error_logs = [entry.payload for entry in log_entries if entry.severity == 'ERROR']
+                if error_logs:
+                    return {
+                        "response": r.text or "No data",
+                        "error_logs": error_logs
+                    }
+                return r.text or "No data"
             return r.text or "No data"
         except TimeoutError:
             return "No data returned because the function call timed out."
+        except Exception as e:
+            return str(e)
+
