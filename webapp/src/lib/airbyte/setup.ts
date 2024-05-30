@@ -102,15 +102,17 @@ function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 		};
 	} else {
 		const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+		log('credentialsContent %s', credentialsPath);
 		const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
 		if (!credentialsContent) {
 			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
 			process.exit(1);
 		}
+		log('credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
-			credentials_json: credentialsContent,
+			credentials_json: JSON.parse(credentialsContent),
 			ordering_enabled: false,
 			batching_enabled: false,
 		};
@@ -164,7 +166,7 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
-		log('destinationsList: %O', destinationsList);
+		log('destinationsList: %s', JSON.stringify(destinationsList, null, '\t'));
 
 		let airbyteAdminDestination = destinationsList.destinations?.find(d => d?.destinationDefinitionId === destinationDefinitionId);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
@@ -176,7 +178,7 @@ export async function init() {
 			}
 			log(`Creating ${provider} destination`);
 			airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
-			log('Created destination:', airbyteAdminDestination);
+			log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 			if (!airbyteAdminDestination.destinationId) {
 				process.exit(1);
 			}
