@@ -16,9 +16,10 @@ import google.auth.transport.requests
 
 class GoogleCloudFunctionTool(GlobalBaseTool):
     """
-    Code execution tool
+    Google Cloud Function execution tool
     Args:
-        function_name (str): Name of the function. Has to be a valid python name. This name is used to call the function.
+        function_name (str): function name used for the args schema model name
+        function_id (str): datasource ID (used as the function name)
         properties_dict (dict): dictionary of tool.data.parameters.properties { proeprty_name: { type: string | number | boolean, ... } }
                                 this dict is used to create a dynamic pydantic model for "args_schema"
     """
