@@ -12,29 +12,6 @@ RUN npm ci --only=production
 # Copy the rest of your application code
 COPY . .
 
-# Disable Next.js telemetry and build the application
-RUN npx next telemetry disable && npm run build
-
-# Second Stage: Runtime
-FROM node:latest
-
-WORKDIR /app
-
-# Set NODE_ENV environment variable
-ENV NODE_ENV production
-
-# Copy only the necessary files from the builder stage
-# COPY --from=builder /app/node_modules ./node_modules
-# COPY --from=builder /app/next.config.js ./
-# COPY --from=builder /app/public ./public
-# COPY --from=builder /app/.next ./.next
-# COPY --from=builder /app/tsconfig.json ./tsconfig.json
-# COPY --from=builder /app/tsconfig.server.json ./tsconfig.json
-# COPY --from=builder /app/dist ./dist
-# COPY --from=builder /app/package.json ./package.json
-
-COPY --from=builder /app ./
-
 # ARGs for environment variables that need to be passed at build time
 ARG SHORT_COMMIT_HASH
 ARG POSTHOG_KEY
@@ -61,13 +38,22 @@ ENV NEXT_PUBLIC_STORAGE_PROVIDER=$NEXT_PUBLIC_STORAGE_PROVIDER
 ENV NEXT_PUBLIC_HUBSPOT_MEETING_LINK=$NEXT_PUBLIC_HUBSPOT_MEETING_LINK
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
+# Disable Next.js telemetry and build the application
+RUN npx next telemetry disable && npm run build
+
+# Second Stage: Runtime
+FROM node:latest
+
+WORKDIR /app
+
+# Set NODE_ENV environment variable
+ENV NODE_ENV production
+
+COPY --from=builder /app ./
+
 # Display the environment variables to verify
 RUN echo "NEXT_PUBLIC_STORAGE_PROVIDER: ${NEXT_PUBLIC_STORAGE_PROVIDER}" && \
     echo "NEXT_PUBLIC_SECRET_PROVIDER: ${NEXT_PUBLIC_SECRET_PROVIDER}"
-
-
-# Copy the Google credentials file from the build context
-# COPY $GOOGLE_KEYPATH /app/keyfile.json
 
 # Expose the port the app runs on
 EXPOSE 3000
