@@ -199,7 +199,7 @@ export default function ModelForm({ _model = { type: CredentialType.OPENAI }, cr
 					        />
 						</div>
 					</div>}
-					{Object.entries(CredentialTypeRequirements[type]).filter(e => e[1]).map(([key, _], ei) => {
+					{type !== CredentialType.OPENAI && Object.entries(CredentialTypeRequirements[type]).filter(e => e[1]).map(([key, _], ei) => {
 						return (<div key={`modelName_${type}_${ei}`}>
 							<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								{key}
