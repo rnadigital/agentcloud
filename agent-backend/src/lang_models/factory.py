@@ -1,6 +1,7 @@
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
+from langchain_groq import ChatGroq
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
 from langchain_google_vertexai import ChatVertexAI
 from langchain_anthropic import ChatAnthropic
@@ -30,17 +31,19 @@ def model_factory(agentcloud_model: models.mongo.Model,
             return _build_cohere_model(agentcloud_model)
         case models.mongo.Platforms.Anthropic:
             return _build_anthropic_model(agentcloud_model)
+        case models.mongo.Platforms.Groq:
+            return _build_groq_model(agentcloud_model)
 
 
 def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
     if model.modelType == models.mongo.ModelType.embedding:
-        raise # figure this out later
+        raise  # figure this out later
     else:
         return ChatOpenAI(
             **model.model_dump(
                 exclude_none=True,
                 exclude_unset=True,
-            ).get('config') # config key will hold the raw openai format arguments
+            ).get('config')  # config key will hold the raw openai format arguments
         )
 
 
@@ -147,4 +150,15 @@ def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
             exclude_none=True,
             exclude_unset=True,
         ).get('config'),
+        model_name=model.config.get('model')
+    )
+
+
+def _build_groq_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatGroq(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config'),
+        model_name=model.config.get('model')
     )

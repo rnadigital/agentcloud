@@ -29,6 +29,7 @@ class Platforms(str, Enum):
     GoogleVertex = "google_vertex"
     Cohere = "cohere"
     Anthropic = "anthropic"
+    Groq = "groq"
 
 
 class ModelVariant(str, Enum):
@@ -41,6 +42,8 @@ class ModelVariant(str, Enum):
     Opus = "claude-3-opus-20240229"
     Sonnet = "claude-3-sonnet-20240229"
     Haiku = "claude-3-haiku-20240307"
+    LLaMA3_70b = "llama3-70b-8192"
+    Mixtral_8x7b = "mixtral-8x7b-32768"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):

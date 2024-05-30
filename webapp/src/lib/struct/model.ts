@@ -1,6 +1,6 @@
 'use strict';
 
-import { CredentialType } from 'struct/credential';
+import {CredentialType} from 'struct/credential';
 
 export const ModelList = {
 	[CredentialType.OPENAI]: [
@@ -58,6 +58,10 @@ export const ModelList = {
 		'claude-3-opus-20240229',
 		'claude-3-sonnet-20240229',
 		'claude-3-haiku-20240307',
+	],
+	[CredentialType.GROQ]: [
+		'llama3-70b-8192',
+		'mixtral-8x7b-32768'
 	],
 };
 
