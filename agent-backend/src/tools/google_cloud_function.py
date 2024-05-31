@@ -4,9 +4,11 @@ from langchain.tools import BaseTool
 import json
 import subprocess
 
+from init.env_variables import GOOGLE_FUNCTION_LOCATION
 from langchain_core.pydantic_v1 import create_model, Field
 from .global_tools import GlobalBaseTool
 from models.mongo import Tool
+
 
 import requests
 import os
@@ -69,7 +71,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
         try:
             credentials, project_id = google.auth.default()
             request = google.auth.transport.requests.Request()
-            audience = f"https://us-central1-{project_id}.cloudfunctions.net/function-{self.function_id}"
+            audience = f"https://{GOOGLE_FUNCTION_LOCATION}-{project_id}.cloudfunctions.net/function-{self.function_id}"
             TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
             r = requests.post(
                 audience,
