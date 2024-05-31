@@ -42,6 +42,7 @@ export type Tool = {
 		builtin?: boolean;
 		name: string;
 		description?: string;
+		environmentVariables?: Record<string,string>;
 		parameters?: {
 			//type: string;
 			properties: Record<string,FunctionProperty>;

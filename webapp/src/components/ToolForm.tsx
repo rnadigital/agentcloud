@@ -161,6 +161,10 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 						requirements: requirementsTxt,
 						runtime: runtimeState,
 						description: toolDescription,
+						environmentVariables: environmentVariables.reduce((acc, par) => {
+							acc[par.name.trim()] = par.description;
+							return acc;
+						}, {}),
 						parameters: {
 							type: 'object',
 							required: parameters.filter(x => x.required).map(x => x.name.trim()),
