@@ -9,7 +9,7 @@ export default class FunctionProvider {
 		throw new Error('deployFunction method not implemented');
 	}
 
-	async callFunction(functionId: string, data: any): Promise<any> {
-		throw new Error('callFunction method not implemented');
+	async deleteFunction(functionId: string, data: any): Promise<any> {
+		throw new Error('deleteFunction method not implemented');
 	}
 }
