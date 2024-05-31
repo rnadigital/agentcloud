@@ -6,6 +6,8 @@ import { getAssetById } from 'db/asset';
 import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
+import FunctionProviderFactory from 'lib/function';
+import { runtimeValues } from 'misc/runtimeoptions';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { Retriever,ToolType, ToolTypes } from 'struct/tool';
@@ -117,7 +119,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -130,9 +132,22 @@ export async function addToolApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
 	}
+	
+	if (runtime && (typeof runtime !== 'string' || !runtimeValues.includes(runtime))) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
+	}
 
 	const foundIcon = await getAssetById(iconId);
 
+	const toolData = {
+		...data,
+		builtin: false,
+		name: (type as ToolType) === ToolType.API_TOOL
+			? 'openapi_request'
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+				? toSnakeCase(name)
+				: name),
+	};
 	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -143,20 +158,18 @@ export async function addToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 	 	schema: schema,
-		data: {
-			...data,
-			builtin: false,
-			name: (type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: ((type as ToolType) === ToolType.FUNCTION_TOOL 
-					? toSnakeCase(name)
-					: name),
-		},
+		data: toolData,
 		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
 		} : null,
 	});
+
+	if (type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		const addedToolId = addedTool.insertedId.toString();
+		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, addedToolId);
+	}
 
 	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
 
@@ -164,7 +177,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -178,6 +191,18 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
+	//Need the existing tool type to know whether we should delete an existing deployed function
+	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+
+	const toolData = {
+		...data,
+		builtin: false,
+		name: (type as ToolType) === ToolType.API_TOOL
+			? 'openapi_request'
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+				? toSnakeCase(name)
+				: name),
+	};
 	await editTool(req.params.resourceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
@@ -186,16 +211,17 @@ export async function editToolApi(req, res, next) {
 	 	datasourceId: toObjectId(datasourceId),
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
-		data: {
-			...data,
-			builtin: false,
-			name: (type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: ((type as ToolType) === ToolType.FUNCTION_TOOL 
-					? toSnakeCase(name)
-					: name),
-		},
+		data: toolData,
 	});
+
+	let functionProvider;
+	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL && type as ToolType !== ToolType.FUNCTION_TOOL) {
+		functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deleteFunction(toolId.toString());
+	} else if (type as ToolType === ToolType.FUNCTION_TOOL) {
+		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
+		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, toolId);
+	}
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });
 
@@ -220,6 +246,12 @@ export async function deleteToolApi(req, res, next) {
 		deleteToolById(req.params.resourceSlug, toolId),
 		removeAgentsTool(req.params.resourceSlug, toolId),
 	]);
+
+	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deleteFunction(toolId.toString());
+	}
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 

@@ -288,3 +288,19 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 		background-position: 300px 0; /* this value can be adjusted for different speeds/effects */
 	}
 }
+
+.pulsate {
+	animation: pulsate 2s infinite;
+}
+
+@keyframes pulsate {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.1);
+	}
+	100% {
+		transform: scale(1);
+	}
+}

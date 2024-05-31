@@ -10,7 +10,6 @@ import { addTool, deleteToolsForDatasource,editToolsForDatasource } from 'db/too
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
-import { sendMessage } from 'lib/rabbitmq/send';
 import convertStringToJsonl from 'misc/converttojsonl';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
@@ -18,6 +17,7 @@ import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { PDFExtract } from 'pdf.js-extract';
+import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
@@ -820,7 +820,7 @@ export async function uploadFileApi(req, res, next) {
 	
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
-	await storageProvider.addFile(filename, uploadedFile);
+	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype);
 
 	// Create the collection in qdrant
 	try {
@@ -829,17 +829,24 @@ export async function uploadFileApi(req, res, next) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
-
-	// Tell the vector proxy to process it	
-	await sendMessage(JSON.stringify({
+	
+	// Fetch the appropriate message queue provider
+	const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+	
+	// Prepare the message and metadata
+	const message = JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 		file: `/tmp/${filename}`,
-	}), { 
+	});
+	const metadata = { 
 		stream: newDatasourceId.toString(), 
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
-	});
-
+	};
+	
+	// Send the message using the provider
+	await messageQueueProvider.sendMessage(message, metadata);
+	
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
