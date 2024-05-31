@@ -113,6 +113,17 @@ class GoogleFunctionProvider extends FunctionProvider {
 		return functionName;
 	}
 
+	async deleteFunction(functionId: string) {
+		const functionName = `projects/${this.#projectId}/locations/${this.#location}/functions/function-${functionId}`;
+		try {
+			await this.#functionsClient.deleteFunction({ name: functionName });
+			log(`Function deleted successfully: ${functionName}`);
+		} catch (err) {
+			log(err);
+			throw err;
+		}
+	}
+
 }
 
 export default new GoogleFunctionProvider();

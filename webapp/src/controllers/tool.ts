@@ -191,6 +191,9 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
+	//Need the existing tool type to know whether we should delete an existing deployed function
+	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+
 	const toolData = {
 		...data,
 		builtin: false,
@@ -211,8 +214,12 @@ export async function editToolApi(req, res, next) {
 		data: toolData,
 	});
 
-	if (type as ToolType === ToolType.FUNCTION_TOOL) {
-		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+	let functionProvider;
+	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL && type as ToolType !== ToolType.FUNCTION_TOOL) {
+		functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deleteFunction(toolId.toString());
+	} else if (type as ToolType === ToolType.FUNCTION_TOOL) {
+		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, toolId);
 	}
 
@@ -239,6 +246,12 @@ export async function deleteToolApi(req, res, next) {
 		deleteToolById(req.params.resourceSlug, toolId),
 		removeAgentsTool(req.params.resourceSlug, toolId),
 	]);
+
+	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deleteFunction(toolId.toString());
+	}
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 
