@@ -69,12 +69,23 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	const [authorizationMethodState, setAuthorizationMethod] = useState(authorizationMethods[0].value);
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); // todo: array like ^ ?
 	const [searchTerm, setSearchTerm] = useState('');
+
+	// Initial state setup for parameters and environment variables
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
 		return acc;
 	}, []);
+	
+	const initialEnvironmentVariables = tool?.data?.environmentVariables?.properties && Object.entries(tool.data.environmentVariables.properties).reduce((acc, entry) => {
+		const [parname, par]: any = entry;
+		acc.push({ name: parname, description: par.description });
+		return acc;
+	}, []);
+	
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
+	const [environmentVariables, setEnvironmentVariables] = useState(initialEnvironmentVariables || [{ name: '', description: '' }]);
+	
 	const [functionsList, setFunctionsList] = useState(null);
 	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
@@ -777,7 +788,29 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 						</div>
 					</div>}
 
-					{toolType !== ToolType.RAG_TOOL && <ParameterForm readonly={isBuiltin} parameters={parameters} setParameters={setParameters} />}
+					{toolType !== ToolType.RAG_TOOL && <>
+						<ParameterForm 
+							readonly={isBuiltin} 
+							parameters={parameters} 
+							setParameters={setParameters} 
+							title='Parameters' 
+							disableTypes={false} 
+							hideRequired={false} 
+							namePlaceholder='Name'
+							descriptionPlaceholder='Description'
+						/>
+
+						<ParameterForm 
+							readonly={isBuiltin} 
+							parameters={environmentVariables} 
+							setParameters={setEnvironmentVariables} 
+							title='Environment Variables' 
+							disableTypes={true} 
+							hideRequired={true} 
+							namePlaceholder='Key'
+							descriptionPlaceholder='Value'
+						/>
+					</>}
 
 				</div>
 			</div>
