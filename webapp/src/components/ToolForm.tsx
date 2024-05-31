@@ -1,6 +1,7 @@
 'use strict';
 
 import ButtonSpinner from 'components/ButtonSpinner'; // Import ButtonSpinner
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
@@ -35,7 +36,7 @@ const authorizationMethods = [
 ];
 import { runtimeOptions } from 'misc/runtimeoptions';
 
-export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
@@ -90,6 +91,14 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	function handleSearchChange(event) {
 		setSearchTerm(event.target.value.toLowerCase());
 	}
+
+	async function createDatasourceCallback(createdDatasource) {
+		console.log('createDatasourceCallback', createdDatasource);
+		await fetchFormData && fetchFormData();
+		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setModalOpen(false);
+	}
+	const [modalOpen, setModalOpen] = useState(false);
 
 	async function toolPost(e) {
 		e.preventDefault();
@@ -311,7 +320,22 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 		};
 	}, [searchTerm, functionsList]);
 
-	return (
+	let modal;
+	switch (modalOpen) {
+		case 'datasource':
+			modal = <CreateDatasourceModal
+				open={modalOpen !== false}
+				setOpen={setModalOpen}
+				callback={createDatasourceCallback}
+			/>;
+			break;
+		default:
+			modal = null;
+			break;
+	}
+
+	return (<>
+		{modal}
 		<form onSubmit={toolPost}>
 			<input
 				type='hidden'
@@ -351,7 +375,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							>
 								<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
 								<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-								<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>
+								{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
 							</select>
 						</div>
 					</div>}
@@ -377,7 +401,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources (Optional)
 							</label>
-
+						
 							<div className='mt-2'>
 								<Select
 									isSearchable
@@ -391,16 +415,20 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 									}}
 									value={datasourceState}
 									onChange={(v) => {
+										if (v?.value === null) {
+											// Create new pressed
+											return setModalOpen('datasource');
+										}
 										setDatasourceState(v);
 										setToolRetriever(Retriever.SELF_QUERY);
 									}}
 									options={datasources
-										// .filter(t => t?.status === DatasourceStatus.READY)
-										.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))}
+										.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
+										.concat([{ label: '+ New Datasource', value: null }])}
 									formatOptionLabel={formatDatasourceOptionLabel}
 								/>
 							</div>
-
+						
 							<RetrievalStrategyComponent
 								toolRetriever={toolRetriever}
 								setToolRetriever={setToolRetriever}
@@ -411,8 +439,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 								schema={currentDatasource?.connectionSettings?.syncCatalog}
 								currentDatasource={currentDatasource}
 							/>
-
+						
 						</div>
+						
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
@@ -769,5 +798,5 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 				</button>}
 			</div>
 		</form>
-	);
+	</>);
 }
