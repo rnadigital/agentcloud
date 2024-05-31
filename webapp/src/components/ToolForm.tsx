@@ -98,7 +98,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(false);
 	}
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function toolPost(e) {
 		e.preventDefault();
@@ -414,7 +414,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 									}}
 									value={datasourceState}
-									onChange={(v) => {
+									onChange={(v: any) => {
 										if (v?.value === null) {
 											// Create new pressed
 											return setModalOpen('datasource');
