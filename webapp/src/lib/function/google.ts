@@ -1,4 +1,3 @@
-import { CloudFunctionsServiceClient } from '@google-cloud/functions';
 import { Storage } from '@google-cloud/storage';
 import archiver from 'archiver';
 import debug from 'debug';
@@ -12,7 +11,7 @@ const log = debug('webapp:function:google');
 
 class GoogleFunctionProvider extends FunctionProvider {
 	#storageProvider: any;
-	#functionsClient: CloudFunctionsServiceClient;
+	#functionsClient: any;
 	#projectId: string;
 	#location: string;
 	#bucket: string;
@@ -24,14 +23,15 @@ class GoogleFunctionProvider extends FunctionProvider {
 
 	async init() {
 		await this.#storageProvider.init();
-		this.#functionsClient = new CloudFunctionsServiceClient();
+		const { FunctionServiceClient } = require('@google-cloud/functions').v2;
+		this.#functionsClient = new FunctionServiceClient();
 		this.#projectId = process.env.PROJECT_ID;
 		this.#location = process.env.GCP_FUNCTION_LOCATION;
 		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME;
 		log('Google Function Provider initialized.');
 	}
 
-	async deployFunction(code: string, requirements: string, mongoId: string): Promise<string> {
+	async deployFunction(code: string, requirements: string, mongoId: string, runtime: string = 'python310'): Promise<string> {
 		const functionPath = `functions/${mongoId}`;
 		const codeBuffer = Buffer.from(WrapToolCode(code));
 		const requirementsBuffer = Buffer.from(`${requirements}\n${StandardRequirements.join('\n')}`);
@@ -70,11 +70,29 @@ class GoogleFunctionProvider extends FunctionProvider {
 		const request: any = {
 			function: {
 				name: functionName,
-				entryPoint: 'hello_http', // Note: see functions/base.ts to understand why this is hello_http
-				runtime: 'python39', //TODO: allow user to select
-				sourceArchiveUrl: `gs://${this.#bucket}/${functionPath}/function.zip`,
-				httpsTrigger: {},
+				buildConfig: {
+					runtime: 'python310', // TODO: allow user to select
+					entryPoint: 'hello_http', // Note: see functions/base.ts to understand why this is hello_http
+					source: {
+						storageSource: {
+							bucket: this.#bucket,
+							object: `${functionPath}/function.zip`,
+						},
+					},
+					environmentVariables: {
+						// Add environment variables here
+					},
+				},
+				serviceConfig: {
+					availableMemory: '256M', // TODO: allow user to configure
+					timeoutSeconds: 60, // TODO: allow user to configure
+					// ingressSettings: 'ALLOW_ALL',
+					// Additional settings can be added here
+				},
+				environment: 'GEN_2',
 			},
+			parent: `projects/${this.#projectId}/locations/${this.#location}`,	
+			functionId: `function-${mongoId}`,
 		};
 
 		try {
@@ -88,23 +106,13 @@ class GoogleFunctionProvider extends FunctionProvider {
 				log(`Function created successfully: ${functionName}`);
 			}
 		} catch (e) {
-			log(e);
+			log(JSON.stringify(e, null, 2));
 			throw e;
 		}
 
 		return functionName;
 	}
 
-	async callFunction(functionId: string, data: any): Promise<any> {
-		const request = {
-			name: functionId,
-			data: JSON.stringify(data),
-		};
-
-		const [response] = await this.#functionsClient.callFunction(request);
-		log(`Function ${functionId} called successfully.`);
-		return response;
-	}
 }
 
 export default new GoogleFunctionProvider();

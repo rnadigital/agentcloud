@@ -33,8 +33,9 @@ const authorizationMethods = [
 	{ label: 'Bearer', value: 'bearer' },
 	{ label: 'Custom', value: 'custom' },
 ];
+import { runtimeOptions } from 'misc/runtimeoptions';
 
-export default function ToolForm({ tool = {}, credentials = [], datasources=[], editing, callback, compact }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
@@ -84,6 +85,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 	const [datasourceState, setDatasourceState]: any = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
 	const currentDatasource = datasources.find(d => d._id === datasourceState?.value);
 
+	const [runtimeState, setRuntimeState] = useState(tool?.data?.runtime || runtimeOptions[0].value);
+
 	function handleSearchChange(event) {
 		setSearchTerm(event.target.value.toLowerCase());
 	}
@@ -97,7 +100,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 				resourceSlug,
 				name: toolName,
 				type: toolType,
-				data: null,
+				data: {
+					...tool?.data,
+				},
 				schema: null,
 				datasourceId: datasourceState ? datasourceState.value : null,
 				description: toolDescription,
@@ -112,6 +117,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 				case ToolType.API_TOOL:
 					body.schema = toolAPISchema;
 					body.data = {
+						...body.data,
 						code: '',
 						description: toolDescription,
 						parameters: {
@@ -130,8 +136,10 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					break;
 				case ToolType.FUNCTION_TOOL:
 					body.data = {
+						...body.data,
 						code: toolCode,
 						requirements: requirementsTxt,
+						runtime: runtimeState,
 						description: toolDescription,
 						parameters: {
 							type: 'object',
@@ -408,6 +416,21 @@ export default function ToolForm({ tool = {}, credentials = [], datasources=[], 
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
+						<div>
+							<label className='text-base font-semibold text-gray-900'>Runtime</label>
+							<div>
+								<select
+									name='runtime'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									value={runtimeState}
+									onChange={(e) => setRuntimeState(e.target.value)}
+								>
+									{runtimeOptions.map((option) => (
+										<option key={option.value} value={option.value}>{option.label}</option>
+									))}
+								</select>
+							</div>
+						</div>
 						<div className='border-gray-900/10'>
 							<div className='flex justify-between'>
 								<h2 className='text-base font-semibold leading-7 text-gray-900'>

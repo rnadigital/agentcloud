@@ -7,6 +7,7 @@ import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
+import { runtimeValues } from 'misc/runtimeoptions';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { Retriever,ToolType, ToolTypes } from 'struct/tool';
@@ -118,7 +119,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
@@ -130,6 +131,10 @@ export async function addToolApi(req, res, next) {
 		if (!foundDatasource) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
+	}
+	
+	if (runtime && (typeof runtime !== 'string' || !runtimeValues.includes(runtime))) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
 	}
 
 	const foundIcon = await getAssetById(iconId);
@@ -172,7 +177,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {	
