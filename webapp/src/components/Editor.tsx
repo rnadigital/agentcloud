@@ -31,11 +31,12 @@ export type MonacoOnInitializePane = (
 
 export type ScriptEditorProps = {
 	// usage: const [code, setCode] = useState<string>('default value')
-	code: string
-	setCode: Dispatch<SetStateAction<string>>
+	code: string;
+	setCode: Dispatch<SetStateAction<string>>;
 	// see: https://microsoft.github.io/monaco-editor/api/modules/monaco.editor.html
-	editorOptions: MonacoEditorOptions
-	onInitializePane: MonacoOnInitializePane
+	editorOptions: MonacoEditorOptions;
+	onInitializePane: MonacoOnInitializePane;
+	height?: any;
 };
 
 //
@@ -43,7 +44,7 @@ export type ScriptEditorProps = {
 //
 
 const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
-	const { code, setCode, editorOptions, onInitializePane } = props;
+	const { code, setCode, editorOptions, onInitializePane, height } = props;
 
 	const monacoEditorRef = useRef<any | null>(null);
 	const editorRef = useRef<any | null>(null);
@@ -62,7 +63,7 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 	});
 
 	return <Editor
-		height='42.9em' // preference
+		height={height||'42.9'} // preference
 		language='python'   // preference
 		onChange={(value, _event) => {
 			setCode(value);

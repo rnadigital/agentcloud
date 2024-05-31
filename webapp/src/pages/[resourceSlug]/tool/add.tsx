@@ -40,7 +40,7 @@ export default function AddTool(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
 		</div>}
 
-		<ToolForm credentials={credentials} datasources={datasources} />
+		<ToolForm credentials={credentials} datasources={datasources} fetchFormData={fetchTools} />
 
 	</>);
 

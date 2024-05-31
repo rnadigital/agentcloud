@@ -167,6 +167,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									{/*<option value={CredentialType.FASTEMBED}>FastEmbed</option>*/}
 									<option value={CredentialType.COHERE}>Cohere</option>
 									<option value={CredentialType.ANTHROPIC}>Anthropic</option>
+									<option value={CredentialType.GROQ}>Groq</option>
 								</select>
 							</div>
 						</div>	
