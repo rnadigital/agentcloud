@@ -6,6 +6,8 @@ import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compa
 import path from 'path';
 const { GoogleAuth } = require('google-auth-library');
 
+import SecretProviderFactory from 'lib/secret';
+
 dotenv.config({ path: '.env' });
 
 const log = debug('webapp:airbyte:setup');
@@ -104,25 +106,29 @@ async function getDestinationConfiguration(provider: 'rabbitmq' | 'google') {
 		};
 	} else {
 		let credentialsContent;
-		// if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-		// 	const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-		// 	if (!credentialsPath) {
-		// 		log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-		// 		process.exit(1);
-		// 	}
-		// 	log('credentialsContent %s', credentialsPath);
-		// 	credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
-		// 	if (!credentialsContent) {
-		// 		log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-		// 		process.exit(1);
-		// 	}
-		// } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-		// 	log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-		// 	credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-		// } else {
-		log('No GOOGLE_APPLICATION_CREDENTIALS(_JSON), ysing getGoogleCredentials()');
-		credentialsContent = await getGoogleCredentials();
-		// }
+		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+			if (!credentialsPath) {
+				log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+			log('credentialsContent %s', credentialsPath);
+			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+			if (!credentialsContent) {
+				log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+		} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+			log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+		} else {
+			log('google application credentials missing private_key, fetching from secret store');
+			const secretProvider = SecretProviderFactory.getSecretProvider('google');
+			await secretProvider.init();
+			const googleCreds = await secretProvider.getSecret('GOOGLE_APPLICATION_CREDENTIAL');
+			credentialsContent = googleCreds;
+		}
+
 		log('credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
