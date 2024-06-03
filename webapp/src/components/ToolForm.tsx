@@ -34,7 +34,7 @@ const authorizationMethods = [
 	{ label: 'Bearer', value: 'bearer' },
 	{ label: 'Custom', value: 'custom' },
 ];
-import { runtimeOptions } from 'misc/runtimeoptions';
+import { runtimeOptions } from 'struct/function';
 
 export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
 
@@ -77,9 +77,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 		return acc;
 	}, []);
 	
-	const initialEnvironmentVariables = tool?.data?.environmentVariables?.properties && Object.entries(tool.data.environmentVariables.properties).reduce((acc, entry) => {
+	const initialEnvironmentVariables = tool?.data?.environmentVariables && Object.entries(tool.data.environmentVariables).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
-		acc.push({ name: parname, description: par.description });
+		acc.push({ name: parname, description: par });
 		return acc;
 	}, []);
 	

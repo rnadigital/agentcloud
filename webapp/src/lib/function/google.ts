@@ -4,6 +4,7 @@ import debug from 'debug';
 import { StandardRequirements,WrapToolCode } from 'function/base';
 import StorageProviderFactory from 'lib/storage';
 import { Readable } from 'stream';
+import { DeployFunctionArgs } from 'struct/function';
 
 import FunctionProvider from './provider';
 
@@ -31,7 +32,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 		log('Google Function Provider initialized.');
 	}
 
-	async deployFunction(code: string, requirements: string, mongoId: string, runtime: string = 'python310'): Promise<string> {
+	async deployFunction({ code, requirements, mongoId, runtime = 'python310', environmentVariables = {} }: DeployFunctionArgs): Promise<string> {
 		const functionPath = `functions/${mongoId}`;
 		const codeBuffer = Buffer.from(WrapToolCode(code));
 		const requirementsBuffer = Buffer.from(`${requirements}\n${StandardRequirements.join('\n')}`);
@@ -79,15 +80,13 @@ class GoogleFunctionProvider extends FunctionProvider {
 							object: `${functionPath}/function.zip`,
 						},
 					},
-					environmentVariables: {
-						// Add environment variables here
-					},
+					environmentVariables,
 				},
 				serviceConfig: {
 					availableMemory: '256M', // TODO: allow user to configure
 					timeoutSeconds: 60, // TODO: allow user to configure
 					// ingressSettings: 'ALLOW_ALL',
-					// Additional settings can be added here
+					environmentVariables,
 				},
 				environment: 'GEN_2',
 			},
