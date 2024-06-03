@@ -4,13 +4,13 @@ import type { OnConnect } from '@xyflow/react';
 import {
 	addEdge,
 	Background,
+	ColorMode,
 	Controls,
 	MiniMap,
 	Panel,
 	ReactFlow,
 	ReactFlowProvider,
 	useEdgesState,
-	ColorMode,
 	useNodesState,
 	useReactFlow,
 } from '@xyflow/react';
@@ -33,17 +33,16 @@ export default function Flow() {
 			event.preventDefault();
 			const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
 			const type = event.dataTransfer.getData('application/reactflow');
-			const nodeData = JSON.parse(event.dataTransfer.getData('data'));
-			if (typeof type === 'undefined' || !type) {
+			if (!type) {
 				return;
 			}
+			const nodeData = JSON.parse(event.dataTransfer.getData('data'));
 			const position = reactFlowInstance && reactFlowInstance.screenToFlowPosition({
 				x: event.clientX - 150,
 				y: event.clientY - 30,
 			});
-			console.log('position', position);
 			const newNode = {
-				id: `${type}-${+new Date()}`,
+				id: `${type}-${Date.now()}`,
 				type,
 				position,
 				data: { label: nodeData.name },
@@ -90,7 +89,7 @@ export default function Flow() {
 	);
 }
 
-export function FlowWithProvider(props) {
+export function FlowWithPWrovider(props) {
 	return (
 		<ReactFlowProvider>
 			<Flow {...props} />
