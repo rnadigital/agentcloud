@@ -1,11 +1,12 @@
 import { IdOrStr } from 'db/index';
+import { DeployFunctionArgs } from 'struct/function';
 
 export default class FunctionProvider {
 	async init() {
 		throw new Error('init method not implemented');
 	}
 
-	async deployFunction(code: string, requirements: string, functionId: IdOrStr): Promise<string> {
+	async deployFunction(args: DeployFunctionArgs): Promise<string> {
 		throw new Error('deployFunction method not implemented');
 	}
 

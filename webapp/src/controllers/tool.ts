@@ -7,9 +7,9 @@ import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
-import { runtimeValues } from 'misc/runtimeoptions';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
+import { runtimeValues } from 'struct/function';
 import { Retriever,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
@@ -98,6 +98,7 @@ function validateTool(tool) {
 		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL }},
 		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
 		{ field: 'data.parameters', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
+		{ field: 'data.environmentVariables', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
 		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
 		{ field: 'naame', validation: { regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$','gm'),
 			customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed' },
@@ -168,7 +169,13 @@ export async function addToolApi(req, res, next) {
 	if (type as ToolType === ToolType.FUNCTION_TOOL) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		const addedToolId = addedTool.insertedId.toString();
-		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, addedToolId);
+		await functionProvider.deployFunction({
+			code: toolData?.code,
+			requirements: toolData?.requirements,
+			environmentVariables: toolData?.environmentVariables,
+			mongoId: toolData?.addedToolId,
+			runtime,
+		});
 	}
 
 	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
@@ -220,7 +227,13 @@ export async function editToolApi(req, res, next) {
 		await functionProvider.deleteFunction(toolId.toString());
 	} else if (type as ToolType === ToolType.FUNCTION_TOOL) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
-		await functionProvider.deployFunction(toolData?.code, toolData?.requirements, toolId);
+		await functionProvider.deployFunction({
+			code: toolData?.code,
+			requirements: toolData?.requirements,
+			environmentVariables: toolData?.environmentVariables,
+			mongoId: toolId,
+			runtime,
+		});
 	}
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });

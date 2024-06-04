@@ -1,3 +1,11 @@
+export type DeployFunctionArgs = {
+	code: string;
+	requirements: string;
+	mongoId: string;
+	runtime?: string;
+	environmentVariables?: Record<string, string>;
+};
+
 //Runtime optiosn for google cloud functions, used in tool form
 export const runtimeOptions = [
 	{ label: 'Python 3.12', value: 'python312' },
