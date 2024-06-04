@@ -1,6 +1,6 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 
-export default function InfoAlert({ message, color='blue' }: { message: string, color?: string; }) {
+export default function InfoAlert({ message, color='blue' }: { message: any, color?: string; }) {
 	return message && (
 	    <div className={`rounded-md bg-${color}-100 p-4 mb-2`}>
 			<div className='flex'>

@@ -1,6 +1,7 @@
-const { Storage } = require('@google-cloud/storage');
+import { Storage } from '@google-cloud/storage';
 import debug from 'debug';
-import StorageProvider from 'storage/provider';
+
+import StorageProvider from './provider';
 
 const log = debug('webapp:storage:google');
 
@@ -9,19 +10,16 @@ class GoogleStorageProvider extends StorageProvider {
 	#storageClient: any;
 
 	constructor() {
-		super();		
+		super();
 		const options: any = { projectId: process.env.PROJECT_ID };
 		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 			options['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-		}
-		if (typeof window !== 'undefined') {
-			log('GoogleStorageProvider options:', options);
 		}
 		this.#storageClient = new Storage(options);
 	}
 
 	async init() {
-		this.createBucket();
+		// this.createBucket();
 	}
 
 	async createBucket(bucketName = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME, options = {}) {
@@ -45,33 +43,49 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
-	async addFile(filename, uploadedFile, isPublic = false): Promise<any> {
-		log('Uploading file %s (%s)', uploadedFile.name, filename);
-		return new Promise((resolve, reject) => {
-			const file = this.#storageClient
-				.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
-				.file(filename);
-			const stream = file.createWriteStream({
+	async uploadLocalFile(filename, uploadedFile, contentType, isPublic = false): Promise<any> {
+		log('Uploading file %s', filename);
+		const file = this.#storageClient
+			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.file(filename);
+		try {
+			await file.save(filename, {
 				metadata: {
-					contentType: uploadedFile.mimetype,
+					contentType,
 				},
 			});
-			stream.on('error', (err) => {
-				log('File upload error:', err);
-				reject(err);
-			});
-			stream.on('finish', async () => {
-				log('File uploaded successfully.');
-				if (isPublic === true) {
-					await file.makePublic();
-				}
-				resolve(null);
-			});
-			stream.end(uploadedFile.data);
-		});
+			log('File uploaded successfully.');
+			if (isPublic) {
+				await file.makePublic();
+			}
+		} catch (err) {
+			log('File upload error:', err);
+			throw err;
+		}
 	}
 
-	async deleteFile(filename): Promise<any> {
+	async uploadBuffer(filename: string, content: Buffer, contentType: string, isPublic = false): Promise<any> {
+		log('Uploading buffer to file %s', filename);
+		const file = this.#storageClient
+			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.file(filename);
+		try {
+			await file.save(content, {
+				metadata: {
+					contentType,
+				},
+			});
+			log('Buffer uploaded successfully.');
+			if (isPublic) {
+				await file.makePublic();
+			}
+		} catch (err) {
+			log('Buffer upload error:', err);
+			throw err;
+		}
+	}
+
+	async deleteFile(filename: string): Promise<any> {
 		log('Deleting file %s', filename);
 		const file = this.#storageClient
 			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
@@ -82,7 +96,6 @@ class GoogleStorageProvider extends StorageProvider {
 	getBasePath() {
 		return `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET_NAME}`;
 	}
-
 }
 
 export default new GoogleStorageProvider();

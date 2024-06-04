@@ -38,6 +38,8 @@ youtube-search = "^2.1.2"
 langchain-google-vertexai = "^1.0.3"
 langchain-cohere = "^0.1.4"
 langchain-anthropic = "^0.1.12"
+google-cloud-logging = "^3.10.0"
+langchain-groq = "^0.1.4"
 
 
 [build-system]

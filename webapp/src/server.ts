@@ -32,6 +32,7 @@ import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
 import * as airbyteSetup from 'lib/airbyte/setup';
 import * as ses from 'lib/email/ses';
+import FunctionProviderFactory from 'lib/function';
 import MessageQueueProviderFactory from 'lib/queue';
 import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
@@ -55,6 +56,10 @@ app.prepare()
 		await secretProvider.init();
 		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 		await messageQueueProvider.init();
+
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.init();
+
 		await initGlobalTools();
 		await ses.init();
 
