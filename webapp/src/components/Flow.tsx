@@ -14,11 +14,11 @@ import {
 	useNodesState,
 	useReactFlow,
 } from '@xyflow/react';
-import CustomNode from 'components/nodes/CustomNode';
+import TaskNode from 'components/nodes/TaskNode';
 import React, { useCallback, useRef, useState } from 'react';
 
 const nodeTypes = {
-	'custom': CustomNode,
+	'task': TaskNode,
 };
 
 export default function Flow() {
@@ -51,7 +51,6 @@ export default function Flow() {
 				type,
 				position,
 				data: { label: nodeData.name },
-				type: 'custom',
 			};
 
 			setNodes((nds) => nds.concat(newNode));
@@ -59,8 +58,7 @@ export default function Flow() {
 		[setNodes]
 	);
 
-	const onChange: ChangeEventHandler<HTMLSelectElement> = (evt) =>
-		setColorMode(evt.target.value as ColorMode);
+	const onChange = (evt) => setColorMode(evt.target.value as ColorMode);
 
 	const onDragOver = useCallback((event) => {
 		event.preventDefault();

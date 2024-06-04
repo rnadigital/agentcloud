@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Layout from 'components/Layout';
 import { AccountWrapper } from 'context/account';
 import { ChatWrapper } from 'context/chat';
+import { FlowWrapper } from 'context/flow';
 import { NotificationWrapper } from 'context/notifications';
 import { SocketWrapper } from 'context/socket';
 import { StepWrapper } from 'context/stepwrapper';
@@ -58,24 +59,26 @@ export default function App({ Component, pageProps }) {
 					<SocketWrapper>
 						<NotificationWrapper>
 							<StepWrapper>
-								<ToastContainer
-									progressClassName='toast-container'
-									bodyClassName='toast-body'
-									theme='colored'
-									position='bottom-right'
-									autoClose={3000}
-									newestOnTop={true}
-									pauseOnFocusLoss={false}
-									pauseOnHover={false}
-									hideProgressBar={true}
-									limit={3}
-								/>
-								<Layout {...pageProps}>
-									<style>
-										{''}
-									</style>
-									<Component {...pageProps} />
-								</Layout>
+								<FlowWrapper>
+									<ToastContainer
+										progressClassName='toast-container'
+										bodyClassName='toast-body'
+										theme='colored'
+										position='bottom-right'
+										autoClose={3000}
+										newestOnTop={true}
+										pauseOnFocusLoss={false}
+										pauseOnHover={false}
+										hideProgressBar={true}
+										limit={3}
+									/>
+									<Layout {...pageProps}>
+										<style>
+											{''}
+										</style>
+										<Component {...pageProps} />
+									</Layout>
+								</FlowWrapper>
 							</StepWrapper>
 						</NotificationWrapper>
 					</SocketWrapper>
