@@ -60,7 +60,7 @@ export default function Flow() {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = 'move';
 	}, []);
-
+	
 	return (
 		<div className='reactflow-wrapper w-full h-full' ref={reactFlowWrapper}>
 			<ReactFlow
@@ -89,7 +89,7 @@ export default function Flow() {
 	);
 }
 
-export function FlowWithPWrovider(props) {
+export function FlowWithProvider(props) {
 	return (
 		<ReactFlowProvider>
 			<Flow {...props} />

@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 use threadpool::ThreadPool;
 use qdrant_client::client::QdrantClient;
 use crossbeam::queue::ArrayQueue;
-use crate::data::processing_incoming_messages::process_messages;
+use crate::data::processing_incoming_messages::process_streaming_messages;
 
 pub struct Pool<T: Clone> {
     pub q: ArrayQueue<T>,
@@ -88,7 +88,7 @@ impl<T: Clone + Send> Pool<T>
             self.pool.execute(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    let _ = process_messages(qdrant_client, mongo_client, data, id).await;
+                    let _ = process_streaming_messages(qdrant_client, mongo_client, data, id).await;
                 })
             });
         }

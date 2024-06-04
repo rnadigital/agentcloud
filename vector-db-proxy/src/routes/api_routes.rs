@@ -95,10 +95,10 @@ pub async fn check_collection_exists(
     app_data: Data<(Arc<RwLock<QdrantClient>>, Arc<RwLock<Database>>)>,
     Path(collection_name): Path<String>,
 ) -> Result<HttpResponse> {
-    let (qdrant_conn, mongo_conn) = app_data.get_ref();
+    let (qdrant_conn, _) = app_data.get_ref();
     let collection_name_clone = collection_name.clone();
     let qdrant = Qdrant::new(qdrant_conn.to_owned(), collection_name);
-    let mongo = mongo_conn.read().await;
+    let mongo = start_mongo_connection().await.unwrap();
     return match get_embedding_model_and_embedding_key(&mongo, &collection_name_clone)
         .await
     {
