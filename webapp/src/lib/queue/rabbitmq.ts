@@ -17,7 +17,7 @@ class RabbitMQProvider extends MessageQueueProvider {
 
 	async init() {
 		try {
-			this.#connection = await connect(`amqp://${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`);
+			this.#connection = await connect(`amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`);
 			this.#channel = await this.#connection.createChannel();
 			await this.#channel.assertExchange(process.env.QUEUE_NAME, 'direct', { durable: true });
 			log('RabbitMQ connection and channel established.');
