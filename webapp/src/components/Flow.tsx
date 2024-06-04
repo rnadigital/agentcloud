@@ -14,7 +14,12 @@ import {
 	useNodesState,
 	useReactFlow,
 } from '@xyflow/react';
+import CustomNode from 'components/nodes/CustomNode';
 import React, { useCallback, useRef, useState } from 'react';
+
+const nodeTypes = {
+	'custom': CustomNode,
+};
 
 export default function Flow() {
 	const [colorMode, setColorMode] = useState<ColorMode>('dark');
@@ -46,6 +51,7 @@ export default function Flow() {
 				type,
 				position,
 				data: { label: nodeData.name },
+				type: 'custom',
 			};
 
 			setNodes((nds) => nds.concat(newNode));
@@ -72,6 +78,7 @@ export default function Flow() {
 				onDrop={onDrop}
 				onDragOver={onDragOver}
 				colorMode={colorMode}
+				nodeTypes={nodeTypes}
 				fitView
 			>
 				<MiniMap />

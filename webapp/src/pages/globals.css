@@ -304,3 +304,17 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 		transform: scale(1);
 	}
 }
+
+.task-node {
+  height: 50px;
+  border: 1px solid #eee;
+  padding: 5px;
+  border-radius: 5px;
+  background: white;
+}
+
+.task-node label {
+  display: block;
+  color: #777;
+  font-size: 12px;
+}
