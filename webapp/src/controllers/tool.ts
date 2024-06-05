@@ -173,7 +173,7 @@ export async function addToolApi(req, res, next) {
 			code: toolData?.code,
 			requirements: toolData?.requirements,
 			environmentVariables: toolData?.environmentVariables,
-			mongoId: toolData?.addedToolId,
+			mongoId: addedToolId,
 			runtime,
 		});
 	}
