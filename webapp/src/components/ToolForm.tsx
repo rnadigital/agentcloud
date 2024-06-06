@@ -811,7 +811,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							title='Environment Variables' 
 							disableTypes={true} 
 							hideRequired={true} 
-							namePlaceholder='Key'
+							namePlaceholder='Key must be uppercase seperated by underscores'
 							descriptionPlaceholder='Value'
 						/>
 					</>}
