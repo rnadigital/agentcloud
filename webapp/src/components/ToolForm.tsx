@@ -813,8 +813,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							title='Environment Variables' 
 							disableTypes={true} 
 							hideRequired={true} 
-							namePlaceholder='Key'
 							namePattern='[A-Z][A-Z0-9_]*'
+							namePlaceholder='Key must be uppercase seperated by underscores'
 							descriptionPlaceholder='Value'
 						/>
 					</>}
