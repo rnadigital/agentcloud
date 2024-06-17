@@ -53,7 +53,6 @@ def _build_openai_model(model: models.mongo.Model) -> BaseLanguageModel | Embedd
                 exclude_none=True,
                 exclude_unset=True,
             ).get('config'),
-            model=model.model_name,
         )
     else:
         return ChatOpenAI(
@@ -61,7 +60,6 @@ def _build_openai_model(model: models.mongo.Model) -> BaseLanguageModel | Embedd
                 exclude_none=True,
                 exclude_unset=True,
             ).get('config'),
-            model=model.model_name,
        )
 
 
