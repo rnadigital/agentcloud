@@ -2,8 +2,8 @@ import GoogleSecretProvider from 'secret/google';
 import LocalSecretProvider from 'secret/local';
 
 export default class SecretProviderFactory {
-	static getSecretProvider() {
-		switch ((process.env.NEXT_PUBLIC_SECRET_PROVIDER||'').toLowerCase()) {
+	static getSecretProvider(provider: string = '') {
+		switch ((process.env.NEXT_PUBLIC_SECRET_PROVIDER||provider).toLowerCase()) {
 			case 'google':
 				return GoogleSecretProvider;
 			case 'local':

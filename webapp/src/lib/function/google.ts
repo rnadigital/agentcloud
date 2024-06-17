@@ -80,13 +80,13 @@ class GoogleFunctionProvider extends FunctionProvider {
 							object: `${functionPath}/function.zip`,
 						},
 					},
-					environmentVariables,
+					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {}),
 				},
 				serviceConfig: {
 					availableMemory: '256M', // TODO: allow user to configure
 					timeoutSeconds: 60, // TODO: allow user to configure
 					// ingressSettings: 'ALLOW_ALL',
-					environmentVariables,
+					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {}),
 				},
 				environment: 'GEN_2',
 			},
