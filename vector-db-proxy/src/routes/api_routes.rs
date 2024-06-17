@@ -104,7 +104,7 @@ pub async fn check_collection_exists(
     {
         Ok((model_parameter_result, _)) => match model_parameter_result {
             Some(model_parameters) => {
-                let vector_length = model_parameters.embeddingLength as u64;
+                let vector_length = model_parameters.embedding_length as u64;
                 let embedding_model_name = model_parameters.model;
                 match qdrant.check_collection_exists(
                     CreateDisposition::CreateIfNeeded,
@@ -266,7 +266,7 @@ pub async fn bulk_upsert_data_to_collection(
             .await
             .unwrap()
             .unwrap();
-    let vector_length = model_parameters.embeddingLength as u64;
+    let vector_length = model_parameters.embedding_length as u64;
     let bulk_upsert_results = qdrant
         .bulk_upsert_data(list_of_points, Some(vector_length), None)
         .await?;

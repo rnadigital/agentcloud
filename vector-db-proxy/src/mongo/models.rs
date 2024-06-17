@@ -63,15 +63,26 @@ impl From<String> for ChunkingStrategy {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelConfig {
+	pub api_key: Option<String>,
+	pub base_url: Option<String>,
+	pub cohere_api_key: Option<String>,
+	pub groq_api_key: Option<String>,
+	// Add more fields here if needed
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Model {
-    pub _id: ObjectId,
-    pub orgId: ObjectId,
-    pub teamId: ObjectId,
-    pub credentialId: Option<ObjectId>,
-    pub name: String,
-    pub model: String,
-    pub embeddingLength: i32,
-    pub modelType: String,
+	pub _id: ObjectId,
+	pub org_id: ObjectId,
+	pub team_id: ObjectId,
+	pub name: String,
+	pub model: String,
+	pub embedding_length: i32,
+	pub model_type: String,
+	pub config: ModelConfig,
 }
 
 
