@@ -11,20 +11,19 @@ import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
 
 
-def model_factory(agentcloud_model: models.mongo.Model,
-                  credential: models.mongo.Credentials) -> BaseLanguageModel | Embeddings:
+def model_factory(agentcloud_model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
     """
-    Return a (llm or embedding) langchain model based on credentials and model specs in mongo
+    Return a (llm or embedding) langchain model based on model specs in mongo
     """
     match agentcloud_model.type:
         case models.mongo.Platforms.ChatOpenAI:
-            return _build_openai_model_with_credential(agentcloud_model, credential)
+            return _build_openai_model(agentcloud_model)
         case models.mongo.Platforms.AzureChatOpenAI:
-            return _build_azure_model_with_credential(agentcloud_model, credential)
+            return _build_azure_model(agentcloud_model)
         case models.mongo.Platforms.FastEmbed:
             return _build_fastembed_model(agentcloud_model)
         case models.mongo.Platforms.Ollama:
-            return _build_openai_compatible_model_with_credential(agentcloud_model)
+            return _build_openai_compatible_model(agentcloud_model)
         case models.mongo.Platforms.GoogleVertex:
             return _build_google_vertex_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
@@ -35,7 +34,7 @@ def model_factory(agentcloud_model: models.mongo.Model,
             return _build_groq_model(agentcloud_model)
 
 
-def _build_openai_compatible_model_with_credential(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
+def _build_openai_compatible_model(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
     if model.modelType == models.mongo.ModelType.embedding:
         raise  # figure this out later
     else:
@@ -47,60 +46,31 @@ def _build_openai_compatible_model_with_credential(model: models.mongo.Model) ->
         )
 
 
-def _build_openai_model_with_credential(model: models.mongo.Model,
-                                        credential: models.mongo.Credentials) -> BaseLanguageModel | Embeddings:
+def _build_openai_model(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
     if model.modelType == models.mongo.ModelType.embedding:
         return OpenAIEmbeddings(
-            api_key=credential.credentials.api_key,
-            model=model.model_name,
             **model.model_dump(
                 exclude_none=True,
                 exclude_unset=True,
-                exclude={
-                    "id",
-                    "credentialId",
-                    "modelType",
-                    "model_name",
-                    "name",
-                    "embeddingLength",
-                    "type",
-                    "config"
-                }
-            )
+            ).get('config'),
+            model=model.model_name,
         )
     else:
         return ChatOpenAI(
-            api_key=credential.credentials.api_key,
             **model.model_dump(
                 exclude_none=True,
                 exclude_unset=True,
-                exclude={
-                    "id",
-                    "credentialId",
-                    "embeddingLength",
-                    "modelType",
-                    "type",
-                    "config"
-                }
-            )
-        )
+            ).get('config'),
+            model=model.model_name,
+       )
 
 
-def _build_azure_model_with_credential(model: models.mongo.Model,
-                                       credential: models.mongo.Credentials) -> BaseLanguageModel:
+def _build_azure_model(model: models.mongo.Model) -> BaseLanguageModel:
     return AzureChatOpenAI(
-        api_key=credential.credentials.api_key,
         **model.model_dump(
             exclude_none=True,
             exclude_unset=True,
-            exclude={
-                "id",
-                "credentialId",
-                "embeddingLength",
-                "type",
-                "config"
-            }
-        )
+        ).get('config')
     )
 
 
