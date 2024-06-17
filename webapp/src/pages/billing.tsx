@@ -24,7 +24,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 	const router = useRouter();
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
+	const { stripeEndsAt, stripeTrial, stripeAddons, stripeCancelled } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
@@ -114,7 +114,7 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 				</div>
 				{price > 0 && (
 					<span suppressHydrationWarning className='text-sm px-2 py-[0.5px] me-2 bg-white text-green-800 border border-green-300 text-sm rounded-lg'>
-						Renews {new Date(stripeEndsAt).toDateString()}
+						{stripeCancelled === true ? 'Expires' : 'Renews'} {new Date(stripeEndsAt).toDateString()}
 					</span>
 				)}
 			</>)}
@@ -200,7 +200,9 @@ export default function Billing(props) {
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [continued, setContinued] = useState(false);
 	const [last4, setLast4] = useState(null);
-
+	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
+	const [missingEnvs, setMissingEnvs] = useState(null);
+	
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
@@ -229,11 +231,14 @@ export default function Billing(props) {
 	};
 
 	useEffect(() => {
-		fetchAccount();
-		API.hasPaymentMethod(res => {
-			if (res && res?.ok === true && res?.last4)  {
-				setLast4(res?.last4);
-			}
+		API.checkStripeReady(x => {
+			setMissingEnvs(x.missingEnvs);
+			fetchAccount();
+			API.hasPaymentMethod(res => {
+				if (res && res?.ok === true && res?.last4)  {
+					setLast4(res?.last4);
+				}
+			}, toast.error, router);
 		}, toast.error, router);
 	}, [resourceSlug]);
 
@@ -255,8 +260,13 @@ export default function Billing(props) {
 		};
 	}, [stagedChange?.id]);
 
-	if (!account) {
+	if (!account || missingEnvs == null) {
 		return <Spinner />;
+	}
+
+	if (missingEnvs.length > 0) {
+		return (<ErrorAlert error={`Stripe functionality is missing the following env vars:
+${missingEnvs.join('\n')}`} />);
 	}
 
 	return (

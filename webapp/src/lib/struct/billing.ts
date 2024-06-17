@@ -1,6 +1,21 @@
 import Permissions from 'permissions/permissions';
 import { CredentialType, CredentialTypes } from 'struct/credential';
 
+export const stripeEnvs: string[] = [
+	'STRIPE_FREE_PLAN_PRICE_ID',
+	'STRIPE_PRO_PLAN_PRICE_ID',
+	'STRIPE_TEAMS_PLAN_PRICE_ID',
+	'STRIPE_ADDON_USERS_PRICE_ID',
+	'STRIPE_ADDON_STORAGE_PRICE_ID',
+	'STRIPE_FREE_PLAN_PRODUCT_ID',
+	'STRIPE_PRO_PLAN_PRODUCT_ID',
+	'STRIPE_TEAMS_PLAN_PRODUCT_ID',
+	'STRIPE_ADDON_USERS_PRODUCT_ID',
+	'STRIPE_ADDON_STORAGE_PRODUCT_ID',
+	'STRIPE_WEBHOOK_SECRET',
+	'STRIPE_ACCOUNT_SECRET',
+];
+
 // account.stripe data
 export type AccountStripeData = {
 	stripeCustomerId?: string;

@@ -7,7 +7,7 @@ import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import { stripe } from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, priceToPlanMap, priceToProductMap,stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 import { io } from '@socketio';
 import { addNotification } from 'db/notification';
@@ -388,4 +388,12 @@ export async function createPortalLink(req, res, next) {
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
+}
+
+export async function checkReady(req, res, next) {
+
+	const missingEnvs = stripeEnvs.filter(k => process.env[k] == null);
+
+	return dynamicResponse(req, res, 200, { missingEnvs });
+
 }
