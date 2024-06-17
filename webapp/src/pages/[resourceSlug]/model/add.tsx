@@ -15,7 +15,7 @@ export default function AddModel(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { models, credentials } = state;
+	const { models } = state;
 
 	function fetchModels() {
 		API.getModels({ resourceSlug }, dispatch, setError, router);
@@ -35,7 +35,7 @@ export default function AddModel(props) {
 			<title>{`New Model - ${teamName}`}</title>
 		</Head>
 
-		<ModelForm credentials={credentials} fetchModelFormData={fetchModels} />
+		<ModelForm fetchModelFormData={fetchModels} />
 
 	</>);
 

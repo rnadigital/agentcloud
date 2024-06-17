@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import React, { useReducer,useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { CredentialType, CredentialTypeRequirements } from 'struct/credential';
+import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
@@ -37,7 +37,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [description, setDescription] = useState('');
-	const [modelType, setModelType] = useState(CredentialType.OPENAI);
+	const [modelType, setModelType] = useState(ModelType.OPENAI);
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
@@ -162,18 +162,18 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									}}
 								>
 									<option disabled value=''>Select a type...</option>
-									<option value={CredentialType.OPENAI}>OpenAI</option>
-									<option value={CredentialType.OLLAMA}>Ollama</option>
-									{/*<option value={CredentialType.FASTEMBED}>FastEmbed</option>*/}
-									<option value={CredentialType.COHERE}>Cohere</option>
-									<option value={CredentialType.ANTHROPIC}>Anthropic</option>
-									<option value={CredentialType.GROQ}>Groq</option>
+									<option value={ModelType.OPENAI}>OpenAI</option>
+									<option value={ModelType.OLLAMA}>Ollama</option>
+									{/*<option value={ModelType.FASTEMBED}>FastEmbed</option>*/}
+									<option value={ModelType.COHERE}>Cohere</option>
+									<option value={ModelType.ANTHROPIC}>Anthropic</option>
+									<option value={ModelType.GROQ}>Groq</option>
 								</select>
 							</div>
 						</div>	
 
-						{CredentialTypeRequirements[modelType] && Object.keys(CredentialTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
-							{Object.entries(CredentialTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
+						{ModelTypeRequirements[modelType] && Object.keys(ModelTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
+							{Object.entries(ModelTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
 								return (<div key={`modelName_${modelType}_${ei}`}>
 									<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										{key}
@@ -225,7 +225,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 						</div>}
 
 						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources
 							</label>
 							

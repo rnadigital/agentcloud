@@ -1,9 +1,44 @@
 'use strict';
 
-import {CredentialType} from 'struct/credential';
+export enum ModelType {
+  OPENAI = 'open_ai',
+  FASTEMBED = 'fastembed',
+  OLLAMA = 'ollama',
+  COHERE = 'cohere',
+  ANTHROPIC = 'anthropic',
+  GROQ = 'groq'
+}
+
+export const ModelTypes = Object.values(ModelType);
+
+interface ModelRequirements {
+  [key: string]: string | boolean; // Key is the field name, value is its type or existence
+}
+
+export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
+	[ModelType.OPENAI]: {
+		api_key: 'string',
+	},
+	[ModelType.FASTEMBED]: {},
+	[ModelType.OLLAMA]: {
+		base_url: 'string',
+		api_key: 'string',
+	},
+	[ModelType.COHERE]: {
+		cohere_api_key: 'string',
+	},
+	[ModelType.ANTHROPIC]: {
+		api_key: 'string',
+	},
+	[ModelType.GROQ]: {
+		groq_api_key: 'string',
+	},
+  // Add more types here if needed
+};
+
 
 export const ModelList = {
-	[CredentialType.OPENAI]: [
+	[ModelType.OPENAI]: [
 		'gpt-4o',
 		'gpt-4o-2024-05-13',
 		'gpt-4-turbo',
@@ -28,7 +63,7 @@ export const ModelList = {
 		'text-embedding-3-small',
 		'text-embedding-ada-002'
 	],
-	[CredentialType.FASTEMBED]: [
+	[ModelType.FASTEMBED]: [
 		'fast-bge-small-en',
 		'fast-bge-small-en-v1.5',
 		'fast-bge-base-en',
@@ -36,7 +71,7 @@ export const ModelList = {
 		'fast-all-MiniLM-L6-v2',
 		'fast-multilingual-e5-large'
 	],
-	[CredentialType.OLLAMA]: [
+	[ModelType.OLLAMA]: [
 		'llama2',
 		'llama3',
 		'llama3:8b',
@@ -51,15 +86,15 @@ export const ModelList = {
 		'mixtral:instruct',
 		'nomic-embed-text',
 	],
-	[CredentialType.COHERE]: [
+	[ModelType.COHERE]: [
 		'command-r-plus',
 	],
-	[CredentialType.ANTHROPIC]: [
+	[ModelType.ANTHROPIC]: [
 		'claude-3-opus-20240229',
 		'claude-3-sonnet-20240229',
 		'claude-3-haiku-20240307',
 	],
-	[CredentialType.GROQ]: [
+	[ModelType.GROQ]: [
 		'llama3-70b-8192',
 		'mixtral-8x7b-32768'
 	],
