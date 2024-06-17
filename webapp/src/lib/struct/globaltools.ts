@@ -111,6 +111,44 @@ The returned data includes essential details like the paper's title, authors, ab
 			},
 			builtin: true
 		}
+	},
+	{
+		name: 'Search Google (Serper)',
+		description: 'This tool takes a string query as input and fetches relevant data from Google.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'search_google',
+			description: 'This tool takes a string query as input and fetches relevant data from Google.',
+			apiKey: '',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {
+					query: {type: 'string', description: 'The search query to send to Google'}
+				}
+			},
+			builtin: true
+		}
+	},
+	{
+		name: 'Search Google (Apify)',
+		description: 'This tool takes a string query as input and fetches results from Google.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'apify_search_google',
+			description: 'This tool takes a string query as input and fetches results from Google.',
+			apiKey: '',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {
+					query: {type: 'string', description: 'The search query to send to Google'},
+				}
+			},
+			builtin: true
+		}
 	}
 ].map((t: Tool) => {
 	t.data.builtin = true;

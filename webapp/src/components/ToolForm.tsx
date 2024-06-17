@@ -5,43 +5,59 @@ import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
-import { dereferenceSync } from 'dereference-json-schema';
+import {dereferenceSync} from 'dereference-json-schema';
 import yaml from 'js-yaml';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
-import React, { useEffect, useState } from 'react';
+import {useRouter} from 'next/router';
+import {Document, OpenAPIClientAxios} from 'openapi-client-axios';
+import React, {useEffect, useState} from 'react';
 import Select from 'react-tailwindcss-select';
-import { toast } from 'react-toastify';
-import { DatasourceStatus } from 'struct/datasource';
-import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
+import {toast} from 'react-toastify';
+import {DatasourceStatus} from 'struct/datasource';
+import {BaseOpenAPIParameters, Retriever, ToolType} from 'struct/tool';
 
 import * as API from '../api';
-import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
+import ScriptEditor, {MonacoOnInitializePane} from '../components/Editor';
 import FunctionCard from '../components/FunctionCard';
 import ParameterForm from '../components/ParameterForm';
-import { useAccountContext } from '../context/account';
-import { generateOpenAPIMatchKey } from '../lib/utils/toolsUtils';
+import {useAccountContext} from '../context/account';
+import {generateOpenAPIMatchKey} from '../lib/utils/toolsUtils';
 
 const authenticationMethods = [
-	{ label: 'None', value: 'none' },
-	{ label: 'API Key', value: 'api' },
-	{ label: 'Oauth', value: 'oauth' },
+	{label: 'None', value: 'none'},
+	{label: 'API Key', value: 'api'},
+	{label: 'Oauth', value: 'oauth'},
 ];
 
 const authorizationMethods = [
-	{ label: 'Basic', value: 'basic' },
-	{ label: 'Bearer', value: 'bearer' },
-	{ label: 'Custom', value: 'custom' },
+	{label: 'Basic', value: 'basic'},
+	{label: 'Bearer', value: 'bearer'},
+	{label: 'Custom', value: 'custom'},
 ];
-import { runtimeOptions } from 'struct/function';
+import {runtimeOptions} from 'struct/function';
 
-export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
+export default function ToolForm({
+	tool = {},
+	credentials = [],
+	datasources = [],
+	editing,
+	callback,
+	compact,
+	fetchFormData
+}: {
+  tool?: any,
+  credentials?: any[],
+  datasources?: any[],
+  editing?: boolean,
+  callback?: Function,
+  compact?: boolean,
+  fetchFormData?: Function
+}) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext;
+	const {account, csrf} = accountContext;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const {resourceSlug} = router.query;
 	const [toolState, setToolState] = useState(tool);
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = toolState?.data?.builtin === true;
@@ -52,10 +68,11 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
+	const [toolApiKey, setToolApiKey] = useState(tool?.data?.apiKey);
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [submitting, setSubmitting] = useState(false); // Add submitting state
 
-	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
+  // TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
 	useEffect(() => {
@@ -70,31 +87,48 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); // todo: array like ^ ?
 	const [searchTerm, setSearchTerm] = useState('');
 
-	// Initial state setup for parameters and environment variables
+  // Initial state setup for parameters and environment variables
 	const initialParameters = tool?.data?.parameters?.properties && Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
-		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
+		acc.push({
+			name: parname,
+			type: par.type,
+			description: par.description,
+			required: tool.data.parameters.required.includes(parname)
+		});
 		return acc;
 	}, []);
-	
+
 	const initialEnvironmentVariables = tool?.data?.environmentVariables && Object.entries(tool.data.environmentVariables).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
-		acc.push({ name: parname, description: par });
+		acc.push({name: parname, description: par});
 		return acc;
 	}, []);
-	
-	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
-	const [environmentVariables, setEnvironmentVariables] = useState(initialEnvironmentVariables || [{ name: '', description: '' }]);
-	
+
+	const [parameters, setParameters] = useState(initialParameters || [{
+		name: '',
+		type: '',
+		description: '',
+		required: false
+	}]);
+	const [environmentVariables, setEnvironmentVariables] = useState(initialEnvironmentVariables || [{
+		name: '',
+		description: ''
+	}]);
+
 	const [functionsList, setFunctionsList] = useState(null);
 	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
 	const [selectedOpenAPIMatchKey, setSelectedOpenAPIMatchKey] = useState(null);
 	const [error, setError] = useState();
-	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */
+	};
 
 	const initialDatasource = datasources.find(d => d._id === tool?.datasourceId);
-	const [datasourceState, setDatasourceState]: any = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
+	const [datasourceState, setDatasourceState]: any = useState(initialDatasource ? {
+		label: initialDatasource.name,
+		value: initialDatasource._id
+	} : null);
 	const currentDatasource = datasources.find(d => d._id === datasourceState?.value);
 
 	const [runtimeState, setRuntimeState] = useState(tool?.data?.runtime || runtimeOptions[0].value);
@@ -106,9 +140,10 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	async function createDatasourceCallback(createdDatasource) {
 		console.log('createDatasourceCallback', createdDatasource);
 		await fetchFormData && fetchFormData();
-		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setDatasourceState({label: createdDatasource.name, value: createdDatasource.datasourceId});
 		setModalOpen(false);
 	}
+
 	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function toolPost(e) {
@@ -161,6 +196,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 						requirements: requirementsTxt,
 						runtime: runtimeState,
 						description: toolDescription,
+						apiKey: toolApiKey,
 						environmentVariables: environmentVariables.reduce((acc, par) => {
 							if (par.name.trim().length > 0) {
 								acc[par.name.trim()] = par.description;
@@ -181,7 +217,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 					};
 					break;
 				case ToolType.RAG_TOOL:
-					// TODO: anything? or nah
+          // TODO: anything? or nah
 					break;
 				default:
 					return;
@@ -197,7 +233,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 					setSubmitting(false);
 				}, null);
 			} else {
-				const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
+				const addedTool = await API.addTool(body, null, (err) => {
+					toast.error(err);
+				}, compact ? null : router);
 				callback && addedTool && callback(addedTool._id, body);
 			}
 		} finally {
@@ -212,11 +250,11 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 			apiOptions.definition = importValue; // URL import
 		} else if (toolAPISchema) {
 			try {
-				// Try json parse (detect json schema)
+        // Try json parse (detect json schema)
 				loadedDocument = JSON.parse(toolAPISchema);
 			} catch (e) {
 				console.warn(e); // just a warning
-				// Try yaml parse (detect yaml schema)
+        // Try yaml parse (detect yaml schema)
 				try {
 					loadedDocument = yaml.load(toolAPISchema) as Document;
 				} catch (e2) {
@@ -284,7 +322,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 				funs.push({
 					name: op.summary,
 					description: `${op.description ? (op.description + '.\n\n') : ''}The ${BaseOpenAPIParameters.PATH} for this function is "${op.path}",` +
-						` the ${BaseOpenAPIParameters.METHOD} is "${op.method}", and the ${BaseOpenAPIParameters.BASE_URL} is "${client.api.instance.defaults.baseURL}".`,
+            ` the ${BaseOpenAPIParameters.METHOD} is "${op.method}", and the ${BaseOpenAPIParameters.BASE_URL} is "${client.api.instance.defaults.baseURL}".`,
 					parameters: {
 						type: 'object',
 						properties: functionProps,
@@ -303,11 +341,11 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 	}, [debouncedValue]);
 
 	useEffect(() => {
-		// Set a timeout to update the debounced value after a delay
+    // Set a timeout to update the debounced value after a delay
 		const handler = setTimeout(() => {
 			setDebouncedValue(toolAPISchema);
 		}, 500); // 500ms delay, adjust as needed
-		// Clear the timeout if the value changes
+    // Clear the timeout if the value changes
 		return () => {
 			clearTimeout(handler);
 		};
@@ -399,7 +437,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 
 					<div>
 						<label className='text-base font-semibold text-gray-900'>Description</label>
-						<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
+						<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better
+              understand when to use this tool.</p>
 						<div>
 							<textarea
 								required
@@ -412,13 +451,30 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							/>
 						</div>
 					</div>
-
+					{isBuiltin &&
+						<div>
+							<label className='text-sm font-semibold text-gray-900 dark:text-slate-400'>API Key</label>
+							<div>
+								<input
+									type='text'
+									name='toolApiKey'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+									onChange={e => setToolApiKey(e.target.value)}
+									value={toolApiKey}
+								/>
+								{/*<p className='text-sm text-gray-900'>
+							{toolName && `Function name: ${toSnakeCase(toolName)}`}
+						</p>*/}
+							</div>
+						</div>
+					}
 					{toolType === ToolType.RAG_TOOL && <>
 						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label htmlFor='credentialId'
+										 className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources (Optional)
 							</label>
-						
+
 							<div className='mt-2'>
 								<Select
 									isSearchable
@@ -428,24 +484,26 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
 										list: 'dark:bg-slate-700',
 										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
+										listItem: (value?: {
+                      isSelected?: boolean
+                    }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 									}}
 									value={datasourceState}
 									onChange={(v: any) => {
 										if (v?.value === null) {
-											// Create new pressed
+                      // Create new pressed
 											return setModalOpen('datasource');
 										}
 										setDatasourceState(v);
 										setToolRetriever(Retriever.SELF_QUERY);
 									}}
 									options={datasources
-										.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
-										.concat([{ label: '+ New Datasource', value: null }])}
+										.map(t => ({label: `${t.name} (${t.originalName})`, value: t._id, ...t}))
+										.concat([{label: '+ New Datasource', value: null}])}
 									formatOptionLabel={formatDatasourceOptionLabel}
 								/>
 							</div>
-						
+
 							<RetrievalStrategyComponent
 								toolRetriever={toolRetriever}
 								setToolRetriever={setToolRetriever}
@@ -456,9 +514,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 								schema={currentDatasource?.connectionSettings?.syncCatalog}
 								currentDatasource={currentDatasource}
 							/>
-						
+
 						</div>
-						
+
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
@@ -486,7 +544,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 								<div className='col-span-full'>
 									<div className='mt-2'>
-										<InfoAlert message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the parameters specified below (if any)</p>} />
+										<InfoAlert
+											message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the
+                        parameters specified below (if any)</p>}/>
 										<ScriptEditor
 											height='40em'
 											code={toolCode}
@@ -554,7 +614,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 												e.preventDefault();
 												openApiToParams();
 											}}
-										>Import</button>
+										>Import
+										</button>
 										<button
 											className='rounded-md bg-slate-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 											onClick={(e) => {
@@ -565,7 +626,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 												setInvalidFuns(0);
 												setSelectedOpenAPIMatchKey(null);
 											}}
-										>Cancel</button>
+										>Cancel
+										</button>
 									</div>}
 								</span>
 							</div>
@@ -601,7 +663,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 													defaultChecked={authenticationMethod.value === authenticationMethodState}
 													className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
 												/>
-												<label htmlFor={authenticationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+												<label htmlFor={authenticationMethod.value}
+													className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
 													{authenticationMethod.label}
 												</label>
 											</div>
@@ -636,7 +699,8 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 														defaultChecked={authorizationMethod.value === authorizationMethodState}
 														className='h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600'
 													/>
-													<label htmlFor={authorizationMethod.value} className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
+													<label htmlFor={authorizationMethod.value}
+														className='ml-3 block text-sm font-medium leading-6 text-gray-900'>
 														{authorizationMethod.label}
 													</label>
 												</div>
@@ -765,9 +829,11 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 									value={searchTerm}
 									className='p-2 border rounded'
 								/>
-								{invalidFuns > 0 && <span className='ms-4 rounded-md bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800'>
-									{invalidFuns} endpoint{invalidFuns > 1 ? 's are not shown because they are' : ' is not shown because it is'} missing a <code className='text-xs'>name</code> property in the api definition
-								</span>}
+								{invalidFuns > 0 &&
+									<span className='ms-4 rounded-md bg-yellow-100 px-2 py-1 text-sm font-medium text-yellow-800'>
+										{invalidFuns} endpoint{invalidFuns > 1 ? 's are not shown because they are' : ' is not shown because it is'} missing a <code
+											className='text-xs'>name</code> property in the api definition
+									</span>}
 							</div>
 						</div>
 						<div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4'>
@@ -783,7 +849,12 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 											setToolDescription(item?.description);
 											const functionParameters = item?.parameters?.properties && Object.entries(item.parameters.properties).reduce((acc, entry) => {
 												const [parname, par]: any = entry;
-												acc.push({ name: parname, type: par.type, description: par.description, required: item.parameters.required.includes(parname) });
+												acc.push({
+													name: parname,
+													type: par.type,
+													description: par.description,
+													required: item.parameters.required.includes(parname)
+												});
 												return acc;
 											}, []);
 											setParameters(functionParameters || []);
@@ -795,24 +866,24 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 					</div>}
 
 					{toolType !== ToolType.RAG_TOOL && <>
-						<ParameterForm 
-							readonly={isBuiltin} 
-							parameters={parameters} 
-							setParameters={setParameters} 
-							title='Parameters' 
-							disableTypes={false} 
-							hideRequired={false} 
+						<ParameterForm
+							readonly={isBuiltin}
+							parameters={parameters}
+							setParameters={setParameters}
+							title='Parameters'
+							disableTypes={false}
+							hideRequired={false}
 							namePlaceholder='Name'
 							descriptionPlaceholder='Description'
 						/>
 
-						<ParameterForm 
-							readonly={isBuiltin} 
-							parameters={environmentVariables} 
-							setParameters={setEnvironmentVariables} 
-							title='Environment Variables' 
-							disableTypes={true} 
-							hideRequired={true} 
+						<ParameterForm
+							readonly={isBuiltin}
+							parameters={environmentVariables}
+							setParameters={setEnvironmentVariables}
+							title='Environment Variables'
+							disableTypes={true}
+							hideRequired={true}
 							namePlaceholder='Key'
 							namePattern='[A-Z][A-Z0-9_]*'
 							descriptionPlaceholder='Value'
@@ -828,13 +899,13 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 				>
 					Back
 				</Link>}
-				{!isBuiltin && <button
+				{<button
 					type='submit'
 					disabled={submitting}
 					className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 				>
-					{submitting && <ButtonSpinner className='mr-2' />}
-					Save
+					{submitting && <ButtonSpinner className='mr-2'/>}
+          Save
 				</button>}
 			</div>
 		</form>
