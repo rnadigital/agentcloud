@@ -162,7 +162,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 						runtime: runtimeState,
 						description: toolDescription,
 						environmentVariables: environmentVariables.reduce((acc, par) => {
-							acc[par.name.trim()] = par.description;
+							if (par.name.trim().length > 0) {
+								acc[par.name.trim()] = par.description;
+							}
 							return acc;
 						}, {}),
 						parameters: {
@@ -812,6 +814,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							disableTypes={true} 
 							hideRequired={true} 
 							namePlaceholder='Key'
+							namePattern='[A-Z][A-Z0-9_]*'
 							descriptionPlaceholder='Value'
 						/>
 					</>}
