@@ -132,12 +132,12 @@ export async function webhookHandler(req, res, next) {
 			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			}
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			}
 			log('Customer subscription update %O', update);
@@ -389,4 +389,3 @@ export async function createPortalLink(req, res, next) {
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 }
-
