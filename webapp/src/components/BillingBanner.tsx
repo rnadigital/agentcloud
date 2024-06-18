@@ -8,7 +8,12 @@ export default function BillingBanner({ stripePlan, stripeEndsAt, stripeCancelle
 	const daysRemaining = Math.floor((stripeEndsAt - now) / 86400000);
 	const router = useRouter();
 
-	if (router.asPath == '/billing' || !stripePlan || !stripeEndsAt || stripeEndsAt <= now || daysRemaining > 30) {
+	//Dont show banner if
+	if (router.asPath == '/billing' // they are on the billing page
+		|| !stripePlan || !stripeEndsAt // the stripe object doesnt have the plan or end date
+		|| stripeEndsAt <= now  // its already past the end date
+		|| daysRemaining > 7 // there are still more than 30 days
+		|| stripePlan === SubscriptionPlan.FREE) { // or they are on the free plan
 		return null;
 	}
 
@@ -21,7 +26,7 @@ export default function BillingBanner({ stripePlan, stripeEndsAt, stripeCancelle
 				: <span className='me-2'>
 					Your free trial of {stripePlan} ends in {daysRemaining} days ({new Date(stripeEndsAt).toDateString()}).
 				</span>}
-			<Link href={'/billing'} className={`px-2 py-[0.5px] me-2 bg-${stripeCancelled ? 'orange-200' : 'indigo-500'} text-${stripeCancelled ? 'orange' : 'indigo'}-700 border border-${stripeCancelled ? 'orange-700' : 'indigo'} text-sm rounded-lg`}>
+			<Link href={'/billing'} className={`px-2 py-[0.5px] me-2 ${stripeCancelled ? 'bg-orange-200' : 'bg-indigo-500'} text-${stripeCancelled ? 'orange' : 'indigo'}-700 border ${stripeCancelled ? 'border-orange-700' : 'border-indigo'} text-sm rounded-lg`}>
 				Manage Subscription
 			</Link>
 		</div>
