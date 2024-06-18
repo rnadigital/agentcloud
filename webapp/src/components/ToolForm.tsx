@@ -6,11 +6,13 @@ import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel'
 import InfoAlert from 'components/InfoAlert';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import { dereferenceSync } from 'dereference-json-schema';
+import { WrapToolCode } from 'function/base';
 import yaml from 'js-yaml';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { DatasourceStatus } from 'struct/datasource';
@@ -48,12 +50,33 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 	const [importOpen, setImportOpen] = useState(false);
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
+	const [wrappedCode, setWrappedCode] = useState(WrapToolCode(toolCode));
 	const [requirementsTxt, setRequirementsTxt] = useState(tool?.data?.requirements || '');
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [submitting, setSubmitting] = useState(false); // Add submitting state
+	const codeBlockRef = useRef(null);
+	useEffect(() => {
+		setWrappedCode(WrapToolCode(toolCode));
+	}, [toolCode]);
+	const PreWithRef = (preProps) => {
+		return (
+			<pre {...preProps} ref={codeBlockRef} />
+		);
+	};
+	const [ style, setStyle ] = useState(null);
+	try {
+		useEffect(() => {
+			if (!style) {
+				import('react-syntax-highlighter/dist/esm/styles/prism/material-dark')
+					.then(mod => setStyle(mod.default));
+			}
+		}, []);
+	} catch (e) {
+		console.error(e);
+	}
 
 	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
@@ -351,6 +374,8 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 			break;
 	}
 
+	if (!style) { return null; }
+
 	return (<>
 		{modal}
 		<form onSubmit={toolPost}>
@@ -479,14 +504,14 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 						</div>
 						<div className='border-gray-900/10'>
 							<div className='flex justify-between'>
-								<h2 className='text-base font-semibold leading-7 text-gray-900'>
+								<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
 									Python code
+									<InfoAlert className='w-full mb-1 m-0 p-4 bg-blue-100' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />										
 								</h2>
 							</div>
 							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-								<div className='col-span-full'>
-									<div className='mt-2'>
-										<InfoAlert message={<p>In your code, <code>args</code> will be in-scope and be a dictionary containing the parameters specified below (if any)</p>} />
+								<div className='col-span-full grid grid-cols-4'>
+									<div className='col-span-2'>
 										<ScriptEditor
 											height='40em'
 											code={toolCode}
@@ -497,7 +522,19 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 											onInitializePane={onInitializePane}
 										/>
 									</div>
+									<div className='col-span-2'>
+										<SyntaxHighlighter
+											language='python'
+											style={style}
+											showLineNumbers={true}
+											PreTag={PreWithRef}
+											customStyle={{ margin: 0, maxHeight: 'unset', height: '40em', marginLeft: -1 }}
+										>
+											{wrappedCode}
+										</SyntaxHighlighter>
+									</div>
 								</div>
+								
 							</div>
 						</div>
 						<div className='border-gray-900/10'>
