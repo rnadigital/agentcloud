@@ -88,7 +88,7 @@ pub async fn subscribe_to_queue(
                                                                             }
                                                                         }
                                                                     }
-                                                                    let vector_length = model_parameters.embedding_length as u64;
+                                                                    let vector_length = model_parameters.embeddingLength as u64;
                                                                     let qdrant_conn_clone = Arc::clone(&qdrant_clone);
                                                                     let qdrant = Qdrant::new(qdrant_conn_clone, datasource_id.to_string());
                                                                     match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name)).await {

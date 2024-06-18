@@ -119,10 +119,9 @@ pub async fn get_model_credentials(
                 .find_one(doc! {"_id": datasource.modelId}, None)
                 .await
             {
-                Ok(Some(model)) => {
-                    Ok(Some(model))
+                Ok(model) => {
+                    Ok(model)
                 } // Return the model if found (could be Some or None)
-                Ok(None) => Ok(None),
                 Err(e) => {
                     log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))

@@ -131,31 +131,34 @@ pub async fn embed_text(
                 // initiate variables
                 let mongodb_connection = mongo_conn.read().await;
                 match get_model_credentials(&mongodb_connection, datasource_id.as_str()).await {
-                    Ok(Some(model_obj)) => {
-                        let backoff = backoff::ExponentialBackoffBuilder::new()
-                            .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                            .build();
-                        if let Some(api_key) = model_obj.config.api_key {
-	                        let mut config = OpenAIConfig::new()
-                                .with_api_key(api_key);
-                            config = config.with_org_id(model_obj.org_id.to_string());
-                            let client = async_openai::Client::with_config(config).with_backoff(backoff);
-                            let request = CreateEmbeddingRequestArgs::default()
-                                .model(m)
-                                .input(text)
-                                .build()?;
-                            let response = client.embeddings().create(request).await?;
-                            let embedding: Vec<Vec<f32>> = response
-                                .data
-                                .iter()
-                                .map(|data| data.clone().embedding)
-                                .collect();
-                            Ok(embedding)
+                    Ok(model) => {
+                        if let Some(model_obj) = model {
+                            let backoff = backoff::ExponentialBackoffBuilder::new()
+                                .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                                .build();
+                            if let Some(api_key) = model_obj.config.api_key {
+    	                        let mut config = OpenAIConfig::new()
+                                    .with_api_key(api_key);
+                                config = config.with_org_id(model_obj.orgId.to_string());
+                                let client = async_openai::Client::with_config(config).with_backoff(backoff);
+                                let request = CreateEmbeddingRequestArgs::default()
+                                    .model(m)
+                                    .input(text)
+                                    .build()?;
+                                let response = client.embeddings().create(request).await?;
+                                let embedding: Vec<Vec<f32>> = response
+                                    .data
+                                    .iter()
+                                    .map(|data| data.clone().embedding)
+                                    .collect();
+                                Ok(embedding)
+                            } else {
+                                Err(anyhow!("Model missing api key"))
+                            }
                         } else {
-                            Err(anyhow!("Model missing api key"))
+                            Err(anyhow!("Model not returned"))
                         }
                     }
-                    Ok(None) => Err(anyhow!("Model credentials returned NONE")),
                     Err(e) => {
                         Err(anyhow!("Could not get OPEN AI model credentials, {:?}",e))
                     }
