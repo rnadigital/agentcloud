@@ -113,7 +113,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 					</span>
 				</div>
 				{price > 0 && (
-					<span suppressHydrationWarning className={`text-sm px-2 py-[0.5px] me-2 bg-${stripeCancelled ? 'orange-200' : 'white'} text-${stripeCancelled ? 'orange-700' : 'green-800'} border border-${stripeCancelled ? 'orange-700' : 'green-300'} text-sm rounded-lg`}>
+					<span suppressHydrationWarning className={`text-sm px-2 py-[0.5px] me-2 bg-${stripeCancelled ? 'orange-300' : 'white'} text-${stripeCancelled ? 'orange-700' : 'green-800'} border border-${stripeCancelled ? 'orange-700' : 'green-300'} text-sm rounded-lg`}>
 						{stripeCancelled === true ? 'Ends' : 'Renews'} {new Date(stripeEndsAt).toDateString()}
 					</span>
 				)}

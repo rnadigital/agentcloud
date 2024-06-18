@@ -1,13 +1,13 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { setStripeCustomerId, setStripePlan, updateStripeCustomer } from 'db/account';
+import { setStripeCustomerId, updateStripeCustomer } from 'db/account';
 import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutsession';
 import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import { stripe } from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap,stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 import { io } from '@socketio';
 import { addNotification } from 'db/notification';
@@ -122,7 +122,7 @@ export async function webhookHandler(req, res, next) {
 			
 			//Note: null to not update them unless required
 			const update = {
-				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : {}),
+				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : { stripePlan: SubscriptionPlan.FREE }),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -140,27 +140,22 @@ export async function webhookHandler(req, res, next) {
 				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			}
+			if (update['stripeEndsAt'] > Date.now() && update['stripeCancelled'] === true) {
+				update['stripePlan'] = SubscriptionPlan.FREE;
+			}
 			log('Customer subscription update %O', update);
 			await updateStripeCustomer(subscriptionUpdated.customer, update);
 			break;
 		}
 
-		case 'customer.subscription.created': {
-			// const subscriptionCreated = event.data.object;
-			// await updateStripeCustomer(subscriptionCreated.customer, {
-			// 	stripeEndsAt: subscriptionCreated.current_period_end*1000,
-			// });
+		case 'customer.subscription.deleted': {
+			const subscriptionDeleted = event.data.object;
+			await updateStripeCustomer(subscriptionDeleted.customer, {
+				stripePlan: SubscriptionPlan.FREE,
+				stripeAddons: { users: 0, storage: 0 },
+			});
 			break;
 		}
-		
-		// case 'customer.subscription.trial_will_end': {
-		// 	break;
-		// }
-		
-		//TODO:
-		// case 'customer.subscription.deleted': {
-		// 	break;
-		// }
 
 		default: {
 			log(`Unhandled stripe webhook event type "${event.type}"`);
