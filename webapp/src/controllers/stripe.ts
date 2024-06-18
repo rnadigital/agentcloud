@@ -153,6 +153,8 @@ export async function webhookHandler(req, res, next) {
 			await updateStripeCustomer(subscriptionDeleted.customer, {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
+				stripeCancelled: true,
+				stripeTrial: false,
 			});
 			break;
 		}
