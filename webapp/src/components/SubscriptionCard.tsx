@@ -108,12 +108,12 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 			)}
 			{currentPlan && (<>
 				<div className='flex items-center'>
-					<span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-300 text-sm rounded-lg'>
+					<span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-800 text-sm rounded-lg'>
 						Current Plan
 					</span>
 				</div>
 				{price > 0 && (
-					<span suppressHydrationWarning className={`text-sm px-2 py-[0.5px] me-2 bg-${stripeCancelled ? 'orange-300' : 'white'} text-${stripeCancelled ? 'orange-700' : 'green-800'} border border-${stripeCancelled ? 'orange-700' : 'green-300'} text-sm rounded-lg`}>
+					<span suppressHydrationWarning className={`text-sm px-2 py-[0.5px] me-2 bg-white text-${stripeCancelled ? 'orange-700' : 'green-800'} border border-${stripeCancelled ? 'orange-800' : 'green-800'} text-sm rounded-lg`}>
 						{stripeCancelled === true ? 'Ends' : 'Renews'} {new Date(stripeEndsAt).toDateString()}
 					</span>
 				)}
