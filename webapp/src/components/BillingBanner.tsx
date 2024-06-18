@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import React from 'react';
+import { useRouter } from 'next/router';
 
 export default function BillingBanner({ stripePlan, stripeEndsAt, stripeCancelled }) {
+
 	const now = Date.now();
 	const daysRemaining = Math.floor((stripeEndsAt - now) / 86400000);
+	const router = useRouter();
 
-	if (!stripePlan || !stripeEndsAt || stripeEndsAt <= now || daysRemaining > 30) {
+	if (router.asPath == '/billing' || !stripePlan || !stripeEndsAt || stripeEndsAt <= now || daysRemaining > 30) {
 		return null;
 	}
 
