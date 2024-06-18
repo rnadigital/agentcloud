@@ -176,7 +176,7 @@ export async function hasPaymentMethod(req, res, next) {
 	}
 
 	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
-		limit: 3, //Just 1??
+		limit: 1,
 	});
 
 	const hasPaymentMethods = paymentMethods?.data?.length > 0;
@@ -315,7 +315,7 @@ export async function confirmChangePlan(req, res, next) {
 	});
 
 	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
-		limit: 3
+		limit: 1,
 	});
 
 	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
