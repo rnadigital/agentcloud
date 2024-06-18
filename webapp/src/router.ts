@@ -202,7 +202,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
 	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), fetchUsage, checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.deleteTeamMemberApi);
-	teamRouter.post('/forms/team/transfer-ownership', hasPerms.one([Permissions.ORG_OWNER, Permissions.TEAM_OWNER]), teamController.transferTeamOwnershipApi);
+	teamRouter.post('/forms/team/transfer-ownership', hasPerms.any(Permissions.ORG_OWNER, Permissions.TEAM_OWNER), teamController.transferTeamOwnershipApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.addTeamApi);
 
 	//assets

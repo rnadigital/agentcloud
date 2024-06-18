@@ -55,7 +55,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 	};
 	
 	return (
-		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md min-w-[20px]'>
+		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md min-w-[200px]'>
 			<p className='mb-2 font-bold tracking-tight text-gray-900 flex space-x-4'>
 				<span>{member.name}</span>
 				{!me && permissions.get(Permissions.EDIT_TEAM_MEMBER) && <Link href={`/${resourceSlug}/team/${member._id}/edit`}>

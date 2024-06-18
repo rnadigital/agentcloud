@@ -5,7 +5,7 @@ module.exports = {
     // watch_delay: 1000,
     ignore_watch : ["node_modules", "src/components", "src/pages", "src/context", "\\.next", "\\.dist"],
     "env": {
-      "DEBUG": "webapp*,-webapp:storage*",
+      "DEBUG": "webapp*,-webapp:storage*,-webapp:middleware:auth:setpermissions",
     },
   }]
 }
