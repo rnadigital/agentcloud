@@ -112,11 +112,14 @@ export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, switching } = accountContext as any;
+	const { account, csrf, switching, team } = accountContext as any;
+	const { currentTeam } = account || {};
 	const { stripeEndsAt, stripePlan, stripeCancelled } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -265,7 +268,7 @@ export default withRouter(function Layout(props) {
 																Account
 															</Link>
 														</li>
-														<li key='billing'>
+														{isOrgOwner && <li key='billing'>
 															<Link
 																href='/billing'
 																className={classNames(
@@ -281,7 +284,7 @@ export default withRouter(function Layout(props) {
 																/>
 																Billing
 															</Link>
-														</li>
+														</li>}
 														{/*<li>
 															<Link
 																href='/settings'
@@ -409,7 +412,7 @@ export default withRouter(function Layout(props) {
 											Account
 										</Link>
 									</li>
-									<li key='billing'>
+									{isOrgOwner && <li key='billing'>
 										<Link
 											href='/billing'
 											className={classNames(
@@ -425,7 +428,7 @@ export default withRouter(function Layout(props) {
 											/>
 											Billing
 										</Link>
-									</li>
+									</li>}
 									{/*<li>
 										<Link
 											href='/settings'
