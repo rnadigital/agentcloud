@@ -130,6 +130,11 @@ export default async function createAccount(
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
 				trial_period_days: 30,
+				trial_settings: {
+					end_behavior: {
+						missing_payment_method: 'cancel',
+					}
+				}
 			});
 			log('Subscription created for new user: %O', subscription);
 			await setStripeCustomerId(newAccountId, stripeCustomer.id);

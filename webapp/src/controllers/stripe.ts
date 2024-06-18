@@ -268,7 +268,7 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let { stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
+	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -335,7 +335,8 @@ export async function confirmChangePlan(req, res, next) {
 	}
 
 	const subscription = await stripe.subscriptions.update(subscriptionId, {
-		items
+		items,
+		...(stripeTrial === true ? { trial_end: 'now' } : {}),
 	});
 
 	// const notification = {
