@@ -3,8 +3,8 @@
 import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import { ModelType } from 'struct/model';
 import { InsertResult } from 'struct/db';
+import { ModelType } from 'struct/model';
 
 export type Model = {
 	_id?: ObjectId;

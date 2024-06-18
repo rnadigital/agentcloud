@@ -132,7 +132,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 							</select>
 						</div>
 					</div>
-					{Object.entries(ModelTypeRequirements[type]).filter(e => e[1]).map(([key, _], ei) => {
+					{Object.entries(ModelTypeRequirements[type]).filter(e => e[1]).map(([key, req]: any, ei) => {
 						return (<div key={`modelName_${type}_${ei}`}>
 							<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								{key}
@@ -144,7 +144,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 									id={key}
 									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 									onChange={e => setConfig(e.target)}
-									required
+									required={req?.optional !== true}
 									defaultValue={config[key]}
 								/>
 							</div>

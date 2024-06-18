@@ -10,8 +10,8 @@ import { addModel,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
 import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
-import { ModelType } from 'struct/model';
 import { ProcessImpl } from 'struct/crew';
+import { ModelType } from 'struct/model';
 import { ModelEmbeddingLength } from 'struct/model';
 
 export async function appsData(req, res, _next) {

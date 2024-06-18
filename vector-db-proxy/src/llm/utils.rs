@@ -139,7 +139,9 @@ pub async fn embed_text(
                             if let Some(api_key) = model_obj.config.api_key {
     	                        let mut config = OpenAIConfig::new()
                                     .with_api_key(api_key);
-                                config = config.with_org_id(model_obj.orgId.to_string());
+                                if let Some(org_id) = model_obj.config.org_id {
+                                    config = config.with_org_id(org_id)
+                                }
                                 let client = async_openai::Client::with_config(config).with_backoff(backoff);
                                 let request = CreateEmbeddingRequestArgs::default()
                                     .model(m)

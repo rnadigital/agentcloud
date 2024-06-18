@@ -11,31 +11,36 @@ export enum ModelType {
 
 export const ModelTypes = Object.values(ModelType);
 
+interface FieldRequirement {
+	type: string;
+	optional?: boolean;
+}
+
 interface ModelRequirements {
-  [key: string]: string | boolean; // Key is the field name, value is its type or existence
+	[key: string]: FieldRequirement;
 }
 
 export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
-		api_key: 'string',
+		api_key: { type: 'string' },
+		org_id: { type: 'string', optional: true },
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
-		base_url: 'string',
-		api_key: 'string',
+		base_url: { type: 'string' },
+		api_key: { type: 'string' },
 	},
 	[ModelType.COHERE]: {
-		cohere_api_key: 'string',
+		cohere_api_key: { type: 'string' },
 	},
 	[ModelType.ANTHROPIC]: {
-		api_key: 'string',
+		api_key: { type: 'string' },
 	},
 	[ModelType.GROQ]: {
-		groq_api_key: 'string',
+		groq_api_key: { type: 'string' },
 	},
-  // Add more types here if needed
+	// Add more types here if needed
 };
-
 
 export const ModelList = {
 	[ModelType.OPENAI]: [
