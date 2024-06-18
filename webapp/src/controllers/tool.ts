@@ -3,7 +3,6 @@
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
@@ -14,15 +13,13 @@ import { Retriever,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function toolsData(req, res, _next) {
-	const [tools, credentials, datasources] = await Promise.all([
+	const [tools, datasources] = await Promise.all([
 		getToolsByTeam(req.params.resourceSlug),
-		getCredentialsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
-		credentials,
 		datasources,
 	};
 }
@@ -47,15 +44,13 @@ export async function toolsJson(req, res, next) {
 }
 
 export async function toolData(req, res, _next) {
-	const [tool, credentials, datasources] = await Promise.all([
+	const [tool, datasources] = await Promise.all([
 		getToolById(req.params.resourceSlug, req.params.toolId),
-		getCredentialsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tool,
-		credentials,
 		datasources,
 	};
 }
@@ -109,7 +104,6 @@ function validateTool(tool) {
 		name: 'Name',
 		retriever_type: 'Retrieval Strategy',
 		type: 'Type',
-		credentialId: 'Credential',
 		'data.builtin': 'Is built-in',
 		'data.description': 'Description',
 		'data.parameters': 'Parameters',

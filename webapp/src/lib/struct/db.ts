@@ -11,7 +11,6 @@ export enum CollectionName {
 	Apps = 'apps',
 	Chat = 'chat',
 	CheckoutSessions = 'checkoutsessions',
-	Credentials = 'credentials',
 	Crews = 'crews',
 	Datasources = 'datasources',
 	Version = 'version',

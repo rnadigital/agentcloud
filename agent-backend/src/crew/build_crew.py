@@ -78,7 +78,7 @@ class CrewAIBuilder:
     def build_models(self):
         for key, model in self.models_models.items():
             credential = match_key(self.credentials_models, key)
-            self.crew_models[key] = language_model_factory(model, credential)
+            self.crew_models[key] = language_model_factory(model) #, credential)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():

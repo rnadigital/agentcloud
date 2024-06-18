@@ -56,7 +56,6 @@ export default function CreateToolModal({ open, setOpen, callback }) {
 									</Dialog.Title>
 									<div className='mt-2'>
 										<ToolForm
-											// credentials={credentials}
 											compact={true}
 											callback={callback}
 											datasources={datasources} 
