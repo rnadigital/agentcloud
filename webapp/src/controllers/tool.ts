@@ -3,7 +3,6 @@
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { getCredentialsByTeam } from 'db/credential';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
@@ -14,15 +13,13 @@ import { Retriever,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function toolsData(req, res, _next) {
-	const [tools, credentials, datasources] = await Promise.all([
+	const [tools, datasources] = await Promise.all([
 		getToolsByTeam(req.params.resourceSlug),
-		getCredentialsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
-		credentials,
 		datasources,
 	};
 }
@@ -47,15 +44,13 @@ export async function toolsJson(req, res, next) {
 }
 
 export async function toolData(req, res, _next) {
-	const [tool, credentials, datasources] = await Promise.all([
+	const [tool, datasources] = await Promise.all([
 		getToolById(req.params.resourceSlug, req.params.toolId),
-		getCredentialsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tool,
-		credentials,
 		datasources,
 	};
 }
@@ -78,7 +73,7 @@ export async function toolEditPage(app, req, res, next) {
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/tool/${data.tool._id}/edit`);
 }
- 
+
 /**
  * GET /[resourceSlug]/tool/add
  * tool json data
@@ -105,11 +100,10 @@ function validateTool(tool) {
 		validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
 		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
 		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
-	], { 
+	], {
 		name: 'Name',
 		retriever_type: 'Retrieval Strategy',
 		type: 'Type',
-		credentialId: 'Credential',
 		'data.builtin': 'Is built-in',
 		'data.description': 'Description',
 		'data.parameters': 'Parameters',
@@ -123,7 +117,7 @@ export async function addToolApi(req, res, next) {
 	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
-	if (validationError) {	
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
@@ -133,7 +127,7 @@ export async function addToolApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
 	}
-	
+
 	if (runtime && (typeof runtime !== 'string' || !runtimeValues.includes(runtime))) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
 	}
@@ -145,7 +139,7 @@ export async function addToolApi(req, res, next) {
 		builtin: false,
 		name: (type as ToolType) === ToolType.API_TOOL
 			? 'openapi_request'
-			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL
 				? toSnakeCase(name)
 				: name),
 	};
@@ -187,7 +181,7 @@ export async function editToolApi(req, res, next) {
 	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body);
-	if (validationError) {	
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
@@ -206,7 +200,7 @@ export async function editToolApi(req, res, next) {
 		builtin: false,
 		name: (type as ToolType) === ToolType.API_TOOL
 			? 'openapi_request'
-			: ((type as ToolType) === ToolType.FUNCTION_TOOL 
+			: ((type as ToolType) === ToolType.FUNCTION_TOOL
 				? toSnakeCase(name)
 				: name),
 	};
@@ -248,11 +242,21 @@ export async function editToolApi(req, res, next) {
  * @apiParam {String} toolID tool id
  */
 export async function deleteToolApi(req, res, next) {
-
 	const { toolId } = req.body;
 
 	if (!toolId || typeof toolId !== 'string' || toolId.length !== 24) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+
+	if (!existingTool) {
+		return dynamicResponse(req, res, 404, { error: 'Tool not found' });
+	}
+
+	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.deleteFunction(toolId.toString());
 	}
 
 	await Promise.all([
@@ -260,12 +264,5 @@ export async function deleteToolApi(req, res, next) {
 		removeAgentsTool(req.params.resourceSlug, toolId),
 	]);
 
-	const existingTool = await getToolById(req.params.resourceSlug, toolId);
-	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
-		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.deleteFunction(toolId.toString());
-	}
-
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
-
 }

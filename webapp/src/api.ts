@@ -167,17 +167,6 @@ export function deleteAsset(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/asset/${body.assetId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
-// Credentials
-export function getCredentials(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/credentials.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function deleteCredential(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/credential/${body.credentialId}`, 'DELETE', body, dispatch, errorCallback, router);
-}
-export function addCredential(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/credential/add`, 'POST', body, dispatch, errorCallback, router);
-}
-
 // Datasources
 export function getDatasources(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/datasources.json`, 'GET', null, dispatch, errorCallback, router);

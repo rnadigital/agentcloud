@@ -85,12 +85,6 @@ const agentNavigation: any[] = [
 		base: '/model',
 		icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
 	},
-	{
-		name: 'Credentials',
-		href: '/credentials',
-		base: '/credential',
-		icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
-	},
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 

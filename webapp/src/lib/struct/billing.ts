@@ -1,5 +1,5 @@
 import Permissions from 'permissions/permissions';
-import { CredentialType, CredentialTypes } from 'struct/credential';
+import { ModelType, ModelTypes } from 'struct/model';
 
 export const stripeEnvs: string[] = [
 	'STRIPE_FREE_PLAN_PRICE_ID',
@@ -180,8 +180,8 @@ export const pricingMatrix: PricingMatrix = {
 		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
 		maxVectorStorageBytes: (100 * 1024 * 1024), //100MB
 		storageLocations: ['US'],
-		llmModels: [CredentialType.OPENAI],
-		embeddingModels: [CredentialType.OPENAI],
+		llmModels: [ModelType.OPENAI],
+		embeddingModels: [ModelType.OPENAI],
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -200,8 +200,8 @@ export const pricingMatrix: PricingMatrix = {
 		maxFileUploadBytes: (25 * 1024 * 1024), //25MB
 		maxVectorStorageBytes: (1 * 1024 * 1024 * 1024), //1GB
 		storageLocations: ['US'],
-		llmModels: CredentialTypes,
-		embeddingModels: CredentialTypes,
+		llmModels: ModelTypes,
+		embeddingModels: ModelTypes,
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 100,
@@ -213,8 +213,8 @@ export const pricingMatrix: PricingMatrix = {
 		maxFileUploadBytes: (50 * 1024 * 1024), //50MB
 		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
-		llmModels: CredentialTypes,
-		embeddingModels: CredentialTypes,
+		llmModels: ModelTypes,
+		embeddingModels: ModelTypes,
 	},
 	[SubscriptionPlan.ENTERPRISE]: { //TODO
 		users: 10**6,
@@ -226,7 +226,7 @@ export const pricingMatrix: PricingMatrix = {
 		maxFileUploadBytes: (1 * 1024 * 1024 * 1024), //1GB (until we have "custom")
 		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
 		storageLocations: ['US'],
-		llmModels: CredentialTypes,
-		embeddingModels: CredentialTypes,
+		llmModels: ModelTypes,
+		embeddingModels: ModelTypes,
 	}
 };

@@ -32,7 +32,6 @@ import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
 import * as appController from 'controllers/app';
 import * as assetController from 'controllers/asset';
-import * as credentialController from 'controllers/credential';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
@@ -152,14 +151,6 @@ export default function router(server, app) {
 	teamRouter.post('/forms/app/add2', hasPerms.one(Permissions.CREATE_APP), appController.addAppApiSimple);
 	teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_APP), appController.editAppApi);
 	teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_APP), appController.deleteAppApi);
-
-	//credentials
-	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
-	teamRouter.get('/credentials.json', credentialController.credentialsJson);
-	teamRouter.get('/credential/add', hasPerms.one(Permissions.CREATE_CREDENTIAL), credentialController.credentialAddPage.bind(null, app));
-	teamRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
-	teamRouter.post('/forms/credential/add', hasPerms.one(Permissions.CREATE_CREDENTIAL), credentialController.addCredentialApi);
-	teamRouter.delete('/forms/credential/:credentialId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_CREDENTIAL), credentialController.deleteCredentialApi);
 
 	//tools
 	teamRouter.get('/tools', toolController.toolsPage.bind(null, app));

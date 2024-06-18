@@ -3,19 +3,18 @@
 import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import { CredentialType } from 'struct/credential';
 import { InsertResult } from 'struct/db';
+import { ModelType } from 'struct/model';
 
 export type Model = {
 	_id?: ObjectId;
 	orgId: ObjectId;
 	teamId: ObjectId;
-	credentialId?: ObjectId; //id of credential (holds key) in credentials db 
 	name: string;
 	model: string;
 	modelType: string; //'embedding' | 'llm'
 	embeddingLength: number;
-	type?: CredentialType; //redundant
+	type?: ModelType;
 	config?: Record<string,any>;
 	hidden?: boolean;
 }

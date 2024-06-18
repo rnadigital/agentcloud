@@ -30,7 +30,7 @@ export default function Tools(props) {
 		fetchTools();
 	}, [resourceSlug]);
 
-	const { tools, credentials } = state;
+	const { tools } = state;
 	const filteredTools = tools?.filter(x => !x.hidden);
 
 	if (!tools) {
