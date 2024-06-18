@@ -171,7 +171,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 							setTimeout(() => setSubmitting(false), 500);
 						}
 					}}		
-					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && !stripeCancelled)}
+					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && (!stripeCancelled || price === 0))}
 					className={editedAddons || (!currentPlan && selectedPlan === plan)
 						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
 						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
@@ -180,7 +180,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 					{submitting
 						? 'Loading...'
 						: currentPlan
-							? stripeCancelled ? 'Resubscribe' : 'Update Subscription'
+							? stripeCancelled && price > 0 ? 'Resubscribe' : 'Update Subscription'
 							: 'Change Plan'}
 				</button>
 			)}
