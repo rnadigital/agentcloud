@@ -218,7 +218,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 				}, (err) => {
 					toast.error(err);
 					setSubmitting(false);
-				}, null);
+				}, router);
 			} else {
 				const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
 				callback && addedTool && callback(addedTool._id, body);

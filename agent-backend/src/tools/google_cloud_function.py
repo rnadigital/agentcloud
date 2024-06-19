@@ -44,7 +44,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             function_name=tool.data.name,
             code=tool.data.code,
             properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else [],
-            function_id=str(tool.id)
+            function_id=str(tool.functionId)
         )
         google_cloud_function_tool.post_init()
         return google_cloud_function_tool

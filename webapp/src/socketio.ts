@@ -4,7 +4,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import debug from 'debug';
 import { Server } from 'socket.io';
 
-import { client } from './lib/redis/redis';
+import { client } from 'lib/redis/redis';
 const log = debug('webapp:socket');
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';

@@ -1,5 +1,7 @@
 'use strict';
 
+import { v4 as uuidv4 } from 'uuid';
+import * as redisClient from 'lib/redis/redis';
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
@@ -8,8 +10,9 @@ import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from '
 import FunctionProviderFactory from 'lib/function';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
+import { ObjectId } from 'mongodb';
 import { runtimeValues } from 'struct/function';
-import { Retriever,ToolType, ToolTypes } from 'struct/tool';
+import { Retriever, ToolType, ToolTypes, ToolState } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function toolsData(req, res, _next) {
@@ -114,9 +117,9 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime } = req.body;
 
-	const validationError = validateTool(req.body);
+	const validationError = validateTool(req.body); //TODO: reject if function tool type
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -132,6 +135,7 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
 	}
 
+	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 	const foundIcon = await getAssetById(iconId);
 
 	const toolData = {
@@ -143,8 +147,10 @@ export async function addToolApi(req, res, next) {
 				? toSnakeCase(name)
 				: name),
 	};
+
+	const functionId = isFunctionTool ? uuidv4() : null;
 	const addedTool = await addTool({
-		orgId: res.locals.matchingOrg.id,
+		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 	    name,
 	    description,
@@ -158,18 +164,46 @@ export async function addToolApi(req, res, next) {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
 		} : null,
+		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
+		functionId,
 	});
 
-	if (type as ToolType === ToolType.FUNCTION_TOOL) {
+	if (!addedTool?.insertedId) {
+		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
+	}
+
+	if (isFunctionTool) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		const addedToolId = addedTool.insertedId.toString();
-		await functionProvider.deployFunction({
-			code: toolData?.code,
-			requirements: toolData?.requirements,
-			environmentVariables: toolData?.environmentVariables,
-			mongoId: toolData?.addedToolId,
-			runtime,
-		});
+		try {
+			functionProvider.deployFunction({
+				code: toolData?.code,
+				requirements: toolData?.requirements,
+				environmentVariables: toolData?.environmentVariables,
+				id: functionId,
+				runtime,
+			}).then(() => {
+				/* Waits for the function to be active (asynchronously)
+				 * TODO: turn this into a job thats sent to bull and handled elsewhere
+				 * to prevent issues of ephemeral webapp pods leaving functions in "pending" state
+				 */
+				functionProvider.waitForFunctionToBeActive(functionId)
+					.then(isActive => {
+						if (!isActive) {
+							// Delete the broken function
+							functionProvider.deleteFunction(functionId);
+						}
+						editTool(req.params.resourceSlug, addedTool?.insertedId, {
+							state: isActive ? ToolState.READY : ToolState.ERROR,
+						});
+					});
+			});
+		} catch (e) {
+			console.error(e);
+			// logging warnings only
+			functionProvider.deleteFunction(functionId).catch(e => console.warn(e));
+			editTool(req.params.resourceSlug, addedTool?.insertedId, { state: ToolState.ERROR }).catch(e => console.warn(e));
+			return dynamicResponse(req, res, 400, { error: 'Error deploying or testing function' });
+		}
 	}
 
 	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
@@ -180,7 +214,7 @@ export async function editToolApi(req, res, next) {
 
 	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
-	const validationError = validateTool(req.body);
+	const validationError = validateTool(req.body); //TODO: reject if function tool type
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -192,9 +226,9 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	//Need the existing tool type to know whether we should delete an existing deployed function
 	const existingTool = await getToolById(req.params.resourceSlug, toolId);
 
+	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 	const toolData = {
 		...data,
 		builtin: false,
@@ -213,24 +247,55 @@ export async function editToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
+		...(isFunctionTool ? { state: ToolState.PENDING } : {}), //TODO: only set pending if changes were made that affect the deployed function
 	});
 
+	//TODO: only run these checks if changes were made that affect the deployed function
 	let functionProvider;
 	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL && type as ToolType !== ToolType.FUNCTION_TOOL) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.deleteFunction(toolId.toString());
+		await functionProvider.deleteFunction(existingTool.functionId);
 	} else if (type as ToolType === ToolType.FUNCTION_TOOL) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
-		await functionProvider.deployFunction({
-			code: toolData?.code,
-			requirements: toolData?.requirements,
-			environmentVariables: toolData?.environmentVariables,
-			mongoId: toolId,
-			runtime,
-		});
+		const functionId = uuidv4();
+		try {
+			functionProvider.deployFunction({
+				code: toolData?.code,
+				requirements: toolData?.requirements,
+				environmentVariables: toolData?.environmentVariables,
+				id: functionId,
+				runtime,
+			}).then(() => {
+				/* Waits for the function to be active (asynchronously)
+				 * TODO: turn this into a job thats sent to bull and handled elsewhere
+				 * to prevent issues of ephemeral webapp pods leaving functions in "pending" state
+				 */
+				functionProvider.waitForFunctionToBeActive(functionId)
+					.then(async isActive => {
+						await editTool(req.params.resourceSlug, toolId, {
+							state: isActive ? ToolState.READY : ToolState.ERROR,
+							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
+						});
+						if (!isActive) {
+							// Delete the new broken function
+							functionProvider.deleteFunction(functionId);
+						}
+						if (isActive && existingTool?.functionId) {
+							//Delete the old function with old functionid
+							functionProvider.deleteFunction(existingTool.functionId);
+						}
+					});
+			});
+		} catch (e) {
+			console.error(e);
+			// logging warnings only
+			functionProvider.deleteFunction(functionId).catch(e => console.warn(e));
+			editTool(req.params.resourceSlug, toolId, { state: ToolState.ERROR }).catch(e => console.warn(e));
+			return dynamicResponse(req, res, 400, { error: 'Error deploying or testing function' });
+		}
 	}
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });
+	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/tools` });
 
 }
 
