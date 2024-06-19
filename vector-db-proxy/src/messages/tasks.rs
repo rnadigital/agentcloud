@@ -28,7 +28,7 @@ pub async fn get_message_queue(message_queue_provider: MessageQueueProvider, qdr
             println!("Using RabbitMQ as the streaming Queue!");
             let rabbitmq_connection = RabbitConnect {
                 host: global_data.rabbitmq_host.clone(),
-                port: global_data.rabbitmq_port.clone(),
+                port: global_data.rabbitmq_port,
                 username: global_data.rabbitmq_username.clone(),
                 password: global_data.rabbitmq_password.clone(),
             };
@@ -102,7 +102,7 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                                             match qdrant.bulk_upsert_data(points_to_upload, Some(vector_length), Some(model_name)).await {
                                                 Ok(_) => {
                                                     log::debug!("points uploaded successfully!");
-                                                    if let Err(e) = send_webapp_embed_ready(&datasource_id).await {
+                                                    if let Err(e) = send_webapp_embed_ready(datasource_id).await {
                                                         log::error!("Error notifying webapp: {}", e);
                                                     } else {
                                                         log::info!("Webapp notified successfully!");
