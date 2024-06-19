@@ -32,8 +32,14 @@ pub async fn process_streaming_messages(
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         let mut field_path = "recordCount.failure";
-                        if let Value::Object(data_obj) = message_data {
-                            let mut metadata = convert_serde_value_to_hashmap_string(data_obj);
+                        if let Value::Object(mut data_obj) = message_data {
+                            // This is to account for airbyte sending the data in the _airbyte_data object when the destination is PubSub
+                            if let Some(is_pubsub) = data_obj.get("_airbyte_data") {
+                                if let Some(pubsub_is_obj) = is_pubsub.as_object() {
+                                    data_obj = pubsub_is_obj.to_owned();
+                                }
+                            }
+                            let mut metadata = convert_serde_value_to_hashmap_string(data_obj.to_owned());
                             log::debug!("Metadata: {:?}", metadata);
                             if let Some(text_field) = embedding_field {
                                 log::debug!("text field: {}", text_field.as_str().to_lowercase());
