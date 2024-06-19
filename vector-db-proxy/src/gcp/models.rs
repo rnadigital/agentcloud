@@ -56,7 +56,7 @@ impl MessageQueue for PubSubConnect {
             let cloned_message = message.message.clone();
             let message_attributes = cloned_message.attributes;
             if let Ok(message_string) = String::from_utf8(cloned_message.data) {
-                match message_attributes.get("stream") {
+                match message_attributes.get("_stream") {
                     Some(datasource_id) => {
                         let mut stream_type: Option<String> = None;
                         if let Some(s) = message_attributes.get("type") { stream_type = Some(s.to_owned()); }
