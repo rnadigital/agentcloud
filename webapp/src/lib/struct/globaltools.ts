@@ -111,6 +111,22 @@ The returned data includes essential details like the paper's title, authors, ab
 			},
 			builtin: true
 		}
+	},
+	{
+		name: 'Search Tavily',
+		description: 'This tool takes a string query as input and fetches relevant data from YouTube.',
+		type: ToolType.FUNCTION_TOOL,
+		data: {
+			code: '',
+			name: 'search_youtube',
+			description: 'This tool takes a string query as input and fetches relevant data from YouTube.',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {query: {type: 'string', description: 'The search query to send to YouTube'}}
+			},
+			builtin: true
+		}
 	}
 ].map((t: Tool) => {
 	t.data.builtin = true;

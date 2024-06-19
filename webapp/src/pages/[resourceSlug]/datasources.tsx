@@ -6,7 +6,7 @@ import DatasourceFileTable from 'components/DatasourceFileTable';
 import DatasourceTable from 'components/DatasourceTable';
 import ErrorAlert from 'components/ErrorAlert';
 import NewButtonSection from 'components/NewButtonSection';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
@@ -22,9 +22,9 @@ export default function Datasources(props) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const [, notificationTrigger]: any = useSocketContext();
-	
+
 	const { account, teamName } = accountContext as any;
-	const { stripePlan } = (account?.stripe||{});
+	const { stripePlan } = (account?.stripe || {});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
@@ -78,7 +78,7 @@ export default function Datasources(props) {
 			<title>{`Datasources - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={filteredDatasources} title='File Uploads' />
+		<PageTitleWithButtons title='File Uploads' />
 
 		<span className='pt-1 mb-3 w-full'>
 			<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasources} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
@@ -89,7 +89,15 @@ export default function Datasources(props) {
 		{/*(stripePlan && pricingMatrix[stripePlan].dataConnections) && <>*/}
 		<span className='py-8 h-1'></span>
 
-		<PageTitleWithNewButton list={filteredDatasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
+		<PageTitleWithButtons
+			buttons={[
+				{
+					buttonText: 'New Connection',
+					onClick: () => setOpen(true),
+					icon: <PlusIcon />
+				}
+			]}
+			title='Data Connections' />
 
 		<CreateDatasourceModal
 			open={open}

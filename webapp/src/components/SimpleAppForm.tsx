@@ -2,22 +2,19 @@
 
 import * as API from '@api';
 import {
-	HandRaisedIcon,
 	PlayIcon
 } from '@heroicons/react/20/solid';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useReducer,useState } from 'react';
+import React, { useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
-import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 // @ts-ignore
@@ -27,7 +24,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFormData }
+export default function SimpleAppForm({ datasourceChoices = [], callback, fetchFormData }
 	: { datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
@@ -41,7 +38,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
- 
+
 	const [config, setConfig] = useReducer(configReducer, {
 		model: 'gpt-4o',
 	});
@@ -170,7 +167,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									<option value={ModelType.GROQ}>Groq</option>
 								</select>
 							</div>
-						</div>	
+						</div>
 
 						{ModelTypeRequirements[modelType] && Object.keys(ModelTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
 							{Object.entries(ModelTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
@@ -194,33 +191,32 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 						</div>}
 						{ModelList[modelType]?.length > 0 && <div className='sm:col-span-12'>
 							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Model
+								Model
 							</label>
 							<div className='mt-2'>
 								<Select
 									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={config?.model ? { label: config?.model, value: config?.model } : null}
-						            onChange={(v: any) => {
-				            			setConfig({
+									primaryColor={'indigo'}
+									classNames={SelectClassNames}
+									value={config?.model ? { label: config?.model, value: config?.model } : null}
+									onChange={(v: any) => {
+										setConfig({
 											name: 'model',
 											value: v?.value,
-				            			});
-					            	}}
-						            options={ModelList && ModelList[modelType] && ModelList[modelType].filter(m => !ModelEmbeddingLength[m]).map(m => ({ label: m, value: m }))}
-						            formatOptionLabel={data => {
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}
-						                </li>);
-						            }}
-						        />
+										});
+									}}
+									options={ModelList && ModelList[modelType] && ModelList[modelType].filter(m => !ModelEmbeddingLength[m]).map(m => ({ label: m, value: m }))}
+									formatOptionLabel={data => {
+										return (<li
+											className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
+													? 'bg-blue-100 text-blue-500'
+													: 'dark:text-white'
+												}`}
+										>
+											{data.label}
+										</li>);
+									}}
+								/>
 							</div>
 						</div>}
 
@@ -228,37 +224,37 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources
 							</label>
-							
+
 							<div className='mt-2'>
 								<Select
 									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
+									primaryColor={'indigo'}
+									classNames={{
 										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
 										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
 										list: 'dark:bg-slate-700',
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={datasourceState}
-						            onChange={(v: any) => {
-							            if (v?.value === null) {
+									}}
+									value={datasourceState}
+									onChange={(v: any) => {
+										if (v?.value === null) {
 											//Create new pressed
 											return setModalOpen('datasource');
 										}
-						            	setDatasourceState(v);
-					            	}}
-						            options={datasourceChoices
-						            	// .filter(t => t?.status === DatasourceStatus.READY)
-						            	.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
-						            	.concat([{ label: '+ New Datasource', value: null }])}
-						            formatOptionLabel={formatDatasourceOptionLabel}
-						        />
+										setDatasourceState(v);
+									}}
+									options={datasourceChoices
+										// .filter(t => t?.status === DatasourceStatus.READY)
+										.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
+										.concat([{ label: '+ New Datasource', value: null }])}
+									formatOptionLabel={formatDatasourceOptionLabel}
+								/>
 							</div>
-						</div>			
+						</div>
 
 					</div>
-				</div>			
+				</div>
 
 			</div>
 
