@@ -4,7 +4,7 @@ import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/CreateToolModal';
-import ToolSelector from 'components/ToolSelector';
+import ToolSelector from 'components/tools/ToolSelector';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 import { ModelEmbeddingLength } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function AgentForm({ agent = {}, models = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
+export default function AgentForm({ agent = {}, models = [], tools = [], groups = [], editing, compact = false, callback, fetchAgentFormData }
 	: { agent?: any, models?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -65,7 +65,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			toolIds: toolState ? toolState.map(t => t.value) : [],
 			iconId: icon?._id,
 		};
-		if (editing) {			
+		if (editing) {
 			await API.editAgent(agentState._id, body, () => {
 				toast.success('Agent Updated');
 			}, (res) => {
@@ -119,7 +119,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	}
 
 	return (<>
-		{modal}		
+		{modal}
 		<form onSubmit={agentPost}>
 			<input
 				type='hidden'
@@ -131,7 +131,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Avatar
+							Avatar
 						</label>
 						<div className='mt-2'>
 							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
@@ -142,7 +142,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
 						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Name
+							Name
 						</label>
 						<div className='mt-2'>
 							<input
@@ -280,11 +280,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								formatOptionLabel={data => {
 									const optionCred = models.find(oc => oc._id === data.value);
 									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'
-										}`}
+											}`}
 									>
 										{data.label} {optionCred ? `(${optionCred?.model})` : null}
 									</li>);
@@ -319,11 +318,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								formatOptionLabel={data => {
 									const optionCred = models.find(oc => oc._id === data.value);
 									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'
-										}`}
+											}`}
 									>
 										{data.label} {optionCred ? `(${optionCred?.model})` : null}
 									</li>);
@@ -348,11 +346,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								formatOptionLabel={data => {
 									const optionCred = tools.find(oc => oc._id === data.value);
 									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'
-										}`}
+											}`}
 									>
 										{data.label} {optionCred ? `(${optionCred?.type})` : null}
 									</li>);

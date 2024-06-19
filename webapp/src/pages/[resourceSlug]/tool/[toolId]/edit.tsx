@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 import * as API from '../../../../api';
-import ToolForm from '../../../../components/ToolForm';
+import ToolForm from '../../../../components/tools/ToolForm';
 import { useAccountContext } from '../../../../context/account';
 
 export default function EditTool(props) {

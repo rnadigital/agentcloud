@@ -8,10 +8,11 @@ import React, { useEffect, useState } from 'react';
 
 import * as API from '../../api';
 import NewButtonSection from '../../components/NewButtonSection';
-import ToolForm from '../../components/ToolForm';
-import ToolList from '../../components/ToolList';
+import ToolForm from '../../components/tools/ToolForm';
+import ToolList from '../../components/tools/ToolList';
 import { useAccountContext } from '../../context/account';
 import SearchFilter from 'components/SearchFilter';
+import ToolTabs from 'components/tools/TooltTabs';
 
 export default function Tools(props) {
 
@@ -58,7 +59,10 @@ export default function Tools(props) {
 				}
 			]}
 			title='Tools' />
+		<div className='mb-4' />
 		<SearchFilter filter="asda" setFilter={() => { }} />
+		<ToolTabs />
+
 
 		{tools.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/tool/add`}
