@@ -133,20 +133,6 @@ export function editTool(toolId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
-export function testFunction(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/test-function`, 'POST', body, dispatch, errorCallback, router);
-}
-export function addFunction(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/add-function`, 'POST', body, dispatch, errorCallback, router);
-}
-export function editFunction(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit-function`, 'POST', body, dispatch, errorCallback, router);
-}
-
-
-
-
-
 // Models
 export function getModels(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/models.json`, 'GET', null, dispatch, errorCallback, router);

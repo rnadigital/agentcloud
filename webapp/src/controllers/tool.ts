@@ -1,19 +1,19 @@
 'use strict';
 
-import { v4 as uuidv4 } from 'uuid';
-import * as redisClient from 'lib/redis/redis';
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
+import * as redisClient from 'lib/redis/redis';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import { runtimeValues } from 'struct/function';
-import { Retriever, ToolType, ToolTypes, ToolState } from 'struct/tool';
+import { Retriever, ToolState,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function toolsData(req, res, _next) {
 	const [tools, datasources] = await Promise.all([
