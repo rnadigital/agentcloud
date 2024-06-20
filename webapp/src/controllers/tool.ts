@@ -257,10 +257,6 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const _functionProvider = FunctionProviderFactory.getFunctionProvider();
-	const logs = await _functionProvider.getFunctionLogs('e9b9bb81-0afb-4a5c-9b87-24cbdf52a525').catch(e => { log(e); });
-	return dynamicResponse(req, res, 400, { error: logs });
-
 	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type

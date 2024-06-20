@@ -6,7 +6,9 @@ import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
 import { Readable } from 'stream';
 import { DeployFunctionArgs } from 'struct/function';
-
+const protopath = protofiles.getProtoPath('../../google-proto-files/google/cloud/audit/audit_log.proto');
+const root = protofiles.loadSync(protopath);
+const auditLogProto = root.lookupType('google.cloud.audit.AuditLog');
 import FunctionProvider from './provider';
 
 const log = debug('webapp:function:google');
@@ -38,33 +40,25 @@ class GoogleFunctionProvider extends FunctionProvider {
 	}
 
 	async getFunctionLogs(functionId: string, limit = 100): Promise<string> {
-		const filter = `resource.type="cloud_run_revision" resource.labels.service_name="function-${functionId}"`;
+		const filter = `resource.type="cloud_run_revision" severity>=WARNING resource.labels.service_name="function-${functionId}"`;
 		const [entries] = await this.#loggingClient.getEntries({
 			filter,
 			pageSize: limit,
 			orderBy: 'timestamp desc',
 		});
-	
 		return entries
 			.map(entry => {
-			
 				const payload = (entry as any).metadata.payload as string;
+				const textPayload = entry?.metadata?.textPayload;
 				if (payload == 'protoPayload' && Buffer.isBuffer(entry.metadata[payload]?.value)) {
-					const protopath = protofiles.getProtoPath('../../google-proto-files/google/cloud/audit/audit_log.proto');
-					const root = protofiles.loadSync(protopath);
-					const type = root.lookupType('google.cloud.audit.AuditLog');
-					const value = type.decode(entry.data.value).toJSON();
-					log(JSON.stringify(value, null, 2));
+					const value = auditLogProto.decode(entry.data.value).toJSON();
+					// log(JSON.stringify(value, null, 2));
+					return value?.status?.message;
+				} else if (textPayload) {
+					log('textPayload, %O', textPayload);
+					const severity = entry.metadata.severity || 'UNKNOWN';
+					return `${entry.metadata.timestamp} [${severity}] ${textPayload}`;
 				}
-			
-				// if (entry?.data?.value) {
-				// 	// const buffer = Buffer.from(entry.data.value, 'hex');
-				// 	const logText = entry.data.value.toString('utf-8').replace(/[\x00-\x1F\x7F-\x9F\x1B\[[0-9;]*m]/g, ''); // Remove color codes
-				// 	const severity = entry.metadata.severity || 'UNKNOWN';
-				// 	return `${entry.metadata.timestamp} [${severity}] ${logText}`;
-				// }
-				
-				return null;
 			})
 			.filter(x => x)
 			.join('\n');
