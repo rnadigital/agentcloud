@@ -1,7 +1,8 @@
-import { Storage } from '@google-cloud/storage';
+import { Logging } from '@google-cloud/logging';
 import archiver from 'archiver';
 import debug from 'debug';
 import { StandardRequirements,WrapToolCode } from 'function/base';
+import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
 import { Readable } from 'stream';
 import { DeployFunctionArgs } from 'struct/function';
@@ -11,8 +12,11 @@ import FunctionProvider from './provider';
 const log = debug('webapp:function:google');
 
 class GoogleFunctionProvider extends FunctionProvider {
+	// TODO: type these?
 	#storageProvider: any;
 	#functionsClient: any;
+	#loggingClient: any;
+
 	#projectId: string;
 	#location: string;
 	#bucket: string;
@@ -20,6 +24,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 	constructor() {
 		super();
 		this.#storageProvider = StorageProviderFactory.getStorageProvider('google');
+		this.#loggingClient = new Logging();
 	}
 
 	async init() {
@@ -30,6 +35,39 @@ class GoogleFunctionProvider extends FunctionProvider {
 		this.#location = process.env.GOOGLE_FUNCTION_LOCATION;
 		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME;
 		log('Google Function Provider initialized.');
+	}
+
+	async getFunctionLogs(functionId: string, limit = 100): Promise<string> {
+		const filter = `resource.type="cloud_run_revision" resource.labels.service_name="function-${functionId}"`;
+		const [entries] = await this.#loggingClient.getEntries({
+			filter,
+			pageSize: limit,
+			orderBy: 'timestamp desc',
+		});
+	
+		return entries
+			.map(entry => {
+			
+				const payload = (entry as any).metadata.payload as string;
+				if (payload == 'protoPayload' && Buffer.isBuffer(entry.metadata[payload]?.value)) {
+					const protopath = protofiles.getProtoPath('../../google-proto-files/google/cloud/audit/audit_log.proto');
+					const root = protofiles.loadSync(protopath);
+					const type = root.lookupType('google.cloud.audit.AuditLog');
+					const value = type.decode(entry.data.value).toJSON();
+					log(JSON.stringify(value, null, 2));
+				}
+			
+				// if (entry?.data?.value) {
+				// 	// const buffer = Buffer.from(entry.data.value, 'hex');
+				// 	const logText = entry.data.value.toString('utf-8').replace(/[\x00-\x1F\x7F-\x9F\x1B\[[0-9;]*m]/g, ''); // Remove color codes
+				// 	const severity = entry.metadata.severity || 'UNKNOWN';
+				// 	return `${entry.metadata.timestamp} [${severity}] ${logText}`;
+				// }
+				
+				return null;
+			})
+			.filter(x => x)
+			.join('\n');
 	}
 
 	async deployFunction({ id, code, requirements, runtime = 'python310', environmentVariables = {} }: DeployFunctionArgs): Promise<string> {

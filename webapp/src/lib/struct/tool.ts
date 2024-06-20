@@ -44,7 +44,6 @@ export type Tool = {
  	retriever_type?: Retriever;
 	retriever_config?: RetrieverConfig;
  	datasourceId?: ObjectId;
- 	functionId?: string;
  	state?: ToolState;
 	data?: {
 		builtin?: boolean;
@@ -61,6 +60,8 @@ export type Tool = {
 	},
 	icon?: IconAttachment;
 	hidden?: boolean;
+ 	functionId?: string;
+ 	functionLogs?: string;
 };
 
 export type FunctionProperty = {

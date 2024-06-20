@@ -13,6 +13,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
@@ -189,7 +190,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												{optionTool?.type} tool
 											</span>
 										</span>
-										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
+										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{optionTool?.state} {data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
 					            }}
 							/>

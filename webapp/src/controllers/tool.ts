@@ -196,6 +196,8 @@ export async function addToolApi(req, res, next) {
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
+						log('addToolApi functionId %s isActive %O', functionId, isActive);
+						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(addedTool?.insertedId),
 							teamId: toObjectId(req.params.resourceSlug),
@@ -203,13 +205,16 @@ export async function addToolApi(req, res, next) {
 							type: ToolType.FUNCTION_TOOL,
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
+							...(!isActive && logs ? { functionLogs: logs } : {}),
 						});
 						if (editedRes.modifiedCount === 0) {
 							/* If there were multiple current depoyments and this one happened out of order (late)
 							  delete the function to not leave it orphaned*/
+							log('Deleting and returning to prevent orphan functionId %s', functionId);
 							return functionProvider.deleteFunction(functionId);
 						} else if (!isActive) {
 							// Delete the broken function
+							log('Deleting broken functionId %s', functionId);
 							functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
@@ -251,6 +256,10 @@ export async function addToolApi(req, res, next) {
 }
 
 export async function editToolApi(req, res, next) {
+
+	const _functionProvider = FunctionProviderFactory.getFunctionProvider();
+	const logs = await _functionProvider.getFunctionLogs('e9b9bb81-0afb-4a5c-9b87-24cbdf52a525').catch(e => { log(e); });
+	return dynamicResponse(req, res, 400, { error: logs });
 
 	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
 
@@ -318,18 +327,23 @@ export async function editToolApi(req, res, next) {
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
+						log('editToolApi functionId %s isActive %O', functionId, isActive);
+						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(toolId),
 							teamId: toObjectId(req.params.resourceSlug),
-							functionId, // Note: filtering by the function id so that we will get 0 modifiedCount for orphaned function deployments
+							state: ToolState.PENDING,
+							//functionId: ...
 							type: ToolType.FUNCTION_TOOL, // Note: filter to only function tool so if they change the TYPE while its deploying we discard and delete the function to prevent orphan
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
+							...(!isActive && logs ? { functionLogs: logs } : {}),
 						});
-						if (editedRes.modifiedCount) {
+						if (editedRes.modifiedCount === 0) {
 							/* If there were multiple current depoyments and this one happened out of order (late)
 							  delete the function to not leave it orphaned*/
+							log('Deleting and returning to prevent orphan functionId %s', functionId);
 							return functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
@@ -356,9 +370,11 @@ export async function editToolApi(req, res, next) {
 						if (!isActive) {
 							// Delete the new broken function
 							functionProvider.deleteFunction(functionId);
+							log('Deleting new broken functionId %s', functionId);
 						}
 						if (isActive && existingTool?.functionId) {
 							//Delete the old function with old functionid
+							log('Deleting function with old functionId %s', functionId);
 							functionProvider.deleteFunction(existingTool.functionId);
 						}
 					}).catch(e => {
