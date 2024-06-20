@@ -206,7 +206,7 @@ export async function addToolApi(req, res, next) {
 							type: ToolType.FUNCTION_TOOL,
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
-							...(!isActive && logs ? { functionLogs: logs } : {}),
+							...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),
 						});
 						if (editedRes.modifiedCount === 0) {
 							/* If there were multiple current depoyments and this one happened out of order (late)
@@ -276,6 +276,10 @@ export async function editToolApi(req, res, next) {
 	if (!existingTool) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
+
+	// await FunctionProviderFactory.getFunctionProvider().getFunctionLogs(existingTool?.functionId)
+	// 	.then(res => { log('function logs %s', res); })
+	// 	.catch(e => { log(e); });
 	
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 
@@ -343,7 +347,7 @@ export async function editToolApi(req, res, next) {
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
-							...(!isActive && logs ? { functionLogs: logs } : {}),
+							...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),
 						});
 						if (editedRes.modifiedCount === 0) {
 							/* If there were multiple current depoyments and this one happened out of order (late)

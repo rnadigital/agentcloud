@@ -14,8 +14,8 @@ import requests
 import os
 import google.oauth2.id_token
 import google.auth.transport.requests
-import google.cloud.logging
-from google.cloud.logging import DESCENDING
+from google.cloud import logging_v2
+from google.api_core.exceptions import GoogleAPIError
 
 class GoogleCloudFunctionTool(GlobalBaseTool):
     """
@@ -62,7 +62,24 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             if prop:
                 typed_args[k] = bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
                 return typed_args
-    
+
+    def query_log_entries(self, limit):
+        client = logging_v2.Client()
+        filter_str = f'resource.type="cloud_run_revision" severity>=WARNING resource.labels.service_name="function-{self.function_id}"'
+        try:
+            entries = client.list_entries(
+                filter_=filter_str,
+                page_size=limit,
+                order_by='timestamp desc'
+            )
+            # Convert entries to a list to access the entries
+            entries_list = list(entries)
+            combined_payloads = '\n'.join(entry.payload for entry in entries_list if entry.payload is not None)
+            return combined_payloads
+        except GoogleAPIError as e:
+            print(f"An error occurred: {e}")
+            return "" # TODO: what is a sensible value here?
+
     def _run(self, args_str: Dict):
         args = json.loads(args_str)
         typed_args = self.convert_str_args_to_correct_type(args)
@@ -82,16 +99,9 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             print(f"response body: {r.text}")
 
             if r.status_code != 200:
-                # Fetch logs for the function to get detailed error information
-                log_client = google.cloud.logging.Client()
-                logger = log_client.logger(f"cloudfunctions.googleapis.com%2Fcloud-functions%2F{self.function_id}")
-                log_entries = list(logger.list_entries(order_by=DESCENDING))
-                error_logs = [entry.payload for entry in log_entries if entry.severity == 'ERROR']
+                error_logs = self.query_log_entries(3)
                 if error_logs:
-                    return {
-                        "response": r.text or "No data",
-                        "error_logs": error_logs
-                    }
+                    return error_logs or "No data"
                 return r.text or "No data"
             return r.text or "No data"
         except google.auth.exceptions.DefaultCredentialsError:
