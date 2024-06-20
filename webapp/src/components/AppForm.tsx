@@ -134,7 +134,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	return (<>
 		{modal}
 		{!editing && <h2 className='text-xl font-bold mb-6'>
-			Custom App
+			Process App
 		</h2>}
 		<form onSubmit={appPost}>
 			<input
