@@ -63,12 +63,18 @@ export async function addTool(tool: Tool): Promise<InsertResult> {
 	return ToolCollection().insertOne(tool);
 }
 
-export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Partial<Tool>): Promise<InsertResult> {
+export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, update: Partial<Tool>): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		_id: toObjectId(toolId),
 		teamId: toObjectId(teamId),
 	}, {
-		$set: tool,
+		$set: update,
+	});
+}
+
+export async function editToolUnsafe(filter: Partial<Tool>, update: Partial<Tool>): Promise<InsertResult> {
+	return ToolCollection().updateOne(filter, {
+		$set: update,
 	});
 }
 

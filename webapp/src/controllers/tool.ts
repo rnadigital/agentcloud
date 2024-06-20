@@ -2,9 +2,11 @@
 
 import { dynamicResponse } from '@dr';
 import { removeAgentsTool } from 'db/agent';
+import { addNotification } from 'db/notification';
+import { io } from '@socketio';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
-import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam } from 'db/tool';
+import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam, editToolUnsafe } from 'db/tool';
 import FunctionProviderFactory from 'lib/function';
 import * as redisClient from 'lib/redis/redis';
 import toObjectId from 'misc/toobjectid';
@@ -14,6 +16,12 @@ import { runtimeValues } from 'struct/function';
 import { Retriever, ToolState,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { DatasourceStatus } from 'struct/datasource';
+import { CollectionName } from 'struct/db';
+import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
+import debug from 'debug';
+
+const log = debug('webapp:controllers:tool');
 
 export async function toolsData(req, res, _next) {
 	const [tools, datasources] = await Promise.all([
@@ -187,14 +195,20 @@ export async function addToolApi(req, res, next) {
 				 * to prevent issues of ephemeral webapp pods leaving functions in "pending" state
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
-					.then(isActive => {
+					.then(async isActive => {
 						if (!isActive) {
 							// Delete the broken function
 							functionProvider.deleteFunction(functionId);
 						}
-						editTool(req.params.resourceSlug, addedTool?.insertedId, {
+						const editedRes = await editToolUnsafe({
+							_id: toObjectId(addedTool?.insertedId),
+							teamId: toObjectId(req.params.resourceSlug),
+						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 						});
+						log('editedRes %O', editedRes);
+					}).catch(e => {
+						log('An error occurred while async deplopying function %s, %O', functionId, e);
 					});
 			});
 		} catch (e) {
@@ -227,8 +241,12 @@ export async function editToolApi(req, res, next) {
 	}
 
 	const existingTool = await getToolById(req.params.resourceSlug, toolId);
-
+	if (!existingTool) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
+	}
+	
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
+	
 	const toolData = {
 		...data,
 		builtin: false,
@@ -247,7 +265,9 @@ export async function editToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
-		...(isFunctionTool ? { state: ToolState.PENDING } : {}), //TODO: only set pending if changes were made that affect the deployed function
+		state: isFunctionTool
+			? ToolState.PENDING
+			: ToolState.READY,
 	});
 
 	//TODO: only run these checks if changes were made that affect the deployed function
@@ -272,10 +292,36 @@ export async function editToolApi(req, res, next) {
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
-						await editTool(req.params.resourceSlug, toolId, {
+						const editedRes = await editToolUnsafe({
+							_id: toObjectId(toolId),
+							teamId: toObjectId(req.params.resourceSlug),
+						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
 						});
+						log('editedRes %O', editedRes);
+						
+						const notification = {
+						    orgId: toObjectId(existingTool.orgId.toString()),
+						    teamId: toObjectId(existingTool.teamId.toString()),
+						    target: {
+								id: existingTool._id.toString(),
+								collection: CollectionName.Tools,
+								property: '_id',
+								objectId: true,
+						    },
+						    title: 'Tool Deployment',
+						    date: new Date(),
+						    seen: false,
+							// stuff specific to notification type
+						    description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+							type: NotificationType.Tool,
+							details: {
+								// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well
+							} as NotificationDetails,
+						};
+						await addNotification(notification);
+						io.to(existingTool.teamId.toString()).emit('notification', notification);
 						if (!isActive) {
 							// Delete the new broken function
 							functionProvider.deleteFunction(functionId);
@@ -284,6 +330,8 @@ export async function editToolApi(req, res, next) {
 							//Delete the old function with old functionid
 							functionProvider.deleteFunction(existingTool.functionId);
 						}
+					}).catch(e => {
+						log('An error occurred while async deplopying function %s, %O', functionId, e);
 					});
 			});
 		} catch (e) {

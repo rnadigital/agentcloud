@@ -5,6 +5,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { NotificationType, WebhookType } from 'struct/notification';
+import { useSocketContext } from 'context/socket';
 
 import * as API from '../../api';
 import NewButtonSection from '../../components/NewButtonSection';
@@ -21,10 +23,18 @@ export default function Tools(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [open, setOpen] = useState(false);
+	const [, notificationTrigger]: any = useSocketContext();
 
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
+
+	useEffect(() => {
+		if (notificationTrigger
+			&& notificationTrigger?.type === NotificationType.Tool) {
+			fetchTools();
+		}
+	}, [resourceSlug, notificationTrigger]);
 
 	useEffect(() => {
 		fetchTools();
