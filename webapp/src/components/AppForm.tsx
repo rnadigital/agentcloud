@@ -42,7 +42,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
-	const { name, agents, tasks, tools } = crewState;
+	const { name, agents, tasks } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 

@@ -32,7 +32,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		.map(tid => {
 			const foundTool = tools.find(t => t._id === tid);
 			if (!foundTool) { return null; }
-			return { label: foundTool.name, value: foundTool._id };
+			return { label: foundTool.name, value: foundTool._id, disabled: false };
 		})
 		.filter(t => t);
 
@@ -163,6 +163,8 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								classNames={SelectClassNames}
 								value={taskState?.toolIds?.map(x => ({ value: x, label: tools.find(tx => tx._id === x)?.name}))}
 								onChange={(v: any) => {
+									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
+									if (v?.some(val => val?.disabled)) { return; }
 									if (v?.some(vals => vals.value === null)) {
 										//Create new pressed
 										return setModalOpen('tool');
@@ -174,11 +176,12 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										};
 									});
 								}}
-								options={tools.map(t => ({ label: t.name, value: t._id })).concat([{ label: '+ New Tool', value: null }])}
+								options={tools.map(t => ({ label: t.name, value: t._id, disabled: (t?.state && t?.state !== ToolState.READY) })).concat([{ label: '+ New Tool', value: null, disabled: false }])}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
+									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
 					                return (<li
-										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
+										className={`${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''} flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
 											data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'
@@ -190,6 +193,9 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												{optionTool?.type} tool
 											</span>
 										</span>
+										{optionTool?.state && <span className={`px-2 py-[0.5px] ms-2 bg-white ${isReady ? 'text-green-800' : 'text-red-800'} border ${isReady ? 'border-green-800' : 'border-red-800'} text-sm rounded-lg`}>
+											{optionTool.state}
+										</span>}
 										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{optionTool?.state} {data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
 					            }}
