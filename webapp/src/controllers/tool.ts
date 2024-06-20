@@ -1,25 +1,25 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { removeAgentsTool } from 'db/agent';
-import { addNotification } from 'db/notification';
 import { io } from '@socketio';
+import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
-import { addTool, deleteToolById, editTool, getToolById, getToolsByTeam, editToolUnsafe } from 'db/tool';
+import { addNotification } from 'db/notification';
+import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
+import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import * as redisClient from 'lib/redis/redis';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
+import { DatasourceStatus } from 'struct/datasource';
+import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
+import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
 import { Retriever, ToolState,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 import { v4 as uuidv4 } from 'uuid';
-import { DatasourceStatus } from 'struct/datasource';
-import { CollectionName } from 'struct/db';
-import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
-import debug from 'debug';
 
 const log = debug('webapp:controllers:tool');
 
@@ -196,17 +196,43 @@ export async function addToolApi(req, res, next) {
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
-						if (!isActive) {
-							// Delete the broken function
-							functionProvider.deleteFunction(functionId);
-						}
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(addedTool?.insertedId),
 							teamId: toObjectId(req.params.resourceSlug),
+							functionId,
+							type: ToolType.FUNCTION_TOOL,
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 						});
-						log('editedRes %O', editedRes);
+						if (editedRes.modifiedCount === 0) {
+							/* If there were multiple current depoyments and this one happened out of order (late)
+							  delete the function to not leave it orphaned*/
+							return functionProvider.deleteFunction(functionId);
+						} else if (!isActive) {
+							// Delete the broken function
+							functionProvider.deleteFunction(functionId);
+						}
+						const notification = {
+						    orgId: toObjectId(res.locals.matchingOrg.id),
+						    teamId: toObjectId(req.params.resourceSlug),
+						    target: {
+								id: addedTool?.insertedId.toString(),
+								collection: CollectionName.Tools,
+								property: '_id',
+								objectId: true,
+						    },
+						    title: 'Tool Deployment',
+						    date: new Date(),
+						    seen: false,
+							// stuff specific to notification type
+						    description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+							type: NotificationType.Tool,
+							details: {
+								// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well
+							} as NotificationDetails,
+						};
+						await addNotification(notification);
+						io.to(req.params.resourceSlug).emit('notification', notification);
 					}).catch(e => {
 						log('An error occurred while async deplopying function %s, %O', functionId, e);
 					});
@@ -295,12 +321,17 @@ export async function editToolApi(req, res, next) {
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(toolId),
 							teamId: toObjectId(req.params.resourceSlug),
+							functionId, // Note: filtering by the function id so that we will get 0 modifiedCount for orphaned function deployments
+							type: ToolType.FUNCTION_TOOL, // Note: filter to only function tool so if they change the TYPE while its deploying we discard and delete the function to prevent orphan
 						}, {
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
 						});
-						log('editedRes %O', editedRes);
-						
+						if (editedRes.modifiedCount) {
+							/* If there were multiple current depoyments and this one happened out of order (late)
+							  delete the function to not leave it orphaned*/
+							return functionProvider.deleteFunction(functionId);
+						}
 						const notification = {
 						    orgId: toObjectId(existingTool.orgId.toString()),
 						    teamId: toObjectId(existingTool.teamId.toString()),
@@ -321,7 +352,7 @@ export async function editToolApi(req, res, next) {
 							} as NotificationDetails,
 						};
 						await addNotification(notification);
-						io.to(existingTool.teamId.toString()).emit('notification', notification);
+						io.to(req.params.resourceSlug).emit('notification', notification);
 						if (!isActive) {
 							// Delete the new broken function
 							functionProvider.deleteFunction(functionId);
