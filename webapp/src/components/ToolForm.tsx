@@ -506,7 +506,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 							<div className='flex justify-between'>
 								<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
 									Python code
-									<InfoAlert className='w-full mb-1 m-0 p-4 bg-blue-100' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />										
+									<InfoAlert className='w-full mb-1 m-0 p-4 bg-blue-100' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />
 								</h2>
 							</div>
 							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
@@ -532,6 +532,9 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 										>
 											{wrappedCode}
 										</SyntaxHighlighter>
+									</div>
+									<div className='col-span-4'>
+										{tool?.functionLogs?.length > 0 && <InfoAlert className='w-full mb-1 m-0 p-4 bg-orange-300 text-black' message={`The previous function deployment encountered the following error(s):\n\n${tool?.functionLogs}`} />}
 									</div>
 								</div>
 								

@@ -9,6 +9,7 @@ import { addNotification } from 'db/notification';
 import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
+import getDotProp from 'lib/misc/getdotprop';
 import * as redisClient from 'lib/redis/redis';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -277,6 +278,14 @@ export async function editToolApi(req, res, next) {
 	}
 	
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
+
+	//Check if any keys that are used by the cloud function have changed
+	const functionNeedsUpdate = [
+		'data.environmentVariables',
+		'data.code',
+		'data.requirements',
+		'runtime'
+	].some(k => getDotProp(req.body, k) !== getDotProp(existingTool, k));
 	
 	const toolData = {
 		...data,
@@ -306,7 +315,7 @@ export async function editToolApi(req, res, next) {
 	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL && type as ToolType !== ToolType.FUNCTION_TOOL) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (type as ToolType === ToolType.FUNCTION_TOOL) {
+	} else if (type as ToolType === ToolType.FUNCTION_TOOL && functionNeedsUpdate) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
@@ -412,7 +421,7 @@ export async function deleteToolApi(req, res, next) {
 
 	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.deleteFunction(toolId.toString());
+		await functionProvider.deleteFunction(existingTool?.functionId);
 	}
 
 	await Promise.all([

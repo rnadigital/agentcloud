@@ -56,6 +56,7 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
+		requirements?: string;
 		openAPIMatchKey?: string;
 	},
 	icon?: IconAttachment;
