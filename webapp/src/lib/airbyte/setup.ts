@@ -168,7 +168,7 @@ async function updateWebhookUrls(workspaceId: string) {
 				sendOnSuccess: {
 					notificationType: ['slack'],
 					slackConfiguration: {
-						webhook: 'http://webapp_next:3000/webhook/sync-successful'
+						webhook: `${process.env.URL_APP}/webhook/sync-successful`,
 					}
 				}
 			}
