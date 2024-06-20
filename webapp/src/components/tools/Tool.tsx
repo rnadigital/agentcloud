@@ -5,12 +5,13 @@ interface ToolProps {
     description: string;
     creator: string;
     position: number;
+    openToolModal: (toolId: string) => void;
 }
 
-const Tool = ({ name, imageURL, description, creator, position }: ToolProps) => {
+const Tool = ({ name, imageURL, description, creator, position, openToolModal }: ToolProps) => {
 
     return (
-        <div className='flex items-center h-28 px-2 py-4 rounded-xl hover:bg-gray-100 cursor-pointer'>
+        <div className='flex items-center h-28 px-2 py-4 rounded-xl hover:bg-gray-100 cursor-pointer' onClick={() => openToolModal(name)}>
             <div className='text-sm'>{position}</div>
             <img src={imageURL} alt="tool" className='rounded-full h-12 w-12 mx-4' />
             <div className='flex flex-col items-start text-left gap-1'>

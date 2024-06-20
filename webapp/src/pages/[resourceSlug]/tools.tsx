@@ -13,6 +13,7 @@ import ToolList from '../../components/tools/ToolList';
 import { useAccountContext } from '../../context/account';
 import SearchFilter from 'components/SearchFilter';
 import ToolTabs from 'components/tools/TooltTabs';
+import ToolModal from 'components/tools/ToolModal';
 
 export default function Tools(props) {
 

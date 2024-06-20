@@ -27,25 +27,31 @@ export type TimeWeightedRetrieverConfig = {
 
 export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
 
+export type TeamTool = {
+	_id?: ObjectId;
+	toolId: ObjectId;
+	parameters: Record<string, string>;
+}
+
 export type Tool = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
 	teamId?: ObjectId;
-    name: string;
-    description: string;
- 	type: ToolType;
- 	schema?: string;
- 	retriever_type?: Retriever;
+	name: string;
+	description: string;
+	type: ToolType;
+	schema?: string;
+	retriever_type?: Retriever;
 	retriever_config?: RetrieverConfig;
- 	datasourceId?: ObjectId;
+	datasourceId?: ObjectId;
 	data?: {
 		builtin?: boolean;
 		name: string;
 		description?: string;
-		environmentVariables?: Record<string,string>;
+		environmentVariables?: Record<string, string>;
 		parameters?: {
 			//type: string;
-			properties: Record<string,FunctionProperty>;
+			properties: Record<string, FunctionProperty>;
 			required?: string[];
 		};
 		code?: string;

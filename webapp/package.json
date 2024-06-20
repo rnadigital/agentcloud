@@ -22,7 +22,7 @@
     "@google-cloud/pubsub": "^4.4.0",
     "@google-cloud/secret-manager": "^5.0.1",
     "@google-cloud/storage": "^7.7.0",
-    "@headlessui/react": "^1.7.17",
+    "@headlessui/react": "^2.0.4",
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
     "@rjsf/core": "^5.15.1",

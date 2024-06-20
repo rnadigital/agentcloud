@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 import Tool from './Tool';
+import ToolModal from './ToolModal';
 
 interface Tool {
 	id: string;
@@ -90,12 +91,15 @@ dummyTools.forEach(tool => {
 
 
 export default function ToolList({ tools, fetchTools }) {
-	console.log(tools)
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [open, setOpen] = useState(false);
+
+	const openToolModal = (toolId: string) => {
+		setOpen(true);
+	}
 
 	async function deleteTool(toolId) {
 		API.deleteTool({
@@ -144,7 +148,7 @@ export default function ToolList({ tools, fetchTools }) {
 						<p className='text-sm mb-4'>{description}</p>
 						<ul role='list' className='grid grid-cols-1 gap-6 md:grid-cols-2 md:max-w-4xl'>
 							{toolList[category].map((tool, index) => (
-								<Tool key={tool.id} {...tool} position={index + 1} />
+								<Tool key={tool.id} {...tool} position={index + 1} openToolModal={openToolModal} />
 							))}
 						</ul>
 					</div>
@@ -198,6 +202,7 @@ export default function ToolList({ tools, fetchTools }) {
 			{/* </ul>
 			</div> */}
 
+			<ToolModal open={open} setOpen={setOpen} />
 		</div>
 	);
 }
