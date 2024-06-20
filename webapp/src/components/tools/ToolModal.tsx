@@ -53,6 +53,9 @@ const ToolModal = ({ open, setOpen }: ToolModalProps) => {
                                 </div>
                             </section>
 
+
+                            <p>This tool allows you to search LinkedIn for professional profiles. It uses AI to parse the search results and return the most relevant profiles. It can be used to find potential job candidates, business partners, or industry experts.</p>
+
                             <section className='w-full'>
                                 <div className='font-semibold'>Use Cases</div>
                                 <ul>
@@ -62,14 +65,6 @@ const ToolModal = ({ open, setOpen }: ToolModalProps) => {
                                 </ul>
 
                             </section>
-
-                            <p>This tool allows you to search LinkedIn for professional profiles. It uses AI to parse the search results and return the most relevant profiles. It can be used to find potential job candidates, business partners, or industry experts.</p>
-
-
-                            <p>This tool allows you to search LinkedIn for professional profiles. It uses AI to parse the search results and return the most relevant profiles. It can be used to find potential job candidates, business partners, or industry experts.</p>
-                            <p>This tool allows you to search LinkedIn for professional profiles. It uses AI to parse the search results and return the most relevant profiles. It can be used to find potential job candidates, business partners, or industry experts.</p>
-
-
                         </DialogPanel>
 
                         <div className='absolute bottom-0 w-full max-w-lg px-2 bg-white'>

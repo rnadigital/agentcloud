@@ -9,7 +9,7 @@ import FunctionProviderFactory from 'lib/function';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { runtimeValues } from 'struct/function';
-import { Retriever,ToolType, ToolTypes } from 'struct/tool';
+import { Retriever, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function toolsData(req, res, _next) {
@@ -30,8 +30,20 @@ export async function toolsData(req, res, _next) {
  */
 export async function toolsPage(app, req, res, next) {
 	const data = await toolsData(req, res, next);
+	console.log("Data", data)
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/tools`);
+}
+
+/**
+ * GET /[resourceSlug]/mytools
+ * mytools page html
+ */
+export async function myToolsPage(app, req, res, next) {
+	// const data = await toolsData(req, res, next);
+	console.log("Data", "masdfkajshdf")
+	res.locals.data = { foo: "hello", account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/mytools`);
 }
 
 /**
@@ -86,20 +98,24 @@ export async function toolAddPage(app, req, res, next) {
 
 function validateTool(tool) {
 	return chainValidations(tool, [
-		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes))}},
-		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever))}},
-		{ field: 'description', validation: { notEmpty: true, lengthMin: 2 }, validateIf: { field: 'type', condition: (value) => value === ToolType.RAG_TOOL }},
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL }},
-		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'data.parameters', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'data.environmentVariables', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'naame', validation: { regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$','gm'),
-			customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed' },
-		validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
+		{ field: 'name', validation: { notEmpty: true } },
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes)) } },
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) } },
+		{ field: 'description', validation: { notEmpty: true, lengthMin: 2 }, validateIf: { field: 'type', condition: (value) => value === ToolType.RAG_TOOL } },
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL } },
+		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'data.parameters', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'data.environmentVariables', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL } },
+		{
+			field: 'naame', validation: {
+				regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$', 'gm'),
+				customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed'
+			},
+			validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }
+		},
+		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL } },
+		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL } },
 	], {
 		name: 'Name',
 		retriever_type: 'Retrieval Strategy',
@@ -114,7 +130,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime }  = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime } = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {
@@ -146,13 +162,13 @@ export async function addToolApi(req, res, next) {
 	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-	    name,
-	    description,
-	 	type: type as ToolType,
+		name,
+		description,
+		type: type as ToolType,
 		datasourceId: toObjectId(datasourceId),
-	 	retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
-	 	schema: schema,
+		retriever_type: retriever || null,
+		retriever_config: retriever_config || {}, //TODO: validation
+		schema: schema,
 		data: toolData,
 		icon: foundIcon ? {
 			id: foundIcon._id,
@@ -178,7 +194,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime } = req.body;
 
 	const validationError = validateTool(req.body);
 	if (validationError) {
@@ -205,13 +221,13 @@ export async function editToolApi(req, res, next) {
 				: name),
 	};
 	await editTool(req.params.resourceSlug, toolId, {
-	    name,
-	 	type: type as ToolType,
-	    description,
-	 	schema: schema,
-	 	datasourceId: toObjectId(datasourceId),
-	 	retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
+		name,
+		type: type as ToolType,
+		description,
+		schema: schema,
+		datasourceId: toObjectId(datasourceId),
+		retriever_type: retriever || null,
+		retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
 	});
 

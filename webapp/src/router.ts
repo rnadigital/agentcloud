@@ -22,7 +22,7 @@ import bodyParser from 'body-parser';
 import express, { Router } from 'express';
 import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
-import { PlanLimitsKeys, pricingMatrix,SubscriptionPlan } from 'struct/billing';
+import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, setSubscriptionLocals, csrfMiddleware];
@@ -46,7 +46,7 @@ export default function router(server, app) {
 	server.use('/static', express.static('static'));
 
 	// Stripe webhook handler
-	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
+	server.post('/stripe-webhook', express.raw({ type: 'application/json' }), stripeController.webhookHandler);
 
 	// Oauth handlers
 	server.use(myPassport.initialize());
@@ -68,10 +68,10 @@ export default function router(server, app) {
 
 	// Body and query parsing middleware
 	server.set('query parser', 'simple');
-	server.use(bodyParser.json({limit: '10mb'}));
+	server.use(bodyParser.json({ limit: '10mb' }));
 	server.use(bodyParser.urlencoded({ extended: false }));
 	// Default options for express-fileupload
-	server.use(fileUpload({ limits: { fileSize: pricingMatrix[SubscriptionPlan.ENTERPRISE].maxFileUploadBytes }}));
+	server.use(fileUpload({ limits: { fileSize: pricingMatrix[SubscriptionPlan.ENTERPRISE].maxFileUploadBytes } }));
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
@@ -155,6 +155,7 @@ export default function router(server, app) {
 	teamRouter.get('/tools', toolController.toolsPage.bind(null, app));
 	teamRouter.get('/tools.json', toolController.toolsJson);
 	teamRouter.get('/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.toolAddPage.bind(null, app));
+	teamRouter.get('/mytools', toolController.myToolsPage.bind(null, app));
 	teamRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
 	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.toolEditPage.bind(null, app));
 	teamRouter.post('/forms/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.addToolApi);
