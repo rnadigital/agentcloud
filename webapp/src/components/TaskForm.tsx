@@ -4,20 +4,20 @@ import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
-import { useSocketContext } from 'context/socket';
-import { NotificationType } from 'struct/notification';
-
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
 import { useAccountContext } from 'context/account';
+import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { NotificationType } from 'struct/notification';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
+
 import ToolStateBadge from './ToolStateBadge';
 
 export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }

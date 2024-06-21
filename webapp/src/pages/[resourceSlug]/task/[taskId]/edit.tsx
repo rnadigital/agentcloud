@@ -15,7 +15,7 @@ export default function EditTask(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { task, tools, agents, datasources } = state; // Assuming tasks need tools
-	console.log(tools);
+
 	async function fetchTaskFormData() {
 		await API.getTask({
 			resourceSlug,

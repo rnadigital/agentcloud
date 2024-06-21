@@ -1,5 +1,7 @@
 'use strict';
 
+import { isDeepStrictEqual } from 'node:util';
+
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import { removeAgentsTool } from 'db/agent';
@@ -289,7 +291,12 @@ export async function editToolApi(req, res, next) {
 		'data.code',
 		'data.requirements',
 		'runtime'
-	].some(k => getDotProp(req.body, k) !== getDotProp(existingTool, k));
+	].some(k => {
+		const current = getDotProp(req.body, k);
+		const prev = getDotProp(existingTool, k);
+		return !isDeepStrictEqual(current, prev);
+	});
+	log('Tool %s (%s) functionNeedsUpdate: %s', existingTool?.name, existingTool?._id, functionNeedsUpdate);
 	
 	const toolData = {
 		...data,
@@ -309,7 +316,7 @@ export async function editToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
-		state: isFunctionTool
+		state: (isFunctionTool && functionNeedsUpdate)
 			? ToolState.PENDING
 			: ToolState.READY,
 	});

@@ -5,7 +5,7 @@ import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
-import { getToolsByTeam, getReadyToolsById } from 'db/tool';
+import { getReadyToolsById,getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -146,6 +146,17 @@ export async function editTaskApi(req, res, next) {
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	if (toolIds) {
+		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
+		const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
+		if (!foundReadyTools || foundReadyTools?.length !== toolIds.length) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
 	}
 
 	await updateTask(req.params.resourceSlug, req.params.taskId, {

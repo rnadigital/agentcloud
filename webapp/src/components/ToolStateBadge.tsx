@@ -1,6 +1,6 @@
+import ButtonSpinner from 'components/ButtonSpinner';
 import React from 'react';
 import { ToolState } from 'struct/tool';
-import ButtonSpinner from 'components/ButtonSpinner';
 
 const toolStateColors = {
 	[ToolState.PENDING]: 'bg-blue-200 text-blue-800 border-blue-800',
