@@ -4,6 +4,8 @@ import * as API from '@api';
 import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
+import { useSocketContext } from 'context/socket';
+
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
@@ -15,6 +17,7 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
+import ToolStateBadge from './ToolStateBadge';
 
 export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
 	: { task?: any, tools?: any[], agents?: any[], datasources?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
@@ -25,6 +28,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState(task);
+	const [, notificationTrigger]: any = useSocketContext();
 
 	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
@@ -38,10 +42,6 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 
 	const preferredAgent = agents
 		.find(a => a?._id === taskState?.agentId);
-
-	useEffect(() => {
-	    // Placeholder for any initial setup or effects
-	}, []);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -93,6 +93,13 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			};
 		});
 	};
+
+	useEffect(() => {
+		if (notificationTrigger
+			&& notificationTrigger?.type === NotificationType.Tool) {
+			fetchTaskFormData();
+		}
+	}, [resourceSlug, notificationTrigger]);
 
 	return (
 		<>
@@ -193,9 +200,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												{optionTool?.type} tool
 											</span>
 										</span>
-										{optionTool?.state && <span className={`px-2 py-[0.5px] ms-2 bg-white ${isReady ? 'text-green-800' : 'text-red-800'} border ${isReady ? 'border-green-800' : 'border-red-800'} text-sm rounded-lg`}>
-											{optionTool.state}
-										</span>}
+										{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
 										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{optionTool?.state} {data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
 					            }}

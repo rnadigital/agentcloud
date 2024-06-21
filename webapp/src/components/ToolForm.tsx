@@ -210,7 +210,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 					return;
 			}
 			if (editing) {
-				await API.editTool(toolState._id, {
+				await API.editTool({
 					...body,
 					toolId: toolState._id,
 				}, () => {
