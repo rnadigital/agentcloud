@@ -41,13 +41,3 @@ export function Notification({ index, title, description, date, seen, _id, markS
 		</div>
 	);
 }
-
-export function NotificationBox({ notifications }) {
-	return (
-		<div className='max-w-sm max-h-20 w-full bg-white shadow-md rounded-lg overflow-hidden'>
-			{notifications.slice(0, 5).map((notification, index) => (
-				<Notification key={index} index={index} {...notification} />
-			))}
-		</div>
-	);
-}

@@ -214,11 +214,16 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 					...body,
 					toolId: toolState._id,
 				}, () => {
-					toast.success('Tool Updated');
+					if (toolType === ToolType.FUNCTION_TOOL) {
+						toast.info('Tool updating...');
+						router.push(`/${resourceSlug}/tools`);
+					} else {
+						toast.success('Tool updated sucessfully');
+					}
 				}, (err) => {
 					toast.error(err);
 					setSubmitting(false);
-				}, router);
+				}, null);
 			} else {
 				const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
 				callback && addedTool && callback(addedTool._id, body);

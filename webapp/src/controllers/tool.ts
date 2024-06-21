@@ -252,7 +252,7 @@ export async function addToolApi(req, res, next) {
 		}
 	}
 
-	return dynamicResponse(req, res, 302, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
+	return dynamicResponse(req, res, 200, { _id: addedTool.insertedId, redirect: `/${req.params.resourceSlug}/tools` });
 
 }
 
@@ -399,7 +399,7 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/tools` });
+	return dynamicResponse(req, res, 200, { redirect: `/${req.params.resourceSlug}/tools` });
 
 }
 

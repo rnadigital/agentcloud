@@ -129,8 +129,8 @@ export function addTool(body, dispatch, errorCallback, router) {
 export function deleteTool(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
-export function editTool(toolId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+export function editTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
 // Models
