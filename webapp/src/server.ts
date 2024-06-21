@@ -40,7 +40,6 @@ import StorageProviderFactory from 'lib/storage';
 import StripeClient from 'lib/stripe';
 import { v4 as uuidv4 } from 'uuid';
 
-import router from './router';
 import { initSocket } from './socketio';
 const log = debug('webapp:server');
 
@@ -75,6 +74,7 @@ app.prepare()
 			return handle(req, res);
 		});
 
+		const router = (await import('./router')).default;
 		router(server, app);
 
 		server.all('*', (req, res) => {

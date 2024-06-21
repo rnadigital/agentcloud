@@ -101,7 +101,7 @@ export default function Billing(props) {
 	}
 
 	if (missingEnvs.length > 0) {
-		return (<ErrorAlert error={`Stripe functionality is missing the following env vars:
+		return (<ErrorAlert error={`Stripe functionality is missing the following:
 ${missingEnvs.join('\n')}`} />);
 	}
 

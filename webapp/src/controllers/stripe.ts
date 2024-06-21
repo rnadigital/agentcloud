@@ -404,7 +404,14 @@ export async function createPortalLink(req, res, next) {
 
 export async function checkReady(req, res, next) {
 
-	const missingEnvs = stripeEnvs.filter(k => process.env[k] == null);
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const missingEnvs = [];
+
+	await Promise.all(stripeEnvs.map(async k => {
+		if (process.env[k] == null && (await secretProvider.getSecret(k)) == null) {
+			missingEnvs.push(k);
+		}
+	}));
 
 	return dynamicResponse(req, res, 200, { missingEnvs });
 
