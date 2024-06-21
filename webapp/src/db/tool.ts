@@ -6,7 +6,7 @@ import toObjectId from 'misc/toobjectid';
 import { UpdateResult } from 'mongodb'; //TODO: put these in all other db update* return types
 import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
-import { Tool } from 'struct/tool';
+import { Tool, ToolState } from 'struct/tool';
 
 const log = debug('webapp:db:tools');
 
@@ -48,6 +48,21 @@ export function getToolsById(teamId: db.IdOrStr, toolIds: db.IdOrStr[]): Promise
 			{ teamId: toObjectId(teamId) },
 			{ 'data.builtin': true },
 		],
+	}).toArray();
+}
+
+export function getReadyToolsById(teamId: db.IdOrStr, toolIds: db.IdOrStr[]): Promise<Tool[]> {
+	return ToolCollection().find({
+		_id: {
+			$in: toolIds.map(toObjectId),
+		},
+		$or: [
+			{ teamId: toObjectId(teamId) },
+			{ 'data.builtin': true },
+		],
+		state: {
+			$in: [null, ToolState.READY],
+		}
 	}).toArray();
 }
 

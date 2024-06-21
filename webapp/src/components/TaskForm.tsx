@@ -5,6 +5,7 @@ import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
 import { useSocketContext } from 'context/socket';
+import { NotificationType } from 'struct/notification';
 
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
