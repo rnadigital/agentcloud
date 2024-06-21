@@ -37,6 +37,7 @@ import MessageQueueProviderFactory from 'lib/queue';
 import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
+import StripeClient from 'lib/stripe';
 import { v4 as uuidv4 } from 'uuid';
 
 import router from './router';
@@ -46,14 +47,14 @@ const log = debug('webapp:server');
 app.prepare()
 	.then(async () => {
 
-		//do a bunch of tasks on initing the server
 		await airbyteSetup.init();
 		await db.connect();
 		await migrate();
+		const secretProvider = SecretProviderFactory.getSecretProvider();
+		await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
+		await StripeClient.init();
 		const storageProvider = StorageProviderFactory.getStorageProvider();
 		await storageProvider.init();
-		const secretProvider = SecretProviderFactory.getSecretProvider();
-		await secretProvider.init();
 		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 		await messageQueueProvider.init();
 

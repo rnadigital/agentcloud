@@ -6,12 +6,14 @@ import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutse
 import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
-import { stripe } from 'lib/stripe';
+import StripeClient from 'lib/stripe';
 import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 import { io } from '@socketio';
 import { addNotification } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
+import SecretProviderFactory from 'secret/index';
+import SecretKeys from 'secret/secretkeys';
 import { NotificationType } from 'struct/notification';
 
 function destructureSubscription(sub) {
@@ -43,11 +45,11 @@ export async function getSubscriptionsDetails(stripeCustomerId: string) {
 			status: 'trialing',
 			limit: 1 // fetch only the first subscription
 		};
-		let subscriptions = await stripe.subscriptions.list(body);
+		let subscriptions = await StripeClient.get().subscriptions.list(body);
 		if (!subscriptions || subscriptions?.data?.length === 0) {
 			//They are not on a trial
 			body.status = 'active';
-			subscriptions = await stripe.subscriptions.list(body);
+			subscriptions = await StripeClient.get().subscriptions.list(body);
 		}
 		return destructureSubscription(subscriptions.data[0]);
 	} catch (error) {
@@ -61,15 +63,18 @@ export async function getSubscriptionsDetails(stripeCustomerId: string) {
  */
 export async function webhookHandler(req, res, next) {
 
-	if (!process.env['STRIPE_WEBHOOK_SECRET']) {
-		log('Received stripe webhook but STRIPE_WEBHOOK_SECRET is not set');
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
+	
+	if (!STRIPE_WEBHOOK_SECRET) {
+		log('missing STRIPE_WEBHOOK_SECRET');
 		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
 	}
 
 	const sig = req.headers['stripe-signature'];
 	let event;
 	try {
-		event = stripe.webhooks.constructEvent(req.body, sig, process.env['STRIPE_WEBHOOK_SECRET']);
+		event = StripeClient.get().webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
 	} catch (err) {
 		log(err);
 		return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -177,7 +182,7 @@ export async function hasPaymentMethod(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
 
-	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
 		limit: 1,
 	});
 
@@ -190,7 +195,10 @@ export async function hasPaymentMethod(req, res, next) {
 
 export async function requestChangePlan(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
+
+	if (!STRIPE_WEBHOOK_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
@@ -238,14 +246,14 @@ export async function requestChangePlan(req, res, next) {
 		quantity: storage,
 	});
 
-	const createdCheckoutSession = await stripe.checkout.sessions.create({
+	const createdCheckoutSession = await StripeClient.get().checkout.sessions.create({
 		customer: stripeCustomerId,
 		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 		line_items: items.filter(i => i.quantity > 0),
 		currency: 'USD',
 		mode: 'subscription',
 	});
-	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
+	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(createdCheckoutSession.id, {
 		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
 	});
 
@@ -261,7 +269,10 @@ export async function requestChangePlan(req, res, next) {
 
 export async function confirmChangePlan(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+
+	if (!STRIPE_ACCOUNT_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
@@ -316,12 +327,12 @@ export async function confirmChangePlan(req, res, next) {
 		quantity: storage,
 	});
 
-	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
 		limit: 1,
 	});
 
 	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
-		const checkoutSession = await stripe.checkout.sessions.create({
+		const checkoutSession = await StripeClient.get().checkout.sessions.create({
 			ui_mode: 'embedded',
 			customer: stripeCustomerId,
 			redirect_on_completion: 'never',
@@ -331,7 +342,7 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
 
-	const subscription = await stripe.subscriptions.update(subscriptionId, {
+	const subscription = await StripeClient.get().subscriptions.update(subscriptionId, {
 		items,
 		...(stripeTrial === true ? { trial_end: 'now' } : {}),
 	});
@@ -362,7 +373,10 @@ export async function confirmChangePlan(req, res, next) {
 
 export async function createPortalLink(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+
+	if (!STRIPE_ACCOUNT_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
@@ -372,7 +386,7 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
 
-	const portalLink = await stripe.billingPortal.sessions.create({
+	const portalLink = await StripeClient.get().billingPortal.sessions.create({
 		customer: customerId,
 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 	});
