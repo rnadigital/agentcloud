@@ -60,6 +60,7 @@
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
+    "mongoose": "^8.4.3",
     "next": "^13.5.6",
     "nprogress": "^0.2.0",
     "openapi-client-axios": "^7.4.0",
