@@ -1,4 +1,3 @@
-import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';

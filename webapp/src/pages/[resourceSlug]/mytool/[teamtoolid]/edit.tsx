@@ -1,7 +1,8 @@
+import InstallToolForm from "components/tools/InstallToolForm"
 
 const EditTeamTool = () => {
     return (
-        <div>EditTeamTool</div>
+        <InstallToolForm apiKeyNames={["SERP_API_KEY", "TAVILY_API_KEY"]} />
     )
 }
 

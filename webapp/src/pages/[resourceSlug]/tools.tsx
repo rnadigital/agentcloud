@@ -50,7 +50,7 @@ export default function Tools(props) {
 			buttons={[
 				{
 					buttonText: 'My Tools',
-					href: '/tool/add',
+					href: '/mytools',
 					variant: 'outline',
 				},
 				{
