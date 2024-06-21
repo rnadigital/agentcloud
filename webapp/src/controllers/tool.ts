@@ -406,7 +406,7 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/tools`*/ });
+	return dynamicResponse(req, res, 200, { functionNeedsUpdate/*, redirect: `/${req.params.resourceSlug}/tools`*/ });
 
 }
 

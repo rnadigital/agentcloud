@@ -213,8 +213,9 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 				await API.editTool({
 					...body,
 					toolId: toolState._id,
-				}, () => {
-					if (toolType === ToolType.FUNCTION_TOOL) {
+				}, (res) => {
+					if (toolType === ToolType.FUNCTION_TOOL
+						&& res?.functionNeedsUpdate === true) {
 						toast.info('Tool updating...');
 						router.push(`/${resourceSlug}/tools`);
 					} else {
@@ -225,7 +226,14 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 					setSubmitting(false);
 				}, null);
 			} else {
-				const addedTool = await API.addTool(body, null, (err) => { toast.error(err); }, compact ? null : router);
+				const addedTool = await API.addTool(body, () => {
+					if (toolType === ToolType.FUNCTION_TOOL) {
+						toast.info('Tool deploying...');
+					} else {
+						toast.success('Tool created sucessfully');
+					}
+					router.push(`/${resourceSlug}/tools`);
+				}, (err) => { toast.error(err); }, null);
 				callback && addedTool && callback(addedTool._id, body);
 			}
 		} finally {
