@@ -46,6 +46,7 @@ export type Tool = {
  	datasourceId?: ObjectId;
  	state?: ToolState;
 	data?: {
+		runtime?: string;
 		builtin?: boolean;
 		name: string;
 		description?: string;

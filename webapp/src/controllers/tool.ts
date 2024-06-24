@@ -128,7 +128,7 @@ function validateTool(tool) {
 
 export async function addToolApi(req, res, next) {
 
-	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config, runtime } = req.body;
+	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config } = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
 	if (validationError) {
@@ -142,7 +142,7 @@ export async function addToolApi(req, res, next) {
 		}
 	}
 
-	if (runtime && (typeof runtime !== 'string' || !runtimeValues.includes(runtime))) {
+	if (data?.runtime && (typeof data?.runtime !== 'string' || !runtimeValues.includes(data?.runtime))) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
 	}
 
@@ -191,7 +191,7 @@ export async function addToolApi(req, res, next) {
 				requirements: toolData?.requirements,
 				environmentVariables: toolData?.environmentVariables,
 				id: functionId,
-				runtime,
+				runtime: toolData?.runtime,
 			}).then(() => {
 				/* Waits for the function to be active (asynchronously)
 				 * TODO: turn this into a job thats sent to bull and handled elsewhere
@@ -286,7 +286,7 @@ export async function editToolApi(req, res, next) {
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 
 	//Check if any keys that are used by the cloud function have changed
-	const functionNeedsUpdate = [
+	const functionNeedsUpdate = isFunctionTool && [
 		'data.environmentVariables',
 		'data.code',
 		'data.requirements',

@@ -90,7 +90,8 @@ class GoogleFunctionProvider extends FunctionProvider {
 		// Check if the function exists
 		let functionExists = false;
 		try {
-			await this.#functionsClient.getFunction({ name: functionName });
+			const existingFunction = await this.#functionsClient.getFunction({ name: functionName });
+			log(existingFunction);
 			functionExists = true;
 		} catch (err) {
 			if (err.code !== 5) { // 5 means NOT_FOUND

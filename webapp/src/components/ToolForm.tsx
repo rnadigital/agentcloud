@@ -70,7 +70,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 	try {
 		useEffect(() => {
 			if (!style) {
-				import('react-syntax-highlighter/dist/esm/styles/prism/material-dark')
+				import('react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus')
 					.then(mod => setStyle(mod.default));
 			}
 		}, []);
@@ -526,11 +526,12 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 								<div className='col-span-full grid grid-cols-4'>
 									<div className='col-span-2'>
 										<ScriptEditor
-											height='40em'
+											height='32.5em'
 											code={toolCode}
 											setCode={setToolCode}
 											editorOptions={{
 												stopRenderingLineAfter: 1000,
+												fontSize: '12pt',
 											}}
 											onInitializePane={onInitializePane}
 										/>
@@ -541,7 +542,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 											style={style}
 											showLineNumbers={true}
 											PreTag={PreWithRef}
-											customStyle={{ margin: 0, maxHeight: 'unset', height: '40em', marginLeft: -1 }}
+											customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}
 										>
 											{wrappedCode}
 										</SyntaxHighlighter>
@@ -568,6 +569,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 											setCode={setRequirementsTxt}
 											editorOptions={{
 												stopRenderingLineAfter: 1000,
+												fontSize: '12pt',
 											}}
 											onInitializePane={onInitializePane}
 										/>
