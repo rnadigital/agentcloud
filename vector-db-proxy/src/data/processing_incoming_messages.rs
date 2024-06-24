@@ -32,44 +32,57 @@ pub async fn process_streaming_messages(
                         let ds_clone = datasource_id.clone();
                         let qdrant = Qdrant::new(qdrant_conn, datasource_id);
                         let mut field_path = "recordCount.failure";
-                        if let Value::Object(data_obj) = message_data {
-                            let mut metadata = convert_serde_value_to_hashmap_string(data_obj);
+                        if let Value::Object(mut data_obj) = message_data {
+                            // This is to account for airbyte sending the data in the _airbyte_data object when the destination is PubSub
+                            if let Some(is_pubsub) = data_obj.get("_airbyte_data") {
+                                if let Some(pubsub_is_obj) = is_pubsub.as_object() {
+                                    data_obj = pubsub_is_obj.to_owned();
+                                }
+                            }
+                            let mut metadata = convert_serde_value_to_hashmap_string(data_obj.to_owned());
+                            log::debug!("Metadata: {:?}", metadata);
                             if let Some(text_field) = embedding_field {
-                                log::debug!("text field: {}", text_field.as_str());
-                                let text = metadata.remove(text_field.as_str()).unwrap();
-                                metadata.insert("page_content".to_string(), text.to_owned());
-                                let mongo_conn_clone = Arc::clone(&mongo_conn);
-                                let ds_clone = ds_clone.clone();
-                                match embed_payload(
-                                    mongo_conn_clone,
-                                    &metadata,
-                                    &text,
-                                    Some(ds_clone.clone()),
-                                    EmbeddingModels::from(embedding_model_name)).await {
-                                    Ok(point_struct) => {
-                                        match qdrant.upsert_data_point_blocking(point_struct).await {
-                                            Ok(result) => {
-                                                match result {
-                                                    true => {
-                                                        field_path = "recordCount.success";
-                                                        let _ = increment_by_one(&mongodb_connection, &*ds_clone, field_path).await.unwrap();
+                                log::debug!("text field: {}", text_field.as_str().to_lowercase());
+                                match metadata.remove(text_field.to_lowercase().as_str()) {
+                                    Some(t) => {
+                                        metadata.insert("page_content".to_string(), t.to_owned());
+                                        let mongo_conn_clone = Arc::clone(&mongo_conn);
+                                        let ds_clone = ds_clone.clone();
+                                        match embed_payload(
+                                            mongo_conn_clone,
+                                            &metadata,
+                                            &t,
+                                            Some(ds_clone.clone()),
+                                            EmbeddingModels::from(embedding_model_name)).await {
+                                            Ok(point_struct) => {
+                                                match qdrant.upsert_data_point_blocking(point_struct).await {
+                                                    Ok(result) => {
+                                                        match result {
+                                                            true => {
+                                                                field_path = "recordCount.success";
+                                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                            }
+                                                            false => {
+                                                                log::warn!("An error occurred while inserting into vector database");
+                                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                            }
+                                                        }
                                                     }
-                                                    false => {
-                                                        log::warn!("An error occurred while inserting into vector database");
-                                                        let _ = increment_by_one(&mongodb_connection, &*ds_clone, field_path).await.unwrap();
+                                                    Err(e) => {
+                                                        log::warn!("An error occurred while inserting into vector database. Error: {}", e);
+                                                        increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
                                                     }
                                                 }
+                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
                                             }
                                             Err(e) => {
-                                                log::warn!("An error occurred while inserting into vector database. Error: {}", e);
-                                                let _ = increment_by_one(&mongodb_connection, &*ds_clone, field_path).await.unwrap();
+                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                log::error!("An error occurred while upserting  point structs to Qdrant: {}", e);
                                             }
                                         }
-                                        let _ = increment_by_one(&mongodb_connection, &*ds_clone, field_path).await.unwrap();
                                     }
-                                    Err(e) => {
-                                        let _ = increment_by_one(&mongodb_connection, &*ds_clone, field_path).await.unwrap();
-                                        log::error!("An error occurred while upserting  point structs to Qdrant: {}", e);
+                                    None => {
+                                        log::error!("The text field {} returned None!", text_field)
                                     }
                                 }
                             }

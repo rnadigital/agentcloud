@@ -71,7 +71,7 @@ impl<T: Clone + Send> Pool<T>
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
     ) {
-        while self.q.len() > 0 {
+        while !self.q.is_empty() {
             let task = match self.q.pop() {
                 Some(t) => t,
                 None => continue, //Because ! (continue) can never have a value, Rust decides that the type of guess is u32.
