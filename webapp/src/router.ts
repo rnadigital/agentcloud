@@ -40,6 +40,7 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
+import * as teamToolController from 'controllers/teamtool';
 
 export default function router(server, app) {
 
@@ -161,6 +162,9 @@ export default function router(server, app) {
 	teamRouter.post('/forms/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.addToolApi);
 	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.editToolApi);
 	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_TOOL), toolController.deleteToolApi);
+
+	//team tools
+	teamRouter.post('/forms/teamtool/add', hasPerms.one(Permissions.CREATE_TOOL), teamToolController.addTeamToolApi);
 
 	//models
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));

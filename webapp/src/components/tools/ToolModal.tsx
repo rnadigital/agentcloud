@@ -5,17 +5,52 @@ import Button from 'components/shared/Button';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
+import * as API from '../../api';
+import mongoose from 'mongoose';
+
 interface ToolModalProps {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+
+const sampleCall = async () => {
+    const teamId = new mongoose.Types.ObjectId();
+    const toolId = new mongoose.Types.ObjectId();
+    const apiKeys = new Map<string, string>([
+        ['service1', 'apiKey1'],
+        ['service2', 'apiKey2']
+    ]);
+    return {
+        teamId,
+        toolId,
+        apiKeys
+    };
 }
 
 const ToolModal = ({ open, setOpen }: ToolModalProps) => {
     const route = useRouter()
     const [imageLoaded, setImageLoaded] = useState(false);
 
-    const onInstall = () => {
+    const { resourceSlug } = router.query;
+
+    const onInstall = async () => {
         console.log("oninstall")
+        API.addTeamTool({
+            resourceSlug,
+            ...sampleCall()
+        })
+
+        await API.editTool(toolState._id, {
+            ...body,
+            toolId: toolState._id,
+        }, () => {
+            toast.success('Tool Updated');
+        }, (err) => {
+            toast.error(err);
+            setSubmitting(false);
+        }, null);
+
         route.push(`/${route.query.resourceSlug}/mytool/${route.query.teamtoolid}/edit`)
     }
 

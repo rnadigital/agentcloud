@@ -30,7 +30,6 @@ export async function toolsData(req, res, _next) {
  */
 export async function toolsPage(app, req, res, next) {
 	const data = await toolsData(req, res, next);
-	console.log("Data", data)
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/tools`);
 }
@@ -41,7 +40,6 @@ export async function toolsPage(app, req, res, next) {
  */
 export async function myToolsPage(app, req, res, next) {
 	// const data = await toolsData(req, res, next);
-	console.log("Data", "masdfkajshdf")
 	res.locals.data = { foo: "hello", account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/mytools`);
 }

@@ -133,6 +133,11 @@ export function editTool(toolId, body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
 }
 
+// team tools
+export function addTeamTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/teamtool/add`, 'POST', body, dispatch, errorCallback, router);
+}
+
 // Models
 export function getModels(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/models.json`, 'GET', null, dispatch, errorCallback, router);
@@ -273,7 +278,7 @@ function buildOptions(_route, method, body) {
 				body,
 			};
 		}
-	
+
 		options.body = JSON.stringify(body);
 	}
 
@@ -282,7 +287,7 @@ function buildOptions(_route, method, body) {
 
 }
 
-export async function ApiCall(route, method='get', body, dispatch, errorCallback, router, finishProgress=1) {
+export async function ApiCall(route, method = 'get', body, dispatch, errorCallback, router, finishProgress = 1) {
 
 	// Start progress bar
 	NProgress.inc();
