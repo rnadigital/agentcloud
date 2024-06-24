@@ -134,13 +134,13 @@ class CrewAIBuilder:
                 tools=agent_tools_objs.values(),
             )
 
-    def stop_generating_check(self, step):
-        logging.debug(f"stop_generating_check step % NTH_CHUNK_CANCEL_CHECK: {step % NTH_CHUNK_CANCEL_CHECK}")
-        if step % NTH_CHUNK_CANCEL_CHECK == 0:
+    def stop_generating_check(self):
+        try:
             stop_flag = redis_con.get(f"{self.session_id}_stop")
-            logging.debug(f"stop_generating_check: {stop_flag}")
+            logging.debug(f"stop_generating_check for session: {self.session_id}, stop_flag: {stop_flag}")
             return stop_flag == "1"
-        return False
+        except:
+            return False
 
     def build_tasks(self):
         for key, task in self.tasks_models.items():
