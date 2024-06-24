@@ -5,7 +5,7 @@ use mongodb::{Collection, Database};
 use std::str::FromStr;
 use mongodb::options::{FindOneOptions};
 
-use crate::mongo::models::{DataSources, Model, Credentials, CredentialsObj};
+use crate::mongo::models::{DataSources, Model};
 
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
@@ -101,12 +101,11 @@ pub async fn get_embedding_model_and_embedding_key(
 pub async fn get_model_credentials(
     db: &Database,
     datasource_id: &str,
-) -> Result<Option<CredentialsObj>> {
+) -> Result<Option<Model>> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
-    let credentials_collection = db.collection::<Credentials>("credentials");
 
-// Attempt to find the datasource. If not found or error, handle accordingly.
+    // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
         .find_one(
             doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
@@ -120,20 +119,9 @@ pub async fn get_model_credentials(
                 .find_one(doc! {"_id": datasource.modelId}, None)
                 .await
             {
-                Ok(Some(model)) => {
-                    match credentials_collection
-                        .find_one(doc! {"_id": model.credentialId}, None)
-                        .await {
-                        Ok(Some(credentials)) => {
-                            Ok(credentials.credentials)
-                        }
-                        Ok(None) => Ok(None),
-                        Err(e) => {
-                            Err(anyhow!("Failed to find a Credentials object: {}", e))
-                        }
-                    }
+                Ok(model) => {
+                    Ok(model)
                 } // Return the model if found (could be Some or None)
-                Ok(None) => Ok(None),
                 Err(e) => {
                     log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))

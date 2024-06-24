@@ -13,7 +13,7 @@ export default function EditModel(props) {
 	const { resourceSlug, modelId } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { model, credentials } = state;
+	const { model } = state;
 
 	async function fetchModelFormData() {
 		await API.getModel({
@@ -43,7 +43,6 @@ export default function EditModel(props) {
 			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
 				<ModelForm
 					_model={model}
-					credentials={credentials}
 					fetchModelFormData={fetchModelFormData}
 					editing={true}
 				/>

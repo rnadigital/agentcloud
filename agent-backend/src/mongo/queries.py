@@ -4,7 +4,7 @@ from mongo.client import MongoConnection
 from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from models.mongo import Agent, App, Credentials, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
+from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
 from typing import List, Dict, Union, Any, Optional
 from pydantic import BaseModel
 
@@ -82,9 +82,6 @@ class MongoClientConnection(MongoConnection):
 
     def get_agent_model(self, modelId: str):
         return self.get_single_model_by_id("models", Model, modelId)
-
-    def get_model_credential(self, credentialId: str):
-        return self.get_single_model_by_id("credentials", Credentials, credentialId)
 
     def get_agent_datasources(self, agent: Dict):
         pass

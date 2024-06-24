@@ -15,6 +15,10 @@ class BaseToolRetriever(ABC):
     def __init__(self):
         self.init_logger()
 
+    def init_logger(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.DEBUG)
+
     def run(self, query):
         # Perform the query and get results
         results = self.perform_query(query)
@@ -32,8 +36,18 @@ class BaseToolRetriever(ABC):
 
     def format_results(self, results):
         self.logger.debug(f"{self.__class__.__name__} results: {results}")
-        return "\n".join(map(lambda x: x if type(x) is str else x.page_content, results))
+        return "\n".join(map(self._result_getter, results))
 
-    def init_logger(self):
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.DEBUG)
+    @staticmethod
+    def _result_getter(result):
+        match result:
+            case str():
+                return result
+            case tuple():
+                return str({
+                    'data': result[0].page_content,
+                    'metadata': result[0].metadata,
+                    'score': result[1]
+                })
+            case _:
+                return result.page_content

@@ -26,4 +26,5 @@ export type Crew = {
 	agents: ObjectId[];
 	process: ProcessImpl;
 	managerModelId?: ObjectId;
+	hidden?: boolean;
 };	

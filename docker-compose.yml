@@ -38,6 +38,7 @@ services:
         # - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
         - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
         - NEXT_PUBLIC_HUBSPOT_MEETING_LINK=https://meetings.hubspot.com/andrew520
+        - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
         - POSTHOG_KEY=
         - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
     ports:
@@ -50,7 +51,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_STREAM=streaming
+      - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
       - RABBITMQ_ROUTING_KEY=key
       - RABBITMQ_USERNAME=guest
@@ -85,18 +86,23 @@ services:
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - GCS_BUCKET_LOCATION=${GCS_BUCKET_LOCATION}
       - STRIPE_FREE_PLAN_PRICE_ID=price_1P0zlRDxQ9GZKzvoYUAzWMSv
-      - STRIPE_PRO_PLAN_PRICE_ID=price_1OAMHSDxQ9GZKzvoBbDryhiZ
-      - STRIPE_TEAMS_PLAN_PRICE_ID=price_1P0xEGDxQ9GZKzvoTDfMJK6f
-      - STRIPE_ADDON_USERS_PRICE_ID=price_1PFnQmDxQ9GZKzvoS4cRlCtt
-      - STRIPE_ADDON_STORAGE_PRICE_ID=price_1PGClWDxQ9GZKzvoiB8SNOrV      
+      - STRIPE_PRO_PLAN_PRICE_ID=price_1PFrOlDxQ9GZKzvo7Pcb29jS
+      - STRIPE_TEAMS_PLAN_PRICE_ID=price_1PFrGKDxQ9GZKzvotx5U0JE5
+      - STRIPE_ADDON_USERS_PRICE_ID=price_1PFrRsDxQ9GZKzvoTFCE6YTz
+      - STRIPE_ADDON_STORAGE_PRICE_ID=price_1PGClWDxQ9GZKzvoiB8SNOrV
       - STRIPE_FREE_PLAN_PRODUCT_ID=prod_Pqh9LfvzCal4Ux
       - STRIPE_PRO_PLAN_PRODUCT_ID=prod_OyItEyf2n0TZGj
       - STRIPE_TEAMS_PLAN_PRODUCT_ID=prod_PqeXHjZLXeuzyr
       - STRIPE_ADDON_USERS_PRODUCT_ID=prod_PqgU2ZCIJqDDRf
       - STRIPE_ADDON_STORAGE_PRODUCT_ID=prod_Q6Pao7IJyTNLYv
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
       - NEXT_PUBLIC_STORAGE_PROVIDER=local
       - NEXT_PUBLIC_SECRET_PROVIDER=local
+      - MESSAGE_QUEUE_PROVIDER=rabbitmq
       - UPLOADS_BASE_PATH=/tmp
+      # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
+      - FUNCTION_PROVIDER=google
+      - GOOGLE_FUNCTION_LOCATION=us-central1
     volumes:
       - datasource_files:/tmp
 
@@ -124,6 +130,9 @@ services:
       - MONGO_DB_NAME=test
       - MAX_RETRIES=10
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
+      # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
+      - FUNCTION_PROVIDER=google
+      - GOOGLE_FUNCTION_LOCATION=us-central1
 
   vector_db_proxy:
     restart: always

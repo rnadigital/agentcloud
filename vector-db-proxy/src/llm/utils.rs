@@ -131,16 +131,16 @@ pub async fn embed_text(
                 // initiate variables
                 let mongodb_connection = mongo_conn.read().await;
                 match get_model_credentials(&mongodb_connection, datasource_id.as_str()).await {
-                    Ok(Some(creds_obj)) => {
-                        match creds_obj.key {
-                            Some(k) => {
-                                let backoff = backoff::ExponentialBackoffBuilder::new()
-                                    .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
-                                    .build();
-                                let mut config = OpenAIConfig::new()
-                                    .with_api_key(k);
-                                if let Some(org) = creds_obj.org {
-                                    config = config.with_org_id(org);
+                    Ok(model) => {
+                        if let Some(model_obj) = model {
+                            let backoff = backoff::ExponentialBackoffBuilder::new()
+                                .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
+                                .build();
+                            if let Some(api_key) = model_obj.config.api_key {
+    	                        let mut config = OpenAIConfig::new()
+                                    .with_api_key(api_key);
+                                if let Some(org_id) = model_obj.config.org_id {
+                                    config = config.with_org_id(org_id)
                                 }
                                 let client = async_openai::Client::with_config(config).with_backoff(backoff);
                                 let request = CreateEmbeddingRequestArgs::default()
@@ -154,13 +154,13 @@ pub async fn embed_text(
                                     .map(|data| data.clone().embedding)
                                     .collect();
                                 Ok(embedding)
+                            } else {
+                                Err(anyhow!("Model missing api key"))
                             }
-                            None => {
-                                Err(anyhow!("Credentials key was empty"))
-                            }
+                        } else {
+                            Err(anyhow!("Model not returned"))
                         }
                     }
-                    Ok(None) => Err(anyhow!("Model credentials returned NONE")),
                     Err(e) => {
                         Err(anyhow!("Could not get OPEN AI model credentials, {:?}",e))
                     }

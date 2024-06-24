@@ -15,7 +15,7 @@ from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
 from typing import Dict
 from models.sockets import SocketMessage, SocketEvents, Message
-from tools import CodeExecutionTool, RagTool
+from tools import CodeExecutionTool, RagTool, GoogleCloudFunctionTool
 from messaging.send_message_to_socket import send
 from tools.global_tools import CustomHumanInput, GlobalBaseTool
 from tools.builtin_tools import BuiltinTools
@@ -78,7 +78,7 @@ class CrewAIBuilder:
     def build_models(self):
         for key, model in self.models_models.items():
             credential = match_key(self.credentials_models, key)
-            self.crew_models[key] = language_model_factory(model, credential)
+            self.crew_models[key] = language_model_factory(model) #, credential)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -94,8 +94,7 @@ class CrewAIBuilder:
                 case ToolType.RAG_TOOL:
                     tool_class = RagTool
                 case ToolType.HOSTED_FUNCTION_TOOL:
-                    # TODO: use more secure option tools.CodeExecutionUsingDockerNotebookTool
-                    tool_class = CodeExecutionTool
+                    tool_class = GoogleCloudFunctionTool
             if tool.data.builtin:
                 tool_class = BuiltinTools.get_tool_class(tool.data.name)
                 logging.debug(f"tool_class: {tool_class}")

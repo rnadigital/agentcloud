@@ -83,11 +83,3 @@ class SelfQueryRetriever(BaseToolRetriever):
         query_result = super().perform_query(query)
         self.logger.info(f"query result: {query_result}")
         return query_result
-
-    def format_results(self, results):
-        self.logger.debug(f"{self.__class__.__name__} results: {results}")
-        return "\n".join(
-            map(lambda x: x if type(x) is str else str({
-                'data': x.page_content,
-                'metadata': x.metadata
-            }), results))

@@ -42,6 +42,7 @@ export type Tool = {
 		builtin?: boolean;
 		name: string;
 		description?: string;
+		environmentVariables?: Record<string,string>;
 		parameters?: {
 			//type: string;
 			properties: Record<string,FunctionProperty>;
@@ -50,8 +51,8 @@ export type Tool = {
 		code?: string;
 		openAPIMatchKey?: string;
 	},
-	credentialId?: ObjectId; //links to a credential 
 	icon?: IconAttachment;
+	hidden?: boolean;
 };
 
 export type FunctionProperty = {

@@ -1,6 +1,6 @@
-import json
 import logging
-from abc import ABC, abstractmethod
+import re
+from abc import abstractmethod
 from typing import Type
 
 from langchain_core.tools import ToolException
@@ -44,11 +44,17 @@ class BaseBuiltinTool(GlobalBaseTool):
     def run_tool(self, query: str) -> str:
         pass
 
+    @staticmethod
+    def extract_query_val(text):
+        res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', text)
+        return res[0] if res else text
+
     def _run(self, query: str) -> str:
         try:
             self.logger.debug(f"{self.__class__.__name__} received {query}")
-            json_query = json.loads(query)
-            query_val = json_query["query"] if "query" in json_query else json_query["text"]
+            # json_query = json.loads(query)
+            # TODO: should figure a better way to do this... ideally using LLM itself
+            query_val = self.extract_query_val(query)
             self.logger.info(f"{self.__class__.__name__} search string = '{query_val}'")
             return self.run_tool(query_val)
         except ToolException as te:

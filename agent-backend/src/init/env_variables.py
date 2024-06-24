@@ -18,7 +18,8 @@ MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
-
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+GOOGLE_FUNCTION_LOCATION = os.getenv("GOOGLE_FUNCTION_LOCATION", "us-central1")
 
 def _set_max_threads() -> int:
     try:

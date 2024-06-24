@@ -16,7 +16,7 @@ export default function EditTool(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tool, credentials, datasources } = state;
+	const { tool, datasources } = state;
 
 	function fetchTools() {
 		API.getTool({
@@ -43,7 +43,7 @@ export default function EditTool(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Edit Tool</h3>
 		</div>
 
-		<ToolForm tool={tool} credentials={credentials} datasources={datasources} editing={true} />
+		<ToolForm tool={tool} datasources={datasources} editing={true} />
 
 	</>);
 

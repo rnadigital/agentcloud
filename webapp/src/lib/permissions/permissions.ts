@@ -39,10 +39,6 @@ const Permissions = Object.seal(Object.freeze(Object.preventExtensions({
 	EDIT_MODEL: 120,
 	DELETE_MODEL: 125,
 
-	CREATE_CREDENTIAL: 130,
-	EDIT_CREDENTIAL: 135,
-	DELETE_CREDENTIAL: 140,
-
 	CREATE_TASK: 145,
 	EDIT_TASK: 150,
 	DELETE_TASK: 155,

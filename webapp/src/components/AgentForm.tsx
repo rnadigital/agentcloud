@@ -4,23 +4,20 @@ import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/CreateToolModal';
-import ToolSelectIcons from 'components/ToolSelectIcons';
 import ToolSelector from 'components/ToolSelector';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import Blockies from 'react-blockies';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { ModelEmbeddingLength, ModelList } from 'struct/model';
+import { ModelEmbeddingLength } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function AgentForm({ agent = {}, models = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, models?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
-
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -29,9 +26,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const [verbose, setVerbose] = useState(agent.verbose || false);
 	const [icon, setIcon] = useState(agent?.icon);
 	const [agentState, setAgent] = useState(agent);
-	const [error, setError] = useState();
-	const { verifysuccess } = router.query;
-
 	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
@@ -111,13 +105,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		setIcon(addedIcon);
 	};
 
-	const handleToolSelect = (tool) => {
-		if (toolState.some(t => t.value === tool._id)) {
-			setToolState(oldTs => oldTs.filter(t => t.value !== tool._id));
-		} else {
-			setToolState(oldTs => oldTs.concat([tool]));
-		}
-	};
 	let modal;
 	switch (modalOpen) {
 		case 'model':
@@ -126,10 +113,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		case 'tool':
 			modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />;
 			break;
-		// case 'icon':
-		// 	TODO: modal to pick from asset library
-		// 	modal = <AvatarUploader open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
-		// 	break;
 		default:
 			modal = null;
 			break;
@@ -189,12 +172,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								defaultValue={role}
 							/>
 						</div>
-						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
 					</div>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
 					<div className='col-span-full'>
 						<label htmlFor='goal' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Goal
@@ -209,12 +190,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								defaultValue={goal}
 							/>
 						</div>
-						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
 					</div>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
 					<div className='col-span-full'>
 						<label htmlFor='backstory' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Backstory
@@ -229,12 +208,10 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								defaultValue={backstory}
 							/>
 						</div>
-						{/*<p className='mt-3 text-sm leading-6 text-gray-600'></p>*/}
 					</div>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
 					<div className='col-span-full'>
 						<div className='mt-2'>
 							<div className='sm:col-span-12'>
@@ -256,7 +233,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-
 					<div className='col-span-full'>
 						<div className='mt-2'>
 							<div className='sm:col-span-12'>
@@ -285,95 +261,104 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 						<div className='mt-2'>
 							<Select
 								isClearable
-					            primaryColor={'indigo'}
-					            classNames={SelectClassNames}
-					            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
-					            onChange={(v: any) => {
+								primaryColor={'indigo'}
+								classNames={SelectClassNames}
+								value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+								onChange={(v: any) => {
 									if (v?.value === null) {
 										setModalOpen('model');
 										return setCallbackKey('modelId');
 									}
-					            	setAgent(oldAgent => {
-  											return {
-  												...oldAgent,
-  												modelId: v?.value,
-  											};
-  										});
-				            	}}
-					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
-					            formatOptionLabel={data => {
-  										const optionCred = models.find(oc => oc._id === data.value);
-					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
-					                </li>);
-					            }}
-					        />
+									setAgent(oldAgent => {
+										return {
+											...oldAgent,
+											modelId: v?.value,
+										};
+									});
+								}}
+								options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
+								formatOptionLabel={data => {
+									const optionCred = models.find(oc => oc._id === data.value);
+									return (<li
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+											data.isSelected
+												? 'bg-blue-100 text-blue-500'
+												: 'dark:text-white'
+										}`}
+									>
+										{data.label} {optionCred ? `(${optionCred?.model})` : null}
+									</li>);
+								}}
+							/>
 						</div>
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+						<label htmlFor='functionModelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Function Calling Model (Optional)
 						</label>
 						<div className='mt-2'>
 							<Select
 								isClearable
-					            primaryColor={'indigo'}
-					            classNames={SelectClassNames}
-					            value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
-					            onChange={(v: any) => {
+								primaryColor={'indigo'}
+								classNames={SelectClassNames}
+								value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
+								onChange={(v: any) => {
 									if (v?.value === null) {
 										setModalOpen('model');
 										return setCallbackKey('functionModelId');
 									}
-					            	setAgent(oldAgent => {
+									setAgent(oldAgent => {
 										return {
 											...oldAgent,
 											functionModelId: v?.value,
 										};
 									});
-				            	}}
-					            options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
-					            formatOptionLabel={data => {
-  										const optionCred = models.find(oc => oc._id === data.value);
-					                return (<li
-					                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-					                        data.isSelected
-					                            ? 'bg-blue-100 text-blue-500'
-					                            : 'dark:text-white'
-					                    }`}
-					                >
-					                    {data.label} {optionCred ? `(${optionCred?.model})` : null}
-					                </li>);
-					            }}
-					        />
+								}}
+								options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
+								formatOptionLabel={data => {
+									const optionCred = models.find(oc => oc._id === data.value);
+									return (<li
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+											data.isSelected
+												? 'bg-blue-100 text-blue-500'
+												: 'dark:text-white'
+										}`}
+									>
+										{data.label} {optionCred ? `(${optionCred?.model})` : null}
+									</li>);
+								}}
+							/>
 						</div>
 					</div>
 
 					<div className='sm:col-span-12'>
-						<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+						<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Tools (Optional)
 						</label>
-						<ToolSelector
-						  tools={tools}
-						  toolState={toolState}
-						  setToolState={setToolState}
-						>
-							<button 
-								className={`w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-								onClick={(e) => {
-									e.preventDefault();
-									setModalOpen('tool');
-								}}>
-									+ New Tool
-							</button>
-						</ToolSelector>
+						<div className='mt-2'>
+							<Select
+								isMultiple
+								isClearable
+								primaryColor={'indigo'}
+								classNames={SelectClassNames}
+								value={toolState}
+								onChange={(v: any) => setToolState(v)}
+								options={tools.map(c => ({ label: c.name, value: c._id }))}
+								formatOptionLabel={data => {
+									const optionCred = tools.find(oc => oc._id === data.value);
+									return (<li
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+											data.isSelected
+												? 'bg-blue-100 text-blue-500'
+												: 'dark:text-white'
+										}`}
+									>
+										{data.label} {optionCred ? `(${optionCred?.type})` : null}
+									</li>);
+								}}
+							/>
+						</div>
 					</div>
 
 				</div>
@@ -391,10 +376,9 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					type='submit'
 					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
 				>
-						Save
+					Save
 				</button>
 			</div>
 		</form>
 	</>);
-
 }

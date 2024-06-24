@@ -7,35 +7,36 @@ import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import { stripe } from 'lib/stripe';
-import toObjectId from 'misc/toobjectid';
 import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
+import { io } from '@socketio';
+import { addNotification } from 'db/notification';
+import toObjectId from 'misc/toobjectid';
+import { NotificationType } from 'struct/notification';
 
 function destructureSubscription(sub) {
-	let planSub
-		, addonUsersSub
-		, addonStorageSub;
-	// for (let sub of subscriptionData) {
-	if (Array.isArray(sub?.items?.data) && sub.items.data[0]?.price?.id) {
-		switch (sub.items.data[0]?.price?.id) {
-			case process.env.STRIPE_FREE_PLAN_PRICE_ID:
-			case process.env.STRIPE_PRO_PLAN_PRICE_ID:
-			case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
-				planSub = sub;
-				break;
-			case process.env.STRIPE_ADDON_USERS_PRICE_ID:
-				addonUsersSub = sub;
-				break;
-			case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
-				addonStorageSub = sub;
-				break;
+	let planItem, addonUsersItem, addonStorageItem;
+	if (Array.isArray(sub?.items?.data) && sub?.items?.data.length > 0) {
+		for (let item of sub?.items?.data) {
+			switch (item.price.id) {
+				case process.env.STRIPE_FREE_PLAN_PRICE_ID:
+				case process.env.STRIPE_PRO_PLAN_PRICE_ID:
+				case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
+					planItem = item;
+					break;
+				case process.env.STRIPE_ADDON_USERS_PRICE_ID:
+					addonUsersItem = item;
+					break;
+				case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
+					addonStorageItem = item;
+					break;
+			}
 		}
 	}
-	// }
-	return { planSub, addonUsersSub, addonStorageSub };
+	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
 } 
 
-async function getSubscriptionsDetails(stripeCustomerId: string) {
+export async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
 		const body: any = {
 			customer: stripeCustomerId,
@@ -98,31 +99,36 @@ export async function webhookHandler(req, res, next) {
 				createdDate: new Date(),
 			});
 			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const { planSub, addonUsersSub, addonStorageSub } = await getSubscriptionsDetails(checkoutSession.customer);
+			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
 			//Note: 0 to set them on else case
 			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: planToPriceMap[planSub?.items.data[0].price.id],
+				stripePlan: priceToPlanMap[planItem.price.id],
 				stripeAddons: {
-					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : 0,
-					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : 0,
+					users: addonUsersItem ? addonUsersItem.quantity : 0,
+					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: planSub?.current_period_end*1000,
+				stripeEndsAt: checkoutSession?.current_period_end*1000,
 			});
 			break;
 		}
 
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
-			const { planSub, addonUsersSub, addonStorageSub } = destructureSubscription(subscriptionUpdated);
+
+			//NOTE: when updating plans, only UPDATED items come through, not the original plan, so we need to get the plan regardless
+			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
+
+			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
+			
 			//Note: null to not update them unless required
 			const update = {
-				stripePlan: priceToPlanMap[planSub?.items.data[0].price.id],
+				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : {}),
 				stripeAddons: {
-					users: addonUsersSub ? addonUsersSub?.items.data[0].quantity : null,
-					storage: addonStorageSub ? addonStorageSub?.items.data[0].quantity : null,
+					users: addonUsersItem ? addonUsersItem.quantity : 0,
+					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: planSub?.current_period_end ? planSub.current_period_end*1000 : null,
-				stripeTrial: planSub?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end*1000 : null,
+				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
@@ -140,11 +146,10 @@ export async function webhookHandler(req, res, next) {
 		}
 
 		case 'customer.subscription.created': {
-			const subscriptionCreated = event.data.object;
-			//TODO: check we actually need this
-			await updateStripeCustomer(subscriptionCreated.customer, {
-				stripeEndsAt: subscriptionCreated.current_period_end,
-			});
+			// const subscriptionCreated = event.data.object;
+			// await updateStripeCustomer(subscriptionCreated.customer, {
+			// 	stripeEndsAt: subscriptionCreated.current_period_end*1000,
+			// });
 			break;
 		}
 		
@@ -167,60 +172,211 @@ export async function webhookHandler(req, res, next) {
 
 }
 
+export async function hasPaymentMethod(req, res, next) {
+
+	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+		limit: 3, //Just 1??
+	});
+
+	const hasPaymentMethods = paymentMethods?.data?.length > 0;
+	const last4 = hasPaymentMethods ? paymentMethods.data[0].card.last4 : null;
+
+	return dynamicResponse(req, res, 200, { ok: hasPaymentMethods, last4 });
+
+}
+
+export async function requestChangePlan(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+
+	if (!subscriptionId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	}
+
+	const users = req.body.users || 0;
+	const storage = req.body.storage || 0;
+	const plan = req.body.plan;
+	const planPrice = planToPriceMap[plan];
+
+	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
+
+	const planItemId = planItem?.id;
+	const items: any[] = [
+		{
+			price: planPrice,
+			quantity: 1
+		}
+	];
+
+	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
+	const usersItemId = addonUsersItem?.id;
+	items.push({
+		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
+		quantity: users,
+	});
+	
+	const storageItemId = addonStorageItem?.id;
+	items.push({
+		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
+		quantity: storage,
+	});
+
+	const createdCheckoutSession = await stripe.checkout.sessions.create({
+		customer: stripeCustomerId,
+		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		line_items: items.filter(i => i.quantity > 0),
+		currency: 'USD',
+		mode: 'subscription',
+	});
+	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
+		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
+	});
+
+	return dynamicResponse(req, res, 302, {
+		checkoutSession: {
+			id: checkoutSession.id, //for useEffect
+			line_items: checkoutSession.line_items,
+			amount_total: checkoutSession.amount_total,
+			plan, users, storage,
+		}
+	});
+}
+
+export async function confirmChangePlan(req, res, next) {
+
+	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
+	}
+
+	let { stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
+
+	if (!stripeCustomerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+	}
+
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+
+	if (!subscriptionId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	}
+
+	const plan = req.body.plan;
+	const planPrice = planToPriceMap[plan];
+	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
+		process.env.STRIPE_PRO_PLAN_PRICE_ID,
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
+	}
+	
+	const users = req.body.users || 0;
+	const storage = req.body.storage || 0;
+	const planItemId = planItem?.id;
+	const items: any[] = [
+		{
+			//TODO: check might be redundant now
+			...(planItem?.price?.id === planToPriceMap[req.body.plan] ? { id: planItemId } : { price: planToPriceMap[req.body.plan] }),
+			quantity: 1
+		}
+	];
+
+	if (planItemId && planItem?.price?.id !== planToPriceMap[req.body.plan]) {
+		items.push({
+			id: planItemId,
+			deleted: true,
+		});
+	}
+
+	//Note: Stripe needs the subscription item id if it's an existing subscription item else it needs the price id
+	const usersItemId = addonUsersItem?.id;
+	items.push({
+		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
+		quantity: users,
+	});
+	
+	const storageItemId = addonStorageItem?.id;
+	items.push({
+		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		quantity: storage,
+	});
+
+	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
+		limit: 3
+	});
+
+	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
+		const checkoutSession = await stripe.checkout.sessions.create({
+			ui_mode: 'embedded',
+			customer: stripeCustomerId,
+			redirect_on_completion: 'never',
+			currency: 'USD',
+			mode: 'setup',
+		});
+		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
+	}
+
+	const subscription = await stripe.subscriptions.update(subscriptionId, {
+		items
+	});
+
+	// const notification = {
+	//     orgId: toObjectId(res.locals.matchingOrg.id.toString()),
+	//     teamId: toObjectId(res.locals.matchingTeam.id.toString()),
+	//     target: {
+	// 	    //what to do for subscriptions?
+	// 		id: null,
+	// 		collection: null,
+	// 		property: null,
+	// 		objectId: null,
+	//     },
+	//     title: 'Subscription updated',
+	//     date: new Date(),
+	//     seen: false,
+	// 	// stuff specific to notification type
+	//     description: 'Your subscription was updated successfully.',
+	// 	type: NotificationType.UserAction,
+	// 	details: null,
+	// };
+	// await addNotification(notification);
+	// io.to(res.locals.matchingTeam.id).emit('notification', notification);
+	
+	return dynamicResponse(req, res, 200, { });
+}
+
 export async function createPortalLink(req, res, next) {
 
 	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	if (!res.locals.account?.stripe?.stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
-	}
+	const customerId = res.locals.account?.stripe?.stripeCustomerId;
 
-	const { planSub } = await getSubscriptionsDetails(res.locals.account?.stripe?.stripeCustomerId);
-	if (!planSub) {
-		return dynamicResponse(req, res, 400, { error: 'No subscription to manage' });
+	if (!customerId) {
+		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
-	
-	// const configurationData: any = {
-	// 	business_profile: {
-	// 		//TODO: envs
-	// 		headline: 'RNA Digital makers of Agentcloud',
-	// 		privacy_policy_url: 'https://www.getmonita.io/legal',
-	// 		terms_of_service_url: 'https://www.getmonita.io/legal',
-	// 	},
-	// 	features: {
-	// 		subscription_update: {
-	// 			enabled: true,
-	// 			default_allowed_updates: ['quantity'],
-	// 			products: [
-	// 				{
-	// 					product: priceToProductMap[planToPriceMap[res.locals.account.stripe.stripePlan]],
-	// 					prices: [planToPriceMap[res.locals.account.stripe.stripePlan]],
-	// 				}
-	// 			]
-	// 		},
-	// 		payment_method_update: {
-	// 			enabled: true,
-	// 		},
-	// 	}
-	// };
-	// const users = req.body.users || 0;
-	// const storage = req.body.storage || 0;
-	// users > 0 && configurationData.features.subscription_update.products.push({
-	// 	prices: [process.env.STRIPE_ADDON_USERS_PRICE_ID],
-	// 	product: process.env.STRIPE_ADDON_USERS_PRODUCT_ID,
-	// });
-	// storage > 0 && configurationData.features.subscription_update.products.push({
-	// 	prices: [process.env.STRIPE_ADDON_STORAGE_PRICE_ID],
-	// 	product: process.env.STRIPE_ADDON_STORAGE_PRODUCT_ID,
-	// });
-	// const customConfiguration = await stripe.billingPortal.configurations.create(configurationData);
 
 	const portalLink = await stripe.billingPortal.sessions.create({
-		customer: res.locals.account?.stripe?.stripeCustomerId,
+		customer: customerId,
 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
-		// configuration: customConfiguration.id
 	});
 
 	await addPortalLink({
@@ -233,3 +389,4 @@ export async function createPortalLink(req, res, next) {
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 }
+

@@ -26,6 +26,10 @@ class Platforms(str, Enum):
     AzureChatOpenAI = "azure"
     FastEmbed = "fastembed"
     Ollama = "ollama"
+    GoogleVertex = "google_vertex"
+    Cohere = "cohere"
+    Anthropic = "anthropic"
+    Groq = "groq"
 
 
 class ModelVariant(str, Enum):
@@ -33,6 +37,13 @@ class ModelVariant(str, Enum):
     GPT4 = "gpt-4"
     GPT4TURBO = "gpt-4-1106-preview"
     GPT3TURBO = "gpt-3.5-turbo"
+    GeminiPro = "gemini-pro"
+    CommandRPlus = "command-r-plus"
+    Opus = "claude-3-opus-20240229"
+    Sonnet = "claude-3-sonnet-20240229"
+    Haiku = "claude-3-haiku-20240307"
+    LLaMA3_70b = "llama3-70b-8192"
+    Mixtral_8x7b = "mixtral-8x7b-32768"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):
@@ -137,8 +148,6 @@ class Model(BaseModel):
     name: str
     model_name: Optional[str] = Field(default=ModelVariant.GPT4, alias="model")
     modelType: ModelType
-    credentialId: Optional[PyObjectId] = None
-    credentials: Optional[PyObjectId] = None
     embeddingLength: Optional[int] = 384
     seed: Optional[int] = randint(1, 100)
     temperature: Optional[float] = 0
@@ -146,7 +155,7 @@ class Model(BaseModel):
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True
     type: Optional[Platforms] = None
-    config: Optional[Dict] = None
+    config: Optional[Dict] = Field(default={})
 
 
 class ChatModel(BaseModel):
@@ -155,7 +164,7 @@ class ChatModel(BaseModel):
     api_key: Optional[str] = None
     model_name: Optional[ModelVariant] = Field(default=ModelVariant.GPT4, alias="model")
     seed: Optional[int] = randint(1, 100)
-    temperature: Optional[float] = 0
+    wtemperature: Optional[float] = 0
     timeout: Optional[int] = 300
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True

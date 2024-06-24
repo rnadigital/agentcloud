@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 
-export default function ModelTable({ models, credentials, fetchModels }: { models: any[], credentials: any[], fetchModels?: any }) {
+export default function ModelTable({ models, fetchModels }: { models: any[], fetchModels?: any }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
@@ -90,9 +90,6 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 							<th scope='col' className='w-min px-6 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 								Embedding Length
 							</th>
-							<th scope='col' className='w-min px-6 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-								Credential Name
-							</th>
 							<th scope='col' className='w-min px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
 								Actions
 							</th>
@@ -109,9 +106,6 @@ export default function ModelTable({ models, credentials, fetchModels }: { model
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
 									<div className='text-sm text-gray-900'>{model.embeddingLength ? model.embeddingLength : '-'}</div>
-								</td>
-								<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
-									<div className='text-sm text-gray-900'>{credentials.find(c => c._id === model.credentialId)?.name || '-'}</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 									<button

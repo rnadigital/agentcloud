@@ -38,10 +38,6 @@ const Metadata = Object.seal(Object.freeze(Object.preventExtensions({
 	[Permissions.EDIT_MODEL]: { title: 'Edit Model', label: 'Edit Model', desc: 'Ability to edit a model' },
 	[Permissions.DELETE_MODEL]: { title: 'Delete Model', label: 'Delete Model', desc: 'Ability to delete a model' },
 
-	[Permissions.CREATE_CREDENTIAL]: { title: 'Create Credential', label: 'Create Credential', desc: 'Ability to create a credential' },
-	[Permissions.EDIT_CREDENTIAL]: { title: 'Edit Credential', label: 'Edit Credential', desc: 'Ability to edit a credential' },
-	[Permissions.DELETE_CREDENTIAL]: { title: 'Delete Credential', label: 'Delete Credential', desc: 'Ability to delete a credential' },
-
 	[Permissions.CREATE_TASK]: { title: 'Create Task', label: 'Create Task', desc: 'Ability to create a task' },
 	[Permissions.EDIT_TASK]: { title: 'Edit Task', label: 'Edit Task', desc: 'Ability to edit a task' },
 	[Permissions.DELETE_TASK]: { title: 'Delete Task', label: 'Delete Task', desc: 'Ability to delete a task' },

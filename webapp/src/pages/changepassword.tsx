@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import * as API from '../api';
+import ButtonSpinner from '../components/ButtonSpinner';
 import ErrorAlert from '../components/ErrorAlert';
 
 export default function ChangePassword() {
@@ -15,15 +16,21 @@ export default function ChangePassword() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [showPassword, setShowPassword] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 
 	const { token } = router.query;
 
 	async function changePassword(e) {
-		e.preventDefault();
-		await API.changePassword({
-			password: e.target.password.value,
-			token,
-		}, null, setError, router);
+		setSubmitting(true);
+		try {
+			e.preventDefault();
+			await API.changePassword({
+				password: e.target.password.value,
+				token,
+			}, null, setError, router);
+		} finally {
+			setSubmitting(false);
+		}
 	}
 
 	return (
@@ -52,7 +59,7 @@ export default function ChangePassword() {
 					<div className='bg-white dark:bg-slate-800 px-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						<form className='space-y-6' onSubmit={changePassword} action='/forms/changepassword' method='POST'>
 							<div>
-								<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								<label htmlFor='password' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
                   					New Password
 								</label>
 								<div className='relative mt-2'>
@@ -76,6 +83,7 @@ export default function ChangePassword() {
 									type='submit'
 									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
+									{submitting && <ButtonSpinner className='mt-1 me-1' />}
                   					Reset Password
 								</button>
 							</div>

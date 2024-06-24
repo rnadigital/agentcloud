@@ -4,7 +4,7 @@ import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
+import Roles, { RoleKey } from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -46,7 +46,7 @@ export function renameTeam(teamId: db.IdOrStr, newName: string): Promise<any> {
 	});
 }
 
-export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
+export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr, role: RoleKey = 'TEAM_MEMBER'): Promise<any> {
 	return TeamCollection().updateOne({
 		_id: toObjectId(teamId),
 	}, {
@@ -54,7 +54,7 @@ export function addTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Promis
 			members: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
 		},
 		$set: {
-			[`permissions.${accountId}`]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+			[`permissions.${accountId}`]: new Binary(Roles[role].array),
 		}
 	});
 }
@@ -73,6 +73,7 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 }
 
 export function setMemberPermissions(teamId: db.IdOrStr, accountId: db.IdOrStr, permissions: Permission): Promise<any> {
+	console.log(permissions);
 	return TeamCollection().updateOne({
 		_id: toObjectId(teamId)
 	}, {
@@ -131,4 +132,14 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 			}
 		}
 	]).toArray();
+}
+
+export async function updateTeamOwner(teamId: db.IdOrStr, newOwnerId: db.IdOrStr): Promise<any> {
+	return TeamCollection().updateOne({
+		_id: toObjectId(teamId),
+	}, {
+		$set: {
+			ownerId: toObjectId(newOwnerId),
+		}
+	});
 }

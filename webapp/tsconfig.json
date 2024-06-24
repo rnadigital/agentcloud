@@ -45,6 +45,9 @@
       "misc/*": [
         "lib/misc/*"
       ],
+      "function/*": [
+        "lib/function/*"
+      ],
       "queue/*": [
         "lib/queue/*"
       ],

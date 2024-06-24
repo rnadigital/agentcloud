@@ -25,7 +25,6 @@ const dev = process.env.NODE_ENV !== 'production'
 	, app = next({ dev, hostname, port })
 	, handle = app.getRequestHandler();
 
-// import getAirbyteInternalApi from 'lib/airbyte/internal';
 import { dynamicResponse } from '@dr';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
@@ -33,7 +32,8 @@ import { initGlobalTools } from 'db/tool';
 import debug from 'debug';
 import * as airbyteSetup from 'lib/airbyte/setup';
 import * as ses from 'lib/email/ses';
-import { initRabbit } from 'lib/rabbitmq/send';
+import FunctionProviderFactory from 'lib/function';
+import MessageQueueProviderFactory from 'lib/queue';
 import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
@@ -54,12 +54,14 @@ app.prepare()
 		await storageProvider.init();
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		await secretProvider.init();
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+		await messageQueueProvider.init();
+
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		await functionProvider.init();
+
 		await initGlobalTools();
 		await ses.init();
-		await initRabbit();
-
-		// const ia = await getAirbyteInternalApi();
-		// console.log(ia);
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

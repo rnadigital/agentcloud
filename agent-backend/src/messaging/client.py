@@ -1,7 +1,7 @@
 import logging
 import random
 import time
-from build.get_crew_components import construct_crew, looping_app, session_terminated
+from crew.get_crew_components import construct_crew, looping_app, session_terminated
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT

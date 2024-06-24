@@ -2,7 +2,7 @@ from typing import Any, Optional, List, Dict, Set, Tuple, Union
 from init.mongo_session import start_mongo_session
 from models.mongo import Agent, AppType, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool, App
-from build.build_crew import CrewAIBuilder
+from crew.build_crew import CrewAIBuilder
 from utils.model_helper import in_enums, keyset
 
 mongo_client = start_mongo_session()
@@ -20,9 +20,9 @@ def construct_models(parents: List[Tuple[Set[str], Agent | Datasource | Crew]]):
 def construct_model_credentials(models: List[Tuple[Set[str], Model]]):
     credentials: Dict[Set[PyObjectId], Credentials] = dict()
     for model_id_set, model in models:
-        if model.credentialId:
-            credential = mongo_client.get_model_credential(model.credentialId)
-            credentials[keyset(model_id_set, credential.id if credential else None)] = credential
+        if model.config:
+            credential = model.config
+            credentials[keyset(model_id_set, model.id if credential else None)] = credential
         elif in_enums(enums=[FastEmbedModelsStandardFormat, FastEmbedModelsDocFormat], value=model.model_name):
             credentials[keyset(model_id_set)] = Credentials(type=Platforms.FastEmbed)
     return credentials

@@ -7,7 +7,7 @@ import { removeAgentFromCrews } from 'db/crew';
 import { getDatasourcesById, getDatasourcesByTeam } from 'db/datasource';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
-import { getToolsById, getToolsByTeam } from 'db/tool';
+import { getToolsById,getToolsByTeam } from 'db/tool';
 import toObjectId from 'lib/misc/toobjectid';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'lib/utils/validationUtils';
 import { ModelList } from 'struct/model';
@@ -126,7 +126,7 @@ export async function addAgentApi(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-		
+
     // Check for foundTools
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {

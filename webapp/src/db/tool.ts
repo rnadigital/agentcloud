@@ -72,12 +72,26 @@ export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Par
 	});
 }
 
+export async function getToolForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<Tool> {
+	return ToolCollection().findOne({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	});
+}
+
 export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, update: any): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		teamId: toObjectId(teamId),
 		datasourceId: toObjectId(datasourceId),
 	}, {
 		$set: update, //Note: any type and not a Partial because we use a mongo dot notation update
+	});
+}
+
+export function deleteToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<any> {
+	return ToolCollection().deleteMany({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
 	});
 }
 
