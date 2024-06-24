@@ -126,6 +126,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 			parent: `projects/${this.#projectId}/locations/${this.#location}`,	
 			functionId: `function-${id}`,
 		};
+		log('Function create request for %s %O', functionName, request);
 
 		try {
 			let response;
@@ -135,7 +136,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 			} else {
 				request.location = location;
 				[response] = await this.#functionsClient.createFunction(request);
-				log(`Function created successfully: ${functionName}`);
+				log(`Function created successfully: ${functionName} https://console.cloud.google.com/functions/details/${this.#location}/${functionName}?env=gen2&project=${this.#projectId}&tab=source`);
 			}
 		} catch (e) {
 			log(JSON.stringify(e, null, 2));

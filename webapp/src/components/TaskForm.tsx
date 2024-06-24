@@ -184,12 +184,13 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										};
 									});
 								}}
-								options={tools.map(t => ({ label: t.name, value: t._id, disabled: (t?.state && t?.state !== ToolState.READY) })).concat([{ label: '+ New Tool', value: null, disabled: false }])}
+								options={tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })).concat([{ label: '+ New Tool', value: null, disabled: false }])}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
 									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
 					                return (<li
-										className={`${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''} flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
+					                	//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''} 
+										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
 											data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'

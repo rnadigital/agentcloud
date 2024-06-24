@@ -335,7 +335,7 @@ export async function editToolApi(req, res, next) {
 				requirements: toolData?.requirements,
 				environmentVariables: toolData?.environmentVariables,
 				id: functionId,
-				runtime,
+				runtime: toolData?.runtime,
 			}).then(() => {
 				/* Waits for the function to be active (asynchronously)
 				 * TODO: turn this into a job thats sent to bull and handled elsewhere
