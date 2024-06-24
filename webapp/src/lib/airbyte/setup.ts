@@ -43,7 +43,7 @@ async function skipSetupScreen() {
 		body: JSON.stringify({
 			email: 'example@example.org',
 			anonymousDataCollection: false,
-			securityCheck: 'succeeded',
+			securityCheck: 'ignored',
 			organizationName: 'example',
 			initialSetupComplete: true,
 			displaySetupWizard: false
