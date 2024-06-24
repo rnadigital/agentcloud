@@ -1,18 +1,49 @@
 import debug from 'debug';
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model, Query } from 'mongoose';
+import CryptoJS from 'crypto-js';
 
 const log = debug('webapp:db:teamTool');
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key';
+
+function encrypt(text: string): string {
+    return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
+}
 
 interface ITeamTool extends Document {
     teamId: mongoose.Schema.Types.ObjectId;
     toolId: mongoose.Schema.Types.ObjectId;
-    apiKeys?: string[];
+    apiKeys?: Map<string, string>;
 }
 
 const TeamToolSchema: Schema = new Schema({
     teamId: { type: mongoose.Schema.Types.ObjectId, required: true },
     toolId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    apiKeys: { type: [String], required: false },
+    apiKeys: { type: Map, of: String, required: false },
+});
+
+TeamToolSchema.pre<ITeamTool>('save', function (next) {
+    if (this.apiKeys) {
+        const encryptedApiKeys = new Map();
+        this.apiKeys.forEach((value, key) => {
+            encryptedApiKeys.set(key, encrypt(value));
+        });
+        this.apiKeys = encryptedApiKeys;
+    }
+    next();
+});
+
+TeamToolSchema.pre<Query<ITeamTool, ITeamTool>>('findOneAndUpdate', function (next) {
+    const update = this.getUpdate() as Partial<ITeamTool> & { apiKeys?: Map<string, string> };
+
+    if (update.apiKeys) {
+        const encryptedApiKeys = new Map<string, string>();
+        update.apiKeys.forEach((value, key) => {
+            encryptedApiKeys.set(key, encrypt(value));
+        });
+        update.apiKeys = encryptedApiKeys;
+    }
+
+    next();
 });
 
 const TeamTool: Model<ITeamTool> = mongoose.model<ITeamTool>('TeamTool', TeamToolSchema);
