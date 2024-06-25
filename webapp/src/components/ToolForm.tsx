@@ -1,6 +1,8 @@
 'use strict';
 
 import ButtonSpinner from 'components/ButtonSpinner'; // Import ButtonSpinner
+import FunctionToolForm from 'components/FunctionToolForm';
+import ToolDetailsForm from 'components/ToolDetailsForm'
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
@@ -78,6 +80,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 		console.error(e);
 	}
 
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
@@ -114,7 +117,6 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 	const [invalidFuns, setInvalidFuns] = useState(0);
 	const [selectedOpenAPIMatchKey, setSelectedOpenAPIMatchKey] = useState(null);
 	const [error, setError] = useState();
-	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 
 	const initialDatasource = datasources.find(d => d._id === tool?.datasourceId);
 	const [datasourceState, setDatasourceState]: any = useState(initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null);
@@ -400,56 +402,17 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 			<div className='space-y-12'>
 
 				<div className='space-y-6'>
-					<div>
-						<label className='text-base font-semibold text-gray-900'>Name</label>
-						<div>
-							<input
-								required
-								readOnly={isBuiltin}
-								type='text'
-								name='toolName'
-								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-								onChange={e => setToolName(e.target.value)}
-								value={toolName}
-							/>
-							{/*<p className='text-sm text-gray-900'>
-							{toolName && `Function name: ${toSnakeCase(toolName)}`}
-						</p>*/}
-						</div>
-					</div>
 
-					{!isBuiltin && <div>
-						<label className='text-base font-semibold text-gray-900'>Tool Type</label>
-						<div>
-							<select
-								required
-								name='toolType'
-								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								value={toolType}
-								onChange={(e) => setToolType(e.target.value as ToolType)}
-							>
-								<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
-								<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-								{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
-							</select>
-						</div>
-					</div>}
-
-					<div>
-						<label className='text-base font-semibold text-gray-900'>Description</label>
-						<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
-						<div>
-							<textarea
-								required
-								readOnly={isBuiltin}
-								name='toolName'
-								className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-								onChange={e => setToolDescription(e.target.value)}
-								rows={3}
-								value={toolDescription}
-							/>
-						</div>
-					</div>
+					<ToolDetailsForm
+                        toolName={toolName}
+                        setToolName={setToolName}
+                        toolType={toolType}
+                        setToolType={setToolType}
+                        toolDescription={toolDescription}
+                        setToolDescription={setToolDescription}
+                        isBuiltin={isBuiltin}
+                        ToolType={ToolType}
+                    />
 
 					{toolType === ToolType.RAG_TOOL && <>
 						<div className='sm:col-span-12'>
@@ -500,84 +463,19 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
-						<div>
-							<label className='text-base font-semibold text-gray-900'>Runtime</label>
-							<div>
-								<select
-									name='runtime'
-									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-									value={runtimeState}
-									onChange={(e) => setRuntimeState(e.target.value)}
-								>
-									{runtimeOptions.map((option) => (
-										<option key={option.value} value={option.value}>{option.label}</option>
-									))}
-								</select>
-							</div>
-						</div>
-						<div className='border-gray-900/10'>
-							<div className='flex justify-between'>
-								<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
-									Python code
-									<InfoAlert className='w-full mb-1 m-0 p-4 bg-blue-100' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />
-								</h2>
-							</div>
-							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-								<div className='col-span-full grid grid-cols-4'>
-									<div className='col-span-2'>
-										<ScriptEditor
-											height='32.5em'
-											code={toolCode}
-											setCode={setToolCode}
-											editorOptions={{
-												stopRenderingLineAfter: 1000,
-												fontSize: '12pt',
-											}}
-											onInitializePane={onInitializePane}
-										/>
-									</div>
-									<div className='col-span-2'>
-										<SyntaxHighlighter
-											language='python'
-											style={style}
-											showLineNumbers={true}
-											PreTag={PreWithRef}
-											customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}
-										>
-											{wrappedCode}
-										</SyntaxHighlighter>
-									</div>
-									<div className='col-span-4'>
-										{tool?.functionLogs?.length > 0 && <InfoAlert className='w-full mb-1 m-0 p-4 bg-orange-300 text-black' message={`The previous function deployment encountered the following error(s):\n\n${tool?.functionLogs}`} />}
-									</div>
-								</div>
-								
-							</div>
-						</div>
-						<div className='border-gray-900/10'>
-							<div className='flex justify-between'>
-								<h2 className='text-base font-semibold leading-7 text-gray-900'>
-									requirements.txt
-								</h2>
-							</div>
-							<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-								<div className='col-span-full'>
-									<div className='mt-2'>
-										<ScriptEditor
-											height='10em'
-											code={requirementsTxt}
-											setCode={setRequirementsTxt}
-											editorOptions={{
-												stopRenderingLineAfter: 1000,
-												fontSize: '12pt',
-											}}
-											onInitializePane={onInitializePane}
-										/>
-									</div>
-								</div>
-							</div>
-						</div>
-
+						<FunctionToolForm
+                            toolCode={toolCode}
+                            setToolCode={setToolCode}
+                            requirementsTxt={requirementsTxt}
+                            setRequirementsTxt={setRequirementsTxt}
+                            runtimeState={runtimeState}
+                            setRuntimeState={setRuntimeState}
+                            wrappedCode={wrappedCode}
+                            style={style}
+                            PreWithRef={PreWithRef}
+                            isBuiltin={isBuiltin}
+                            runtimeOptions={runtimeOptions}
+                        />
 					</>}
 
 					{/* api call tool */}
