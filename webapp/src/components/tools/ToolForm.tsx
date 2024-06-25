@@ -1,7 +1,7 @@
 'use strict';
 
 import * as API from '@api';
-import ButtonSpinner from 'components/ButtonSpinner'; // Import ButtonSpinner
+import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
@@ -430,6 +430,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Source' && <>
 						<FunctionToolForm
+							fetchFormData={fetchFormData}
 							toolCode={toolCode}
 							setToolCode={setToolCode}
 							requirementsTxt={requirementsTxt}

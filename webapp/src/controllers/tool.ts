@@ -9,7 +9,7 @@ import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
-import { addToolRevision, deleteRevisionsForTool,getRevisionById, getRevisionsForTool } from 'db/toolrevision';
+import { addToolRevision, deleteRevisionsForTool, deleteToolRevisionById,getRevisionsForTool, getToolRevisionById} from 'db/toolrevision';
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
@@ -77,7 +77,7 @@ export async function toolData(req, res, _next) {
  * tool json data
  */
 export async function toolJson(req, res, next) {
-	const data = await toolsData(req, res, next);
+	const data = await toolData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
 
@@ -439,7 +439,7 @@ export async function applyToolRevisionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
-	const existingRevision = await getRevisionById(req.params.resourceSlug, revisionId);
+	const existingRevision = await getToolRevisionById(req.params.resourceSlug, revisionId);
 	if (!existingRevision) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid revisionId' });
 	}
@@ -579,6 +579,17 @@ export async function deleteToolApi(req, res, next) {
 		removeAgentsTool(req.params.resourceSlug, toolId),
 		deleteRevisionsForTool(req.params.resourceSlug, toolId),
 	]);
+
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
+}
+
+export async function deleteToolRevisionApi(req, res, next) {
+
+	const { revisionId/*, toolId*/ } = req.params;
+
+	//TODO: anything with the tool??
+
+	await deleteToolRevisionById(req.params.resourceSlug, revisionId);
 
 	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/agents`*/ });
 }

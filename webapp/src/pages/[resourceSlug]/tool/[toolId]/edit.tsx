@@ -17,15 +17,15 @@ export default function EditTool(props) {
 	const [error, setError] = useState();
 	const { tool, revisions, datasources } = state;
 
-	function fetchTools() {
+	function fetchTool() {
 		API.getTool({
 			resourceSlug: resourceSlug,
-			agentId: router.query.agentId,
+			toolId: router.query.toolId,
 		}, dispatch, setError, router);
 	}
 
 	useEffect(() => {
-		fetchTools();
+		fetchTool();
 	}, [resourceSlug]);
 
 	if (!tool) {
@@ -42,7 +42,7 @@ export default function EditTool(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>Edit Tool</h3>
 		</div>
 
-		<ToolForm tool={tool} datasources={datasources} editing={true} revisions={revisions} />
+		<ToolForm tool={tool} datasources={datasources} editing={true} revisions={revisions} fetchFormData={fetchTool} />
 
 	</>);
 

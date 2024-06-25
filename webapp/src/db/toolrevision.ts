@@ -14,14 +14,14 @@ export function ToolRevisionCollection(): any {
 	return db.db().collection(CollectionName.Toolrevisions);
 }
 
-export function getRevisionById(teamId: db.IdOrStr, revisionId: db.IdOrStr): Promise<ToolRevision> {
+export function getToolRevisionById(teamId: db.IdOrStr, revisionId: db.IdOrStr): Promise<ToolRevision> {
 	return ToolRevisionCollection().findOne({
 		_id: toObjectId(revisionId),
 		teamId: toObjectId(teamId),
 	});
 }
 
-export function getRevisionsById(teamId: db.IdOrStr, revisionIds: db.IdOrStr[]): Promise<ToolRevision[]> {
+export function getToolRevisionsById(teamId: db.IdOrStr, revisionIds: db.IdOrStr[]): Promise<ToolRevision[]> {
 	return ToolRevisionCollection().find({
 		_id: {
 			$in: revisionIds.map(toObjectId),
@@ -60,7 +60,7 @@ export function deleteRevisionsForTool(teamId: db.IdOrStr, toolId: db.IdOrStr): 
 	});
 }
 
-export function deleteRevisionById(teamId: db.IdOrStr, revisionId: db.IdOrStr): Promise<any> {
+export function deleteToolRevisionById(teamId: db.IdOrStr, revisionId: db.IdOrStr): Promise<any> {
 	return ToolRevisionCollection().deleteOne({
 		_id: toObjectId(revisionId),
 		teamId: toObjectId(teamId),
