@@ -40,12 +40,23 @@ const authorizationMethods = [
 ];
 import { runtimeOptions } from 'struct/function';
 
+const tabs = [
+	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
+	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{ name: 'Parameters', href: '#params', toolTypes: [ToolType.FUNCTION_TOOL] },
+];
+
+function classNames(...classes) {
+	return classes.filter(Boolean).join(' ');
+}
+
 export default function ToolForm({ tool = {}, datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [currentTab, setCurrentTab] = useState(tabs[0]);
 	const [toolState, setToolState] = useState(tool);
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = toolState?.data?.builtin === true;
@@ -59,6 +70,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [submitting, setSubmitting] = useState(false); // Add submitting state
+
 	const codeBlockRef = useRef(null);
 	useEffect(() => {
 		setWrappedCode(WrapToolCode(toolCode));
@@ -287,6 +299,19 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 		}*/
 	}, [toolType]);
 
+	useEffect(() => {
+		const allowedTabs = tabs.filter(t => !t.toolTypes || t.toolTypes.includes(toolType));
+   		if (typeof window !== 'undefined') {
+   			const hashTab = window.location.hash;
+   			const foundTab = allowedTabs.find(t => t.href === hashTab);
+   			if (foundTab) {
+   				setCurrentTab(foundTab);
+   			} else {
+   				setCurrentTab(allowedTabs[0]);
+   			}
+   		}
+	}, [toolType]);
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -326,7 +351,60 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 						ToolType={ToolType}
 					/>
 
-					{toolType === ToolType.RAG_TOOL && <>
+					<div>
+						<div className='sm:hidden'>
+							<label htmlFor='tabs' className='sr-only'>
+					          Select a tab
+							</label>
+							<select
+								id='tabs'
+								name='tabs'
+
+  						        className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+
+  								          	onChange={(e) => {
+									setCurrentTab(tabs.find(t => t.name === e.target.value));
+								}}
+								defaultValue={currentTab.name}
+							>
+								{tabs
+									.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+									.map((tab) => (
+										<option key={tab.name}>{tab.name}</option>
+									))
+								}
+							</select>
+						</div>
+						<div className='hidden sm:block'>
+	        <div className='border-b border-gray-200'>
+	          <nav className='-mb-px flex space-x-8' aria-label='Tabs'>
+									{tabs
+										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+										.map((tab) => (
+											<a
+												key={tab.name}
+												href={tab.href}
+												onClick={(e) => {
+													setCurrentTab(tabs.find(t => t.name === tab.name));
+												}}
+												className={classNames(
+													currentTab.name === tab.name
+													                    ? 'border-indigo-500 text-indigo-600'
+	                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+	                  'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
+												)}
+												aria-current={currentTab.name === tab.name ? 'page' : undefined}
+											>
+												{tab.name}
+											</a>
+										))
+									}
+								</nav>
+							</div>
+						</div>
+					</div>				
+
+					{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && <>
 						<div className='sm:col-span-12'>
 	                        <RagToolForm
 	                            datasourceState={datasourceState}
@@ -350,7 +428,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 						
 					</>}
 
-					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
+					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Source' && <>
 						<FunctionToolForm
 							toolCode={toolCode}
 							setToolCode={setToolCode}
@@ -372,8 +450,8 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
                         />
                     )*/}
 
-					{toolType !== ToolType.RAG_TOOL && <>
-						<ParameterForm 
+					{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && <>
+						<ParameterForm
 							readonly={isBuiltin} 
 							parameters={parameters} 
 							setParameters={setParameters} 
@@ -399,7 +477,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 
 				</div>
 			</div>
-			<div className='mt-6 flex items-center justify-between gap-x-6'>
+			<div className='bottom-0 mt-auto flex items-center justify-between gap-x-6'>
 				{!compact && <Link
 					className='text-sm font-semibold leading-6 text-gray-900'
 					href={`/${resourceSlug}/tools`}

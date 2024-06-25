@@ -38,12 +38,11 @@ export default function FunctionToolForm({
 				<div className='flex justify-between'>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
                         Python code
-						<InfoAlert className='w-full mb-1 m-0 p-4 bg-blue-100' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />
-					</h2>
+                    </h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-					<div className='col-span-full grid grid-cols-4'>
-						<div className='col-span-2'>
+					<div className='col-span-full grid grid-cols-5 space-x-1'>
+						<div className='md:col-span-3 col-span-5 rounded-[6px] overflow-hidden'>
 							<ScriptEditor
 								height='32.5em'
 								code={toolCode}
@@ -55,7 +54,7 @@ export default function FunctionToolForm({
 								onInitializePane={onInitializePane}
 							/>
 						</div>
-						<div className='col-span-2'>
+						<div className='md:col-span-2 col-span-5 rounded overflow-hidden'>
 							<SyntaxHighlighter
 								language='python'
 								style={style}
@@ -68,8 +67,9 @@ export default function FunctionToolForm({
 						</div>
 					</div>
 				</div>
+				<InfoAlert className='w-full mt-2 m-0 p-4 bg-blue-100 rounded' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />
 			</div>
-			<div className='border-gray-900/10'>
+			<div className='border-gray-900/10 !mt-3'>
 				<div className='flex justify-between'>
 					<h2 className='text-base font-semibold leading-7 text-gray-900'>
                         requirements.txt
@@ -77,7 +77,7 @@ export default function FunctionToolForm({
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 					<div className='col-span-full'>
-						<div className='mt-2'>
+						<div className='mt-2 rounded overflow-hidden'>
 							<ScriptEditor
 								height='10em'
 								code={requirementsTxt}
