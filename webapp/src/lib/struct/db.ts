@@ -23,5 +23,6 @@ export enum CollectionName {
 	Tasks = 'tasks',
 	Teams = 'teams',
 	Tools = 'tools',
+	Toolrevisions = 'toolrevisions',
 	Verifications = 'verifications'
 }
