@@ -16,12 +16,12 @@ import { toast } from 'react-toastify';
 import { DatasourceStatus } from 'struct/datasource';
 import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
 
-import * as API from '../api';
-import ScriptEditor, { MonacoOnInitializePane } from '../components/Editor';
-import FunctionCard from '../components/FunctionCard';
-import ParameterForm from '../components/ParameterForm';
-import { useAccountContext } from '../context/account';
-import { generateOpenAPIMatchKey } from '../lib/utils/toolsUtils';
+import * as API from '../../api';
+import ScriptEditor, { MonacoOnInitializePane } from '../Editor';
+import FunctionCard from '../FunctionCard';
+import ParameterForm from '../ParameterForm';
+import { useAccountContext } from '../../context/account';
+import { generateOpenAPIMatchKey } from '../../lib/utils/toolsUtils';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -76,16 +76,16 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
 		return acc;
 	}, []);
-	
+
 	const initialEnvironmentVariables = tool?.data?.environmentVariables && Object.entries(tool.data.environmentVariables).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
 		acc.push({ name: parname, description: par });
 		return acc;
 	}, []);
-	
+
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [environmentVariables, setEnvironmentVariables] = useState(initialEnvironmentVariables || [{ name: '', description: '' }]);
-	
+
 	const [functionsList, setFunctionsList] = useState(null);
 	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
@@ -418,7 +418,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources (Optional)
 							</label>
-						
+
 							<div className='mt-2'>
 								<Select
 									isSearchable
@@ -445,7 +445,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 									formatOptionLabel={formatDatasourceOptionLabel}
 								/>
 							</div>
-						
+
 							<RetrievalStrategyComponent
 								toolRetriever={toolRetriever}
 								setToolRetriever={setToolRetriever}
@@ -456,9 +456,9 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 								schema={currentDatasource?.connectionSettings?.syncCatalog}
 								currentDatasource={currentDatasource}
 							/>
-						
+
 						</div>
-						
+
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && <>
@@ -795,24 +795,24 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 					</div>}
 
 					{toolType !== ToolType.RAG_TOOL && <>
-						<ParameterForm 
-							readonly={isBuiltin} 
-							parameters={parameters} 
-							setParameters={setParameters} 
-							title='Parameters' 
-							disableTypes={false} 
-							hideRequired={false} 
+						<ParameterForm
+							readonly={isBuiltin}
+							parameters={parameters}
+							setParameters={setParameters}
+							title='Parameters'
+							disableTypes={false}
+							hideRequired={false}
 							namePlaceholder='Name'
 							descriptionPlaceholder='Description'
 						/>
 
-						<ParameterForm 
-							readonly={isBuiltin} 
-							parameters={environmentVariables} 
-							setParameters={setEnvironmentVariables} 
-							title='Environment Variables' 
-							disableTypes={true} 
-							hideRequired={true} 
+						<ParameterForm
+							readonly={isBuiltin}
+							parameters={environmentVariables}
+							setParameters={setEnvironmentVariables}
+							title='Environment Variables'
+							disableTypes={true}
+							hideRequired={true}
 							namePattern='[A-Z][A-Z0-9_]*'
 							namePlaceholder='Key must be uppercase seperated by underscores'
 							descriptionPlaceholder='Value'

@@ -1,7 +1,7 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import ModelTable from 'components/ModelTable';
 import NewButtonSection from 'components/NewButtonSection';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -39,7 +39,15 @@ export default function Models(props) {
 			<title>{`Models - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={filteredModels} title='Models' buttonText='New Model' href='/model/add' />
+		<PageTitleWithButtons
+			buttons={[
+				{
+					buttonText: 'New Model',
+					href: '/model/add',
+					icon: <PlusIcon />
+				}
+			]}
+			title='Models' />
 
 		<ModelTable models={filteredModels} fetchModels={fetchModels} />
 

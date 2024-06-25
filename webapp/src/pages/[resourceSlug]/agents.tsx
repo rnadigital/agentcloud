@@ -1,5 +1,4 @@
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -10,6 +9,7 @@ import * as API from '../../api';
 import AgentList from '../../components/AgentList';
 import NewButtonSection from '../../components/NewButtonSection';
 import { useAccountContext } from '../../context/account';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 
 export default function Agents(props) {
 
@@ -40,7 +40,9 @@ export default function Agents(props) {
 			<title>{`Agents - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={filteredAgents} title='Agents' buttonText='New Agent' href='/agent/add' />
+		<PageTitleWithButtons buttons={[
+			{ buttonText: 'New Agent', href: '/agent/add', icon: <PlusIcon /> },
+		]} title='Agents' />
 
 		{agents.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/agent/add`}

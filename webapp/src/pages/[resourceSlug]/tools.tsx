@@ -1,5 +1,5 @@
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -8,9 +8,12 @@ import React, { useEffect, useState } from 'react';
 
 import * as API from '../../api';
 import NewButtonSection from '../../components/NewButtonSection';
-import ToolForm from '../../components/ToolForm';
-import ToolList from '../../components/ToolList';
+import ToolForm from '../../components/tools/ToolForm';
+import ToolList from '../../components/tools/ToolList';
 import { useAccountContext } from '../../context/account';
+import SearchFilter from 'components/SearchFilter';
+import ToolTabs from 'components/tools/TooltTabs';
+import ToolModal from 'components/tools/ToolModal';
 
 export default function Tools(props) {
 
@@ -43,7 +46,24 @@ export default function Tools(props) {
 			<title>{`Tools - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={filteredTools} title='Tools' buttonText='New Tool' href='/tool/add' />
+		<PageTitleWithButtons
+			buttons={[
+				{
+					buttonText: 'My Tools',
+					href: '/mytools',
+					variant: 'outline',
+				},
+				{
+					buttonText: 'New Tool',
+					href: '/tool/add',
+					icon: <PlusIcon />
+				}
+			]}
+			title='Tools' />
+		<div className='mb-4' />
+		<SearchFilter filter="asda" setFilter={() => { }} />
+		<ToolTabs />
+
 
 		{tools.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/tool/add`}

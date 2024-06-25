@@ -6,7 +6,7 @@ import {
 } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/CreateToolModal';
-import ToolSelectIcons from 'components/ToolSelectIcons';
+import ToolSelectIcons from 'components/tools/ToolSelectIcons';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -39,7 +39,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		.find(a => a?._id === taskState?.agentId);
 
 	useEffect(() => {
-	    // Placeholder for any initial setup or effects
+		// Placeholder for any initial setup or effects
 	}, []);
 
 	async function taskPost(e) {
@@ -77,7 +77,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		setTask(oldTask => {
 			return {
 				...oldTask,
-				toolIds: [...(taskState?.toolIds||[]), addedToolId],
+				toolIds: [...(taskState?.toolIds || []), addedToolId],
 			};
 		});
 	};
@@ -160,7 +160,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
-								value={taskState?.toolIds?.map(x => ({ value: x, label: tools.find(tx => tx._id === x)?.name}))}
+								value={taskState?.toolIds?.map(x => ({ value: x, label: tools.find(tx => tx._id === x)?.name }))}
 								onChange={(v: any) => {
 									if (v?.some(vals => vals.value === null)) {
 										//Create new pressed
@@ -174,14 +174,13 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 									});
 								}}
 								options={tools.map(t => ({ label: t.name, value: t._id })).concat([{ label: '+ New Tool', value: null }])}
-					            formatOptionLabel={data => {
+								formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
-					                return (<li
-										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
-											data.isSelected
+									return (<li
+										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${data.isSelected
 												? 'bg-blue-100 text-blue-500'
 												: 'dark:text-white'
-										}`}
+											}`}
 									>
 										<span className='tooltip z-100'>
 											{ToolSelectIcons[optionTool?.type]}
@@ -191,28 +190,28 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										</span>
 										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
-					            }}
+								}}
 							/>
 						</div>
 
 						{/* Preferred agent */}
 						<div className='col-span-full'>
 							<label htmlFor='preferredAgent' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Preferred Agent
+								Preferred Agent
 							</label>
 							<div className='mt-2'>
 								<Select
 									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
+									primaryColor={'indigo'}
+									classNames={{
 										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
 										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
 										list: 'dark:bg-slate-700',
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={preferredAgent ? { label: preferredAgent.name, value: preferredAgent._id } : null}
-						            onChange={(v: any) => {
+									}}
+									value={preferredAgent ? { label: preferredAgent.name, value: preferredAgent._id } : null}
+									onChange={(v: any) => {
 										if (v?.value == null) {
 											return setModalOpen('agent');
 										}
@@ -222,34 +221,33 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												agentId: v?.value,
 											};
 										});
-        						   	}}
-						            options={agents
-						            	.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-						            	.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
-						            formatOptionLabel={(data: any) => {
-						            	const optionAgent = agents.find(ac => ac._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
-								            {data.allowDelegation && <span className='tooltip z-100'>
-									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
-       												<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
-       											</span>
-							        			<span className='tooltiptext'>
+									}}
+									options={agents
+										.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
+										.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+									formatOptionLabel={(data: any) => {
+										const optionAgent = agents.find(ac => ac._id === data.value);
+										return (<li
+											className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${data.isSelected
+													? 'bg-blue-100 text-blue-500'
+													: 'dark:text-white'
+												}`}
+										>
+											{data.label}{optionAgent ? ` - ${optionAgent.role}` : null}
+											{data.allowDelegation && <span className='tooltip z-100'>
+												<span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
+													<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
+												</span>
+												<span className='tooltiptext'>
 													This agent allows automatic task delegation.
 												</span>
 											</span>}
-						                </li>);
-						            }}
-						        />
+										</li>);
+									}}
+								/>
 							</div>
 						</div>
-						
+
 						{/* Async execution checkbox 
 						<div className='col-span-full'>
 							<div className='mt-2'>
@@ -275,7 +273,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								</div>
 							</div>
 						</div>*/}
-						
+
 						{/* human_input tool checkbox */}
 						<div className='col-span-full'>
 							<div className='mt-2'>

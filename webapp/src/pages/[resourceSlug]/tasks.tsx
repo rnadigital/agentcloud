@@ -1,6 +1,6 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import NewButtonSection from 'components/NewButtonSection';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 import TaskCards from 'components/TaskCards';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -39,10 +39,18 @@ export default function Tasks(props) {
 		<>
 			<Head>
 				<title>{`Tasks - ${teamName}`}</title>
-				
+
 			</Head>
 
-			<PageTitleWithNewButton list={filteredTasks} title='Tasks' buttonText='New Task' href='/task/add' />
+			<PageTitleWithButtons
+				buttons={[
+					{
+						buttonText: 'New Task',
+						href: '/task/add',
+						icon: <PlusIcon />
+					}
+				]}
+				title='Tasks' />
 
 			<TaskCards tasks={filteredTasks} fetchTasks={fetchTasks} />
 

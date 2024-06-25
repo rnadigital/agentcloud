@@ -3,7 +3,7 @@ import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
 import Flow from 'components/Flow';
 import NewButtonSection from 'components/NewButtonSection';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import PageTitleWithButtons from 'components/PageTitleWithButtons';
 import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -51,7 +51,11 @@ export default function Apps(props) {
 			<title>{`Apps - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={filteredApps} title='Apps' buttonText='New App' href='/app/add' />
+		<PageTitleWithButtons
+			buttons={[
+				{ buttonText: 'New App', href: '/app/add', icon: <PlusIcon /> },
+			]}
+			title='Apps' />
 
 		{error && <ErrorAlert error={error} />}
 
