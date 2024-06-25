@@ -105,6 +105,9 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
 					{datasources.map((datasource) => {
 						const processingOrEmbedding = [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource?.status);
+						//note: until we have a better way to set the state after it is "ready"
+						const { total, success ,failure } = (datasource?.recordCount || {});
+						const finished = total === null || (((success||0)+(failure||0)) >= total);
 						return (
 							<tr key={datasource._id} className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700 transition-all opacity-1 duration-700 ${deletingMap[datasource._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`} style={{ borderColor: deletingMap[datasource._id] ? 'red' : '' }}>
 								<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
@@ -119,7 +122,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 									</div>
 								</td>
 								<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-									<DatasourceStatusIndicator datasource={datasource} processingOrEmbedding={processingOrEmbedding} />
+									<DatasourceStatusIndicator datasource={datasource} finished={finished} processingOrEmbedding={processingOrEmbedding} />
 								</td>
 								<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 									<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>
@@ -139,10 +142,10 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 								<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 									{datasource.sourceType !== 'file' && <button
 										onClick={() => syncDatasource(datasource._id)}
-										disabled={syncing[datasource._id]
+										disabled={!finished && (syncing[datasource._id]
 											|| deleting[datasource._id]
 											|| (datasource.status === DatasourceStatus.DRAFT && !datasource?.connectionSettings?.syncCatalog?.streams?.length)
-											|| [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status)}
+											|| [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status))}
 										className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 									>
 									
