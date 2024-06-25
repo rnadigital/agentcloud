@@ -50,7 +50,7 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-export default function ToolForm({ tool = {}, datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, revisions = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, revisions?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
@@ -441,6 +441,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 							PreWithRef={PreWithRef}
 							isBuiltin={isBuiltin}
 							runtimeOptions={runtimeOptions}
+							revisions={revisions}
 						/>
 					</>}
 
@@ -477,7 +478,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 
 				</div>
 			</div>
-			<div className='mt-auto flex items-center justify-between gap-x-6'>
+			<div className='mt-auto pt-6 flex items-center justify-between gap-x-6'>
 				{!compact && <Link
 					className='text-sm font-semibold leading-6 text-gray-900'
 					href={`/${resourceSlug}/tools`}

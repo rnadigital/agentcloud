@@ -13,7 +13,7 @@ export default function CreateToolModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	const { agents, models, tools, datasources } = state as any;
+	const { datasources } = state as any;
 
 	async function fetchToolFormData() {
 		await API.getTools({ resourceSlug }, dispatch, setError, router);

@@ -34,6 +34,10 @@ export function getRevisionsForTool(teamId: db.IdOrStr, toolId: db.IdOrStr, limi
 	return ToolRevisionCollection().find({
 		teamId: toObjectId(teamId),
 		toolId: toObjectId(toolId),
+	}, {
+		projection: {
+			content: 0,
+		}
 	}).sort({
 		date: -1,
 	}).limit(limit).toArray();

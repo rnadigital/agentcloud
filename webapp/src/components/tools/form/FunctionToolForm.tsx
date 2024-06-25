@@ -14,7 +14,8 @@ export default function FunctionToolForm({
 	style,
 	PreWithRef,
 	isBuiltin,
-	runtimeOptions
+	runtimeOptions,
+	revisions,
 }) {
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 	return (
@@ -42,7 +43,7 @@ export default function FunctionToolForm({
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 					<div className='col-span-full grid grid-cols-5 space-x-1'>
-						<div className='md:col-span-3 col-span-5 rounded-[6px] overflow-hidden'>
+						<div className='md:col-span-4 col-span-5 rounded-[6px] overflow-hidden'>
 							<ScriptEditor
 								height='32.5em'
 								code={toolCode}
@@ -57,8 +58,10 @@ export default function FunctionToolForm({
 								onInitializePane={onInitializePane}
 							/>
 						</div>
-						<div className='md:col-span-2 col-span-5 rounded overflow-hidden'>
-							<SyntaxHighlighter
+						<div className='md:col-span-1 col-span-5 rounded overflow-hidden'>
+							Revision history:
+							{JSON.stringify(revisions, null, 2)}
+							{/*<SyntaxHighlighter
 								language='python'
 								style={style}
 								showLineNumbers={true}
@@ -66,7 +69,7 @@ export default function FunctionToolForm({
 								customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}
 							>
 								{wrappedCode}
-							</SyntaxHighlighter>
+							</SyntaxHighlighter>*/}
 						</div>
 					</div>
 				</div>
