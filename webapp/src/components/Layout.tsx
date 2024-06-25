@@ -106,11 +106,14 @@ export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, switching } = accountContext as any;
-	const { stripeEndsAt, stripePlan } = account?.stripe || {};
+	const { account, csrf, switching, team } = accountContext as any;
+	const { currentTeam } = account || {};
+	const { stripeEndsAt, stripePlan, stripeCancelled } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -259,7 +262,7 @@ export default withRouter(function Layout(props) {
 																Account
 															</Link>
 														</li>
-														<li key='billing'>
+														{isOrgOwner && <li key='billing'>
 															<Link
 																href='/billing'
 																className={classNames(
@@ -275,7 +278,7 @@ export default withRouter(function Layout(props) {
 																/>
 																Billing
 															</Link>
-														</li>
+														</li>}
 														{/*<li>
 															<Link
 																href='/settings'
@@ -403,7 +406,7 @@ export default withRouter(function Layout(props) {
 											Account
 										</Link>
 									</li>
-									<li key='billing'>
+									{isOrgOwner && <li key='billing'>
 										<Link
 											href='/billing'
 											className={classNames(
@@ -419,7 +422,7 @@ export default withRouter(function Layout(props) {
 											/>
 											Billing
 										</Link>
-									</li>
+									</li>}
 									{/*<li>
 										<Link
 											href='/settings'
@@ -458,7 +461,7 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} />
+					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />
 					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'

@@ -8,7 +8,10 @@ export enum OAUTH_PROVIDER {
 export type OAuthStrategy = {
 	strategy: any;
 	callback: Function;
-	env: string;
+	secretKeys: {
+		clientId: string;
+		secret: string;
+	};
 	path: string;
 	extra?: any; // Stuff like scope (this object is a different shape depending on provider hence any)
 }

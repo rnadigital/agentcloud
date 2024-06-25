@@ -4,6 +4,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import debug from 'debug';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
+import SecretKeys from 'secret/secretkeys';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
 import { Account, addAccount, getAccountByOAuthOrEmail, setAccountOauth } from '../db/account';
@@ -14,13 +15,14 @@ const log = debug('webapp:oauth');
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
-import { Strategy as StripeStrategy } from 'passport-stripe';
+// import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
+// import { Strategy as StripeStrategy } from 'passport-stripe';
+
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
-	{ strategy: GitHubStrategy, env: 'GITHUB', callback: githubCallback, path: '/auth/github/callback', extra: { scope: ['user:email'] } },
-	{ strategy: GoogleStrategy, env: 'GOOGLE', callback: googleCallback, path: '/auth/google/callback', extra: { /* N/A */ } },
-	{ strategy: StripeStrategy, env: 'STRIPE', callback: stripeCallback, path: '/auth/stripe/callback', extra: { /* N/A */ } },
-	{ strategy: HubspotStrategy, env: 'HUBSPOT', callback: hubspotCallback, path: '/auth/hubspot/callback', extra: { /* N/A */ } },
+	{ strategy: GitHubStrategy, secretKeys: { clientId: SecretKeys.OAUTH_GITHUB_CLIENT_ID, secret: SecretKeys.OAUTH_GITHUB_CLIENT_SECRET }, callback: githubCallback, path: '/auth/github/callback', extra: { scope: ['user:email'] } },
+	{ strategy: GoogleStrategy, secretKeys: { clientId: SecretKeys.OAUTH_GOOGLE_CLIENT_ID, secret: SecretKeys.OAUTH_GOOGLE_CLIENT_SECRET }, callback: googleCallback, path: '/auth/google/callback', extra: { /* N/A */ } },
+	// { strategy: StripeStrategy, secretKeys: { clientId: SecretKeys.OAUTH_STRIPE_CLIENT_ID, secret: SecretKeys.OAUTH_STRIPE_CLIENT_SECRET }, callback: stripeCallback, path: '/auth/stripe/callback', extra: { /* N/A */ } },
+	// { strategy: HubspotStrategy, secretKeys: { clientId: SecretKeys.OAUTH_HUBSPOT_CLIENT_ID, secret: SecretKeys.OAUTH_HUBSPOT_CLIENT_SECRET }, callback: hubspotCallback, path: '/auth/hubspot/callback', extra: { /* N/A */ } },
 ];
 
 export async function githubCallback(accessToken, refreshToken, profile, done) {
@@ -51,15 +53,15 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 	done(null, profile);
 }
 
-export async function stripeCallback(accessToken, refreshToken, profile, done) {
-	log(`stripeCallback profile: ${JSON.stringify(profile, null, '\t')}`);
-	done(null, profile);
-}
+// export async function stripeCallback(accessToken, refreshToken, profile, done) {
+// 	log(`stripeCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+// 	done(null, profile);
+// }
 
-export async function hubspotCallback(accessToken, refreshToken, profile, done) {
-	log(`hubspotCallback profile: ${JSON.stringify(profile, null, '\t')}`);
-	done(null, profile);
-}
+// export async function hubspotCallback(accessToken, refreshToken, profile, done) {
+// 	log(`hubspotCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+// 	done(null, profile);
+// }
 
 export async function serializeHandler(user, done) {
 	log('serializeHandler user', user);
