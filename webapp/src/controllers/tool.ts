@@ -432,16 +432,16 @@ export async function editToolApi(req, res, next) {
 
 export async function applyToolRevisionApi(req, res, next) {
 
-	const { revisionId, toolId }  = req.body;
-
-	const existingTool = await getToolById(req.params.resourceSlug, toolId);
-	if (!existingTool) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
-	}
+	const { revisionId }  = req.body;
 
 	const existingRevision = await getToolRevisionById(req.params.resourceSlug, revisionId);
 	if (!existingRevision) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid revisionId' });
+	}
+
+	const existingTool = await getToolById(req.params.resourceSlug, existingRevision.toolId);
+	if (!existingTool) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 	
 	const isFunctionTool = existingTool.type === ToolType.FUNCTION_TOOL;
@@ -451,7 +451,7 @@ export async function applyToolRevisionApi(req, res, next) {
 
 	const toolData = existingRevision.content.data;
 	
-	await editTool(req.params.resourceSlug, toolId, {
+	await editTool(req.params.resourceSlug, existingRevision.toolId, {
 		data: toolData,
 		state: ToolState.PENDING,
 	});
@@ -459,7 +459,7 @@ export async function applyToolRevisionApi(req, res, next) {
 	addToolRevision({
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
-		toolId: toObjectId(toolId),
+		toolId: toObjectId(existingRevision.toolId),
 		content: { //Note: any type, keeping it very loose for now
 			data: toolData,
 		},
@@ -486,7 +486,7 @@ export async function applyToolRevisionApi(req, res, next) {
 					log('editToolApi functionId %s isActive %O', functionId, isActive);
 					const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
 					const editedRes = await editToolUnsafe({
-						_id: toObjectId(toolId),
+						_id: toObjectId(existingRevision.toolId),
 						teamId: toObjectId(req.params.resourceSlug),
 						state: ToolState.PENDING,
 						//functionId: ...
@@ -541,7 +541,7 @@ export async function applyToolRevisionApi(req, res, next) {
 		console.error(e);
 		// logging warnings only
 		functionProvider.deleteFunction(functionId).catch(e => console.warn(e));
-		editTool(req.params.resourceSlug, toolId, { state: ToolState.ERROR }).catch(e => console.warn(e));
+		editTool(req.params.resourceSlug, existingRevision.toolId, { state: ToolState.ERROR }).catch(e => console.warn(e));
 		return dynamicResponse(req, res, 400, { error: 'Error deploying or testing function' });
 	}
 

@@ -63,8 +63,8 @@ export default function FunctionToolForm({
 					</h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-					<div className='col-span-full grid grid-cols-5 space-x-1'>
-						<div className='md:col-span-4 col-span-5 rounded-[6px] overflow-hidden'>
+					<div className='col-span-full grid grid-cols-6 space-x-1'>
+						<div className='md:col-span-4 col-span-6 rounded-[6px] overflow-hidden'>
 							<ScriptEditor
 								height='32.5em'
 								code={toolCode}
@@ -79,18 +79,28 @@ export default function FunctionToolForm({
 								onInitializePane={onInitializePane}
 							/>
 						</div>
-						<div className='md:col-span-1 col-span-5 rounded overflow-hidden'>
+						<div className='md:col-span-2 col-span-6 rounded overflow-hidden'>
 						    <ul className='space-y-2'>
 						        {revisions.map((revision, index) => (
 						            <li key={index} className='flex justify-between items-center bg-white shadow rounded-lg p-2'>
 						                <div className='flex-1 truncate'>
-						                    <p className='text-sm text-gray-800'><strong>Revision {index + 1}:</strong> {new Date(revision.date).toString()}</p>
+						                    <p className='text-sm text-gray-800'><strong>Revision {index + 1}:</strong> {new Date(revision.date).toLocaleString()}</p>
 						                </div>
 						                <div className='flex gap-2'>
 						                    <a
 						                        onClick={() => {
-													toast.warning('Not implemented');
-						                        }}
+													API.applyToolRevision({
+														_csrf: csrf,
+														revisionId: revision._id,
+														resourceSlug,
+													}, () => {
+														// fetchFormData && fetchFormData();
+														toast.success('Tool updating...');
+														router.push(`/${resourceSlug}/tools`);
+													}, () => {
+														toast.error('Error applying revision');
+													}, null);
+												}}
 						                        className='p-2 rounded text-white bg-green-500 hover:bg-green-600'
 						                        aria-label='Apply/Revert Revision'
 						                    >
