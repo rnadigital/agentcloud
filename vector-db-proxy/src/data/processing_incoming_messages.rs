@@ -43,9 +43,7 @@ pub async fn process_streaming_messages(
                                 }
                             }
                             let mut metadata = convert_serde_value_to_hashmap_string(data_obj.to_owned());
-                            log::debug!("Metadata: {:?}", metadata);
                             if let Some(text_field) = embedding_field {
-                                log::debug!("text field: {}", text_field.as_str().to_lowercase());
                                 match metadata.remove(text_field.to_lowercase().as_str()) {
                                     Some(t) => {
                                         metadata.insert("page_content".to_string(), t.to_owned());
