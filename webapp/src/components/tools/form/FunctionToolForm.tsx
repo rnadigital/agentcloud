@@ -38,7 +38,7 @@ export default function FunctionToolForm({
 				<div className='flex justify-between'>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
                         Python code
-                    </h2>
+					</h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 					<div className='col-span-full grid grid-cols-5 space-x-1'>
@@ -50,6 +50,9 @@ export default function FunctionToolForm({
 								editorOptions={{
 									stopRenderingLineAfter: 1000,
 									fontSize: '12pt',
+									//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+									minimap: { enabled: false },
+						            scrollBeyondLastLine: false,
 								}}
 								onInitializePane={onInitializePane}
 							/>
@@ -85,6 +88,9 @@ export default function FunctionToolForm({
 								editorOptions={{
 									stopRenderingLineAfter: 1000,
 									fontSize: '12pt',
+									//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+						            minimap: { enabled: false },
+						            scrollBeyondLastLine: false,
 								}}
 								onInitializePane={onInitializePane}
 							/>

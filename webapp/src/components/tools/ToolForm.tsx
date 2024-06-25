@@ -330,7 +330,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 
 	return (<>
 		{modal}
-		<form onSubmit={toolPost}>
+		<form onSubmit={toolPost} className='flex flex-1 flex-col space-between'>
 			<input
 				type='hidden'
 				name='_csrf'
@@ -477,7 +477,7 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 
 				</div>
 			</div>
-			<div className='bottom-0 mt-auto flex items-center justify-between gap-x-6'>
+			<div className='mt-auto flex items-center justify-between gap-x-6'>
 				{!compact && <Link
 					className='text-sm font-semibold leading-6 text-gray-900'
 					href={`/${resourceSlug}/tools`}

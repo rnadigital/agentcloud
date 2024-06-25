@@ -11,7 +11,7 @@ export default function RagToolForm({
 	return (
 		<div className='sm:col-span-12'>
 			<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-                Datasources (Optional)
+                Datasource
 			</label>
 			<div className='mt-2'>
 				<Select
