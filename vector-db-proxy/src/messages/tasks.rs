@@ -19,9 +19,8 @@ use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
 use crate::init::env_variables::GLOBAL_DATA;
-use anyhow::Result;
 
-pub async fn get_message_queue(message_queue_provider: MessageQueueProvider, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, _queue_name: &str) -> Result<()> {
+pub async fn get_message_queue(message_queue_provider: MessageQueueProvider, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, _queue_name: &str) {
     let global_data = GLOBAL_DATA.read().await;
     match message_queue_provider {
         MessageQueueProvider::RABBITMQ => {
@@ -47,7 +46,6 @@ pub async fn get_message_queue(message_queue_provider: MessageQueueProvider, qdr
 
         MessageQueueProvider::UNKNOWN => panic!("Unknown message Queue provider specified. Aborting application!")
     }
-    Ok(())
 }
 
 pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>) {

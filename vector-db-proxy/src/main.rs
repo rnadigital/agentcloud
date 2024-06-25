@@ -90,7 +90,7 @@ async fn main() -> std::io::Result<()> {
 
 
     let subscribe_to_message_stream = tokio::spawn(async move {
-        let _ = get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await.unwrap();
+        get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await;
     });
 
 
