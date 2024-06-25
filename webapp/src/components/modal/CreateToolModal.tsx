@@ -1,6 +1,6 @@
 import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
-import ToolForm from 'components/ToolForm';
+import ToolForm from 'components/tools/ToolForm';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect,useState } from 'react';

@@ -1,18 +1,17 @@
+import * as API from '@api';
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import ToolList from 'components/ToolList';
+import ToolForm from 'components/tools/ToolForm';
+import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { NotificationType } from 'struct/notification';
-
-import * as API from '../../api';
-import NewButtonSection from '../../components/NewButtonSection';
-import ToolForm from '../../components/ToolForm';
-import ToolList from '../../components/ToolList';
-import { useAccountContext } from '../../context/account';
 
 export default function Tools(props) {
 

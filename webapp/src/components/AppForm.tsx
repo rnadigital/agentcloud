@@ -7,7 +7,7 @@ import {
 } from '@heroicons/react/20/solid';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
-// import CreateToolModal from 'components/CreateToolModal';
+// import CreateToolModal from 'components/modal/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';

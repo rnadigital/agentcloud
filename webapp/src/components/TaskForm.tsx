@@ -5,7 +5,7 @@ import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
-import CreateToolModal from 'components/CreateToolModal';
+import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
@@ -184,7 +184,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										};
 									});
 								}}
-								options={tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })).concat([{ label: '+ New Tool', value: null, disabled: false }])}
+								options={tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })).concat([{ label: '+ New Tool', value: null /*, disabled: false*/ }])}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
 									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
