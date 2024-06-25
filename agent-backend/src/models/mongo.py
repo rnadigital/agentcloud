@@ -148,8 +148,6 @@ class Model(BaseModel):
     name: str
     model_name: Optional[str] = Field(default=ModelVariant.GPT4, alias="model")
     modelType: ModelType
-    credentialId: Optional[PyObjectId] = None
-    credentials: Optional[PyObjectId] = None
     embeddingLength: Optional[int] = 384
     seed: Optional[int] = randint(1, 100)
     temperature: Optional[float] = 0
@@ -166,7 +164,7 @@ class ChatModel(BaseModel):
     api_key: Optional[str] = None
     model_name: Optional[ModelVariant] = Field(default=ModelVariant.GPT4, alias="model")
     seed: Optional[int] = randint(1, 100)
-    temperature: Optional[float] = 0
+    wtemperature: Optional[float] = 0
     timeout: Optional[int] = 300
     max_retries: Optional[int] = 10
     stream: Optional[bool] = True

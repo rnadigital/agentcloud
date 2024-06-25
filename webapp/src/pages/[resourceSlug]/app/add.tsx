@@ -41,7 +41,7 @@ export default function AddApp(props) {
 		{
 			icon: CogIcon,
 			step: 2,
-			text: 'Custom',
+			text: 'Process',
 			color: 'green'
 		}
 	];

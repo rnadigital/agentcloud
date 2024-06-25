@@ -43,10 +43,6 @@ export const TEAM_BITS = Object.seal(Object.freeze(Object.preventExtensions([
 	Permissions.EDIT_MODEL,
 	Permissions.DELETE_MODEL,
 
-	Permissions.CREATE_CREDENTIAL,
-	Permissions.EDIT_CREDENTIAL,
-	Permissions.DELETE_CREDENTIAL,
-
 	Permissions.CREATE_TASK,
 	Permissions.EDIT_TASK,
 	Permissions.DELETE_TASK,

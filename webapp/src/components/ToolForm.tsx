@@ -36,7 +36,7 @@ const authorizationMethods = [
 ];
 import { runtimeOptions } from 'struct/function';
 
-export default function ToolForm({ tool = {}, credentials = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, credentials?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
@@ -162,7 +162,9 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 						runtime: runtimeState,
 						description: toolDescription,
 						environmentVariables: environmentVariables.reduce((acc, par) => {
-							acc[par.name.trim()] = par.description;
+							if (par.name.trim().length > 0) {
+								acc[par.name.trim()] = par.description;
+							}
 							return acc;
 						}, {}),
 						parameters: {
@@ -413,7 +415,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 
 					{toolType === ToolType.RAG_TOOL && <>
 						<div className='sm:col-span-12'>
-							<label htmlFor='credentialId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Datasources (Optional)
 							</label>
 						
@@ -811,6 +813,7 @@ export default function ToolForm({ tool = {}, credentials = [], datasources = []
 							title='Environment Variables' 
 							disableTypes={true} 
 							hideRequired={true} 
+							namePattern='[A-Z][A-Z0-9_]*'
 							namePlaceholder='Key must be uppercase seperated by underscores'
 							descriptionPlaceholder='Value'
 						/>
