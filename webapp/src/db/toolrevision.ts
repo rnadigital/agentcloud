@@ -30,13 +30,13 @@ export function getRevisionsById(teamId: db.IdOrStr, revisionIds: db.IdOrStr[]):
 	}).toArray();
 }
 
-export function getRevisionsForTool(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<ToolRevision[]> {
+export function getRevisionsForTool(teamId: db.IdOrStr, toolId: db.IdOrStr, limit: number=100): Promise<ToolRevision[]> {
 	return ToolRevisionCollection().find({
 		teamId: toObjectId(teamId),
 		toolId: toObjectId(toolId),
 	}).sort({
 		date: -1,
-	}).toArray();
+	}).limit(limit).toArray();
 }
 
 export function getToolsByTeam(teamId: db.IdOrStr): Promise<ToolRevision[]> {
@@ -45,14 +45,14 @@ export function getToolsByTeam(teamId: db.IdOrStr): Promise<ToolRevision[]> {
 	}).toArray();
 }
 
-export async function addTool(tool: ToolRevision): Promise<InsertResult> {
-	return ToolRevisionCollection().insertOne(tool);
+export async function addToolRevision(toolRevision: ToolRevision): Promise<InsertResult> {
+	return ToolRevisionCollection().insertOne(toolRevision);
 }
 
-export function deleteRevisionsForTool(teamId: db.IdOrStr, revisionId: db.IdOrStr): Promise<any> {
+export function deleteRevisionsForTool(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
 	return ToolRevisionCollection().deleteMany({
 		teamId: toObjectId(teamId),
-		revisionId: toObjectId(revisionId),
+		toolId: toObjectId(toolId),
 	});
 }
 
