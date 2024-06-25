@@ -100,10 +100,9 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new((
+                .app_data(Data::new(
                     Arc::clone(&app_qdrant_client),
-                    Arc::clone(&app_mongo_client),
-                )))
+                ))
                 .configure(init)
         })
             .bind(format!("{}:{}", host, port))?

@@ -17,13 +17,14 @@ pub async fn process_streaming_messages(
     datasource_id: String,
 ) {
     // initiate variables
-    let mongodb_connection = mongo_conn.read().await;
+    let mongodb_connection = mongo_conn.clone();
     let mut message_count: Vec<u8> = vec![];
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             message_count.push(1);
             log::debug!("'{}' messages arrived at process_messages module", message_count.len());
-            match get_embedding_model_and_embedding_key(&mongodb_connection, datasource_id.as_str())
+            let mongo = mongodb_connection.read().await;
+            match get_embedding_model_and_embedding_key(&mongo, datasource_id.as_str())
                 .await
             {
                 Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
@@ -60,23 +61,23 @@ pub async fn process_streaming_messages(
                                                         match result {
                                                             true => {
                                                                 field_path = "recordCount.success";
-                                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                                increment_by_one(&mongo, &ds_clone, field_path).await.unwrap();
                                                             }
                                                             false => {
                                                                 log::warn!("An error occurred while inserting into vector database");
-                                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                                increment_by_one(&mongo, &ds_clone, field_path).await.unwrap();
                                                             }
                                                         }
                                                     }
                                                     Err(e) => {
                                                         log::warn!("An error occurred while inserting into vector database. Error: {}", e);
-                                                        increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                        increment_by_one(&mongo, &ds_clone, field_path).await.unwrap();
                                                     }
                                                 }
-                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                increment_by_one(&mongo, &ds_clone, field_path).await.unwrap();
                                             }
                                             Err(e) => {
-                                                increment_by_one(&mongodb_connection, &ds_clone, field_path).await.unwrap();
+                                                increment_by_one(&mongo, &ds_clone, field_path).await.unwrap();
                                                 log::error!("An error occurred while upserting  point structs to Qdrant: {}", e);
                                             }
                                         }
