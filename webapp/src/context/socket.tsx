@@ -27,13 +27,11 @@ export function SocketWrapper({ children }) {
 		if (!sharedSocket || !resourceSlug) { return; }
 		sharedSocket.emit('join_room', resourceSlug);		
 		sharedSocket.on('notification', notification => {
-
 			if (notification?.description
 				&& notification?.type === NotificationType.Webhook
 				&& notification?.details?.webhookType === WebhookType.SuccessfulSync) {
 				toast.success(notification?.description);
 			}
-		
 		    setNotificationTrigger(notification);
 		});
 	}

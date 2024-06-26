@@ -43,6 +43,11 @@ export function set(key, value) {
 	return client.set(key, JSON.stringify(value));
 }
 
+//set an expiration for a key
+export function expire(key, ttl) {
+	return client.expire(key, ttl);
+}
+
 //delete value with key
 export function del(keyOrKeys) {
 	if (Array.isArray(keyOrKeys)) {

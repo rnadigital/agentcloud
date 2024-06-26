@@ -4,7 +4,9 @@ import { ObjectId } from 'mongodb';
 import { CollectionName } from 'struct/db';
 
 export enum NotificationType {
-    Webhook = 'Webhook',
+    Webhook = 'Webhook', // Webhooks from airbyte/vector-db-proxy callbacks
+    Tool = 'Tool', // Function tool deployment updates 
+    // Not used yet
     SystemUpdate = 'SystemUpdate',
     UserAction = 'UserAction',
     ProcessingError = 'ProcessingError'

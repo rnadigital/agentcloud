@@ -112,10 +112,16 @@ class TimeWeightedRetrieverConfig(BaseModel):
 class CombinedRetrieverConfig(SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig):
     pass
 
+class ToolState(str, Enum):
+	PENDING = 'pending'
+	READY = 'ready'
+	ERROR = 'error'
 
 class Tool(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
+    functionId: Optional[str] = None
+    state: Optional[ToolState] = None 
     name: str
     description: Optional[str] = None
     type: Optional[str] = "function"

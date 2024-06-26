@@ -81,7 +81,7 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 								<span>0</span>
 								<span>
 									<div className='w-full text-center mb-2'>{toolDecayRate}</div>
-									{(toolDecayRate === 1 || toolDecayRate === 0) && <InfoAlert message='A decay rate of exactly 0 or 1 is equivalent to default similarity search' color='yellow' />}
+									{(toolDecayRate === 1 || toolDecayRate === 0) && <InfoAlert message='A decay rate of exactly 0 or 1 is equivalent to default similarity search' />}
 								</span>
 								<span>1</span>
 							</div>
