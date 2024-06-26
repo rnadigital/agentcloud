@@ -248,7 +248,7 @@ export async function transferTeamOwnershipApi(req, res) {
 		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
 	}
 	if (res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString()
-		&& !res.locals.permissions.includes(Permissions.ORG_OWNER)) {
+		&& !res.locals.permissions.get(Permissions.ORG_OWNER)) {
 		return dynamicResponse(req, res, 403, { error: 'Permission denied' });
 	}
 	const newOwner = await getAccountById(newOwnerId);

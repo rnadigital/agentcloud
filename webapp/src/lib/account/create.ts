@@ -10,7 +10,7 @@ import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
 import debug from 'debug';
 import * as ses from 'lib/email/ses';
-import { stripe } from 'lib/stripe';
+import StripeClient from 'lib/stripe';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
@@ -66,6 +66,10 @@ export default async function createAccount(
 	const emailVerified = amazonKey == null;
 	const passwordHash = password ? (await bcrypt.hash(password, 12)) : null;
 	const oauth = provider ? { [provider]: { id: profileId } } : {} as OAuthRecordType;
+	
+	// get stripe secret
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+	
 	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
 		addAccount({
@@ -90,7 +94,7 @@ export default async function createAccount(
 			permissions: new Binary(Roles.REGISTERED_USER.array),
 			stripe: {
 				stripeCustomerId: null,
-				stripePlan: process.env['STRIPE_ACCOUNT_SECRET'] ? SubscriptionPlan.FREE : SubscriptionPlan.ENTERPRISE,
+				stripePlan: STRIPE_ACCOUNT_SECRET ? SubscriptionPlan.FREE : SubscriptionPlan.ENTERPRISE,
 				stripeAddons: {
 					users: 0,
 					storage: 0,
@@ -101,12 +105,12 @@ export default async function createAccount(
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL),
 	]);
 
-	if (process.env['STRIPE_ACCOUNT_SECRET']) {
+	if (STRIPE_ACCOUNT_SECRET) {
 		let foundCheckoutSession;
 		if (checkoutSession) {
 			log('Account creation attempted with checkoutSession %s', checkoutSession);
 			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
-			foundCheckoutSession = await stripe.checkout.sessions.retrieve(checkoutSession);
+			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSession);
 			const customerId = foundCheckoutSession?.customer as string;
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(customerId);
 			await setStripeCustomerId(newAccountId, customerId);
@@ -121,15 +125,20 @@ export default async function createAccount(
 		}
 		if (!foundCheckoutSession) {
 			// Create Stripe customer
-			const stripeCustomer = await stripe.customers.create({
+			const stripeCustomer = await StripeClient.get().customers.create({
 				email,
 				name,
 			});
 			// Subscribe customer to 'Pro' plan with a 30-day trial
-			const subscription = await stripe.subscriptions.create({
+			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
 				trial_period_days: 30,
+				trial_settings: {
+					end_behavior: {
+						missing_payment_method: 'cancel',
+					}
+				}
 			});
 			log('Subscription created for new user: %O', subscription);
 			await setStripeCustomerId(newAccountId, stripeCustomer.id);
