@@ -53,7 +53,7 @@ export default function FunctionRevisionForm({
 										resourceSlug,
 									}, () => {
 // fetchFormData && fetchFormData();
-										toast.success('Tool updating...');
+										toast.info('Tool updating...');
 										router.push(`/${resourceSlug}/tools`);
 									}, () => {
 										toast.error('Error applying revision');
