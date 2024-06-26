@@ -256,24 +256,15 @@ class CrewAIBuilder:
             verbose=True,
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
-                        author_name="System", overwrite=False):
-
-        # text isnt string, its agentaction, etc
+    def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
+        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
+        
         if type(text) != str:
             text = "NON STRING MESSAGE"
 
-        # handle missig args
-        if text is None or len(text) == 0:
-            text = ''
-        if event is None:
-            event = SocketEvents.MESSAGE
-        if first is None:
-            first = True
+        # Set default timestamp if not provided
         if timestamp is None:
-            timestamp = datetime.now().timestamp() * 1000
-        if author_name is None or len(author_name) == 0:
-            author_name = "System"
+            timestamp = int(datetime.now().timestamp() * 1000)
 
         # send the message
         send(
