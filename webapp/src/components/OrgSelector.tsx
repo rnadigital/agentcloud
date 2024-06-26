@@ -11,6 +11,14 @@ import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import { SubscriptionPlan } from 'struct/billing';
 
+const TEAM_PARENT_LOCATIONS = [
+	'agent',
+	'task',
+	'tool',
+	'datasource',
+	'model'
+];
+
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
@@ -34,8 +42,10 @@ export default function OrgSelector({ orgs }) {
 			splitLocation.shift();
 			if (splitLocation.length <= 1) {
 				redirect = `/${teamId}/${splitLocation.join('/')}`;
-			} else {
+			} else if (TEAM_PARENT_LOCATIONS.includes(splitLocation[0])) {
 				redirect = `/${teamId}/${splitLocation[0]}s`;
+			} else {
+				redirect = `/${teamId}/apps`;
 			}
 		}
 		const start = Date.now();
