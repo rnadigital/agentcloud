@@ -26,8 +26,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { NotificationType } from 'struct/notification';
 import { DatasourceStatus } from 'struct/datasource';
+import { NotificationType } from 'struct/notification';
 import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
 
 const authenticationMethods = [

@@ -95,7 +95,6 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		});
 	};
 
-	const [, notificationTrigger]: any = useSocketContext();
 	useEffect(() => {
 		if (notificationTrigger
 			&& notificationTrigger?.type === NotificationType.Tool) {

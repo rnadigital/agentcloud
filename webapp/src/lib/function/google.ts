@@ -178,7 +178,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 			} else if (functionState !== 'DEPLOYING') {
 				return false; //Short circuit if it enters a state other than pending and isnt active
 			}
-			log('In waitForFunctionToBeActive loop for ID: %s, waiting %dms', functionId, waitTime);
+			log('In waitForFunctionToBeActive loop for ID: %s', functionId);
 			await new Promise(resolve => setTimeout(resolve, 10000));
 		}
 	
