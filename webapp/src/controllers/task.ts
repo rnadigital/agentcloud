@@ -106,10 +106,10 @@ export async function addTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
-		const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
-		if (!foundReadyTools || foundReadyTools?.length !== toolIds.length) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-		}
+		// const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
+		// if (!foundReadyTools || foundReadyTools?.length !== toolIds.length) {
+		// 	return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		// }
 	}
 
 	const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
