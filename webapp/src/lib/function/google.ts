@@ -168,11 +168,9 @@ class GoogleFunctionProvider extends FunctionProvider {
 		}
 	}
 
-	async waitForFunctionToBeActive(functionId: string, maxWaitTime = 180000): Promise<boolean> {
+	async waitForFunctionToBeActive(functionId: string, maxWaitTime = 120000): Promise<boolean> {
 		log('In waitForFunctionToBeActive loop for ID: %s', functionId);
 		const startTime = Date.now();
-		let waitTime = 5000; // Start with 5 seconds
-	
 		while (Date.now() - startTime < maxWaitTime) {
 			const functionState = await this.getFunctionState(functionId);
 			if (functionState === 'ACTIVE') {
@@ -181,8 +179,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 				return false; //Short circuit if it enters a state other than pending and isnt active
 			}
 			log('In waitForFunctionToBeActive loop for ID: %s, waiting %dms', functionId, waitTime);
-			await new Promise(resolve => setTimeout(resolve, waitTime));
-			waitTime = Math.min(waitTime * 2, 60000); // Exponential backoff up to 1 minute
+			await new Promise(resolve => setTimeout(resolve, 10000));
 		}
 	
 		return false;

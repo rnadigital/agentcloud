@@ -509,7 +509,7 @@ export async function applyToolRevisionApi(req, res, next) {
 					    date: new Date(),
 					    seen: false,
 						// stuff specific to notification type
-					    description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+					    description: `Custom code tool "${existingTool.name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
 						type: NotificationType.Tool,
 						details: {
 							// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well

@@ -14,6 +14,7 @@ import FunctionToolForm from 'components/tools/form/FunctionToolForm';
 import RagToolForm from 'components/tools/form/RagToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
 import { useAccountContext } from 'context/account';
+import { useSocketContext } from 'context/socket';
 import { dereferenceSync } from 'dereference-json-schema';
 import { WrapToolCode } from 'function/base';
 import yaml from 'js-yaml';
@@ -25,6 +26,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { NotificationType } from 'struct/notification';
 import { DatasourceStatus } from 'struct/datasource';
 import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
 
@@ -71,6 +73,14 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
 	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [submitting, setSubmitting] = useState(false); // Add submitting state
+	const [, notificationTrigger]: any = useSocketContext();
+
+	useEffect(() => {
+		if (notificationTrigger
+			&& notificationTrigger?.type === NotificationType.Tool) {
+			fetchFormData();
+		}
+	}, [resourceSlug, notificationTrigger]);
 
 	const codeBlockRef = useRef(null);
 	useEffect(() => {
