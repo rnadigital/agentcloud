@@ -1,8 +1,9 @@
 import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
 import {
+	ArrowUturnLeftIcon,
 	EllipsisHorizontalIcon,
-	TrashIcon
+	TrashIcon,
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
@@ -31,10 +32,12 @@ export default function FunctionToolForm({
 	isBuiltin,
 	runtimeOptions,
 	revisions,
+	tool,
 	fetchFormData,
 }) {
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
+	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [accountContext]: any = useAccountContext();
@@ -82,34 +85,39 @@ export default function FunctionToolForm({
 						<div className='md:col-span-2 col-span-6 rounded overflow-hidden'>
 						    <ul className='space-y-2'>
 						        {revisions.map((revision, index) => (
-						            <li key={index} className='flex justify-between items-center bg-white shadow rounded-lg p-2'>
+						            <li key={index} className='flex justify-between items-center bg-white shadow rounded p-2'>
 						                <div className='flex-1 truncate'>
-						                    <p className='text-sm text-gray-800'><strong>Revision {index + 1}:</strong> {new Date(revision.date).toLocaleString()}</p>
+						                    <p className='text-sm text-gray-800 truncate'>Version {index+1} - {new Date(revision.date).toLocaleString()}</p>
 						                </div>
 						                <div className='flex gap-2'>
 						                    <a
 						                        onClick={() => {
-													API.applyToolRevision({
-														_csrf: csrf,
-														revisionId: revision._id,
-														resourceSlug,
-													}, () => {
-														// fetchFormData && fetchFormData();
-														toast.success('Tool updating...');
-														router.push(`/${resourceSlug}/tools`);
-													}, () => {
-														toast.error('Error applying revision');
-													}, null);
+						                        	if (submitting[revision._id]) { return; }
+						                        	setSubmitting({ [revision._id]: true });
+						                        	try {
+														API.applyToolRevision({
+															_csrf: csrf,
+															revisionId: revision._id,
+															resourceSlug,
+														}, () => {
+															// fetchFormData && fetchFormData();
+															toast.success('Tool updating...');
+															router.push(`/${resourceSlug}/tools`);
+														}, () => {
+															toast.error('Error applying revision');
+														}, null);
+													} finally {
+							                        	setDeleting({ [revision._id]: false });
+													}
 												}}
-						                        className='p-2 rounded text-white bg-green-500 hover:bg-green-600'
+						                        className={`cursor-pointer p-1 rounded text-white bg-indigo-500 hover:bg-indigo-600 ${submitting[revision._id] ? 'opacity-90' : ''}`}
 						                        aria-label='Apply/Revert Revision'
 						                    >
-						                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-						                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M3 10h12M9 6l6 4-6 4V6z'></path>
-						                        </svg>
+						                        {submitting[revision._id] ? <ButtonSpinner className='ms-1' size={14} /> : <ArrowUturnLeftIcon className='h-4 m-1' aria-hidden='true' />}
 						                    </a>
 						                    <a
 						                        onClick={() => {
+						                        	if (deleting[revision._id]) { return; }
 						                        	setDeleting({ [revision._id]: true });
 						                        	try {
 														API.deleteToolRevision({
@@ -126,11 +134,10 @@ export default function FunctionToolForm({
 							                        	setDeleting({ [revision._id]: false });
 													}
 						                        }}
-						                        // disabled={deleting[revision._id]}
-						                        className='p-2 rounded text-white bg-red-500 hover:bg-red-600'
+						                        className={`cursor-pointer p-1 rounded text-white bg-red-500 hover:bg-red-600 ${deleting[revision._id] ? 'opacity-90' : ''}`}
 						                        aria-label='Delete Revision'
 						                    >
-						                        {deleting[revision._id] ? <ButtonSpinner size={14} /> : <TrashIcon className='h-5' aria-hidden='true' />}
+						                        {deleting[revision._id] ? <ButtonSpinner className='ms-1' size={14} /> : <TrashIcon className='h-4 m-1' aria-hidden='true' />}
 						                    </a>
 						                </div>
 						            </li>

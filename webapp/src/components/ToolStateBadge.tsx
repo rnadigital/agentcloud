@@ -11,7 +11,7 @@ const toolStateColors = {
 export default function ToolStateBadge({ state }) {
 	return (
 		<span className={`capitalize px-1.5 py-[0.5px] border text-sm rounded-lg ${toolStateColors[state]}`}>
-			{state === ToolState.PENDING && <ButtonSpinner size={12} className='my-0.5 -me-1 text-blue-700' />}
+			{state === ToolState.PENDING && <ButtonSpinner size={12} className='my-0.5 -me-1 !text-blue-800' />}
 			{state}
 		</span>
 	);

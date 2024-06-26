@@ -57,9 +57,8 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [currentTab, setCurrentTab] = useState(tabs[0]);
-	const [toolState, setToolState] = useState(tool);
 	const [debouncedValue, setDebouncedValue] = useState(null);
-	const isBuiltin = toolState?.data?.builtin === true;
+	const isBuiltin = tool?.data?.builtin === true;
 	const [importOpen, setImportOpen] = useState(false);
 	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
@@ -227,7 +226,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 			if (editing) {
 				await API.editTool({
 					...body,
-					toolId: toolState._id,
+					toolId: tool._id,
 				}, (res) => {
 					if (toolType === ToolType.FUNCTION_TOOL
 						&& res?.functionNeedsUpdate === true) {
@@ -443,6 +442,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 							isBuiltin={isBuiltin}
 							runtimeOptions={runtimeOptions}
 							revisions={revisions}
+							tool={tool}
 						/>
 					</>}
 

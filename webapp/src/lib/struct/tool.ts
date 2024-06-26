@@ -63,6 +63,7 @@ export type Tool = {
 	icon?: IconAttachment;
 	hidden?: boolean;
  	functionId?: string;
+ 	revisionId?: ObjectId;
  	functionLogs?: string;
 };
 

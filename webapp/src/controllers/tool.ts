@@ -163,6 +163,7 @@ export async function addToolApi(req, res, next) {
 	};
 
 	const functionId = isFunctionTool ? uuidv4() : null;
+	const newRevisionId = new ObjectId();
 	const addedTool = await addTool({
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
@@ -180,6 +181,7 @@ export async function addToolApi(req, res, next) {
 		} : null,
 		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
 		functionId,
+		revisionId: newRevisionId,
 	});
 
 	if (!addedTool?.insertedId) {
@@ -188,6 +190,7 @@ export async function addToolApi(req, res, next) {
 
 	if (isFunctionTool) {
 		addToolRevision({
+			_id: newRevisionId,
 			orgId: toObjectId(res.locals.matchingOrg.id),
 			teamId: toObjectId(req.params.resourceSlug),
 			toolId: addedTool?.insertedId,
@@ -319,6 +322,8 @@ export async function editToolApi(req, res, next) {
 				? toSnakeCase(name)
 				: name),
 	};
+
+	const newRevisionId = new ObjectId();
 	await editTool(req.params.resourceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
@@ -331,6 +336,7 @@ export async function editToolApi(req, res, next) {
 		state: (isFunctionTool && functionNeedsUpdate)
 			? ToolState.PENDING
 			: ToolState.READY,
+		revisionId: newRevisionId,
 	});
 
 	let functionProvider;
@@ -339,6 +345,7 @@ export async function editToolApi(req, res, next) {
 		await functionProvider.deleteFunction(existingTool.functionId);
 	} else if (type as ToolType === ToolType.FUNCTION_TOOL && functionNeedsUpdate) {
 		addToolRevision({
+			_id: newRevisionId,
 			orgId: toObjectId(res.locals.matchingOrg.id),
 			teamId: toObjectId(req.params.resourceSlug),
 			toolId: toObjectId(toolId),
@@ -454,16 +461,7 @@ export async function applyToolRevisionApi(req, res, next) {
 	await editTool(req.params.resourceSlug, existingRevision.toolId, {
 		data: toolData,
 		state: ToolState.PENDING,
-	});
-
-	addToolRevision({
-		orgId: toObjectId(res.locals.matchingOrg.id),
-		teamId: toObjectId(req.params.resourceSlug),
-		toolId: toObjectId(existingRevision.toolId),
-		content: { //Note: any type, keeping it very loose for now
-			data: toolData,
-		},
-		date: new Date(),
+		revisionId: toObjectId(revisionId),
 	});
 
 	const functionProvider = FunctionProviderFactory.getFunctionProvider();
