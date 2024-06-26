@@ -80,10 +80,9 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             print(f"An error occurred: {e}")
             return "" # TODO: what is a sensible value here?
 
-    def _run(self, args_str: Dict):
-        args = json.loads(args_str)
-        typed_args = self.convert_str_args_to_correct_type(args)
-        print(f"args: {args}")
+    def _run(self, **kwargs):
+        typed_args = self.convert_str_args_to_correct_type(kwargs)
+        print(f"kwargs: {kwargs}")
         print(f"typed args: {typed_args}")
         try:
             credentials, project_id = google.auth.default()
