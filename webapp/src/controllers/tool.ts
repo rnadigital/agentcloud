@@ -163,7 +163,6 @@ export async function addToolApi(req, res, next) {
 	};
 
 	const functionId = isFunctionTool ? uuidv4() : null;
-	const newRevisionId = new ObjectId();
 	const addedTool = await addTool({
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
@@ -181,7 +180,6 @@ export async function addToolApi(req, res, next) {
 		} : null,
 		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
 		functionId,
-		revisionId: newRevisionId,
 	});
 
 	if (!addedTool?.insertedId) {
@@ -189,16 +187,6 @@ export async function addToolApi(req, res, next) {
 	}
 
 	if (isFunctionTool) {
-		addToolRevision({
-			_id: newRevisionId,
-			orgId: toObjectId(res.locals.matchingOrg.id),
-			teamId: toObjectId(req.params.resourceSlug),
-			toolId: addedTool?.insertedId,
-			content: { //Note: any type, keeping it very loose for now
-				data: toolData,
-			},
-			date: new Date(),
-		});
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			functionProvider.deployFunction({
@@ -214,6 +202,15 @@ export async function addToolApi(req, res, next) {
 				 */
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
+						const addedRevision = await addToolRevision({
+							orgId: toObjectId(res.locals.matchingOrg.id),
+							teamId: toObjectId(req.params.resourceSlug),
+							toolId: addedTool?.insertedId,
+							content: { //Note: any type, keeping it very loose for now
+								data: toolData,
+							},
+							date: new Date(),
+						});
 						log('addToolApi functionId %s isActive %O', functionId, isActive);
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
 						const editedRes = await editToolUnsafe({
@@ -222,6 +219,7 @@ export async function addToolApi(req, res, next) {
 							functionId,
 							type: ToolType.FUNCTION_TOOL,
 						}, {
+							revisionId: toObjectId(addedRevision?.insertedId),						
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),
 						});
@@ -323,7 +321,6 @@ export async function editToolApi(req, res, next) {
 				: name),
 	};
 
-	const newRevisionId = new ObjectId();
 	await editTool(req.params.resourceSlug, toolId, {
 	    name,
 	 	type: type as ToolType,
@@ -333,27 +330,16 @@ export async function editToolApi(req, res, next) {
 	 	retriever_type: retriever || null,
 	 	retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
-		state: (isFunctionTool && functionNeedsUpdate)
+		state: functionNeedsUpdate
 			? ToolState.PENDING
 			: ToolState.READY,
-		revisionId: newRevisionId,
 	});
 
 	let functionProvider;
 	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL && type as ToolType !== ToolType.FUNCTION_TOOL) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (type as ToolType === ToolType.FUNCTION_TOOL && functionNeedsUpdate) {
-		addToolRevision({
-			_id: newRevisionId,
-			orgId: toObjectId(res.locals.matchingOrg.id),
-			teamId: toObjectId(req.params.resourceSlug),
-			toolId: toObjectId(toolId),
-			content: { //Note: any type, keeping it very loose for now
-				data: toolData,
-			},
-			date: new Date(),
-		});
+	} else if (functionNeedsUpdate) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
@@ -372,6 +358,15 @@ export async function editToolApi(req, res, next) {
 					.then(async isActive => {
 						log('editToolApi functionId %s isActive %O', functionId, isActive);
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
+						const addedRevision = await addToolRevision({
+							orgId: toObjectId(res.locals.matchingOrg.id),
+							teamId: toObjectId(req.params.resourceSlug),
+							toolId: toObjectId(toolId),
+							content: { //Note: any type, keeping it very loose for now
+								data: toolData,
+							},
+							date: new Date(),
+						});
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(toolId),
 							teamId: toObjectId(req.params.resourceSlug),
@@ -379,6 +374,7 @@ export async function editToolApi(req, res, next) {
 							//functionId: ...
 							type: ToolType.FUNCTION_TOOL, // Note: filter to only function tool so if they change the TYPE while its deploying we discard and delete the function to prevent orphan
 						}, {
+							revisionId: toObjectId(addedRevision?.insertedId),
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
 							...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),
@@ -461,7 +457,6 @@ export async function applyToolRevisionApi(req, res, next) {
 	await editTool(req.params.resourceSlug, existingRevision.toolId, {
 		data: toolData,
 		state: ToolState.PENDING,
-		revisionId: toObjectId(revisionId),
 	});
 
 	const functionProvider = FunctionProviderFactory.getFunctionProvider();
@@ -490,6 +485,7 @@ export async function applyToolRevisionApi(req, res, next) {
 						//functionId: ...
 						type: ToolType.FUNCTION_TOOL, // Note: filter to only function tool so if they change the TYPE while its deploying we discard and delete the function to prevent orphan
 					}, {
+						revisionId: toObjectId(revisionId),
 						state: isActive ? ToolState.READY : ToolState.ERROR,
 						...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
 						...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),

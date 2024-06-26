@@ -9,6 +9,7 @@ import FunctionCard from 'components/FunctionCard';
 import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
+import FunctionRevisionForm from 'components/tools/form/FunctionRevisionForm';
 import FunctionToolForm from 'components/tools/form/FunctionToolForm';
 import RagToolForm from 'components/tools/form/RagToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
@@ -43,7 +44,8 @@ import { runtimeOptions } from 'struct/function';
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
-	{ name: 'Parameters', href: '#params', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL] },
 ];
 
 function classNames(...classes) {
@@ -376,7 +378,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 						</div>
 						<div className='hidden sm:block'>
 	        <div className='border-b border-gray-200'>
-	          <nav className='-mb-px flex space-x-8' aria-label='Tabs'>
+						          <nav className='-mb-px flex space-x-8' aria-label='Tabs'>
 									{tabs
 										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
 										.map((tab) => (
@@ -429,7 +431,6 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Source' && <>
 						<FunctionToolForm
-							fetchFormData={fetchFormData}
 							toolCode={toolCode}
 							setToolCode={setToolCode}
 							requirementsTxt={requirementsTxt}
@@ -441,6 +442,12 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 							PreWithRef={PreWithRef}
 							isBuiltin={isBuiltin}
 							runtimeOptions={runtimeOptions}
+						/>
+					</>}
+
+					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Version History' && <>
+						<FunctionRevisionForm
+							fetchFormData={fetchFormData}
 							revisions={revisions}
 							tool={tool}
 						/>

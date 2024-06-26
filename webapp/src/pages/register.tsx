@@ -5,7 +5,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
-import InfoAlert from 'components/InfoAlert';
+import SuccessAlert from 'components/SuccessAlert';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -64,9 +64,8 @@ export default function Register() {
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
 					<div className='bg-white dark:bg-slate-800 px-6 py-12 shadow sm:rounded-lg sm:px-12'>
 						{checkoutSession && (
-							<InfoAlert
+							<SuccessAlert
 								message='Thanks for subscribing, please create the primary billing account for this org.'
-								color='green'
 							/>
 						)}
 						<form className='space-y-6' onSubmit={register} action='/forms/register' method='POST'>

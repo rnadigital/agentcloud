@@ -31,17 +31,8 @@ export default function FunctionToolForm({
 	PreWithRef,
 	isBuiltin,
 	runtimeOptions,
-	revisions,
-	tool,
-	fetchFormData,
 }) {
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
-	const [deleting, setDeleting] = useReducer(submittingReducer, {});
-	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
-	const router = useRouter();
-	const { resourceSlug } = router.query;
-	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext;
 	return (
 		<>
 			<div>
@@ -63,11 +54,12 @@ export default function FunctionToolForm({
 				<div className='flex justify-between'>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
                         Python code
+						<InfoAlert className='w-full mb-2 m-0 p-4 bg-blue-100 rounded' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' textColor='black' />
 					</h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-					<div className='col-span-full grid grid-cols-6 space-x-1'>
-						<div className='md:col-span-4 col-span-6 rounded-[6px] overflow-hidden'>
+					<div className='col-span-full grid grid-cols-6 md:space-x-2'>
+						<div className='md:col-span-4 col-span-6 rounded-[5px] overflow-hidden'>
 							<ScriptEditor
 								height='32.5em'
 								code={toolCode}
@@ -83,69 +75,7 @@ export default function FunctionToolForm({
 							/>
 						</div>
 						<div className='md:col-span-2 col-span-6 rounded overflow-hidden'>
-						    <ul className='space-y-2'>
-						        {revisions.map((revision, index) => (
-						            <li key={index} className='flex justify-between items-center bg-white shadow rounded p-2'>
-						                <div className='flex-1 truncate'>
-						                    <p className='text-sm text-gray-800 truncate'>Version {index+1} - {new Date(revision.date).toLocaleString()}</p>
-						                </div>
-						                <div className='flex gap-2'>
-						                    <a
-						                        onClick={() => {
-						                        	if (submitting[revision._id]) { return; }
-						                        	setSubmitting({ [revision._id]: true });
-						                        	try {
-														API.applyToolRevision({
-															_csrf: csrf,
-															revisionId: revision._id,
-															resourceSlug,
-														}, () => {
-															// fetchFormData && fetchFormData();
-															toast.success('Tool updating...');
-															router.push(`/${resourceSlug}/tools`);
-														}, () => {
-															toast.error('Error applying revision');
-														}, null);
-													} finally {
-							                        	setDeleting({ [revision._id]: false });
-													}
-												}}
-						                        className={`cursor-pointer p-1 rounded text-white bg-indigo-500 hover:bg-indigo-600 ${submitting[revision._id] ? 'opacity-90' : ''}`}
-						                        aria-label='Apply/Revert Revision'
-						                    >
-						                        {submitting[revision._id] ? <ButtonSpinner className='ms-1' size={14} /> : <ArrowUturnLeftIcon className='h-4 m-1' aria-hidden='true' />}
-						                    </a>
-						                    <a
-						                        onClick={() => {
-						                        	if (deleting[revision._id]) { return; }
-						                        	setDeleting({ [revision._id]: true });
-						                        	try {
-														API.deleteToolRevision({
-															_csrf: csrf,
-															revisionId: revision._id,
-															resourceSlug,
-														}, () => {
-															fetchFormData && fetchFormData();
-															toast.success('Revision deleted successfully');
-														}, () => {
-															toast.error('Error deleting revision');
-														}, null);
-													} finally {
-							                        	setDeleting({ [revision._id]: false });
-													}
-						                        }}
-						                        className={`cursor-pointer p-1 rounded text-white bg-red-500 hover:bg-red-600 ${deleting[revision._id] ? 'opacity-90' : ''}`}
-						                        aria-label='Delete Revision'
-						                    >
-						                        {deleting[revision._id] ? <ButtonSpinner className='ms-1' size={14} /> : <TrashIcon className='h-4 m-1' aria-hidden='true' />}
-						                    </a>
-						                </div>
-						            </li>
-						        ))}
-						    </ul>
-						</div>
-						
-						{/*<SyntaxHighlighter
+							<SyntaxHighlighter
 								language='python'
 								style={style}
 								showLineNumbers={true}
@@ -153,10 +83,10 @@ export default function FunctionToolForm({
 								customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}
 							>
 								{wrappedCode}
-							</SyntaxHighlighter>*/}
+							</SyntaxHighlighter>
+						</div>
 					</div>
 				</div>
-				<InfoAlert className='w-full mt-2 m-0 p-4 bg-blue-100 rounded' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' />
 			</div>
 			<div className='border-gray-900/10 !mt-3'>
 				<div className='flex justify-between'>
