@@ -751,8 +751,8 @@ tools = ["crewai-tools (>=0.2.5,<0.3.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "develop"
-resolved_reference = "e7b7d59b24ed7d4ffdf35d4e7624e2be36d362a5"
+reference = "refactor-ui-streaming"
+resolved_reference = "589dccbea513b20790e49d91a723c6ce21b934fc"
 
 [[package]]
 name = "curl-cffi"
@@ -5447,4 +5447,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "d0f24030939261c8bcf92b706e6972b43072d4ca5784a14f1bc254b6a6efeb0e"
+content-hash = "6bcefa98ada7f73070d29c17899d149c79e13c243317d1b0ddfd7b553b682456"
