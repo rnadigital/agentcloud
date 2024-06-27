@@ -50,6 +50,7 @@ export type Tool = {
 		builtin?: boolean;
 		name: string;
 		description?: string;
+		apiKey?: string;
 		environmentVariables?: Record<string,string>;
 		parameters?: {
 			//type: string;
