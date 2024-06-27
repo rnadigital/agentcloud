@@ -118,7 +118,7 @@ ${missingEnvs.join('\n')}`} />);
 			</div>
 			<InfoAlert
 				message='Click the button below to manage or remove payment methods, cancel your subscription, or view invoice history.'
-				color='blue'
+				textColor='blue'
 			/>
 			<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
 				<button

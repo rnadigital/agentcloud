@@ -17,6 +17,7 @@ import {
 
 export type MonacoEditorOptions = {
 	stopRenderingLineAfter: number;
+	fontSize?: string;
 }
 
 export type MonacoEditorA = MutableRefObject<any>;
@@ -72,6 +73,7 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 			monacoEditorRef.current = monaco.editor;
 			editorRef.current = editor;
 		}}
+		//@ts-ignore
 		options={editorOptions}
 		theme='vs-dark' // preference
 		value={code}

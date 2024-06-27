@@ -52,7 +52,7 @@ export default function NotificationBell() {
 				{notificationContext?.length > 0
 					?  notificationContext
 						.slice(0, more ? null : 3)
-						.map((n, ni) => (<Notification markSeen={markSeen} key={n._id} {...n} />))
+						.map((n, ni) => (<Notification markSeen={markSeen} key={n._id} {...n} index={ni} />))
 					: <p className='text-center'>No notifications.</p>}
 			</Menu.Items>
 		</Transition>

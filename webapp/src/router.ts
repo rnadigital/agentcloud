@@ -161,6 +161,11 @@ export default function router(server, app) {
 	teamRouter.post('/forms/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.addToolApi);
 	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.editToolApi);
 	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_TOOL), toolController.deleteToolApi);
+	
+	teamRouter.post('/forms/revision/:revisionId([a-f0-9]{24})/apply', hasPerms.one(Permissions.EDIT_TOOL), toolController.applyToolRevisionApi);
+	//TODO: permission for deleting tool revisions
+	//TODO: endpoint to download source as zip?
+	teamRouter.delete('/forms/revision/:revisionId([a-f0-9]{24})', hasPerms.one(Permissions.EDIT_TOOL), toolController.deleteToolRevisionApi);
 
 	//models
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));

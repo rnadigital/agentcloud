@@ -134,13 +134,13 @@ class CrewAIBuilder:
                 tools=agent_tools_objs.values(),
             )
 
-    def stop_generating_check(self, step):
-        logging.debug(f"stop_generating_check step % NTH_CHUNK_CANCEL_CHECK: {step % NTH_CHUNK_CANCEL_CHECK}")
-        if step % NTH_CHUNK_CANCEL_CHECK == 0:
+    def stop_generating_check(self):
+        try:
             stop_flag = redis_con.get(f"{self.session_id}_stop")
-            logging.debug(f"stop_generating_check: {stop_flag}")
+            logging.debug(f"stop_generating_check for session: {self.session_id}, stop_flag: {stop_flag}")
             return stop_flag == "1"
-        return False
+        except:
+            return False
 
     def build_tasks(self):
         for key, task in self.tasks_models.items():
@@ -256,24 +256,15 @@ class CrewAIBuilder:
             verbose=True,
         )
 
-    def send_to_sockets(self, text=None, event=None, first=None, chunk_id=None, timestamp=None, display_type="bubble",
-                        author_name="System", overwrite=False):
-
-        # text isnt string, its agentaction, etc
+    def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
+        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
+        
         if type(text) != str:
             text = "NON STRING MESSAGE"
 
-        # handle missig args
-        if text is None or len(text) == 0:
-            text = ''
-        if event is None:
-            event = SocketEvents.MESSAGE
-        if first is None:
-            first = True
+        # Set default timestamp if not provided
         if timestamp is None:
-            timestamp = datetime.now().timestamp() * 1000
-        if author_name is None or len(author_name) == 0:
-            author_name = "System"
+            timestamp = int(datetime.now().timestamp() * 1000)
 
         # send the message
         send(

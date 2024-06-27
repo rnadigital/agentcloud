@@ -738,15 +738,21 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
-		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-		const jobBody = {
-			connectionId: datasource.connectionId,
-			jobType: 'reset',
-		};
-		const resetJob = await jobsApi
-			.createJob(null, jobBody)
-			.then(res => res.data);
-		log('resetJob', resetJob);
+
+		try {
+			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+			const jobBody = {
+				connectionId: datasource.connectionId,
+				jobType: 'reset',
+			};
+			const resetJob = await jobsApi
+				.createJob(null, jobBody)
+				.then(res => res.data);
+			log('resetJob', resetJob);
+		} catch (e) {
+			// Continue but log a warning if the reset job api call fails
+			console.warn(e);
+		}
 
 		// Delete the connection in airbyte
 		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
