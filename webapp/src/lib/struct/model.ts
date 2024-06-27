@@ -4,6 +4,7 @@ export enum ModelType {
   OPENAI = 'open_ai',
   FASTEMBED = 'fastembed',
   OLLAMA = 'ollama',
+  GOOGLE_VERTEX = 'google_vertex',
   COHERE = 'cohere',
   ANTHROPIC = 'anthropic',
   GROQ = 'groq'
@@ -29,6 +30,9 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OLLAMA]: {
 		base_url: { type: 'string' },
 		api_key: { type: 'string' },
+	},
+	[ModelType.GOOGLE_VERTEX]: {
+		credentials: { type: 'string' },
 	},
 	[ModelType.COHERE]: {
 		cohere_api_key: { type: 'string' },
@@ -76,6 +80,14 @@ export const ModelList = {
 		'fast-all-MiniLM-L6-v2',
 		'fast-multilingual-e5-large'
 	],
+	[ModelType.GOOGLE_VERTEX]: [
+		'gemini-1.5-flash',
+		'gemini-1.0-pro-vision',
+		'gemini-1.5-pro',
+		'gemini-1.0-pro',
+		// 'text-embedding-004', //Disabled until we support these in vector-db-proxy
+		// 'text-multilingual-embedding-002',
+	],
 	[ModelType.OLLAMA]: [
 		'llama2',
 		'llama3',
@@ -117,4 +129,6 @@ export const ModelEmbeddingLength = {
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
 	'nomic-embed-text': 8192,
+	'text-embedding-004': 768,
+	'text-multilingual-embedding-002': 768,
 };

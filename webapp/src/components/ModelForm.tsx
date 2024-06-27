@@ -125,6 +125,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 								<option disabled value=''>Select a type...</option>
 								<option value={ModelType.OPENAI}>OpenAI</option>
 								<option value={ModelType.OLLAMA}>Ollama</option>
+								<option value={ModelType.GOOGLE_VERTEX}>Vertex</option>
 								<option value={ModelType.FASTEMBED}>FastEmbed</option>
 								<option value={ModelType.COHERE}>Cohere</option>
 								<option value={ModelType.ANTHROPIC}>Anthropic</option>

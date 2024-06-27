@@ -96,11 +96,12 @@ def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_t
 
 
 def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
-    model_name = model.config.get('model', models.mongo.ModelVariant.GeminiPro)
-
-    # credentials taken from GOOGLE_ACCOUNT_CREDENTIALS env var
-    return ChatVertexAI(model=model_name,
-                        temperature=model.temperature)
+    return ChatVertexAI(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config')
+    )
 
 
 def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
