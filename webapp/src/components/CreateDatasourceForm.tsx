@@ -20,16 +20,12 @@ import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
-const TailwindForm = dynamic(() => import('components/rjsf'), {
-	ssr: false,
-});
-import validator from '@rjsf/validator-ajv8';
 import formatModelOptionLabel from 'components/FormatModelOptionLabel';
-const DynamicForm = dynamic(() => import('components/DynamicForm'), {
+const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnectorForm'), {
 	ssr: false,
 });
-import { getSubmitButtonOptions, RJSFSchema, SubmitButtonProps } from '@rjsf/utils';
 import { StreamsList } from 'components/DatasourceStream';
+import FormContext from 'context/connectorform';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -49,10 +45,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const { stripePlan } = (account?.stripe||{});
+	const { stripePlan } = (account?.stripe || {});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [error, setError] = useState(null);
+	const [error, setError] = useState<string>(null);
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
@@ -83,23 +79,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamState] = useState({ streams: [], selectedFieldsMap: {}, descriptionsMap: {} });
 	const [formData, setFormData] = useState(null);
-	const SubmitButton = (props: SubmitButtonProps) => {
-		const { uiSchema } = props;
-		const { norender } = getSubmitButtonOptions(uiSchema);
-		if (norender) {
-			return null;
-		}
-		return (
-			<button
-				disabled={submitting}
-				type='submit'
-				className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-			>
-				{submitting && <ButtonSpinner />}
-				{submitting ? 'Testing connection...' : 'Submit'}
-			</button>
-		);
-	};
 
 	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
@@ -109,6 +88,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}, setSpec, setError, null);
 		setLoading(false);
 	}
+	console.log("hello")
+	console.log(spec)
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
@@ -137,11 +118,13 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
 	// }
 	connectorOptions = connectorOptions.map(key => ({
-	  value: connectors[key]?.definitionId,
-	  label: connectors[key]?.name_oss || 'test',
-	  icon: connectors[key]?.iconUrl_oss,
-	  supportLevel: connectors[key]?.supportLevel_oss,
+		value: connectors[key]?.definitionId,
+		label: connectors[key]?.name_oss || 'test',
+		icon: connectors[key]?.iconUrl_oss,
+		supportLevel: connectors[key]?.supportLevel_oss,
 	}));
+
+	console.log(connectorOptions)
 
 	const modelCallback = async (addedModelId) => {
 		await fetchDatasourceFormData && fetchDatasourceFormData();
@@ -149,13 +132,13 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		setModelId(addedModelId);
 	};
 
-	async function datasourcePost(e) {
+	async function datasourcePost(data) {
 		setSubmitting(true);
 		setError(null);
 		try {
 			if (step === 2) {
 				const body = {
-					sourceConfig: e.formData,
+					sourceConfig: data,
 					_csrf: csrf,
 					connectorId: connector.value,
 					connectorName: connector.label,
@@ -185,7 +168,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
-				e.preventDefault();
+				// e.preventDefault();
 				const body = {
 					_csrf: csrf,
 					datasourceId: datasourceId,
@@ -203,7 +186,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					datasourceDescription,
 					embeddingField,
 					retriever: toolRetriever,
-					retriever_config:  {
+					retriever_config: {
 						timeWeightField: toolTimeWeightField,
 						decay_rate: toolDecayRate,
 						metadata_field_info: Object.entries(discoveredSchema.catalog.streams[0].stream.jsonSchema.properties)
@@ -230,7 +213,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			case 0:
 				return <div className='flex justify-evenly space-x-4 mt-20 w-2/3 mx-auto'>
 					<div className='flex flex-col items-center space-y-2'>
-						<button 
+						<button
 							className='rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 							onClick={() => setStep(1)}
 						>
@@ -241,7 +224,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						</div>
 					</div>
 					<div className='flex flex-col items-center space-y-2'>
-						<button 
+						<button
 							className='rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600'
 							onClick={() => setStep(2)}
 						>
@@ -251,7 +234,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							Sync data from external systems e.g. Google Sheets, Confluence.
 						</div>
 					</div>
-				</div>;			
+				</div>;
 			case 1:
 				return <DropZone
 					files={files}
@@ -306,19 +289,19 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						<div className='mt-2'>
 							<Select
 								isClearable
-					            primaryColor={'indigo'}
-					            classNames={SelectClassNames}
-					            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
-					            onChange={(v: any) => {
+								primaryColor={'indigo'}
+								classNames={SelectClassNames}
+								value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+								onChange={(v: any) => {
 									if (v?.value === null) {
 										//Create new pressed
 										return setModalOpen(true);
 									}
 									setModelId(v?.value);
-				            	}}
-					            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
-					            formatOptionLabel={formatModelOptionLabel}
-					        />
+								}}
+								options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
+								formatOptionLabel={formatModelOptionLabel}
+							/>
 						</div>
 						<RetrievalStrategyComponent
 							toolRetriever={toolRetriever}
@@ -345,7 +328,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							classNames={SelectClassNames}
 							value={connector}
 							onChange={(v: any) => {
-								if (!stripePlan 
+								if (!stripePlan
 									|| !pricingMatrix[stripePlan].dataConnections
 									|| (pricingMatrix[stripePlan].allowedConnectors.length > 0
 										&& !pricingMatrix[stripePlan].allowedConnectors.includes(v.value))) {
@@ -362,11 +345,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							options={connectorOptions}
 							formatOptionLabel={(data: any) => {
 								return (<li
-									className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-										data.isSelected
-											? 'bg-blue-100 text-blue-500'
-											: 'dark:text-white'
-									}`}
+									className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
+										? 'bg-blue-100 text-blue-500'
+										: 'dark:text-white'
+										}`}
 								>
 									<span className='flex justify-between'>
 										<span>
@@ -377,7 +359,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											/>}
 											{data.label}
 										</span>
-										<span className={`px-1 rounded-full bg-${data.supportLevel==='certified'?'green':'gray'}-100 text-${data.supportLevel==='certified'?'green':'gray'}-700`}>
+										<span className={`px-1 rounded-full bg-${data.supportLevel === 'certified' ? 'green' : 'gray'}-100 text-${data.supportLevel === 'certified' ? 'green' : 'gray'}-700`}>
 											{data.supportLevel}
 										</span>
 									</span>
@@ -425,9 +407,9 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setToolDecayRate={setToolDecayRate}
 										currentDatasource={null}
 										defaultRetriever={Retriever.SELF_QUERY}
-										// toolTimeWeightField={toolTimeWeightField}
-										// setToolTimeWeightField={setToolTimeWeightField}
-										// schema={['example']}
+									// toolTimeWeightField={toolTimeWeightField}
+									// setToolTimeWeightField={setToolTimeWeightField}
+									// schema={['example']}
 									/>
 									<DatasourceScheduleForm
 										scheduleType={scheduleType}
@@ -442,30 +424,11 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setCronTimezone={setCronTimezone}
 									/>
 								</div>
-								{spec.schema.connectionSpecification && <TailwindForm
-									schema={spec.schema.connectionSpecification}
-									formData={formData}
-									onChange={(e) => setFormData(e.formData)}
-									templates={{ ButtonTemplates: { SubmitButton } }}
-									validator={validator}
-									onSubmit={datasourcePost}
-									transformErrors={(errors) => {
-										return errors.filter(e => e.name !== 'pattern'); //filter datetime pattern 
-									}}
-									noHtml5Validate
-								>
-									{error && <div className='mb-4'><ErrorAlert error={error} /></div>}
-									<button
-										disabled={submitting}
-										type='submit'
-										className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-									>
-										{submitting && <ButtonSpinner />}
-										{submitting ? 'Testing connection...' : 'Submit'}
-									</button>
-								</TailwindForm>}
+								<FormContext>
+									<DynamicConnectorForm schema={spec.schema.connectionSpecification} datasourcePost={datasourcePost} error={error} />
+								</FormContext>
+
 							</>}
-		
 					</div>
 				</span>;
 			case 3:
@@ -480,7 +443,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 						.filter(x => x['checked'] === true)
 						.filter(x => x['dataset']['parent'])
 						.reduce((acc, x) => {
-							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']]||[]).concat([x['name']]);
+							acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([x['name']]);
 							return acc;
 						}, {});
 					const descriptionsMap = Array.from(e.target.elements)
@@ -570,19 +533,19 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 								<div className='mt-2'>
 									<Select
 										isClearable
-							            primaryColor={'indigo'}
-							            classNames={SelectClassNames}
-							            value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
-							            onChange={(v: any) => {
+										primaryColor={'indigo'}
+										classNames={SelectClassNames}
+										value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
+										onChange={(v: any) => {
 											if (v?.value === null) {
 												//Create new pressed
 												return setModalOpen(true);
 											}
 											setModelId(v?.value);
-						            	}}
-							            options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new model', value: null }])}
-							            formatOptionLabel={formatModelOptionLabel}
-							        />
+										}}
+										options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new model', value: null }])}
+										formatOptionLabel={formatModelOptionLabel}
+									/>
 								</div>
 							</div>
 							<button
@@ -608,7 +571,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (
 					<li key={stepData.name} className='md:flex-1 cursor-pointer'>
-						{step > stepData.steps[stepData.steps.length-1] ? (
+						{step > stepData.steps[stepData.steps.length - 1] ? (
 							<a
 								href={stepData.href}
 								className='group flex flex-col border-l-4 border-indigo-600 py-2 pl-4 hover:border-indigo-800 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4'
