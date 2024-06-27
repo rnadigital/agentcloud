@@ -144,7 +144,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 										onClick={() => syncDatasource(datasource._id)}
 										disabled={!finished && (syncing[datasource._id]
 											|| deleting[datasource._id]
-											|| (datasource.status === DatasourceStatus.DRAFT && !datasource?.connectionSettings?.syncCatalog?.streams?.length)
+											|| (datasource.status === DatasourceStatus.DRAFT && !datasource?.connectionSettings?.configurations?.streams?.length)
 											|| [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource.status))}
 										className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 									>

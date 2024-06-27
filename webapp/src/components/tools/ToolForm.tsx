@@ -431,7 +431,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 								setToolDecayRate={setToolDecayRate}
 								toolTimeWeightField={toolTimeWeightField}
 								setToolTimeWeightField={setToolTimeWeightField}
-								schema={currentDatasource?.connectionSettings?.syncCatalog}
+								schema={currentDatasource?.connectionSettings?.configurations}
 								currentDatasource={currentDatasource}
 							/>
 						

@@ -50,6 +50,17 @@ export async function addDatasource(datasource: Datasource): Promise<InsertResul
 	return DatasourceCollection().insertOne(datasource);
 }
 
+export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Partial<Datasource>): Promise<any> {
+	return DatasourceCollection().updateOne({
+		_id: toObjectId(datasourceId),
+		teamId: toObjectId(teamId),
+	}, {
+		$set: {
+			datasource,
+		},
+	});
+}
+
 export async function setDatasourceConnectionSettings(teamId: db.IdOrStr, datasourceId: db.IdOrStr, connectionId: db.IdOrStr, connectionSettings: DatasourceConnectionSettings): Promise<any> {
 	return DatasourceCollection().updateOne({
 		_id: toObjectId(datasourceId),
@@ -106,15 +117,6 @@ export async function setDatasourceEmbedding(teamId: db.IdOrStr, datasourceId: d
 			modelId: toObjectId(modelId),
 			embeddingField,
 		},
-	});
-}
-
-export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, datasource: Datasource): Promise<InsertResult> {
-	return DatasourceCollection().updateOne({
-		_id: toObjectId(datasourceId),
-		teamId: toObjectId(teamId),
-	}, {
-		$set: datasource,
 	});
 }
 

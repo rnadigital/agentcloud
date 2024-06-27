@@ -71,4 +71,5 @@ export type Datasource = {
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
+	descriptionsMap?: Record<string,string>;
 };
