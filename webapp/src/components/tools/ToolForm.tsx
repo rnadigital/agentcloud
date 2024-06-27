@@ -44,6 +44,7 @@ const authorizationMethods = [
 import { runtimeOptions } from 'struct/function';
 
 const tabs = [
+	{ name: 'Details', href: '#details', toolTypes: [ToolType.RAG_TOOL, ToolType.FUNCTION_TOOL] },
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
 	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] },
@@ -351,7 +352,60 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 				<div className='space-y-6'>
 
-					<ToolDetailsForm
+					{editing
+						? <div>
+							<div className='sm:hidden'>
+								<label htmlFor='tabs' className='sr-only'>
+Select a tab
+								</label>
+								<select
+									id='tabs'
+									name='tabs'
+
+									className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+									onChange={(e) => {
+										setCurrentTab(tabs.find(t => t.name === e.target.value));
+									}}
+									defaultValue={currentTab.name}
+								>
+									{tabs
+										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+										.map((tab) => (
+											<option key={tab.name}>{tab.name}</option>
+										))
+									}
+								</select>
+							</div>
+							<div className='hidden sm:block'>
+								<div className='border-b border-gray-200'>
+									<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
+										{tabs
+											.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+											.map((tab) => (
+												<a
+													key={tab.name}
+													href={tab.href}
+													onClick={(e) => {
+														setCurrentTab(tabs.find(t => t.name === tab.name));
+													}}
+													className={classNames(
+														currentTab.name === tab.name
+															? 'border-indigo-500 text-indigo-600'
+															: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+														'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
+													)}
+													aria-current={currentTab.name === tab.name ? 'page' : undefined}
+												>
+													{tab.name}
+												</a>
+											))
+										}
+									</nav>
+								</div>
+							</div>
+						</div>:null}
+
+					{(currentTab?.name === 'Details'||!editing) && <ToolDetailsForm
 						toolName={toolName}
 						setToolName={setToolName}
 						toolType={toolType}
@@ -360,62 +414,9 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 						setToolDescription={setToolDescription}
 						isBuiltin={isBuiltin}
 						ToolType={ToolType}
-					/>
+					/>}
 
-					<div>
-						<div className='sm:hidden'>
-							<label htmlFor='tabs' className='sr-only'>
-					          Select a tab
-							</label>
-							<select
-								id='tabs'
-								name='tabs'
-
-  						        className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-
-  								          	onChange={(e) => {
-									setCurrentTab(tabs.find(t => t.name === e.target.value));
-								}}
-								defaultValue={currentTab.name}
-							>
-								{tabs
-									.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
-									.map((tab) => (
-										<option key={tab.name}>{tab.name}</option>
-									))
-								}
-							</select>
-						</div>
-						<div className='hidden sm:block'>
-	        <div className='border-b border-gray-200'>
-						          <nav className='-mb-px flex space-x-8' aria-label='Tabs'>
-									{tabs
-										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
-										.map((tab) => (
-											<a
-												key={tab.name}
-												href={tab.href}
-												onClick={(e) => {
-													setCurrentTab(tabs.find(t => t.name === tab.name));
-												}}
-												className={classNames(
-													currentTab.name === tab.name
-													                    ? 'border-indigo-500 text-indigo-600'
-	                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-	                  'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
-												)}
-												aria-current={currentTab.name === tab.name ? 'page' : undefined}
-											>
-												{tab.name}
-											</a>
-										))
-									}
-								</nav>
-							</div>
-						</div>
-					</div>				
-
-					{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && <>
+					{toolType === ToolType.RAG_TOOL && (currentTab?.name === 'Datasource'||!editing) && <>
 						<div className='sm:col-span-12'>
 	                        <RagToolForm
 	                            datasourceState={datasourceState}
@@ -439,7 +440,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 						
 					</>}
 
-					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Source' && <>
+					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  (currentTab?.name === 'Source'||!editing) && <>
 						<FunctionToolForm
 							toolCode={toolCode}
 							setToolCode={setToolCode}
@@ -469,7 +470,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
                         />
                     )*/}
 
-					{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && <>
+					{toolType === ToolType.FUNCTION_TOOL && (currentTab?.name === 'Parameters'||!editing) && <>
 						<ParameterForm
 							readonly={isBuiltin} 
 							parameters={parameters} 
@@ -496,22 +497,38 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 				</div>
 			</div>
-			<div className='mt-auto pt-6 flex items-center justify-between gap-x-6'>
-				{!compact && <Link
-					className='text-sm font-semibold leading-6 text-gray-900'
-					href={`/${resourceSlug}/tools`}
-				>
-					Back
-				</Link>}
-				{!isBuiltin && <button
-					type='submit'
-					disabled={submitting}
-					className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-				>
-					{submitting && <ButtonSpinner className='mr-2' />}
-					Save
-				</button>}
-			</div>
+			{editing
+				? <div className='mt-auto pt-6 flex items-center justify-between gap-x-6'>
+					{!compact && <Link
+						className='text-sm font-semibold leading-6 text-gray-900'
+						href={`/${resourceSlug}/tools`}
+					>
+						Back
+					</Link>}
+					{!isBuiltin && <button
+						type='submit'
+						disabled={submitting}
+						className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+					>
+						{submitting && <ButtonSpinner className='mr-2' />}
+						Save
+					</button>}
+				</div>
+				: <div className='mt-auto pt-6 flex items-center justify-between gap-x-6'>
+					{!compact && <a
+						className='cursor-pointer text-sm font-semibold leading-6 text-gray-900'
+					>
+						Previous
+					</a>}
+					{!isBuiltin && <a
+						type='submit'
+						className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+					>
+						{submitting && <ButtonSpinner className='mr-2' />}
+						Next
+					</a>}
+				</div>
+			}
 		</form>
 	</>);
 }
