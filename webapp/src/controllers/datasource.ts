@@ -298,77 +298,6 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
 	}
 
-/*
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
-	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
-	const connectionBody = {
-		descriptionsMap,
-		connectionId: datasource.connectionId,
-		sourceId: datasource.sourceId,
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		syncCatalog: {
-			streams: streams.map(s => {
-				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
-				const config = {
-					aliasName: s,
-					syncMode: 'full_refresh',
-					destinationSyncMode: 'append',
-					fieldSelectionEnabled,
-					selected: true,
-					primaryKey: [],
-					cursorField: [],
-				};
-				if (fieldSelectionEnabled) {
-					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: [x] }));
-				}
-				return {
-					stream: {
-						name: s,
-						description: descriptionsMap[s],
-						defaultCursorField: [],
-						sourceDefinedPrimaryKey: [],
-						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
-						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh', 'incremental'],
-					},
-					config,
-				};
-			})
-		},
-		scheduleType: scheduleType,
-		namespaceDefinition: 'destination',
-		// namespaceFormat: null,
-		prefix: `${datasource._id.toString()}_`,
-		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource._id.toString(),
-		status: 'active',
-		operations: [],
-		skipReset: false,
-	};
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
-		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
-		};
-	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	const createdConnection = await connectionsApi
-		.createConnection(null, connectionBody)
-		.then(res => res.data);
-	log('createdConnection', JSON.stringify(createdConnection, null, 2));
-*/
-
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		name: datasource._id.toString(),
@@ -403,7 +332,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
-		// setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
+		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, createdConnection.connectionId, connectionBody),
 		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
 		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField),
 	]);
@@ -556,6 +485,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	    'retriever_config.metadata_field_info': metadata_field_info,
 	});
 
+/*
 	// Create a connection to our destination in airbyte
 	const connectionsApi = await getAirbyteInternalApi();
 	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
@@ -631,6 +561,38 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 			.then(res => res.data);
 		log('createdConnection', JSON.stringify(updatedConnection, null, 2));
 	}
+*/
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const connectionBody = {
+		name: datasource._id.toString(),
+		sourceId: datasource.sourceId,
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append'
+			})),
+		},
+		dataResidency: 'auto',
+		namespaceDefinition: 'destination',
+		// namespaceFormat: null,
+		prefix: `${datasource._id.toString()}_`,
+		nonBreakingSchemaUpdatesBehavior: 'ignore',
+		status: 'active',
+	};
+	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
+		};
+	} else if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['schedule'] = {
+			scheduleType: 'cron',
+			cronExpression,
+		};
+	}
+	const createdConnection = await connectionsApi
+		.patchConnection(datasource.connectionId, connectionBody)
+		.then(res => res.data);
 
 	// Create the collection in qdrant
 	try {

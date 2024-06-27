@@ -8,16 +8,20 @@ export type DatasourceStream = {
 };
 
 export type DatasourceConnectionSettings = {
-	syncCatalog: any; //TODO
-	scheduleType: string; //TODO: allow scheduling
-	namespaceDefinition?: string;
-	namespaceFormat?: string | null;
-	nonBreakingSchemaUpdatesBehavior: string;
 	prefix: string | null;
 	name: string;
 	sourceId: string;
 	destinationId: string;
 	status: string; //TODO: enum to match airbyte api, and allow creating in paused state
+	configurations: any; //TODO
+	schedule?: {
+		scheduleType: 'cron' | 'manual';
+		cronExpression?: string;
+	};
+	dataResidency?: string;
+	namespaceDefinition?: string;
+	namespaceFormat?: string | null;
+	nonBreakingSchemaUpdatesBehavior: string;
 };
 
 export type DatasourceChunkStrategy = 'semantic' | 'character';
