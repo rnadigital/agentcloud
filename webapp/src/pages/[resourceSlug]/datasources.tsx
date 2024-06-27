@@ -98,6 +98,7 @@ export default function Datasources(props) {
 				setOpen(false);
 				fetchDatasources();
 			}}
+			initialStep={2}
 		/>
 
 		<DatasourceTable datasources={filteredDatasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />

@@ -1,7 +1,7 @@
 export type DeployFunctionArgs = {
 	code: string;
 	requirements: string;
-	mongoId: string;
+	id: string;
 	runtime?: string;
 	environmentVariables?: Record<string, string>;
 };

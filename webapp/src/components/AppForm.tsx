@@ -7,7 +7,7 @@ import {
 } from '@heroicons/react/20/solid';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
-// import CreateToolModal from 'components/CreateToolModal';
+// import CreateToolModal from 'components/modal/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -42,7 +42,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
-	const { name, agents, tasks, tools } = crewState;
+	const { name, agents, tasks } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
