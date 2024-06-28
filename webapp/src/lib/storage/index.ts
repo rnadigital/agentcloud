@@ -3,7 +3,7 @@ import LocalStorageProvider from 'storage/local';
 
 export default class StorageProviderFactory {
 	static getStorageProvider(providerName?: string) {
-		const provider = providerName || process.env.NEXT_PUBLIC_STORAGE_PROVIDER;
+		const provider = providerName || process.env.NEXT_PUBLIC_STORAGE_PROVIDER || 'local';
 		switch ((provider || '').toLowerCase()) {
 			case 'google':
 				return GoogleStorageProvider;
