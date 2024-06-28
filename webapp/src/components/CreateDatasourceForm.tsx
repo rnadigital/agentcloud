@@ -88,8 +88,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}, setSpec, setError, null);
 		setLoading(false);
 	}
-	console.log('hello');
-	console.log(spec);
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
@@ -123,8 +121,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		icon: connectors[key]?.iconUrl_oss,
 		supportLevel: connectors[key]?.supportLevel_oss,
 	}));
-
-	console.log(connectorOptions);
 
 	const modelCallback = async (addedModelId) => {
 		await fetchDatasourceFormData && fetchDatasourceFormData();

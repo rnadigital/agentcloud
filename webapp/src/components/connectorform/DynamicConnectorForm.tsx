@@ -14,11 +14,14 @@ interface DynamicFormProps {
 }
 
 const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProps) => {
+	console.log(schema);
 	const { handleSubmit, unregister, reset } = useFormContext();
 	const [submitting, setSubmitting] = useState(false);
 
 	const onSubmit = (data: FieldValues) => {
 		setSubmitting(true);
+		console.log(data);
+
 		datasourcePost(data);
 		setSubmitting(false);
 	};
