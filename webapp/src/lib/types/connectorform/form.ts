@@ -7,7 +7,6 @@ export interface Connector {
     }
 }
 
-
 export interface Schema {
     $schema: string;
     title: string;

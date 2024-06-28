@@ -6,6 +6,7 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
 import ErrorAlert from 'components/ErrorAlert';
+import formatModelOptionLabel from 'components/FormatModelOptionLabel';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
@@ -20,7 +21,6 @@ import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
-import formatModelOptionLabel from 'components/FormatModelOptionLabel';
 const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnectorForm'), {
 	ssr: false,
 });
@@ -88,8 +88,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		}, setSpec, setError, null);
 		setLoading(false);
 	}
-	console.log("hello")
-	console.log(spec)
+	console.log('hello');
+	console.log(spec);
 
 	const [connectors, setConnectors] = useState([]);
 	const [connector, setConnector] = useState(null);
@@ -124,7 +124,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		supportLevel: connectors[key]?.supportLevel_oss,
 	}));
 
-	console.log(connectorOptions)
+	console.log(connectorOptions);
 
 	const modelCallback = async (addedModelId) => {
 		await fetchDatasourceFormData && fetchDatasourceFormData();
@@ -348,7 +348,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${data.isSelected
 										? 'bg-blue-100 text-blue-500'
 										: 'dark:text-white'
-										}`}
+									}`}
 								>
 									<span className='flex justify-between'>
 										<span>
