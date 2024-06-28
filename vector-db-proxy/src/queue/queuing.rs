@@ -2,14 +2,14 @@ use mongodb::Database;
 use std::fmt::Debug;
 use std::marker::Send;
 use std::sync::Arc;
-use std::thread;
 use std::thread::available_parallelism;
-use std::time::Duration;
 use tokio::sync::RwLock;
 use threadpool::ThreadPool;
 use qdrant_client::client::QdrantClient;
 use crossbeam::queue::ArrayQueue;
 use crate::data::processing_incoming_messages::process_streaming_messages;
+use std::thread::sleep;
+use std::time::Duration;
 
 pub struct Pool<T: Clone> {
     pub q: ArrayQueue<T>,
@@ -60,11 +60,11 @@ impl<T: Clone + Send> Pool<T>
             log::debug!("Task added, current queue size after adding: {}", self.q.len());
         } else {
             log::debug!("Queue is full. Waiting...");
-            thread::sleep(Duration::from_millis(500));
+            sleep(Duration::from_millis(500));
             self.enqueue(task);
         }
     }
-
+    
     pub fn embed_message(
         &mut self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,

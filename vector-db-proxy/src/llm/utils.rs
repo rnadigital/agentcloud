@@ -6,10 +6,11 @@ use std::sync::Arc;
 use async_openai::config::OpenAIConfig;
 use mongodb::Database;
 use ort::{CoreMLExecutionProvider, CUDAExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc};
 use tokio::sync::RwLock;
 use tokio::task;
 use crate::init::env_variables::GLOBAL_DATA;
+use crate::llm::oai_client::OPENAI_CLIENT;
 
 use crate::llm::models::{EmbeddingModels, FastEmbedModels};
 use crate::mongo::queries::get_model_credentials;
@@ -137,12 +138,15 @@ pub async fn embed_text(
                                 .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                                 .build();
                             if let Some(api_key) = model_obj.config.api_key {
-    	                        let mut config = OpenAIConfig::new()
-                                    .with_api_key(api_key);
-                                if let Some(org_id) = model_obj.config.org_id {
-                                    config = config.with_org_id(org_id)
-                                }
-                                let client = async_openai::Client::with_config(config).with_backoff(backoff);
+    	                        // let mut config = OpenAIConfig::new()
+                                //     .with_api_key(api_key);
+                                // if let Some(org_id) = model_obj.config.org_id {
+                                //     config = config.with_org_id(org_id)
+                                // }
+                                // let client = async_openai::Client::with_config(config).with_backoff(backoff);
+                                let client = OPENAI_CLIENT.clone().with_backoff(backoff);
+                                // Apply api key to client
+                                let _ = <OpenAIConfig as Clone>::clone(&client.clone().config()).with_api_key(api_key);
                                 let request = CreateEmbeddingRequestArgs::default()
                                     .model(m)
                                     .input(text)

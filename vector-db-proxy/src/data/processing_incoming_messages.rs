@@ -5,7 +5,6 @@ use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
 use crate::llm::models::EmbeddingModels;
-use crate::mongo::client::start_mongo_connection;
 use crate::mongo::queries::{get_embedding_model_and_embedding_key, increment_by_one};
 use crate::qdrant::helpers::embed_payload;
 use crate::qdrant::utils::Qdrant;
@@ -18,14 +17,13 @@ pub async fn process_streaming_messages(
     datasource_id: String,
 ) {
     // initiate variables
-    // let mongodb_connection = mongo_conn.clone();
+    let mongodb_connection = mongo_conn.clone();
     let mut message_count: Vec<u8> = vec![];
     match serde_json::from_str(message.as_str()) {
         Ok::<Value, _>(message_data) => {
             message_count.push(1);
             log::debug!("'{}' messages arrived at process_messages module", message_count.len());
-            // let mongo = mongodb_connection.read().await;
-            let mongo = start_mongo_connection().await.unwrap();
+            let mongo = mongodb_connection.read().await;
             match get_embedding_model_and_embedding_key(&mongo, datasource_id.as_str())
                 .await
             {

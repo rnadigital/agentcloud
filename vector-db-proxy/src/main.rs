@@ -72,8 +72,8 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
     let message_queue_provider = MessageQueueProvider::from(global_data.message_queue_provider.clone());
-
-    // Set the default logging level
+    
+    // Instantiate client connections
     let qdrant_client = match instantiate_qdrant_client().await {
         Ok(client) => client,
         Err(e) => {
@@ -82,18 +82,22 @@ async fn main() -> std::io::Result<()> {
         }
     };
     let mongo_connection = start_mongo_connection().await.unwrap();
+    // create Arcs to allow sending across threads 
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
-    let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
     let queue: Arc<RwLock<Pool<String>>> = Arc::new(RwLock::new(Pool::optimised(global_data.thread_percentage_utilisation)));
+    
+    // Clone all Arcs so that threads can have a copy
+    let queue_clone = Arc::clone(&queue);
+    let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
-
-
+    
+    // Start the message consumption on a new thread so as not to block the main threads
     let subscribe_to_message_stream = tokio::spawn(async move {
-        get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue, global_data.rabbitmq_stream.as_str()).await;
+        get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue_clone, global_data.rabbitmq_stream.as_str()).await;
     });
 
-
+    // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
         log::info!("Running on http://{}:{}", host.clone(), port.clone());
