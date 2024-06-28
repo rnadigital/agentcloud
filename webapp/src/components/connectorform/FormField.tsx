@@ -84,7 +84,7 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 						value={{ value: selectedOption?.title || '', label: selectedOption?.title || '' }}
 					/>
 
-					{selectedOption?.properties && <FormSection properties={selectedOption.properties} requiredFields={selectedOption.required} />}
+					{selectedOption?.properties && <FormSection properties={selectedOption.properties} requiredFields={selectedOption.required} name={name} />}
 				</div >;
 			}
 			return <div>unknown</div>;

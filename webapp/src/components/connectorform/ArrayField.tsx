@@ -6,6 +6,7 @@ import {
 	Controller,
 	useFieldArray,
 	useFormContext,
+	useWatch,
 } from 'react-hook-form';
 import { toSentenceCase } from 'utils/toSentenceCase';
 
@@ -16,11 +17,19 @@ const ArrayField = ({
 	disabled,
 	property,
 }: FormFieldProps) => {
-	const { control } = useFormContext();
+	const { control, getValues } = useFormContext();
 	const { fields, append, remove } = useFieldArray({
 		control,
 		name,
 	});
+
+	const watchedFields = useWatch({ control, name });
+
+	const handleAppend = () => {
+		append({ value: '' });
+		const values = getValues(name).map((item: { value: string }) => item.value);
+		console.log(values); // This will log the array of strings
+	};
 
 	return (
 		<div>
@@ -37,7 +46,7 @@ const ArrayField = ({
 			{fields.map((field, index) => (
 				<div key={field.id} className='flex items-center mt-2'>
 					<Controller
-						name={`${name}[${index}].value`}
+						name={`${name}[${index}]`}
 						control={control}
 						render={({ field, fieldState }) => (
 							<>
@@ -73,7 +82,7 @@ const ArrayField = ({
 			))}
 			<button
 				type='button'
-				onClick={() => append({ value: '' })}
+				onClick={()=>append('')}
 				className='mt-2 text-blue-500'
 			>
                 Add
