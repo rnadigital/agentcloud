@@ -33,6 +33,7 @@ export interface FormFieldProps {
 export interface Property {
     const?: string
     type: 'string' | 'object' | 'integer' | 'boolean' | 'array'
+    enum?: string[]
     description?: string
     order?: number
     items: {
@@ -40,7 +41,8 @@ export interface Property {
         type: 'array' | 'object' | 'string'
         properties: {
             [key: string]: Property
-        }
+        },
+        required?: string[]
     },
     minItems?: number
     title?: string

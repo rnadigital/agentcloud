@@ -1,5 +1,6 @@
 import { InformationCircleIcon, PlusIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import Tippy from '@tippyjs/react';
+import ToolTip from 'components/shared/ToolTip';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import {
 	useFieldArray,
@@ -12,7 +13,8 @@ import FormSection from './FormSection';
 const ObjectArrayField = ({
 	name,
 	property,
-	level = 0
+	level = 0,
+	isRequired
 }: FormFieldProps) => {
 	const { control } = useFormContext();
 
@@ -26,12 +28,14 @@ const ObjectArrayField = ({
 			<div className='flex items-center'>
 				<label htmlFor={name} className='mr-1'>
 					{property.title ? property.title : toSentenceCase(name)}
+
+					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 				</label>
-				<Tippy content={property.description}>
+				{property.description && <ToolTip content={property.description} allowHTML interactive>
 					<div className='cursor-pointer'>
 						<InformationCircleIcon className='h-4 w-4' />
 					</div>
-				</Tippy>
+				</ToolTip>}
 			</div>
 			{fields.map((field, index) => (
 				<div key={field.id} className='flex flex-col mt-2'>
@@ -47,6 +51,7 @@ const ObjectArrayField = ({
 						properties={property.items.properties}
 						name={`${name}[${index}]`}
 						level={level + 1}
+						requiredFields={property.items.required}
 					/>
 
 				</div>

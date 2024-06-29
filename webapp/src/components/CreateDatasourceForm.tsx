@@ -420,9 +420,9 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										setCronTimezone={setCronTimezone}
 									/>
 								</div>
-								<FormContext>
+								{spec.schema && <FormContext schema={spec.schema.connectionSpecification}>
 									<DynamicConnectorForm schema={spec.schema.connectionSpecification} datasourcePost={datasourcePost} error={error} />
-								</FormContext>
+								</FormContext>}
 
 							</>}
 					</div>
@@ -559,6 +559,12 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				return null;
 		}
 	}
+
+	useEffect(() => {
+		if (spec) {
+			setError(null);
+		}
+	}, [spec]);
 
 	return (<div>
 		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ data connections.' buttonText='Upgrade' />

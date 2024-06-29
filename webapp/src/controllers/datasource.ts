@@ -2,11 +2,12 @@
 
 import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import getConnectors from 'airbyte/getconnectors';
+import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
+import draft7MetaSchema from 'ajv/lib/refs/json-schema-draft-07.json';
 import { getModelById, getModelsByTeam } from 'db/model';
-import { addTool, deleteToolsForDatasource,editToolsForDatasource } from 'db/tool';
+import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
@@ -22,14 +23,20 @@ import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
 import { DatasourceStatus } from 'struct/datasource';
 import { DatasourceScheduleType } from 'struct/schedule';
-import { Retriever,ToolType } from 'struct/tool';
+import { Retriever, ToolType } from 'struct/tool';
 import { promisify } from 'util';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
 const log = debug('webapp:controllers:datasource');
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
-const ajv = new Ajv({ strict: 'log' });
+import addFormats from 'ajv-formats';
+import submittingReducer from 'utils/submittingreducer';
+
+import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced, setDatasourceStatus } from '../db/datasource';
+
+const ajv = new Ajv({ strict: 'log', meta:true });
+addFormats(ajv);
+
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
@@ -44,7 +51,8 @@ function updateDateStrings(obj) {
 		}
 	});
 }
-ajv.addFormat('date-time', validateDateTimeFormat);
+
+// ajv.addFormat('date-time', validateDateTimeFormat);
 
 const pdfExtract = new PDFExtract();
 const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
@@ -123,16 +131,21 @@ export async function datasourceAddPage(app, req, res, next) {
 }
 
 export async function testDatasourceApi(req, res, next) {
+	log('Test datasource');
 
-	const { connectorId, connectorName, datasourceName, datasourceDescription, sourceConfig }  = req.body;
+	const { connectorId , datasourceName, datasourceDescription, sourceConfig } = req.body;
+	log('req.body', req.body);
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+	
+	const connector = await getConnectorSpecification(connectorId) as any;
+	log('connector', connector);
 
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
-	if (!submittedConnector) {
+	if (!connector) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
 	}
 
@@ -140,12 +153,17 @@ export async function testDatasourceApi(req, res, next) {
 		&& !res.locals.limits.allowedConnectors.includes(connectorId)) {
 		return dynamicResponse(req, res, 400, { error: 'You need to upgrade to access 260+ data connections.' });
 	}
-	
+
 	const newDatasourceId = new ObjectId();
-	const spec = submittedConnector.spec_oss.connectionSpecification;
-	// log(JSON.stringify(spec, null, 2));
+	const spec = connector.schema.connectionSpecification;
+	
+	// https://json-shcema.org/draft-07/schema# fails to validate
+	spec.$schema = 'http://json-schema.org/draft-07/schema#';
+
 	try {
+		log('spec', JSON.stringify(spec, null, 2));
 		const validate = ajv.compile(spec);
+		log('validate', validate);
 		const validated = validate(req.body.sourceConfig);
 		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
 			log('validate.errors', validate?.errors);
@@ -158,10 +176,12 @@ export async function testDatasourceApi(req, res, next) {
 
 	// Create source in airbyte based on the validated form
 	let createdSource;
-	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;		
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
 	try {
 		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-		updateDateStrings(req.body.sourceConfig);
+		log('spec', spec);
+		//TODO move updateDateStrings logic to happen before submitting form
+		// updateDateStrings(req.body.sourceConfig);
 		const sourceBody = {
 			configuration: {
 				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
@@ -171,7 +191,7 @@ export async function testDatasourceApi(req, res, next) {
 			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 			name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 		};
-		log('sourceBody', sourceBody);	
+		log('sourceBody', sourceBody);
 		createdSource = await sourcesApi
 			.createSource(null, sourceBody)
 			.then(res => res.data);
@@ -226,25 +246,25 @@ export async function testDatasourceApi(req, res, next) {
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: datasourceName,
-	    description: datasourceDescription,
-	    filename: null,
-	    originalName: datasourceName,
-	    sourceId: createdSource.sourceId,
-	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-	    sourceType,
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-	    lastSyncedDate: null,
-	    discoveredSchema,
-	    createdDate: new Date(),
-	    status: DatasourceStatus.DRAFT,
-	    recordCount: {
+		_id: newDatasourceId,
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		teamId: toObjectId(req.params.resourceSlug),
+		name: datasourceName,
+		description: datasourceDescription,
+		filename: null,
+		originalName: datasourceName,
+		sourceId: createdSource.sourceId,
+		connectionId: null, // no connection at this point, that comes after schema check and selecting streams
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		sourceType,
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		lastSyncedDate: null,
+		discoveredSchema,
+		createdDate: new Date(),
+		status: DatasourceStatus.DRAFT,
+		recordCount: {
 			total: 0,
-	    }
+		}
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -257,7 +277,7 @@ export async function testDatasourceApi(req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		datasourceName,
 		datasourceDescription,
@@ -274,7 +294,7 @@ export async function addDatasourceApi(req, res, next) {
 		embeddingField,
 		retriever,
 		retriever_config,
-	}  = req.body;
+	} = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string'
 		|| !modelId || typeof modelId !== 'string'
@@ -395,7 +415,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Set status to processing after jub submission
 	await setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING);
-	
+
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
@@ -409,7 +429,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: retriever_config || {}, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName),
@@ -426,14 +446,14 @@ export async function addDatasourceApi(req, res, next) {
 
 export async function updateDatasourceScheduleApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		scheduleType,
 		timeUnit,
 		units,
 		cronExpression,
 		cronTimezone
-	}  = req.body;
+	} = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -484,13 +504,13 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
 export async function updateDatasourceStreamsApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		streams,
 		sync,
@@ -519,7 +539,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	//update the metadata map of tools if found
 	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
-	    'retriever_config.metadata_field_info': metadata_field_info,
+		'retriever_config.metadata_field_info': metadata_field_info,
 	});
 
 	// Create a connection to our destination in airbyte
@@ -627,7 +647,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
@@ -671,7 +691,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
@@ -764,8 +784,8 @@ export async function uploadFileApi(req, res, next) {
 	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
 	log(modelId, name, datasourceDescription);
 	if (!req.files || Object.keys(req.files).length === 0
-			|| !modelId || typeof modelId !== 'string'
-			|| !name || typeof name !== 'string') {
+		|| !modelId || typeof modelId !== 'string'
+		|| !name || typeof name !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -794,30 +814,30 @@ export async function uploadFileApi(req, res, next) {
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
 	const createdDatasource = await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: name,
-	    filename: filename,
-	    description: datasourceDescription,
-	    originalName: uploadedFile.name,
-	    sourceId: null,
-	    connectionId: null,
-	    destinationId: null,
-	    sourceType: 'file',
-	    workspaceId: null,
-	    lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
-	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
-	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
-	    modelId: toObjectId(modelId),
-	    createdDate: new Date(),
-	    embeddingField: 'document', //Note: always document for sourceType: file
-	    status: DatasourceStatus.EMBEDDING,
-	    recordCount: {
-   			total: null,
-   	    }
+		_id: newDatasourceId,
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		teamId: toObjectId(req.params.resourceSlug),
+		name: name,
+		filename: filename,
+		description: datasourceDescription,
+		originalName: uploadedFile.name,
+		sourceId: null,
+		connectionId: null,
+		destinationId: null,
+		sourceType: 'file',
+		workspaceId: null,
+		lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
+		chunkCharacter: req.body.chunkCharacter, //TODO: validate
+		chunkStrategy: req.body.chunkStrategy, //TODO: validate
+		modelId: toObjectId(modelId),
+		createdDate: new Date(),
+		embeddingField: 'document', //Note: always document for sourceType: file
+		status: DatasourceStatus.EMBEDDING,
+		recordCount: {
+			total: null,
+		}
 	});
-	
+
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype);
@@ -829,24 +849,24 @@ export async function uploadFileApi(req, res, next) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
-	
+
 	// Fetch the appropriate message queue provider
 	const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
-	
+
 	// Prepare the message and metadata
 	const message = JSON.stringify({
 		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
 		filename,
 		file: `/tmp/${filename}`,
 	});
-	const metadata = { 
-		stream: newDatasourceId.toString(), 
+	const metadata = {
+		stream: newDatasourceId.toString(),
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
 	};
-	
+
 	// Send the message using the provider
 	await messageQueueProvider.sendMessage(message, metadata);
-	
+
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
@@ -871,7 +891,7 @@ export async function uploadFileApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { 
+	return dynamicResponse(req, res, 302, {
 		datasourceId: createdDatasource.insertedId,
 		name,
 	});

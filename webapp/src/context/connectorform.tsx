@@ -1,7 +1,15 @@
-import { FormProvider,useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 
-const FormContext = ({ children, }: { children: React.ReactNode }) => {
+const FormContext = ({ children, schema }: { children: React.ReactNode, schema?: any }) => {
+
 	const methods = useForm();
+
+	useEffect(() => {
+		if (schema && schema.properties) {
+			methods.reset();
+		}
+	}, [schema]);
 
 	return (
 		<FormProvider {...methods}>

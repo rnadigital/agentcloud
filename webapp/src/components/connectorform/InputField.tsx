@@ -1,9 +1,9 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
-import Tippy from '@tippyjs/react';
 import clsx from 'clsx';
+import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
 import { FormFieldProps } from 'lib/types/connectorform/form';
-import { ChangeEvent, useEffect } from 'react';
+import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { capitalizeFirstLetter } from 'utils/capitalizeFirstLetter';
 import { toSentenceCase } from 'utils/toSentenceCase';
@@ -17,13 +17,7 @@ const InputField = ({
 	isRequired
 }: FormFieldProps) => {
 
-	const { control, setValue } = useFormContext();
-
-	useEffect(() => {
-		if (property.const) {
-			setValue(name, property.const);
-		}
-	}, [setValue, property, name]);
+	const { control } = useFormContext();
 
 	return (
 		<Controller
@@ -34,12 +28,14 @@ const InputField = ({
 			}}
 			render={({ field, fieldState }) => {
 				const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-					console.log(type);
 					switch (type) {
 						case 'number':
+						case 'integer':
 							field.onChange(parseFloat(e.target.value));
 							break;
-						case 'date':
+						case 'checkbox':
+							field.onChange(e.target.checked);
+							break;
 						case 'datetime-local':
 						case 'date-time':
 							field.onChange(dayjs(e.target.value).toISOString());
@@ -48,15 +44,15 @@ const InputField = ({
 							field.onChange(e.target.value);
 					}
 				};
-				
+
 				let value;
 				switch (type) {
 					case 'date':
-						value = field.value ? dayjs(field.value).format('YYYY-MM-DD'):'';
+						value = field.value ? dayjs(field.value).format('YYYY-MM-DD') : '';
 						break;
 					case 'date-time':
 					case 'datetime-local':
-						value = field.value ? dayjs(field.value).format('YYYY-MM-DDTHH:mm'):'';
+						value = field.value ? dayjs(field.value).format('YYYY-MM-DDTHH:mm') : '';
 						break;
 					default:
 						value = field.value;
@@ -67,12 +63,14 @@ const InputField = ({
 						<div className='flex items-center'>
 							<label htmlFor={name} className='mr-1'>
 								{property.title ? property.title : toSentenceCase(name)}
+
+								{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 							</label>
-							{property.description && <Tippy content={property.description}>
+							{property.description && <ToolTip content={property.description} allowHTML interactive>
 								<div className='cursor-pointer'>
 									<InformationCircleIcon className='h-4 w-4' />
 								</div>
-							</Tippy>}
+							</ToolTip>}
 						</div>
 						<input
 							{...field}
@@ -83,7 +81,6 @@ const InputField = ({
 							disabled={disabled}
 							onChange={handleChange}
 							value={value}
-							// onChange={(e) => field.onChange(type === 'number' ? parseFloat(e.target.value) : e.target.value)} 
 							className={clsx(
 								type !== 'checkbox' && 'mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 px-2',
 								{

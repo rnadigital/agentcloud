@@ -10,15 +10,29 @@ import MultiSelectField from './MultiSelectField';
 import ObjectArrayField from './ObjectArrayField';
 
 interface FormFieldProps {
-    name: string;
-    property: Property;
-    requiredFields?: string[]
-    level?: number
+	name: string;
+	property: Property;
+	requiredFields?: string[]
+	level?: number
 }
+
+const isRequiredField = (name: string, requiredFields?: string[]): boolean => {
+	if (!requiredFields) { return false; }
+
+	const regex = /(\w+)\[(\d+)\]\.(\w+)/;
+	const match = name.match(regex);
+
+	if (match) {
+		const [, _arrayName, _index, fieldName] = match;
+		return requiredFields.includes(fieldName);
+	}
+
+	return requiredFields.includes(name);
+};
 
 const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps) => {
 
-	const isRequired = requiredFields?.includes(name);
+	const isRequired = isRequiredField(name, requiredFields);
 
 	const [selectedOption, setSelectedOption] = useState<Property>();
 
@@ -31,6 +45,7 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 	};
 
 	switch (property.type) {
+
 		case 'string':
 			if (property?.format === 'date') {
 				return <InputField property={property} name={name} type='date' isRequired={isRequired} />;
@@ -38,6 +53,15 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 			if (property?.format === 'date-time') {
 				return <InputField property={property} name={name} type='datetime-local' isRequired={isRequired} />;
 			}
+
+			if (property.enum && property.enum.length > 0) {
+				return <MultiSelectField type='string' options={property.enum.map(item => ({ value: item, label: item }))} name={name} property={property} isRequired={isRequired} />;
+			}
+
+			if (property.const) {
+				return <MultiSelectField type='string' options={[{ value: property.const, label: property.const }]} name={name} property={property} isRequired={isRequired} />;
+			}
+
 			return <InputField property={property} name={name} type='text' isRequired={isRequired} />;
 
 		case 'integer':
@@ -47,8 +71,8 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 			return <InputField property={property} name={name} type='checkbox' isRequired={isRequired} />;
 
 		case 'array':
-			if (property.items.type === 'object') {
-				return <ObjectArrayField property={property} name={name} type='object' level={level} />;
+			if (property.items?.type === 'object') {
+				return <ObjectArrayField property={property} name={name} type='object' level={level} isRequired={isRequired} />;
 			}
 
 			if (property.items?.enum && property.items.enum.length > 0) {
@@ -63,12 +87,12 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 						name={name}
 						testId={name}
 						type='text'
-						isMultiple={!!property.minItems}
+						isMultiple
 						isRequired={isRequired}
 					/>
 				);
 			}
-			return <ArrayField property={property} name={name} testId={name} type='text' />;
+			return <ArrayField property={property} name={name} testId={name} type={property.items?.type} />;
 
 		case 'object':
 			if (property.oneOf) {
