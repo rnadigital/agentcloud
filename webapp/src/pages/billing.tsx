@@ -1,30 +1,26 @@
 import * as API from '@api';
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
+import InfoAlert from 'components/InfoAlert';
 import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
+import StripeCheckoutModal from 'components/StripeCheckoutModal';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-import InfoAlert from 'components/InfoAlert';
-import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
-function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
+function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, 
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
 	const router = useRouter();
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
-	const { stripeEndsAt, stripeTrial, stripeAddons } = account?.stripe || {};
+	const { stripeEndsAt , stripeAddons } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
 	const numberPrice = typeof price === 'number';
 	const [editedAddons, setEditedAddons] = useState(false);
@@ -187,11 +183,11 @@ function SubscriptionCard({ title, link = null, plan = null, price = null, descr
 export default function Billing(props) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { account, csrf } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
 	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
-	const [state, dispatch] = useState(props);
+	const [_,dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
 	const [stagedChange, setStagedChange] = useState(null);
