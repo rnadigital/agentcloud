@@ -91,6 +91,7 @@ Options:
 [How to Build a RAG Chatbot Using Agent Cloud and PostgreSQL](https://www.agentcloud.dev/blog/build-chat-app-postgresql-agentcloud)<br>
 [How to Build a RAG Chatbot Using Agent Cloud and BigQuery](https://www.agentcloud.dev/blog/a-rag-chat-app-with-agent-cloud-and-bigquery)<br>
 [How to Build a RAG Chatbot Using Agent Cloud and MongoDB](https://www.agentcloud.dev/blog/build-rag-chatbot-agentcloud-mongodb)<br>
+[How to Build a RAG Chatbot with Agent Cloud and Google Sheets](https://www.freecodecamp.org/news/build-a-rag-chatbot-agent-cloud-google-sheets/)<br>
 
 ## Comparisons
 [Agent Cloud vs CrewAI](https://www.agentcloud.dev/blog/agent-cloud-vs-crewai-a-comparison)<br>
