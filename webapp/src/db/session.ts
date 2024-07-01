@@ -15,7 +15,7 @@ export type Session = {
     lastUpdatedDate: Date;
     tokensUsed: number;
 	status: SessionStatus;
-	crewId?: ObjectId;
+	appId?: ObjectId;
 	previewLabel?: string;
 }
 

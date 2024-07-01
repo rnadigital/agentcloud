@@ -154,7 +154,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
 						</div>
 					</div>
-				</div>			
+				</div>
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-4 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
@@ -396,7 +396,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
 				{!compact && <button
-					className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 					onClick={(e) => {
 						e.preventDefault();
 						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
@@ -407,22 +407,25 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					</svg>
 					<span>Back</span>
 				</button>}
-				<button
-					type='submit'
-					onClick={() => setRun(false)}
-					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-				>
+				<div className='flex gap-x-4'>
+					<button
+						type='submit'
+						onClick={() => setRun(false)}
+						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
 						Save
-				</button>
-				{!editing && <button
-					type='submit'
-					onClick={() => setRun(true)}
-					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
-				>
-					<PlayIcon className='h-4 w-4 mr-2' />
-					Save and Run
-				</button>}
+					</button>
+					<button
+						type='submit'
+						onClick={() => setRun(true)}
+						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+					>
+						<PlayIcon className='h-4 w-4 mr-2' />
+						Save and Run
+					</button>
+				</div>
 			</div>
+
 		</form>
 	</>);
 

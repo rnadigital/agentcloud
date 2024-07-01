@@ -3,18 +3,28 @@
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
+export enum AppType {
+	CHAT = 'chat',
+	CREW = 'crew',
+}
+
 export type App = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
 	teamId?: ObjectId;
 	name: string;
-	memory?: boolean;
-	cache?: boolean;
 	description?: string;
+	type: AppType;
 	author?: string;
 	tags?: string[];
 	visibility?: any; //TODO: perms
-	crewId?: ObjectId;
 	icon: IconAttachment;
 	hidden?: boolean;
+	//AppType.CREW
+	crewId?: ObjectId;
+	memory?: boolean;
+	cache?: boolean;
+	//AppType.CHAT
+	agentId?: ObjectId;
+	conversationStarters?: string
 };

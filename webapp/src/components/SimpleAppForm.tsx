@@ -5,6 +5,8 @@ import {
 	HandRaisedIcon,
 	PlayIcon
 } from '@heroicons/react/20/solid';
+import InfoAlert from 'components/InfoAlert';
+import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
@@ -41,7 +43,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
- 
+	const [icon, setIcon] = useState(null);
 	const [config, setConfig] = useReducer(configReducer, {
 		model: 'gpt-4o',
 	});
@@ -73,6 +75,12 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 			}
 		}, toast.error, router);
 	}
+
+	const iconCallback = async (addedIcon) => {
+		await fetchFormData && fetchFormData();
+		setModalOpen(false);
+		setIcon(addedIcon);
+	};
 
 	async function createDatasourceCallback(createdDatasource) {
 		console.log('createDatasourceCallback', createdDatasource);
@@ -108,10 +116,22 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 			/>
 
 			<div className='space-y-4'>
+				<InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='Under Construction...' />
+
+				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 md:col-span-2'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Avatar
+						</label>
+						<div className='mt-2'>
+							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+						</div>
+					</div>
+				</div>
 
 				<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-						{/*<div className='sm:col-span-12'>
+						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									App Name
 							</label>
@@ -140,7 +160,19 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									rows={3}
 								/>
 							</div>
-						</div>*/}
+						</div>
+
+						{/*<ParameterForm 
+							readonly={isBuiltin} 
+							parameters={environmentVariables} 
+							setParameters={setEnvironmentVariables} 
+							title='Environment Variables' 
+							disableTypes={true} 
+							hideRequired={true} 
+							namePattern='[A-Z][A-Z0-9_]*'
+							namePlaceholder='Key must be uppercase seperated by underscores'
+							descriptionPlaceholder='Value'
+						/>*/}
 
 						<div className='sm:col-span-12'>
 							<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

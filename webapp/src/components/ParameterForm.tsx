@@ -1,6 +1,8 @@
 import React from 'react';
 
-export default function ParameterForm({ parameters, setParameters, readonly, title = 'Parameters', disableTypes = false, hideRequired = false, namePlaceholder = 'Name', descriptionPlaceholder = 'Description', namePattern = null, descriptionPattern = null }) {
+export default function ParameterForm({ parameters, setParameters, readonly, title = 'Parameters',
+	disableTypes = false, disableDescription = false, hideRequired = false, namePlaceholder = 'Name',
+	descriptionPlaceholder = 'Description', namePattern = null, descriptionPattern = null }) {
 
 	const addParameter = () => {
 		setParameters([...parameters, { name: '', type: '', description: '', required: false }]);
@@ -48,7 +50,7 @@ export default function ParameterForm({ parameters, setParameters, readonly, tit
 							{/* Add more types as needed */}
 						</select>
 					)}
-					<input
+					{!disableDescription && <input
 						readOnly={readonly}
 						type='text'
 						placeholder={descriptionPlaceholder}
@@ -56,7 +58,7 @@ export default function ParameterForm({ parameters, setParameters, readonly, tit
 						value={param.description}
 						onChange={(e) => updateParameter(index, 'description', e.target.value)}
 						className='col-span-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-					/>
+					/>}
 					<div className='col-span-1 flex justify-between items-center'>
 						{!hideRequired && <label className='flex items-center space-x-2'>
 							<input

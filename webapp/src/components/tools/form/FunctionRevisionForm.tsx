@@ -52,7 +52,7 @@ export default function FunctionRevisionForm({
 										revisionId: revision._id,
 										resourceSlug,
 									}, () => {
-// fetchFormData && fetchFormData();
+										// fetchFormData && fetchFormData();
 										toast.info('Tool updating...');
 										router.push(`/${resourceSlug}/tools`);
 									}, () => {

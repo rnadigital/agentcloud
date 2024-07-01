@@ -10,6 +10,7 @@ import { addModel,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
 import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
+import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
 import { ModelType } from 'struct/model';
 import { ModelEmbeddingLength } from 'struct/model';
@@ -112,7 +113,7 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId, run }  = req.body;
+	const { memory, cache, name, description, tags, conversationStarters, agents, process, tasks, managerModelId, iconId, run }  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -137,8 +138,12 @@ export async function addAppApi(req, res, next) {
 		memory: memory === true,
 		cache: cache === true,
 		tags: (tags||[])
-			.map(tag => tag.trim()) // Assuming tags is an array of strings
+			.map(tag => tag.trim())
 			.filter(x => x),
+		conversationStarters: (conversationStarters||[])
+			.map(x => x.trim())
+			.filter(x => x),
+		type: AppType.CREW,
 		crewId: addedCrew.insertedId,
 		author: res.locals.matchingTeam.name,
 		icon: foundIcon ? {
@@ -209,7 +214,6 @@ export async function addAppApiSimple(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name: 'Chat task',
 		description : 'Chat back and forth with the user, get human input each time.',
-		//TODO maybe include tool names in prompt?: foundTools.map(x => x.name).join(', ')
 		expectedOutput: '',
 		toolIds: toolIds.map(toObjectId),
 		agentId: toObjectId(addedAgent.insertedId),
@@ -238,6 +242,7 @@ export async function addAppApiSimple(req, res, next) {
 		crewId: addedCrew.insertedId,
 		author: res.locals.matchingTeam.name,
 		icon: null,
+		type: AppType.CHAT,
 		// hidden: true,
 	});
 
