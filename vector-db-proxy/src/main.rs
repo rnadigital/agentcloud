@@ -24,8 +24,10 @@ use std::sync::{Arc};
 use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
+use amqprs::channel::Channel;
 use anyhow::Context;
 use env_logger::Env;
+use google_cloud_pubsub::subscription::MessageStream;
 use tokio::signal;
 use tokio::sync::{RwLock};
 
@@ -72,7 +74,7 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
     let message_queue_provider = MessageQueueProvider::from(global_data.message_queue_provider.clone());
-    
+
     // Instantiate client connections
     let qdrant_client = match instantiate_qdrant_client().await {
         Ok(client) => client,
@@ -86,16 +88,40 @@ async fn main() -> std::io::Result<()> {
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
     let queue: Arc<RwLock<Pool<String>>> = Arc::new(RwLock::new(Pool::optimised(global_data.thread_percentage_utilisation)));
-    
+
     // Clone all Arcs so that threads can have a copy
     let queue_clone = Arc::clone(&queue);
     let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
+
+    if let Some(connection) = get_message_queue(message_queue_provider).await {
+        match message_queue_provider {
+            MessageQueueProvider::RABBITMQ => {
+                if let Ok(channel) = connection.downcast::<Channel>() {
+                    tokio::spawn(async move {
+                        consume_rabbitmq(*channel).await;
+                    });
+                }
+            }
+            MessageQueueProvider::PUBSUB => {
+                if let Ok(conn_str) = connection.downcast::<MessageStream>() {
+                    tokio::spawn(async move {
+                        consume_pubsub(*conn_str).await;
+                    });
+                }
+            }
+            MessageQueueProvider::UNKNOWN => {
+                panic!("Unknown message Queue provider specified. Aborting application!");
+            }
+        }
+    } else {
+        println!("Failed to connect");
+    }
     
-    // Start the message consumption on a new thread so as not to block the main threads
-    let subscribe_to_message_stream = tokio::spawn(async move {
-        get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue_clone, global_data.rabbitmq_stream.as_str()).await;
-    });
+    
+    // let subscribe_to_message_stream = tokio::spawn(async move {
+    //     get_message_queue(message_queue_provider, qdrant_connection_for_streaming, mongo_client_for_streaming, queue_clone, global_data.rabbitmq_stream.as_str()).await;
+    // });
 
     // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
@@ -117,7 +143,7 @@ async fn main() -> std::io::Result<()> {
 
     tokio::select! {
         _ = web_task => log::info!("Web server task completed"),
-        _ = subscribe_to_message_stream => log::info!("Message stream task completed"),
+        // _ = subscribe_to_message_stream => log::info!("Message stream task completed"),
         _ = signal::ctrl_c() => {
             log::info!("Received Ctrl+C, shutting down");
         }

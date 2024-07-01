@@ -1,11 +1,12 @@
 use std::sync::Arc;
+use async_trait::async_trait;
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::RwLock;
 use crate::gcp::pubsub::subscribe_to_topic;
 use crate::init::env_variables::GLOBAL_DATA;
-use crate::messages::models::{MessageQueue, MessageQueueProvider};
+use crate::messages::models::{MessageQueue, MessageQueueConnection, MessageQueueProvider};
 use crate::queue::queuing::Pool;
 use futures::StreamExt;
 use crate::messages::tasks::process_message;
@@ -23,10 +24,10 @@ impl Default for PubSubConnect {
         }
     }
 }
-
-impl MessageQueue for PubSubConnect {
-    type Queue = MessageStream;
-    async fn connect(&self, message_queue_provider: MessageQueueProvider) -> Option<Self::Queue> {
+#[async_trait]
+impl MessageQueueConnection for PubSubConnect {
+    type Connection = MessageStream;
+    async fn connect(&self, message_queue_provider: MessageQueueProvider) -> Option<Self::Connection> {
         let global_data = GLOBAL_DATA.read().await;
         match message_queue_provider {
             MessageQueueProvider::PUBSUB => {
@@ -48,7 +49,10 @@ impl MessageQueue for PubSubConnect {
             }
         }
     }
-
+}
+#[async_trait]
+impl MessageQueue for PubSubConnect {
+    type Queue = MessageStream;
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, _queue_name: &str) {
         let mut stream = streaming_queue;
         while let Some(message) = stream.next().await {

@@ -1,12 +1,13 @@
 use std::sync::Arc;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
+use async_trait::async_trait;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::tasks::process_message;
-use crate::messages::models::{MessageQueue, MessageQueueProvider};
+use crate::messages::models::{MessageQueue, MessageQueueConnection, MessageQueueProvider};
 use crate::queue::queuing::Pool;
 use crate::rabbitmq::client::{bind_queue_to_exchange};
 use log::{warn, error};
@@ -29,12 +30,10 @@ impl Default for RabbitConnect {
         }
     }
 }
-
-
-impl MessageQueue for RabbitConnect {
-    type Queue = Channel;
-
-    async fn connect(&self, message_queue_provider: MessageQueueProvider) -> Option<Self::Queue> {
+#[async_trait]
+impl MessageQueueConnection for RabbitConnect{
+    type Connection = Channel;
+    async fn connect(&self, message_queue_provider: MessageQueueProvider) -> Option<Self::Connection> {
         let global_data = GLOBAL_DATA.read().await;
         match message_queue_provider {
             MessageQueueProvider::PUBSUB => None,
@@ -45,20 +44,23 @@ impl MessageQueue for RabbitConnect {
                     username: global_data.rabbitmq_username.clone(),
                     password: global_data.rabbitmq_password.clone(),
                 };
-
+                
                 let channel = bind_queue_to_exchange(
                     &rabbitmq_connection_details,
                     &global_data.rabbitmq_exchange,
                     &global_data.rabbitmq_stream,
                     &global_data.rabbitmq_routing_key,
-                )
-                    .await;
-                Some(channel)
+                ).await;
+                return Some(channel);
             }
             MessageQueueProvider::UNKNOWN => None,
         }
     }
+}
 
+#[async_trait]
+impl MessageQueue for RabbitConnect {
+    type Queue = Channel;
     async fn consume(
         &self,
         streaming_queue: Self::Queue,
