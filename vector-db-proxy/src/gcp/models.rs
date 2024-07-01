@@ -3,10 +3,10 @@ use async_trait::async_trait;
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use crate::gcp::pubsub::subscribe_to_topic;
 use crate::init::env_variables::GLOBAL_DATA;
-use crate::messages::models::{MessageQueue, MessageQueueConnection, MessageQueueProvider};
+use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::queue::queuing::Pool;
 use futures::StreamExt;
 use crate::messages::tasks::process_message;
@@ -26,35 +26,21 @@ impl Default for PubSubConnect {
 }
 #[async_trait]
 impl MessageQueueConnection for PubSubConnect {
-    type Connection = MessageStream;
-    async fn connect(&self, message_queue_provider: MessageQueueProvider) -> Option<Self::Connection> {
+    async fn connect(&self) -> Option<QueueConnectionTypes> {
         let global_data = GLOBAL_DATA.read().await;
-        match message_queue_provider {
-            MessageQueueProvider::PUBSUB => {
-                let pubsub_connection = PubSubConnect {
-                    topic: global_data.rabbitmq_stream.clone(),
-                    subscription: global_data.rabbitmq_stream.clone(),
-                };
-                if let Ok(message_stream) = subscribe_to_topic(pubsub_connection).await {
-                    return Some(message_stream);
-                } else {
-                    None
-                }
-            }
-            MessageQueueProvider::RABBITMQ => {
-                None
-            }
-            MessageQueueProvider::UNKNOWN => {
-                None
-            }
-        }
+        let pubsub_connection = PubSubConnect {
+            topic: global_data.rabbitmq_stream.clone(),
+            subscription: global_data.rabbitmq_stream.clone(),
+        };
+        if let Ok(message_stream) = subscribe_to_topic(pubsub_connection).await {
+            let stream = Arc::new(Mutex::new(message_stream));
+            return Some(QueueConnectionTypes::PubSub(stream));
+        } else { None }
     }
 }
-#[async_trait]
-impl MessageQueue for PubSubConnect {
-    type Queue = MessageStream;
-    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, _queue_name: &str) {
-        let mut stream = streaming_queue;
+
+pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>) {
+    if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
             println!("Received Message. Processing...");
             let cloned_message = message.message.clone();

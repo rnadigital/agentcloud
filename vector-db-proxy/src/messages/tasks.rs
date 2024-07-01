@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 use crate::data::utils::{apply_chunking_strategy_to_document, extract_text_from_file};
 use crate::gcp::models::PubSubConnect;
 use crate::llm::models::EmbeddingModels;
-use crate::messages::models::{MessageQueue, MessageQueueConnection, MessageQueueProvider};
+use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
 use crate::mongo::models::ChunkingStrategy;
 use crate::mongo::queries::{get_datasource, get_embedding_model};
 use crate::qdrant::helpers::construct_point_struct;
@@ -22,7 +22,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 
 pub async fn get_message_queue(
     message_queue_provider: MessageQueueProvider,
-) -> Option<Box<dyn std::any::Any + Send>> {
+) -> QueueConnectionTypes {
     let global_data = GLOBAL_DATA.read().await;
     match message_queue_provider {
         MessageQueueProvider::RABBITMQ => {
@@ -33,7 +33,7 @@ pub async fn get_message_queue(
                 username: global_data.rabbitmq_username.clone(),
                 password: global_data.rabbitmq_password.clone(),
             };
-            rabbitmq_connection.connect(message_queue_provider).await.map(|conn| Box::new(conn) as Box<dyn std::any::Any + Send>)
+            rabbitmq_connection.connect().await.unwrap()
         }
         MessageQueueProvider::PUBSUB => {
             println!("Using PubSub as the streaming Queue!");
@@ -41,7 +41,7 @@ pub async fn get_message_queue(
                 topic: global_data.rabbitmq_stream.clone(),
                 subscription: global_data.rabbitmq_stream.clone(),
             };
-            pubsub_connection.connect(message_queue_provider).await.map(|conn| Box::new(conn) as Box<dyn std::any::Any + Send>)
+            pubsub_connection.connect().await.unwrap()
         }
         MessageQueueProvider::UNKNOWN => {
             panic!("Unknown message Queue provider specified. Aborting application!");
