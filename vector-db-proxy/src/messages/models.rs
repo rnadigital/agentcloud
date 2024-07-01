@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use amqprs::channel::Channel;
-use async_trait::async_trait;
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
@@ -40,7 +39,6 @@ impl Clone for QueueConnectionTypes {
         }
     }
 }
-#[async_trait]
 impl MessageQueue for QueueConnectionTypes {
     type Queue = Self;
 
@@ -56,11 +54,9 @@ impl MessageQueue for QueueConnectionTypes {
     }
 }
 
-#[async_trait]
 pub trait MessageQueueConnection {
     async fn connect(&self) -> Option<QueueConnectionTypes>;
 }
-#[async_trait]
 pub trait MessageQueue {
     type Queue;
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, queue_name: &str);

@@ -5184,7 +5184,6 @@ dependencies = [
  "anyhow",
  "async-openai 0.20.0",
  "async-stream",
- "async-trait",
  "backoff",
  "base64 0.22.0",
  "bson",

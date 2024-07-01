@@ -60,7 +60,6 @@ crossbeam = { version = "0.8.4", features = ["crossbeam-channel"] }
 google-cloud-gax = "0.17.0"
 google-cloud-pubsub = "0.25.0"
 lazy_static = "1.4.0"
-async-trait = "0.1.80"
 
 [features]
 default = ["cuda_rocm"]

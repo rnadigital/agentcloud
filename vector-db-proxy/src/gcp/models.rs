@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use async_trait::async_trait;
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
@@ -24,7 +23,6 @@ impl Default for PubSubConnect {
         }
     }
 }
-#[async_trait]
 impl MessageQueueConnection for PubSubConnect {
     async fn connect(&self) -> Option<QueueConnectionTypes> {
         let global_data = GLOBAL_DATA.read().await;
