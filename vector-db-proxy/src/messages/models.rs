@@ -47,15 +47,10 @@ impl MessageQueue for QueueConnectionTypes {
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>, queue_name: &str) {
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
-                tokio::spawn(async move {
-                    pubsub_consume(&stream, qdrant_client, mongo_client, queue).await;
-                });
+                pubsub_consume(&stream, qdrant_client, mongo_client, queue).await;
             }
             QueueConnectionTypes::RabbitMQ(channel) => {
-                let q = queue_name.to_string();
-                tokio::spawn(async move {
-                    rabbit_consume(&channel, qdrant_client, mongo_client, queue, q).await;
-                });
+                rabbit_consume(&channel, qdrant_client, mongo_client, queue, queue_name.to_string()).await;
             }
         }
     }
