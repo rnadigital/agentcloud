@@ -4,7 +4,6 @@ import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
-import ToolSelector from 'components/ToolSelector';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
