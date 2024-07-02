@@ -1,9 +1,10 @@
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 
-export default function AgentsSelect({ agentChoices, initialAgents, onChange, setModalOpen }) {
-	const [agentsState, setAgentsState] = useState(initialAgents || []);
+export default function AgentsSelect({ agentChoices, initialAgents, onChange, setModalOpen, multiple }
+	: { agentChoices: any[], initialAgents: any[], onChange: Function, setModalOpen: Function, multiple?: boolean }) {
+	const [agentsState, setAgentsState] = useState(initialAgents || (multiple ? [] : null));
 
 	useEffect(() => {
 		onChange(agentsState);
@@ -16,7 +17,7 @@ export default function AgentsSelect({ agentChoices, initialAgents, onChange, se
 			</label>
 			<div className='mt-2'>
 				<Select
-					isMultiple
+					isMultiple={multiple}
 					isSearchable
 					primaryColor={'indigo'}
 					classNames={{
@@ -32,14 +33,21 @@ export default function AgentsSelect({ agentChoices, initialAgents, onChange, se
 					}}
 					value={agentsState}
 					onChange={(v: any) => {
-						if (v && v.length > 0 && v[v.length - 1]?.value == null) {
-							return setModalOpen('agent');
+						if (multiple) {
+							if (v && v.length > 0 && v[v.length - 1]?.value == null) {
+								return setModalOpen('agent');
+							}
+							setAgentsState(v || []);
+						} else {
+							if (v?.value === null) {
+								return setModalOpen('agent');
+							}
+							setAgentsState(v);
 						}
-						setAgentsState(v || []);
 					}}
 					options={agentChoices
-						.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-						.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+						.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation }))
+						.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])}
 					formatOptionLabel={(data: any) => {
 						const optionAgent = agentChoices.find(ac => ac._id === data.value);
 						return (

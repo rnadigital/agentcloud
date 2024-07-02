@@ -61,11 +61,8 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 		};
 	}
 
-	const initialAgents = agentChoices && agentChoices.map(a => {
-		const oa = agentChoices.find(ai => ai._id === a);
-		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
-	}).filter(n => n);
-	const [agentsState, setAgentsState] = useState(initialAgents || []);
+	// const initialAgent = agentChoices && agentChoices.find(ac => ac._id === ); TODO: initial agent once "editing" is in
+	const [agentsState, setAgentsState] = useState(null);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -194,9 +191,10 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 
 						{!newAgent && <AgentsSelect
 							agentChoices={agentChoices}
-							initialAgents={initialAgents}
+							initialAgents={null}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={() => setNewAgent(_newAgent => !_newAgent)}
+							multiple={false}
 						/>}
 
 						{newAgent && <>
