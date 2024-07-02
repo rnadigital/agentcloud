@@ -193,7 +193,7 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
-		log('workspacesList: %O', workspacesList);
+		log('workspacesList: %s', workspacesList?.workspaces?.map(x => x.name)?.join());
 		const airbyteAdminWorkspaceId = workspacesList.workspaces[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
@@ -201,7 +201,7 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
-		log('destinationsList: %s', JSON.stringify(destinationsList, null, '\t'));
+		log('destinationsList: %s', destinationsList?.destinations?.map(x => x.name)?.join());
 
 		let airbyteAdminDestination = destinationsList.destinations?.find(d => d?.destinationDefinitionId === destinationDefinitionId);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
@@ -216,10 +216,9 @@ export async function init() {
 				return currentConfig[key] !== newConfig[key];
 			});
 			if (configMismatch) {
-				log('Destination configuration mismatch detected, delete and recreate the destination.');
+				log('Destination configuration mismatch detected, attempting to delete and re-create...');
 				await deleteDestination(airbyteAdminDestination?.destinationId);
 				airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider);
-				log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 				if (!airbyteAdminDestination.destinationId) {
 					log('Failed to create new destination with updated config');
 					log(airbyteAdminDestination);
@@ -228,7 +227,7 @@ export async function init() {
 			}
 		} else {
 			if (!provider) {
-				console.error('Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
+				log('Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
 				process.exit(1);
 			}
 			log(`Creating ${provider} destination`);
