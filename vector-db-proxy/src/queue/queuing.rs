@@ -6,28 +6,28 @@ use std::thread::available_parallelism;
 use tokio::sync::RwLock;
 use threadpool::ThreadPool;
 use qdrant_client::client::QdrantClient;
-use crossbeam::queue::ArrayQueue;
+use crossbeam::queue::SegQueue;
 use crate::data::processing_incoming_messages::process_streaming_messages;
-use std::thread::sleep;
-use std::time::Duration;
 
 pub struct Pool<T: Clone> {
-    pub q: ArrayQueue<T>,
+    pub q: Arc<SegQueue<T>>,
     pub pool: ThreadPool,
+    pub runtime: Arc<tokio::runtime::Runtime>,
 }
 
 // This defines implementations of each of the methods in the class
 // This implementation is generic for all types that are both Send and Clone
 // T must be Send in order to be sent safely across threads
 impl<T: Clone + Send> Pool<T>
-    where
-        T: Debug,
-        String: From<T>,
+where
+    T: Debug,
+    String: From<T>,
 {
     pub fn new(pool_size: usize) -> Self {
         Pool {
-            q: ArrayQueue::new(pool_size),
+            q: Arc::new(SegQueue::new()),
             pool: ThreadPool::new(pool_size),
+            runtime: Arc::new(tokio::runtime::Runtime::new().unwrap()),
         }
     }
 
@@ -37,36 +37,29 @@ impl<T: Clone + Send> Pool<T>
             .unwrap_or(1);
         log::debug!("Threads used: {}", threads_utilised);
         Pool {
-            q: ArrayQueue::new(threads_utilised),
+            q: Arc::new(SegQueue::new()),
             pool: ThreadPool::new(threads_utilised),
+            runtime: Arc::new(tokio::runtime::Runtime::new().unwrap()),
         }
     }
 
     pub fn default() -> Self {
         let default_threads = available_parallelism().map(|t| t.get()).unwrap_or(1);
         Pool {
-            q: ArrayQueue::new(default_threads),
+            q: Arc::new(SegQueue::new()),
             pool: ThreadPool::new(default_threads),
+            runtime: Arc::new(tokio::runtime::Runtime::new().unwrap()),
         }
     }
 
-    pub fn enqueue(&mut self, task: T) {
-        if self.q.len() < self.q.capacity() {
-            log::debug!("Enqueueing task, current queue size before adding: {}", self.q.len());
-            match self.q.push(task) {
-                Ok(_) => { log::debug!("Task inserted into queue successfully!") }
-                Err(e) => { log::error!("An error occurred: {:?}", e) }
-            }
-            log::debug!("Task added, current queue size after adding: {}", self.q.len());
-        } else {
-            log::debug!("Queue is full. Waiting...");
-            sleep(Duration::from_millis(500));
-            self.enqueue(task);
-        }
+    pub fn enqueue(&self, task: T) {
+        log::debug!("Enqueueing task, current queue size before adding: {}", self.q.len());
+        self.q.push(task);
+        log::debug!("Task added, current queue size after adding: {}", self.q.len());
     }
-    
+
     pub fn embed_message(
-        &mut self,
+        &self,
         qdrant_conn: Arc<RwLock<QdrantClient>>,
         mongo_conn: Arc<RwLock<Database>>,
         message: String,
@@ -74,7 +67,7 @@ impl<T: Clone + Send> Pool<T>
         while !self.q.is_empty() {
             let task = match self.q.pop() {
                 Some(t) => t,
-                None => continue, //Because ! (continue) can never have a value, Rust decides that the type of guess is u32.
+                None => continue,
             };
             // We try and coerce T into String type, if it can't we handle the error
             let id = match String::try_from(task) {
@@ -84,10 +77,10 @@ impl<T: Clone + Send> Pool<T>
             let data = message.clone();
             let qdrant_client = Arc::clone(&qdrant_conn);
             let mongo_client = Arc::clone(&mongo_conn);
+            let runtime = Arc::clone(&self.runtime);
 
             self.pool.execute(move || {
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                rt.block_on(async {
+                runtime.block_on(async {
                     let _ = process_streaming_messages(qdrant_client, mongo_client, data, id).await;
                 })
             });

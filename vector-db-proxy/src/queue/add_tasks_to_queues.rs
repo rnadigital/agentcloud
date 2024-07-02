@@ -13,7 +13,7 @@ pub async fn add_message_to_embedding_queue(
 ) {
     let (dataset_id, table_name) = params;
     // Instantiate a new instance of the MyQueue
-    let mut q_guard = queue.write().await;
+    let q_guard = queue.write().await;
     log::debug!("Queue has size: {}", q_guard.q.len());
     // Add task to queue
     q_guard.enqueue(dataset_id);
