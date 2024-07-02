@@ -73,7 +73,6 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 }
 
 export function setMemberPermissions(teamId: db.IdOrStr, accountId: db.IdOrStr, permissions: Permission): Promise<any> {
-	console.log(permissions);
 	return TeamCollection().updateOne({
 		_id: toObjectId(teamId)
 	}, {

@@ -15,14 +15,9 @@ import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
-import { addAgents } from 'db/agent';
-import { addChatMessage, ChatChunk, getAgentMessageForSession, unsafeGetTeamJsonMessage,upsertOrUpdateChatMessage } from 'db/chat';
-import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeIncrementTokens, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
-import { ObjectId } from 'mongodb';
-import { taskQueue } from 'queue/bull';
+import {  ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
+import { getSessionById, setSessionStatus, unsafeGetSessionById , unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { SessionStatus } from 'struct/session';
-
-import { getAppByCrewId } from './db/app';
 
 export const io = new Server();
 

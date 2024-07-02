@@ -2,18 +2,12 @@ import {
 	CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
-
-import * as API from '../api';
-import ErrorAlert from '../components/ErrorAlert';
+import React  from 'react';
 
 export default function Redirect() {
 
 	const router = useRouter();
-	const [verified, setVerified] = useState(null);
-	const [error, setError] = useState();
 	const { to } = router.query;
 	if (typeof window !== 'undefined') {
 		router.push(to as string || '/login');

@@ -104,7 +104,6 @@ export default function ToolForm({ tool = {}, datasources = [], editing, callbac
 	}
 
 	async function createDatasourceCallback(createdDatasource) {
-		console.log('createDatasourceCallback', createdDatasource);
 		await fetchFormData && fetchFormData();
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(false);

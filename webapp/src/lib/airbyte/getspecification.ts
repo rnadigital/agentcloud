@@ -21,7 +21,8 @@ export default async function getSpecification(req, res, _next) {
 			body: JSON.stringify(body),
 		});
 		schema = await res.json();
-		log(schema);
+		schema.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
+		// log(JSON.stringify(schema, null, 2));
 	} catch (e) {
 		console.error(e);
 		schema = null;
