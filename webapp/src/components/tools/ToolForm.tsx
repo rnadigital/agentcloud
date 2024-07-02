@@ -3,6 +3,7 @@
 import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
+import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
 import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import FunctionCard from 'components/FunctionCard';
@@ -11,7 +12,6 @@ import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import FunctionRevisionForm from 'components/tools/form/FunctionRevisionForm';
 import FunctionToolForm from 'components/tools/form/FunctionToolForm';
-import RagToolForm from 'components/tools/form/RagToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
@@ -417,11 +417,11 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 					{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && <>
 						<div className='sm:col-span-12'>
-	                        <RagToolForm
+	                        <DatasourcesSelect
 	                            datasourceState={datasourceState}
 	                            setDatasourceState={setDatasourceState}
 	                            datasources={datasources}
-	                            setModalOpen={setModalOpen}
+	                            addNewCallback={setModalOpen}
 	                        />
 						
 							<RetrievalStrategyComponent

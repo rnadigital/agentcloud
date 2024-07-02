@@ -2,11 +2,11 @@ import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel'
 import React from 'react';
 import Select from 'react-tailwindcss-select';
 
-export default function RagToolForm({
+export default function DatasourceSelector({
 	datasourceState,
 	setDatasourceState,
 	datasources,
-	setModalOpen
+	addNewCallback,
 }) {
 	return (
 		<div className='sm:col-span-12'>
@@ -28,7 +28,7 @@ export default function RagToolForm({
 					onChange={(v: any) => {
 						if (v?.value === null) {
                             // Create new pressed
-							return setModalOpen('datasource');
+							return addNewCallback && addNewCallback('datasource');
 						}
 						setDatasourceState(v);
 					}}
