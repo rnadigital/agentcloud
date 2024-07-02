@@ -53,7 +53,7 @@ pub async fn rabbit_consume(
     streaming_queue: &Channel,
     qdrant_client: Arc<RwLock<QdrantClient>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Arc<RwLock<Sender<(String, String)>>>,
+    sender: Sender<(String, String)>,
 ) {
     println!("Consuming from RabbitMQ");
     let global_data = GLOBAL_DATA.read().await;
@@ -77,7 +77,7 @@ pub async fn rabbit_consume(
                                     let mut stream_type: Option<String> = None;
                                     let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
                                     if let Some(s) = stream_type_field_value { stream_type = Some(s.to_string()); }
-                                    let sender_clone = Arc::clone(&sender);
+                                    let sender_clone = sender.clone();
                                     let qdrant_client = Arc::clone(&qdrant_client);
                                     let mongo_client = Arc::clone(&mongo_client);
                                     process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, sender_clone).await;

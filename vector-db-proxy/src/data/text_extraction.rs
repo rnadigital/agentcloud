@@ -121,12 +121,12 @@ impl TextExtraction {
         let results = (text, metadata);
         Ok(results)
     }
-    
+
     pub async fn extract_text_from_csv(
         &self,
         path: String,
         datasource_id: String,
-        sender: Arc<RwLock<Sender<(String, String)>>>,
+        sender: Sender<(String, String)>,
     ) {
         match csv::Reader::from_path(path) {
             Ok(mut rdr) => {
@@ -135,7 +135,7 @@ impl TextExtraction {
                         Ok(record) => {
                             let string_record = record.iter().collect::<Vec<&str>>().join(", ");
                             let ds_clone = datasource_id.clone();
-                            let sender_clone = Arc::clone(&sender);
+                            let sender_clone = sender.clone();
                             send_task(sender_clone, (ds_clone, string_record)).await;
                         }
                         Err(e) => { log::error!("An error occurred {}", e); }

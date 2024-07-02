@@ -37,7 +37,7 @@ impl MessageQueueConnection for PubSubConnect {
     }
 }
 
-pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>) {
+pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
     println!("Consuming from Pub/Sub");
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
@@ -54,7 +54,7 @@ pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: A
                         let stream_string: String = stream.to_string();
                         let stream_split: Vec<&str> = stream_string.split('_').collect();
                         let datasource_id = stream_split.to_vec()[0];
-                        let sender = Arc::clone(&sender);
+                        let sender = sender.clone();
                         process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, sender).await;
                     }
                     None => { log::warn!("No stream ID present in message. Can not proceed") }

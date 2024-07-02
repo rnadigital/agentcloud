@@ -66,7 +66,7 @@ pub async fn extract_text_from_file(
     file_path: &str,
     document_name: String,
     datasource_id: String,
-    sender: Arc<RwLock<Sender<(String, String)>>>,
+    sender: Sender<(String, String)>,
 ) -> Option<(String, Option<HashMap<String, String>>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();

@@ -49,7 +49,7 @@ pub async fn get_message_queue(
     }
 }
 
-pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>) {
+pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
     println!("process_message");
     let mongodb_connection = mongo_client.read().await;
     match get_datasource(&mongodb_connection, datasource_id).await {
@@ -64,7 +64,7 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                                 Some((file_type, file, file_path)) => {
                                     save_file_to_disk(file, file_path.as_str()).await.unwrap();
                                     let datasource_clone = ds.clone();
-                                    let sender_clone = Arc::clone(&sender);
+                                    let sender_clone = sender.clone();
                                     let (document_text, metadata) =
                                         extract_text_from_file(file_type, file_path.as_str(), ds.originalName, datasource_id.to_string(), sender_clone).await.unwrap();
                                     // dynamically get user's chunking strategy of choice from the database

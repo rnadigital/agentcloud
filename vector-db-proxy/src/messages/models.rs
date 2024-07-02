@@ -42,7 +42,7 @@ impl Clone for QueueConnectionTypes {
 impl MessageQueue for QueueConnectionTypes {
     type Queue = Self;
 
-    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>) {
+    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
         println!("Starting to consume");
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
@@ -60,7 +60,7 @@ pub trait MessageQueueConnection {
 }
 pub trait MessageQueue {
     type Queue;
-    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>);
+    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>);
 }
 
 

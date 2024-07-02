@@ -13,11 +13,10 @@ use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 
 pub async fn process_incoming_messages(
-    receiver: Arc<RwLock<Receiver<(String, String)>>>,
+    receiver: Receiver<(String, String)>,
     qdrant_conn: Arc<RwLock<QdrantClient>>,
     mongo_conn: Arc<RwLock<Database>>,
 ) {
-    println!("processing incoming messages");
     let number_of_workers = available_parallelism()
         .map(|t| t.get() as u64)
         .unwrap_or(12);
@@ -25,8 +24,10 @@ pub async fn process_incoming_messages(
         let mongo_connection = Arc::clone(&mongo_conn);
         let qdrant_connection = Arc::clone(&qdrant_conn);
         let receiver_clone = receiver.clone();
-        tokio::spawn(async move {
-            while let Ok(msg) = receiver_clone.read().await.recv() {
+        // tokio::spawn(async move {
+            while let Ok(msg) = receiver_clone.recv() {
+                println!("{:?}", msg);
+                println!("processing incoming messages");
                 let (datasource_id, message) = msg;
                 match serde_json::from_str(message.as_str()) {
                     Ok::<Value, _>(message_data) => {
@@ -110,6 +111,6 @@ pub async fn process_incoming_messages(
                     }
                 }
             }
-        });
+        // });
     }
 }
