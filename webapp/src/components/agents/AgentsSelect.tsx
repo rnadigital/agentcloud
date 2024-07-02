@@ -13,7 +13,7 @@ export default function AgentsSelect({ agentChoices, initialAgents, onChange, se
 	return (
 		<div className='sm:col-span-12'>
 			<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-				Agents
+				Agent{multiple?'s':null}
 			</label>
 			<div className='mt-2'>
 				<Select

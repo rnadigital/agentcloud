@@ -46,6 +46,7 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 	const [description, setDescription] = useState('');
 	const [modelType, setModelType] = useState(ModelType.OPENAI);
 	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
+	const [agentName, setAgentName] = useState('');
 	const [systemMessage, setSystemMessage] = useState('');
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
@@ -189,13 +190,13 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 
 						<hr className='col-span-12' />
 
-						{!newAgent && <AgentsSelect
+						<AgentsSelect
 							agentChoices={agentChoices}
 							initialAgents={null}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={() => setNewAgent(_newAgent => !_newAgent)}
 							multiple={false}
-						/>}
+						/>
 
 						{newAgent && <>
 							<div className='sm:col-span-12'>

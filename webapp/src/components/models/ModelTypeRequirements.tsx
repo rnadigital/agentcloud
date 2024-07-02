@@ -4,26 +4,42 @@ import { ModelList,ModelTypeRequirements } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
 const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
+	const { requiredFields, optionalFields } = Object
+		.entries(ModelTypeRequirements[type])
+		.filter(e => e[1])
+		.reduce((acc, x) => {
+			if (x[1].optional === true) {
+				acc.optionalFields.push(x);
+			} else {
+				acc.requiredFields.push(x);
+			}
+			return acc;
+		}, { requiredFields: [], optionalFields: [] });
+	const renderInput = ([key, req]: any, ei) => {
+		return <div key={`modelName_${type}_${ei}`}>
+			<label htmlFor={key} className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+				{key}
+			</label>
+			<div className='mt-2'>
+				<input
+					type='text'
+					name={key}
+					id={key}
+					className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+					onChange={e => setConfig(e.target)}
+					required={req?.optional !== true}
+					defaultValue={config[key]}
+				/>
+			</div>
+		</div>;
+	};
 	return (
 		<>
-			{Object.entries(ModelTypeRequirements[type]).filter(e => e[1]).map(([key, req]: any, ei) => (
-				<div key={`modelName_${type}_${ei}`}>
-					<label htmlFor={key} className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-						{key}
-					</label>
-					<div className='mt-2'>
-						<input
-							type='text'
-							name={key}
-							id={key}
-							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-							onChange={e => setConfig(e.target)}
-							required={req?.optional !== true}
-							defaultValue={config[key]}
-						/>
-					</div>
-				</div>
-			))}
+			{requiredFields.map(renderInput)}
+			{optionalFields.length > 0 && <details>
+				<summary className='cursor-pointer'>Optional fields</summary>
+				{optionalFields.map(renderInput)}
+			</details>}
 			{ModelList[type]?.length > 0 && (
 				<div className='sm:col-span-12'>
 					<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
