@@ -1,18 +1,24 @@
-import { Storage } from '@google-cloud/storage';
+import { Logging } from '@google-cloud/logging';
 import archiver from 'archiver';
 import debug from 'debug';
 import { StandardRequirements,WrapToolCode } from 'function/base';
+import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
 import { Readable } from 'stream';
 import { DeployFunctionArgs } from 'struct/function';
-
+const protopath = protofiles.getProtoPath('../../google-proto-files/google/cloud/audit/audit_log.proto');
+const root = protofiles.loadSync(protopath);
+const auditLogProto = root.lookupType('google.cloud.audit.AuditLog');
 import FunctionProvider from './provider';
 
 const log = debug('webapp:function:google');
 
 class GoogleFunctionProvider extends FunctionProvider {
+	// TODO: type these?
 	#storageProvider: any;
 	#functionsClient: any;
+	#loggingClient: any;
+
 	#projectId: string;
 	#location: string;
 	#bucket: string;
@@ -20,6 +26,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 	constructor() {
 		super();
 		this.#storageProvider = StorageProviderFactory.getStorageProvider('google');
+		this.#loggingClient = new Logging();
 	}
 
 	async init() {
@@ -32,8 +39,33 @@ class GoogleFunctionProvider extends FunctionProvider {
 		log('Google Function Provider initialized.');
 	}
 
-	async deployFunction({ code, requirements, mongoId, runtime = 'python310', environmentVariables = {} }: DeployFunctionArgs): Promise<string> {
-		const functionPath = `functions/${mongoId}`;
+	async getFunctionLogs(functionId: string, limit = 100): Promise<string> {
+		const filter = `resource.type="cloud_run_revision" severity>=WARNING resource.labels.service_name="function-${functionId}"`;
+		const [entries] = await this.#loggingClient.getEntries({
+			filter,
+			pageSize: limit,
+			orderBy: 'timestamp desc',
+		});
+		return entries
+			.map(entry => {
+				const payload = (entry as any).metadata.payload as string;
+				const textPayload = entry?.metadata?.textPayload;
+				if (payload == 'protoPayload' && Buffer.isBuffer(entry.metadata[payload]?.value)) {
+					const value = auditLogProto.decode(entry.data.value).toJSON();
+					// log(JSON.stringify(value, null, 2));
+					return value?.status?.message;
+				} else if (textPayload) {
+					log('textPayload, %O', textPayload);
+					const severity = entry.metadata.severity || 'UNKNOWN';
+					return `${entry.metadata.timestamp} [${severity}] ${textPayload}`;
+				}
+			})
+			.filter(x => x)
+			.join('\n');
+	}
+
+	async deployFunction({ id, code, requirements, runtime = 'python310', environmentVariables = {} }: DeployFunctionArgs): Promise<string> {
+		const functionPath = `functions/${id}`;
 		const codeBuffer = Buffer.from(WrapToolCode(code));
 		const requirementsBuffer = Buffer.from(`${requirements}\n${StandardRequirements.join('\n')}`);
 
@@ -53,12 +85,13 @@ class GoogleFunctionProvider extends FunctionProvider {
 
 		// Construct the fully qualified location
 		const location = `projects/${this.#projectId}/locations/${this.#location}`;
-		const functionName = `${location}/functions/function-${mongoId}`;
+		const functionName = `${location}/functions/function-${id}`;
 
 		// Check if the function exists
 		let functionExists = false;
 		try {
-			await this.#functionsClient.getFunction({ name: functionName });
+			const existingFunction = await this.#functionsClient.getFunction({ name: functionName });
+			log(existingFunction);
 			functionExists = true;
 		} catch (err) {
 			if (err.code !== 5) { // 5 means NOT_FOUND
@@ -72,7 +105,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 			function: {
 				name: functionName,
 				buildConfig: {
-					runtime: 'python310', // TODO: allow user to select
+					runtime, // TODO: allow user to select
 					entryPoint: 'hello_http', // Note: see functions/base.ts to understand why this is hello_http
 					source: {
 						storageSource: {
@@ -91,8 +124,9 @@ class GoogleFunctionProvider extends FunctionProvider {
 				environment: 'GEN_2',
 			},
 			parent: `projects/${this.#projectId}/locations/${this.#location}`,	
-			functionId: `function-${mongoId}`,
+			functionId: `function-${id}`,
 		};
+		log('Function create request for %s %O', functionName, request);
 
 		try {
 			let response;
@@ -102,7 +136,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 			} else {
 				request.location = location;
 				[response] = await this.#functionsClient.createFunction(request);
-				log(`Function created successfully: ${functionName}`);
+				log(`Function created successfully: ${functionName} https://console.cloud.google.com/functions/details/${this.#location}/${functionName}?env=gen2&project=${this.#projectId}&tab=source`);
 			}
 		} catch (e) {
 			log(JSON.stringify(e, null, 2));
@@ -120,6 +154,52 @@ class GoogleFunctionProvider extends FunctionProvider {
 		} catch (err) {
 			log(err);
 			throw err;
+		}
+	}
+
+	async getFunctionState(functionId: string): Promise<string> {
+		const functionName = `projects/${this.#projectId}/locations/${this.#location}/functions/function-${functionId}`;
+		try {
+			const [response] = await this.#functionsClient.getFunction({ name: functionName });
+			return response.state;
+		} catch (err) {
+			log(err);
+			return 'ERROR';
+		}
+	}
+
+	async waitForFunctionToBeActive(functionId: string, maxWaitTime = 120000): Promise<boolean> {
+		log('In waitForFunctionToBeActive loop for ID: %s', functionId);
+		const startTime = Date.now();
+		while (Date.now() - startTime < maxWaitTime) {
+			const functionState = await this.getFunctionState(functionId);
+			if (functionState === 'ACTIVE') {
+				return true;
+			} else if (functionState !== 'DEPLOYING') {
+				return false; //Short circuit if it enters a state other than pending and isnt active
+			}
+			log('In waitForFunctionToBeActive loop for ID: %s', functionId);
+			await new Promise(resolve => setTimeout(resolve, 10000));
+		}
+	
+		return false;
+	}
+
+	async callFunction(functionName: string, body: object) {
+		const url = `https://${this.#location}-${this.#projectId}.cloudfunctions.net/${functionName}`;
+		try {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(body)
+			});
+			const responseData = await response.json();
+			return responseData;
+		} catch (error) {
+			log(error);
+			throw error;
 		}
 	}
 

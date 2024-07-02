@@ -1,6 +1,6 @@
 import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
-import ToolForm from 'components/ToolForm';
+import ToolForm from 'components/tools/ToolForm';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect,useState } from 'react';
@@ -13,7 +13,7 @@ export default function CreateToolModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	const { agents, models, tools, datasources } = state as any;
+	const { datasources } = state as any;
 
 	async function fetchToolFormData() {
 		await API.getTools({ resourceSlug }, dispatch, setError, router);

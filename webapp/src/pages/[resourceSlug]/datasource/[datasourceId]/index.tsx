@@ -46,7 +46,7 @@ export default function Datasource(props) {
 	const [cronExpression, setCronExpression] = useState('');
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
-	const numStreams = datasource?.connectionSettings?.syncCatalog?.streams?.length || 0;
+	const numStreams = datasource?.connectionSettings?.configurations?.streams?.length || 0;
 	async function fetchDatasource() {
 		await API.getDatasource({
 			resourceSlug,
@@ -220,8 +220,8 @@ export default function Datasource(props) {
 			{discoveredSchema && <form onSubmit={(e) => { e.preventDefault(); }}>
 				<StreamsList
 					streams={discoveredSchema.discoveredSchema.catalog.streams}
-					existingStreams={datasource?.connectionSettings?.syncCatalog?.streams}
-					descriptionsMap={datasource?.connectionSettings?.descriptionsMap}
+					existingStreams={datasource?.connectionSettings?.configurations?.streams}
+					descriptionsMap={datasource?.descriptionsMap}
 				/>
 				<button
 					onClick={(e) => updateStreams(e)}
@@ -243,10 +243,10 @@ export default function Datasource(props) {
 				</button>
 			</form>}
 
-			{!discoveredSchema && datasource?.connectionSettings?.syncCatalog && <StreamsList
-				streams={datasource.connectionSettings.syncCatalog.streams}
-				existingStreams={datasource.connectionSettings.syncCatalog.streams}
-				descriptionsMap={datasource?.connectionSettings?.descriptionsMap}
+			{!discoveredSchema && datasource?.connectionSettings?.configurations && <StreamsList
+				streams={datasource.connectionSettings.configurations.streams}
+				existingStreams={datasource.connectionSettings.configurations.streams}
+				descriptionsMap={datasource?.descriptionsMap}
 				readonly={true}
 			/>}
 			{!discoveredSchema && isDraft && numStreams === 0 && <>

@@ -1,8 +1,12 @@
 import debug from 'debug';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import getGoogleCredentials from 'misc/getgooglecredentials';
 import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 import path from 'path';
+const { GoogleAuth } = require('google-auth-library');
+
+import SecretProviderFactory from 'lib/secret';
 
 dotenv.config({ path: '.env' });
 
@@ -39,7 +43,7 @@ async function skipSetupScreen() {
 		body: JSON.stringify({
 			email: 'example@example.org',
 			anonymousDataCollection: false,
-			securityCheck: 'succeeded',
+			securityCheck: 'ignored',
 			organizationName: 'example',
 			initialSetupComplete: true,
 			displaySetupWizard: false
@@ -115,12 +119,31 @@ async function getDestinationConfiguration(provider: string) {
 			ssl: false
 		};
 	} else {
-		const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-		const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
-		if (!credentialsContent) {
-			log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-			process.exit(1);
+		let credentialsContent;
+		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+			if (!credentialsPath) {
+				log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+			log('credentialsContent %s', credentialsPath);
+			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+			if (!credentialsContent) {
+				log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				process.exit(1);
+			}
+		} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+			log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+		} else {
+			log('google application credentials missing private_key, fetching from secret store');
+			const secretProvider = SecretProviderFactory.getSecretProvider('google');
+			await secretProvider.init();
+			const googleCreds = await secretProvider.getSecret('GOOGLE_APPLICATION_CREDENTIAL');
+			credentialsContent = googleCreds;
 		}
+
+		log('credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
@@ -145,7 +168,7 @@ async function updateWebhookUrls(workspaceId: string) {
 				sendOnSuccess: {
 					notificationType: ['slack'],
 					slackConfiguration: {
-						webhook: 'http://webapp_next:3000/webhook/sync-successful'
+						webhook: `${process.env.URL_APP}/webhook/sync-successful`,
 					}
 				}
 			}
@@ -178,7 +201,7 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
-		log('destinationsList: %O', destinationsList);
+		log('destinationsList: %s', JSON.stringify(destinationsList, null, '\t'));
 
 		let airbyteAdminDestination = destinationsList.destinations?.find(d => d?.destinationDefinitionId === destinationDefinitionId);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
@@ -210,7 +233,7 @@ export async function init() {
 			}
 			log(`Creating ${provider} destination`);
 			airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
-			log('Created destination:', airbyteAdminDestination);
+			log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 			if (!airbyteAdminDestination.destinationId) {
 				process.exit(1);
 			}

@@ -108,13 +108,14 @@ impl Qdrant {
             Ok(true)
         } else {
             log::debug!(
-                "Collection: {} does NOT exist...creating it now",
+                "Collection: {} does NOT exist...",
                 &self.collection_name
             );
             let vector_size = vector_length.unwrap_or(512); // Default to fastembed embedding size if none is given;
             let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
+                    log::debug!("Creating collection now...");
                     // check if vector name is a value or None
                     match vector_name {
                         Some(name) => {
@@ -176,7 +177,7 @@ impl Qdrant {
                     }
                 }
                 CreateDisposition::CreateNever => {
-                    log::debug!("Collection: '{}' has a Do Not Create disposition. Therefore will not attempt creations", &self.collection_name);
+                    log::debug!("Collection: '{}' has a Do Not Create disposition. Therefore will not attempt creation", &self.collection_name);
                     Ok(false)
                 }
             }

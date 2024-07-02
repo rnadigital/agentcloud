@@ -8,9 +8,9 @@ pub fn convert_serde_value_to_hashmap_string(
 ) -> HashMap<String, String> {
     let hashmap_serde: HashMap<String, String> = serde_value
         .iter()
-        .map(|(k, v)| (k.clone(), v.to_owned().to_string()))
+        .map(|(k, v)| (k.clone().to_lowercase(), v.to_owned().to_string()))
         .collect();
-    return hashmap_serde;
+    hashmap_serde
 }
 
 pub fn convert_hashmap_to_filters(

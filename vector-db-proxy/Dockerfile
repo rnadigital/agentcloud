@@ -7,6 +7,8 @@ COPY Cargo.toml .
 COPY Cargo.lock .
 RUN sed -i 's#src/main.rs#src/dummy.rs#' Cargo.toml
 
+RUN apt-get update -y && apt-get install -y iputils-ping htop
+
 RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." \
 	&& cargo build --release \
 	&& mkdir -p /usr/local/src/vector-db-proxy/target/debug \

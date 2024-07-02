@@ -124,7 +124,7 @@ export function StreamsList({ streams, existingStreams, readonly, descriptionsMa
 					readonly={readonly}
 					key={index}
 					stream={stream}
-					existingStream={existingStreams?.find(es => es.stream.name === stream?.stream?.name)}
+					existingStream={existingStreams?.find(st => st.name === stream?.name)}
 					descriptionsMap={descriptionsMap}
 				/>
 			))}

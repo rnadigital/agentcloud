@@ -58,12 +58,12 @@ export default function router(server, app) {
 		scope: ['profile', 'email'],
 	}));
 	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/hubspot', useSession, useJWT, myPassport.authenticate('hubspot', {
-		scope: 'crm.objects.line_items.read content crm.schemas.deals.read crm.schemas.line_items.read crm.objects.owners.read forms tickets crm.objects.marketing_events.read sales-email-read crm.objects.companies.read crm.lists.read crm.objects.deals.read crm.schemas.contacts.read crm.objects.contacts.read crm.schemas.companies.read crm.objects.quotes.read',
-	}));
-	oauthRouter.get('/hubspot/callback', useSession, useJWT, myPassport.authenticate('hubspot', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/stripe', useSession, useJWT, myPassport.authenticate('stripe'));
-	oauthRouter.get('/stripe/callback', useSession, useJWT, myPassport.authenticate('stripe', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	// oauthRouter.get('/hubspot', useSession, useJWT, myPassport.authenticate('hubspot', {
+	// 	scope: 'crm.objects.line_items.read content crm.schemas.deals.read crm.schemas.line_items.read crm.objects.owners.read forms tickets crm.objects.marketing_events.read sales-email-read crm.objects.companies.read crm.lists.read crm.objects.deals.read crm.schemas.contacts.read crm.objects.contacts.read crm.schemas.companies.read crm.objects.quotes.read',
+	// }));
+	// oauthRouter.get('/hubspot/callback', useSession, useJWT, myPassport.authenticate('hubspot', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	// oauthRouter.get('/stripe', useSession, useJWT, myPassport.authenticate('stripe'));
+	// oauthRouter.get('/stripe/callback', useSession, useJWT, myPassport.authenticate('stripe', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	server.use('/auth', useSession, myPassport.session(), oauthRouter);
 
 	// Body and query parsing middleware
@@ -87,6 +87,7 @@ export default function router(server, app) {
 	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.requestChangePlan);
 	server.post('/stripe-plan-confirm', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.confirmChangePlan);
 	server.get('/stripe-has-paymentmethod', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.hasPaymentMethod);
+	server.get('/stripe-ready', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.checkReady);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -160,6 +161,11 @@ export default function router(server, app) {
 	teamRouter.post('/forms/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.addToolApi);
 	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.editToolApi);
 	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_TOOL), toolController.deleteToolApi);
+	
+	teamRouter.post('/forms/revision/:revisionId([a-f0-9]{24})/apply', hasPerms.one(Permissions.EDIT_TOOL), toolController.applyToolRevisionApi);
+	//TODO: permission for deleting tool revisions
+	//TODO: endpoint to download source as zip?
+	teamRouter.delete('/forms/revision/:revisionId([a-f0-9]{24})', hasPerms.one(Permissions.EDIT_TOOL), toolController.deleteToolRevisionApi);
 
 	//models
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
@@ -192,7 +198,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
 	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), fetchUsage, checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.deleteTeamMemberApi);
-	teamRouter.post('/forms/team/transfer-ownership', hasPerms.one([Permissions.ORG_OWNER, Permissions.TEAM_OWNER]), teamController.transferTeamOwnershipApi);
+	teamRouter.post('/forms/team/transfer-ownership', hasPerms.any(Permissions.ORG_OWNER, Permissions.TEAM_OWNER), teamController.transferTeamOwnershipApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.addTeamApi);
 
 	//assets

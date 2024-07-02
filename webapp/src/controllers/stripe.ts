@@ -1,17 +1,19 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { setStripeCustomerId, setStripePlan, updateStripeCustomer } from 'db/account';
+import { setStripeCustomerId, updateStripeCustomer } from 'db/account';
 import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutsession';
 import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
-import { stripe } from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap,SubscriptionPlan } from 'struct/billing';
+import StripeClient from 'lib/stripe';
+import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
 import { io } from '@socketio';
 import { addNotification } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
+import SecretProviderFactory from 'secret/index';
+import SecretKeys from 'secret/secretkeys';
 import { NotificationType } from 'struct/notification';
 
 function destructureSubscription(sub) {
@@ -43,11 +45,11 @@ export async function getSubscriptionsDetails(stripeCustomerId: string) {
 			status: 'trialing',
 			limit: 1 // fetch only the first subscription
 		};
-		let subscriptions = await stripe.subscriptions.list(body);
+		let subscriptions = await StripeClient.get().subscriptions.list(body);
 		if (!subscriptions || subscriptions?.data?.length === 0) {
 			//They are not on a trial
 			body.status = 'active';
-			subscriptions = await stripe.subscriptions.list(body);
+			subscriptions = await StripeClient.get().subscriptions.list(body);
 		}
 		return destructureSubscription(subscriptions.data[0]);
 	} catch (error) {
@@ -61,15 +63,18 @@ export async function getSubscriptionsDetails(stripeCustomerId: string) {
  */
 export async function webhookHandler(req, res, next) {
 
-	if (!process.env['STRIPE_WEBHOOK_SECRET']) {
-		log('Received stripe webhook but STRIPE_WEBHOOK_SECRET is not set');
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
+	
+	if (!STRIPE_WEBHOOK_SECRET) {
+		log('missing STRIPE_WEBHOOK_SECRET');
 		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
 	}
 
 	const sig = req.headers['stripe-signature'];
 	let event;
 	try {
-		event = stripe.webhooks.constructEvent(req.body, sig, process.env['STRIPE_WEBHOOK_SECRET']);
+		event = StripeClient.get().webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
 	} catch (err) {
 		log(err);
 		return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -122,7 +127,7 @@ export async function webhookHandler(req, res, next) {
 			
 			//Note: null to not update them unless required
 			const update = {
-				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : {}),
+				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : { stripePlan: SubscriptionPlan.FREE }),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -132,35 +137,32 @@ export async function webhookHandler(req, res, next) {
 			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			}
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at;
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
+			}
+			if (update['stripeEndsAt'] > Date.now() && update['stripeCancelled'] === true) {
+				update['stripePlan'] = SubscriptionPlan.FREE;
 			}
 			log('Customer subscription update %O', update);
 			await updateStripeCustomer(subscriptionUpdated.customer, update);
 			break;
 		}
 
-		case 'customer.subscription.created': {
-			// const subscriptionCreated = event.data.object;
-			// await updateStripeCustomer(subscriptionCreated.customer, {
-			// 	stripeEndsAt: subscriptionCreated.current_period_end*1000,
-			// });
+		case 'customer.subscription.deleted': {
+			const subscriptionDeleted = event.data.object;
+			await updateStripeCustomer(subscriptionDeleted.customer, {
+				stripePlan: SubscriptionPlan.FREE,
+				stripeAddons: { users: 0, storage: 0 },
+				stripeCancelled: true,
+				stripeTrial: false,
+			});
 			break;
 		}
-		
-		// case 'customer.subscription.trial_will_end': {
-		// 	break;
-		// }
-		
-		//TODO:
-		// case 'customer.subscription.deleted': {
-		// 	break;
-		// }
 
 		default: {
 			log(`Unhandled stripe webhook event type "${event.type}"`);
@@ -180,8 +182,8 @@ export async function hasPaymentMethod(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
 
-	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
-		limit: 3, //Just 1??
+	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
+		limit: 1,
 	});
 
 	const hasPaymentMethods = paymentMethods?.data?.length > 0;
@@ -193,7 +195,10 @@ export async function hasPaymentMethod(req, res, next) {
 
 export async function requestChangePlan(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
+
+	if (!STRIPE_WEBHOOK_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
@@ -241,14 +246,14 @@ export async function requestChangePlan(req, res, next) {
 		quantity: storage,
 	});
 
-	const createdCheckoutSession = await stripe.checkout.sessions.create({
+	const createdCheckoutSession = await StripeClient.get().checkout.sessions.create({
 		customer: stripeCustomerId,
 		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 		line_items: items.filter(i => i.quantity > 0),
 		currency: 'USD',
 		mode: 'subscription',
 	});
-	const checkoutSession = await stripe.checkout.sessions.retrieve(createdCheckoutSession.id, {
+	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(createdCheckoutSession.id, {
 		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
 	});
 
@@ -264,11 +269,14 @@ export async function requestChangePlan(req, res, next) {
 
 export async function confirmChangePlan(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+
+	if (!STRIPE_ACCOUNT_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let { stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
+	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -319,12 +327,12 @@ export async function confirmChangePlan(req, res, next) {
 		quantity: storage,
 	});
 
-	const paymentMethods = await stripe.customers.listPaymentMethods(stripeCustomerId, {
-		limit: 3
+	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
+		limit: 1,
 	});
 
 	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
-		const checkoutSession = await stripe.checkout.sessions.create({
+		const checkoutSession = await StripeClient.get().checkout.sessions.create({
 			ui_mode: 'embedded',
 			customer: stripeCustomerId,
 			redirect_on_completion: 'never',
@@ -334,8 +342,9 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
 
-	const subscription = await stripe.subscriptions.update(subscriptionId, {
-		items
+	const subscription = await StripeClient.get().subscriptions.update(subscriptionId, {
+		items,
+		...(stripeTrial === true ? { trial_end: 'now' } : {}),
 	});
 
 	// const notification = {
@@ -364,7 +373,10 @@ export async function confirmChangePlan(req, res, next) {
 
 export async function createPortalLink(req, res, next) {
 
-	if (!process.env['STRIPE_ACCOUNT_SECRET']) {
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+
+	if (!STRIPE_ACCOUNT_SECRET) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
@@ -374,7 +386,7 @@ export async function createPortalLink(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
 	}
 
-	const portalLink = await stripe.billingPortal.sessions.create({
+	const portalLink = await StripeClient.get().billingPortal.sessions.create({
 		customer: customerId,
 		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 	});
@@ -390,3 +402,17 @@ export async function createPortalLink(req, res, next) {
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 }
 
+export async function checkReady(req, res, next) {
+
+	const secretProvider = SecretProviderFactory.getSecretProvider();
+	const missingEnvs = [];
+
+	await Promise.all(stripeEnvs.map(async k => {
+		if (process.env[k] == null && (await secretProvider.getSecret(k)) == null) {
+			missingEnvs.push(k);
+		}
+	}));
+
+	return dynamicResponse(req, res, 200, { missingEnvs });
+
+}

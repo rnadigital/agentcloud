@@ -6,7 +6,7 @@ use std::sync::Arc;
 use async_openai::config::OpenAIConfig;
 use mongodb::Database;
 use ort::{CoreMLExecutionProvider, CUDAExecutionProvider, ExecutionProvider, ExecutionProviderDispatch, ROCmExecutionProvider};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc};
 use tokio::sync::RwLock;
 use tokio::task;
 use crate::init::env_variables::GLOBAL_DATA;
@@ -137,7 +137,7 @@ pub async fn embed_text(
                                 .with_max_elapsed_time(Some(std::time::Duration::from_secs(60)))
                                 .build();
                             if let Some(api_key) = model_obj.config.api_key {
-    	                        let mut config = OpenAIConfig::new()
+                                let mut config = OpenAIConfig::new()
                                     .with_api_key(api_key);
                                 if let Some(org_id) = model_obj.config.org_id {
                                     config = config.with_org_id(org_id)
