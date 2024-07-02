@@ -41,6 +41,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [description, setDescription] = useState('');
 	const [modelType, setModelType] = useState(ModelType.OPENAI);
+	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
@@ -162,19 +163,19 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 							</div>
 						</div>
 
-
 						<div className='sm:col-span-12'>
 							<ParameterForm 
 								readonly={false} 
-								parameters={[{}]} 
-								setParameters={() => {}} 
+								parameters={conversationStarters}
+								setParameters={setConversationStarters} 
 								title='Conversation Starters' 
 								disableTypes={true} 
 								disableDescription={true}
 								hideRequired={true} 
 								namePattern='[A-Z][A-Z0-9_]*'
-								namePlaceholder='Key must be uppercase seperated by underscores'
+								namePlaceholder=''
 								descriptionPlaceholder='Value'
+								addButtonText={'+'}
 							/>
 						</div>
 
