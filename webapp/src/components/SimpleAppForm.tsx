@@ -141,7 +141,7 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 				</div>
 
 				<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									App Name
@@ -189,8 +189,6 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 							/>
 						</div>
 
-						<hr className='col-span-12' />
-
 						{!newAgent && <AgentsSelect
 							agentChoices={agentChoices}
 							initialAgents={null}
@@ -200,6 +198,9 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 						/>}
 
 						{newAgent && <>
+
+							<hr className='col-span-12' />
+
 							<div className='sm:col-span-12'>
 								<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Agent Name

@@ -27,7 +27,7 @@ export default function ParameterForm({ parameters, setParameters, readonly, tit
 	};
 
 	return (
-		<div>				
+		<div className='mb-0'>
 			<label className='text-base font-semibold text-gray-900'>{title}</label>
 			{parameters.map((param, index) => (
 				<div key={index} className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-4'>
