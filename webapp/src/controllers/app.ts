@@ -166,7 +166,7 @@ export async function addAppApi(req, res, next) {
  */
 export async function addAppApiSimple(req, res, next) {
 
-	const { modelType, config, datasourceId, run }  = req.body;
+	const { conversationStarters, modelType, config, datasourceId, run }  = req.body;
 
 	//todo: validation
 

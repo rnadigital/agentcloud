@@ -5,10 +5,12 @@ import {
 	HandRaisedIcon,
 	PlayIcon
 } from '@heroicons/react/20/solid';
+import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
+import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import ParameterForm from 'components/ParameterForm';
 import { useAccountContext } from 'context/account';
@@ -30,8 +32,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFormData }
-	: { datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], callback, fetchFormData }
+	: { agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
@@ -42,6 +44,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 	const [description, setDescription] = useState('');
 	const [modelType, setModelType] = useState(ModelType.OPENAI);
 	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
+	const [systemMessage, setSystemMessage] = useState('');
 	const [error, setError] = useState();
 	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
@@ -56,6 +59,12 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 		};
 	}
 
+	const initialAgents = agentChoices && agentChoices.map(a => {
+		const oa = agentChoices.find(ai => ai._id === a);
+		return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
+	}).filter(n => n);
+	const [agentsState, setAgentsState] = useState(initialAgents || []);
+
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
@@ -64,7 +73,7 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 			modelType: modelType,
 			config: config,
 			datasourceId: datasourceState ? datasourceState?.value : null,
-			toolIds: [], //TODO
+			conversationStarters: conversationStarters.map(x => x?.name.trim()),
 			run,
 		};
 		API.addAppSimple(body, (res) => {
@@ -179,6 +188,46 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 							/>
 						</div>
 
+						<hr className='col-span-12' />
+
+						<AgentsSelect
+							agentChoices={agentChoices}
+							initialAgents={initialAgents}
+							onChange={agentsState => setAgentsState(agentsState)}
+							setModalOpen={setModalOpen}
+						/>
+
+						<div className='sm:col-span-12'>
+							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Agent Name
+							</label>
+							<input
+								required
+								type='text'
+								name='name'
+								id='name'
+								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							/>
+						</div>
+
+						<div className='sm:col-span-12 flex flex-row gap-4'>
+							<div className='w-full'>
+								<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									System Message
+								</label>
+								<textarea
+									name='systemMessage'
+									id='systemMessage'
+									value={systemMessage}
+									onChange={e => {
+										setSystemMessage(e.target.value);
+									}}
+									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									rows={3}
+								/>
+							</div>
+						</div>
+
 						<div className='sm:col-span-12'>
 							<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Model Type
@@ -207,59 +256,11 @@ export default function SimpleAppForm({ datasourceChoices=[], callback, fetchFor
 									<option value={ModelType.GROQ}>Groq</option>
 								</select>
 							</div>
-						</div>	
+						</div>
 
-						{ModelTypeRequirements[modelType] && Object.keys(ModelTypeRequirements[modelType]).length > 0 && <div className='sm:col-span-12'>
-							{Object.entries(ModelTypeRequirements[modelType]).filter(e => e[1]).map(([key, _], ei) => {
-								return (<div key={`modelName_${modelType}_${ei}`}>
-									<label htmlFor='modelName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-										{key}
-									</label>
-									<div className='mt-2'>
-										<input
-											type='text'
-											name={key}
-											id={key}
-											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-											onChange={e => setConfig(e.target)}
-											required
-											defaultValue={config[key]}
-										/>
-									</div>
-								</div>);
-							})}
-						</div>}
-						{ModelList[modelType]?.length > 0 && <div className='sm:col-span-12'>
-							<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-						            primaryColor={'indigo'}
-						            classNames={SelectClassNames}
-						            value={config?.model ? { label: config?.model, value: config?.model } : null}
-						            onChange={(v: any) => {
-				            			setConfig({
-											name: 'model',
-											value: v?.value,
-				            			});
-					            	}}
-						            options={ModelList && ModelList[modelType] && ModelList[modelType].filter(m => !ModelEmbeddingLength[m]).map(m => ({ label: m, value: m }))}
-						            formatOptionLabel={data => {
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>}
+						<div className='sm:col-span-12 space-y-6'>					
+							<ModelTypeRequirementsComponent type={modelType} config={config} setConfig={setConfig} />
+						</div>
 
 						<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

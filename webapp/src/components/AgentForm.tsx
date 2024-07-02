@@ -26,7 +26,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const [verbose, setVerbose] = useState(agent.verbose || false);
 	const [icon, setIcon] = useState(agent?.icon);
 	const [agentState, setAgent] = useState(agent);
-	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
+	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory, systemMessage } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 
@@ -63,6 +63,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
+			systemMessage: e.target.systemMessage.value,
 			iconId: icon?._id,
 		};
 		if (editing) {			
@@ -213,47 +214,51 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='col-span-full'>
+						<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							System Message
+						</label>
 						<div className='mt-2'>
-							<div className='sm:col-span-12'>
-								<label htmlFor='allowDelegation' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									<input
-										type='checkbox'
-										id='allowDelegation'
-										name='allowDelegation'
-										checked={allowDelegation}
-										onChange={e => setAllowDelegation(e.target.checked)}
-										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-									/>
-									Allow Delegation
-								</label>
-								<p className='mt-3 text-sm leading-6 text-gray-600'>Allow this agent to be assigned appropriate tasks automatically.</p>
-							</div>
+							<textarea
+								required
+								id='systemMessage'
+								name='systemMessage'
+								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								defaultValue={systemMessage}
+							/>
 						</div>
 					</div>
 				</div>
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='col-span-full'>
+					<div className='sm:col-span-12'>
+						<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							Tools
+						</label>
 						<div className='mt-2'>
-							<div className='sm:col-span-12'>
-								<label htmlFor='verbose' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									<input
-										type='checkbox'
-										id='verbose'
-										name='verbose'
-										checked={verbose}
-										onChange={e => setVerbose(e.target.checked)}
-										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-									/>
-									Verbose
-								</label>
-								<p className='mt-3 text-sm leading-6 text-gray-600'>Enables detailed logging of the agent&apos;s execution for debugging or monitoring purposes when enabled.</p>
-							</div>
+							<Select
+								isMultiple
+								isClearable
+								primaryColor={'indigo'}
+								classNames={SelectClassNames}
+								value={toolState}
+								onChange={(v: any) => setToolState(v)}
+								options={tools.map(c => ({ label: c.name, value: c._id }))}
+								formatOptionLabel={data => {
+									const optionCred = tools.find(oc => oc._id === data.value);
+									return (<li
+										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+											data.isSelected
+												? 'bg-blue-100 text-blue-500'
+												: 'dark:text-white'
+										}`}
+									>
+										{data.label} {optionCred ? `(${optionCred?.type})` : null}
+									</li>);
+								}}
+							/>
 						</div>
 					</div>
-				</div>
-
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+				
 					<div className='sm:col-span-12'>
 						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Model
@@ -292,76 +297,83 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 							/>
 						</div>
 					</div>
-
-					<div className='sm:col-span-12'>
-						<label htmlFor='functionModelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Function Calling Model (Optional)
-						</label>
-						<div className='mt-2'>
-							<Select
-								isClearable
-								primaryColor={'indigo'}
-								classNames={SelectClassNames}
-								value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
-								onChange={(v: any) => {
-									if (v?.value === null) {
-										setModalOpen('model');
-										return setCallbackKey('functionModelId');
-									}
-									setAgent(oldAgent => {
-										return {
-											...oldAgent,
-											functionModelId: v?.value,
-										};
-									});
-								}}
-								options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
-								formatOptionLabel={data => {
-									const optionCred = models.find(oc => oc._id === data.value);
-									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
-												? 'bg-blue-100 text-blue-500'
-												: 'dark:text-white'
-										}`}
-									>
-										{data.label} {optionCred ? `(${optionCred?.model})` : null}
-									</li>);
-								}}
-							/>
-						</div>
-					</div>
-
-					<div className='sm:col-span-12'>
-						<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Tools (Optional)
-						</label>
-						<div className='mt-2'>
-							<Select
-								isMultiple
-								isClearable
-								primaryColor={'indigo'}
-								classNames={SelectClassNames}
-								value={toolState}
-								onChange={(v: any) => setToolState(v)}
-								options={tools.map(c => ({ label: c.name, value: c._id }))}
-								formatOptionLabel={data => {
-									const optionCred = tools.find(oc => oc._id === data.value);
-									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
-												? 'bg-blue-100 text-blue-500'
-												: 'dark:text-white'
-										}`}
-									>
-										{data.label} {optionCred ? `(${optionCred?.type})` : null}
-									</li>);
-								}}
-							/>
-						</div>
-					</div>
-
+					
 				</div>
+
+				<details>
+					<summary className='cursor-pointer mb-4'>Advanced</summary>
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+
+						<div className='sm:col-span-12'>
+							<label htmlFor='functionModelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Function Calling Model
+							</label>
+							<div className='mt-2'>
+								<Select
+									isClearable
+									primaryColor={'indigo'}
+									classNames={SelectClassNames}
+									value={foundFunctionModel ? { label: foundFunctionModel.name, value: foundFunctionModel._id } : null}
+									onChange={(v: any) => {
+										if (v?.value === null) {
+											setModalOpen('model');
+											return setCallbackKey('functionModelId');
+										}
+										setAgent(oldAgent => {
+											return {
+												...oldAgent,
+												functionModelId: v?.value,
+											};
+										});
+									}}
+									options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
+									formatOptionLabel={data => {
+										const optionCred = models.find(oc => oc._id === data.value);
+										return (<li
+											className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
+												data.isSelected
+													? 'bg-blue-100 text-blue-500'
+													: 'dark:text-white'
+											}`}
+										>
+											{data.label} {optionCred ? `(${optionCred?.model})` : null}
+										</li>);
+									}}
+								/>
+							</div>
+						</div>
+
+						<div className='sm:col-span-12'>
+							<label htmlFor='verbose' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								<input
+									type='checkbox'
+									id='verbose'
+									name='verbose'
+									checked={verbose}
+									onChange={e => setVerbose(e.target.checked)}
+									className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+								/>
+								Verbose
+							</label>
+							<p className='mt-3 text-sm leading-6 text-gray-600'>Enables detailed logging of the agent&apos;s execution for debugging or monitoring purposes when enabled.</p>
+						</div>
+
+						<div className='sm:col-span-12'>
+							<label htmlFor='allowDelegation' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								<input
+									type='checkbox'
+									id='allowDelegation'
+									name='allowDelegation'
+									checked={allowDelegation}
+									onChange={e => setAllowDelegation(e.target.checked)}
+									className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+								/>
+								Allow Delegation
+							</label>
+							<p className='mt-3 text-sm leading-6 text-gray-600'>Allow this agent to be assigned appropriate tasks automatically.</p>
+						</div>
+					</div>
+				</details>
 
 			</div>
 
