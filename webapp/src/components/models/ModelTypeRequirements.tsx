@@ -7,8 +7,8 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
 	const { requiredFields, optionalFields } = Object
 		.entries(ModelTypeRequirements[type])
 		.filter(e => e[1])
-		.reduce((acc, x) => {
-			if (x[1].optional === true) {
+		.reduce((acc, x): any => {
+			if (x[1]['optional'] === true) {
 				acc.optionalFields.push(x);
 			} else {
 				acc.requiredFields.push(x);

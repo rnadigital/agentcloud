@@ -1,3 +1,6 @@
+import {
+	TrashIcon,
+} from '@heroicons/react/20/solid';
 import React from 'react';
 
 export default function ParameterForm({ parameters, setParameters, readonly, title = 'Parameters',
@@ -76,7 +79,7 @@ export default function ParameterForm({ parameters, setParameters, readonly, tit
 							onClick={() => removeParameter(index)}
 							className='text-red-500 hover:text-red-700'
 						>
-							Remove
+							<TrashIcon className='h-5' />
 						</button>}
 					</div>
 				</div>

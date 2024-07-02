@@ -2,8 +2,8 @@ import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 
-export default function AgentsSelect({ agentChoices, initialAgents, onChange, setModalOpen, multiple }
-	: { agentChoices: any[], initialAgents: any[], onChange: Function, setModalOpen: Function, multiple?: boolean }) {
+export default function AgentsSelect({ agentChoices, initialAgents, onChange, setModalOpen, multiple, disabled }
+	: { agentChoices: any[], initialAgents: any[], onChange: Function, setModalOpen: Function, multiple?: boolean, disabled?: boolean }) {
 	const [agentsState, setAgentsState] = useState(initialAgents || (multiple ? [] : null));
 
 	useEffect(() => {
@@ -17,7 +17,8 @@ export default function AgentsSelect({ agentChoices, initialAgents, onChange, se
 			</label>
 			<div className='mt-2'>
 				<Select
-					isMultiple={multiple}
+					isDisabled={disabled === true}
+					isMultiple={multiple === true}
 					isSearchable
 					primaryColor={'indigo'}
 					classNames={{

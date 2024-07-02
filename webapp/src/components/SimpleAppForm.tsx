@@ -160,6 +160,7 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 									App Description
 								</label>
 								<textarea
+									required
 									name='description'
 									id='description'
 									value={description}
@@ -190,13 +191,13 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 
 						<hr className='col-span-12' />
 
-						<AgentsSelect
+						{!newAgent && <AgentsSelect
 							agentChoices={agentChoices}
 							initialAgents={null}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={() => setNewAgent(_newAgent => !_newAgent)}
 							multiple={false}
-						/>
+						/>}
 
 						{newAgent && <>
 							<div className='sm:col-span-12'>
@@ -273,6 +274,14 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 		                            addNewCallback={setModalOpen}
 		                        />
 							</div>
+
+							<button
+								className='rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 inline-flex items-center'
+								onClick={() => setNewAgent(_newAgent => !_newAgent)}
+							>
+								Cancel
+							</button>
+
 						</>}
 
 					</div>
