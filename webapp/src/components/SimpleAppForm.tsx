@@ -174,11 +174,14 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 						</div>
 
 						<div className='sm:col-span-12'>
+							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								Conversation Starters
+							</label>
 							<ParameterForm 
 								readonly={false} 
 								parameters={conversationStarters}
 								setParameters={setConversationStarters} 
-								title='Conversation Starters' 
+								title={null}
 								disableTypes={true} 
 								disableDescription={true}
 								hideRequired={true} 
