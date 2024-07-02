@@ -1,13 +1,13 @@
 use std::sync::Arc;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
+use crossbeam::channel::Sender;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{RwLock};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::tasks::process_message;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
-use crate::queue::queuing::Pool;
 use crate::rabbitmq::client::{bind_queue_to_exchange};
 use log::{warn, error};
 
@@ -53,14 +53,17 @@ pub async fn rabbit_consume(
     streaming_queue: &Channel,
     qdrant_client: Arc<RwLock<QdrantClient>>,
     mongo_client: Arc<RwLock<Database>>,
-    queue: Arc<RwLock<Pool<String>>>,
-    queue_name: String,
+    sender: Arc<RwLock<Sender<(String, String)>>>,
 ) {
-    let args = BasicConsumeArguments::new(queue_name.as_str(), "");
+    println!("Consuming from RabbitMQ");
+    let global_data = GLOBAL_DATA.read().await;
+    let queue_name = global_data.rabbitmq_stream.as_str();
+    let args = BasicConsumeArguments::new(queue_name, "");
     loop {
         match streaming_queue.basic_consume_rx(args.clone()).await {
             Ok((_, mut messages_rx)) => {
                 while let Some(message) = messages_rx.recv().await {
+                    println!("received something!");
                     let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = streaming_queue.basic_ack(args).await;
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
@@ -74,10 +77,10 @@ pub async fn rabbit_consume(
                                     let mut stream_type: Option<String> = None;
                                     let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
                                     if let Some(s) = stream_type_field_value { stream_type = Some(s.to_string()); }
-                                    let queue = Arc::clone(&queue);
+                                    let sender_clone = Arc::clone(&sender);
                                     let qdrant_client = Arc::clone(&qdrant_client);
                                     let mongo_client = Arc::clone(&mongo_client);
-                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
+                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, sender_clone).await;
                                 }
                             }
                         }

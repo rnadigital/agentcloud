@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crossbeam::channel::{Sender};
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::PointStruct;
@@ -12,8 +13,7 @@ use crate::mongo::models::ChunkingStrategy;
 use crate::mongo::queries::{get_datasource, get_embedding_model};
 use crate::qdrant::helpers::construct_point_struct;
 use crate::qdrant::utils::Qdrant;
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
-use crate::queue::queuing::Pool;
+use crate::messages::task_handoff::send_task;
 use crate::rabbitmq::models::RabbitConnect;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
@@ -49,7 +49,8 @@ pub async fn get_message_queue(
     }
 }
 
-pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>) {
+pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>) {
+    println!("process_message");
     let mongodb_connection = mongo_client.read().await;
     match get_datasource(&mongodb_connection, datasource_id).await {
         Ok(datasource) => {
@@ -62,13 +63,10 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                             match file_operations::read_file_from_source(Some(stream_type.to_string()), message_data).await {
                                 Some((file_type, file, file_path)) => {
                                     save_file_to_disk(file, file_path.as_str()).await.unwrap();
-                                    let message_queue = Arc::clone(&queue);
-                                    let qdrant_conn = Arc::clone(&qdrant_client);
-                                    let mongo_conn = Arc::clone(&mongo_client);
-                                    // let redis_conn = Arc::clone(&redis_connection_pool);
                                     let datasource_clone = ds.clone();
+                                    let sender_clone = Arc::clone(&sender);
                                     let (document_text, metadata) =
-                                        extract_text_from_file(file_type, file_path.as_str(), ds.originalName, datasource_id.to_string(), message_queue, qdrant_conn, mongo_conn).await.unwrap();
+                                        extract_text_from_file(file_type, file_path.as_str(), ds.originalName, datasource_id.to_string(), sender_clone).await.unwrap();
                                     // dynamically get user's chunking strategy of choice from the database
                                     let model_obj_clone = model_parameters.clone();
                                     let model_name = model_obj_clone.model;
@@ -122,10 +120,7 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                         }
                     } else {
                         // This is where data is coming from airbyte rather than a direct file upload
-                        let message_queue = Arc::clone(&queue);
-                        let qdrant_conn = Arc::clone(&qdrant_client);
-                        let mongo_conn = Arc::clone(&mongo_client);
-                        let _ = add_message_to_embedding_queue(message_queue, qdrant_conn, mongo_conn, (datasource_id.to_string(), message_string)).await;
+                        let _ = send_task(sender, (datasource_id.to_string(), message_string)).await;
                     }
                 }
             } else {

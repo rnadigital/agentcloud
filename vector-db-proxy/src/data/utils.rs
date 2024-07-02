@@ -4,15 +4,14 @@ use std::fs;
 use std::sync::Arc;
 use actix_web::dev::ResourcePath;
 use anyhow::anyhow;
+use crossbeam::channel::Sender;
 use mongodb::Database;
-use qdrant_client::client::QdrantClient;
 use tokio::sync::RwLock;
 use crate::data::text_extraction::TextExtraction;
 use crate::data::models::{Document as DocumentModel, Document, FileType, Sentence};
 use crate::data::text_splitting::TextSplitting;
 use crate::llm::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
-use crate::queue::queuing::Pool;
 
 pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();
@@ -67,10 +66,7 @@ pub async fn extract_text_from_file(
     file_path: &str,
     document_name: String,
     datasource_id: String,
-    queue: Arc<RwLock<Pool<String>>>,
-    qdrant_conn: Arc<RwLock<QdrantClient>>,
-    mongo_conn: Arc<RwLock<Database>>,
-    // redis_conn_pool: Arc<Mutex<RedisConnection>>,
+    sender: Arc<RwLock<Sender<(String, String)>>>,
 ) -> Option<(String, Option<HashMap<String, String>>)> {
     let mut document_text = String::new();
     let mut metadata = HashMap::new();
@@ -100,10 +96,7 @@ pub async fn extract_text_from_file(
             _ = chunker.extract_text_from_csv(
                 path_clone,
                 datasource_id,
-                queue,
-                qdrant_conn,
-                mongo_conn,
-                // redis_conn_pool,
+                sender,
             );
             None
         },

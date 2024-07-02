@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crossbeam::channel::{Sender};
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
@@ -6,7 +7,6 @@ use tokio::sync::{Mutex, RwLock};
 use crate::gcp::pubsub::subscribe_to_topic;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
-use crate::queue::queuing::Pool;
 use futures::StreamExt;
 use crate::messages::tasks::process_message;
 
@@ -37,7 +37,8 @@ impl MessageQueueConnection for PubSubConnect {
     }
 }
 
-pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, queue: Arc<RwLock<Pool<String>>>) {
+pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Arc<RwLock<Sender<(String, String)>>>) {
+    println!("Consuming from Pub/Sub");
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
             println!("Received Message. Processing...");
@@ -48,13 +49,13 @@ pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: A
                     Some(stream) => {
                         let mut stream_type: Option<String> = None;
                         if let Some(s) = message_attributes.get("type") { stream_type = Some(s.to_owned()); }
-                        let queue = Arc::clone(&queue);
                         let qdrant_client = Arc::clone(&qdrant_client);
                         let mongo_client = Arc::clone(&mongo_client);
                         let stream_string: String = stream.to_string();
                         let stream_split: Vec<&str> = stream_string.split('_').collect();
                         let datasource_id = stream_split.to_vec()[0];
-                        process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, queue).await;
+                        let sender = Arc::clone(&sender);
+                        process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, sender).await;
                     }
                     None => { log::warn!("No stream ID present in message. Can not proceed") }
                 }

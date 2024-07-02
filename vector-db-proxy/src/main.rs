@@ -11,7 +11,6 @@ mod init;
 mod llm;
 mod mongo;
 mod qdrant;
-mod queue;
 mod rabbitmq;
 mod routes;
 mod utils;
@@ -20,7 +19,6 @@ mod messages;
 
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::{Arc};
-
 use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
@@ -28,15 +26,15 @@ use anyhow::Context;
 use env_logger::Env;
 use tokio::signal;
 use tokio::sync::{RwLock};
-
+use crossbeam::channel;
 use crate::init::env_variables::set_all_env_vars;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, health_check,
     list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
+use crate::data::processing_incoming_messages::process_incoming_messages;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::mongo::client::start_mongo_connection;
-use crate::queue::queuing::Pool;
 use crate::messages::tasks::get_message_queue;
 
 pub fn init(config: &mut web::ServiceConfig) {
@@ -71,6 +69,7 @@ async fn main() -> std::io::Result<()> {
     let logging_level = global_data.logging_level.clone();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
+    let (s, r) = channel::unbounded::<(String, String)>();
     let message_queue_provider = MessageQueueProvider::from(global_data.message_queue_provider.clone());
 
     // Instantiate client connections
@@ -82,21 +81,33 @@ async fn main() -> std::io::Result<()> {
         }
     };
     let mongo_connection = start_mongo_connection().await.unwrap();
-    // create Arcs to allow sending across threads 
+    // Create Arcs to allow sending across threads 
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
-    let queue: Arc<RwLock<Pool<String>>> = Arc::new(RwLock::new(Pool::optimised(global_data.thread_percentage_utilisation)));
 
-    // Clone all Arcs so that threads can have a copy
-    let queue_clone = Arc::clone(&queue);
+    // Clones for senders
     let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
+    // Clones for receivers
+    let mongo_client_clone = Arc::clone(&app_mongo_client);
+    let qdrant_client_clone = Arc::clone(&app_qdrant_client);
+
+    // Clones of the receiver and sender so that they can be sent to the right threads
+    let receiver_clone = Arc::new(RwLock::new(r));
+    let sender_clone = Arc::new(RwLock::new(s));
+
     let connection = get_message_queue(message_queue_provider).await;
 
+    // Thread to read messages from message queue and pass them to channel for processing
     let subscribe_to_message_stream = tokio::spawn(async move {
-        connection.consume(connection.clone(), qdrant_connection_for_streaming, mongo_client_for_streaming, queue_clone, global_data.rabbitmq_stream.as_str()).await;
+        connection.consume(connection.clone(), qdrant_connection_for_streaming, mongo_client_for_streaming, sender_clone).await;
     });
+    // Thread for receiving messages in channel and processing them across workers
+    let receive_from_channel = tokio::spawn(async move {
+        process_incoming_messages(receiver_clone.clone(), qdrant_client_clone, mongo_client_clone).await;
+    });
+
 
     // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
@@ -119,6 +130,7 @@ async fn main() -> std::io::Result<()> {
     tokio::select! {
         _ = web_task => log::info!("Web server task completed"),
         _ = subscribe_to_message_stream => log::info!("Message stream task completed"),
+        _ = receive_from_channel => log::info!("Message processing task completed"),
         _ = signal::ctrl_c() => {
             log::info!("Received Ctrl+C, shutting down");
         }
