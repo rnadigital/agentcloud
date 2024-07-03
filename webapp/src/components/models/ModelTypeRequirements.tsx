@@ -35,11 +35,6 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
 	};
 	return (
 		<>
-			{requiredFields.map(renderInput)}
-			{optionalFields.length > 0 && <details>
-				<summary className='cursor-pointer'>Optional fields</summary>
-				{optionalFields.map(renderInput)}
-			</details>}
 			{ModelList[type]?.length > 0 && (
 				<div className='sm:col-span-12'>
 					<label htmlFor='model' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -71,6 +66,11 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
 					</div>
 				</div>
 			)}
+			{requiredFields.map(renderInput)}
+			{optionalFields.length > 0 && <details>
+				<summary className='cursor-pointer'>Optional fields</summary>
+				{optionalFields.map(renderInput)}
+			</details>}
 		</>
 	);
 };
