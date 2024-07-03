@@ -4,6 +4,7 @@ import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
+import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -25,7 +26,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const [verbose, setVerbose] = useState(agent.verbose || false);
 	const [icon, setIcon] = useState(agent?.icon);
 	const [agentState, setAgent] = useState(agent);
-	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory, systemMessage } = agentState;
+	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 
@@ -62,7 +63,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
 			toolIds: toolState ? toolState.map(t => t.value) : [],
-			systemMessage: e.target.systemMessage.value,
 			iconId: icon?._id,
 		};
 		if (editing) {			
@@ -157,61 +157,48 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 					</div>
 				</div>
 
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='col-span-full'>
-						<label htmlFor='role' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Role
-						</label>
-						<div className='mt-2'>
-							<textarea
-								required
-								id='role'
-								name='role'
-								placeholder='Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={role}
-							/>
-						</div>
+				<div className='isolate space-y-px rounded-md shadow-sm'>
+					<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mb-2'>
+						System Message
+					</label>
+					<div className='relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label htmlFor='role' className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>Role</label>
+						<textarea
+							required
+							id='role'
+							name='role'
+							placeholder='Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.'
+							className='relative block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							defaultValue={role}
+							rows={3}
+						/>
+					</div>
+					<div className='relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label htmlFor='goal' className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>Goal</label>
+						<textarea
+							required
+							id='goal'
+							name='goal'
+							placeholder='The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.'
+							className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							defaultValue={goal}
+							rows={2}
+						/>
+					</div>
+					<div className='relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<label htmlFor='backstory' className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>Backstory</label>
+						<textarea
+							required
+							id='backstory'
+							name='backstory'
+							placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
+							className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							defaultValue={backstory}
+						/>
 					</div>
 				</div>
 
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='col-span-full'>
-						<label htmlFor='goal' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Goal
-						</label>
-						<div className='mt-2'>
-							<textarea
-								required
-								id='goal'
-								name='goal'
-								placeholder='The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={goal}
-							/>
-						</div>
-					</div>
-				</div>
-
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='col-span-full'>
-						<label htmlFor='backstory' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Backstory
-						</label>
-						<div className='mt-2'>
-							<textarea
-								required
-								id='backstory'
-								name='backstory'
-								placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={backstory}
-							/>
-						</div>
-					</div>
-				</div>
-
-				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
+				{/*<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 					<div className='col-span-full'>
 						<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							System Message
@@ -223,40 +210,20 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 								name='systemMessage'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={systemMessage}
+								placeholder='Enter the system message that will guide the language model. For example: "You are a helpful assistant who provides accurate information and helpful suggestions."'
 							/>
 						</div>
 					</div>
-				</div>
+				</div>*/}
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='sm:col-span-12'>
-						<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Tools
-						</label>
-						<div className='mt-2'>
-							<Select
-								isMultiple
-								isClearable
-								primaryColor={'indigo'}
-								classNames={SelectClassNames}
-								value={toolState}
-								onChange={(v: any) => setToolState(v)}
-								options={tools.map(c => ({ label: c.name, value: c._id }))}
-								formatOptionLabel={data => {
-									const optionCred = tools.find(oc => oc._id === data.value);
-									return (<li
-										className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
-											data.isSelected
-												? 'bg-blue-100 text-blue-500'
-												: 'dark:text-white'
-										}`}
-									>
-										{data.label} {optionCred ? `(${optionCred?.type})` : null}
-									</li>);
-								}}
-							/>
-						</div>
-					</div>
+
+					<ToolsSelect
+						tools={tools}
+						initialTools={initialTools}
+						onChange={toolState => setToolState(toolState)}
+						setModalOpen={setModalOpen}
+					/>
 				
 					<div className='sm:col-span-12'>
 						<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -280,7 +247,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 										};
 									});
 								}}
-								options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id })).concat([{ label: '+ New model', value: null }])}
+								options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name||c._id, value: c._id })).concat([{ label: '+ New model', value: null }])}
 								formatOptionLabel={data => {
 									const optionCred = models.find(oc => oc._id === data.value);
 									return (<li
@@ -290,7 +257,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 												: 'dark:text-white'
 										}`}
 									>
-										{data.label} {optionCred ? `(${optionCred?.model})` : null}
+										{data?.label} {optionCred ? `(${optionCred?.model})` : null}
 									</li>);
 								}}
 							/>
