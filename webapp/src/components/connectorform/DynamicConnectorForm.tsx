@@ -14,15 +14,22 @@ interface DynamicFormProps {
 }
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
+const ISODateSixPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}Z$';
 
-function findPattern(obj: any): 'pattern1' | 'pattern2' | null {
-	if (typeof obj !== 'object' || obj === null) { return null; }
+function findPattern(obj: any): 'ISODatePattern' | 'ISODateSixPattern' | null {
+	if (typeof obj !== 'object' || obj === null) { 
+		return null; 
+	}
 
 	for (const key in obj) {
 		if (key === 'pattern') {
-
-			if (obj[key] === ISODatePattern) {
-				return 'pattern1';
+			switch (obj[key]) {
+				case ISODatePattern:
+					return 'ISODatePattern';
+				case ISODateSixPattern:
+					return 'ISODateSixPattern';
+				default:
+					return null;
 			}
 		}
 		if (typeof obj[key] === 'object') {
@@ -35,12 +42,21 @@ function findPattern(obj: any): 'pattern1' | 'pattern2' | null {
 	return null;
 }
 
-function updateDateStrings(obj: any) {
+function updateDateStrings(obj: any, pattern: 'ISODatePattern' | 'ISODateSixPattern') {
 	Object.keys(obj).forEach(key => {
 		if (typeof obj[key] === 'object') {
-			updateDateStrings(obj[key]);
+			updateDateStrings(obj[key], pattern);
 		} else if (typeof obj[key] === 'string') {
-			obj[key] = obj[key].replace(/\.000Z$/, 'Z');
+			switch (pattern) {
+				case 'ISODatePattern':
+					obj[key] = obj[key].replace(/\.000Z$/, 'Z');
+					break;
+				case 'ISODateSixPattern':
+					obj[key] = obj[key].replace(/\.000Z$/, '.000000Z');
+					break;
+				default:
+					break;
+			}
 		}
 	});
 }
@@ -48,13 +64,20 @@ function updateDateStrings(obj: any) {
 const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProps) => {
 	const { handleSubmit } = useFormContext();
 	const [submitting, setSubmitting] = useState(false);
+	console.log('schema', schema);
 
 	const onSubmit = async (data: FieldValues) => {
-
-		// updateDateStrings(req.body.sourceConfig);
-		if (findPattern(schema) === 'pattern1') {
-			updateDateStrings(data);
+		switch (findPattern(schema)) {
+			case 'ISODatePattern':
+				updateDateStrings(data, 'ISODatePattern');
+				break;
+			case 'ISODateSixPattern':
+				updateDateStrings(data, 'ISODateSixPattern');
+				break;
+			default:
+				break;
 		}
+
 		setSubmitting(true);
 		await datasourcePost(data);
 		setSubmitting(false);
