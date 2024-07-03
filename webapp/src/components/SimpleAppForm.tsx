@@ -48,24 +48,13 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [newAgent, setNewAgent]: any = useState(false);
+	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
-	const [modelType, setModelType] = useState(ModelType.OPENAI);
 	const [modelId, setModelId] = useState(null);
 	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
-	const [agentName, setAgentName] = useState('');
-	const [systemMessage, setSystemMessage] = useState('');
 	const [error, setError] = useState();
 	const [run, setRun] = useState(false);
 	const [icon, setIcon] = useState(null);
-	const [config, setConfig] = useReducer(configReducer, {
-		model: 'gpt-4o',
-	});
-	function configReducer(state, action) {
-		return {
-			...state,
-			[action.name]: action.value
-		};
-	}
 
 	// TODO: initial agent and tool state once editing is added
 	// const initialDatasources ...
@@ -86,22 +75,25 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
+			name,
 			resourceSlug,
-			modelType: modelType,
+			modelId,
 			config: config,
 			datasourceId: datasourceState ? datasourceState?.value : null,
-			conversationStarters: conversationStarters.map(x => x?.name.trim()),
+			toolIds: toolState?.map(x => x.value),
+			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
 			run,
 		};
-		API.addAppSimple(body, (res) => {
-			if (run === true) {
-				API.addSession({
-					_csrf: e.target._csrf.value,
-					resourceSlug,
-					id: res._id,
-				}, null, setError, router);
-			}
-		}, toast.error, router);
+		console.log(JSON.stringify(body, null, '\t'));
+		// API.addAppSimple(body, (res) => {
+		// 	if (run === true) {
+		// 		API.addSession({
+		// 			_csrf: e.target._csrf.value,
+		// 			resourceSlug,
+		// 			id: res._id,
+		// 		}, null, setError, router);
+		// 	}
+		// }, toast.error, router);
 	}
 
 	const iconCallback = async (addedIcon) => {
@@ -127,7 +119,7 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 	async function toolCallback(addedToolId, addedTool) {
 		console.log('addedToolId', addedToolId);
 		await fetchFormData && fetchFormData();
-		setToolState({ label: addedTool.name, value: addedToolId });
+		setToolState(oldToolState => (oldToolState||[]).concat([{ label: addedTool.name, value: addedToolId }]));
 		setModalOpen(false);
 	}
 
@@ -196,6 +188,10 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 								type='text'
 								name='name'
 								id='name'
+								value={name}
+								onChange={e => {
+									setName(e.target.value);
+								}}
 								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
 						</div>
@@ -305,39 +301,6 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 								</div>
 							</div>
 
-							{/*<div className='sm:col-span-12'>
-								<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Model Type
-								</label>
-								<div className='mt-2'>
-									<select
-										required
-										id='type'
-										name='type'
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-										value={modelType}
-										onChange={(e: any) => {
-											setModelType(e.target.value);
-											setConfig({
-												name: 'model',
-												value: null,
-											});
-										}}
-									>
-										<option disabled value=''>Select a type...</option>
-										<option value={ModelType.OPENAI}>OpenAI</option>
-										<option value={ModelType.OLLAMA}>Ollama</option>
-										<option value={ModelType.COHERE}>Cohere</option>
-										<option value={ModelType.ANTHROPIC}>Anthropic</option>
-										<option value={ModelType.GROQ}>Groq</option>
-									</select>
-								</div>
-							</div>
-
-							<div className='sm:col-span-12 space-y-6'>					
-								<ModelTypeRequirementsComponent type={modelType} config={config} setConfig={setConfig} />
-							</div>*/}
-
 							<ModelSelect
 								models={modelChoices}
 								initialModelId={modelId}
@@ -355,6 +318,8 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 								Cancel
 							</button>
 
+							<hr className='col-span-12' />
+
 						</>}
 
 						<ToolsSelect
@@ -362,6 +327,7 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 							initialTools={null}
 							onChange={toolState => setToolState(toolState)}
 							setModalOpen={setModalOpen}
+							enableAddNew={false}
 						/>
 
 						<div className='sm:col-span-12'>
