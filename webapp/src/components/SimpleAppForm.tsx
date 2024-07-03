@@ -48,7 +48,11 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [newAgent, setNewAgent]: any = useState(false);
-	const [name, setName] = useState('');
+	const [appName, setAppName] = useState('');
+	const [agentName, setAgentName] = useState('');
+	const [role, setRole] = useState('');
+	const [goal, setGoal] = useState('');
+	const [backstory, setBackstory] = useState('');
 	const [description, setDescription] = useState('');
 	const [modelId, setModelId] = useState(null);
 	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
@@ -77,12 +81,20 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 			_csrf: e.target._csrf.value,
 			name,
 			resourceSlug,
-			modelId,
-			config: config,
-			datasourceId: datasourceState ? datasourceState?.value : null,
-			toolIds: toolState?.map(x => x.value),
+			appName,
+			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
+			toolIds: toolState?.map(x => x.value),
+			datasourceId: datasourceState ? datasourceState?.value : null,
 			run,
+			//existing agent
+			agentId: agentsState ? agentsState.value : null,
+			//add new
+			agentName,
+			role,
+			goal,
+			backstory,
+			modelId,
 		};
 		console.log(JSON.stringify(body, null, '\t'));
 		// API.addAppSimple(body, (res) => {
@@ -180,17 +192,17 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 				<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
-							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label htmlFor='appName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								App Name
 							</label>
 							<input
 								required
 								type='text'
-								name='name'
-								id='name'
-								value={name}
+								name='appName'
+								id='appName'
+								value={appName}
 								onChange={e => {
-									setName(e.target.value);
+									setAppName(e.target.value);
 								}}
 								className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							/>
@@ -226,7 +238,6 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 								disableTypes={true} 
 								disableDescription={true}
 								hideRequired={true} 
-								namePattern='[A-Z][A-Z0-9_]*'
 								namePlaceholder=''
 								descriptionPlaceholder='Value'
 								addButtonText={'+'}
@@ -246,15 +257,19 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 							<hr className='col-span-12' />
 
 							<div className='sm:col-span-12'>
-								<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+								<label htmlFor='agentName' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Agent Name
 								</label>
 								<input
 									required
 									type='text'
-									name='name'
-									id='name'
+									name='agentName'
+									id='agentName'
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									value={agentName}
+									onChange={e => {
+										setAgentName(e.target.value);
+									}}
 								/>
 							</div>
 
@@ -271,8 +286,11 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 											name='role'
 											placeholder='Defines the agent&apos;s function within the crew. It determines the kind of tasks the agent is best suited for.'
 											className='relative block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-											// defaultValue={role}
 											rows={3}
+											value={role}
+											onChange={e => {
+												setRole(e.target.value);
+											}}
 										/>
 									</div>
 									<div className='relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
@@ -283,8 +301,11 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 											name='goal'
 											placeholder='The individual objective that the agent aims to achieve. It guides the agent&apos;s decision-making process.'
 											className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-											// defaultValue={goal}
 											rows={2}
+											value={goal}
+											onChange={e => {
+												setGoal(e.target.value);
+											}}
 										/>
 									</div>
 									<div className='relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
@@ -295,7 +316,11 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 											name='backstory'
 											placeholder='Provides context to the agent&apos;s role and goal, enriching the interaction and collaboration dynamics.'
 											className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-											// defaultValue={backstory}
+											rows={2}
+											value={backstory}
+											onChange={e => {
+												setBackstory(e.target.value);
+											}}
 										/>
 									</div>
 								</div>

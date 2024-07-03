@@ -26,5 +26,7 @@ export type App = {
 	cache?: boolean;
 	//AppType.CHAT
 	agentId?: ObjectId;
-	conversationStarters?: string
+	conversationStarters?: string;
+	toolIds?: ObjectId[];
+	datasourceId?: ObjectId[];
 };

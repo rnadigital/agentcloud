@@ -37,6 +37,7 @@ export default function ParameterForm({ parameters, setParameters, readonly, tit
 						placeholder={namePlaceholder}
 						pattern={namePattern}
 						value={param.name}
+						required
 						onChange={(e) => updateParameter(index, 'name', e.target.value)}
 						className={`${disableDescription ? 'col-span-3' : ''} rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
 					/>
