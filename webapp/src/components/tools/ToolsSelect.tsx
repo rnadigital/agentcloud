@@ -1,3 +1,6 @@
+import {
+	ArrowPathIcon,
+} from '@heroicons/react/20/solid';
 import ToolSelectIcons from 'components/ToolSelectIcons';
 import ToolStateBadge from 'components/ToolStateBadge';
 import React, { useEffect, useState } from 'react';
@@ -5,7 +8,7 @@ import Select from 'react-tailwindcss-select';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ToolsSelect({ tools, initialTools, onChange, setModalOpen }) {
+export default function ToolsSelect({ tools, initialTools, onChange, setModalOpen, enableAddNew=true }) {
 	const [toolState, setToolState] = useState(initialTools || null);
 
 	useEffect(() => {
@@ -25,8 +28,7 @@ export default function ToolsSelect({ tools, initialTools, onChange, setModalOpe
 					primaryColor={'indigo'}
 					classNames={SelectClassNames}
 					value={toolState}
-					onChange={(v) => {
-						console.log(v);
+					onChange={(v: any) => {
 						// if (v?.some(val => val?.disabled)) { return; }
 						if (v?.some(val => val.value === null)) {
 							setModalOpen('tool');
@@ -38,11 +40,11 @@ export default function ToolsSelect({ tools, initialTools, onChange, setModalOpe
 						label: tool.name,
 						value: tool._id,
 						disabled: false, //tool.state && tool.state !== 'READY',
-					})).concat([{
+					})).concat(enableAddNew ? [{
 						label: '+ New Tool',
 						value: null,
 						disabled: false,
-					}])}
+					}] : [])}
 					formatOptionLabel={data => {
 						const optionTool = tools.find(tool => tool._id === data.value);
 						const isReady = true; //!optionTool?.state || optionTool?.state as ToolState === ToolState.READY;
