@@ -455,7 +455,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 					setStep(4);
 				}}>
 					<StreamsList
-						streams={discoveredSchema.catalog.streams}
+						streams={discoveredSchema.catalog?.streams}
 					/>
 					<div className='flex justify-end'>
 						<button

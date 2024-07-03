@@ -119,7 +119,7 @@ export function StreamsList({ streams, existingStreams, readonly, descriptionsMa
 : { streams?: any, existingStreams?: any, readonly?: boolean, descriptionsMap?: any }) {
 	return (
 		<div className='my-4'>
-			{streams.map((stream, index) => (
+			{streams?.map((stream, index) => (
 				<StreamRow
 					readonly={readonly}
 					key={index}

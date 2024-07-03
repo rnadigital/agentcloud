@@ -34,7 +34,7 @@ import submittingReducer from 'utils/submittingreducer';
 
 import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced, setDatasourceStatus } from '../db/datasource';
 
-const ajv = new Ajv({ strict: 'log', meta:true });
+const ajv = new Ajv({ strict: 'log', meta: true });
 addFormats(ajv);
 
 function validateDateTimeFormat(dateTimeStr) {
@@ -133,13 +133,13 @@ export async function datasourceAddPage(app, req, res, next) {
 export async function testDatasourceApi(req, res, next) {
 	log('Test datasource');
 
-	const { connectorId , datasourceName, datasourceDescription, sourceConfig } = req.body;
+	const { connectorId, datasourceName, datasourceDescription, sourceConfig } = req.body;
 	log('req.body', req.body);
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	const connector = await getConnectorSpecification(connectorId) as any;
 	log('connector', connector);
 
@@ -156,7 +156,7 @@ export async function testDatasourceApi(req, res, next) {
 
 	const newDatasourceId = new ObjectId();
 	const spec = connector.schema.connectionSpecification;
-	
+
 	// https://json-shcema.org/draft-07/schema# fails to validate
 	spec.$schema = 'http://json-schema.org/draft-07/schema#';
 
@@ -167,10 +167,12 @@ export async function testDatasourceApi(req, res, next) {
 		const validated = validate(req.body.sourceConfig);
 		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
 			log('validate.errors', validate?.errors);
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			const error = validate.errors.map(error => `Invalid input for ${error.instancePath.replace('/', '')}: ${error.message}`).join('; ');
+			return dynamicResponse(req, res, 400, { error });
 		}
 	} catch (e) {
 		console.error(e);
+
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -179,9 +181,7 @@ export async function testDatasourceApi(req, res, next) {
 	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
 	try {
 		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-		log('spec', spec);
-		//TODO move updateDateStrings logic to happen before submitting form
-		// updateDateStrings(req.body.sourceConfig);
+
 		const sourceBody = {
 			configuration: {
 				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
@@ -232,6 +232,11 @@ export async function testDatasourceApi(req, res, next) {
 			.discoverSchemaForSource(null, discoverSchemaBody)
 			.then(res => res.data);
 		log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+
+		if (!discoveredSchema.catalog) {
+			return dynamicResponse(req, res, 400, { error: 'Schema catalog not found' });
+		}
+
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}` });
@@ -305,8 +310,13 @@ export async function addDatasourceApi(req, res, next) {
 	//TODO: validation for other fields
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	if (!datasource.discoveredSchema.catalog) {
+		return dynamicResponse(req, res, 400, { error: 'Schema catalog not found' });
 	}
 
 	const model = await getModelById(req.params.resourceSlug, modelId);
