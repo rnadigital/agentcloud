@@ -8,12 +8,16 @@ import {
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
+import CreateModelModal from 'components/CreateModelModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import InfoAlert from 'components/InfoAlert';
+import CreateToolModal from 'components/modal/CreateToolModal';
+import ModelSelect from 'components/models/ModelSelect';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import ParameterForm from 'components/ParameterForm';
+import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
@@ -24,6 +28,7 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { ToolType } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 // @ts-ignore
@@ -33,8 +38,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], callback, fetchFormData }
-	: { agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentChoices=[], datasourceChoices=[], callback, fetchFormData }
+	: { toolChoices?: any[], modelChoices?: any[], agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
@@ -45,11 +50,11 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 	const [newAgent, setNewAgent]: any = useState(false);
 	const [description, setDescription] = useState('');
 	const [modelType, setModelType] = useState(ModelType.OPENAI);
+	const [modelId, setModelId] = useState(null);
 	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
 	const [agentName, setAgentName] = useState('');
 	const [systemMessage, setSystemMessage] = useState('');
 	const [error, setError] = useState();
-	const [datasourceState, setDatasourceState] = useState(null);
 	const [run, setRun] = useState(false);
 	const [icon, setIcon] = useState(null);
 	const [config, setConfig] = useReducer(configReducer, {
@@ -62,8 +67,20 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 		};
 	}
 
-	// const initialAgent = agentChoices && agentChoices.find(ac => ac._id === ); TODO: initial agent once "editing" is in
+	// TODO: initial agent and tool state once editing is added
+	// const initialDatasources ...
+	// const initialAgent = agentChoices && agentChoices.find(ac => ac._id === ....);
+	// const initialTools = agent.toolIds && agent.toolIds
+	// 	.map(tid => {
+	// 		const foundTool = tools.find(t => t._id === tid);
+	// 		if (!foundTool) { return null; }
+	// 		return { label: foundTool.name, value: foundTool._id };
+	// 	})
+	// 	.filter(t => t);
+
+	const [datasourceState, setDatasourceState] = useState(null);
 	const [agentsState, setAgentsState] = useState(null);
+	const [toolState, setToolState] = useState(null);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -100,6 +117,20 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 		setModalOpen(false);
 	}
 
+	async function modelCallback(addedModelId) {
+		console.log('addedModelId', addedModelId);
+		await fetchFormData && fetchFormData();
+		setModelId(addedModelId);
+		setModalOpen(false);
+	}
+
+	async function toolCallback(addedToolId, addedTool) {
+		console.log('addedToolId', addedToolId);
+		await fetchFormData && fetchFormData();
+		setToolState({ label: addedTool.name, value: addedToolId });
+		setModalOpen(false);
+	}
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -107,6 +138,20 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 				open={modalOpen !== false}
 				setOpen={setModalOpen}
 				callback={createDatasourceCallback}
+			/>;
+			break;
+		case 'model':
+			modal = <CreateModelModal
+				open={modalOpen !== false}
+				setOpen={setModalOpen}
+				callback={modelCallback}
+			/>;
+			break;
+		case 'tool':
+			modal = <CreateToolModal
+				open={modalOpen !== false}
+				setOpen={setModalOpen}
+				callback={toolCallback}
 			/>;
 			break;
 		default:
@@ -144,7 +189,7 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 md:col-span-2'>
 						<div className='sm:col-span-12'>
 							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									App Name
+								App Name
 							</label>
 							<input
 								required
@@ -258,25 +303,9 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 										/>
 									</div>
 								</div>
-								{/*<div className='w-full'>
-									<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-										System Message
-									</label>
-									<textarea
-										required
-										name='systemMessage'
-										id='systemMessage'
-										value={systemMessage}
-										onChange={e => {
-											setSystemMessage(e.target.value);
-										}}
-										className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-										rows={3}
-									/>
-								</div>*/}
 							</div>
 
-							<div className='sm:col-span-12'>
+							{/*<div className='sm:col-span-12'>
 								<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Model Type
 								</label>
@@ -298,7 +327,6 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 										<option disabled value=''>Select a type...</option>
 										<option value={ModelType.OPENAI}>OpenAI</option>
 										<option value={ModelType.OLLAMA}>Ollama</option>
-										{/*<option value={ModelType.FASTEMBED}>FastEmbed</option>*/}
 										<option value={ModelType.COHERE}>Cohere</option>
 										<option value={ModelType.ANTHROPIC}>Anthropic</option>
 										<option value={ModelType.GROQ}>Groq</option>
@@ -308,16 +336,17 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 
 							<div className='sm:col-span-12 space-y-6'>					
 								<ModelTypeRequirementsComponent type={modelType} config={config} setConfig={setConfig} />
-							</div>
+							</div>*/}
 
-							<div className='sm:col-span-12'>
-								<DatasourcesSelect
-		                            datasourceState={datasourceState}
-		                            setDatasourceState={setDatasourceState}
-		                            datasources={datasourceChoices}
-		                            addNewCallback={setModalOpen}
-		                        />
-							</div>
+							<ModelSelect
+								models={modelChoices}
+								initialModelId={modelId}
+								label='Model'
+								onChange={model => setModelId(model?.value)}
+								setModalOpen={setModalOpen}
+								callbackKey='modelId'
+								setCallbackKey={null}
+							/>
 
 							<button
 								className='rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 inline-flex items-center'
@@ -328,9 +357,24 @@ export default function SimpleAppForm({ agentChoices=[], datasourceChoices=[], c
 
 						</>}
 
-					</div>
-				</div>			
+						<ToolsSelect
+							tools={toolChoices.filter(t => t?.type as ToolType !== ToolType.RAG_TOOL)}
+							initialTools={null}
+							onChange={toolState => setToolState(toolState)}
+							setModalOpen={setModalOpen}
+						/>
 
+						<div className='sm:col-span-12'>
+							<DatasourcesSelect
+								datasourceState={datasourceState}
+								setDatasourceState={setDatasourceState}
+								datasources={datasourceChoices}
+								addNewCallback={setModalOpen}
+							/>
+						</div>
+
+					</div>
+				</div>
 			</div>
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>

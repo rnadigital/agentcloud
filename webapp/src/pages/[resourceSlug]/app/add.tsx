@@ -90,6 +90,8 @@ export default function AddApp(props) {
 						datasourceChoices={datasources}
 						fetchFormData={fetchAppFormData}
 						agentChoices={agents}
+						modelChoices={models}
+						toolChoices={tools}
 					/>
 				);
 			case 2:

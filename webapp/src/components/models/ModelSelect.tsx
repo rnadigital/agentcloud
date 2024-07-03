@@ -25,7 +25,7 @@ export default function ModelSelect({ models, initialModelId, label, onChange, s
 					onChange={(v: any) => {
 						if (v?.value === null) {
 							setModalOpen('model');
-							setCallbackKey(callbackKey);
+							setCallbackKey && setCallbackKey(callbackKey);
 							return;
 						}
 						setModelState(v);

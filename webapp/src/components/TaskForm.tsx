@@ -7,6 +7,7 @@ import {
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
+import ToolStateBadge from 'components/ToolStateBadge';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
@@ -17,8 +18,6 @@ import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
-
-import ToolStateBadge from './ToolStateBadge';
 
 export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
 	: { task?: any, tools?: any[], agents?: any[], datasources?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {

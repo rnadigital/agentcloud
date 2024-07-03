@@ -1,9 +1,12 @@
-import React, { useEffect,useState } from 'react';
+import ToolSelectIcons from 'components/ToolSelectIcons';
+import ToolStateBadge from 'components/ToolStateBadge';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
+import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function ToolsSelect({ tools, initialTools, onChange, setModalOpen }) {
-	const [toolState, setToolState] = useState(initialTools || []);
+	const [toolState, setToolState] = useState(initialTools || null);
 
 	useEffect(() => {
 		onChange(toolState);
@@ -16,28 +19,50 @@ export default function ToolsSelect({ tools, initialTools, onChange, setModalOpe
 			</label>
 			<div className='mt-2'>
 				<Select
-					isMultiple
+					isSearchable
 					isClearable
+					isMultiple
 					primaryColor={'indigo'}
 					classNames={SelectClassNames}
 					value={toolState}
-					onChange={(v: any) => {
-						if (v?.value === null) {
+					onChange={(v) => {
+						console.log(v);
+						// if (v?.some(val => val?.disabled)) { return; }
+						if (v?.some(val => val.value === null)) {
 							setModalOpen('tool');
 							return;
 						}
 						setToolState(v);
 					}}
-					options={tools.map(c => ({ label: c.name, value: c._id }))}
+					options={tools.map(tool => ({
+						label: tool.name,
+						value: tool._id,
+						disabled: false, //tool.state && tool.state !== 'READY',
+					})).concat([{
+						label: '+ New Tool',
+						value: null,
+						disabled: false,
+					}])}
 					formatOptionLabel={data => {
-						const optionCred = tools.find(oc => oc._id === data.value);
+						const optionTool = tools.find(tool => tool._id === data.value);
+						const isReady = true; //!optionTool?.state || optionTool?.state as ToolState === ToolState.READY;
 						return (
 							<li
-								className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 ${
+								className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 ${
 									data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-								}`}
+								} ${optionTool?.state && !isReady ? 'cursor-not-allowed pointer-events-none opacity-50' : ''}`}
 							>
-								{data.label} {optionCred ? `(${optionCred?.type})` : null}
+								<span className='tooltip z-100'>
+									{/* Replace ToolSelectIcons with appropriate icon component */}
+									{ToolSelectIcons[optionTool?.type]}
+									<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
+										{optionTool?.type} tool
+									</span>
+								</span>
+								{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
+								<span className='ms-2 w-full overflow-hidden text-ellipsis'>
+									{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}
+								</span>
 							</li>
 						);
 					}}
