@@ -87,7 +87,6 @@ export default function AddApp(props) {
 			case 1:
 				return (
 					<ChatAppForm
-						datasourceChoices={datasources}
 						fetchFormData={fetchAppFormData}
 						agentChoices={agents}
 						modelChoices={models}

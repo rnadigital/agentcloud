@@ -39,8 +39,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], datasourceChoices=[], callback, fetchFormData, editing }
-	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
+export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], callback, fetchFormData, editing }
+	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
@@ -72,29 +72,30 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 	// 	})
 	// 	.filter(t => t);
 
-	const [datasourceState, setDatasourceState] = useState(null);
 	const [agentsState, setAgentsState] = useState(null);
 	const [toolState, setToolState] = useState(null);
+	const [datasourceState, setDatasourceState] = useState(null); //Note: still technically tools, just only RAG tools
 
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
+			//app section
 			appName,
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
-			toolIds: toolState?.map(x => x.value),
-			datasourceId: datasourceState ? datasourceState?.value : null,
 			run,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
-			//add new
+			//new agent
 			agentName,
 			role,
 			goal,
 			backstory,
 			modelId,
+			toolIds: toolState?.map(x => x.value)
+				.concat(datasourceState?.map(x => x.value)),
 			type: AppType.CHAT,
 		};
 		console.log(JSON.stringify(body, null, '\t'));
@@ -336,6 +337,23 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 								setCallbackKey={null}
 							/>
 
+							<ToolsSelect
+								tools={toolChoices.filter(t => t?.type as ToolType !== ToolType.RAG_TOOL)}
+								initialTools={null}
+								onChange={setToolState}
+								setModalOpen={setModalOpen}
+								enableAddNew={false}
+							/>
+
+							<ToolsSelect
+								title='Datasources'
+								tools={toolChoices.filter(t => t?.type as ToolType === ToolType.RAG_TOOL)}
+								initialTools={null}
+								onChange={setDatasourceState}
+								setModalOpen={setModalOpen}
+								enableAddNew={false}
+							/>
+
 							<button
 								className='rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 inline-flex items-center'
 								onClick={() => setNewAgent(_newAgent => !_newAgent)}
@@ -346,23 +364,6 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 							<hr className='col-span-12' />
 
 						</>}
-
-						<ToolsSelect
-							tools={toolChoices.filter(t => t?.type as ToolType !== ToolType.RAG_TOOL)}
-							initialTools={null}
-							onChange={toolState => setToolState(toolState)}
-							setModalOpen={setModalOpen}
-							enableAddNew={false}
-						/>
-
-						<div className='sm:col-span-12'>
-							<DatasourcesSelect
-								datasourceState={datasourceState}
-								setDatasourceState={setDatasourceState}
-								datasources={datasourceChoices}
-								addNewCallback={setModalOpen}
-							/>
-						</div>
 
 					</div>
 				</div>

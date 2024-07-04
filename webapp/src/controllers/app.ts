@@ -115,7 +115,7 @@ export async function addAppApi(req, res, next) {
 
 	const {
 		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
-		appName, conversationStarters, toolIds, datasourceId, agentId, agentName, role, goal, backstory, modelId,
+		appName, conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
 		type, run
 	}  = req.body;
 
@@ -149,17 +149,17 @@ export async function addAppApi(req, res, next) {
 			chatAgent = await addAgent({
 				orgId: res.locals.matchingOrg.id,
 				teamId: toObjectId(req.params.resourceSlug),
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId),
 			    name: agentName,
 			    role,
 			    goal,
 			    backstory,
-				modelId: toObjectId(modelId),
 				functionModelId: null,
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
 				allowDelegation: false,
-				toolIds: [],
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -185,12 +185,12 @@ export async function addAppApi(req, res, next) {
 			memory: memory === true,
 			cache: cache === true,
 		}: {
-			agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
-			datasourceId: datasourceId ? toObjectId(datasourceId) : null,
-			toolIds: toolIds.map(toObjectId),
-			conversationStarters: (conversationStarters||[])
-				.map(x => x.trim())
-				.filter(x => x),
+			chatAppConfig: {
+				agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
+				conversationStarters: (conversationStarters||[])
+					.map(x => x.trim())
+					.filter(x => x),
+			},
 		}),
 	});
 

@@ -20,13 +20,12 @@ export type App = {
 	visibility?: any; //TODO: perms
 	icon: IconAttachment;
 	hidden?: boolean;
-	//AppType.CREW
+	//TODO crewAppConfig for AppType.CREW ?
 	crewId?: ObjectId;
 	memory?: boolean;
 	cache?: boolean;
-	//AppType.CHAT
-	agentId?: ObjectId;
-	conversationStarters?: string;
-	toolIds?: ObjectId[];
-	datasourceId?: ObjectId;
+	chatAppConfig?: { //AppType.CHAT
+		agentId: ObjectId;
+		conversationStarters: string[];
+	}
 };

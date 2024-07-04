@@ -102,6 +102,7 @@ export async function addSessionApi(req, res, next) {
 
 	const app: App = await getAppById(req.params.resourceSlug, id);
 
+	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
 	let agentId;
 	if (app?.type === AppType.CREW) {
@@ -116,11 +117,10 @@ export async function addSessionApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	} else {
-		const agent = await getAgentById(req.params.resourceSlug, app?.agentId);
+		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		agentId = agent._id;
 	}
 
 	const addedSession = await addSession({

@@ -49,7 +49,7 @@ export default function EditApp(props) {
 				editing={true}
 				app={app}
 				fetchFormData={fetchAppFormData}
-				datasourceChoices={datasources}
+				// datasourceChoices={datasources}
 				agentChoices={agents}
 				modelChoices={models}
 				// taskChoices={tasks}

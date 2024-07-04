@@ -8,7 +8,7 @@ import Select from 'react-tailwindcss-select';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ToolsSelect({ tools, initialTools, onChange, setModalOpen, enableAddNew=true }) {
+export default function ToolsSelect({ title='Tools', tools, initialTools, onChange, setModalOpen, enableAddNew=true }) {
 	const [toolState, setToolState] = useState(initialTools || null);
 
 	useEffect(() => {
@@ -18,7 +18,7 @@ export default function ToolsSelect({ tools, initialTools, onChange, setModalOpe
 	return (
 		<div className='sm:col-span-12'>
 			<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-				Tools
+				{title}
 			</label>
 			<div className='mt-2'>
 				<Select
