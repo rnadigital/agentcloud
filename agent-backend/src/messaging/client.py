@@ -14,10 +14,7 @@ import threading
 async def process(job: Job, token: str):
     print(f'Running session ID: {job.data.get("sessionId")}')
     # Send job to the correct executor based on the job type
-
-    # TODO: Switch to commented line after frontend changes
-    # target = execute_chat_task if job.data.get('appType') == AppType.CHAT else execute_task
-    target = execute_chat_task if job.data.get('appType') in [AppType.CHAT, None] else execute_task
+    target = execute_chat_task if job.data.get('type') == AppType.CHAT else execute_task
     thread = threading.Thread(target=target, args=[job.data])
     thread.start()
     return True

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import uuid
 from datetime import datetime
 
@@ -19,7 +20,7 @@ from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN
 from init.mongo_session import start_mongo_session
 from lang_models import model_factory as language_model_factory
 from messaging.send_message_to_socket import send
-from models.mongo import App, Tool, Datasource, Model, PyObjectId, ToolType
+from models.mongo import App, Tool, Datasource, Model, ToolType, Agent
 from models.sockets import SocketEvents, SocketMessage, Message
 from redisClient.utilities import RedisClass
 from tools import RagTool, GoogleCloudFunctionTool
@@ -32,13 +33,13 @@ redis_con = RedisClass()
 class ChatAssistant:
     chat_model: BaseLanguageModel
     tools: list[BaseTool]
-    datasource: Datasource
     workflow: CompiledGraph
     system_message: str
 
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.socket = SimpleClient()
+        self.mongo_client = start_mongo_session()
         self.init_socket()
         self.init_app_state()
         self.init_graph()
@@ -55,35 +56,51 @@ class ChatAssistant:
             raise
 
     def init_app_state(self):
-        mongo_client = start_mongo_session()
-        session = mongo_client.get_session(self.session_id)
+        session = self.mongo_client.get_session(self.session_id)
 
-        app: App
-        # We only want app, unpack and forget the rest
-        # TODO: add a method to fetch app from crewID without using this method;
-        #  better still, don't have crewID for chat apps
-        app, *_ = mongo_client.get_crew(session)
+        app = self.mongo_client.get_single_model_by_id("apps", App, session.get('appId'))
 
         app_config = app.chatAppConfig
         if not app_config:
             raise
 
-        self.system_message = app_config.systemMessage
+        agentcloud_agent = self.mongo_client.get_single_model_by_id("agents", Agent, app_config.agentId)
+        agentcloud_tools = self.mongo_client.get_models_by_ids("tools", Tool, agentcloud_agent.toolIds)
 
-        model = mongo_client.get_single_model_by_id("models", Model, app_config.modelId)
+        self.system_message = '\n'.join([agentcloud_agent.backstory, agentcloud_agent.role, agentcloud_agent.goal])
+
+        model = self.mongo_client.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         self.chat_model = language_model_factory(model)
 
-        embedding = embedding_model = None
-        if app_config.datasourceId:
-            self.datasource = mongo_client.get_single_model_by_id("datasources", Datasource, app_config.datasourceId)
-            if self.datasource:
-                embedding_model = mongo_client.get_single_model_by_id("models", Model, self.datasource.modelId)
-                embedding = language_model_factory(embedding_model)
+        self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
 
-        agentcloud_tools = mongo_client.get_models_by_ids("tools", Tool, app_config.toolIds)
-        self.tools = [
-            _make_langchain_tool(t, self.datasource, self.chat_model, [(embedding, embedding_model)])
-            for t in agentcloud_tools]
+    @staticmethod
+    def _transform_tool_name(tool_name: str) -> str:
+        """
+        Remove all non-alphanumeric characters from tool name except spaces, hyphens and underscores,
+        and re-join them else llm will complain (allowed chars: [a-zA-Z0-9_-])
+        """
+        return '_'.join(re.sub(r'[^a-zA-Z0-9 _-]', '', tool_name).split())
+
+    def _make_langchain_tool(self, agentcloud_tool: Tool):
+        tool_class = None
+
+        agentcloud_tool.name = self._transform_tool_name(agentcloud_tool.name)
+
+        if agentcloud_tool.type == ToolType.RAG_TOOL:
+            datasource = self.mongo_client.get_single_model_by_id("datasources", Datasource,
+                                                                  agentcloud_tool.datasourceId)
+            embedding_model = self.mongo_client.get_single_model_by_id("models", Model, datasource.modelId)
+            embedding = language_model_factory(embedding_model)
+
+            return RagTool.factory(tool=agentcloud_tool, models=[(embedding, embedding_model)], datasources=[datasource],
+                                   llm=self.chat_model)
+        elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL and not agentcloud_tool.data.builtin:
+            tool_class = GoogleCloudFunctionTool
+        elif agentcloud_tool.data.builtin:
+            tool_class = BuiltinTools.get_tool_class(agentcloud_tool.data.name)
+
+        return tool_class.factory(agentcloud_tool)
 
     def init_graph(self):
         def call_model(state):
@@ -266,17 +283,3 @@ class ChatAssistant:
             ),
             "both"
         )
-
-
-def _make_langchain_tool(agentcloud_tool: Tool, datasource: Datasource, chat_model: BaseLanguageModel,
-                         embed_models: list[tuple[Embeddings, Model]] = None):
-    tool_class = None
-    if agentcloud_tool.type == ToolType.RAG_TOOL:
-        tool_class = RagTool
-    elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL and not agentcloud_tool.data.builtin:
-        tool_class = GoogleCloudFunctionTool
-    elif agentcloud_tool.data.builtin:
-        tool_class = BuiltinTools.get_tool_class(agentcloud_tool.data.name)
-
-    agentcloud_tool.name = '_'.join(agentcloud_tool.name.split())
-    return tool_class.factory(tool=agentcloud_tool, models=embed_models, datasources=[datasource], llm=chat_model)

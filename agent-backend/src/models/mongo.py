@@ -255,6 +255,7 @@ class Session(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     crewId: Crew
+    appId: Optional[PyObjectId] = None
 
 
 class Datasource(BaseModel):
@@ -278,10 +279,8 @@ class AppType(str, Enum):
 
 
 class ChatAppConfig(BaseModel):
-    modelId: PyObjectId
-    systemMessage: str = Field(default="You are an AI Assistant")
-    datasourceId: Optional[PyObjectId] = None
-    toolIds: Optional[List[PyObjectId]] = None
+    agentId: PyObjectId
+    conversationStarters: list[str] = Field(default_factory=list)
 
 
 class App(BaseModel):
