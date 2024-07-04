@@ -51,34 +51,34 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	const [error, setError] = useState();
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
-	const [newAgent, setNewAgent]: any = useState(false);
-	
+	const [showAgentForm, setShowAgentForm]: any = useState(false);
+
+	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name||'');
 	const [description, setDescription] = useState(app?.description||'');
 	const [conversationStarters, setConversationStarters] = useState(app?.chatAppConfig?.conversationStarters
 		? app?.chatAppConfig?.conversationStarters.map(x => ({ name:x }))
 		: [{name:''}]);
-	const [agentName, setAgentName] = useState('');
-	const [role, setRole] = useState('');
-	const [goal, setGoal] = useState('');
-	const [backstory, setBackstory] = useState('');
-	const [modelId, setModelId] = useState(null);
+	const [agentName, setAgentName] = useState(initialAgent?.name||'');
+	const [role, setRole] = useState(initialAgent?.role||'');
+	const [goal, setGoal] = useState(initialAgent?.goal||'');
+	const [backstory, setBackstory] = useState(initialAgent?.backstory||'');
+	const [modelId, setModelId] = useState(initialAgent?.modelId||null);
 
-	// TODO: initial agent and tool state once editing is added
-	// const initialDatasources ...
-	// const initialAgent = agentChoices && agentChoices.find(ac => ac._id === ....);
-	// const initialTools = agent.toolIds && agent.toolIds
-	// 	.map(tid => {
-	// 		const foundTool = tools.find(t => t._id === tid);
-	// 		if (!foundTool) { return null; }
-	// 		return { label: foundTool.name, value: foundTool._id };
-	// 	})
-	// 	.filter(t => t);
-
-	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
+	const { initialTools, initialDatasources } = initialAgent?.toolIds && initialAgent.toolIds.reduce((acc, tid) => {
+		const foundTool = toolChoices.find(t => t._id === tid);
+		if (!foundTool) { return acc; }
+		const toolVal = { label: foundTool.name, value: foundTool._id };
+		if (foundTool?.type as ToolType !== ToolType.RAG_TOOL) {
+			acc.initialTools.push(toolVal);
+		} else {
+			acc.initialDatasources.push(toolVal);
+		}
+		return acc;
+	}, { initialTools: [], initialDatasources: [] });
 	const [agentsState, setAgentsState] = useState(initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null);
-	const [toolState, setToolState] = useState(null);
-	const [datasourceState, setDatasourceState] = useState(null); //Note: still technically tools, just only RAG tools
+	const [toolState, setToolState] = useState(initialTools.length > 0 ? initialTools : null);
+	const [datasourceState, setDatasourceState] = useState(initialDatasources.length > 0 ? initialDatasources : null); //Note: still technically tools, just only RAG tools
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -255,15 +255,15 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							/>
 						</div>
 
-						{!newAgent && <AgentsSelect
+						<AgentsSelect
 							agentChoices={agentChoices}
-							initialAgents={[agentsState]}
+							initialAgents={agentsState}
 							onChange={agentsState => setAgentsState(agentsState)}
-							setModalOpen={() => setNewAgent(_newAgent => !_newAgent)}
+							setModalOpen={() => setShowAgentForm(_showAgentForm => !_showAgentForm)}
 							multiple={false}
-						/>}
+						/>
 
-						{newAgent && <>
+						{showAgentForm && <>
 
 							<hr className='col-span-12' />
 
@@ -349,7 +349,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 
 							<ToolsSelect
 								tools={toolChoices.filter(t => t?.type as ToolType !== ToolType.RAG_TOOL)}
-								initialTools={null}
+								initialTools={toolState}
 								onChange={setToolState}
 								setModalOpen={setModalOpen}
 								enableAddNew={false}
@@ -358,7 +358,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							<ToolsSelect
 								title='Datasources'
 								tools={toolChoices.filter(t => t?.type as ToolType === ToolType.RAG_TOOL)}
-								initialTools={null}
+								initialTools={datasourceState}
 								onChange={setDatasourceState}
 								setModalOpen={setModalOpen}
 								enableAddNew={false}
@@ -366,7 +366,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 
 							<button
 								className='rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 inline-flex items-center'
-								onClick={() => setNewAgent(_newAgent => !_newAgent)}
+								onClick={() => setShowAgentForm(false)}
 							>
 								Cancel
 							</button>
