@@ -1,7 +1,7 @@
 import * as API from '@api';
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
-import AppForm from 'components/AppForm';
-// import SimpleAppForm from 'components/SimpleAppForm';
+import CrewAppForm from 'components/CrewAppForm';
+// import ChatAppForm from 'components/ChatAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
@@ -43,7 +43,7 @@ export default function EditApp(props) {
 			<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
 		</div>
 
-		<AppForm
+		<CrewAppForm
 			editing={true}
 			app={app}
 			crew={app?.crew}
