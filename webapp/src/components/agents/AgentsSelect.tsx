@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 
 export default function AgentsSelect({ agentChoices, initialAgents, onChange, setModalOpen, multiple, disabled }
-	: { agentChoices: any[], initialAgents: any[], onChange: Function, setModalOpen: Function, multiple?: boolean, disabled?: boolean }) {
+	: { agentChoices: any[], initialAgents: any, onChange: Function, setModalOpen: Function, multiple?: boolean, disabled?: boolean }) {
 	const [agentsState, setAgentsState] = useState(initialAgents || (multiple ? [] : null));
 
 	useEffect(() => {

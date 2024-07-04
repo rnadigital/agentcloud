@@ -47,19 +47,22 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [icon, setIcon] = useState(null);
+	const [error, setError] = useState();
+	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [newAgent, setNewAgent]: any = useState(false);
-	const [appName, setAppName] = useState('');
+	
+	const [appName, setAppName] = useState(app?.name||'');
+	const [description, setDescription] = useState(app?.description||'');
+	const [conversationStarters, setConversationStarters] = useState(app?.chatAppConfig?.conversationStarters
+		? app?.chatAppConfig?.conversationStarters.map(x => ({ name:x }))
+		: [{name:''}]);
 	const [agentName, setAgentName] = useState('');
 	const [role, setRole] = useState('');
 	const [goal, setGoal] = useState('');
 	const [backstory, setBackstory] = useState('');
-	const [description, setDescription] = useState('');
 	const [modelId, setModelId] = useState(null);
-	const [conversationStarters, setConversationStarters] = useState([{name:''}]);
-	const [error, setError] = useState();
-	const [run, setRun] = useState(false);
-	const [icon, setIcon] = useState(null);
 
 	// TODO: initial agent and tool state once editing is added
 	// const initialDatasources ...
@@ -72,7 +75,8 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	// 	})
 	// 	.filter(t => t);
 
-	const [agentsState, setAgentsState] = useState(null);
+	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
+	const [agentsState, setAgentsState] = useState(initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null);
 	const [toolState, setToolState] = useState(null);
 	const [datasourceState, setDatasourceState] = useState(null); //Note: still technically tools, just only RAG tools
 
@@ -253,7 +257,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 
 						{!newAgent && <AgentsSelect
 							agentChoices={agentChoices}
-							initialAgents={null}
+							initialAgents={[agentsState]}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={() => setNewAgent(_newAgent => !_newAgent)}
 							multiple={false}
