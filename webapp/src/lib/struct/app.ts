@@ -28,5 +28,5 @@ export type App = {
 	agentId?: ObjectId;
 	conversationStarters?: string;
 	toolIds?: ObjectId[];
-	datasourceId?: ObjectId[];
+	datasourceId?: ObjectId;
 };

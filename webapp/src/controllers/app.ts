@@ -1,12 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { addAgent,getAgentsByTeam } from 'db/agent';
+import { addAgent,getAgentById,getAgentsByTeam } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
-import { addModel,getModelsByTeam } from 'db/model';
+import { addModel,getModelById,getModelsByTeam } from 'db/model';
 import { addTask,getTasksByTeam } from 'db/task';
 import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'misc/toobjectid';
@@ -113,140 +113,91 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, conversationStarters, agents, process, tasks, managerModelId, iconId, run }  = req.body;
+	const {
+		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
+		appName, conversationStarters, toolIds, datasourceId, agentId, agentName, role, goal, backstory, modelId,
+		type, run
+	}  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
+	}//TODO:validation
 
 	const foundIcon = await getAssetById(iconId);
 
-	const addedCrew = await addCrew({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name,
-		tasks: tasks.map(toObjectId),
-		agents: agents.map(toObjectId),
-		process,
-		managerModelId: toObjectId(managerModelId),
-	});
+	let addedCrew
+		, chatAgent;
+	if (type as AppType === AppType.CREW) {
+		addedCrew = await addCrew({
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+			name,
+			tasks: tasks.map(toObjectId),
+			agents: agents.map(toObjectId),
+			process,
+			managerModelId: toObjectId(managerModelId),
+		});
+	} else {
+		if (agentId) {
+			//using agent with agentId
+			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
+			if (!chatAgent) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+		} else if (modelId) { //
+			const foundModel = await getModelById(req.params.resourceSlug, modelId);
+			if (!foundModel) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			chatAgent = await addAgent({
+				orgId: res.locals.matchingOrg.id,
+				teamId: toObjectId(req.params.resourceSlug),
+			    name: agentName,
+			    role,
+			    goal,
+			    backstory,
+				modelId: toObjectId(modelId),
+				functionModelId: null,
+				maxIter: null,
+				maxRPM: null,
+				verbose: false,
+				allowDelegation: false,
+				toolIds: [],
+			});
+		} else {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	}
+
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-		name,
+		name: appName,
 		description,
-		memory: memory === true,
-		cache: cache === true,
 		tags: (tags||[])
 			.map(tag => tag.trim())
 			.filter(x => x),
-		conversationStarters: (conversationStarters||[])
-			.map(x => x.trim())
-			.filter(x => x),
-		type: AppType.CREW,
-		crewId: addedCrew.insertedId,
 		author: res.locals.matchingTeam.name,
 		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
 		} : null,
+		type,
+		...(type === AppType.CREW ? {
+			crewId: addedCrew ? addedCrew.insertedId : null,
+			memory: memory === true,
+			cache: cache === true,
+		}: {
+			agentId: agentId ? toObjectId(agentId) : chatAgent.insertedId,
+			datasourceId: datasourceId ? toObjectId(datasourceId) : null,
+			toolIds: toolIds.map(toObjectId),
+			conversationStarters: (conversationStarters||[])
+				.map(x => x.trim())
+				.filter(x => x),
+		}),
 	});
 
 	return dynamicResponse(req, res, 302, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
-
-}
-
-/**
- * @api {post} /forms/app/add Add an app
- * @apiName add
- * @apiGroup App
- *
- * @apiParam {String} name App name
- * @apiParam {String[]} tags Tags for the app
- */
-export async function addAppApiSimple(req, res, next) {
-
-	const { conversationStarters, modelType, config, datasourceId, run }  = req.body;
-
-	//todo: validation
-
-	let toolIds = req.body.toolIds || [];
-	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
-	if (!foundTools || foundTools.length !== toolIds.length) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid tool IDs' });
-	}
-
-	const datasourceTool = await getToolForDatasource(req.params.resourceSlug, datasourceId);
-	if (datasourceTool) {
-		toolIds.push(datasourceTool._id);
-	}
-
-	const addedModel = await addModel({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name: config?.model,
-		model: config?.model,
-		embeddingLength: ModelEmbeddingLength[config?.model] || 0,
-		modelType: ModelEmbeddingLength[config?.model] ? 'embedding' : 'llm',
-		type: modelType,
-		config: config, //TODO: validation
-		hidden: true,
-	});
-	const addedAgent = await addAgent({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-	    name: 'Chat agent',
-	    role: 'A helpful assistant',
-	    goal: 'Follow instructions and assist the user in completing all the tasks.',
-	    backstory: ' .',
-		modelId: toObjectId(addedModel.insertedId),
-		functionModelId: toObjectId(addedModel.insertedId),
-		maxIter: null,
-		maxRPM: null,
-		verbose: true,
-		allowDelegation: false,
-		toolIds: toolIds.map(toObjectId),
-		icon : null,
-		hidden: true,
-	});
-	const addedTask = await addTask({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name: 'Chat task',
-		description : 'Chat back and forth with the user, get human input each time.',
-		expectedOutput: '',
-		toolIds: toolIds.map(toObjectId),
-		agentId: toObjectId(addedAgent.insertedId),
-		asyncExecution: false,
-		requiresHumanInput: true,
-		icon : null,
-		hidden: true,
-	});
-	const addedCrew = await addCrew({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name: 'chat crew',
-		tasks: [addedTask.insertedId].map(toObjectId),
-		agents: [addedAgent.insertedId].map(toObjectId),
-		process: ProcessImpl.SEQUENTIAL,
-		managerModelId: toObjectId(addedModel.insertedId),
-		hidden: true,
-	});
-	const addedApp = await addApp({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name: 'Chat app',
-		description: 'A simple conversation.',
-		memory: false,
-		cache: false,
-		crewId: addedCrew.insertedId,
-		author: res.locals.matchingTeam.name,
-		icon: null,
-		type: AppType.CHAT,
-		// hidden: true,
-	});
-
-	return dynamicResponse(req, res, 302, (run ? { _id: addedApp?.insertedId } : { redirect: `/${req.params.resourceSlug}/apps` }));
 
 }
 

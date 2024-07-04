@@ -148,7 +148,6 @@ export default function router(server, app) {
 	teamRouter.get('/app/:appId([a-f0-9]{24}).json', appController.appJson);
 	teamRouter.get('/app/:appId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_APP), appController.appEditPage.bind(null, app));
 	teamRouter.post('/forms/app/add', hasPerms.one(Permissions.CREATE_APP), appController.addAppApi);
-	teamRouter.post('/forms/app/add2', hasPerms.one(Permissions.CREATE_APP), appController.addAppApiSimple);
 	teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_APP), appController.editAppApi);
 	teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_APP), appController.deleteAppApi);
 

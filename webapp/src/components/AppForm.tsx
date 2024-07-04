@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -75,6 +76,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?._id || icon?.id,
+			type: AppType.CREW,
 			run,
 		};
 		if (editing === true) {

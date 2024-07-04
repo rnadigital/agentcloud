@@ -26,6 +26,7 @@ import { useRouter } from 'next/router';
 import React, { useReducer,useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { AppType } from 'struct/app';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import { ToolType } from 'struct/tool';
@@ -79,7 +80,6 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
-			name,
 			resourceSlug,
 			appName,
 			description,
@@ -95,17 +95,18 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 			goal,
 			backstory,
 			modelId,
+			type: AppType.CHAT,
 		};
 		console.log(JSON.stringify(body, null, '\t'));
-		// API.addAppSimple(body, (res) => {
-		// 	if (run === true) {
-		// 		API.addSession({
-		// 			_csrf: e.target._csrf.value,
-		// 			resourceSlug,
-		// 			id: res._id,
-		// 		}, null, setError, router);
-		// 	}
-		// }, toast.error, router);
+		API.addApp(body, (res) => {
+			if (run === true) {
+				API.addSession({
+					_csrf: e.target._csrf.value,
+					resourceSlug,
+					id: res._id,
+				}, null, setError, router);
+			}
+		}, toast.error, router);
 	}
 
 	const iconCallback = async (addedIcon) => {
@@ -176,7 +177,6 @@ export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentCh
 			/>
 
 			<div className='space-y-4'>
-				<InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='Under Construction...' />
 
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 md:col-span-2'>
 					<div className='sm:col-span-12'>
