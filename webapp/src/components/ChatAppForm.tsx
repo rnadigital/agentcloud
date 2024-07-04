@@ -361,8 +361,6 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 								Cancel
 							</button>
 
-							<hr className='col-span-12' />
-
 						</>}
 
 					</div>
