@@ -17,8 +17,8 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
 		}, { requiredFields: [], optionalFields: [] });
 	const renderInput = ([key, req]: any, ei) => {
 		return <div key={`modelName_${type}_${ei}`}>
-			<label htmlFor={key} className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-				{key}
+			<label htmlFor={key} className='capitalize block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+				{key.replaceAll('_', ' ')}
 			</label>
 			<div className='mt-2'>
 				<input
