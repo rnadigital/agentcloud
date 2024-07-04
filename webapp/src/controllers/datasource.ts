@@ -701,9 +701,9 @@ export async function uploadFileApi(req, res, next) {
 	}
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
-	// if (uploadedFile?.size > pricingMatrix[currentPlan].maxFileUploadBytes) {
-	// 	return dynamicResponse(req, res, 400, { error: `Uploaded file exceeds maximum size for your plan "${currentPlan}" (${formatSize(uploadedFile.size)})` });
-	// }
+	if (uploadedFile?.size > pricingMatrix[currentPlan].maxFileUploadBytes) {
+		return dynamicResponse(req, res, 400, { error: `Uploaded file exceeds maximum size for your plan "${currentPlan}" (${formatSize(uploadedFile.size)})` });
+	}
 
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
