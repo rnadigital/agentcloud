@@ -27,7 +27,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from '../lib/struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew={}, app={}, editing, compact=false, callback, fetchFormData }
+export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew={}, app={}, editing, compact=false, callback, fetchFormData }
 	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
@@ -295,7 +295,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
 						            //@ts-ignore
-						            value={managerModel ? { name: managerModel._id, label: managerModel.name, ...managerModel } : null}
+						            value={managerModel ? { label: managerModel.name, value: managerModel._id, ...managerModel } : null}
 						            onChange={(v: any) => {
 										setManagerModel(v);
         						   	}}

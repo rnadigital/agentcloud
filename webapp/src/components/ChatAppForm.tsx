@@ -39,7 +39,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], callback, fetchFormData, editing }
+export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], callback, fetchFormData, editing }
 	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
@@ -82,7 +82,7 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			//app section
-			appName,
+			name: appName,
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
 			run,
@@ -98,16 +98,22 @@ export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], ag
 				.concat(datasourceState?.map(x => x.value)),
 			type: AppType.CHAT,
 		};
-		console.log(JSON.stringify(body, null, '\t'));
-		API.addApp(body, (res) => {
-			if (run === true) {
-				API.addSession({
-					_csrf: e.target._csrf.value,
-					resourceSlug,
-					id: res._id,
-				}, null, setError, router);
-			}
-		}, toast.error, router);
+		// console.log(JSON.stringify(body, null, '\t'));
+		if (editing === true) {
+			await API.editApp(app._id, body, () => {
+				toast.success('App Updated');
+			}, setError, null);
+		} else {
+			API.addApp(body, (res) => {
+				if (run === true) {
+					API.addSession({
+						_csrf: e.target._csrf.value,
+						resourceSlug,
+						id: res._id,
+					}, null, setError, router);
+				}
+			}, toast.error, router);
+		}
 	}
 
 	const iconCallback = async (addedIcon) => {

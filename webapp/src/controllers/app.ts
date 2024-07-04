@@ -115,7 +115,7 @@ export async function addAppApi(req, res, next) {
 
 	const {
 		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
-		appName, conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
+		conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
 		type, run
 	}  = req.body;
 
@@ -169,7 +169,7 @@ export async function addAppApi(req, res, next) {
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-		name: appName,
+		name,
 		description,
 		tags: (tags||[])
 			.map(tag => tag.trim())
@@ -180,7 +180,7 @@ export async function addAppApi(req, res, next) {
 			filename: foundIcon.filename,
 		} : null,
 		type,
-		...(type === AppType.CREW ? {
+		...(type as AppType === AppType.CREW ? {
 			crewId: addedCrew ? addedCrew.insertedId : null,
 			memory: memory === true,
 			cache: cache === true,
@@ -207,7 +207,11 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, agents, process, tasks, managerModelId, iconId }  = req.body;
+	const {
+		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
+		conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
+		run
+	}  = req.body;
 
 	if (!name || typeof name !== 'string' || name.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -218,11 +222,9 @@ export async function editAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getAssetById(iconId);
-
-	//const [updatedCrew, _] = 
-	await Promise.all([
-		updateCrew(req.params.resourceSlug, app.crewId, {
+	let chatAgent;
+	if (app.type === AppType.CREW) {
+		await updateCrew(req.params.resourceSlug, app.crewId, {
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
 			name,
@@ -230,21 +232,63 @@ export async function editAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			managerModelId: toObjectId(managerModelId)
-		}),
-		updateApp(req.params.resourceSlug, req.params.appId, {
-		    name,
-			description,
+		});
+	} else {
+		if (agentId) {
+			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
+			if (!chatAgent) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+		} else if (modelId) {
+			const foundModel = await getModelById(req.params.resourceSlug, modelId);
+			if (!foundModel) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			chatAgent = await addAgent({
+				orgId: res.locals.matchingOrg.id,
+				teamId: toObjectId(req.params.resourceSlug),
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId),
+			    name: agentName,
+			    role,
+			    goal,
+			    backstory,
+				functionModelId: null,
+				maxIter: null,
+				maxRPM: null,
+				verbose: false,
+				allowDelegation: false,
+			});
+		} else {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	}
+
+	const foundIcon = await getAssetById(iconId);
+
+	await updateApp(req.params.resourceSlug, req.params.appId, {
+		name,
+		description,
+		tags: (tags||[])
+			.map(tag => tag.trim())
+			.filter(x => x),
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+		...(app.type === AppType.CREW ? {
 			memory: memory === true,
 			cache: cache === true,
-			tags: (tags||[]) //TODO
-				.map(t => t.trim())
-				.filter(t => t),
-			icon: foundIcon ? {
-				id: foundIcon._id,
-				filename: foundIcon.filename,
-			} : null,
-		})
-	]);
+		}: {
+			chatAppConfig: {
+				agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
+				conversationStarters: (conversationStarters||[])
+					.map(x => x.trim())
+					.filter(x => x),
+			},
+		}),
+		
+	});
 
 	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
 
