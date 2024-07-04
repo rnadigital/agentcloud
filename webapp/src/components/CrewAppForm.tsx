@@ -18,7 +18,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AppType } from 'struct/app';
+import { App, AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -27,8 +27,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from '../lib/struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
-	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew, app, editing, compact=false, callback, fetchFormData }
+	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: App, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
@@ -75,7 +75,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon?._id || icon?.id,
+			iconId: icon?.id,
 			type: AppType.CREW,
 			run,
 		};

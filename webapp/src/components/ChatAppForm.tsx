@@ -26,7 +26,7 @@ import { useRouter } from 'next/router';
 import React, { useReducer,useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { AppType } from 'struct/app';
+import { App,AppType } from 'struct/app';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength,ModelList } from 'struct/model';
 import { ToolType } from 'struct/tool';
@@ -39,8 +39,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from 'struct/crew';
 
-export default function SimpleAppForm({ toolChoices=[], modelChoices=[], agentChoices=[], datasourceChoices=[], callback, fetchFormData }
-	: { toolChoices?: any[], modelChoices?: any[], agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
+export default function SimpleAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], datasourceChoices=[], callback, fetchFormData, editing }
+	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, datasourceChoices?: any[], callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
 
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();

@@ -119,9 +119,7 @@ export async function addAppApi(req, res, next) {
 		type, run
 	}  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}//TODO:validation
+	//TODO:validation
 
 	const foundIcon = await getAssetById(iconId);
 
@@ -139,7 +137,6 @@ export async function addAppApi(req, res, next) {
 		});
 	} else {
 		if (agentId) {
-			//using agent with agentId
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -188,7 +185,7 @@ export async function addAppApi(req, res, next) {
 			memory: memory === true,
 			cache: cache === true,
 		}: {
-			agentId: agentId ? toObjectId(agentId) : chatAgent.insertedId,
+			agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
 			datasourceId: datasourceId ? toObjectId(datasourceId) : null,
 			toolIds: toolIds.map(toObjectId),
 			conversationStarters: (conversationStarters||[])
