@@ -271,12 +271,22 @@ class Datasource(BaseModel):
     connectionId: PyObjectId
     destinationId: PyObjectId
 
+
 class AppType(str, Enum):
     CHAT = "chat"
     PROCESS = "process"
+
+
+class ChatAppConfig(BaseModel):
+    modelId: PyObjectId
+    systemMessage: str = Field(default="You are an AI Assistant")
+    datasourceId: Optional[PyObjectId] = None
+    toolIds: Optional[List[PyObjectId]] = None
 
 
 class App(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     appType: Optional[AppType] = Field(default=None)
     crewId: Optional[PyObjectId] = Field(default=None)
+    chatAppConfig: Optional[ChatAppConfig] = None
+

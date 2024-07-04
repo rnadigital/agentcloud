@@ -34,7 +34,7 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.error(f"an error has occurred while retrieving session from the database: {e}")
 
-    def get_crew(self, session: Session):
+    def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
             crew_id = session.get("crewId")
             print(f"Crew ID: {crew_id}")

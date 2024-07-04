@@ -41,6 +41,7 @@ langchain-anthropic = "^0.1.12"
 google-cloud-logging = "^3.10.0"
 langchain-groq = "^0.1.4"
 apify-client = "^1.7.0"
+langgraph = "0.0.51"
 
 
 [build-system]
