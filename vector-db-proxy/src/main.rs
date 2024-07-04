@@ -20,6 +20,7 @@ mod messages;
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::{Arc};
 use std::thread;
+use std::thread::available_parallelism;
 use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
@@ -99,10 +100,14 @@ async fn main() -> std::io::Result<()> {
     let subscribe_to_message_stream = tokio::spawn(async move {
         let _ = connection.consume(connection.clone(), qdrant_connection_for_streaming, mongo_client_for_streaming, sender_clone).await;
     });
+    // Figure out how many threads are available on the machine
+    let number_of_workers = available_parallelism()
+        .map(|t| t.get() as u64)
+        .unwrap_or(12);
     // Thread for receiving messages in channel and processing them across workers
     // Spawn multiple threads to process messages
     let mut handles = vec![];
-    for _ in 0..120 {
+    for _ in 0..number_of_workers * 10 {
         // let receiver_clone = receiver.clone();
         let qdrant_client_clone = Arc::clone(&app_qdrant_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);
@@ -111,7 +116,7 @@ async fn main() -> std::io::Result<()> {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
                 process_incoming_messages(receiver, qdrant_client_clone, mongo_client_clone).await;
-            })
+            });
         });
         handles.push(handle);
     }
