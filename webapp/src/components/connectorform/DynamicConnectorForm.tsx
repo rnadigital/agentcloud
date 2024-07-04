@@ -1,5 +1,6 @@
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
+import dayjs from 'dayjs';
 import { Schema } from 'lib/types/connectorform/form';
 import { useEffect, useState } from 'react';
 import { FieldValues, useFormContext } from 'react-hook-form';
@@ -15,39 +16,114 @@ interface DynamicFormProps {
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
 const ISODateSixPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}Z$';
+const ISODatePattern2 = '^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?)$';
+const DatePattern = '^[0-9]{2}-[0-9]{2}-[0-9]{4}$';
+const YYYYMMDDPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}$';
 
-function findPattern(obj: any): 'ISODatePattern' | 'ISODateSixPattern' | null {
-	if (typeof obj !== 'object' || obj === null) { 
-		return null; 
-	}
+// function findPattern(obj: any): 'ISODatePattern' | 'ISODateSixPattern' | null {
+// 	if (typeof obj !== 'object' || obj === null) { 
+// 		return null; 
+// 	}
 
-	for (const key in obj) {
-		if (key === 'pattern') {
-			switch (obj[key]) {
-				case ISODatePattern:
-					return 'ISODatePattern';
-				case ISODateSixPattern:
-					return 'ISODateSixPattern';
-				default:
-					return null;
+// 	for (const key in obj) {
+// 		if (key === 'pattern') {
+// 			switch (obj[key]) {
+// 				case ISODatePattern:
+// 					return 'ISODatePattern';
+// 				case ISODateSixPattern:
+// 					return 'ISODateSixPattern';
+// 				default:
+// 					return null;
+// 			}
+// 		}
+// 		if (typeof obj[key] === 'object') {
+// 			const result = findPattern(obj[key]);
+// 			if (result) {
+// 				return result;
+// 			}
+// 		}
+// 	}
+// 	return null;
+// }
+
+// function updateDateStrings(obj: any, pattern: 'ISODatePattern' | 'ISODateSixPattern') {
+// 	Object.keys(obj).forEach(key => {
+// 		if (typeof obj[key] === 'object') {
+// 			updateDateStrings(obj[key], pattern);
+// 		} else if (typeof obj[key] === 'string') {
+// 			switch (pattern) {
+// 				case 'ISODatePattern':
+// 					obj[key] = obj[key].replace(/\.000Z$/, 'Z');
+// 					break;
+// 				case 'ISODateSixPattern':
+// 					obj[key] = obj[key].replace(/\.000Z$/, '.000000Z');
+// 					break;
+// 				default:
+// 					break;
+// 			}
+// 		}
+// 	});
+// }
+
+function findPatterns(obj: any): { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } {
+	const foundPatterns: { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } = {};
+
+	function search(obj: any, parentKey: string = '') {
+		if (typeof obj !== 'object' || obj === null) {
+			return;
+		}
+
+		for (const key in obj) {
+			if (key === 'properties') {
+				search(obj[key], parentKey);
+				continue;
+			}
+			const currentKey = parentKey ? `${parentKey}.${key}` : key;
+			if (key === 'pattern') {
+				switch (obj[key]) {
+					case YYYYMMDDPattern:
+						foundPatterns[parentKey] = 'YYYYMMDDPattern';
+						break;
+					case DatePattern:
+						foundPatterns[parentKey] = 'DatePattern';
+						break;
+					case ISODatePattern:
+					case ISODatePattern2:
+						foundPatterns[parentKey] = 'ISODatePattern';
+						break;
+					case ISODateSixPattern:
+						foundPatterns[parentKey] = 'ISODateSixPattern';
+						break;
+					default:
+						break;
+				}
+			}
+			if (typeof obj[key] === 'object') {
+				search(obj[key], currentKey);
 			}
 		}
-		if (typeof obj[key] === 'object') {
-			const result = findPattern(obj[key]);
-			if (result) {
-				return result;
-			}
-		}
 	}
-	return null;
+	console.log('foundPatterns', foundPatterns);
+
+	search(obj);
+	return foundPatterns;
 }
 
-function updateDateStrings(obj: any, pattern: 'ISODatePattern' | 'ISODateSixPattern') {
+function updateDateStrings(obj: any, patterns: { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' }, parentKey: string = '') {
 	Object.keys(obj).forEach(key => {
+		const currentKey = parentKey ? `${parentKey}.${key}` : key;
 		if (typeof obj[key] === 'object') {
-			updateDateStrings(obj[key], pattern);
+			updateDateStrings(obj[key], patterns, currentKey);
 		} else if (typeof obj[key] === 'string') {
+
+			const pattern = patterns[currentKey];
 			switch (pattern) {
+				case 'YYYYMMDDPattern':
+					obj[key] = dayjs(obj[key]).format('YYYY-MM-DD');
+					break;
+				case 'DatePattern':
+					obj[key] = dayjs(obj[key]).format('DD-MM-YYYY');
+					break;
 				case 'ISODatePattern':
 					obj[key] = obj[key].replace(/\.000Z$/, 'Z');
 					break;
@@ -64,19 +140,12 @@ function updateDateStrings(obj: any, pattern: 'ISODatePattern' | 'ISODateSixPatt
 const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProps) => {
 	const { handleSubmit } = useFormContext();
 	const [submitting, setSubmitting] = useState(false);
-	console.log('schema', schema);
+	console.log('schema', schema,);
 
 	const onSubmit = async (data: FieldValues) => {
-		switch (findPattern(schema)) {
-			case 'ISODatePattern':
-				updateDateStrings(data, 'ISODatePattern');
-				break;
-			case 'ISODateSixPattern':
-				updateDateStrings(data, 'ISODateSixPattern');
-				break;
-			default:
-				break;
-		}
+		console.log('data', data);
+		const patterns = findPatterns(schema.properties);
+		updateDateStrings(data, patterns);
 
 		setSubmitting(true);
 		await datasourcePost(data);

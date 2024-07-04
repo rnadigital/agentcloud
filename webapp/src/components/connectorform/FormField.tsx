@@ -111,7 +111,7 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 					{selectedOption?.properties && <FormSection properties={selectedOption.properties} requiredFields={selectedOption.required} name={name} />}
 				</div >;
 			}
-			return <FormSection properties={property.properties} requiredFields={property.required} name={name} />;
+			return <FormSection properties={property.properties} requiredFields={property.required} name={name} level={level} />;
 
 		default:
 			console.error('Unknown property type:', property);

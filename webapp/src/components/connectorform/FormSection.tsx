@@ -20,23 +20,31 @@ const FormSection = ({ properties, name, requiredFields, level = 0 }: FormSectio
 		return orderA - orderB;
 	});
 
-	return sortedEntries.map(([fieldName, fieldSchema]) => {
-		return (<div key={name ? `${name}.${fieldName}` : fieldName}
+	return <div
+	
+		className={clsx({
+			'ml-4 border p-2': level === 1,
+			'ml-8 border p-2 ': level === 2,
+			'ml-12 border p-2': level >= 3,
+		})}
+	>
+		<div className='font-semibold capitalize mb-2'>{name}</div>
 
-			className={clsx({
-				'ml-4 border p-2': level === 1,
-				'ml-8 border p-2 ': level === 2,
-				'ml-12 border p-2': level >= 3,
-			})}
-		>
-			<FormField
-				name={name ? `${name}.${fieldName}` : fieldName}
-				property={fieldSchema}
-				requiredFields={requiredFields}
-				level={level + 1}
-			/>
-		</div >);
-	});
+		{sortedEntries.map(([fieldName, fieldSchema]) => {
+	
+			return (<div key={name ? `${name}.${fieldName}` : fieldName}
+
+			>
+				<FormField
+					name={name ? `${name}.${fieldName}` : fieldName}
+					property={fieldSchema}
+					requiredFields={requiredFields}
+					level={level + 1}
+				/>
+			</div >);
+		})}
+
+	</div>;
 };
 
 export default FormSection;
