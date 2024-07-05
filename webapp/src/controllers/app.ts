@@ -143,7 +143,7 @@ export async function addAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -158,7 +158,7 @@ export async function addAppApi(req, res, next) {
 				orgId: res.locals.matchingOrg.id,
 				teamId: toObjectId(req.params.resourceSlug),
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
 			    name: agentName,
 			    role,
 			    goal,
@@ -249,7 +249,7 @@ export async function editAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -264,7 +264,7 @@ export async function editAppApi(req, res, next) {
 				orgId: res.locals.matchingOrg.id,
 				teamId: toObjectId(req.params.resourceSlug),
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
 			    name: agentName,
 			    role,
 			    goal,
