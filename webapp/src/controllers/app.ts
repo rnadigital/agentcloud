@@ -202,7 +202,7 @@ export async function addAppApi(req, res, next) {
 		}),
 	});
 
-	return dynamicResponse(req, res, 302, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
+	return dynamicResponse(req, res, 200, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
 
 }
 
@@ -306,7 +306,7 @@ export async function editAppApi(req, res, next) {
 		
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
 
 }
 
