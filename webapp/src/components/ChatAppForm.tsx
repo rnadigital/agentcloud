@@ -113,8 +113,8 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 			goal,
 			backstory,
 			modelId,
-			toolIds: toolState?.map(x => x.value)
-				.concat(datasourceState?.map(x => x.value)),
+			toolIds: (toolState||[]).map(x => x.value)
+				.concat((datasourceState||[]).map(x => x.value)),
 			type: AppType.CHAT,
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
