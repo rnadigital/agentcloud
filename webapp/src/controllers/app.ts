@@ -43,7 +43,7 @@ export async function appData(req, res, _next) {
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
-	 ]);
+	]);
 	 return {
 		csrf: req.csrfToken(),
 		app,
@@ -142,7 +142,7 @@ export async function addAppApi(req, res, next) {
 				role,
 				goal,
 				backstory,
-				modelId,
+				modelId: toObjectId(modelId),
 				toolIds: toolIds.map(toObjectId),
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
@@ -248,7 +248,7 @@ export async function editAppApi(req, res, next) {
 				role,
 				goal,
 				backstory,
-				modelId,
+				modelId: toObjectId(modelId),
 				toolIds: toolIds.map(toObjectId),
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
