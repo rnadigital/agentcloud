@@ -20,51 +20,6 @@ const ISODatePattern2 = '^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2
 const DatePattern = '^[0-9]{2}-[0-9]{2}-[0-9]{4}$';
 const YYYYMMDDPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}$';
 
-// function findPattern(obj: any): 'ISODatePattern' | 'ISODateSixPattern' | null {
-// 	if (typeof obj !== 'object' || obj === null) { 
-// 		return null; 
-// 	}
-
-// 	for (const key in obj) {
-// 		if (key === 'pattern') {
-// 			switch (obj[key]) {
-// 				case ISODatePattern:
-// 					return 'ISODatePattern';
-// 				case ISODateSixPattern:
-// 					return 'ISODateSixPattern';
-// 				default:
-// 					return null;
-// 			}
-// 		}
-// 		if (typeof obj[key] === 'object') {
-// 			const result = findPattern(obj[key]);
-// 			if (result) {
-// 				return result;
-// 			}
-// 		}
-// 	}
-// 	return null;
-// }
-
-// function updateDateStrings(obj: any, pattern: 'ISODatePattern' | 'ISODateSixPattern') {
-// 	Object.keys(obj).forEach(key => {
-// 		if (typeof obj[key] === 'object') {
-// 			updateDateStrings(obj[key], pattern);
-// 		} else if (typeof obj[key] === 'string') {
-// 			switch (pattern) {
-// 				case 'ISODatePattern':
-// 					obj[key] = obj[key].replace(/\.000Z$/, 'Z');
-// 					break;
-// 				case 'ISODateSixPattern':
-// 					obj[key] = obj[key].replace(/\.000Z$/, '.000000Z');
-// 					break;
-// 				default:
-// 					break;
-// 			}
-// 		}
-// 	});
-// }
-
 function findPatterns(obj: any): { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } {
 	const foundPatterns: { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } = {};
 
@@ -103,7 +58,6 @@ function findPatterns(obj: any): { [key: string]: 'ISODatePattern' | 'ISODateSix
 			}
 		}
 	}
-	console.log('foundPatterns', foundPatterns);
 
 	search(obj);
 	return foundPatterns;
@@ -140,10 +94,8 @@ function updateDateStrings(obj: any, patterns: { [key: string]: 'ISODatePattern'
 const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProps) => {
 	const { handleSubmit } = useFormContext();
 	const [submitting, setSubmitting] = useState(false);
-	console.log('schema', schema,);
 
 	const onSubmit = async (data: FieldValues) => {
-		console.log('data', data);
 		const patterns = findPatterns(schema.properties);
 		updateDateStrings(data, patterns);
 
