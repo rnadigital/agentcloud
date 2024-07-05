@@ -273,7 +273,10 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 						{/*(editing || !showAgentForm) && */<AgentsSelect
 							agentChoices={agentChoices}
 							agentsState={agentsState}
-							onChange={agentsState => setAgentsState(agentsState)}
+							onChange={agentsState => {
+								setShowAgentForm(true);
+								setAgentsState(agentsState);
+							}}
 							setModalOpen={() => {
 								setShowAgentForm(true);
 								setAgentsState(null);
