@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::rabbitmq::models::RabbitConnect;
 use amqp_serde::types::{FieldTable, FieldValue, ShortStr};
 use amqprs::channel::{Channel, ExchangeDeclareArguments};
@@ -6,9 +7,13 @@ use amqprs::{
     channel::{BasicQosArguments, QueueBindArguments, QueueDeclareArguments},
     connection::{Connection, OpenConnectionArguments},
 };
-use tokio::time::{sleep, Duration};
+use lazy_static::lazy_static;
+use tokio::sync::RwLock;
 
-pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
+lazy_static! {
+    static ref GLOBAL_CONNECTION: Arc<RwLock<Option<Connection>>> = Arc::new(RwLock::new(None));
+}
+pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection {
     let mut res = Connection::open(
         OpenConnectionArguments::new(
             &connection_details.host,
@@ -16,19 +21,26 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
             &connection_details.username,
             &connection_details.password,
         )
+            .heartbeat(10) // Set heartbeat interval to 10 seconds
             .virtual_host("/"),
     )
         .await;
 
+    let mut connection_attempts = 0;
     while res.is_err() {
-        log::debug!("trying to connect after error");
-        sleep(Duration::from_millis(2000)).await;
-        res = Connection::open(&OpenConnectionArguments::new(
-            &connection_details.host,
-            connection_details.port,
-            &connection_details.username,
-            &connection_details.password,
-        ))
+        connection_attempts += 1;
+        let time_to_sleep = 2 + (connection_attempts * 2);
+        println!("Going to sleep for '{}' seconds then will try to re-connect...", time_to_sleep);
+        tokio::time::sleep(tokio::time::Duration::from_secs(time_to_sleep)).await;
+        res = Connection::open(
+            &OpenConnectionArguments::new(
+                &connection_details.host,
+                connection_details.port,
+                &connection_details.username,
+                &connection_details.password,
+            )
+                .heartbeat(10) // Set heartbeat interval to 10 seconds
+        )
             .await;
     }
 
@@ -37,8 +49,23 @@ pub async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Connection 
         .register_callback(DefaultConnectionCallback)
         .await
         .unwrap();
+
     connection
 }
+
+pub(crate) async fn ensure_connection(connection_details: &RabbitConnect) -> Arc<RwLock<Connection>> {
+    let global_conn = Arc::clone(&GLOBAL_CONNECTION);
+    {
+        let mut conn_guard = global_conn.write().await;
+        if conn_guard.is_none() || !conn_guard.as_ref().unwrap().is_open() {
+            let new_connection = connect_rabbitmq(connection_details).await;
+            *conn_guard = Some(new_connection);
+        }
+    }
+    let conn_guard = global_conn.read().await;
+    Arc::new(RwLock::new(conn_guard.as_ref().unwrap().clone()))
+}
+
 
 pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
     let channel = connection.open_channel(None).await.unwrap();
@@ -50,19 +77,14 @@ pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
 }
 
 pub async fn bind_queue_to_exchange(
-    connection: &mut Connection,
-    channel: &mut Channel,
     connection_details: &RabbitConnect,
     exchange: &str,
     queue: &str,
     routing_key: &str,
-) {
-    if !connection.is_open() {
-        log::warn!("Connection not open");
-        *connection = connect_rabbitmq(connection_details).await;
-        *channel = channel_rabbitmq(connection).await;
-        log::debug!("{}", connection);
-    }
+) -> Channel {
+    let connection = ensure_connection(connection_details).await;
+    let connection = connection.read().await;
+    let channel = channel_rabbitmq(&connection).await;
     // Declaring the exchange on startup
     channel
         .exchange_declare(ExchangeDeclareArguments::new(exchange, "direct"))
@@ -97,16 +119,7 @@ pub async fn bind_queue_to_exchange(
         Ok(queue_option) => {
             match queue_option {
                 Some((queue, _, _)) => {
-                    //check if the channel is open, if not then open it
-                    if !channel.is_open() {
-                        log::warn!(
-                            "Channel is not open, does exchange {} exist on rabbitMQ?",
-                            exchange
-                        );
-                        *channel = channel_rabbitmq(connection).await;
-                    }
-
-                    // bind the queue to the exchange using this channel
+                    // Bind the queue to the exchange using this channel
                     channel
                         .queue_bind(QueueBindArguments::new(&queue, exchange, routing_key))
                         .await
@@ -119,4 +132,6 @@ pub async fn bind_queue_to_exchange(
             log::error!("An error occurred while setting up the queue: {}", e)
         }
     }
+
+    channel
 }

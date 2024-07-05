@@ -52,6 +52,8 @@ export function calcPerms(account, matchingOrg, matchingTeam) {
 			}
 		}
 
+		// log('Calculated permissions: %o', calculatedPermissions.toJSON());
+
 		// Apply inheritance, see Permission
 		calculatedPermissions.applyInheritance();
 

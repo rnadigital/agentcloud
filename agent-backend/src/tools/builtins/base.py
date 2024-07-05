@@ -20,6 +20,7 @@ class BaseBuiltinTool(GlobalBaseTool):
     code: str
     function_name: str
     properties_dict: dict
+    api_key: str
     args_schema: Type[BaseModel] = BuiltinToolArgsSchema
     logger: logging.Logger = None
 
@@ -30,7 +31,8 @@ class BaseBuiltinTool(GlobalBaseTool):
             description=tool.description,
             function_name=tool.data.name,
             code=tool.data.code,
-            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else [],
+            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else {},
+            api_key=tool.data.apiKey,
             verbose=True,
             handle_tool_error=True
         )
@@ -46,13 +48,12 @@ class BaseBuiltinTool(GlobalBaseTool):
 
     @staticmethod
     def extract_query_val(text):
-        res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', text)
+        res = re.findall('["\']?(?:query|text)["\']?:\s*["\'](.+)["\']', text)
         return res[0] if res else text
 
     def _run(self, query: str) -> str:
         try:
             self.logger.debug(f"{self.__class__.__name__} received {query}")
-            # json_query = json.loads(query)
             # TODO: should figure a better way to do this... ideally using LLM itself
             query_val = self.extract_query_val(query)
             self.logger.info(f"{self.__class__.__name__} search string = '{query_val}'")

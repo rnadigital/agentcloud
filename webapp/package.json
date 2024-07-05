@@ -19,6 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-ses": "^3.465.0",
     "@google-cloud/functions": "^3.4.0",
+    "@google-cloud/logging": "^11.1.0",
     "@google-cloud/pubsub": "^4.4.0",
     "@google-cloud/secret-manager": "^5.0.1",
     "@google-cloud/storage": "^7.7.0",
@@ -58,6 +59,8 @@
     "express-session": "^1.17.3",
     "fs-extra": "^10.1.0",
     "html-react-parser": "^5.1.10",
+    "google-auth-library": "^9.10.0",
+    "google-proto-files": "^4.2.0",
     "ioredis": "^5.3.2",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",

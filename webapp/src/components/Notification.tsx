@@ -16,7 +16,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 export function Notification({ index, title, description, date, seen, _id, markSeen }) {
 	const [gone, setGone] = useState(false);
 	return (
-		<div className={`p-4 ${index === 0 ? '' : 'border-t'} ${seen ? 'bg-gray-100' : 'bg-white'} transition-all duration-500 max-h-[500px] overflow-hidden ${gone ? 'max-h-0 opacity-0' : ''}`}>
+		<div className={`p-4 ${index === 0 || gone ? '' : 'border-t'} ${seen ? 'bg-gray-100' : 'bg-white'} transition-all duration-500 max-h-[500px] overflow-hidden ${gone ? 'max-h-0 opacity-0' : ''}`}>
 			{!seen && <div className='ml-3 flex h-7 items-center cursor-pointer rounded-full right-5 absolute w-4 h-4'>
 				<button
 					type='button'
@@ -38,16 +38,6 @@ export function Notification({ index, title, description, date, seen, _id, markS
 				{description}
 			</Markdown>
 			<p className='text-xs text-gray-500'>{new Date(date).toLocaleString()}</p>
-		</div>
-	);
-}
-
-export function NotificationBox({ notifications }) {
-	return (
-		<div className='max-w-sm max-h-20 w-full bg-white shadow-md rounded-lg overflow-hidden'>
-			{notifications.slice(0, 5).map((notification, index) => (
-				<Notification key={index} index={index} {...notification} />
-			))}
 		</div>
 	);
 }

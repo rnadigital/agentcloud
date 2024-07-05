@@ -27,6 +27,12 @@ export type TimeWeightedRetrieverConfig = {
 
 export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
 
+export enum ToolState {
+	PENDING = 'pending',
+	READY = 'ready',
+	ERROR = 'error'
+}
+
 export type Tool = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -38,10 +44,13 @@ export type Tool = {
  	retriever_type?: Retriever;
 	retriever_config?: RetrieverConfig;
  	datasourceId?: ObjectId;
+ 	state?: ToolState;
 	data?: {
+		runtime?: string;
 		builtin?: boolean;
 		name: string;
 		description?: string;
+		apiKey?: string;
 		environmentVariables?: Record<string,string>;
 		parameters?: {
 			//type: string;
@@ -49,10 +58,14 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
+		requirements?: string;
 		openAPIMatchKey?: string;
 	},
 	icon?: IconAttachment;
 	hidden?: boolean;
+ 	functionId?: string;
+ 	revisionId?: ObjectId;
+ 	functionLogs?: string;
 };
 
 export type FunctionProperty = {

@@ -27,16 +27,20 @@ import { Retriever, ToolType } from 'struct/tool';
 import { promisify } from 'util';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
+
+import {
+	addDatasource, deleteDatasourceById, editDatasource, getDatasourceById,
+	getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding,
+	setDatasourceLastSynced, setDatasourceStatus
+} from '../db/datasource';
 const log = debug('webapp:controllers:datasource');
 
 import addFormats from 'ajv-formats';
 import submittingReducer from 'utils/submittingreducer';
 
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced, setDatasourceStatus } from '../db/datasource';
+const ajv = new Ajv({ strict: 'log' });
 
-const ajv = new Ajv({ strict: 'log', meta: true });
 addFormats(ajv);
-
 function validateDateTimeFormat(dateTimeStr) {
 	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
@@ -328,74 +332,37 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
 	}
 
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
-	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		descriptionsMap,
-		connectionId: datasource.connectionId,
+		name: datasource._id.toString(),
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		syncCatalog: {
-			streams: streams.map(s => {
-				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
-				const config = {
-					aliasName: s,
-					syncMode: 'full_refresh',
-					destinationSyncMode: 'append',
-					fieldSelectionEnabled,
-					selected: true,
-					primaryKey: [],
-					cursorField: [],
-				};
-				if (fieldSelectionEnabled) {
-					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: [x] }));
-				}
-				return {
-					stream: {
-						name: s,
-						description: descriptionsMap[s],
-						defaultCursorField: [],
-						sourceDefinedPrimaryKey: [],
-						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
-						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh', 'incremental'],
-					},
-					config,
-				};
-			})
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append'
+			})),
 		},
-		scheduleType: scheduleType,
+		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource._id.toString(),
 		status: 'active',
-		operations: [],
-		skipReset: false,
 	};
 	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
 		};
 	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'cron',
+			cronExpression,
 		};
 	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
-	log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
@@ -484,22 +451,16 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 		scheduleType: scheduleType,
 	};
 	connectionBody['connectionId'] = datasource.connectionId;
+
 	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
 		};
 	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'cron',
+			cronExpression,
 		};
-	} else {
-		delete connectionBody['scheduleData'];
 	}
 	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
@@ -507,10 +468,11 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 		.then(res => res.data);
 	log('updatedConnection', updatedConnection);
 
-	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
-	]);
+	// Update the datasource with the connection settings
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: datasource.connectionId,
+		connectionSettings: connectionBody,
+	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -552,81 +514,37 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		'retriever_config.metadata_field_info': metadata_field_info,
 	});
 
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
-	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		descriptionsMap,
-		connectionId: datasource.connectionId,
+		name: datasource._id.toString(),
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		syncCatalog: {
-			streams: streams.map(s => {
-				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
-				const config = {
-					aliasName: s,
-					syncMode: 'full_refresh',
-					destinationSyncMode: 'append',
-					fieldSelectionEnabled,
-					selected: true,
-					primaryKey: [],
-					cursorField: [],
-				};
-				if (fieldSelectionEnabled) {
-					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: [x] }));
-				}
-				return {
-					stream: {
-						name: s,
-						defaultCursorField: [],
-						sourceDefinedPrimaryKey: [],
-						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
-						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh', 'incremental'],
-					},
-					config,
-				};
-			})
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append'
+			})),
 		},
-		scheduleType,
+		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource._id.toString(),
 		status: 'active',
-		operations: [],
-		skipReset: false,
 	};
 	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
 		};
 	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
+		connectionBody['schedule'] = {
+			scheduleType: 'cron',
+			cronExpression,
 		};
 	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	let updatedConnection;
-	if (connectionBody?.connectionId) {
-		updatedConnection = await connectionsApi
-			.updateConnection(null, connectionBody)
-			.then(res => res.data);
-		log('updatedConnection', updatedConnection);
-	} else {
-		updatedConnection = await connectionsApi
-			.createConnection(null, connectionBody)
-			.then(res => res.data);
-		log('createdConnection', JSON.stringify(updatedConnection, null, 2));
-	}
+	const createdConnection = await connectionsApi
+		.patchConnection(datasource.connectionId, connectionBody)
+		.then(res => res.data);
 
 	// Create the collection in qdrant
 	try {
@@ -650,10 +568,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
-		// sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
-	]);
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: datasource.connectionId,
+		connectionSettings: connectionBody,
+		descriptionsMap,
+	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -734,15 +653,21 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
-		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-		const jobBody = {
-			connectionId: datasource.connectionId,
-			jobType: 'reset',
-		};
-		const resetJob = await jobsApi
-			.createJob(null, jobBody)
-			.then(res => res.data);
-		log('resetJob', resetJob);
+
+		try {
+			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+			const jobBody = {
+				connectionId: datasource.connectionId,
+				jobType: 'reset',
+			};
+			const resetJob = await jobsApi
+				.createJob(null, jobBody)
+				.then(res => res.data);
+			log('resetJob', resetJob);
+		} catch (e) {
+			// Continue but log a warning if the reset job api call fails
+			console.warn(e);
+		}
 
 		// Delete the connection in airbyte
 		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);

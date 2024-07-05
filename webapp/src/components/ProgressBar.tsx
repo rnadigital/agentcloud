@@ -15,7 +15,7 @@ const ProgressBar: React.FC<ProgressBarProps> = function ({ total=null, success=
 		<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white px-2'>
 			<span className='tooltip z-100'>
 				{text}{' '}
-				({successPercentage.toFixed(1).endsWith('0') ? successPercentage : successPercentage.toFixed(1)}%)
+				({successPercentage.toFixed(1).endsWith('.0') ? successPercentage : successPercentage.toFixed(1)}%)
 				{(successPercentage > 0 || failurePercentage > 0) && <span className='tooltiptext capitalize !w-[150px] !-ml-[75px] whitespace-pre'>
 					{total && `${(success||0)+(failure||0)}/${total} (${successPercentage.toFixed(1)}%)\nsuccess: ${success||0}\nfailure: ${failure||0}`}
 				</span>}
