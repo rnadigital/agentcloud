@@ -152,6 +152,7 @@ services:
       - HOST=0.0.0.0
       - PORT=9001
       - MONGO_URI=mongodb://docker_mongo:27017
+      - MONGO_DB_NAME=test
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
@@ -160,6 +161,8 @@ services:
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
       - QDRANT_URI=http://qdrant:6334
+      - QDRANT_HOST=http://qdrant
+      - QDRANT_PORT=6334
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - WEBAPP_HOST=webapp_next

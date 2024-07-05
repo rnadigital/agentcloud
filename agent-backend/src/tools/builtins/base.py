@@ -1,7 +1,7 @@
 import logging
 import re
 from abc import abstractmethod
-from typing import Type
+from typing import Type, Optional
 
 from langchain_core.tools import ToolException
 from pydantic import BaseModel, Field
@@ -20,7 +20,7 @@ class BaseBuiltinTool(GlobalBaseTool):
     code: str
     function_name: str
     properties_dict: dict
-    api_key: str
+    api_key: Optional[str] = None
     args_schema: Type[BaseModel] = BuiltinToolArgsSchema
     logger: logging.Logger = None
 

@@ -1,6 +1,4 @@
-use std::sync::Arc;
 use crossbeam::channel::{Sender};
-use tokio::sync::RwLock;
 
 /// Adds the incoming task to the execution Queue to be processes when threads are available
 pub async fn send_task(

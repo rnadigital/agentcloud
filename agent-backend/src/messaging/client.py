@@ -1,7 +1,10 @@
 import logging
 import random
 import time
+
 from crew.get_crew_components import construct_crew, looping_app, session_terminated
+from chat import ChatAssistant
+from models.mongo import AppType
 from utils.log_exception_context_manager import log_exception
 from bullmq import Worker, Job
 from init.env_variables import REDIS_HOST, REDIS_PORT
@@ -11,7 +14,8 @@ import threading
 async def process(job: Job, token: str):
     print(f'Running session ID: {job.data.get("sessionId")}')
     # Send job to the correct executor based on the job type
-    thread = threading.Thread(target=execute_task, args=[job.data])
+    target = execute_chat_task if job.data.get('type') == AppType.CHAT else execute_task
+    thread = threading.Thread(target=target, args=[job.data])
     thread.start()
     return True
 
@@ -45,3 +49,8 @@ def execute_task(data: dict):
             loop_max = loop_max - 1
             if looping_app(app) == False or loop_max < 1 or session_terminated(session_id):
                 break
+
+
+def execute_chat_task(data: dict):
+    chat = ChatAssistant(data.get('sessionId'))
+    chat.run()

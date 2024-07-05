@@ -5,10 +5,8 @@ use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
-use std::sync::Arc;
 use crossbeam::channel::Sender;
 use dotext::*;
-use tokio::sync::{RwLock};
 use crate::messages::task_handoff::send_task;
 
 pub struct TextExtraction;

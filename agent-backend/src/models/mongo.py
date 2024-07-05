@@ -255,6 +255,7 @@ class Session(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     crewId: Crew
+    appId: Optional[PyObjectId] = None
 
 
 class Datasource(BaseModel):
@@ -271,12 +272,20 @@ class Datasource(BaseModel):
     connectionId: PyObjectId
     destinationId: PyObjectId
 
+
 class AppType(str, Enum):
     CHAT = "chat"
     PROCESS = "process"
+
+
+class ChatAppConfig(BaseModel):
+    agentId: PyObjectId
+    conversationStarters: list[str] = Field(default_factory=list)
 
 
 class App(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     appType: Optional[AppType] = Field(default=None)
     crewId: Optional[PyObjectId] = Field(default=None)
+    chatAppConfig: Optional[ChatAppConfig] = None
+
