@@ -119,8 +119,15 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {
-			await API.editApp(app._id, body, () => {
+			await API.editApp(app._id, body, res => {
 				toast.success('App Updated');
+				if (run === true) {
+					API.addSession({
+						_csrf: e.target._csrf.value,
+						resourceSlug,
+						id: res._id,
+					}, null, setError, router);
+				}
 			}, setError, null);
 		} else {
 			API.addApp(body, (res) => {
