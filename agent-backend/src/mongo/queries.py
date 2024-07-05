@@ -86,7 +86,6 @@ class MongoClientConnection(MongoConnection):
     def get_agent_datasources(self, agent: Dict):
         pass
 
-
     def get_app_by_crew_id(self, crewId: PyObjectId):
         return self.get_single_model_by_query("apps", App, {"crewId": crewId})
 

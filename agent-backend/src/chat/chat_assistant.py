@@ -67,7 +67,7 @@ class ChatAssistant:
         agentcloud_agent = self.mongo_client.get_single_model_by_id("agents", Agent, app_config.agentId)
         agentcloud_tools = self.mongo_client.get_models_by_ids("tools", Tool, agentcloud_agent.toolIds)
 
-        self.system_message = '\n'.join([agentcloud_agent.backstory, agentcloud_agent.role, agentcloud_agent.goal])
+        self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
 
         model = self.mongo_client.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         self.chat_model = language_model_factory(model)
