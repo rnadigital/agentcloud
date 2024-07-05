@@ -208,7 +208,7 @@ class ChatAssistant:
                         first = False
                         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
 
-                    # praser chunk
+                    # parser chunk
                     case "on_parser_stream":
                         logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}", flush=True)
 
@@ -231,8 +231,8 @@ class ChatAssistant:
                     case "on_tool_end":
                         logging.debug(f"{kind}:\n{event}", flush=True)
                         tool_name = event.get('name').replace('_', ' ').capitalize()
-                        self.send_to_sockets(f"Finished using tool: {tool_name}", "message_complete", True,
-                                             tool_chunk_id, datetime.now().timestamp() * 1000, "inline")
+                        self.send_to_sockets(f"Finished using tool: {tool_name}", "message", True,
+                                             tool_chunk_id, datetime.now().timestamp() * 1000, "inline", None, True)
                         tool_chunk_id = str(uuid.uuid4())
 
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
