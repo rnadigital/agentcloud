@@ -3,14 +3,8 @@ import Select from 'react-tailwindcss-select';
 import { ModelEmbeddingLength } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ModelSelect({ models, initialModelId, label, onChange, setModalOpen, callbackKey, setCallbackKey }) {
-	const foundModel = models.find(m => m._id === initialModelId);
-	const [modelState, setModelState] = useState(foundModel ? { label: foundModel.name, value: foundModel._id } : null);
-
-	useEffect(() => {
-		onChange(modelState);
-	}, [modelState]);
-
+export default function ModelSelect({ models, modelId, label, onChange, setModalOpen, callbackKey, setCallbackKey }) {
+	const foundModel = models.find(m => m._id === modelId);
 	return (
 		<div className='sm:col-span-12'>
 			<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -21,14 +15,14 @@ export default function ModelSelect({ models, initialModelId, label, onChange, s
 					isClearable
 					primaryColor={'indigo'}
 					classNames={SelectClassNames}
-					value={modelState}
+					value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}
 					onChange={(v: any) => {
 						if (v?.value === null) {
 							setModalOpen('model');
 							setCallbackKey && setCallbackKey(callbackKey);
 							return;
 						}
-						setModelState(v);
+						onChange(v);
 					}}
 					options={models.filter(m => !ModelEmbeddingLength[m.model]).map(c => ({ label: c.name || c._id, value: c._id })).concat([{ label: '+ New model', value: null }])}
 					formatOptionLabel={data => {

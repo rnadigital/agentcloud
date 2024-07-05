@@ -221,14 +221,14 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 
 					<ToolsSelect
 						tools={tools}
-						initialTools={initialTools}
+						toolState={toolState}
 						onChange={toolState => setToolState(toolState)}
 						setModalOpen={setModalOpen}
 					/>
 				
 					<ModelSelect
 						models={models}
-						initialModelId={modelId}
+						modelId={modelId}
 						label='Model'
 						onChange={model => setAgent(oldAgent => ({ ...oldAgent, modelId: model?.value }))}
 						setModalOpen={setModalOpen}
@@ -244,7 +244,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 
 						<ModelSelect
 							models={models}
-							initialModelId={functionModelId}
+							modelId={functionModelId}
 							label='Function Calling Model'
 							onChange={model => setAgent(oldAgent => ({ ...oldAgent, functionModelId: model?.value }))}
 							setModalOpen={setModalOpen}

@@ -245,7 +245,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 						
 						<AgentsSelect
 							agentChoices={agentChoices}
-							initialAgents={initialAgents}
+							agentsState={agentsState}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={setModalOpen}
 						/>
