@@ -1,7 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { addAgent,getAgentById,getAgentsByTeam } from 'db/agent';
+import { addAgent,getAgentById,getAgentsByTeam,updateAgent } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
@@ -137,6 +137,14 @@ export async function addAppApi(req, res, next) {
 		});
 	} else {
 		if (agentId) {
+			await updateAgent(req.params.resourceSlug, agentId, {
+				name: agentName,
+				role,
+				goal,
+				backstory,
+				modelId,
+				toolIds: toolIds.map(toObjectId),
+			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -235,6 +243,14 @@ export async function editAppApi(req, res, next) {
 		});
 	} else {
 		if (agentId) {
+			await updateAgent(req.params.resourceSlug, agentId, {
+				name: agentName,
+				role,
+				goal,
+				backstory,
+				modelId,
+				toolIds: toolIds.map(toObjectId),
+			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -281,7 +297,7 @@ export async function editAppApi(req, res, next) {
 			cache: cache === true,
 		}: {
 			chatAppConfig: {
-				agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
+				agentId: toObjectId(agentId),
 				conversationStarters: (conversationStarters||[])
 					.map(x => x.trim())
 					.filter(x => x),
