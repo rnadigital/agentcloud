@@ -43,10 +43,9 @@ impl MessageQueue for QueueConnectionTypes {
     type Queue = Self;
 
     async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
-        println!("Starting to consume");
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
-                pubsub_consume(&stream, qdrant_client, mongo_client, sender,).await;
+                pubsub_consume(&stream, qdrant_client, mongo_client, sender).await;
             }
             QueueConnectionTypes::RabbitMQ(channel) => {
                 rabbit_consume(&channel, qdrant_client, mongo_client, sender).await;

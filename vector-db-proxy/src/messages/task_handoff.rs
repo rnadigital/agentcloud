@@ -5,9 +5,8 @@ pub async fn send_task(
     sender: Sender<(String, String)>,
     params: (String, String),
 ) {
-    println!("Sending task to channel");
     let (dataset_id, message) = params;
     // Instantiate a new instance of the MyQueue
     let _ = sender.send((dataset_id, message))
-        .map_err(|err| println!("an error occurred: {}", err));
+        .map_err(|err| log::error!("An error occurred while sending task to channel: {}", err));
 }

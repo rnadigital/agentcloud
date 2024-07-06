@@ -72,8 +72,6 @@ pub async fn process_incoming_messages(
     let mongo_connection = Arc::clone(&mongo_conn);
     let receiver_clone = receiver.clone();
     while let Ok(msg) = receiver_clone.recv() {
-        println!("{:?}", msg);
-        println!("processing incoming messages");
         let (datasource_id, message) = msg;
         match serde_json::from_str(message.as_str()) {
             Ok::<Value, _>(message_data) => {

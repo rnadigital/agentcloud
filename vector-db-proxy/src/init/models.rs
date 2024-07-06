@@ -1,3 +1,4 @@
+use std::thread::available_parallelism;
 use serde::Serialize;
 
 #[derive(Clone, Serialize, Debug, Default)]
@@ -20,6 +21,7 @@ pub struct GlobalData {
     pub redis_host: String,
     pub redis_port: String,
     pub thread_percentage_utilisation: f64,
+    pub number_of_threads: f64,
     pub use_gpu: String,
     pub logging_level: String,
     pub message_queue_provider: String,
@@ -50,6 +52,9 @@ impl GlobalData {
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
             thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION")
                 .unwrap_or("1".to_string()).parse().unwrap_or(0.8),
+            number_of_threads: available_parallelism()
+                .map(|t| t.get() as f64)
+                .unwrap_or(12.0),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
             message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER").unwrap_or("rabbitmq".to_string()),
