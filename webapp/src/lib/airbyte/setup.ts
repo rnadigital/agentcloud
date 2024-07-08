@@ -100,7 +100,7 @@ async function createDestination(workspaceId: string, provider: string) {
 // Function to deletea destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/delete`, {
-		method: 'DELETE',
+		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			Authorization: authorizationHeader
@@ -233,7 +233,7 @@ export async function init() {
 			});
 			if (configMismatch) {
 				log('Destination configuration mismatch detected, delete and recreate the destination.');
-				await deleteDestination(airbyteAdminDestination?.destinationId);
+				await deleteDestination(airbyteAdminDestination.destinationId);
 				airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider);
 				log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 				if (!airbyteAdminDestination.destinationId) {
