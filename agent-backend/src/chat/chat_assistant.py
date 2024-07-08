@@ -4,7 +4,6 @@ import re
 import uuid
 from datetime import datetime
 
-from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 from langchain_core.tools import tool, BaseTool
@@ -112,6 +111,9 @@ class ChatAssistant:
             return {"messages": [response]}
 
         def invoke_human_input(state):
+            """
+            Same as `call_model` except it appends a prompt to invoke the human input tool to message state
+            """
             messages = (state["messages"] +
                         [HumanMessage(content="Use the human_input tool to ask the user what assistance they need")])
             response = self.chat_model.invoke(messages)
@@ -130,7 +132,10 @@ class ChatAssistant:
         workflow.add_node("tools", tools_node)
         workflow.add_node("human_input_invoker", invoke_human_input)
 
-        workflow.add_edge(START, "chat_model")
+        workflow.add_edge(START, "human_input_invoker")
+        workflow.add_edge("human_input_invoker", "human_input")
+        workflow.add_edge("human_input", "chat_model")
+        workflow.add_edge("tools", "chat_model")
 
         def should_continue(state):
             messages = state["messages"]
@@ -138,6 +143,7 @@ class ChatAssistant:
             # If there is no function call, then we finish
             if not last_message.tool_calls:
                 return "end"
+            # allow for human-in-the-loop flow
             elif last_message.tool_calls[0]["name"] == "human_input":
                 return "human_input"
             # Otherwise if there is, we continue
@@ -151,14 +157,10 @@ class ChatAssistant:
                 # If `tools`, then we call the tool node.
                 "continue": "tools",
                 "human_input": "human_input",
-                # Otherwise we finish and go back to human input invoker.
+                # Otherwise we finish and go back to human input invoker. Always end with human_input_invoker
                 "end": "human_input_invoker"
             },
         )
-
-        workflow.add_edge("tools", "chat_model")
-        workflow.add_edge("human_input", "chat_model")
-        workflow.add_edge("human_input_invoker", "human_input")
 
         # Set up memory
         memory = MemorySaver()
@@ -168,8 +170,7 @@ class ChatAssistant:
     def run(self):
         config = {"configurable": {"thread_id": self.session_id}}
         system_message = SystemMessage(content=self.system_message)
-        input_message = HumanMessage(content="Use the human_input tool to ask the user what assistance they need")
-        asyncio.run(self.stream_execute([system_message, input_message], config))
+        asyncio.run(self.stream_execute([system_message], config))
 
     def stop_generating_check(self):
         try:
