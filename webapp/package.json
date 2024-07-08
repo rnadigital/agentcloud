@@ -59,6 +59,7 @@
     "google-auth-library": "^9.10.0",
     "google-proto-files": "^4.2.0",
     "ioredis": "^5.3.2",
+    "ip6addr": "^0.2.5",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
