@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "incremental": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "outDir": "dist",
