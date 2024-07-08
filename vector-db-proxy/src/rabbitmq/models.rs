@@ -55,7 +55,6 @@ pub async fn rabbit_consume(
     mongo_client: Arc<RwLock<Database>>,
     sender: Sender<(String, String)>,
 ) {
-    println!("Consuming from RabbitMQ");
     let global_data = GLOBAL_DATA.read().await;
     let queue_name = global_data.rabbitmq_stream.as_str();
     let args = BasicConsumeArguments::new(queue_name, "");
@@ -63,7 +62,6 @@ pub async fn rabbit_consume(
         match streaming_queue.basic_consume_rx(args.clone()).await {
             Ok((_, mut messages_rx)) => {
                 while let Some(message) = messages_rx.recv().await {
-                    println!("received something!");
                     let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = streaming_queue.basic_ack(args).await;
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
@@ -94,6 +92,7 @@ pub async fn rabbit_consume(
             }
         }
     }
+    // todo: need to implement reconnection logic
     // // Reconnect on error
     // self.connect(MessageQueueProvider::RABBITMQ).await;
     // // Sleep before retrying to avoid tight loop in case of persistent issues

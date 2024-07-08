@@ -65,7 +65,6 @@ pub async fn get_embedding_model_and_embedding_key(
     let models_collection = db.collection::<Model>("models");
 
     // Attempt to find the datasource. If not found or error, handle accordingly.
-    println!("Datasource ID: {}", datasource_id);
     match datasources_collection
         .find_one(
             doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},

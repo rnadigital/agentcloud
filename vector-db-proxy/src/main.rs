@@ -100,14 +100,15 @@ async fn main() -> std::io::Result<()> {
     let subscribe_to_message_stream = tokio::spawn(async move {
         let _ = connection.consume(connection.clone(), qdrant_connection_for_streaming, mongo_client_for_streaming, sender_clone).await;
     });
-    // Figure out how many threads are available on the machine
-    let number_of_workers = available_parallelism()
-        .map(|t| t.get() as u64)
-        .unwrap_or(12);
+    // Figure out how many threads are available on the machine and the percentage of those that the user would like to use when syncing data
+    let number_of_workers = (
+        global_data.number_of_threads * global_data.thread_percentage_utilisation)
+        as i32;
+    println!("{} threads available for work", number_of_workers);
     // Thread for receiving messages in channel and processing them across workers
     // Spawn multiple threads to process messages
     let mut handles = vec![];
-    for _ in 0..number_of_workers * 10 {
+    for _ in 0..(number_of_workers * 10) {
         // let receiver_clone = receiver.clone();
         let qdrant_client_clone = Arc::clone(&app_qdrant_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);

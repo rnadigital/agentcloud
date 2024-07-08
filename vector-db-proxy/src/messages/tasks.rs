@@ -50,7 +50,6 @@ pub async fn get_message_queue(
 }
 
 pub async fn process_message(message_string: String, stream_type: Option<String>, datasource_id: &str, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
-    println!("process_message");
     let mongodb_connection = mongo_client.read().await;
     match get_datasource(&mongodb_connection, datasource_id).await {
         Ok(datasource) => {
@@ -59,7 +58,6 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                     if let Some(stream_type) = stream_type {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression
-                            println!("Rabbit Message Data: {:#?}", message_data);
                             match file_operations::read_file_from_source(Some(stream_type.to_string()), message_data).await {
                                 Some((file_type, file, file_path)) => {
                                     save_file_to_disk(file, file_path.as_str()).await.unwrap();

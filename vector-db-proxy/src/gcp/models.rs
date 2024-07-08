@@ -38,10 +38,8 @@ impl MessageQueueConnection for PubSubConnect {
 }
 
 pub async fn pubsub_consume(stream: &Arc<Mutex<MessageStream>>, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
-    println!("Consuming from Pub/Sub");
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
-            println!("Received Message. Processing...");
             let cloned_message = message.message.clone();
             let message_attributes = cloned_message.attributes;
             if let Ok(message_string) = String::from_utf8(cloned_message.data) {
