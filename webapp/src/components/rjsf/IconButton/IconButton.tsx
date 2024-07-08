@@ -13,9 +13,9 @@ import {
 } from '@rjsf/utils';
 
 export default function IconButton<
-  T = any,
-  S extends StrictRJSFSchema = RJSFSchema,
-  F extends FormContextType = any,
+	T = any,
+	S extends StrictRJSFSchema = RJSFSchema,
+	F extends FormContextType = any,
 >(props: IconButtonProps<T, S, F>) {
 	const {
 		icon,
@@ -28,12 +28,12 @@ export default function IconButton<
 	} = props;
 	const buttonClass = iconType === 'block' ? 'w-full' : '';
 	const variantClass =
-    // @ts-expect-error incomplete type from rjsf
-    props.variant === 'danger'
-    	? 'bg-red-500 hover:bg-red-700 text-white'
-    	: disabled
-    		? 'bg-gray-100 text-gray-300'
-    		: 'bg-gray-200 hover:bg-gray-500 text-gray-700';
+		// @ts-expect-error incomplete type from rjsf
+		props.variant === 'danger'
+			? 'bg-red-500 hover:bg-red-700 text-white'
+			: disabled
+				? 'bg-gray-100 text-gray-300'
+				: 'bg-gray-200 hover:bg-gray-500 text-gray-700';
 
 	return (
 		<button
@@ -46,9 +46,9 @@ export default function IconButton<
 }
 
 export function CopyButton<
-  T = any,
-  S extends StrictRJSFSchema = RJSFSchema,
-  F extends FormContextType = any,
+	T = any,
+	S extends StrictRJSFSchema = RJSFSchema,
+	F extends FormContextType = any,
 >(props: IconButtonProps<T, S, F>) {
 	const {
 		registry: { translateString },
@@ -63,9 +63,9 @@ export function CopyButton<
 }
 
 export function MoveDownButton<
-  T = any,
-  S extends StrictRJSFSchema = RJSFSchema,
-  F extends FormContextType = any,
+	T = any,
+	S extends StrictRJSFSchema = RJSFSchema,
+	F extends FormContextType = any,
 >(props: IconButtonProps<T, S, F>) {
 	const {
 		registry: { translateString },
@@ -81,9 +81,9 @@ export function MoveDownButton<
 }
 
 export function MoveUpButton<
-  T = any,
-  S extends StrictRJSFSchema = RJSFSchema,
-  F extends FormContextType = any,
+	T = any,
+	S extends StrictRJSFSchema = RJSFSchema,
+	F extends FormContextType = any,
 >(props: IconButtonProps<T, S, F>) {
 	const {
 		registry: { translateString },
@@ -98,9 +98,9 @@ export function MoveUpButton<
 }
 
 export function RemoveButton<
-  T = any,
-  S extends StrictRJSFSchema = RJSFSchema,
-  F extends FormContextType = any,
+	T = any,
+	S extends StrictRJSFSchema = RJSFSchema,
+	F extends FormContextType = any,
 >(props: IconButtonProps<T, S, F>) {
 	const {
 		registry: { translateString },
@@ -109,7 +109,7 @@ export function RemoveButton<
 		<IconButton
 			title={translateString(TranslatableString.RemoveButton)}
 			{...props}
-      // @ts-expect-error incomplete props from rjsf
+			// @ts-expect-error incomplete props from rjsf
 			variant='danger'
 			icon={<XMarkIcon className='h-4' />}
 		/>

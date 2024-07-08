@@ -1,6 +1,8 @@
 import './globals.css';
 import 'nprogress/nprogress.css';
 import 'react-toastify/dist/ReactToastify.css';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/material.css';
 
 import Layout from 'components/Layout';
 import { AccountWrapper } from 'context/account';
@@ -30,7 +32,7 @@ if (typeof window !== 'undefined') {
 		capture_pageview: false // Disable automatic pageview capture, as we capture manually
 	});
 }
-  
+
 NProgress.configure({ showSpinner: false });
 Router.events.on('routeChangeStart', (url) => NProgress.start());
 Router.events.on('routeChangeComplete', (url) => NProgress.done());

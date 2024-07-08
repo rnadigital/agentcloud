@@ -5,7 +5,6 @@ process
 	.on('unhandledRejection', console.error);
 
 import dotenv from 'dotenv';
-import path from 'path';
 dotenv.config({ path: '.env' });
 import { getShortCommitHash } from './lib/commit';
 if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
@@ -81,7 +80,7 @@ app.prepare()
 			return handle(req, res);
 		});
 
-		server.use((err, req, res, _next) => {
+		server.use((err, req, res, _next) => { //TODO: remove
 			const uuid = uuidv4();
 			console.error('An error occurred', uuid, err);
 			return dynamicResponse(req, res, 400, { error: `An error occurred. Please contact support with code: ${uuid}` });
