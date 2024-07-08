@@ -166,6 +166,7 @@ services:
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
       - LOGGING_LEVEL=debug
+      - MONGO_DB_NAME=test
 
     volumes:
       - datasource_files:/tmp
