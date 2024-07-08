@@ -6,7 +6,7 @@ from datetime import datetime
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 from langchain_core.tools import tool, BaseTool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.graph import CompiledGraph
@@ -93,7 +93,9 @@ class ChatAssistant:
             embedding_model = self.mongo_client.get_single_model_by_id("models", Model, datasource.modelId)
             embedding = language_model_factory(embedding_model)
 
-            return RagTool.factory(tool=agentcloud_tool, models=[(embedding, embedding_model)], datasources=[datasource],
+            return RagTool.factory(tool=agentcloud_tool,
+                                   models=[(embedding, embedding_model)],
+                                   datasources=[datasource],
                                    llm=self.chat_model)
         elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL and not agentcloud_tool.data.builtin:
             tool_class = GoogleCloudFunctionTool
@@ -177,8 +179,7 @@ class ChatAssistant:
         except:
             return False
 
-    async def stream_execute(self, task_prompt, config):
-        acc = ""
+    async def stream_execute(self, messages: list[BaseMessage], config: dict):
         chunk_id = str(uuid.uuid4())
         tool_chunk_id = str(uuid.uuid4())
         first = True
@@ -186,27 +187,31 @@ class ChatAssistant:
         try:
             async for event in self.workflow.astream_events(
                     {
-                        "messages": task_prompt,
+                        "messages": messages,
                     },
                     config=config,
                     version="v1",
             ):
                 if self.stop_generating_check():
-                    self.send_to_sockets(f"🛑 Stopped generating.", "message", True, str(uuid.uuid4()),
-                                         datetime.now().timestamp() * 1000, "inline")
+                    self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
+                                        first=True, chunk_id=str(uuid.uuid4()),
+                                        timestamp=datetime.now().timestamp() * 1000,
+                                        display_type="inline")
                     return
 
                 kind = event["event"]
-                logging.debug(f"{kind}:\n{event}", flush=True)
+                logging.debug(f"{kind}:\n{event}")
                 match kind:
                     # message chunk
                     case "on_chat_model_stream":
                         content = event['data']['chunk'].content
                         chunk = repr(content)
-                        self.send_to_sockets(content, "message", first, chunk_id, datetime.now().timestamp() * 1000,
-                                             "bubble")
+                        self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
+                                            first=first, chunk_id=chunk_id,
+                                            timestamp=datetime.now().timestamp() * 1000,
+                                            display_type="bubble")
                         first = False
-                        logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
+                        logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
 
                     # chain chunk
                     # case "on_chain_stream":
@@ -216,61 +221,66 @@ class ChatAssistant:
                     #     if content:
                     #         content = content.get('messages')[0].content
                     #         chunk = repr(content)
-                    #         self.send_to_sockets(content, "message", first, chunk_id, datetime.now().timestamp() * 1000,
+                    #         self.send_to_socket(content, SocketEvents.MESSAGE, first, chunk_id, datetime.now().timestamp() * 1000,
                     #                              "bubble")
                     #         first = False
                     #         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
 
                     # parser chunk
                     case "on_parser_stream":
-                        logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}", flush=True)
+                        logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
 
                     # tool chat message finished
                     case "on_chain_end":
-                        # print(event)
-                        # self.send_to_sockets(acc, "message", True, chunk_id, datetime.now().timestamp() * 1000,
-                                             # "bubble")
+                        # Reset chunk_id
                         chunk_id = str(uuid.uuid4())
+                        # Reset first
                         first = True
 
                     # tool started being used
                     case "on_tool_start":
-                        logging.debug(f"{kind}:\n{event}", flush=True)
-                        tool_chunk_id = str(uuid.uuid4())  # TODO:
+                        logging.debug(f"{kind}:\n{event}")
+                        tool_chunk_id = str(uuid.uuid4())
                         tool_name = event.get('name').replace('_', ' ').capitalize()
-                        self.send_to_sockets(f"Using tool: {tool_name}", "message", True, tool_chunk_id,
-                                             datetime.now().timestamp() * 1000, "inline")
+                        self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
+                                            first=True, chunk_id=tool_chunk_id,
+                                            timestamp=datetime.now().timestamp() * 1000,
+                                            display_type="inline")
 
                     # tool finished being used
                     case "on_tool_end":
 
-                        logging.debug(f"{kind}:\n{event}", flush=True)
+                        logging.debug(f"{kind}:\n{event}")
                         tool_name = event.get('name').replace('_', ' ').capitalize()
-                        self.send_to_sockets(f"Finished using tool: {tool_name}", "message", True,
-                             tool_chunk_id, datetime.now().timestamp() * 1000, "inline", None, True)
+                        self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
+                                            first=True, chunk_id=tool_chunk_id,
+                                            timestamp=datetime.now().timestamp() * 1000,
+                                            display_type="inline", overwrite=True)
                         tool_chunk_id = str(uuid.uuid4())
 
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
                     case _:
-                        logging.debug(f"unhandled {kind} event", flush=True)
+                        logging.debug(f"unhandled {kind} event")
         except Exception as chunk_error:
             import sys, traceback
             exc_type, exc_value, exc_traceback = sys.exc_info()
             err_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             logging.error(err_lines)
-            tool_chunk_id = str(uuid.uuid4())
-            self.send_to_sockets(f"⛔ An unexpected error occurred", "message", True, str(uuid.uuid4()),
-                                 datetime.now().timestamp() * 1000, "inline")
+            self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
+                                first=True, chunk_id=str(uuid.uuid4()),
+                                timestamp=datetime.now().timestamp() * 1000,
+                                display_type="inline")
             # TODO: if debug:
-            self.send_to_sockets(f"""Stack trace:
-```
-{chunk_error}
-```
-""", "message", True, str(uuid.uuid4()), datetime.now().timestamp() * 1000, "bubble")
+            self.send_to_socket(text=f"""Stack trace:
+                ```
+                {chunk_error}
+                ```
+                """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                                timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
             pass
 
-    def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
-                        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
+    def send_to_socket(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
+                       timestamp=None, display_type='bubble', author_name='System', overwrite=False):
 
         if type(text) != str:
             text = "NON STRING MESSAGE"
