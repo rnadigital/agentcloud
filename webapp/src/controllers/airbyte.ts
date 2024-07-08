@@ -10,7 +10,7 @@ import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
-import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
+import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
 
 import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecordCount } from '../db/datasource';
 const warn = debug('webapp:controllers:airbyte:warning');
@@ -49,13 +49,13 @@ export async function listJobsApi(req, res, next) {
 	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	// Create a job to trigger the connection to sync
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 	const jobBody = {
@@ -94,7 +94,7 @@ export async function discoverSchemaApi(req, res, next) {
 	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
 	if (!datasource) {
@@ -155,7 +155,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	//TODO: validate some kind of webhook key
 
 	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(req.body?.blocks || []);
-	if (jobId && datasourceId && recordsLoaded) {
+	if (jobId && datasourceId) {
 		const datasource = await getDatasourceByIdUnsafe(datasourceId);
 		if (datasource) {
 			//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
@@ -164,19 +164,19 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 				jobId,
 			};
 			const notification = {
-			    orgId: toObjectId(datasource.orgId.toString()),
-			    teamId: toObjectId(datasource.teamId.toString()),
-			    target: {
+				orgId: toObjectId(datasource.orgId.toString()),
+				teamId: toObjectId(datasource.teamId.toString()),
+				target: {
 					id: datasourceId,
 					collection: CollectionName.Notifications,
 					property: '_id',
 					objectId: true,
-			    },
-			    title: 'Sync in progress',
-			    date: new Date(),
-			    seen: false,
+				},
+				title: 'Sync Completed',
+				date: new Date(),
+				seen: false,
 				// stuff specific to notification type
-			    description: `Your sync for datasource "${datasource.name}" has started and embedding is in progress.`,
+				description: `Your sync for datasource "${datasource.name}" has completed.`,
 				type: NotificationType.Webhook,
 				details: {
 					webhookType: WebhookType.SuccessfulSync,
@@ -185,7 +185,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			await Promise.all([
 				addNotification(notification),
 				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
+				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY),
 				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded),
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);
@@ -194,7 +194,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
 	}
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
@@ -209,20 +209,20 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	const datasource = await getDatasourceByIdUnsafe(datasourceId);
 	if (datasource) {
 		const notification = {
-		    orgId: toObjectId(datasource.orgId.toString()),
-		    teamId: toObjectId(datasource.teamId.toString()),
-		    target: {
+			orgId: toObjectId(datasource.orgId.toString()),
+			teamId: toObjectId(datasource.teamId.toString()),
+			target: {
 				id: datasourceId,
 				collection: CollectionName.Notifications,
 				property: '_id',
 				objectId: true,
-		    },
-		    title: 'Embedding Successful',
-		    date: new Date(),
-		    seen: false,
+			},
+			title: 'Embedding Successful',
+			date: new Date(),
+			seen: false,
 			// stuff specific to notification type
-		    description: `Embedding completed for datasource "${datasource.name}".`,
-		    type: NotificationType.Webhook,
+			description: `Embedding completed for datasource "${datasource.name}".`,
+			type: NotificationType.Webhook,
 			details: {
 				webhookType: WebhookType.EmbeddingCompleted,
 			} as NotificationDetails,
@@ -234,6 +234,6 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 		io.to(datasource.teamId.toString()).emit('notification', notification);
 	}
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }

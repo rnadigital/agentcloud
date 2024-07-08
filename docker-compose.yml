@@ -41,6 +41,7 @@ services:
         - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
         - POSTHOG_KEY=
         - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+        - NEXT_PUBLIC_STORAGE_PROVIDER=local
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -169,6 +170,7 @@ services:
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
       - LOGGING_LEVEL=debug
+      - MONGO_DB_NAME=test
 
     volumes:
       - datasource_files:/tmp

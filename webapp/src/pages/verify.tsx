@@ -12,7 +12,7 @@ import ErrorAlert from '../components/ErrorAlert';
 export default function Verify() {
 
 	const router = useRouter();
-	const [verified, setVerified] = useState(null);
+	const [verified ] = useState(null);
 	const [newPassword, setNewPassword] = useState('');
 	const [error, setError] = useState();
 	const { token, newpassword } = router.query;

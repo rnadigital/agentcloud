@@ -92,10 +92,12 @@ class Retriever(str, Enum):
     MULTI_QUERY = "multi_query"
 
 
+#TODO: figure out integer vs float vs number
+AllowedLiterals = Literal['string', 'integer', 'float', 'number', 'null']
 class MetadataFieldInfo(BaseModel):
     name: str
-    description: str
-    type: Literal["string", "integer", "float"]
+    description: Optional[str] = ""
+    type: Union[List[AllowedLiterals], AllowedLiterals]
 
 
 class SelfQueryRetrieverConfig(BaseModel):

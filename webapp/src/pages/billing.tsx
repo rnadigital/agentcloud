@@ -1,33 +1,30 @@
 import * as API from '@api';
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
+import InfoAlert from 'components/InfoAlert';
 import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
+import StripeCheckoutModal from 'components/StripeCheckoutModal';
+import SubscriptionCard from 'components/SubscriptionCard';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-import InfoAlert from 'components/InfoAlert';
-import StripeCheckoutModal from 'components/StripeCheckoutModal';
-import SubscriptionCard from 'components/SubscriptionCard';
 
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { account, csrf } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
 	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
-	const [state, dispatch] = useState(props);
+	const [_, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug } = router.query;
 	const [stagedChange, setStagedChange] = useState(null);
@@ -38,7 +35,7 @@ export default function Billing(props) {
 	const [last4, setLast4] = useState(null);
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
-	
+
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
@@ -71,7 +68,7 @@ export default function Billing(props) {
 			setMissingEnvs(x.missingEnvs);
 			fetchAccount();
 			API.hasPaymentMethod(res => {
-				if (res && res?.ok === true && res?.last4)  {
+				if (res && res?.ok === true && res?.last4) {
 					setLast4(res?.last4);
 				}
 			}, toast.error, router);
@@ -190,7 +187,7 @@ ${missingEnvs.join('\n')}`} />);
 				onComplete={() => {
 					setShowPaymentModal(false);
 					API.hasPaymentMethod(res => {
-						if (res && res?.ok === true && res?.last4)  {
+						if (res && res?.ok === true && res?.last4) {
 							setLast4(res?.last4);
 						}
 					}, toast.error, router);
@@ -208,7 +205,7 @@ ${missingEnvs.join('\n')}`} />);
 					return new Promise((resolve, reject) => {
 						try {
 							API.hasPaymentMethod(res => {
-								if (res && res?.ok === true)  {
+								if (res && res?.ok === true) {
 									setLast4(res?.last4);
 									setContinued(true);
 									setShowConfirmModal(true);
@@ -225,7 +222,7 @@ ${missingEnvs.join('\n')}`} />);
 					});
 				}}
 			/>
-			
+
 		</>
 	);
 }
