@@ -128,7 +128,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 		setModelId(addedModelId);
 	};
 
-	async function datasourcePost(data) {
+	async function datasourcePost(data?) {
 		setSubmitting(true);
 		setError(null);
 		try {
@@ -164,7 +164,6 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
-				// e.preventDefault();
 				const body = {
 					_csrf: csrf,
 					datasourceId: datasourceId,
@@ -198,6 +197,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				}, compact ? null : router);
 				callback && addedDatasource && callback(addedDatasource._id);
 			}
+		} catch (e) {
+			console.error(e);
 		} finally {
 			setSubmitting(false);
 		}
@@ -470,7 +471,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 				</form>;
 			case 4:
 				return <>
-					<form onSubmit={datasourcePost}>
+					<form onSubmit={e => {
+						e.preventDefault();
+						datasourcePost();
+					}}>
 						<div className='space-y-4'>
 							<div>
 								<label htmlFor='embeddingField' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
