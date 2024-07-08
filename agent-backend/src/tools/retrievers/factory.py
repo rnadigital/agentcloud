@@ -11,6 +11,10 @@ from .multi_query import MultiQueryRetriever
 
 
 def retriever_factory(tool: Tool, vector_store: VectorStore, embedding: Embeddings, llm: BaseLanguageModel):
+    metadata_field_info = tool.retriever_config.metadata_field_info
+    for field in metadata_field_info:
+        if isinstance(field.type, list) and 'null' in field.type:
+            field.type = [t for t in field.type if t != 'null'][0]
     match tool.retriever_type:
         case Retriever.RAW:
             return DefaultRetriever(tool, embedding, vector_store)
