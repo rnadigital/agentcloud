@@ -209,17 +209,17 @@ class ChatAssistant:
                         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
 
                     # chain chunk
-                    case "on_chain_stream":
-                        content = (event.get('data', {})
-                            .get('chunk', {})
-                            .get('tools'))
-                        if content:
-                            content = content.get('messages')[0].content
-                            chunk = repr(content)
-                            self.send_to_sockets(content, "message", first, chunk_id, datetime.now().timestamp() * 1000,
-                                                 "bubble")
-                            first = False
-                            logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
+                    # case "on_chain_stream":
+                    #     content = (event.get('data', {})
+                    #         .get('chunk', {})
+                    #         .get('tools'))
+                    #     if content:
+                    #         content = content.get('messages')[0].content
+                    #         chunk = repr(content)
+                    #         self.send_to_sockets(content, "message", first, chunk_id, datetime.now().timestamp() * 1000,
+                    #                              "bubble")
+                    #         first = False
+                    #         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
 
                     # parser chunk
                     case "on_parser_stream":
