@@ -5,7 +5,11 @@ import getGoogleCredentials from 'misc/getgooglecredentials';
 import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 import path from 'path';
 const { GoogleAuth } = require('google-auth-library');
+import * as dns from 'node:dns';
+import * as util from 'node:util';
+const lookup = util.promisify(dns.lookup);
 
+import { parse } from 'ip6addr';
 import SecretProviderFactory from 'lib/secret';
 
 dotenv.config({ path: '.env' });
@@ -109,13 +113,25 @@ async function deleteDestination(destinationId: string) {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
+		let host: any = process.env.RABBITMQ_HOST || '0.0.0.0';
+		try {
+			//Note: just parsing to see if it throws, we don't need to actually know the ip kind
+			const ipParsed = parse(host);
+			const ipKind = ipParsed.kind();
+		} catch (e) {
+			host = (await lookup(host, { family: 4 }))?.address;
+			if (!host) {
+				log('Error getting host in getDestinationConfiguration host: %s, process.env.RABBITMQ_HOST: %s', host, process.env.RABBITMQ_HOST);
+			}
+		}
+		log('getDestinationConfiguration host %s', host);
 		return {
 			routing_key: 'key',
 			username: process.env.RABBITMQ_USERNAME || 'guest',
 			password: process.env.RABBITMQ_PASSWORD || 'guest',
 			exchange: 'agentcloud',
 			port: parseInt(process.env.RABBITMQ_PORT) || 5672,
-			host: process.env.RABBITMQ_HOST || '0.0.0.0',
+			host,
 			ssl: false
 		};
 	} else {
