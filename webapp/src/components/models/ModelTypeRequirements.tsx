@@ -1,9 +1,9 @@
 import React from 'react';
 import Select from 'react-tailwindcss-select';
-import { ModelList,ModelTypeRequirements } from 'struct/model';
+import { ModelEmbeddingLength,ModelList,ModelTypeRequirements } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
+const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter=null }) => {
 	const { requiredFields, optionalFields } = Object
 		.entries(ModelTypeRequirements[type])
 		.filter(e => e[1])
@@ -52,7 +52,14 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig }) => {
 									value: v?.value,
 								});
 							}}
-							options={ModelList && ModelList[type] && ModelList[type].map(m => ({ label: m, value: m }))}
+							options={ModelList && ModelList[type] && ModelList[type]
+								.filter(m => {
+									if (!modelFilter) { return true; }
+									return modelFilter == 'embedding'
+										? ModelEmbeddingLength[m]
+										: !ModelEmbeddingLength[m];
+								})
+								.map(m => ({ label: m, value: m }))}
 							formatOptionLabel={data => (
 								<li
 									className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 ${

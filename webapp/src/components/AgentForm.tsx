@@ -109,7 +109,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	let modal;
 	switch (modalOpen) {
 		case 'model':
-			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />;
+			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' />;
 			break;
 		case 'tool':
 			modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />;
@@ -234,6 +234,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 						setModalOpen={setModalOpen}
 						callbackKey='modelId'
 						setCallbackKey={setCallbackKey}
+						modelFilter='llm'
 					/>
 					
 				</div>
@@ -250,6 +251,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 							setModalOpen={setModalOpen}
 							callbackKey='functionModelId'
 							setCallbackKey={setCallbackKey}
+							modelFilter='llm'
 						/>
 
 						<div className='sm:col-span-12'>

@@ -16,7 +16,7 @@ import SelectClassNames from 'styles/SelectClassNames';
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 
-export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing, compact, fetchModelFormData, callback }: { _model?: any, editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function }) { //TODO: fix any type
+export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing, compact, fetchModelFormData, callback, modelFilter }: { _model?: any, editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function, modelFilter?: string }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -133,7 +133,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 							</select>
 						</div>
 					</div>
-					<ModelTypeRequirementsComponent type={type} config={config} setConfig={setConfig} />
+					<ModelTypeRequirementsComponent type={type} config={config} setConfig={setConfig} modelFilter={modelFilter} />
 				</div>
 
 			</div>
