@@ -295,10 +295,10 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 										return setModalOpen(true);
 									}
 									setModelId(v?.value);
-								}}
-								options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
-								formatOptionLabel={formatModelOptionLabel}
-							/>
+				            	}}
+					            options={models?.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
+					            formatOptionLabel={formatModelOptionLabel}
+					        />
 						</div>
 						<RetrievalStrategyComponent
 							toolRetriever={toolRetriever}
@@ -572,7 +572,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 
 	return (<div>
 		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You need to upgrade to access 260+ data connections.' buttonText='Upgrade' />
-		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} />
+		<CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='embedding' />
 		{!hideTabs && <nav aria-label='Progress' className='mb-10'>
 			<ol role='list' className='space-y-4 md:flex md:space-x-8 md:space-y-0'>
 				{stepList.map((stepData, si) => (

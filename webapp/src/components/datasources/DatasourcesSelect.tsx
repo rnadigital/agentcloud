@@ -2,11 +2,11 @@ import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel'
 import React from 'react';
 import Select from 'react-tailwindcss-select';
 
-export default function RagToolForm({
+export default function DatasourceSelector({
 	datasourceState,
 	setDatasourceState,
 	datasources,
-	setModalOpen
+	addNewCallback,
 }) {
 	return (
 		<div className='sm:col-span-12'>
@@ -16,6 +16,7 @@ export default function RagToolForm({
 			<div className='mt-2'>
 				<Select
 					isSearchable
+					isClearable
 					primaryColor={'indigo'}
 					classNames={{
 						menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
@@ -28,7 +29,7 @@ export default function RagToolForm({
 					onChange={(v: any) => {
 						if (v?.value === null) {
                             // Create new pressed
-							return setModalOpen('datasource');
+							return addNewCallback && addNewCallback('datasource');
 						}
 						setDatasourceState(v);
 					}}

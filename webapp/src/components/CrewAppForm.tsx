@@ -5,6 +5,7 @@ import {
 	HandRaisedIcon,
 	PlayIcon,
 } from '@heroicons/react/20/solid';
+import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/modal/CreateToolModal';
@@ -17,6 +18,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { App, AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -25,7 +27,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import { ProcessImpl } from '../lib/struct/crew';
 
-export default function AppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew = {}, app = {}, editing, compact=false, callback, fetchFormData }
+export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew={}, app={}, editing, compact=false, callback, fetchFormData }
 	: { agentChoices?: any[], taskChoices?: any[], /*toolChoices?: any[],*/ crew?: any, modelChoices:any, app?: any, editing?: boolean, compact?: boolean, callback?: Function, fetchFormData?: Function }) { //TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
@@ -73,12 +75,20 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon?._id || icon?.id,
+			iconId: icon?.id,
+			type: AppType.CREW,
 			run,
 		};
 		if (editing === true) {
-			await API.editApp(appState._id, body, () => {
+			await API.editApp(appState._id, body, res => {
 				toast.success('App Updated');
+				if (run === true) {
+					API.addSession({
+						_csrf: e.target._csrf.value,
+						resourceSlug,
+						id: res._id,
+					}, toast.error, setError, router);
+				}
 			}, setError, null);
 		} else {
 			const addedApp: any = await API.addApp(body, res => {
@@ -154,7 +164,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							<AvatarUploader existingAvatar={icon} callback={iconCallback} />
 						</div>
 					</div>
-				</div>			
+				</div>
 
 				<div className={`grid grid-cols-1 gap-x-8 gap-y-4 pb-6 border-b border-gray-900/10 pb-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
@@ -240,55 +250,13 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 							</div>
 						</div>
 						
-						<div className='sm:col-span-12'>
-							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Agents
-							</label>
-							<div className='mt-2'>
-								<Select
-									isMultiple
-									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={agentsState}
-						            onChange={(v: any) => {
-										if (v && v.length > 0 && v[v.length-1]?.value == null) {
-											return setModalOpen('agent');
-										}
-										setAgentsState(v||[]);
-        						   	}}
-						            options={agentChoices
-						            	.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-						            	.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
-						            formatOptionLabel={(data: any) => {
-						            	const optionAgent = agentChoices.find(ac => ac._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
-								            {data.allowDelegation && <span className='tooltip z-100'>
-									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
-													<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
-       											</span>
-							        			<span className='tooltiptext'>
-													This agent allows automatic task delegation.
-												</span>
-											</span>}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
+						<AgentsSelect
+							agentChoices={agentChoices}
+							agentsState={agentsState}
+							onChange={agentsState => setAgentsState(agentsState)}
+							setModalOpen={setModalOpen}
+						/>
+						
 						{/*<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Process
@@ -334,7 +302,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
 						            //@ts-ignore
-						            value={managerModel ? { name: managerModel._id, label: managerModel.name, ...managerModel } : null}
+						            value={managerModel ? { label: managerModel.name, value: managerModel._id, ...managerModel } : null}
 						            onChange={(v: any) => {
 										setManagerModel(v);
         						   	}}
@@ -396,7 +364,7 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 
 			<div className='mt-6 flex items-center justify-between gap-x-6'>
 				{!compact && <button
-					className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
 					onClick={(e) => {
 						e.preventDefault();
 						step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
@@ -407,22 +375,25 @@ export default function AppForm({ agentChoices = [], taskChoices = [], /*toolCho
 					</svg>
 					<span>Back</span>
 				</button>}
-				<button
-					type='submit'
-					onClick={() => setRun(false)}
-					className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-				>
+				<div className='flex gap-x-4'>
+					<button
+						type='submit'
+						onClick={() => setRun(false)}
+						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					>
 						Save
-				</button>
-				{!editing && <button
-					type='submit'
-					onClick={() => setRun(true)}
-					className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
-				>
-					<PlayIcon className='h-4 w-4 mr-2' />
-					Save and Run
-				</button>}
+					</button>
+					<button
+						type='submit'
+						onClick={() => setRun(true)}
+						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+					>
+						<PlayIcon className='h-4 w-4 mr-2' />
+						Save and Run
+					</button>
+				</div>
 			</div>
+
 		</form>
 	</>);
 

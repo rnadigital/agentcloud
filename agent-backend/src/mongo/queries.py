@@ -25,7 +25,7 @@ class MongoClientConnection(MongoConnection):
             session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
             ).find_one(
-                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1}
+                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1, "appId": 1}
             )
             assert session_query_results
             return session_query_results
@@ -34,7 +34,7 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.error(f"an error has occurred while retrieving session from the database: {e}")
 
-    def get_crew(self, session: Session):
+    def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
             crew_id = session.get("crewId")
             print(f"Crew ID: {crew_id}")
@@ -85,7 +85,6 @@ class MongoClientConnection(MongoConnection):
 
     def get_agent_datasources(self, agent: Dict):
         pass
-
 
     def get_app_by_crew_id(self, crewId: PyObjectId):
         return self.get_single_model_by_query("apps", App, {"crewId": crewId})

@@ -12,7 +12,7 @@ export type Model = {
 	teamId: ObjectId;
 	name: string;
 	model: string;
-	modelType: string; //'embedding' | 'llm'
+	modelType: string;
 	embeddingLength: number;
 	type?: ModelType;
 	config?: Record<string,any>;

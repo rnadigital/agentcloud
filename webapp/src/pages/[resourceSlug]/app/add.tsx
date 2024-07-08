@@ -1,7 +1,7 @@
 import * as API from '@api';
 import { ChatBubbleLeftIcon, CogIcon } from '@heroicons/react/24/outline';
-import AppForm from 'components/AppForm';
-import SimpleAppForm from 'components/SimpleAppForm';
+import ChatAppForm from 'components/ChatAppForm';
+import CrewAppForm from 'components/CrewAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -86,14 +86,16 @@ export default function AddApp(props) {
 				);
 			case 1:
 				return (
-					<SimpleAppForm
-						datasourceChoices={datasources}
+					<ChatAppForm
 						fetchFormData={fetchAppFormData}
+						agentChoices={agents}
+						modelChoices={models}
+						toolChoices={tools}
 					/>
 				);
 			case 2:
 				return (
-					<AppForm
+					<CrewAppForm
 						agentChoices={agents}
 						taskChoices={tasks}
 						modelChoices={models}

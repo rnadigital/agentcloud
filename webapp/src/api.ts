@@ -58,9 +58,6 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/app/add`, 'POST', body, dispatch, errorCallback, router);
 }
-export function addAppSimple(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/app/add2`, 'POST', body, dispatch, errorCallback, router);
-}
 export function deleteApp(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/app/${body.appId}`, 'DELETE', body, dispatch, errorCallback, router);
 }

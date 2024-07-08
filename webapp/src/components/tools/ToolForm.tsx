@@ -3,6 +3,7 @@
 import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
+import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
 import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import FunctionCard from 'components/FunctionCard';
@@ -11,7 +12,6 @@ import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import FunctionRevisionForm from 'components/tools/form/FunctionRevisionForm';
 import FunctionToolForm from 'components/tools/form/FunctionToolForm';
-import RagToolForm from 'components/tools/form/RagToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
@@ -77,7 +77,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 	useEffect(() => {
 		if (notificationTrigger
-			&& notificationTrigger?.type === NotificationType.Tool) {
+&& notificationTrigger?.type === NotificationType.Tool) {
 			fetchFormData();
 		}
 	}, [resourceSlug, notificationTrigger]);
@@ -125,16 +125,16 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 		acc.push({ name: parname, type: par.type, description: par.description, required: tool.data.parameters.required.includes(parname) });
 		return acc;
 	}, []);
-	
+
 	const initialEnvironmentVariables = tool?.data?.environmentVariables && Object.entries(tool.data.environmentVariables).reduce((acc, entry) => {
 		const [parname, par]: any = entry;
 		acc.push({ name: parname, description: par });
 		return acc;
 	}, []);
-	
+
 	const [parameters, setParameters] = useState(initialParameters || [{ name: '', type: '', description: '', required: false }]);
 	const [environmentVariables, setEnvironmentVariables] = useState(initialEnvironmentVariables || [{ name: '', description: '' }]);
-	
+
 	const [functionsList, setFunctionsList] = useState(null);
 	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
 	const [invalidFuns, setInvalidFuns] = useState(0);
@@ -181,26 +181,6 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 				}, // TODO
 			};
 			switch (toolType) {
-				// case ToolType.API_TOOL:
-				// 	body.schema = toolAPISchema;
-				// 	body.data = {
-				// 		...body.data,
-				// 		code: '',
-				// 		description: toolDescription,
-				// 		parameters: {
-				// 			type: 'object',
-				// 			required: parameters.filter(x => x.required).map(x => x.name.trim()),
-				// 			properties: parameters.reduce((acc, par) => {
-				// 				acc[par.name.trim()] = {
-				// 					type: par.type,
-				// 					description: par.description,
-				// 				};
-				// 				return acc;
-				// 			}, {}),
-				// 			openAPIMatchKey: selectedOpenAPIMatchKey
-				// 		},
-				// 	};
-				// 	break;
 				case ToolType.FUNCTION_TOOL:
 					body.data = {
 						...body.data,
@@ -267,36 +247,6 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 		}
 	}
 
-	/*
-	useEffect(() => {
-		openApiToParams();
-	}, [debouncedValue]);
-
-	useEffect(() => {
-		// Set a timeout to update the debounced value after a delay
-		const handler = setTimeout(() => {
-			setDebouncedValue(toolAPISchema);
-		}, 500); // 500ms delay, adjust as needed
-		// Clear the timeout if the value changes
-		return () => {
-			clearTimeout(handler);
-		};
-	}, [toolAPISchema]); // Only re-run the effect if inputValue changes
-
-	useEffect(() => {
-		const timeout = setTimeout(() => {
-			if (functionsList && searchTerm && searchTerm.length > 0) {
-				setFilteredFunctionsList(functionsList.filter(item => item?.name?.toLowerCase()?.includes(searchTerm) || item?.description?.toLowerCase()?.includes(searchTerm)));
-			} else if (functionsList) {
-				setFilteredFunctionsList(functionsList.map(item => item));
-			}
-		}, 5000);
-		return () => {
-			clearTimeout(timeout);
-		};
-	}, [searchTerm, functionsList]);
-	*/
-
 	useEffect(() => {
 		if (toolType == ToolType.FUNCTION_TOOL) {
 			setSearchTerm('');
@@ -304,22 +254,19 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 			setInvalidFuns(0);
 			setSelectedOpenAPIMatchKey('');
 		}
-		/* else if (toolType === ToolType.API_TOOL) {
-			openApiToParams();
-		}*/
 	}, [toolType]);
 
 	useEffect(() => {
 		const allowedTabs = tabs.filter(t => !t.toolTypes || t.toolTypes.includes(toolType));
-   		if (typeof window !== 'undefined') {
-   			const hashTab = window.location.hash;
-   			const foundTab = allowedTabs.find(t => t.href === hashTab);
-   			if (foundTab) {
-   				setCurrentTab(foundTab);
-   			} else {
-   				setCurrentTab(allowedTabs[0]);
-   			}
-   		}
+		if (typeof window !== 'undefined') {
+			const hashTab = window.location.hash;
+			const foundTab = allowedTabs.find(t => t.href === hashTab);
+			if (foundTab) {
+				setCurrentTab(foundTab);
+			} else {
+				setCurrentTab(allowedTabs[0]);
+			}
+		}
 	}, [toolType]);
 
 	let modal;
@@ -364,15 +311,15 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 					<div>
 						<div className='sm:hidden'>
 							<label htmlFor='tabs' className='sr-only'>
-					          Select a tab
+								Select a tab
 							</label>
 							<select
 								id='tabs'
 								name='tabs'
 
-  						        className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+								className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
 
-  								          	onChange={(e) => {
+								onChange={(e) => {
 									setCurrentTab(tabs.find(t => t.name === e.target.value));
 								}}
 								defaultValue={currentTab.name}
@@ -386,8 +333,8 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 							</select>
 						</div>
 						<div className='hidden sm:block'>
-	        <div className='border-b border-gray-200'>
-						          <nav className='-mb-px flex space-x-8' aria-label='Tabs'>
+							<div className='border-b border-gray-200'>
+								<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
 									{tabs
 										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
 										.map((tab) => (
@@ -399,9 +346,9 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 												}}
 												className={classNames(
 													currentTab.name === tab.name
-													                    ? 'border-indigo-500 text-indigo-600'
-	                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-	                  'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
+														? 'border-indigo-500 text-indigo-600'
+														: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+													'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
 												)}
 												aria-current={currentTab.name === tab.name ? 'page' : undefined}
 											>
@@ -416,13 +363,13 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 					{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && <>
 						<div className='sm:col-span-12'>
-	                        <RagToolForm
-	                            datasourceState={datasourceState}
-	                            setDatasourceState={setDatasourceState}
-	                            datasources={datasources}
-	                            setModalOpen={setModalOpen}
-	                        />
-						
+							<DatasourcesSelect
+								datasourceState={datasourceState}
+								setDatasourceState={setDatasourceState}
+								datasources={datasources}
+								addNewCallback={setModalOpen}
+							/>
+
 							<RetrievalStrategyComponent
 								toolRetriever={toolRetriever}
 								setToolRetriever={setToolRetriever}
@@ -433,9 +380,9 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 								schema={currentDatasource?.connectionSettings?.configurations}
 								currentDatasource={currentDatasource}
 							/>
-						
+
 						</div>
-						
+
 					</>}
 
 					{toolType === ToolType.FUNCTION_TOOL && !isBuiltin &&  currentTab?.name === 'Source' && <>
@@ -461,12 +408,6 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 							tool={tool}
 						/>
 					</>}
-
-					{/*functionsList && (
-                        <FunctionListForm
-							...
-                        />
-                    )*/}
 
 					{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && <>
 						<ParameterForm

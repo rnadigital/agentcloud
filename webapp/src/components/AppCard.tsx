@@ -4,6 +4,7 @@ import AgentAvatar from 'components/AgentAvatar';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import Blockies from 'react-blockies';
+import { AppType } from 'struct/app';
 
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
@@ -18,6 +19,11 @@ export default function AppCard({ app, startSession }) {
 	return (
 		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
+				<span className={`px-2 py-[0.5px] border text-sm rounded-lg ${app.type === AppType.CHAT
+					? 'bg-blue-100 text-blue-800 border-blue-300'
+					: 'bg-green-100 text-green-800 border-green-300'}`}>
+					{app.type === AppType.CHAT ? 'Chat' : 'Process'}
+				</span>
 				<div className='flex items-center justify-center p-4'>
 					<AgentAvatar agent={app} size={20} />
 				</div>
