@@ -91,7 +91,7 @@ export function StreamRow({ stream, existingStream, readonly, descriptionsMap }
 										</label>
 									</td>
 									<td className='p-2 font-semibold'>{key}</td>
-									<td className='p-2'>{value['type']}</td>
+									<td className='p-2'>{Array.isArray(value['type']) ? value['type'].filter(x => x !== 'null') : value['type']}</td>
 									<td className='p-2'>
 										<input
 											type='text'
