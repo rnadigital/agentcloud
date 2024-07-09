@@ -4,7 +4,7 @@ import {
 	InformationCircleIcon,
 } from '@heroicons/react/20/solid';
 import dynamic from 'next/dynamic';
-import { DatasourceScheduleType } from 'struct/schedule';
+import { DatasourceScheduleType } from 'struct/datasource';
 // @ts-ignore
 const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
@@ -27,11 +27,11 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 				className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 			>
 				<option value={DatasourceScheduleType.MANUAL}>Manual</option>
-				<option value={DatasourceScheduleType.BASICSCHEDULE}>Basic Schedule</option>
+				{/*<option value={DatasourceScheduleType.BASICSCHEDULE}>Basic Schedule</option>*/}
 				<option value={DatasourceScheduleType.CRON}>Cron</option>
 			</select>
 		</div>
-		{scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
+		{/*scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 			<label htmlFor='timeUnit' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 				Time Unit
 			</label>
@@ -65,7 +65,7 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 				/>
 			</div>
-		</>}
+		</>*/}
 		{scheduleType === DatasourceScheduleType.CRON && <>
 			<label htmlFor='cronExpression' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 				Cron Expression
@@ -94,7 +94,7 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 				/>
 			</div>
-			<label htmlFor='cronTimezone' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
+			{/*<label htmlFor='cronTimezone' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 				Timezone
 			</label>
 			<div>
@@ -108,7 +108,7 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 				>
 					{Intl.supportedValuesOf('timeZone').map((tz, tzi) => (<option key={`tz_${tzi}`} value={tz}>{tz}</option>))}
 				</select>
-			</div>
+			</div>*/}
 		</>}
 	</>;
 }

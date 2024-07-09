@@ -17,8 +17,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { DatasourceStatus } from 'struct/datasource';
-import { DatasourceScheduleType } from 'struct/schedule';
+import { DatasourceScheduleType,DatasourceStatus } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -54,14 +53,12 @@ export default function Datasource(props) {
 		}, (res) => {
 			const datasource = res?.datasource;
 			if (datasource) {
-				setScheduleType(datasource?.connectionSettings?.scheduleType);
-				if (datasource?.connectionSettings?.scheduleData) {
-					const { basicSchedule, cron } = datasource.connectionSettings.scheduleData;
-					setTimeUnit(basicSchedule?.timeUnit);
-					setUnits(basicSchedule?.units);
-					setCronExpression(cron?.cronExpression);
-					setCronTimezone(cron?.cronTimezone);
-				}
+				const { scheduleType, cronExpression } = (datasource?.connectionSettings?.schedule||{});
+				setScheduleType(scheduleType);
+				setCronExpression(cronExpression);
+				//setTimeUnit(basicSchedule?.timeUnit);
+				//setUnits(basicSchedule?.units);
+				//setCronTimezone(cron?.cronTimezone);
 			}
 			dispatch(res);
 		}, setError, router);
@@ -311,18 +308,17 @@ export default function Datasource(props) {
 		</>}
 
 		{tab === 2 && datasource.sourceType !== 'file' && <div className='space-y-3'>
-			{/*editingSchedule === false && <div className='my-2'>
-				<p>Sync schedule type: <strong>{datasource.connectionSettings.scheduleType}</strong></p>
-				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
+			{editingSchedule === false && <div className='my-2'>
+				<p>Sync schedule type: <strong>{datasource.connectionSettings.schedule?.scheduleType||'Manual'}</strong></p>
+				{/*datasource.connectionSettings.schedule.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
 					<p>Units: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.units}</strong></p>
+				</>*/}
+				{datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON && <>
+					<p>Cron Expression: <strong>{datasource.connectionSettings.schedule.cronExpression}</strong></p>
 				</>}
-				{datasource.connectionSettings.scheduleType === DatasourceScheduleType.CRON && <>
-					<p>Cron Express: <strong>{datasource.connectionSettings.scheduleData.cron.cronExpression}</strong></p>
-					<p>Timezone: <strong>{datasource.connectionSettings.scheduleData.cron.cronTimezone}</strong></p>
-				</>}
-			</div>*/}
-			<DatasourceScheduleForm
+			</div>}
+			{editingSchedule && <DatasourceScheduleForm
 				scheduleType={scheduleType}
 				setScheduleType={setScheduleType}
 				timeUnit={timeUnit}
@@ -333,7 +329,7 @@ export default function Datasource(props) {
 				setCronExpression={setCronExpression}
 				cronTimezone={cronTimezone}
 				setCronTimezone={setCronTimezone}
-			/>
+			/>}
 			<div className='flex space-x-2'>
 				<button
 					onClick={async (e) => {
@@ -363,13 +359,13 @@ export default function Datasource(props) {
 			</div>
 		</div>}
 
-		{tab === 3 && <div className='space-y-3'>
+		{/*tab === 3 && <div className='space-y-3'>
 			Visualisation
-		</div>}
+		</div>*/}
 
-		{tab === 4 && <div className='space-y-3'>
+		{/*tab === 4 && <div className='space-y-3'>
 			Settings
-		</div>}
+		</div>*/}
 
 	</>);
 

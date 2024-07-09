@@ -5,61 +5,33 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
-import draft7MetaSchema from 'ajv/lib/refs/json-schema-draft-07.json';
+import addFormats from 'ajv-formats';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
-import { readFileSync } from 'fs';
-import convertStringToJsonl from 'misc/converttojsonl';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
-import { PDFExtract } from 'pdf.js-extract';
 import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceStatus } from 'struct/datasource';
-import { DatasourceScheduleType } from 'struct/schedule';
+import { DatasourceScheduleType,DatasourceStatus } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
-import { promisify } from 'util';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
 
 import {
 	addDatasource, deleteDatasourceById, editDatasource, getDatasourceById,
 	getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding,
-	setDatasourceLastSynced, setDatasourceStatus
+	setDatasourceStatus
 } from '../db/datasource';
+
 const log = debug('webapp:controllers:datasource');
-
-import addFormats from 'ajv-formats';
-import submittingReducer from 'utils/submittingreducer';
-
 const ajv = new Ajv({ strict: 'log' });
-
 addFormats(ajv);
-function validateDateTimeFormat(dateTimeStr) {
-	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
-	return dateFormatRegex.test(dateTimeStr);
-}
-function updateDateStrings(obj) {
-	Object.keys(obj).forEach(key => {
-		if (typeof obj[key] === 'object') {
-			updateDateStrings(obj[key]);
-		} else if (typeof obj[key] === 'string') {
-			obj[key] = obj[key].replace(/\.000Z$/, 'Z');
-		}
-	});
-}
-
-// ajv.addFormat('date-time', validateDateTimeFormat);
-
-const pdfExtract = new PDFExtract();
-const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
@@ -350,14 +322,14 @@ export async function addDatasourceApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		status: 'active',
 	};
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['schedule'] = {
-			scheduleType: 'manual',
-		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
+	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: 'cron',
 			cronExpression,
+		};
+	} else {
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
 		};
 	}
 	const createdConnection = await connectionsApi
@@ -445,26 +417,26 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	}
 
 	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		...datasource.connectionSettings,
 		scheduleType: scheduleType,
 	};
 	connectionBody['connectionId'] = datasource.connectionId;
 
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['schedule'] = {
-			scheduleType: 'manual',
-		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
+	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: 'cron',
 			cronExpression,
 		};
+	} else {
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
+		};
 	}
 	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const updatedConnection = await connectionsApi
-		.updateConnection(null, connectionBody)
+		.patchConnection(datasource.connectionId, connectionBody)
 		.then(res => res.data);
 	log('updatedConnection', updatedConnection);
 
@@ -532,14 +504,14 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		status: 'active',
 	};
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['schedule'] = {
-			scheduleType: 'manual',
-		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
+	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: 'cron',
 			cronExpression,
+		};
+	} else {
+		connectionBody['schedule'] = {
+			scheduleType: 'manual',
 		};
 	}
 	const createdConnection = await connectionsApi

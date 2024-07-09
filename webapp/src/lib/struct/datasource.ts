@@ -1,3 +1,4 @@
+
 'use strict';
 
 import { ObjectId } from 'mongodb';
@@ -72,4 +73,10 @@ export type Datasource = {
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
 	descriptionsMap?: Record<string,string>;
+};
+
+export enum DatasourceScheduleType {
+	MANUAL = 'manual',
+	BASICSCHEDULE = 'basic',
+	CRON = 'cron',
 };
