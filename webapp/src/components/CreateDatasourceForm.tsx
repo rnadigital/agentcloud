@@ -17,8 +17,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
+import { DatasourceScheduleType } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
-import { DatasourceScheduleType } from 'struct/schedule';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnectorForm'), {

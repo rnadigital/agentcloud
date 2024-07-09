@@ -55,9 +55,7 @@ export async function editDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrSt
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId),
 	}, {
-		$set: {
-			datasource,
-		},
+		$set: datasource,
 	});
 }
 
