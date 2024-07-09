@@ -249,12 +249,13 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 						        />
 							</div>
 						</div>
-						
+
 						<AgentsSelect
 							agentChoices={agentChoices}
 							agentsState={agentsState}
 							onChange={agentsState => setAgentsState(agentsState)}
 							setModalOpen={setModalOpen}
+							multiple={true}
 						/>
 						
 						{/*<div className='sm:col-span-12'>
