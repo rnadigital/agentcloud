@@ -54,7 +54,7 @@ export default function FunctionToolForm({
 				<div className='flex justify-between'>
 					<h2 className='text-base font-semibold leading-7 text-gray-900 w-full'>
                         Python code
-						<InfoAlert className='w-full mb-2 m-0 p-4 bg-blue-100 rounded' message='Parameters are available as the dictionary "args", and your code will run in the body of hello_http:' textColor='black' />
+						<InfoAlert className='w-full mb-2 m-0 p-4 bg-blue-100 rounded' message='Want your agents to create dynamic requests? E.g. based on a prompt pass in certain parameters to an API call... Make sure to configure your code with parameters, then add them in the Parameters tab. Parameters will be available as the dictionary "args", and your code will run in the body of hello_http.' textColor='black' />
 					</h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
