@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength } from 'struct/model';
+import { ToolType } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function AgentForm({ agent = {}, models = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
@@ -31,14 +32,20 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 
-	const initialTools = agent.toolIds && agent.toolIds
-		.map(tid => {
-			const foundTool = tools.find(t => t._id === tid);
-			if (!foundTool) { return null; }
-			return { label: foundTool.name, value: foundTool._id };
-		})
-		.filter(t => t);
-	const [toolState, setToolState] = useState(initialTools || []);
+	const getInitialTools = (acc, tid) => {
+		const foundTool = tools.find(t => t._id === tid);
+		if (!foundTool) { return acc; }
+		const toolVal = { label: foundTool.name, value: foundTool._id };
+		if (foundTool?.type as ToolType !== ToolType.RAG_TOOL) {
+			acc.initialTools.push(toolVal);
+		} else {
+			acc.initialDatasources.push(toolVal);
+		}
+		return acc;
+	};
+	const { initialTools, initialDatasources } = (agent?.toolIds||[]).reduce(getInitialTools, { initialTools: [], initialDatasources: [] });
+	const [toolState, setToolState] = useState(initialTools.length > 0 ? initialTools : null);
+	const [datasourceState, setDatasourceState] = useState(initialDatasources.length > 0 ? initialDatasources : null); //Note: still technically tools, just only RAG tools
 
 	useEffect(() => {
 		if (models && models.length > 0 && !modelId) {
@@ -63,7 +70,8 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			role: e.target.role.value,
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
-			toolIds: toolState ? toolState.map(t => t.value) : [],
+			toolIds: (toolState||[]).map(x => x.value)
+				.concat((datasourceState||[]).map(x => x.value)),
 			iconId: icon?._id,
 		};
 		if (editing) {			
@@ -220,12 +228,21 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 				<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 
 					<ToolsSelect
-						tools={tools}
+						tools={tools.filter(t => t?.type as ToolType !== ToolType.RAG_TOOL)}
 						toolState={toolState}
 						onChange={toolState => setToolState(toolState)}
 						setModalOpen={setModalOpen}
 					/>
-				
+
+					<ToolsSelect
+						title='Datasources'
+						tools={tools.filter(t => t?.type as ToolType === ToolType.RAG_TOOL)}
+						toolState={datasourceState}
+						onChange={setDatasourceState}
+						setModalOpen={setModalOpen}
+						enableAddNew={false}
+					/>
+
 					<ModelSelect
 						models={models}
 						modelId={modelId}
