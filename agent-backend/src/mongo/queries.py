@@ -36,8 +36,11 @@ class MongoClientConnection(MongoConnection):
 
     def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
-            crew_id = session.get("crewId")
-            print(f"Crew ID: {crew_id}")
+            app_id = session.get("appId")
+            print(f"App ID: {app_id}")
+            apps_collection: collection.Collection = self._get_collection("apps")
+            the_app: Dict = apps_collection.find_one({"_id": ObjectId(app_id)})
+            crew_id = the_app.get("crewId")
             crew_tasks = list()
             try:
                 assert crew_id is not None
