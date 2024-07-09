@@ -78,7 +78,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			}, (res) => {
 				toast.error(res);
 			}, compact ? null : router);
-			callback && addedAgent && callback(addedAgent._id);
+			callback && addedAgent && callback(addedAgent._id, body);
 		}
 	}
 

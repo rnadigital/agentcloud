@@ -68,7 +68,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			}, (res) => {
 				toast.error(res);
 			}, compact ? null : router);
-			callback && addedTask && callback(addedTask._id);
+			callback && addedTask && callback(addedTask._id, body);
 		}
 	}
 

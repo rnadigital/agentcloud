@@ -10,6 +10,8 @@ import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
 // import CreateToolModal from 'components/modal/CreateToolModal';
 import CreateTaskModal from 'components/CreateTaskModal';
+import InfoAlert from 'components/InfoAlert';
+import ModelSelect from 'components/models/ModelSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
@@ -104,8 +106,12 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 		}
 	}
 
-	async function createAgentCallback() {
+	async function createAgentCallback(addedAgentId, body) {
+		console.log('createAgentCallback addedAgentId', addedAgentId);
 		await fetchFormData && fetchFormData();
+		setAgentsState(oldAgentsState => {
+			return oldAgentsState.concat({ label: body.name, value: addedAgentId });
+		});
 		setModalOpen(false);
 	}
 
@@ -114,8 +120,11 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 	// 	setModalOpen(false);
 	// }
 
-	async function createTaskCallback() { // TODO:
+	async function createTaskCallback(addedTaskId, body) {
 		await fetchFormData && fetchFormData();
+		setTasksState(oldTasksState => {
+			return oldTasksState.concat({ label: body.name, value: addedTaskId });
+		});
 		setModalOpen(false);
 	}
 
@@ -133,9 +142,10 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 		case 'task':
 			modal = <CreateTaskModal open={modalOpen !== false} setOpen={setModalOpen} callback={createTaskCallback} />;
 			break;
-		// case 'tool':
+		case 'tool':
+			modal = <InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='Not implemented' />;
 		// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
-		// 	break;
+		 	break;
 		default:
 			modal = null;
 			break;
@@ -216,6 +226,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 								<Select
 									isMultiple
 									isSearchable
+									isClearable
 						            primaryColor={'indigo'}
 						            classNames={{
 										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
@@ -287,43 +298,17 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 								</label>
 							</div>
 						</div>*/}
-						<div className='sm:col-span-12'>
-							<label htmlFor='managermodel' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Chat Manager Model
-							</label>
-							<div className='mt-2'>
-								<Select
-									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            //@ts-ignore
-						            value={managerModel ? { label: managerModel.name, value: managerModel._id, ...managerModel } : null}
-						            onChange={(v: any) => {
-										setManagerModel(v);
-        						   	}}
-						            options={modelChoices.filter(model => model.modelType == undefined || model.modelType == 'llm')
-						            	.map(m => ({ label: m.name, value: m._id }))}
-						            	// .concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])}
-						            formatOptionLabel={(data: any) => {
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}
-						                </li>);
-						            }}
-						        />
-							</div>
-						</div>
+
+						<ModelSelect
+							models={modelChoices}
+							modelId={managerModel?.value}
+							label='Chat Manager Model'
+							onChange={model => setManagerModel(model)}
+							setModalOpen={setModalOpen}
+							callbackKey=''
+							setCallbackKey={() => {}}
+							modelFilter='llm'
+						/>
 
 						<div className='sm:col-span-12'>
 							<div className='mt-2'>

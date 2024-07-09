@@ -15,6 +15,7 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 					isDisabled={disabled === true}
 					isMultiple={multiple === true}
 					isSearchable
+					isClearable
 					primaryColor={'indigo'}
 					classNames={{
 						menuButton: () =>
@@ -27,7 +28,7 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 								value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'
 							}`,
 					}}
-					value={agentsState}
+					value={agentsState?.length ? agentsState : null}
 					onChange={(v: any) => {
 						if (multiple) {
 							if (v && v.length > 0 && v[v.length - 1]?.value == null) {
