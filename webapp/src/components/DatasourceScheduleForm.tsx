@@ -78,7 +78,7 @@ export default function DatasourceScheduleForm({ scheduleType, setScheduleType, 
 							rehypePlugins={[rehypeRaw as any]}
 							className={'markdown-content'}
 						>
-							{'Cron expression builder: <a target=\'_blank\' href=\'http://crontab.guru/\'>http://crontab.guru/</a>'}
+							{'Cron expression builder: <a target=\'_blank\' href=\'https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html\'>https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html</a>'}
 						</Markdown>
 					</span>
 				</span>

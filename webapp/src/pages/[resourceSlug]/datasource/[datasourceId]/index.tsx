@@ -309,7 +309,7 @@ export default function Datasource(props) {
 
 		{tab === 2 && datasource.sourceType !== 'file' && <div className='space-y-3'>
 			{editingSchedule === false && <div className='my-2'>
-				<p>Sync schedule type: <strong>{datasource.connectionSettings.schedule?.scheduleType||'Manual'}</strong></p>
+				<p>Sync schedule type: <strong className='capitalize'>{datasource.connectionSettings.schedule?.scheduleType||'Manual'}</strong></p>
 				{/*datasource.connectionSettings.schedule.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
 					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
 					<p>Units: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.units}</strong></p>

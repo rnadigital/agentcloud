@@ -242,7 +242,7 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
   z-index: 50;
   bottom: 125%;
   left: 50%;
-  margin-left: -175px;
+  margin-left: -173px;
 }
 
 .tooltip .tooltiptext::after {

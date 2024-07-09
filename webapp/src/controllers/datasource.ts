@@ -435,10 +435,14 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 		};
 	}
 	log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	const updatedConnection = await connectionsApi
-		.patchConnection(datasource.connectionId, connectionBody)
-		.then(res => res.data);
-	log('updatedConnection', updatedConnection);
+	try {
+		const updatedConnection = await connectionsApi
+			.patchConnection(datasource.connectionId, connectionBody)
+			.then(res => res.data);
+		log('updatedConnection', updatedConnection);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	// Update the datasource with the connection settings
 	await editDatasource(req.params.resourceSlug, datasourceId, {
