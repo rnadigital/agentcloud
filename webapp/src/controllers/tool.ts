@@ -8,7 +8,7 @@ import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
-import { getToolsForDatasource, addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
+import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam,getToolsForDatasource } from 'db/tool';
 import { addToolRevision, deleteRevisionsForTool, deleteToolRevisionById,getRevisionsForTool, getToolRevisionById} from 'db/toolrevision';
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
@@ -21,7 +21,7 @@ import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
 import { NotificationDetails,NotificationType, WebhookType } from 'struct/notification';
-import { Retriever, ToolState,ToolType, ToolTypes, Tool } from 'struct/tool';
+import { Retriever, Tool,ToolState,ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 import { v4 as uuidv4 } from 'uuid';
 
