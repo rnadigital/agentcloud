@@ -31,7 +31,7 @@ use crossbeam::channel;
 use crate::init::env_variables::set_all_env_vars;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, health_check,
-    list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
+    list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection, get_collection_info,
 };
 use crate::data::processing_incoming_messages::process_incoming_messages;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
@@ -58,7 +58,8 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
-            .service(scroll_data),
+            .service(scroll_data)
+            .service(get_collection_info),
     );
 }
 

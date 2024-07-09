@@ -468,8 +468,8 @@ pub async fn delete_collection(
             }))),
     }
 }
-
-#[get("/collection_info/{dataset_id}")]
+#[wherr]
+#[get("/collection-info/{dataset_id}")]
 pub async fn get_collection_info(
     app_data: Data<Arc<RwLock<QdrantClient>>>,
     Path(dataset_id): Path<String>,
