@@ -48,3 +48,11 @@ impl fmt::Display for HashMapValues {
         }
     }
 }
+
+#[derive(Serialize, Debug, Clone)]
+pub struct CollectionData {
+    pub status: i32,
+    pub indexed_vectors_count: Option<u64>,
+    pub segments_count: u64,
+    pub points_count: Option<u64>,
+}

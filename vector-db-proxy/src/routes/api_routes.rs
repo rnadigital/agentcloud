@@ -468,3 +468,46 @@ pub async fn delete_collection(
             }))),
     }
 }
+
+#[get("/collection_info/{dataset_id}")]
+pub async fn get_collection_info(
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    Path(dataset_id): Path<String>,
+) -> Result<impl Responder> {
+    let dataset_id_clone = dataset_id.clone();
+    let qdrant_conn = app_data.get_ref();
+    let qdrant = Qdrant::new(Arc::clone(qdrant_conn), dataset_id_clone);
+    match qdrant.get_collection_info().await {
+        Ok(Some(info)) => {
+            Ok(HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+            status: Status::Success,
+            data: Some(json!(info)),
+            error_message: None
+        })))
+        }
+        Ok(None) => {
+            Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' returned no information", dataset_id)
+                    }))
+            })))
+        }
+        Err(e) => {
+            Ok(HttpResponse::BadRequest()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' could not be delete due to error: '{}'", dataset_id, e)
+                    }))
+        })))
+        }
+    }
+}

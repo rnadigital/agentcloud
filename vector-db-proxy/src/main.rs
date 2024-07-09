@@ -20,7 +20,6 @@ mod messages;
 use qdrant::client::instantiate_qdrant_client;
 use std::sync::{Arc};
 use std::thread;
-use std::thread::available_parallelism;
 use crate::init::env_variables::GLOBAL_DATA;
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
