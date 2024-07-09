@@ -46,8 +46,8 @@ import { runtimeOptions } from 'struct/function';
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
-	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] },
 	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] },
 ];
 
 function classNames(...classes) {
