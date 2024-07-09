@@ -60,7 +60,7 @@ const MultiSelectField = ({
 							<Select
 								{...field}
 								primaryColor='inigo'
-								options={options}
+								options={options.filter(a => a.value && a.label)}
 								isMultiple={isMultiple}
 								isDisabled={disabled}
 								onChange={handleChange}
