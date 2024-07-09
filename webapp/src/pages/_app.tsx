@@ -68,7 +68,7 @@ export default function App({ Component, pageProps }) {
 									autoClose={3000}
 									newestOnTop={true}
 									pauseOnFocusLoss={false}
-									pauseOnHover={false}
+									pauseOnHover={true}
 									hideProgressBar={true}
 									limit={3}
 								/>

@@ -101,6 +101,13 @@ export async function getToolForDatasource(teamId: db.IdOrStr, datasourceId: db.
 	});
 }
 
+export async function getToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<Tool[]> {
+	return ToolCollection().find({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	}).toArray();
+}
+
 export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, update: any): Promise<InsertResult> {
 	return ToolCollection().updateOne({
 		teamId: toObjectId(teamId),

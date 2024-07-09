@@ -8,7 +8,7 @@ import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
-import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
+import { getToolsForDatasource, addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam } from 'db/tool';
 import { addToolRevision, deleteRevisionsForTool, deleteToolRevisionById,getRevisionsForTool, getToolRevisionById} from 'db/toolrevision';
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
@@ -20,8 +20,8 @@ import { ObjectId } from 'mongodb';
 import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
-import { NotificationDetails,NotificationType,WebhookType } from 'struct/notification';
-import { Retriever, ToolState,ToolType, ToolTypes } from 'struct/tool';
+import { NotificationDetails,NotificationType, WebhookType } from 'struct/notification';
+import { Retriever, ToolState,ToolType, ToolTypes, Tool } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -557,15 +557,22 @@ export async function deleteToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const existingTool = await getToolById(req.params.resourceSlug, toolId);
+	const existingTool: Tool = await getToolById(req.params.resourceSlug, toolId);
 
 	if (!existingTool) {
 		return dynamicResponse(req, res, 404, { error: 'Tool not found' });
 	}
 
-	if (existingTool.type as ToolType === ToolType.FUNCTION_TOOL) {
+	if (existingTool.type === ToolType.FUNCTION_TOOL) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool?.functionId);
+	} else if (existingTool.type === ToolType.RAG_TOOL) {
+		if (existingTool.datasourceId) {
+			const existingToolsForDatasource: Tool[] = await getToolsForDatasource(req.params.resourceSlug, existingTool?.datasourceId);
+			if (existingToolsForDatasource && existingToolsForDatasource.length === 1) {
+				return dynamicResponse(req, res, 409, { error: 'This tool cannot be deleted as datasources require at least one tool associated with them. Please create another tool for this datasource if you would like to delete this tool.' });
+			}
+		}
 	}
 
 	await Promise.all([

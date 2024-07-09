@@ -25,8 +25,10 @@ export default function ToolList({ tools, fetchTools }) {
 		}, () => {
 			fetchTools();
 			toast('Deleted tool');
-		}, () => {
-			toast.error('Error deleting tool');
+		}, (error) => {
+			toast.error(error || 'Error deleting tool', {
+				autoClose: 10000, //Long error text, TODO have a different way of showing this?
+			});
 		}, router);
 	}
 
