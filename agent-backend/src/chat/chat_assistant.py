@@ -34,6 +34,7 @@ class ChatAssistant:
     tools: list[BaseTool]
     workflow: CompiledGraph
     system_message: str
+    agent_name: str
 
     def __init__(self, session_id: str):
         self.session_id = session_id
@@ -64,6 +65,8 @@ class ChatAssistant:
             raise
 
         agentcloud_agent = self.mongo_client.get_single_model_by_id("agents", Agent, app_config.agentId)
+        self.agent_name = agentcloud_agent.name
+
         agentcloud_tools = self.mongo_client.get_models_by_ids("tools", Tool, agentcloud_agent.toolIds)
 
         self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
@@ -210,6 +213,7 @@ class ChatAssistant:
                         self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
                                             first=first, chunk_id=chunk_id,
                                             timestamp=datetime.now().timestamp() * 1000,
+                                            author_name=self.agent_name.capitalize(),
                                             display_type="bubble")
                         first = False
                         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
