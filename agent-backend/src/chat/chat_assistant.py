@@ -182,7 +182,7 @@ class ChatAssistant:
 
     async def stream_execute(self, messages: list[BaseMessage], config: dict):
         chunk_id = str(uuid.uuid4())
-        tool_chunk_id = str(uuid.uuid4())
+        tool_chunk_id = {}
         first = True
 
         try:
@@ -241,23 +241,22 @@ class ChatAssistant:
                     # tool started being used
                     case "on_tool_start":
                         logging.debug(f"{kind}:\n{event}")
-                        tool_chunk_id = str(uuid.uuid4())
                         tool_name = event.get('name').replace('_', ' ').capitalize()
+                        tool_chunk_id[tool_name] = str(uuid.uuid4())
                         self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id,
+                                            first=True, chunk_id=tool_chunk_id[tool_name],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline")
 
                     # tool finished being used
                     case "on_tool_end":
-
                         logging.debug(f"{kind}:\n{event}")
                         tool_name = event.get('name').replace('_', ' ').capitalize()
                         self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id,
+                                            first=True, chunk_id=tool_chunk_id[tool_name],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline", overwrite=True)
-                        tool_chunk_id = str(uuid.uuid4())
+                        del tool_chunk_id[tool_name]
 
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
                     case _:
