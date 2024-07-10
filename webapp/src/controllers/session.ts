@@ -98,9 +98,12 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { rag, prompt, id }  = req.body;
+	let { id: appId }  = req.body;
 
-	const app: App = await getAppById(req.params.resourceSlug, id);
+	const app: App = await getAppById(req.params.resourceSlug, appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
 	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
