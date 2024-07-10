@@ -27,9 +27,12 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 					options={models
 						.filter(m => {
 							if (!modelFilter) { return true; }
-							return modelFilter == 'embedding'
-								? ModelEmbeddingLength[m]
-								: !ModelEmbeddingLength[m];
+							if (typeof m === 'string') {
+								return modelFilter == 'embedding'
+									? ModelEmbeddingLength[m]
+									: !ModelEmbeddingLength[m];
+							}
+							return modelFilter === m?.modelType;
 						})
 						.map(c => ({ label: c.name || c._id, value: c._id }))
 						.concat([{ label: '+ New model', value: null }])}

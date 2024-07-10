@@ -183,6 +183,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 				open={modalOpen !== false}
 				setOpen={setModalOpen}
 				callback={modelCallback}
+				modelFilter='llm'
 			/>;
 			break;
 		case 'tool':
@@ -373,6 +374,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 								setModalOpen={setModalOpen}
 								callbackKey='modelId'
 								setCallbackKey={null}
+								modelFilter='llm'
 							/>
 
 							<ToolsSelect
