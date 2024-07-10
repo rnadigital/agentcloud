@@ -116,6 +116,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 			toolIds: (toolState||[]).map(x => x.value)
 				.concat((datasourceState||[]).map(x => x.value)),
 			type: AppType.CHAT,
+			iconId: icon?._id,
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {

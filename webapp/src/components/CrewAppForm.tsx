@@ -77,7 +77,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon?.id,
+			iconId: icon?._id,
 			type: AppType.CREW,
 			run,
 		};
