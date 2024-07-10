@@ -126,7 +126,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 						_csrf: e.target._csrf.value,
 						resourceSlug,
 						id: app._id,
-					}, null, toast.error, null);
+					}, null, toast.error, router);
 				}
 			}, setError, null);
 		} else {

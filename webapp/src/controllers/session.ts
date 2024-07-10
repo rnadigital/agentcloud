@@ -3,7 +3,7 @@
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { getAppById } from 'db/app';
-import { addChatMessage, getChatMessagesBySession } from 'db/chat';
+import { getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
@@ -38,16 +38,25 @@ export async function sessionsJson(req, res, next) {
 
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
-	const app = await getAppById(req.params.resourceSlug, session?._id);
+	const app = await getAppById(req.params.resourceSlug, session?.appId);
 	let avatarMap = {};
 	switch (app?.type) {
 		case AppType.CREW:
 			const foundCrew = await getCrewById(req.params.resourceSlug, app?.crewId);
 			avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
+			break;
+		case AppType.CHAT:
+		default:
+			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
+			if (foundAgent) {
+				avatarMap = { [foundAgent.name]: foundAgent?.icon?.filename };
+			}
+			break;
 	}
 	return {
 		csrf: req.csrfToken(),
 		session,
+		app,
 		avatarMap,
 	};
 }
