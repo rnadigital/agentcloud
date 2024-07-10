@@ -89,7 +89,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 						_csrf: e.target._csrf.value,
 						resourceSlug,
 						id: res._id,
-					}, toast.error, setError, router);
+					}, null, toast.error, router);
 				}
 			}, setError, null);
 		} else {
@@ -99,7 +99,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 						_csrf: e.target._csrf.value,
 						resourceSlug,
 						id: res._id,
-					}, toast.error, setError, router);
+					}, null, toast.error, router);
 				}
 			}, toast.error, compact ? null : router);
 			callback && addedApp && callback(addedApp._id);
