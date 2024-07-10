@@ -9,7 +9,8 @@ export default function ToolDetailsForm({
 	toolDescription,
 	setToolDescription,
 	isBuiltin,
-	ToolType
+	ToolType,
+	initialType,
 }) {
 	return (
 		<>
@@ -28,7 +29,7 @@ export default function ToolDetailsForm({
 				</div>
 			</div>
 
-			{!isBuiltin && <div>
+			{!isBuiltin && initialType === null && <div>
 				<label className='text-base font-semibold text-gray-900'>Tool Type</label>
 				<div>
 					<select

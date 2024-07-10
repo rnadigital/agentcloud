@@ -306,8 +306,9 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 						setToolType={setToolType}
 						toolDescription={toolDescription}
 						setToolDescription={setToolDescription}
-						isBuiltin={isBuiltin||initialType!=null}
+						isBuiltin={isBuiltin}
 						ToolType={ToolType}
+						initialType={initialType}
 					/>
 
 					<div>
