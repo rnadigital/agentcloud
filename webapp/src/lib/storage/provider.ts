@@ -11,7 +11,7 @@ export default class StorageProvider {
 		throw new Error('uploadBuffer method not implemented');
 	}
 
-	async deleteFile(filename: string): Promise<any> {
+	async deleteFile(filename: string, isPublic = false): Promise<any> {
 		throw new Error('deleteFile method not implemented');
 	}
 

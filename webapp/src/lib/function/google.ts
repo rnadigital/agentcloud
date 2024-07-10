@@ -35,7 +35,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 		this.#functionsClient = new FunctionServiceClient();
 		this.#projectId = process.env.PROJECT_ID;
 		this.#location = process.env.GOOGLE_FUNCTION_LOCATION;
-		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME;
+		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE;
 		log('Google Function Provider initialized.');
 	}
 

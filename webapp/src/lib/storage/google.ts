@@ -43,13 +43,16 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
+	//Note: local file/assets just have an internal buffer, so we can probably remove this and use uploadBuffer everywhere
 	async uploadLocalFile(filename, uploadedFile, contentType, isPublic = false): Promise<any> {
 		log('Uploading file %s', filename);
 		const file = this.#storageClient
-			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.bucket(isPublic === true
+				? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
+				: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE)
 			.file(filename);
 		try {
-			await file.save(filename, {
+			await file.save(uploadedFile.data, {
 				metadata: {
 					contentType,
 				},
@@ -67,7 +70,9 @@ class GoogleStorageProvider extends StorageProvider {
 	async uploadBuffer(filename: string, content: Buffer, contentType: string, isPublic = false): Promise<any> {
 		log('Uploading buffer to file %s', filename);
 		const file = this.#storageClient
-			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.bucket(isPublic === true
+				? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
+				: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE)
 			.file(filename);
 		try {
 			await file.save(content, {
@@ -85,16 +90,20 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
-	async deleteFile(filename: string): Promise<any> {
+	async deleteFile(filename: string, isPublic = false): Promise<any> {
 		log('Deleting file %s', filename);
 		const file = this.#storageClient
-			.bucket(process.env.NEXT_PUBLIC_GCS_BUCKET_NAME)
+			.bucket(isPublic === true
+				? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
+				: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE)
 			.file(filename);
 		await file.delete({});
 	}
 
-	getBasePath() {
-		return `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET_NAME}`;
+	getBasePath(isPublic = true) {
+		return `https://storage.googleapis.com/${isPublic
+			? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
+			: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE}`;
 	}
 }
 

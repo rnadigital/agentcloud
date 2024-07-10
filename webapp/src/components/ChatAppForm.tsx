@@ -263,14 +263,14 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Conversation Starters
 							</label>
-							<ParameterForm 
-								readonly={false} 
+							<ParameterForm
+								readonly={false}
 								parameters={conversationStarters}
-								setParameters={setConversationStarters} 
+								setParameters={setConversationStarters}
 								title={null}
-								disableTypes={true} 
+								disableTypes={true}
 								disableDescription={true}
-								hideRequired={true} 
+								hideRequired={true}
 								namePlaceholder=''
 								descriptionPlaceholder='Value'
 								addButtonText={'+'}
