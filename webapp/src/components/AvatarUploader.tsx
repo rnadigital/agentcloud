@@ -4,6 +4,7 @@ import {
 	CameraIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
+import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -80,9 +81,11 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 				<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
 				{isDragActive ? (
 					<p>Drop the icon here ...</p>
-				) : files?.length === 0 && !existingAvatar 
-					? <CameraIcon className='h-full transition-all hover:stroke-gray-600 stroke-gray-400 w-8 inline-flex align-center justify-center' />
-					: <AgentAvatar agent={{ icon: existingAvatar }} fill={true} />}
+				) : (uploading
+					? <ButtonSpinner className='ms-1 mt-9' size={20} />
+					: (files?.length === 0 && !existingAvatar 
+						? <CameraIcon className='h-full transition-all hover:stroke-gray-600 stroke-gray-400 w-8 inline-flex align-center justify-center' />
+						: <AgentAvatar agent={{ icon: existingAvatar }} fill={true} />))}
 			</label>
 		</div>
 	</>);
