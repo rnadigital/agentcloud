@@ -42,9 +42,8 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 							onChange(v);
 						}
 					}}
-					options={agentChoices
-						.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation }))
-						.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])}
+					options={[{ label: '+ Create new agent', value: null, allowDelegation: false }]
+						.concat(agentChoices.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })))}
 					formatOptionLabel={(data: any) => {
 						const optionAgent = agentChoices.find(ac => ac._id === data.value);
 						return (

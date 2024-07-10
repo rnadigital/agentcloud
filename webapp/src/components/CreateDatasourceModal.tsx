@@ -6,7 +6,7 @@ import FormContext from 'context/connectorform';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateDatasourceModal({ open, setOpen, callback }) {
+export default function CreateDatasourceModal({ open, setOpen, callback, initialStep }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -54,7 +54,7 @@ export default function CreateDatasourceModal({ open, setOpen, callback }) {
 									Create a Datasource
 								</Dialog.Title>
 								<div className='pt-4'>
-									<CreateDatasourceForm compact={true} callback={callback} models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={0} />
+									<CreateDatasourceForm compact={true} callback={callback} models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={initialStep} />
 								</div>
 							</Dialog.Panel>
 						</Transition.Child>

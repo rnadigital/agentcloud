@@ -33,9 +33,8 @@ export default function DatasourceSelector({
 						}
 						setDatasourceState(v);
 					}}
-					options={datasources
-						.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t }))
-						.concat([{ label: '+ New Datasource', value: null }])}
+					options={[{ label: '+ New Datasource', value: null }]
+						.concat(datasources.map(t => ({ label: `${t.name} (${t.originalName})`, value: t._id, ...t })))}
 					formatOptionLabel={formatDatasourceOptionLabel}
 				/>
 			</div>

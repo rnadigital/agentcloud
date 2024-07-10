@@ -242,9 +242,8 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 										}
 										setTasksState(v||[]);
         						   	}}
-						            options={taskChoices
-						            	.map(a => ({ label: a.name, value: a._id }))
-						            	.concat([{ label: '+ New task', value: null }])}
+						            options={[{ label: '+ New task', value: null }].concat(
+						            	taskChoices.map(a => ({ label: a.name, value: a._id })))}
 						            formatOptionLabel={(data: any) => {
 						            	const optionTask = taskChoices.find(tc => tc._id === data.value);
 						                return (<li

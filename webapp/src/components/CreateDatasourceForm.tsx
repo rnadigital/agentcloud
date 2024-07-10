@@ -296,7 +296,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									}
 									setModelId(v?.value);
 				            	}}
-					            options={models?.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new embedding model', value: null }])}
+					            options={[{ label: '+ Create new embedding model', value: null }].concat(models?.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })))}
 					            formatOptionLabel={formatModelOptionLabel}
 					        />
 						</div>
@@ -543,7 +543,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 											}
 											setModelId(v?.value);
 										}}
-										options={models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })).concat([{ label: '+ Create new model', value: null }])}
+										options={[{ label: '+ Create new model', value: null }].concat(models.filter(m => ModelEmbeddingLength[m.model]).map(c => ({ label: c.name, value: c._id, ...c })))}
 										formatOptionLabel={formatModelOptionLabel}
 									/>
 								</div>

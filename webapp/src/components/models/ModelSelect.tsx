@@ -24,8 +24,8 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 						}
 						onChange(v);
 					}}
-					options={models
-						.filter(m => {
+					options={[{ label: '+ New model', value: null }]
+						.concat(models.filter(m => {
 							if (!modelFilter) { return true; }
 							if (typeof m === 'string') {
 								return modelFilter == 'embedding'
@@ -34,8 +34,7 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 							}
 							return modelFilter === m?.modelType;
 						})
-						.map(c => ({ label: c.name || c._id, value: c._id }))
-						.concat([{ label: '+ New model', value: null }])}
+							.map(c => ({ label: c.name || c._id, value: c._id })))}
 					formatOptionLabel={data => {
 						const optionCred = models.find(oc => oc._id === data.value);
 						return (

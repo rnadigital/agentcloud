@@ -31,15 +31,18 @@ export default function ToolsSelect({ title='Tools', tools, toolState, onChange,
 						}
 						onChange(v);
 					}}
-					options={tools.map(tool => ({
+					options={(enableAddNew
+						? [{
+							label: '+ New Tool',
+							value: null,
+							disabled: false,
+						}]
+						: []
+					).concat(tools.map(tool => ({
 						label: tool.name,
 						value: tool._id,
 						disabled: false, //tool.state && tool.state !== 'READY',
-					})).concat(enableAddNew ? [{
-						label: '+ New Tool',
-						value: null,
-						disabled: false,
-					}] : [])}
+					})))}
 					formatOptionLabel={data => {
 						const optionTool = tools.find(tool => tool._id === data.value);
 						const isReady = true; //!optionTool?.state || optionTool?.state as ToolState === ToolState.READY;

@@ -183,7 +183,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										};
 									});
 								}}
-								options={tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })).concat([{ label: '+ New Tool', value: null /*, disabled: false*/ }])}
+								options={[{ label: '+ New Tool', value: null /*, disabled: false*/ }].concat(tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })))}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
 									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;

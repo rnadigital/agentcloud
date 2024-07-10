@@ -176,6 +176,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 				open={modalOpen !== false}
 				setOpen={setModalOpen}
 				callback={createDatasourceCallback}
+				initialStep={0}
 			/>;
 			break;
 		case 'model':

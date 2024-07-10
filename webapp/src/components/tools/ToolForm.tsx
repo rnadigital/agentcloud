@@ -77,7 +77,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 
 	useEffect(() => {
 		if (notificationTrigger
-&& notificationTrigger?.type === NotificationType.Tool) {
+			&& notificationTrigger?.type === NotificationType.Tool) {
 			fetchFormData();
 		}
 	}, [resourceSlug, notificationTrigger]);
@@ -276,6 +276,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 				open={modalOpen !== false}
 				setOpen={setModalOpen}
 				callback={createDatasourceCallback}
+				initialStep={0}
 			/>;
 			break;
 		default:
