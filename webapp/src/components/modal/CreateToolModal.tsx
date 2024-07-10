@@ -5,7 +5,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect,useState } from 'react';
 
-export default function CreateToolModal({ open, setOpen, callback }) {
+export default function CreateToolModal({ open, setOpen, callback, initialType=null }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -59,6 +59,7 @@ export default function CreateToolModal({ open, setOpen, callback }) {
 											compact={true}
 											callback={callback}
 											datasources={datasources} 
+											initialType={initialType}
 										/>
 									</div>
 								</div>

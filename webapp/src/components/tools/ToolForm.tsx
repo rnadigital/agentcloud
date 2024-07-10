@@ -26,9 +26,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { DatasourceStatus } from 'struct/datasource';
 import { NotificationType } from 'struct/notification';
-import { BaseOpenAPIParameters, Retriever, ToolType } from 'struct/tool';
+import { Retriever, ToolType } from 'struct/tool';
 
 const authenticationMethods = [
 	{ label: 'None', value: 'none' },
@@ -54,7 +53,7 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-export default function ToolForm({ tool = {}, revisions = [], datasources = [], editing, callback, compact, fetchFormData }: { tool?: any, revisions?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function }) { //TODO: fix any type
+export default function ToolForm({ tool = {}, revisions = [], datasources = [], editing, callback, compact, fetchFormData, initialType }: { tool?: any, revisions?: any[], datasources?: any[], editing?: boolean, callback?: Function, compact?: boolean, fetchFormData?: Function, initialType?: ToolType }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
@@ -71,7 +70,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(tool?.data?.description || tool?.description || '');
-	const [toolType, setToolType] = useState(tool?.type as ToolType || ToolType.RAG_TOOL);
+	const [toolType, setToolType] = useState(initialType || tool?.type as ToolType || ToolType.RAG_TOOL);
 	const [submitting, setSubmitting] = useState(false); // Add submitting state
 	const [, notificationTrigger]: any = useSocketContext();
 
@@ -229,16 +228,18 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 				}, (err) => {
 					toast.error(err);
 					setSubmitting(false);
-				}, null);
+				}, compact ? null : router);
 			} else {
 				const addedTool = await API.addTool(body, () => {
-					if (toolType === ToolType.FUNCTION_TOOL) {
-						toast.info('Tool deploying...');
-					} else {
-						toast.success('Tool created sucessfully');
+					if (!compact) {
+						if (toolType === ToolType.FUNCTION_TOOL) {
+							toast.info('Tool deploying...');
+						} else {
+							toast.success('Tool created sucessfully');
+						}
+						router.push(`/${resourceSlug}/tools`);
 					}
-					router.push(`/${resourceSlug}/tools`);
-				}, (err) => { toast.error(err); }, null);
+				}, (err) => { toast.error(err); }, compact ? null : router);
 				callback && addedTool && callback(addedTool._id, body);
 			}
 
@@ -305,7 +306,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 						setToolType={setToolType}
 						toolDescription={toolDescription}
 						setToolDescription={setToolDescription}
-						isBuiltin={isBuiltin}
+						isBuiltin={isBuiltin||initialType!=null}
 						ToolType={ToolType}
 					/>
 

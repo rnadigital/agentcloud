@@ -8,7 +8,7 @@ import Select from 'react-tailwindcss-select';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ToolsSelect({ title='Tools', tools, toolState, onChange, setModalOpen, enableAddNew=true }) {
+export default function ToolsSelect({ title='Tools', addNewTitle='+ New Tool', tools, toolState, onChange, setModalOpen, enableAddNew=true }) {
 
 	return (
 		<div className='sm:col-span-12'>
@@ -33,7 +33,7 @@ export default function ToolsSelect({ title='Tools', tools, toolState, onChange,
 					}}
 					options={(enableAddNew
 						? [{
-							label: '+ New Tool',
+							label: addNewTitle,
 							value: null,
 							disabled: false,
 						}]

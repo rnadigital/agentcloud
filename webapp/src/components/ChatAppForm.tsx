@@ -166,7 +166,11 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	async function toolCallback(addedToolId, addedTool) {
 		console.log('addedToolId', addedToolId);
 		await fetchFormData && fetchFormData();
-		setToolState(oldToolState => (oldToolState||[]).concat([{ label: addedTool.name, value: addedToolId }]));
+		if (addedTool?.type as ToolType == ToolType.RAG_TOOL) {
+			setDatasourceState(oldDatasourcesState => (oldDatasourcesState||[]).concat([{ label: addedTool.name, value: addedToolId }]));
+		} else {
+			setToolState(oldToolState => (oldToolState||[]).concat([{ label: addedTool.name, value: addedToolId }]));
+		}
 		setModalOpen(false);
 	}
 
@@ -193,6 +197,15 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 				open={modalOpen !== false}
 				setOpen={setModalOpen}
 				callback={toolCallback}
+				initialType={ToolType.FUNCTION_TOOL}
+			/>;
+			break;
+		case 'datasource_tool':
+			modal = <CreateToolModal
+				open={modalOpen !== false}
+				setOpen={setModalOpen}
+				callback={toolCallback}
+				initialType={ToolType.RAG_TOOL}
 			/>;
 			break;
 		default:
@@ -280,7 +293,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							/>
 						</div>
 
-						{/*(editing || !showAgentForm) && */<AgentsSelect
+						<AgentsSelect
 							agentChoices={agentChoices}
 							agentsState={agentsState}
 							onChange={agentsState => {
@@ -292,7 +305,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 								setAgentsState(null);
 							}}
 							multiple={false}
-						/>}
+						/>
 
 						{showAgentForm && <>
 
@@ -384,24 +397,18 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 								toolState={toolState}
 								onChange={setToolState}
 								setModalOpen={setModalOpen}
-								enableAddNew={false}
+								enableAddNew={true}
 							/>
 
 							<ToolsSelect
 								title='Datasources'
+								addNewTitle='+ New Datasource'
 								tools={toolChoices.filter(t => t?.type as ToolType === ToolType.RAG_TOOL)}
 								toolState={datasourceState}
 								onChange={setDatasourceState}
-								setModalOpen={setModalOpen}
-								enableAddNew={false}
+								setModalOpen={x => setModalOpen('datasource_tool')}
+								enableAddNew={true}
 							/>
-
-							{/*<button
-								className='rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 inline-flex items-center'
-								onClick={() => setShowAgentForm(false)}
-							>
-								Cancel
-							</button>*/}
 
 						</>}
 
