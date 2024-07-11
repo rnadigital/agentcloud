@@ -47,7 +47,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [icon, setIcon] = useState(app?.icon);
+	const [icon, setIcon]: any = useState(app?.icon);
 	const [error, setError] = useState();
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
