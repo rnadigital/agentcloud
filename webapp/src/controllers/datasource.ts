@@ -766,7 +766,7 @@ export async function uploadFileApi(req, res, next) {
 
 	// Prepare the message and metadata
 	const message = JSON.stringify({
-		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
+		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE,
 		filename,
 		file: `/tmp/${filename}`,
 	});
