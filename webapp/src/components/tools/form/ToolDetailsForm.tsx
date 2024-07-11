@@ -9,7 +9,6 @@ export default function ToolDetailsForm({
 	toolDescription,
 	setToolDescription,
 	isBuiltin,
-	ToolType,
 	initialType,
 }) {
 	return (
