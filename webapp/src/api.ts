@@ -41,9 +41,6 @@ export function hasPaymentMethod(dispatch, errorCallback, router) {
 export function checkStripeReady(dispatch, errorCallback, router) {
 	return ApiCall('/stripe-ready', 'GET', null, dispatch, errorCallback, router);
 }
-export function adminEditAccount(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/account/admin', 'POST', body, dispatch, errorCallback, router);
-}
 
 // Apps
 export function getApps(body, dispatch, errorCallback, router) {
