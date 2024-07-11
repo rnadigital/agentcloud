@@ -6,7 +6,7 @@ import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
-import { ObjectId } from 'mongodb';
+import { chainValidations } from 'lib/utils/validationUtils';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import { SubscriptionPlan } from 'struct/billing';
@@ -61,6 +61,14 @@ export async function accountJson(req, res, next) {
  */
 export async function login(req, res) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin:1}},
+	], { email: 'Email', password: 'Password' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const email = req.body.email.toLowerCase();
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
@@ -91,6 +99,15 @@ export async function login(req, res) {
  * regiser
  */
 export async function register(req, res) {
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true }},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin:1}},
+	], { name: 'Name', email: 'Email', password: 'Password' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	const email = req.body.email.toLowerCase();
 	const name = req.body.name;
@@ -130,9 +147,14 @@ export function logout(req, res) {
  */
 export async function requestChangePassword(req, res) {
 	const { email } = req.body;
-	if (!email || typeof email !== 'string' || email.length === 0 || !/^\S+@\S+\.\S+$/.test(email)) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid email' });
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
+	], { email: 'Email' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
 	const foundAccount = await getAccountByEmail(email);
 	if (foundAccount) {
 		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
@@ -144,11 +166,16 @@ export async function requestChangePassword(req, res) {
 					replyTo: null,
 					to: [email],
 					subject: 'Password reset verification',
-					body: `Somebody entered your email a password reset for agentcloud.
+					body: `We received a request to reset your password for your AgentCloud account.
 
-If this was you, click the link to reset your password: "${process.env.URL_APP}/changepassword?token=${verificationToken}"
+If you initiated this request, please click the link below to reset your password:
 
-If you didn't request a password reset, you can safely ignore this email.`,
+${process.env.URL_APP}/changepassword?token=${verificationToken}
+
+If you did not request a password reset, no further action is required, and you can safely disregard this email.
+
+Thank you,
+The AgentCloud Team`,
 				});
 			});
 	}
@@ -161,11 +188,12 @@ If you didn't request a password reset, you can safely ignore this email.`,
  */
 export async function changePassword(req, res) {
 	const { password, token } = req.body;
-	if (!token || typeof token !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
-	}
-	if (!password || typeof password !== 'string' || password.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1 }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin: 1 }},
+	], { name: 'Name', email: 'Email', password: 'Password' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	const deletedVerification = await getAndDeleteVerification(token, VerificationTypes.CHANGE_PASSWORD);
 	if (!deletedVerification || !deletedVerification.token) {
@@ -181,8 +209,11 @@ export async function changePassword(req, res) {
  * logout
  */
 export async function verifyToken(req, res) {
-	if (!req.body || !req.body.token || typeof req.body.token !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1 }},
+	], { token: 'Token' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
 	if (!deletedVerification || !deletedVerification.token) {
@@ -208,12 +239,15 @@ export async function verifyToken(req, res) {
  */
 export async function switchTeam(req, res, _next) {
 
-	const { orgId, teamId, redirect } = req.body;
-	if (!orgId || typeof orgId !== 'string'
-		|| !teamId || typeof teamId !== 'string'
-		|| (redirect && typeof redirect !== 'string')) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24 }},
+	], { orgId: 'Org ID', teamId: 'Team ID' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+	
+	const { orgId, teamId } = req.body;
 
 	const switchOrg = res.locals.account.orgs.find(o => o.id.toString() === orgId);
 	const switchTeam = switchOrg && switchOrg.teams.find(t => t.id.toString() === teamId);
@@ -222,22 +256,6 @@ export async function switchTeam(req, res, _next) {
 	}
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
-
-	return res.json({});
-
-}
-
-export async function adminApi(req, res, next) {
-
-	const { action } = req.body;
-
-	if (Object.values(SubscriptionPlan).includes(action)) {
-		setPlanDebug(res.locals.account._id, action);
-	} else {
-		const updatingPerms = new Permission(Roles.REGISTERED_USER.base64);
-		updatingPerms.set(Permissions.ROOT, action === 'Root');
-		setAccountPermissions(res.locals.account._id, updatingPerms);
-	}
 
 	return res.json({});
 
