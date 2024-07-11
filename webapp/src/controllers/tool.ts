@@ -212,7 +212,9 @@ export async function addToolApi(req, res, next) {
 							date: new Date(),
 						});
 						log('addToolApi functionId %s isActive %O', functionId, isActive);
+						await new Promise(res => setTimeout(res, 10000));
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
+						log('functionId %s logs %O', functionId, logs);
 						const editedRes = await editToolUnsafe({
 							_id: toObjectId(addedTool?.insertedId),
 							teamId: toObjectId(req.params.resourceSlug),
@@ -292,9 +294,9 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
-	// await FunctionProviderFactory.getFunctionProvider().getFunctionLogs(existingTool?.functionId)
-	// 	.then(res => { log('function logs %s', res); })
-	// 	.catch(e => { log(e); });
+	//await FunctionProviderFactory.getFunctionProvider().getFunctionLogs('5ec2b2cb-e701-4713-9df7-c22208daaf06')
+	//	.then(res => { log('function logs %s', res); })
+	//	.catch(e => { log(e); });
 	
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 
@@ -357,7 +359,12 @@ export async function editToolApi(req, res, next) {
 				functionProvider.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
 						log('editToolApi functionId %s isActive %O', functionId, isActive);
+						/* Note: don't remove this static sleep. The purpose is to wait for google
+						 * cloud logging to have the deployment failure message which comes after
+						 * a DELAY even when the function is already in "failed" state */
+						await new Promise(res => setTimeout(res, 10000));
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
+						log('functionId %s logs %O', functionId, logs);
 						const addedRevision = await addToolRevision({
 							orgId: toObjectId(res.locals.matchingOrg.id),
 							teamId: toObjectId(req.params.resourceSlug),
@@ -408,8 +415,8 @@ export async function editToolApi(req, res, next) {
 						io.to(req.params.resourceSlug).emit('notification', notification);
 						if (!isActive) {
 							// Delete the new broken function
-							functionProvider.deleteFunction(functionId);
 							log('Deleting new broken functionId %s', functionId);
+							functionProvider.deleteFunction(functionId);
 						}
 						if (isActive && existingTool?.functionId) {
 							//Delete the old function with old functionid
@@ -477,6 +484,7 @@ export async function applyToolRevisionApi(req, res, next) {
 			functionProvider.waitForFunctionToBeActive(functionId)
 				.then(async isActive => {
 					log('editToolApi functionId %s isActive %O', functionId, isActive);
+					await new Promise(res => setTimeout(res, 10000));
 					const logs = await functionProvider.getFunctionLogs(functionId).catch(e => { log(e); });
 					const editedRes = await editToolUnsafe({
 						_id: toObjectId(existingRevision.toolId),

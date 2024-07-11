@@ -40,7 +40,14 @@ class GoogleFunctionProvider extends FunctionProvider {
 	}
 
 	async getFunctionLogs(functionId: string, limit = 100): Promise<string> {
-		const filter = `resource.type="cloud_run_revision" severity>=WARNING resource.labels.service_name="function-${functionId}"`;
+		const filter = `(resource.type = "cloud_function"
+resource.labels.function_name = "function-${functionId}"
+resource.labels.region = "${this.#location}")
+OR 
+(resource.type = "cloud_run_revision"
+resource.labels.service_name = "function-${functionId}"
+resource.labels.location = "${this.#location}")
+severity>=WARNING`;
 		const [entries] = await this.#loggingClient.getEntries({
 			filter,
 			pageSize: limit,
@@ -51,9 +58,12 @@ class GoogleFunctionProvider extends FunctionProvider {
 				const payload = (entry as any).metadata.payload as string;
 				const textPayload = entry?.metadata?.textPayload;
 				if (payload == 'protoPayload' && Buffer.isBuffer(entry.metadata[payload]?.value)) {
-					const value = auditLogProto.decode(entry.data.value).toJSON();
-					// log(JSON.stringify(value, null, 2));
-					return value?.status?.message;
+					//log('protoPayload, %O', entry.metadata[payload]);
+					const decodedProto = auditLogProto.decode(entry.data.value);
+					//log(decodedProto);
+					const decodedJson = decodedProto.toJSON();
+					//log(decodedJson);
+					return decodedJson?.status?.message;
 				} else if (textPayload) {
 					log('textPayload, %O', textPayload);
 					const severity = entry.metadata.severity || 'UNKNOWN';
@@ -179,7 +189,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 				return false; //Short circuit if it enters a state other than pending and isnt active
 			}
 			log('In waitForFunctionToBeActive loop for ID: %s', functionId);
-			await new Promise(resolve => setTimeout(resolve, 10000));
+			await new Promise(resolve => setTimeout(resolve, 5000));
 		}
 	
 		return false;

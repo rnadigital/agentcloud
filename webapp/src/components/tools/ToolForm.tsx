@@ -350,11 +350,14 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 													currentTab.name === tab.name
 														? 'border-indigo-500 text-indigo-600'
 														: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-													'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium',
+													'whitespace-nowrap border-b-2 px-2 py-4 text-sm font-medium flex',
 												)}
 												aria-current={currentTab.name === tab.name ? 'page' : undefined}
 											>
 												{tab.name}
+												{tab.name === 'Version History' && tool?.functionLogs && <svg className='ms-2 h-2 w-2 fill-red-500' viewBox='0 0 6 6' aria-hidden='true'>
+													<circle cx='3' cy='3' r='3' />
+												</svg>}
 											</a>
 										))
 									}

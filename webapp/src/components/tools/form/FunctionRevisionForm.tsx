@@ -32,7 +32,8 @@ export default function FunctionRevisionForm({
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
 	return (<div className='space-y-3'>
-		{tool?.state === ToolState.PENDING && <InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='A deployment is currently in progress for this tool' />}
+		{tool?.state === ToolState.PENDING && <InfoAlert textColor='black' className='rounded bg-orange-300 p-4' message='A deployment is currently in progress for this tool' />}
+		{tool?.functionLogs && <InfoAlert textColor='black' className='rounded bg-orange-300 p-4' message={<span className='whitespace-pre break-all'>{tool?.functionLogs}</span>} />}
 		{revisions.map((revision, index) => {
 			const currentRevision = revision._id.toString() === tool?.revisionId?.toString();
 			return (<li key={index} className='flex justify-between items-center bg-white shadow rounded p-2'>
