@@ -82,13 +82,13 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 			run,
 		};
 		if (editing === true) {
-			await API.editApp(appState._id, body, res => {
+			await API.editApp(appState._id, body, () => {
 				toast.success('App Updated');
 				if (run === true) {
 					API.addSession({
 						_csrf: e.target._csrf.value,
 						resourceSlug,
-						id: res._id,
+						id: app._id,
 					}, null, toast.error, router);
 				}
 			}, setError, null);
