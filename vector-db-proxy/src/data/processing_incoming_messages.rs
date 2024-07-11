@@ -54,7 +54,6 @@ async fn handle_embedding(
                     increment_by_one(&mongo, &datasource_id_clone_2, field_path).await.unwrap();
                 }
             }
-            increment_by_one(&mongo, &datasource_id_clone_2, field_path).await.unwrap();
         }
         Err(e) => {
             increment_by_one(&mongo, &datasource_id_clone_2, field_path).await.unwrap();
