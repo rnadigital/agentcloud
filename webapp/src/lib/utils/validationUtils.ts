@@ -65,7 +65,7 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.exists === true && object[fieldName] === undefined) {
 				error = `${fieldDescription} does not exist`;
 			}
-			if (validations.ofType != null && object[fieldName] && typeof object[fieldName] !== validations.ofType) {
+			if (validations.ofType != null && item && typeof item !== validations.ofType) {
 				error = `${fieldDescription} is an invalid type, should be "${validations.ofType}"`;
 			}
 			if (validations.notEmpty === true && (item == null || item === '')) {
