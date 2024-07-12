@@ -704,12 +704,44 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
+	if (!req.files || Object.keys(req.files).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Missing file' });
+	}
+
 	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
-	log(modelId, name, datasourceDescription);
-	if (!req.files || Object.keys(req.files).length === 0
-		|| !modelId || typeof modelId !== 'string'
-		|| !name || typeof name !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const validMetadata = (req.body?.retriever_config?.metadata_field_info||[])
+		.every(obj => {
+			return typeof obj?.name === 'string'
+			&& typeof obj?.description === 'string'
+			&& ['string', 'integer', 'float'].includes(obj?.type);
+		});
+	if (!validMetadata) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
+	}
+
+	let validationErrorRetrieverConfig = chainValidations(retriever_config, [
+		{ field: 'decay_rate', validation: { notEmpty: retriever === Retriever.TIME_WEIGHTED, numberFromInclusive: 0 }},
+		// { field: 'k', validation: { notEmpty: retriever === Retriever.SELF_QUERY, numberFromInclusive: 0 }},
+		//Note: topk unused currently
+	], {});
+	if (validationErrorRetrieverConfig) {
+		return dynamicResponse(req, res, 400, { error: validationErrorRetrieverConfig });
 	}
 
 	const uploadedFile = req.files.file;

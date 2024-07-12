@@ -17,7 +17,7 @@ export type MetadataFieldInfo = {
 };
 
 export type SelfQueryRetrieverConfig = {
-	k?: number;
+	k?: number; //top k, unused atm
 	metadata_field_info: MetadataFieldInfo[];
 };
 
