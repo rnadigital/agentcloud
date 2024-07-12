@@ -24,7 +24,7 @@ log.log = console.log.bind(console); //set namespace to log
  */
 export async function specificationJson(req, res, next) {
 
-	let validationError = chainValidations(req.body, [
+	let validationError = chainValidations(req.query, [
 		{ field: 'sourceDefinitionId', validation: { notEmpty: true, ofType: 'string' }},
 	], { sourceDefinitionId: 'Source Definition ID' });
 	if (validationError) {
@@ -51,7 +51,7 @@ export async function listJobsApi(req, res, next) {
 
 	const { datasourceId } = req.query;
 
-	let validationError = chainValidations(req.body, [
+	let validationError = chainValidations(req.query, [
 		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
 	], { datasourceId: 'Datasource ID' });
 	if (validationError) {
