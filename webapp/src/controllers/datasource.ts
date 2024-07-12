@@ -10,6 +10,7 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
+import { chainValidations } from 'lib/utils/validationUtils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -107,10 +108,21 @@ export async function datasourceAddPage(app, req, res, next) {
 }
 
 export async function testDatasourceApi(req, res, next) {
-	log('Test datasource');
 
 	const { connectorId, datasourceName, datasourceDescription, sourceConfig } = req.body;
-	log('req.body', req.body);
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -148,7 +160,6 @@ export async function testDatasourceApi(req, res, next) {
 		}
 	} catch (e) {
 		console.error(e);
-
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -263,27 +274,33 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceName,
 		datasourceDescription,
 		streams,
-		selectedFieldsMap,
-		descriptionsMap,
 		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone,
 		modelId,
-		name,
 		embeddingField,
 		retriever,
 		retriever_config,
 	} = req.body;
 
-	if (!datasourceId || typeof datasourceId !== 'string'
-		|| !modelId || typeof modelId !== 'string'
-		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'embeddingField', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'scheduleType', validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }},
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
+		//TODO: validation for retriever_config and streams?
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-
-	//TODO: validation for other fields
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 
@@ -298,10 +315,6 @@ export async function addDatasourceApi(req, res, next) {
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	if (retriever && !Object.values(Retriever).includes(retriever)) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
 	}
 
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -324,12 +337,12 @@ export async function addDatasourceApi(req, res, next) {
 	};
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
-			scheduleType: 'cron',
+			scheduleType: DatasourceScheduleType.CRON,
 			cronExpression,
 		};
 	} else {
 		connectionBody['schedule'] = {
-			scheduleType: 'manual',
+			scheduleType: DatasourceScheduleType.MANUAL,
 		};
 	}
 	const createdConnection = await connectionsApi
@@ -398,10 +411,7 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	const {
 		datasourceId,
 		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone
 	} = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string') {
@@ -420,18 +430,18 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		...datasource.connectionSettings,
-		scheduleType: scheduleType,
+		scheduleType: scheduleType as DatasourceScheduleType,
 	};
 	connectionBody['connectionId'] = datasource.connectionId;
 
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
-			scheduleType: 'cron',
+			scheduleType: DatasourceScheduleType.CRON,
 			cronExpression,
 		};
 	} else {
 		connectionBody['schedule'] = {
-			scheduleType: 'manual',
+			scheduleType: DatasourceScheduleType.MANUAL,
 		};
 	}
 	log('connectionBody', JSON.stringify(connectionBody, null, 2));
@@ -462,25 +472,37 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		datasourceId,
 		streams,
 		sync,
-		selectedFieldsMap,
 		descriptionsMap,
-		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone,
 		metadata_field_info,
 	} = req.body;
 
-	if (!datasourceId || typeof datasourceId !== 'string'
-		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
+		{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true }},
+		//TODO: more validations?
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	//TODO: validation for other fields
+	const validMetadata = (req.body.metadata_field_info||[])
+		.every(obj => {
+			return typeof obj?.name === 'string'
+			&& typeof obj?.description === 'string'
+			&& ['string', 'integer', 'float'].includes(obj?.type);
+		});
+	if (!validMetadata) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
+	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -508,14 +530,14 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		status: 'active',
 	};
-	if (scheduleType === DatasourceScheduleType.CRON) {
+	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
-			scheduleType: 'cron',
+			scheduleType: DatasourceScheduleType.CRON,
 			cronExpression,
 		};
 	} else {
 		connectionBody['schedule'] = {
-			scheduleType: 'manual',
+			scheduleType: DatasourceScheduleType.MANUAL,
 		};
 	}
 	const createdConnection = await connectionsApi
@@ -559,13 +581,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 export async function syncDatasourceApi(req, res, next) {
 
 	const { datasourceId } = req.params;
-
-	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -609,12 +625,8 @@ export async function syncDatasourceApi(req, res, next) {
 */
 export async function deleteDatasourceApi(req, res, next) {
 
-	if (!req.params.datasourceId || typeof req.params.datasourceId !== 'string' || req.params.datasourceId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
-
+	const { datasourceId } = req.params;
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -680,8 +692,8 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Delete the datasourcein the db
 	await Promise.all([
-		deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId),
-		deleteToolsForDatasource(req.params.resourceSlug, req.params.datasourceId),
+		deleteDatasourceById(req.params.resourceSlug, datasourceId),
+		deleteToolsForDatasource(req.params.resourceSlug, datasourceId),
 	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction	

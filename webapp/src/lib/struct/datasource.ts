@@ -8,6 +8,11 @@ export type DatasourceStream = {
 	name: string;
 };
 
+export enum DatasourceScheduleType {
+	CRON = 'cron',
+	MANUAL = 'manual',
+}
+
 export type DatasourceConnectionSettings = {
 	prefix: string | null;
 	name: string;
@@ -16,7 +21,7 @@ export type DatasourceConnectionSettings = {
 	status: string; //TODO: enum to match airbyte api, and allow creating in paused state
 	configurations: any; //TODO
 	schedule?: {
-		scheduleType: 'cron' | 'manual';
+		scheduleType: DatasourceScheduleType;
 		cronExpression?: string;
 	};
 	dataResidency?: string;
@@ -73,10 +78,4 @@ export type Datasource = {
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
 	descriptionsMap?: Record<string,string>;
-};
-
-export enum DatasourceScheduleType {
-	MANUAL = 'manual',
-	BASICSCHEDULE = 'basic',
-	CRON = 'cron',
 };
