@@ -5,14 +5,14 @@ import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
+import { getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecordCount } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
+import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
-
-import { getDatasourceByConnectionId, getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecordCount } from '../db/datasource';
 const warn = debug('webapp:controllers:airbyte:warning');
 warn.log = console.warn.bind(console); //set namespace to log
 const log = debug('webapp:controllers:airbyte');
@@ -23,9 +23,14 @@ log.log = console.log.bind(console); //set namespace to log
  * get the specification for an airbyte source
  */
 export async function specificationJson(req, res, next) {
-	if (!req?.query?.sourceDefinitionId || typeof req.query.sourceDefinitionId !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'sourceDefinitionId', validation: { notEmpty: true, ofType: 'string' }},
+	], { sourceDefinitionId: 'Source Definition ID' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
 	let data;
 	try {
 		data = await getSpecification(req, res, next);

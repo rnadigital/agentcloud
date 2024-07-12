@@ -62,8 +62,8 @@ export async function accountJson(req, res, next) {
 export async function login(req, res) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin:1}},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin:1, ofType: 'string' }},
 	], { email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -101,25 +101,17 @@ export async function login(req, res) {
 export async function register(req, res) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin:1}},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'checkoutSession', validation: { ofType: 'string' }},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin:1, ofType: 'string'}},
 	], { name: 'Name', email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const email = req.body.email.toLowerCase();
-	const name = req.body.name;
-	const password = req.body.password;
-	const checkoutSession = req.body.checkoutSession;
-
-	if (!email || typeof email !== 'string' || email.length === 0 || !/^\S+@\S+\.\S+$/.test(email)
-		|| !password || typeof password !== 'string' || password.length === 0
-		|| (checkoutSession && (typeof checkoutSession !== 'string' || checkoutSession.length === 0))
-		|| !name || typeof name !== 'string' || name.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
+	const { name, password, checkoutSession } = req.body;
 
 	const existingAccount: Account = await getAccountByEmail(email);
 	if (existingAccount) {
@@ -149,7 +141,7 @@ export async function requestChangePassword(req, res) {
 	const { email } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/ }},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
 	], { email: 'Email' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -189,8 +181,8 @@ The AgentCloud Team`,
 export async function changePassword(req, res) {
 	const { password, token } = req.body;
 	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1 }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin: 1 }},
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
+		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
 	], { name: 'Name', email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -210,7 +202,7 @@ export async function changePassword(req, res) {
  */
 export async function verifyToken(req, res) {
 	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1 }},
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
 	], { token: 'Token' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -240,8 +232,8 @@ export async function verifyToken(req, res) {
 export async function switchTeam(req, res, _next) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24 }},
-		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24 }},
+		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
 	], { orgId: 'Org ID', teamId: 'Team ID' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });

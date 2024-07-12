@@ -4,13 +4,11 @@ import { dynamicResponse } from '@dr';
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { removeAgentFromCrews } from 'db/crew';
-import { getDatasourcesById, getDatasourcesByTeam } from 'db/datasource';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById,getToolsByTeam } from 'db/tool';
 import toObjectId from 'lib/misc/toobjectid';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'lib/utils/validationUtils';
-import { ModelList } from 'struct/model';
+import { chainValidations } from 'lib/utils/validationUtils';
 
 export async function agentsData(req, res, _next) {
 	const [agents, models, tools] = await Promise.all([
