@@ -119,6 +119,7 @@ export async function addAppApi(req, res, next) {
 
 	const isChatApp = type as AppType === AppType.CHAT;
 	let validationError = chainValidations(req.body, [
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set([AppType.CHAT, AppType.CREW]) }},
 		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
