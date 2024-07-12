@@ -51,8 +51,11 @@ export async function listJobsApi(req, res, next) {
 
 	const { datasourceId } = req.query;
 
-	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+	], { datasourceId: 'Datasource ID' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -81,14 +84,6 @@ export async function listJobsApi(req, res, next) {
 }
 
 /**
- * POST /airbyte/jobs
- * trigger a sync or reset job for a connection
- */
-export async function triggerJobApi(req, res, next) {
-
-}
-
-/**
  * GET /airbyte/sources/schema
  * list airbyte sync jobs for a connection
  */
@@ -96,8 +91,11 @@ export async function discoverSchemaApi(req, res, next) {
 
 	const { datasourceId } = req.query;
 
-	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.query, [
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+	], { datasourceId: 'Datasource ID' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);

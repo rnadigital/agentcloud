@@ -100,7 +100,6 @@ export default function router(server, app) {
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
-	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
