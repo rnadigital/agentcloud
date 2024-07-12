@@ -1,17 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import Permission from '@permission';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationUtils';
-import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
-import { SubscriptionPlan } from 'struct/billing';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setAccountPermissions, setCurrentTeam, setPlanDebug, verifyAccount } from '../db/account';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 

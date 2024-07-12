@@ -6,14 +6,12 @@ import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/
 import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
-import { addModel,getModelById,getModelsByTeam } from 'db/model';
-import { addTask,getTasksByTeam } from 'db/task';
-import { getToolForDatasource,getToolsById, getToolsByTeam } from 'db/tool';
+import { getModelById,getModelsByTeam } from 'db/model';
+import { getTasksByTeam } from 'db/task';
+import { getToolsByTeam } from 'db/tool';
+import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
-import { ProcessImpl } from 'struct/crew';
-import { ModelType } from 'struct/model';
-import { ModelEmbeddingLength } from 'struct/model';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
@@ -119,7 +117,23 @@ export async function addAppApi(req, res, next) {
 		type, run
 	}  = req.body;
 
-	//TODO:validation
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'agentName', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'managerModelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		//TODO:validation
+	], {
+		name: 'Name',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	const foundIcon = await getAssetById(iconId);
 
