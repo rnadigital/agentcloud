@@ -6,7 +6,7 @@ import { addModel, deleteModelById, getModelById, getModelsByTeam,updateModel } 
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import { ModelType } from 'struct/model';
+import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
 
@@ -69,13 +69,22 @@ export async function modelAddPage(app, req, res, next) {
 export async function modelAddApi(req, res, next) {
 
 	let { name, model, config, type }  = req.body;
-
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'model', validation: { notEmpty: true }},
+		{ field: 'type', validation: { inSet: new Set(Object.values(ModelType)) }},
+		{ field: 'model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
+		{ field: 'config.model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
 	], { name: 'Name', model: 'Model'});
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const configValidations = Object.entries(ModelTypeRequirements[type])
+		.filter((en: any) => en[1].optional !== true)
+		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
+	let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
+	if (validationErrorConfig) {
+		return dynamicResponse(req, res, 400, { error: validationErrorConfig });
 	}
 
 	// Insert model to db
@@ -100,10 +109,19 @@ export async function editModelApi(req, res, next) {
 
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'model', validation: { notEmpty: true }},
+		{ field: 'model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
+		{ field: 'config.model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
 	], { name: 'Name', model: 'Model'});
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const configValidations = Object.entries(ModelTypeRequirements[type])
+		.filter((en: any) => en[1].optional !== true)
+		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
+	let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
+	if (validationErrorConfig) {
+		return dynamicResponse(req, res, 400, { error: validationErrorConfig });
 	}
 
 	const update = {
