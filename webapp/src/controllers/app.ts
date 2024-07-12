@@ -369,8 +369,13 @@ export async function deleteAppApi(req, res, next) {
 
 	const { appId }  = req.body;
 
-	if (!appId || typeof appId !== 'string' || appId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'appId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+	], {
+		appId: 'App ID',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	await deleteAppById(req.params.resourceSlug, appId);

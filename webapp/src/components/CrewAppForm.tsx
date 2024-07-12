@@ -2,7 +2,6 @@
 
 import * as API from '@api';
 import {
-	HandRaisedIcon,
 	PlayIcon,
 } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
@@ -15,7 +14,6 @@ import ModelSelect from 'components/models/ModelSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
