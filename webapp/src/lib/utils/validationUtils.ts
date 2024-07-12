@@ -74,7 +74,7 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.lengthMax > 0 && (item == null || item.length > validations.lengthMax)) {
 				error = `${fieldDescription} is too long`;
 			}
-			if (validations.hasLength >= 0 && (item == null || item.length != validations.hasLength)) {
+			if (validations.hasLength >= 0 && (item?.length && item.length != validations.hasLength)) {
 				error = `${fieldDescription} is not of the right length`;
 			}
 			if (validations.enum && validations.enum.length > 0 && (item == null || item.length < 0 || validations.enum.indexOf(item) < 0)) {

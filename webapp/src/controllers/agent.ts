@@ -118,9 +118,9 @@ export async function addAgentApi(req, res, next) {
 		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
 		{ field: 'functionModelId', validation: { hasLength: 24 }},
-		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'role', validation: { notEmpty: true }},
+		{ field: 'goal', validation: { notEmpty: true }},
+		{ field: 'backstory', validation: { notEmpty: true }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
@@ -202,12 +202,12 @@ export async function editAgentApi(req, res, next) {
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'name', validation: { notEmpty: true }},
 		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		// { field: 'functionModelId', validation: { hasLength: 24 }},
-		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'functionModelId', validation: { hasLength: 24 }},
+		{ field: 'role', validation: { notEmpty: true, }},
+		{ field: 'goal', validation: { notEmpty: true }},
+		{ field: 'backstory', validation: { notEmpty: true }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
@@ -259,8 +259,11 @@ export async function deleteAgentApi(req, res, next) {
 
 	const { agentId }  = req.body;
 
-	if (!agentId || typeof agentId !== 'string' || agentId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'agentId', validation: { notEmpty: true, hasLength: 24 }},
+	], { agentId: 'Agent' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);
