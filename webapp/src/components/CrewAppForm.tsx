@@ -235,7 +235,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 										listGroupLabel: 'dark:bg-slate-700',
 										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
 						            }}
-						            value={tasksState}
+						            value={tasksState?.length > 0 ? tasksState : null}
 						            onChange={(v: any) => {
 										if (v && v.length > 0 && v[v.length-1]?.value == null) {
 											return setModalOpen('task');

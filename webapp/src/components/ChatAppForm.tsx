@@ -129,7 +129,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 						id: app._id,
 					}, null, toast.error, router);
 				}
-			}, setError, null);
+			}, toast.error, null);
 		} else {
 			API.addApp(body, (res) => {
 				if (run === true) {

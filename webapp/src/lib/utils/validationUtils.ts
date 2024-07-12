@@ -1,6 +1,7 @@
 const PARENT_OBJECT_FIELD_NAME = '';
 
 function chainValidations(object, validations: { field: string, validation: ValidationUtilOptions, validateIf?: ValidationCondition, disallowDotSplit?: boolean }[], fieldDescriptions) {
+	validations = validations.filter(x => x);
 	if (object && validations && validations.length > 0) {
 		for (let v in validations) {
 			const validation = validations[v];
@@ -68,7 +69,7 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.ofType != null && item && typeof item !== validations.ofType) {
 				error = `${fieldDescription} is an invalid type, should be "${validations.ofType}"`;
 			}
-			if (validations.notEmpty === true && (item == null || item === '')) {
+			if (validations.notEmpty === true && (item == null || item === '' || (Array.isArray(item) && item?.length === 0))) {
 				error = `${fieldDescription} is empty`;
 			}
 			if (validations.lengthMin > 0 && (item == null || item.length < validations.lengthMin)) {

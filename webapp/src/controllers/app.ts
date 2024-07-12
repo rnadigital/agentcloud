@@ -117,19 +117,29 @@ export async function addAppApi(req, res, next) {
 		type, run
 	}  = req.body;
 
+	const isChatApp = type as AppType === AppType.CHAT;
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'agentName', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'managerModelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'role', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'goal', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'backstory', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		//Note: due to design limitation of validationUtil we need two checks for array fields to both check if theyre empty and validate each array element
+		{ field: 'tasks', validation: { notEmpty: !isChatApp }},
+		{ field: 'agents', validation: { notEmpty: !isChatApp }},
+		{ field: 'tasks', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }},
+		{ field: 'agents', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Agents' }},
+		{ field: 'managerModelId', validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: isChatApp, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		{ field: 'conversationStarters', validation: { notEmpty: isChatApp, asArray: true, ofType: 'string', customError: 'Invalid Conversation Starters' }},
 		//TODO:validation
 	], {
-		name: 'Name',
+		name: 'App Name',
+		agentName: 'Agent Name',
+		modelId: 'Model',
+		managerModelId: 'Chat Manager Model',
 	});
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -235,17 +245,41 @@ export async function editAppApi(req, res, next) {
 		run
 	}  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	const app = await getAppById(req.params.resourceSlug, req.params.appId);
+	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const isChatApp = app?.type === AppType.CHAT;
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		//Note: due to design limitation of validationUtil we need two checks for array fields to both check if theyre empty and validate each array element
+		{ field: 'tasks', validation: { notEmpty: !isChatApp }},
+		{ field: 'agents', validation: { notEmpty: !isChatApp }},
+		{ field: 'tasks', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }},
+		{ field: 'agents', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Agents' }},
+		{ field: 'managerModelId', validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: isChatApp, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		{ field: 'conversationStarters', validation: { notEmpty: isChatApp, asArray: true, ofType: 'string', customError: 'Invalid Conversation Starters' }},
+		//TODO:validation
+	], {
+		name: 'App Name',
+		agentName: 'Agent Name',
+		modelId: 'Model',
+		managerModelId: 'Chat Manager Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	let chatAgent;
-	if (app.type === AppType.CREW) {
+	if (!isChatApp) {
 		await updateCrew(req.params.resourceSlug, app.crewId, {
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
