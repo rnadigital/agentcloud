@@ -91,7 +91,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 						id: app._id,
 					}, null, toast.error, router);
 				}
-			}, setError, null);
+			}, toast.error, null);
 		} else {
 			const addedApp: any = await API.addApp(body, res => {
 				if (run === true) {
