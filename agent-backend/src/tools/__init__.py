@@ -1,6 +1,7 @@
-from . import rag_tool, code_execution_tool, code_execution_docker_notebook_tool
+from . import rag_tool, code_execution_tool, code_execution_docker_notebook_tool, google_cloud_function
 
 RagTool = rag_tool.RagTool
 CodeExecutionTool = code_execution_tool.CodeExecutionTool
 CodeExecutionUsingDockerNotebookTool = code_execution_docker_notebook_tool.CodeExecutionUsingDockerNotebookTool
+GoogleCloudFunctionTool = google_cloud_function.GoogleCloudFunctionTool
 # RagToolFactory = rag_tool.RagToolFactory

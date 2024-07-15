@@ -4,8 +4,13 @@ import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
-import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions } from 'db/team';
+import { Account, addAccount, changeAccountPassword, getAccountByEmail,
+	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
+	pushAccountTeam, setCurrentTeam, updateTeamOwnerInAccounts,verifyAccount } from 'db/account';
+import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions, updateTeamOwner } from 'db/team';
+import { addVerification, getAndDeleteVerification,VerificationTypes } from 'db/verification';
 import createAccount from 'lib/account/create';
+import * as ses from 'lib/email/ses';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
@@ -13,12 +18,7 @@ import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 
-import { Account, addAccount, changeAccountPassword, getAccountByEmail,
-	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
-	pushAccountTeam, setCurrentTeam, verifyAccount } from '../db/account';
 import { addOrg, getOrgById } from '../db/org';
-import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
-import * as ses from '../lib/email/ses';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -57,16 +57,17 @@ export async function teamJson(req, res, next) {
  * @apiParam {String} email Email of person to invite
  */
 export async function inviteTeamMemberApi(req, res) {
-	const { name, email } = req.body;
-	if (!email || typeof email !== 'string' || email.length === 0) {
+	const { name, email, template } = req.body;
+	if (!email || typeof email !== 'string' || email.length === 0
+		|| (template && !Roles[template])) {
 		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
 	}
 	let foundAccount = await getAccountByEmail(email);
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const { addedAccount } = await createAccount(email, name, null, true);
-		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId);
+		const { addedAccount } = await createAccount(email, name, null, template, true);
+		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
 	} else {
 		//account with that email was found
@@ -74,7 +75,7 @@ export async function inviteTeamMemberApi(req, res) {
 		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
 			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
 		}
-		await addTeamMember(req.params.resourceSlug, foundAccount._id);
+		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
 	}
 	if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
 		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
@@ -143,7 +144,7 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.TEAM_ADMIN.base64).array)),
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
@@ -171,16 +172,20 @@ export async function editTeamMemberApi(req, res) {
 		return dynamicResponse(req, res, 400, { error: 'Team owner permissions can\'t be edited' });
 	}
 
+	if (template && !Roles[template]) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid template' });
+	}
+
 	const editingMember = await getAccountById(req.params.memberId);
 	
 	let updatingPermissions;
 	if (template) {
-		updatingPermissions = new Permission(template); //TODO: template (.base64 of official roles)
+		updatingPermissions = new Permission(Roles[template].base64);
 	} else {
-		const updatingPermissions = new Permission(editingMember.permissions.toString('base64'));		
+		updatingPermissions = new Permission(editingMember.permissions.toString('base64'));		
 		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
-		await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
 	}
+	await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
 
 	//For the bits that are org level, set those in the org map
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
@@ -217,4 +222,42 @@ export async function memberEditPage(app, req, res, next) {
 	const data = await teamMemberData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/team/${req.params.memberId}/edit`);
+}
+
+/**
+ * @api {post} /forms/team/transfer-ownership Transfer Team Ownership
+ * @apiName TransferTeamOwnership
+ * @apiGroup Team
+ * 
+ * @apiParam {String} resourceSlug The ID of the team.
+ * @apiParam {String} newOwnerId The ID of the new owner.
+ * @apiParam {String} _csrf CSRF token for security.
+ * 
+ * @apiPermission ORG_OWNER, TEAM_OWNER
+ * 
+ * @apiSuccess {String} message Success message indicating the team owner was updated.
+ * 
+ * @apiError {String} error Error message detailing the failure.
+ * 
+ */
+export async function transferTeamOwnershipApi(req, res) {
+	const { resourceSlug } = req.params;
+	const { newOwnerId } = req.body;
+	console.log(newOwnerId, res.locals.matchingTeam.ownerId.toString());
+	if (newOwnerId === res.locals.matchingTeam.ownerId.toString()) {
+		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
+	}
+	if (res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString()
+		&& !res.locals.permissions.get(Permissions.ORG_OWNER)) {
+		return dynamicResponse(req, res, 403, { error: 'Permission denied' });
+	}
+	const newOwner = await getAccountById(newOwnerId);
+	if (!newOwner) {
+		return dynamicResponse(req, res, 404, { error: 'New owner not found' });
+	}
+	await Promise.all([
+		updateTeamOwner(resourceSlug, newOwnerId),
+		updateTeamOwnerInAccounts(res.locals.matchingOrg.id, resourceSlug, newOwnerId),
+	]);
+	return dynamicResponse(req, res, 200, { message: 'Team ownership transferred successfully' });
 }

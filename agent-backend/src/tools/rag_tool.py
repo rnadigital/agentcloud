@@ -1,11 +1,11 @@
-from typing import Any, Callable, List, Tuple, Type
+import re
+
+from typing import Any, List, Tuple, Type
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_community.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
 from langchain.tools import BaseTool
-import json
 
 from .global_tools import GlobalBaseTool
 from models.mongo import Model, Tool, Datasource
@@ -82,21 +82,25 @@ class RagTool(GlobalBaseTool):
                        description=tool.description,
                        retriever=retriever_factory(tool, vector_store, embedding, llm))
 
+    def __init__(self, **kwargs):
+        # Monkey-patching `similarity_search` because that's what's called by
+        # self_query and multi_query retrievers internally, but we want scores too
+        Qdrant.similarity_search = Qdrant.similarity_search_with_score
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def extract_query_value(query):
+        res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', query)
+        return res[0] if res else query
+
     def _run(self, query):
         print(f"{self.__class__.__name__} received {query}")
-        processed_query = query
-        try:
-            processed_query = json.loads(query)
-        except:
-            if query.startswith("{"):
-                if not query.endswith('"}'):
-                    query += '"}'
-                elif not query.endswith('}'):
-                    query += '}'
-            try:
-                processed_query = json.loads(query)
-            except:
-                processed_query = query
-        print("processed_query => ", processed_query)
+        # TODO: should figure a better way to do this... ideally using LLM itself
+        query_value = self.extract_query_value(query)
+        print("query_value => ", query_value)
         """ Returns search results via configured retriever """
-        return self.retriever.run(processed_query)
+        return self.retriever.run(query_value)
+
+    def __del__(self):
+        # Restore to earlier state
+        Qdrant.similarity_search = Qdrant.similarity_search

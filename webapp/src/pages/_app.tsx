@@ -1,7 +1,15 @@
 import './globals.css';
 import 'nprogress/nprogress.css';
 import 'react-toastify/dist/ReactToastify.css';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/material.css';
 
+import Layout from 'components/Layout';
+import { AccountWrapper } from 'context/account';
+import { ChatWrapper } from 'context/chat';
+import { NotificationWrapper } from 'context/notifications';
+import { SocketWrapper } from 'context/socket';
+import { StepWrapper } from 'context/stepwrapper';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
@@ -10,12 +18,6 @@ import { PostHogProvider } from 'posthog-js/react';
 import { useEffect } from 'react';
 import React, { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-
-import Layout from '../components/Layout';
-import { AccountWrapper } from '../context/account';
-import { ChatWrapper } from '../context/chat';
-import { NotificationWrapper } from '../context/notifications';
-import { SocketWrapper } from '../context/socket';
 
 // Check that PostHog is client-side (used to handle Next.js SSR)
 if (typeof window !== 'undefined') {
@@ -30,7 +32,7 @@ if (typeof window !== 'undefined') {
 		capture_pageview: false // Disable automatic pageview capture, as we capture manually
 	});
 }
-  
+
 NProgress.configure({ showSpinner: false });
 Router.events.on('routeChangeStart', (url) => NProgress.start());
 Router.events.on('routeChangeComplete', (url) => NProgress.done());
@@ -57,24 +59,26 @@ export default function App({ Component, pageProps }) {
 				<ChatWrapper>
 					<SocketWrapper>
 						<NotificationWrapper>
-							<ToastContainer
-								progressClassName='toast-container'
-								bodyClassName='toast-body'
-								theme='colored'
-								position='bottom-right'
-								autoClose={3000}
-								newestOnTop={true}
-								pauseOnFocusLoss={false}
-								pauseOnHover={false}
-								hideProgressBar={true}
-								limit={3}
-							/>
-							<Layout {...pageProps}>
-								<style>
-									{''}
-								</style>
-								<Component {...pageProps} />
-							</Layout>
+							<StepWrapper>
+								<ToastContainer
+									progressClassName='toast-container'
+									bodyClassName='toast-body'
+									theme='colored'
+									position='bottom-right'
+									autoClose={3000}
+									newestOnTop={true}
+									pauseOnFocusLoss={false}
+									pauseOnHover={true}
+									hideProgressBar={true}
+									limit={3}
+								/>
+								<Layout {...pageProps}>
+									<style>
+										{''}
+									</style>
+									<Component {...pageProps} />
+								</Layout>
+							</StepWrapper>
 						</NotificationWrapper>
 					</SocketWrapper>
 				</ChatWrapper>

@@ -1,12 +1,11 @@
+import * as API from '@api';
 import Spinner from 'components/Spinner';
+import ToolForm from 'components/tools/ToolForm';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../../api';
-import ToolForm from '../../../components/ToolForm';
-import { useAccountContext } from '../../../context/account';
 
 export default function AddTool(props) {
 
@@ -16,7 +15,7 @@ export default function AddTool(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tools, credentials, datasources } = state;
+	const { tools, datasources } = state;
 
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
@@ -40,7 +39,7 @@ export default function AddTool(props) {
 			<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
 		</div>}
 
-		<ToolForm credentials={credentials} datasources={datasources} />
+		<ToolForm datasources={datasources} fetchFormData={fetchTools} initialType={null} />
 
 	</>);
 

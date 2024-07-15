@@ -2,52 +2,37 @@
 
 import { dynamicResponse } from '@dr';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import getConnectors from 'airbyte/getconnectors';
+import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { getModelById, getModelsByTeam } from 'db/model';
-import { addTool, editToolsForDatasource } from 'db/tool';
+import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
-import { readFileSync } from 'fs';
-import { sendMessage } from 'lib/rabbitmq/send';
-import convertStringToJsonl from 'misc/converttojsonl';
+import { chainValidations } from 'lib/utils/validationUtils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
-import { PDFExtract } from 'pdf.js-extract';
+import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceStatus } from 'struct/datasource';
-import { DatasourceScheduleType } from 'struct/schedule';
-import { Retriever,ToolType } from 'struct/tool';
-import { promisify } from 'util';
+import { DatasourceScheduleType,DatasourceStatus } from 'struct/datasource';
+import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
+
+import {
+	addDatasource, deleteDatasourceById, editDatasource, getDatasourceById,
+	getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding,
+	setDatasourceStatus
+} from '../db/datasource';
+
 const log = debug('webapp:controllers:datasource');
-
-import { addDatasource, deleteDatasourceById, editDatasource, getDatasourceById, getDatasourcesByTeam, setDatasourceConnectionSettings, setDatasourceEmbedding, setDatasourceLastSynced,setDatasourceStatus } from '../db/datasource';
 const ajv = new Ajv({ strict: 'log' });
-function validateDateTimeFormat(dateTimeStr) {
-	const dateFormatRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-	//dateTimeStr = dateTimeStr?.replace('.000Z', 'Z');
-	return dateFormatRegex.test(dateTimeStr);
-}
-function updateDateStrings(obj) {
-	Object.keys(obj).forEach(key => {
-		if (typeof obj[key] === 'object') {
-			updateDateStrings(obj[key]);
-		} else if (typeof obj[key] === 'string') {
-			obj[key] = obj[key].replace(/\.000Z$/, 'Z');
-		}
-	});
-}
-ajv.addFormat('date-time', validateDateTimeFormat);
-
-const pdfExtract = new PDFExtract();
-const pdfExtractPromisified = promisify(pdfExtract.extractBuffer);
+addFormats(ajv);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
@@ -124,15 +109,31 @@ export async function datasourceAddPage(app, req, res, next) {
 
 export async function testDatasourceApi(req, res, next) {
 
-	const { connectorId, connectorName, datasourceName, datasourceDescription, sourceConfig }  = req.body;
+	const { connectorId, datasourceName, datasourceDescription, sourceConfig } = req.body;
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	if (!sourceConfig || Object.keys(sourceConfig).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const connector = await getConnectorSpecification(connectorId) as any;
+	log('connector', connector);
+
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
-	if (!submittedConnector) {
+	if (!connector) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid source' });
 	}
 
@@ -140,16 +141,22 @@ export async function testDatasourceApi(req, res, next) {
 		&& !res.locals.limits.allowedConnectors.includes(connectorId)) {
 		return dynamicResponse(req, res, 400, { error: 'You need to upgrade to access 260+ data connections.' });
 	}
-	
+
 	const newDatasourceId = new ObjectId();
-	const spec = submittedConnector.spec_oss.connectionSpecification;
-	// log(JSON.stringify(spec, null, 2));
+	const spec = connector.schema.connectionSpecification;
+
+	// https://json-shcema.org/draft-07/schema# fails to validate
+	spec.$schema = 'http://json-schema.org/draft-07/schema#';
+
 	try {
+		log('spec', JSON.stringify(spec, null, 2));
 		const validate = ajv.compile(spec);
+		log('validate', validate);
 		const validated = validate(req.body.sourceConfig);
 		if (validate?.errors?.filter(p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')?.length > 0) {
 			log('validate.errors', validate?.errors);
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			const error = validate.errors.map(error => `Invalid input for ${error.instancePath.replace('/', '')}: ${error.message}`).join('; ');
+			return dynamicResponse(req, res, 400, { error });
 		}
 	} catch (e) {
 		console.error(e);
@@ -158,10 +165,10 @@ export async function testDatasourceApi(req, res, next) {
 
 	// Create source in airbyte based on the validated form
 	let createdSource;
-	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;		
+	const sourceType = submittedConnector?.githubIssueLabel_oss?.replace('source-', '') || submittedConnector?.sourceType_oss;
 	try {
 		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-		updateDateStrings(req.body.sourceConfig);
+
 		const sourceBody = {
 			configuration: {
 				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
@@ -171,7 +178,7 @@ export async function testDatasourceApi(req, res, next) {
 			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 			name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`,
 		};
-		log('sourceBody', sourceBody);	
+		log('sourceBody', sourceBody);
 		createdSource = await sourcesApi
 			.createSource(null, sourceBody)
 			.then(res => res.data);
@@ -212,6 +219,11 @@ export async function testDatasourceApi(req, res, next) {
 			.discoverSchemaForSource(null, discoverSchemaBody)
 			.then(res => res.data);
 		log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+
+		if (!discoveredSchema.catalog) {
+			return dynamicResponse(req, res, 400, { error: 'Schema catalog not found' });
+		}
+
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, { error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}` });
@@ -226,25 +238,25 @@ export async function testDatasourceApi(req, res, next) {
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: datasourceName,
-	    description: datasourceDescription,
-	    filename: null,
-	    originalName: datasourceName,
-	    sourceId: createdSource.sourceId,
-	    connectionId: null, // no connection at this point, that comes after schema check and selecting streams
-	    destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-	    sourceType,
-	    workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-	    lastSyncedDate: null,
-	    discoveredSchema,
-	    createdDate: new Date(),
-	    status: DatasourceStatus.DRAFT,
-	    recordCount: {
+		_id: newDatasourceId,
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		teamId: toObjectId(req.params.resourceSlug),
+		name: datasourceName,
+		description: datasourceDescription,
+		filename: null,
+		originalName: datasourceName,
+		sourceId: createdSource.sourceId,
+		connectionId: null, // no connection at this point, that comes after schema check and selecting streams
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		sourceType,
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		lastSyncedDate: null,
+		discoveredSchema,
+		createdDate: new Date(),
+		status: DatasourceStatus.DRAFT,
+		recordCount: {
 			total: 0,
-	    }
+		}
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -257,36 +269,47 @@ export async function testDatasourceApi(req, res, next) {
 
 export async function addDatasourceApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		datasourceName,
 		datasourceDescription,
 		streams,
-		selectedFieldsMap,
-		descriptionsMap,
 		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone,
 		modelId,
-		name,
 		embeddingField,
 		retriever,
 		retriever_config,
-	}  = req.body;
+	} = req.body;
 
-	if (!datasourceId || typeof datasourceId !== 'string'
-		|| !modelId || typeof modelId !== 'string'
-		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
+	let validationError = chainValidations(req.body, [
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'embeddingField', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'scheduleType', validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }},
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
+		//TODO: validation for retriever_config and streams?
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+
+	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: validation for other fields
-
-	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-	if (!datasource) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	if (!datasource.discoveredSchema.catalog) {
+		return dynamicResponse(req, res, 400, { error: 'Schema catalog not found' });
 	}
 
 	const model = await getModelById(req.params.resourceSlug, modelId);
@@ -294,78 +317,37 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	if (retriever && !Object.values(Retriever).includes(retriever)) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid Retrieval Strategy' });
-	}
-
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
-	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		descriptionsMap,
-		connectionId: datasource.connectionId,
+		name: datasource._id.toString(),
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		syncCatalog: {
-			streams: streams.map(s => {
-				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
-				const config = {
-					aliasName: s,
-					syncMode: 'full_refresh',
-					destinationSyncMode: 'append',
-					fieldSelectionEnabled,
-					selected: true,
-					primaryKey: [],
-					cursorField: [],
-				};
-				if (fieldSelectionEnabled) {
-					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: [x] }));
-				}
-				return {
-					stream: {
-						name: s,
-						description: descriptionsMap[s],
-						defaultCursorField: [],
-						sourceDefinedPrimaryKey: [],
-						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
-						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh', 'incremental'],
-					},
-					config,
-				};
-			})
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append'
+			})),
 		},
-		scheduleType: scheduleType,
+		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource._id.toString(),
 		status: 'active',
-		operations: [],
-		skipReset: false,
 	};
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
+	if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.CRON,
+			cronExpression,
 		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
+	} else {
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.MANUAL,
 		};
 	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
 	const createdConnection = await connectionsApi
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
-	log('createdConnection', JSON.stringify(createdConnection, null, 2));
 
 	// Update the datasource with the connection settings and sync date
 	await Promise.all([
@@ -395,7 +377,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Set status to processing after jub submission
 	await setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING);
-	
+
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	// Add a tool automatically for the datasource
@@ -409,7 +391,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: retriever_config || {}, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName),
@@ -426,14 +408,11 @@ export async function addDatasourceApi(req, res, next) {
 
 export async function updateDatasourceScheduleApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone
-	}  = req.body;
+	} = req.body;
 
 	if (!datasourceId || typeof datasourceId !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -448,155 +427,122 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	}
 
 	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		...datasource.connectionSettings,
-		scheduleType: scheduleType,
+		scheduleType: scheduleType as DatasourceScheduleType,
 	};
 	connectionBody['connectionId'] = datasource.connectionId;
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
-		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
+
+	if (scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.CRON,
+			cronExpression,
 		};
 	} else {
-		delete connectionBody['scheduleData'];
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.MANUAL,
+		};
 	}
 	log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	const updatedConnection = await connectionsApi
-		.updateConnection(null, connectionBody)
-		.then(res => res.data);
-	log('updatedConnection', updatedConnection);
+	try {
+		const updatedConnection = await connectionsApi
+			.patchConnection(datasource.connectionId, connectionBody)
+			.then(res => res.data);
+		log('updatedConnection', updatedConnection);
+	} catch (e) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
-	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
-	]);
+	// Update the datasource with the connection settings
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: datasource.connectionId,
+		connectionSettings: connectionBody,
+	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
 export async function updateDatasourceStreamsApi(req, res, next) {
 
-	const { 
+	const {
 		datasourceId,
 		streams,
 		sync,
-		selectedFieldsMap,
 		descriptionsMap,
-		scheduleType,
-		timeUnit,
-		units,
 		cronExpression,
-		cronTimezone,
 		metadata_field_info,
 	} = req.body;
 
-	if (!datasourceId || typeof datasourceId !== 'string'
-		|| !Array.isArray(streams) || streams.some(s => typeof s !== 'string')) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
+		{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true }},
+		//TODO: more validations?
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	//TODO: validation for other fields
+	const validMetadata = (req.body.metadata_field_info||[])
+		.every(obj => {
+			return typeof obj?.name === 'string'
+			&& typeof obj?.description === 'string'
+			&& ['string', 'integer', 'float'].includes(obj?.type);
+		});
+	if (!validMetadata) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
+	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
 	//update the metadata map of tools if found
 	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
-	    'retriever_config.metadata_field_info': metadata_field_info,
+		'retriever_config.metadata_field_info': metadata_field_info,
 	});
 
-	// Create a connection to our destination in airbyte
-	const connectionsApi = await getAirbyteInternalApi();
-	const schemaStreams = datasource?.discoveredSchema?.catalog?.streams;
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
-		descriptionsMap,
-		connectionId: datasource.connectionId,
+		name: datasource._id.toString(),
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
-		syncCatalog: {
-			streams: streams.map(s => {
-				const fieldSelectionEnabled = selectedFieldsMap[s] && selectedFieldsMap[s].length > 0;
-				const config = {
-					aliasName: s,
-					syncMode: 'full_refresh',
-					destinationSyncMode: 'append',
-					fieldSelectionEnabled,
-					selected: true,
-					primaryKey: [],
-					cursorField: [],
-				};
-				if (fieldSelectionEnabled) {
-					config['selectedFields'] = selectedFieldsMap[s]
-						.map(x => ({ fieldPath: [x] }));
-				}
-				return {
-					stream: {
-						name: s,
-						defaultCursorField: [],
-						sourceDefinedPrimaryKey: [],
-						namespace: schemaStreams.find(st => st?.stream?.name === s)?.stream?.namespace,
-						jsonSchema: schemaStreams.find(st => st?.stream?.name === s)?.stream?.jsonSchema,
-						supportedSyncModes: ['full_refresh', 'incremental'],
-					},
-					config,
-				};
-			})
+		configurations: {
+			streams: streams.map(s => ({
+				name: s,
+				syncMode: 'full_refresh_append'
+			})),
 		},
-		scheduleType,
+		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
 		// namespaceFormat: null,
 		prefix: `${datasource._id.toString()}_`,
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
-		name: datasource._id.toString(),
 		status: 'active',
-		operations: [],
-		skipReset: false,
 	};
-	if (scheduleType === DatasourceScheduleType.BASICSCHEDULE) {
-		connectionBody['scheduleData'] = {
-			basicSchedule: {
-				timeUnit,
-				units,
-			},
+	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.CRON,
+			cronExpression,
 		};
-	} else if (scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['scheduleData'] = {
-			cron: {
-				cronExpression,
-				cronTimezone,
-			},
-		};
-	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
-	let updatedConnection;
-	if (connectionBody?.connectionId) {
-		updatedConnection = await connectionsApi
-			.updateConnection(null, connectionBody)
-			.then(res => res.data);
-		log('updatedConnection', updatedConnection);
 	} else {
-		updatedConnection = await connectionsApi
-			.createConnection(null, connectionBody)
-			.then(res => res.data);
-		log('createdConnection', JSON.stringify(updatedConnection, null, 2));
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.MANUAL,
+		};
 	}
+	const createdConnection = await connectionsApi
+		.patchConnection(datasource.connectionId, connectionBody)
+		.then(res => res.data);
 
 	// Create the collection in qdrant
 	try {
@@ -620,27 +566,22 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(req.params.resourceSlug, datasourceId, datasource.connectionId, connectionBody),
-		// sync === true ? setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()) : void 0
-	]);
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: datasource.connectionId,
+		connectionSettings: connectionBody,
+		descriptionsMap,
+	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
 export async function syncDatasourceApi(req, res, next) {
 
 	const { datasourceId } = req.params;
-
-	if (!datasourceId || typeof datasourceId !== 'string' || datasourceId.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -671,7 +612,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
@@ -684,12 +625,8 @@ export async function syncDatasourceApi(req, res, next) {
 */
 export async function deleteDatasourceApi(req, res, next) {
 
-	if (!req.params.datasourceId || typeof req.params.datasourceId !== 'string' || req.params.datasourceId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	const datasource = await getDatasourceById(req.params.resourceSlug, req.params.datasourceId);
-
+	const { datasourceId } = req.params;
+	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 	if (!datasource) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -704,15 +641,21 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
-		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-		const jobBody = {
-			connectionId: datasource.connectionId,
-			jobType: 'reset',
-		};
-		const resetJob = await jobsApi
-			.createJob(null, jobBody)
-			.then(res => res.data);
-		log('resetJob', resetJob);
+
+		try {
+			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+			const jobBody = {
+				connectionId: datasource.connectionId,
+				jobType: 'reset',
+			};
+			const resetJob = await jobsApi
+				.createJob(null, jobBody)
+				.then(res => res.data);
+			log('resetJob', resetJob);
+		} catch (e) {
+			// Continue but log a warning if the reset job api call fails
+			console.warn(e);
+		}
 
 		// Delete the connection in airbyte
 		const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -748,7 +691,10 @@ export async function deleteDatasourceApi(req, res, next) {
 	}
 
 	// Delete the datasourcein the db
-	await deleteDatasourceById(req.params.resourceSlug, req.params.datasourceId);
+	await Promise.all([
+		deleteDatasourceById(req.params.resourceSlug, datasourceId),
+		deleteToolsForDatasource(req.params.resourceSlug, datasourceId),
+	]);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction	
 
@@ -758,12 +704,44 @@ export async function deleteDatasourceApi(req, res, next) {
 
 export async function uploadFileApi(req, res, next) {
 
+	if (!req.files || Object.keys(req.files).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'Missing file' });
+	}
+
 	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
-	log(modelId, name, datasourceDescription);
-	if (!req.files || Object.keys(req.files).length === 0
-			|| !modelId || typeof modelId !== 'string'
-			|| !name || typeof name !== 'string') {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
+	], {
+		datasourceName: 'Name',
+		datasourceDescription: 'Description',
+		connectorId: 'Connector ID',
+		modelId: 'Embedding Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const validMetadata = (req.body?.retriever_config?.metadata_field_info||[])
+		.every(obj => {
+			return typeof obj?.name === 'string'
+			&& typeof obj?.description === 'string'
+			&& ['string', 'integer', 'float'].includes(obj?.type);
+		});
+	if (!validMetadata) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
+	}
+
+	let validationErrorRetrieverConfig = chainValidations(retriever_config, [
+		{ field: 'decay_rate', validation: { notEmpty: retriever === Retriever.TIME_WEIGHTED, numberFromInclusive: 0 }},
+		// { field: 'k', validation: { notEmpty: retriever === Retriever.SELF_QUERY, numberFromInclusive: 0 }},
+		//Note: topk unused currently
+	], {});
+	if (validationErrorRetrieverConfig) {
+		return dynamicResponse(req, res, 400, { error: validationErrorRetrieverConfig });
 	}
 
 	const uploadedFile = req.files.file;
@@ -790,34 +768,34 @@ export async function uploadFileApi(req, res, next) {
 	// Create the datasource in the db
 	const newDatasourceId = new ObjectId();
 	const filename = `${newDatasourceId.toString()}${fileExtension}`;
-	await addDatasource({
-	    _id: newDatasourceId,
-	    orgId: toObjectId(res.locals.matchingOrg.id),
-	    teamId: toObjectId(req.params.resourceSlug),
-	    name: name,
-	    filename: filename,
-	    description: datasourceDescription,
-	    originalName: uploadedFile.name,
-	    sourceId: null,
-	    connectionId: null,
-	    destinationId: null,
-	    sourceType: 'file',
-	    workspaceId: null,
-	    lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
-	    chunkCharacter: req.body.chunkCharacter, //TODO: validate
-	    chunkStrategy: req.body.chunkStrategy, //TODO: validate
-	    modelId: toObjectId(modelId),
-	    createdDate: new Date(),
-	    embeddingField: 'document', //Note: always document for sourceType: file
-	    status: DatasourceStatus.EMBEDDING,
-	    recordCount: {
-   			total: null,
-   	    }
+	const createdDatasource = await addDatasource({
+		_id: newDatasourceId,
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		teamId: toObjectId(req.params.resourceSlug),
+		name: name,
+		filename: filename,
+		description: datasourceDescription,
+		originalName: uploadedFile.name,
+		sourceId: null,
+		connectionId: null,
+		destinationId: null,
+		sourceType: 'file',
+		workspaceId: null,
+		lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
+		chunkCharacter: req.body.chunkCharacter, //TODO: validate
+		chunkStrategy: req.body.chunkStrategy, //TODO: validate
+		modelId: toObjectId(modelId),
+		createdDate: new Date(),
+		embeddingField: 'document', //Note: always document for sourceType: file
+		status: DatasourceStatus.EMBEDDING,
+		recordCount: {
+			total: null,
+		}
 	});
-	
+
 	// Send the gcs file path to rabbitmq
 	const storageProvider = StorageProviderFactory.getStorageProvider();
-	await storageProvider.addFile(filename, uploadedFile);
+	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype);
 
 	// Create the collection in qdrant
 	try {
@@ -827,15 +805,22 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	}
 
-	// Tell the vector proxy to process it	
-	await sendMessage(JSON.stringify({
-		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME,
+	// Fetch the appropriate message queue provider
+	const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+
+	// Prepare the message and metadata
+	const message = JSON.stringify({
+		bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE,
 		filename,
 		file: `/tmp/${filename}`,
-	}), { 
-		stream: newDatasourceId.toString(), 
-		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
 	});
+	const metadata = {
+		stream: newDatasourceId.toString(),
+		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER,
+	};
+
+	// Send the message using the provider
+	await messageQueueProvider.sendMessage(message, metadata);
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -861,6 +846,9 @@ export async function uploadFileApi(req, res, next) {
 		} : null,
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/datasources`*/ });
+	return dynamicResponse(req, res, 302, {
+		datasourceId: createdDatasource.insertedId,
+		name,
+	});
 
 }

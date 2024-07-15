@@ -1,6 +1,7 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
+import Flow from 'components/Flow';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
@@ -21,6 +22,7 @@ export default function Apps(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { apps } = state;
+	const filteredApps = apps?.filter(x => !x.hidden);
 
 	async function startSession(appId) {
 		await API.addSession({
@@ -49,7 +51,7 @@ export default function Apps(props) {
 			<title>{`Apps - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={apps} title='Apps' buttonText='New App' href='/app/add' />
+		<PageTitleWithNewButton list={filteredApps} title='Apps' buttonText='New App' href='/app/add' />
 
 		{error && <ErrorAlert error={error} />}
 
@@ -73,8 +75,9 @@ export default function Apps(props) {
 		/>}
 
 		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
-			{apps.map((a, ai) => (<AppCard key={ai} app={a} startSession={startSession} />))}
+			{filteredApps.map((a, ai) => (<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />))}
 		</div>
+
 	</>);
 
 };

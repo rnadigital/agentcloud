@@ -34,9 +34,9 @@ export async function uploadAssetApi(req, res) {
 	};
 
 	const wrappedAddAsset = withLogging(addAsset, res.locals?.account?._id);
-	const addedAsset = await wrappedAddAsset(assetBody);
+	await wrappedAddAsset(assetBody);
 	const storageProvider = StorageProviderFactory.getStorageProvider();
-	await storageProvider.addFile(filename, uploadedFile, true);
+	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype, true);
 
 	return dynamicResponse(req, res, 200, assetBody);
 

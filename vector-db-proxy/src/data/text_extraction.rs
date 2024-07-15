@@ -5,14 +5,9 @@ use lopdf::{Dictionary, Object};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
-use std::sync::Arc;
+use crossbeam::channel::Sender;
 use dotext::*;
-use mongodb::Database;
-use qdrant_client::client::QdrantClient;
-use tokio::sync::{RwLock};
-
-use crate::queue::queuing::Pool;
-use crate::queue::add_tasks_to_queues::add_message_to_embedding_queue;
+use crate::messages::task_handoff::send_task;
 
 pub struct TextExtraction;
 
@@ -65,9 +60,10 @@ impl TextExtraction {
     }
 
     pub fn extract_text_from_pdf(&self, path: String) -> Result<(String, HashMap<String, String>)> {
+        let mut metadata = HashMap::new();
         match lopdf::Document::load(path.as_str()) {
             Ok(doc) => {
-                let mut metadata = self.detect_pdf_fonts(&doc);
+                // metadata = self.detect_pdf_fonts(&doc);
                 let mut res = (String::new(), metadata);
                 let pages = doc.get_pages();
                 if let Some((_, page)) = pages.into_iter().next() {
@@ -124,45 +120,11 @@ impl TextExtraction {
         Ok(results)
     }
 
-    pub fn detect_pdf_fonts(&self, doc: &lopdf::Document) -> HashMap<String, String> {
-        let mut metadata = HashMap::new();
-        // Iterate over all pages
-        for page_id in doc.page_iter() {
-            let (resources, _) = doc.get_page_resources(page_id);
-            match resources {
-                Some(r) => {
-                    let fonts = r.get(b"Font").unwrap().as_dict().unwrap();
-                    // Iterate over fonts in the resources
-                    for (_, font_dict) in fonts {
-                        let font_dict = font_dict.as_reference().unwrap();
-                        let font_obj = doc.get_object(font_dict).unwrap();
-
-                        if let Object::Dictionary(dict) = font_obj {
-                            // Extract font name and encoding
-                            let base_font = dict.get(b"BaseFont").unwrap().as_name_str().unwrap();
-                            let encoding = dict
-                                .get(b"Encoding")
-                                .map_or("Unknown", |e| e.as_name_str().unwrap());
-
-                            metadata.insert(base_font.to_string(), encoding.to_string());
-                        }
-                    }
-                }
-                None => {
-                    log::warn!("Could not retrieve resources from pages! Will be unable to capture font metadata.")
-                }
-            }
-        }
-        metadata
-    }
     pub async fn extract_text_from_csv(
         &self,
         path: String,
         datasource_id: String,
-        queue: Arc<RwLock<Pool<String>>>,
-        qdrant_conn: Arc<RwLock<QdrantClient>>,
-        mongo_conn: Arc<RwLock<Database>>,
-        // redis_conn_pool: Arc<Mutex<RedisConnection>>,
+        sender: Sender<(String, String)>,
     ) {
         match csv::Reader::from_path(path) {
             Ok(mut rdr) => {
@@ -170,11 +132,9 @@ impl TextExtraction {
                     match row {
                         Ok(record) => {
                             let string_record = record.iter().collect::<Vec<&str>>().join(", ");
-                            let queue = Arc::clone(&queue);
-                            let qdrant_conn = Arc::clone(&qdrant_conn);
-                            let mongo_conn = Arc::clone(&mongo_conn);
                             let ds_clone = datasource_id.clone();
-                            add_message_to_embedding_queue(queue, qdrant_conn, mongo_conn, (ds_clone, string_record)).await;
+                            let sender_clone = sender.clone();
+                            send_task(sender_clone, (ds_clone, string_record)).await;
                         }
                         Err(e) => { log::error!("An error occurred {}", e); }
                     }

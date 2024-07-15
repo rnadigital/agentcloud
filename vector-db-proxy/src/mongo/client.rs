@@ -12,12 +12,12 @@ pub async fn start_mongo_connection() -> Result<Database, CustomErrorType> {
     let client = match Client::with_options(client_options) {
         Ok(c) => c,
         Err(e) => {
+            println!("Failed to create client: {}", e);
             log::error!("Failed to create client: {}", e);
             return Err(CustomErrorType::InternalError(anyhow!(e)));
         }
     };
     // Get a handle to a database.
-    let db = client.database("test");
-    // List the names of the collections in that database.
+    let db = client.database(global_data.mongo_db_name.as_str());
     Ok(db)
 }

@@ -12,6 +12,7 @@ export const ACCOUNT_BITS = Object.seal(Object.freeze(Object.preventExtensions([
 export const ORG_BITS = Object.seal(Object.freeze(Object.preventExtensions([
 
 	Permissions.ORG_ADMIN,
+
 	Permissions.CREATE_TEAM,
 	Permissions.EDIT_TEAM,
 	Permissions.DELETE_TEAM,
@@ -37,14 +38,10 @@ export const TEAM_BITS = Object.seal(Object.freeze(Object.preventExtensions([
 	Permissions.CREATE_AGENT,
 	Permissions.EDIT_AGENT,
 	Permissions.DELETE_AGENT,
-	
+
 	Permissions.CREATE_MODEL,
 	Permissions.EDIT_MODEL,
 	Permissions.DELETE_MODEL,
-
-	Permissions.CREATE_CREDENTIAL,
-	Permissions.EDIT_CREDENTIAL,
-	Permissions.DELETE_CREDENTIAL,
 
 	Permissions.CREATE_TASK,
 	Permissions.EDIT_TASK,

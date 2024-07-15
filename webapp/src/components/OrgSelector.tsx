@@ -11,6 +11,14 @@ import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import { SubscriptionPlan } from 'struct/billing';
 
+const TEAM_PARENT_LOCATIONS = [
+	'agent',
+	'task',
+	'tool',
+	'datasource',
+	'model'
+];
+
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
@@ -18,15 +26,13 @@ function classNames(...classes) {
 export default function OrgSelector({ orgs }) {
 
 	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
+	const { account, csrf, teamName } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
-	const teamName = orgs?.find(o => o.teams.find(t => t.id === resourceSlug))?.name;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
-
 	async function switchTeam(orgId, teamId) {
 		const splitLocation = location.pathname.split('/').filter(n => n);
 		const foundResourceSlug = account.orgs
@@ -36,8 +42,10 @@ export default function OrgSelector({ orgs }) {
 			splitLocation.shift();
 			if (splitLocation.length <= 1) {
 				redirect = `/${teamId}/${splitLocation.join('/')}`;
-			} else {
+			} else if (TEAM_PARENT_LOCATIONS.includes(splitLocation[0])) {
 				redirect = `/${teamId}/${splitLocation[0]}s`;
+			} else {
+				redirect = `/${teamId}/apps`;
 			}
 		}
 		const start = Date.now();
@@ -49,14 +57,14 @@ export default function OrgSelector({ orgs }) {
 				_csrf: csrf,
 				redirect,
 			}, (res) => {
-				dispatch(res);
-				router.push(redirect);
+				setTimeout(async () => {
+					await refreshAccountContext();
+					dispatch(res);
+					router.push(redirect);
+				}, 600+(Date.now()-start));
 			}, setError, router);
-			refreshAccountContext();
-		} finally {
-			setTimeout(() => {
-				setSwitchingContext(false);
-			}, 300+(Date.now()-start));
+		} catch (e) {
+			console.error(e);
 		}
 	}
 
@@ -70,7 +78,7 @@ export default function OrgSelector({ orgs }) {
 		<Menu as='div' className='relative inline-block text-left w-full'>
 			<div>
 				<Menu.Button className='text-white justify-between inline-flex w-full max-w-[75%] gap-x-1.5 rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-600'>
-          			<span>{teamName||''}</span>
+          			<span className='whitespace-nowrap truncate'>{teamName||''}</span>
 					<ChevronDownIcon className='-mr-1 h-5 w-5 text-gray-400 bs-auto' aria-hidden='true' />
 				</Menu.Button>
 			</div>
@@ -85,9 +93,6 @@ export default function OrgSelector({ orgs }) {
 				leaveTo='transform opacity-0 scale-95'
 			>
 				<Menu.Items className='absolute left-0 z-10 mt-2 w-56 origin-top-left divide-y divide-gray-700 rounded-md bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
-					{/*<div className='py-1'>
-						
-					</div>*/}
 					<div className='py-1'>
 						{orgs
 							.filter(o => o?.teams?.length > 0)
@@ -99,7 +104,7 @@ export default function OrgSelector({ orgs }) {
 											href='#'
 											className={classNames(
 												active ? 'bg-gray-100' : 'text-gray-100',
-												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700 font-semibold cursor-default'
+												'group flex items-center px-4 py-2 text-sm group-hover:text-gray-700 font-semibold cursor-default break-keep'
 											)}
 										>
 											{org.name}
@@ -115,7 +120,7 @@ export default function OrgSelector({ orgs }) {
 												className={classNames(
 													active ? '' : 'text-gray-100',
 													resourceSlug === team.id ? 'bg-indigo-900': '',
-													'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white'
+													'group flex items-center px-6 py-2 text-sm group-hover:text-gray-700 hover:bg-slate-700 hover:text-white break-keep'
 												)}
 											>
 												{team.name}

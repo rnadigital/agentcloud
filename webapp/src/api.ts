@@ -8,9 +8,6 @@ export function getAccount(body, dispatch, errorCallback, router) {
 	}).toString();
 	return ApiCall(`/account.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
-export function getDockerLogs(dispatch, errorCallback, router) {
-	return ApiCall('/logs.json', 'GET', null, dispatch, errorCallback, router);
-}
 export function login(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/login', 'POST', body, dispatch, errorCallback, router);
 }
@@ -32,8 +29,17 @@ export function switchTeam(body, dispatch, errorCallback, router) {
 export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
-export function adminEditAccount(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/account/admin', 'POST', body, dispatch, errorCallback, router);
+export function requestChangePlan(body, dispatch, errorCallback, router) {
+	return ApiCall('/stripe-plan', 'POST', body, dispatch, errorCallback, router);
+}
+export function confirmChangePlan(body, dispatch, errorCallback, router) {
+	return ApiCall('/stripe-plan-confirm', 'POST', body, dispatch, errorCallback, router);
+}
+export function hasPaymentMethod(dispatch, errorCallback, router) {
+	return ApiCall('/stripe-has-paymentmethod', 'GET', null, dispatch, errorCallback, router);
+}
+export function checkStripeReady(dispatch, errorCallback, router) {
+	return ApiCall('/stripe-ready', 'GET', null, dispatch, errorCallback, router);
 }
 
 // Apps
@@ -120,8 +126,14 @@ export function addTool(body, dispatch, errorCallback, router) {
 export function deleteTool(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
-export function editTool(toolId, body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/tool/${toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+export function editTool(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/tool/${body.toolId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function applyToolRevision(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/revision/${body.revisionId}/apply`, 'POST', body, dispatch, errorCallback, router);
+}
+export function deleteToolRevision(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/revision/${body.revisionId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 // Models
@@ -153,17 +165,6 @@ export function editAsset(body, dispatch, errorCallback, router) {
 }
 export function deleteAsset(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/asset/${body.assetId}`, 'DELETE', body, dispatch, errorCallback, router);
-}
-
-// Credentials
-export function getCredentials(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/credentials.json`, 'GET', null, dispatch, errorCallback, router);
-}
-export function deleteCredential(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/credential/${body.credentialId}`, 'DELETE', body, dispatch, errorCallback, router);
-}
-export function addCredential(body, dispatch, errorCallback, router) {
-	return ApiCall(`/${body.resourceSlug}/forms/credential/add`, 'POST', body, dispatch, errorCallback, router);
 }
 
 // Datasources
@@ -244,6 +245,9 @@ export function addTeam(body, dispatch, errorCallback, router) {
 }
 export function editTeamMember(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.get('resourceSlug')}/forms/team/${body.get('memberId')}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+export function transferTeamOwnership(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/forms/team/transfer-ownership`, 'POST', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

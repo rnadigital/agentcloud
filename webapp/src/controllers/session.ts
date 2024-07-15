@@ -1,15 +1,16 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentNameMap,getAgentsById, getAgentsByTeam } from 'db/agent';
+import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam } from 'db/agent';
 import { getAppById } from 'db/app';
-import { addChatMessage, getChatMessagesBySession } from 'db/chat';
+import { getChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam } from 'db/crew';
 import { setSessionStatus } from 'db/session';
 import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
+import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 
 export async function sessionsData(req, res, _next) {
@@ -37,11 +38,25 @@ export async function sessionsJson(req, res, next) {
 
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
-	const foundCrew = await getCrewById(req.params.resourceSlug, session?.crewId);
-	const avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
+	const app = await getAppById(req.params.resourceSlug, session?.appId);
+	let avatarMap = {};
+	switch (app?.type) {
+		case AppType.CREW:
+			const foundCrew = await getCrewById(req.params.resourceSlug, app?.crewId);
+			avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
+			break;
+		case AppType.CHAT:
+		default:
+			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
+			if (foundAgent) {
+				avatarMap = { [foundAgent.name]: foundAgent?.icon?.filename };
+			}
+			break;
+	}
 	return {
 		csrf: req.csrfToken(),
 		session,
+		app,
 		avatarMap,
 	};
 }
@@ -92,36 +107,47 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { rag, prompt, id }  = req.body;
+	let { id: appId }  = req.body;
 
-	const app = await getAppById(req.params.resourceSlug, id);
+	const app: App = await getAppById(req.params.resourceSlug, appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
 
+	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
-	const crew = await getCrewById(req.params.resourceSlug, app?.crewId || id);
-	if (crew) {
-		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
-		if (!agents) {
+	let agentId;
+	if (app?.type === AppType.CREW) {
+		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
+		if (crew) {
+			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
+			if (!agents) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+			crewId = crew._id;
+		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		crewId = crew._id;
 	} else {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		if (!agent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
 	}
 
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-	    // prompt,
-	    name: crew.name,
+	    name: app.name,
 	    startDate: new Date(),
     	lastUpdatedDate: new Date(),
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		crewId,
+		appId: toObjectId(app?._id),
 	});
 
-	taskQueue.add('execute_rag', { //TODO: figure out room w/ pete
-		task: prompt,
+	taskQueue.add('execute_rag', {
+		type: app?.type,
 		sessionId: addedSession.insertedId.toString(),
 	});
 

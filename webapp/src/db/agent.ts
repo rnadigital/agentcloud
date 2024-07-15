@@ -64,7 +64,7 @@ export async function addAgents(agents: Agent[]): Promise<InsertResult> {
 	return AgentCollection().insertMany(agents);
 }
 
-export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent: Agent): Promise<InsertResult> {
+export async function updateAgent(teamId: db.IdOrStr, agentId: db.IdOrStr, agent: Partial<Agent>): Promise<InsertResult> {
 	return AgentCollection().updateOne({
 		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId),

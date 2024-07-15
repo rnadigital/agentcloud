@@ -1,7 +1,7 @@
-import json
 import logging
-from abc import ABC, abstractmethod
-from typing import Type
+import re
+from abc import abstractmethod
+from typing import Type, Optional
 
 from langchain_core.tools import ToolException
 from pydantic import BaseModel, Field
@@ -20,6 +20,7 @@ class BaseBuiltinTool(GlobalBaseTool):
     code: str
     function_name: str
     properties_dict: dict
+    api_key: Optional[str] = None
     args_schema: Type[BaseModel] = BuiltinToolArgsSchema
     logger: logging.Logger = None
 
@@ -30,7 +31,8 @@ class BaseBuiltinTool(GlobalBaseTool):
             description=tool.description,
             function_name=tool.data.name,
             code=tool.data.code,
-            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else [],
+            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else {},
+            api_key=tool.data.apiKey,
             verbose=True,
             handle_tool_error=True
         )
@@ -44,11 +46,16 @@ class BaseBuiltinTool(GlobalBaseTool):
     def run_tool(self, query: str) -> str:
         pass
 
+    @staticmethod
+    def extract_query_val(text):
+        res = re.findall('["\']?(?:query|text)["\']?:\s*["\'](.+)["\']', text)
+        return res[0] if res else text
+
     def _run(self, query: str) -> str:
         try:
             self.logger.debug(f"{self.__class__.__name__} received {query}")
-            json_query = json.loads(query)
-            query_val = json_query["query"] if "query" in json_query else json_query["text"]
+            # TODO: should figure a better way to do this... ideally using LLM itself
+            query_val = self.extract_query_val(query)
             self.logger.info(f"{self.__class__.__name__} search string = '{query_val}'")
             return self.run_tool(query_val)
         except ToolException as te:

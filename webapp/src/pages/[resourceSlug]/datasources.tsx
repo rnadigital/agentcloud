@@ -22,14 +22,15 @@ export default function Datasources(props) {
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const [, notificationTrigger]: any = useSocketContext();
-	
+
 	const { account, teamName } = accountContext as any;
-	const { stripePlan } = (account?.stripe||{});
+	const { stripePlan } = (account?.stripe || {});
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState(null);
 	const { datasources, models } = state;
+	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
 
 	async function fetchDatasources() {
@@ -77,18 +78,18 @@ export default function Datasources(props) {
 			<title>{`Datasources - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={datasources} title='File Uploads' />
+		<PageTitleWithNewButton list={filteredDatasources} title='File Uploads' />
 
 		<span className='pt-1 mb-3 w-full'>
 			<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasources} hideTabs={true} initialStep={1} fetchDatasources={fetchDatasources} />
 		</span>
 
-		<DatasourceFileTable datasources={datasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
+		<DatasourceFileTable datasources={filteredDatasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
 
 		{/*(stripePlan && pricingMatrix[stripePlan].dataConnections) && <>*/}
 		<span className='py-8 h-1'></span>
 
-		<PageTitleWithNewButton list={datasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
+		<PageTitleWithNewButton list={filteredDatasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
 
 		<CreateDatasourceModal
 			open={open}
@@ -97,9 +98,10 @@ export default function Datasources(props) {
 				setOpen(false);
 				fetchDatasources();
 			}}
+			initialStep={2}
 		/>
 
-		<DatasourceTable datasources={datasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
+		<DatasourceTable datasources={filteredDatasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
 		{/*</>*/}
 
 	</>);

@@ -16,8 +16,8 @@ import formatSize from 'utils/formatsize';
 
 import * as API from '../api';
 
-export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback, description, retriever }:
-	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, retriever?: Retriever, callback?: Function }) {
+export default function DropZone({ modalOpen, children, setFiles, files, modelId, name, callback, description, retriever, compact }:
+	{ modalOpen: boolean, children: any, setFiles: any, files: any[], modelId: string, name: string, description: string, retriever?: Retriever, callback?: Function, compact?: boolean }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
@@ -25,7 +25,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const maxSize = pricingMatrix[stripePlan].maxFileUploadBytes;
+	const maxSize = pricingMatrix[stripePlan]?.maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
 	const [chunkStrategy, setChunkStrategy] = useState('semantic');
 	const [chunkCharacter, setChunkCharacter] = useState('');
@@ -49,7 +49,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 			});
 			await API.uploadDatasourceFileTemp(formData, (res) => {
 				toast.success('Datasource created successfully');
-				callback && callback();
+				callback && callback(res);
 			}, (res) => {
 				toast.error(res);
 			}, router);
@@ -84,21 +84,64 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 	const isFileTooLarge = rejectedFiles && rejectedFiles.length > 0 && rejectedFiles[0].size > maxSize;
 	const open = (files != null && files.length > 0);
 
+	const formContent = <>
+		<form onSubmit={uploadFiles} className='m-auto w-full'>
+			{files && files.map((acceptedFile, ai) => (
+				<li key={`acceptedFile_${ai}`} className='text-white bg-green-600 border-green-700 border rounded p-3 my-3'>
+					{acceptedFile.name} ({formatSize(parseInt(acceptedFile.size))})
+					<button
+						type='button'
+						onClick={() => {
+							setFiles(null);
+						}}
+						className='float-right rounded-md disabled:bg-slate-400 bg-red-600 ms-2 p-1 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 mt-0'
+					>
+						<TrashIcon className='h-4 w-4' />
+					</button>
+				</li>
+			))}
+			{children}
+			<DatasourceChunkingForm
+				chunkStrategy={chunkStrategy}
+				setChunkStrategy={setChunkStrategy}
+				chunkCharacter={chunkCharacter}
+				setChunkCharacter={setChunkCharacter}
+			/>
+			<button
+				disabled={loading || !files || !modelId || !chunkStrategy || (chunkStrategy === 'character' && chunkCharacter.length === 0)}
+				type='submit'
+				className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-4'
+			>
+				{loading && <ButtonSpinner />}
+				Upload
+			</button>
+		</form>
+	</>;
+
+	const fileUploader = <label {...getRootProps({className: 'dropzone'})} htmlFor='file' className='block text-center border-2 border-dashed p-4 rounded mb-4'>
+		<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
+		{!isDragActive && 'Click here or drop a file to upload'}
+		{isDragActive && "Drop it like it's hot!"}
+		<div className={`absolute bg-indigo-900/10 z-50 fixed w-screen h-screen top-0 left-0 border-dotted border-2 border-indigo-600 rounded-lg overflow-hidden transition-all duration-300 pointer-events-none ${isDragActive ? 'opacity-1' : 'opacity-0'}`} />
+		{isDragReject && 'File type not accepted, sorry!'}
+		{isFileTooLarge && (
+			<div className='text-danger mt-2'>
+	            File is too large.
+			</div>
+		)}
+	</label>;
+
+	if (compact) {
+		return <div>
+			{fileUploader}
+			{formContent}
+		</div>;
+	}
+
 	return (<span className='m-auto w-full'>
 		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='File Size Exceeded' text={`Your current plan '${stripePlan}' allows files up to ${formatSize(maxSize)}. Please upgrade your plan if you need to upload larger files. `} buttonText='Upgrade' />
 		<ul>
-			<label {...getRootProps({className: 'dropzone'})} htmlFor='file' className='block text-center border-2 border-dashed p-4 rounded'>
-				<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
-				{!isDragActive && 'Click here or drop a file to upload'}
-				{isDragActive && "Drop it like it's hot!"}
-				<div className={`absolute bg-indigo-900/10 z-50 fixed w-screen h-screen top-0 left-0 border-dotted border-2 border-indigo-600 rounded-lg overflow-hidden transition-all duration-300 pointer-events-none ${isDragActive ? 'opacity-1' : 'opacity-0'}`} />
-				{isDragReject && 'File type not accepted, sorry!'}
-				{isFileTooLarge && (
-					<div className='text-danger mt-2'>
-			            File is too large.
-					</div>
-				)}
-			</label>
+			{fileUploader}
 
 			<Transition.Root show={open === true} as={Fragment}>
 				<Dialog as='div' className='relative z-10' initialFocus={cancelButtonRef} onClose={() =>{
@@ -137,37 +180,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 											</Dialog.Title>
 										</div>
 									</div>
-									<form onSubmit={uploadFiles} className='m-auto w-full'>
-										{files && files.map((acceptedFile, ai) => (
-											<li key={`acceptedFile_${ai}`} className='text-white bg-green-600 border-green-700 border rounded p-3 my-3'>
-												{acceptedFile.name} ({formatSize(parseInt(acceptedFile.size))})
-												<button
-													type='button'
-													onClick={() => {
-														setFiles(null);
-													}}
-													className='float-right rounded-md disabled:bg-slate-400 bg-red-600 ms-2 p-1 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 mt-0'
-												>
-													<TrashIcon className='h-4 w-4' />
-												</button>
-											</li>
-										))}
-										{children}
-										<DatasourceChunkingForm
-											chunkStrategy={chunkStrategy}
-											setChunkStrategy={setChunkStrategy}
-											chunkCharacter={chunkCharacter}
-											setChunkCharacter={setChunkCharacter}
-										/>
-										<button
-											disabled={loading || !files || !modelId || !chunkStrategy || (chunkStrategy === 'character' && chunkCharacter.length === 0)}
-											type='submit'
-											className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-4'
-										>
-											{loading && <ButtonSpinner />}
-											Upload
-										</button>
-									</form>
+									{formContent}
 								</Dialog.Panel>
 							</Transition.Child>
 						</div>

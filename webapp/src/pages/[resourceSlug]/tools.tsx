@@ -1,16 +1,17 @@
+import * as API from '@api';
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import ToolList from 'components/ToolList';
+import ToolForm from 'components/tools/ToolForm';
+import { useAccountContext } from 'context/account';
+import { useSocketContext } from 'context/socket';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../api';
-import NewButtonSection from '../../components/NewButtonSection';
-import ToolForm from '../../components/ToolForm';
-import ToolList from '../../components/ToolList';
-import { useAccountContext } from '../../context/account';
+import { NotificationType } from 'struct/notification';
 
 export default function Tools(props) {
 
@@ -21,16 +22,25 @@ export default function Tools(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [open, setOpen] = useState(false);
+	const [, notificationTrigger]: any = useSocketContext();
 
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
+		if (notificationTrigger
+			&& notificationTrigger?.type === NotificationType.Tool) {
+			fetchTools();
+		}
+	}, [resourceSlug, notificationTrigger]);
+
+	useEffect(() => {
 		fetchTools();
 	}, [resourceSlug]);
 
-	const { tools, credentials } = state;
+	const { tools } = state;
+	const filteredTools = tools?.filter(x => !x.hidden);
 
 	if (!tools) {
 		return <Spinner />;
@@ -42,7 +52,7 @@ export default function Tools(props) {
 			<title>{`Tools - ${teamName}`}</title>
 		</Head>
 
-		<PageTitleWithNewButton list={tools} title='Tools' buttonText='New Tool' href='/tool/add' />
+		<PageTitleWithNewButton list={filteredTools} title='Tools' buttonText='New Tool' href='/tool/add' />
 
 		{tools.length === 0 && <NewButtonSection
 			link={`/${resourceSlug}/tool/add`}
@@ -62,7 +72,7 @@ export default function Tools(props) {
 			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 			buttonMessage={'New Tool'}
 		/>}
-		<ToolList tools={tools} fetchTools={fetchTools} />
+		<ToolList tools={filteredTools} fetchTools={fetchTools} />
 
 	</>);
 

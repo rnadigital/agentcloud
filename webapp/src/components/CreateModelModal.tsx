@@ -5,7 +5,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateModelModal({ open, setOpen, callback }) {
+export default function CreateModelModal({ open, setOpen, callback, modelFilter=null }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -13,7 +13,7 @@ export default function CreateModelModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	const { credentials } = state as any;
+	// const {  } = state as any; //TODO: secrets here
 
 	async function fetchModelFormData() {
 		await API.getModels({ resourceSlug }, dispatch, setError, router);
@@ -57,7 +57,7 @@ export default function CreateModelModal({ open, setOpen, callback }) {
 										</Dialog.Title>
 									</div>
 								</div>
-								<ModelForm compact={true} callback={callback} credentials={credentials} fetchModelFormData={fetchModelFormData} />
+								<ModelForm compact={true} callback={callback} fetchModelFormData={fetchModelFormData} modelFilter={modelFilter} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

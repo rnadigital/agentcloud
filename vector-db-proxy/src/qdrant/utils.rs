@@ -1,15 +1,12 @@
 use anyhow::{anyhow, Result};
 
-use crate::qdrant::models::{CreateDisposition, PointSearchResults};
+use crate::qdrant::models::{CreateDisposition, PointSearchResults, CollectionData};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
 use qdrant_client::qdrant::vectors_config::Config;
-use qdrant_client::qdrant::{
-    CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams,
-    VectorParamsMap, VectorsConfig,
-};
+use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -108,13 +105,14 @@ impl Qdrant {
             Ok(true)
         } else {
             log::debug!(
-                "Collection: {} does NOT exist...creating it now",
+                "Collection: {} does NOT exist...",
                 &self.collection_name
             );
             let vector_size = vector_length.unwrap_or(512); // Default to fastembed embedding size if none is given;
             let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
             match create_disposition {
                 CreateDisposition::CreateIfNeeded => {
+                    log::debug!("Creating collection now...");
                     // check if vector name is a value or None
                     match vector_name {
                         Some(name) => {
@@ -176,7 +174,7 @@ impl Qdrant {
                     }
                 }
                 CreateDisposition::CreateNever => {
-                    log::debug!("Collection: '{}' has a Do Not Create disposition. Therefore will not attempt creations", &self.collection_name);
+                    log::debug!("Collection: '{}' has a Do Not Create disposition. Therefore will not attempt creation", &self.collection_name);
                     Ok(false)
                 }
             }
@@ -430,6 +428,31 @@ impl Qdrant {
             Err(e) => {
                 tracing::error!("Error occurred: {e}");
                 Err(anyhow!("Error occurred: {e}"))
+            }
+        }
+    }
+
+    pub async fn get_collection_info(
+        &self,
+    ) -> Result<Option<CollectionData>> {
+        let id_clone = self.collection_name.clone();
+        let qdrant = &self.client.read().await;
+        match qdrant.collection_info(self.collection_name.clone()).await {
+            Ok(info_results) => {
+                if let Some(info) = info_results.result {
+                    let collection_info = CollectionData {
+                        status: info.status,
+                        indexed_vectors_count: info.indexed_vectors_count,
+                        segments_count: info.segments_count,
+                        points_count: info.points_count,
+                    };
+                    return Ok(Some(collection_info));
+                } else {
+                    Ok(None)
+                }
+            }
+            Err(e) => {
+                return Err(anyhow!("An error occurred while getting info for collection : {}. Error: {}", id_clone, e));
             }
         }
     }

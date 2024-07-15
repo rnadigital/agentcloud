@@ -1,11 +1,14 @@
 import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
+import ButtonSpinner from 'components/ButtonSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { ToolState, ToolType } from 'struct/tool';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
+import ToolStateBadge from './ToolStateBadge';
 
 export default function ToolList({ tools, fetchTools }) {
 
@@ -22,8 +25,10 @@ export default function ToolList({ tools, fetchTools }) {
 		}, () => {
 			fetchTools();
 			toast('Deleted tool');
-		}, () => {
-			toast.error('Error deleting tool');
+		}, (error) => {
+			toast.error(error || 'Error deleting tool', {
+				autoClose: 10000, //Long error text, TODO have a different way of showing this?
+			});
 		}, router);
 	}
 
@@ -37,6 +42,7 @@ export default function ToolList({ tools, fetchTools }) {
 								<h3 className='truncate text-sm font-medium text-gray-900 dark:text-white'>{tool.name}</h3>
 							</div>
 							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>{tool.type} - {tool?.data?.description || tool?.description}</p>
+							{tool?.type === ToolType.FUNCTION_TOOL && tool?.state && <ToolStateBadge state={tool.state} />}
 						</div>
 						<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold pt-1'>
 							<span>{tool.name.charAt(0).toUpperCase()}</span>

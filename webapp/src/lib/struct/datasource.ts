@@ -1,3 +1,4 @@
+
 'use strict';
 
 import { ObjectId } from 'mongodb';
@@ -7,17 +8,26 @@ export type DatasourceStream = {
 	name: string;
 };
 
+export enum DatasourceScheduleType {
+	CRON = 'cron',
+	MANUAL = 'manual',
+}
+
 export type DatasourceConnectionSettings = {
-	syncCatalog: any; //TODO
-	scheduleType: string; //TODO: allow scheduling
-	namespaceDefinition?: string;
-	namespaceFormat?: string | null;
-	nonBreakingSchemaUpdatesBehavior: string;
 	prefix: string | null;
 	name: string;
 	sourceId: string;
 	destinationId: string;
 	status: string; //TODO: enum to match airbyte api, and allow creating in paused state
+	configurations: any; //TODO
+	schedule?: {
+		scheduleType: DatasourceScheduleType;
+		cronExpression?: string;
+	};
+	dataResidency?: string;
+	namespaceDefinition?: string;
+	namespaceFormat?: string | null;
+	nonBreakingSchemaUpdatesBehavior: string;
 };
 
 export type DatasourceChunkStrategy = 'semantic' | 'character';
@@ -66,4 +76,6 @@ export type Datasource = {
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
+	hidden?: boolean;
+	descriptionsMap?: Record<string,string>;
 };

@@ -4,7 +4,7 @@ from mongo.client import MongoConnection
 from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from models.mongo import Agent, App, Credentials, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
+from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
 from typing import List, Dict, Union, Any, Optional
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class MongoClientConnection(MongoConnection):
             session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
             ).find_one(
-                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1}
+                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1, "appId": 1}
             )
             assert session_query_results
             return session_query_results
@@ -34,10 +34,13 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.error(f"an error has occurred while retrieving session from the database: {e}")
 
-    def get_crew(self, session: Session):
+    def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
-            crew_id = session.get("crewId")
-            print(f"Crew ID: {crew_id}")
+            app_id = session.get("appId")
+            print(f"App ID: {app_id}")
+            apps_collection: collection.Collection = self._get_collection("apps")
+            the_app: Dict = apps_collection.find_one({"_id": ObjectId(app_id)})
+            crew_id = the_app.get("crewId")
             crew_tasks = list()
             try:
                 assert crew_id is not None
@@ -83,12 +86,8 @@ class MongoClientConnection(MongoConnection):
     def get_agent_model(self, modelId: str):
         return self.get_single_model_by_id("models", Model, modelId)
 
-    def get_model_credential(self, credentialId: str):
-        return self.get_single_model_by_id("credentials", Credentials, credentialId)
-
     def get_agent_datasources(self, agent: Dict):
         pass
-
 
     def get_app_by_crew_id(self, crewId: PyObjectId):
         return self.get_single_model_by_query("apps", App, {"crewId": crewId})

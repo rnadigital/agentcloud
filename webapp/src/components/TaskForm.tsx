@@ -5,14 +5,18 @@ import {
 	HandRaisedIcon,
 } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
-import CreateToolModal from 'components/CreateToolModal';
+import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
+import ToolStateBadge from 'components/ToolStateBadge';
 import { useAccountContext } from 'context/account';
+import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { NotificationType } from 'struct/notification';
+import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
@@ -24,6 +28,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState(task);
+	const [, notificationTrigger]: any = useSocketContext();
 
 	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
@@ -31,16 +36,12 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 		.map(tid => {
 			const foundTool = tools.find(t => t._id === tid);
 			if (!foundTool) { return null; }
-			return { label: foundTool.name, value: foundTool._id };
+			return { label: foundTool.name, value: foundTool._id, disabled: false };
 		})
 		.filter(t => t);
 
 	const preferredAgent = agents
 		.find(a => a?._id === taskState?.agentId);
-
-	useEffect(() => {
-	    // Placeholder for any initial setup or effects
-	}, []);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -67,7 +68,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			}, (res) => {
 				toast.error(res);
 			}, compact ? null : router);
-			callback && addedTask && callback(addedTask._id);
+			callback && addedTask && callback(addedTask._id, body);
 		}
 	}
 
@@ -92,6 +93,13 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			};
 		});
 	};
+
+	useEffect(() => {
+		if (notificationTrigger
+			&& notificationTrigger?.type === NotificationType.Tool) {
+			fetchTaskFormData();
+		}
+	}, [resourceSlug, notificationTrigger]);
 
 	return (
 		<>
@@ -162,6 +170,8 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								classNames={SelectClassNames}
 								value={taskState?.toolIds?.map(x => ({ value: x, label: tools.find(tx => tx._id === x)?.name}))}
 								onChange={(v: any) => {
+									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
+									if (v?.some(val => val?.disabled)) { return; }
 									if (v?.some(vals => vals.value === null)) {
 										//Create new pressed
 										return setModalOpen('tool');
@@ -173,10 +183,12 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 										};
 									});
 								}}
-								options={tools.map(t => ({ label: t.name, value: t._id })).concat([{ label: '+ New Tool', value: null }])}
+								options={[{ label: '+ New Tool', value: null /*, disabled: false*/ }].concat(tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })))}
 					            formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
+									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
 					                return (<li
+					                	//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''} 
 										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
 											data.isSelected
 												? 'bg-blue-100 text-blue-500'
@@ -189,7 +201,8 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												{optionTool?.type} tool
 											</span>
 										</span>
-										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
+										{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
+										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{optionTool?.state} {data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
 					            }}
 							/>

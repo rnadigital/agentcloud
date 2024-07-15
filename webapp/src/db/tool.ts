@@ -3,9 +3,10 @@
 import * as db from 'db/index';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
+import { UpdateResult } from 'mongodb'; //TODO: put these in all other db update* return types
 import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
-import { Tool } from 'struct/tool';
+import { Tool, ToolState } from 'struct/tool';
 
 const log = debug('webapp:db:tools');
 
@@ -50,6 +51,21 @@ export function getToolsById(teamId: db.IdOrStr, toolIds: db.IdOrStr[]): Promise
 	}).toArray();
 }
 
+export function getReadyToolsById(teamId: db.IdOrStr, toolIds: db.IdOrStr[]): Promise<Tool[]> {
+	return ToolCollection().find({
+		_id: {
+			$in: toolIds.map(toObjectId),
+		},
+		$or: [
+			{ teamId: toObjectId(teamId) },
+			{ 'data.builtin': true },
+		],
+		state: {
+			$in: [null, ToolState.READY],
+		}
+	}).toArray();
+}
+
 export function getToolsByTeam(teamId: db.IdOrStr): Promise<Tool[]> {
 	return ToolCollection().find({
 		$or: [
@@ -63,13 +79,33 @@ export async function addTool(tool: Tool): Promise<InsertResult> {
 	return ToolCollection().insertOne(tool);
 }
 
-export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, tool: Partial<Tool>): Promise<InsertResult> {
+export async function editTool(teamId: db.IdOrStr, toolId: db.IdOrStr, update: Partial<Tool>): Promise<UpdateResult> {
 	return ToolCollection().updateOne({
 		_id: toObjectId(toolId),
 		teamId: toObjectId(teamId),
 	}, {
-		$set: tool,
+		$set: update,
 	});
+}
+
+export async function editToolUnsafe(filter: Partial<Tool>, update: Partial<Tool>): Promise<UpdateResult> {
+	return ToolCollection().updateOne(filter, {
+		$set: update,
+	});
+}
+
+export async function getToolForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<Tool> {
+	return ToolCollection().findOne({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	});
+}
+
+export async function getToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<Tool[]> {
+	return ToolCollection().find({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
+	}).toArray();
 }
 
 export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr, update: any): Promise<InsertResult> {
@@ -78,6 +114,13 @@ export async function editToolsForDatasource(teamId: db.IdOrStr, datasourceId: d
 		datasourceId: toObjectId(datasourceId),
 	}, {
 		$set: update, //Note: any type and not a Partial because we use a mongo dot notation update
+	});
+}
+
+export function deleteToolsForDatasource(teamId: db.IdOrStr, datasourceId: db.IdOrStr): Promise<any> {
+	return ToolCollection().deleteMany({
+		teamId: toObjectId(teamId),
+		datasourceId: toObjectId(datasourceId),
 	});
 }
 

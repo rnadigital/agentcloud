@@ -35,13 +35,24 @@ class LocalStorageProvider extends StorageProvider {
 		}
 	}
 
-	async addFile(filename, uploadedFile, isPublic = false) {
+	async uploadLocalFile(filename, uploadedFile, contentType, isPublic = false) {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, uploadedFile.data);
 			log(`File '${filename}' uploaded successfully.`);
 		} catch (e) {
 			log(`Failed to upload file: ${e.message}`);
+			throw e;
+		}
+	}
+
+	async uploadBuffer(filename: string, content: Buffer, contentType: string, isPublic = false): Promise<any> {
+		const filePath = path.join(this.#basePath, filename);
+		try {
+			await writeFile(filePath, content);
+			log(`Buffer uploaded to '${filename}' successfully.`);
+		} catch (e) {
+			log(`Failed to upload buffer: ${e.message}`);
 			throw e;
 		}
 	}

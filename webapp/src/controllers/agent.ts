@@ -4,13 +4,11 @@ import { dynamicResponse } from '@dr';
 import { addAgent, deleteAgentById, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { removeAgentFromCrews } from 'db/crew';
-import { getDatasourcesById, getDatasourcesByTeam } from 'db/datasource';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
-import { getToolsById, getToolsByTeam } from 'db/tool';
+import { getToolsById,getToolsByTeam } from 'db/tool';
 import toObjectId from 'lib/misc/toobjectid';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'lib/utils/validationUtils';
-import { ModelList } from 'struct/model';
+import { chainValidations } from 'lib/utils/validationUtils';
 
 export async function agentsData(req, res, _next) {
 	const [agents, models, tools] = await Promise.all([
@@ -115,18 +113,18 @@ export async function addAgentApi(req, res, next) {
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		// { field: 'functionModelId', validation: { hasLength: 24 }},
-		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'functionModelId', validation: { hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-		
+
     // Check for foundTools
 	const foundTools = await getToolsById(req.params.resourceSlug, toolIds);
 	if (!foundTools || foundTools.length !== toolIds.length) {
@@ -202,12 +200,12 @@ export async function editAgentApi(req, res, next) {
 	 } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24 }},
-		// { field: 'functionModelId', validation: { hasLength: 24 }},
-		{ field: 'role', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'goal', validation: { notEmpty: true, lengthMin: 2 }},
-		{ field: 'backstory', validation: { notEmpty: true, lengthMin: 2 }},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'functionModelId', validation: { hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'toolIds', validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }},
 	], { name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' });
 	if (validationError) {
@@ -259,8 +257,11 @@ export async function deleteAgentApi(req, res, next) {
 
 	const { agentId }  = req.body;
 
-	if (!agentId || typeof agentId !== 'string' || agentId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'agentId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+	], { agentId: 'Agent' });
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);

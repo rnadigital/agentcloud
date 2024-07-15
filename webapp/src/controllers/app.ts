@@ -1,24 +1,26 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentsByTeam } from 'db/agent';
+import { addAgent,getAgentById,getAgentsByTeam,updateAgent } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
-import { getModelsByTeam } from 'db/model';
+import { getDatasourcesByTeam } from 'db/datasource';
+import { getModelById,getModelsByTeam } from 'db/model';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
-import { ProcessImpl } from 'struct/crew';
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models] = await Promise.all([
-		 getAppsByTeam(req.params.resourceSlug),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
+	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppsByTeam(req.params.resourceSlug),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -27,24 +29,27 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
+		datasources,
 	};
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models] = await Promise.all([
-		 getAppById(req.params.resourceSlug, req.params.appId),
-		 getTasksByTeam(req.params.resourceSlug),
-		 getToolsByTeam(req.params.resourceSlug),
-		 getAgentsByTeam(req.params.resourceSlug),
-		 getModelsByTeam(req.params.resourceSlug),
-	 ]);
+	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
+		getAppById(req.params.resourceSlug, req.params.appId),
+		getTasksByTeam(req.params.resourceSlug),
+		getToolsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug),
+		getModelsByTeam(req.params.resourceSlug),
+		getDatasourcesByTeam(req.params.resourceSlug),
+	]);
 	 return {
 		csrf: req.csrfToken(),
 		app,
 		tasks,
 		tools,
 		agents,
-		models
+		models,
+		datasources,
 	};
 }
 
@@ -106,44 +111,123 @@ export async function appEditPage(app, req, res, next) {
  */
 export async function addAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const {
+		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
+		conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
+		type, run
+	}  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	const isChatApp = type as AppType === AppType.CHAT;
+	let validationError = chainValidations(req.body, [
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set([AppType.CHAT, AppType.CREW]) }},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		//Note: due to design limitation of validationUtil we need two checks for array fields to both check if theyre empty and validate each array element
+		{ field: 'tasks', validation: { notEmpty: !isChatApp }},
+		{ field: 'agents', validation: { notEmpty: !isChatApp }},
+		{ field: 'tasks', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }},
+		{ field: 'agents', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Agents' }},
+		{ field: 'managerModelId', validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: isChatApp, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		{ field: 'conversationStarters', validation: { notEmpty: isChatApp, asArray: true, ofType: 'string', customError: 'Invalid Conversation Starters' }},
+		//TODO:validation
+	], {
+		name: 'App Name',
+		agentName: 'Agent Name',
+		modelId: 'Model',
+		managerModelId: 'Chat Manager Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const foundIcon = await getAssetById(iconId);
 
-	const addedCrew = await addCrew({
-		orgId: res.locals.matchingOrg.id,
-		teamId: toObjectId(req.params.resourceSlug),
-		name,
-		tasks: tasks.map(toObjectId),
-		agents: agents.map(toObjectId),
-		process,
-		managerModelId: toObjectId(managerModelId),
-	});
+	let addedCrew
+		, chatAgent;
+	if (type as AppType === AppType.CREW) {
+		addedCrew = await addCrew({
+			orgId: res.locals.matchingOrg.id,
+			teamId: toObjectId(req.params.resourceSlug),
+			name,
+			tasks: tasks.map(toObjectId),
+			agents: agents.map(toObjectId),
+			process,
+			managerModelId: toObjectId(managerModelId),
+		});
+	} else {
+		if (agentId) {
+			await updateAgent(req.params.resourceSlug, agentId, {
+				name: agentName,
+				role,
+				goal,
+				backstory,
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+			});
+			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
+			if (!chatAgent) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+		} else if (modelId) { //
+			const foundModel = await getModelById(req.params.resourceSlug, modelId);
+			if (!foundModel) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			chatAgent = await addAgent({
+				orgId: res.locals.matchingOrg.id,
+				teamId: toObjectId(req.params.resourceSlug),
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+			    name: agentName,
+			    role,
+			    goal,
+			    backstory,
+				functionModelId: null,
+				maxIter: null,
+				maxRPM: null,
+				verbose: false,
+				allowDelegation: false,
+			});
+		} else {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	}
+
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
-		memory: memory === true,
-		cache: cache === true,
 		tags: (tags||[])
-			.map(tag => tag.trim()) // Assuming tags is an array of strings
+			.map(tag => tag.trim())
 			.filter(x => x),
-		capabilities,
-		crewId: addedCrew.insertedId,
-		appType,
 		author: res.locals.matchingTeam.name,
 		icon: foundIcon ? {
 			id: foundIcon._id,
 			filename: foundIcon.filename,
 		} : null,
+		type,
+		...(type as AppType === AppType.CREW ? {
+			crewId: addedCrew ? addedCrew.insertedId : null,
+			memory: memory === true,
+			cache: cache === true,
+		}: {
+			chatAppConfig: {
+				agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
+				conversationStarters: (conversationStarters||[])
+					.map(x => x.trim())
+					.filter(x => x),
+			},
+		}),
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
+	return dynamicResponse(req, res, 200, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });
 
 }
 
@@ -156,22 +240,48 @@ export async function addAppApi(req, res, next) {
  */
 export async function editAppApi(req, res, next) {
 
-	const { memory, cache, name, description, tags, capabilities, agents, appType, process, tasks, managerModelId, iconId }  = req.body;
+	const {
+		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
+		conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
+		run
+	}  = req.body;
 
-	if (!name || typeof name !== 'string' || name.length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-	}
-
-	const app = await getAppById(req.params.resourceSlug, req.params.appId);
+	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const isChatApp = app?.type === AppType.CHAT;
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'modelId', validation: { notEmpty: isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'role', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'goal', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		{ field: 'backstory', validation: { notEmpty: isChatApp, ofType: 'string' }},
+		//Note: due to design limitation of validationUtil we need two checks for array fields to both check if theyre empty and validate each array element
+		{ field: 'tasks', validation: { notEmpty: !isChatApp }},
+		{ field: 'agents', validation: { notEmpty: !isChatApp }},
+		{ field: 'tasks', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }},
+		{ field: 'agents', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Agents' }},
+		{ field: 'managerModelId', validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }},
+		{ field: 'toolIds', validation: { notEmpty: isChatApp, hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }},
+		{ field: 'conversationStarters', validation: { notEmpty: isChatApp, asArray: true, ofType: 'string', customError: 'Invalid Conversation Starters' }},
+		//TODO:validation
+	], {
+		name: 'App Name',
+		agentName: 'Agent Name',
+		modelId: 'Model',
+		managerModelId: 'Chat Manager Model',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
-	//const [updatedCrew, _] = 
-	await Promise.all([
-		updateCrew(req.params.resourceSlug, app.crewId, {
+	let chatAgent;
+	if (!isChatApp) {
+		await updateCrew(req.params.resourceSlug, app.crewId, {
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
 			name,
@@ -179,25 +289,73 @@ export async function editAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			managerModelId: toObjectId(managerModelId)
-		}),
-		updateApp(req.params.resourceSlug, req.params.appId, {
-		    name,
-			description,
+		});
+	} else {
+		if (agentId) {
+			await updateAgent(req.params.resourceSlug, agentId, {
+				name: agentName,
+				role,
+				goal,
+				backstory,
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+			});
+			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
+			if (!chatAgent) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+		} else if (modelId) {
+			const foundModel = await getModelById(req.params.resourceSlug, modelId);
+			if (!foundModel) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			chatAgent = await addAgent({
+				orgId: res.locals.matchingOrg.id,
+				teamId: toObjectId(req.params.resourceSlug),
+				modelId: toObjectId(modelId),
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+			    name: agentName,
+			    role,
+			    goal,
+			    backstory,
+				functionModelId: null,
+				maxIter: null,
+				maxRPM: null,
+				verbose: false,
+				allowDelegation: false,
+			});
+		} else {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	}
+
+	const foundIcon = await getAssetById(iconId);
+
+	await updateApp(req.params.resourceSlug, req.params.appId, {
+		name,
+		description,
+		tags: (tags||[])
+			.map(tag => tag.trim())
+			.filter(x => x),
+		icon: foundIcon ? {
+			id: foundIcon._id,
+			filename: foundIcon.filename,
+		} : null,
+		...(app.type === AppType.CREW ? {
 			memory: memory === true,
 			cache: cache === true,
-			tags: (tags||[]) //TODO
-				.map(t => t.trim())
-				.filter(t => t),
-			capabilities,
-			appType,
-			icon: foundIcon ? {
-				id: foundIcon._id,
-				filename: foundIcon.filename,
-			} : null,
-		})
-	]);
+		}: {
+			chatAppConfig: {
+				agentId: toObjectId(agentId),
+				conversationStarters: (conversationStarters||[])
+					.map(x => x.trim())
+					.filter(x => x),
+			},
+		}),
+		
+	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
+	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/ });
 
 }
 
@@ -212,8 +370,13 @@ export async function deleteAppApi(req, res, next) {
 
 	const { appId }  = req.body;
 
-	if (!appId || typeof appId !== 'string' || appId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'appId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+	], {
+		appId: 'App ID',
+	});
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	await deleteAppById(req.params.resourceSlug, appId);

@@ -4,8 +4,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { Message } from 'components/chat/message';
 import classNames from 'components/ClassNames';
+import ConversationStarters from 'components/ConversationStarters';
 import SessionChatbox from 'components/SessionChatbox';
-// import StartSessionChatbox from 'components/StartSessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
@@ -20,27 +20,25 @@ import ContentLoader from 'react-content-loader';
 
 export default function Session(props) {
 
+	const scrollContainerRef = useRef(null);
+	
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
-	
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
 	const { sessionId } = router.query;
-	const [currentSession, setCurrentSession] = useState(sessionId);
+	const [currentSessionId, setCurrentSessionId] = useState(sessionId);
+	const [session, setSession] = useState(null);
+	const [app, setApp] = useState(null);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
-	const { session } = state;
-	const scrollContainerRef = useRef(null);
-	const [sessionsData, setSessionData] = useState(null);
-	const { sessions, groups, agents } = (sessionsData||{});
-	const [_chatContext, setChatContext]: any = useChatContext();
+
 	const [loading, setLoading] = useState(false);
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
-	const [terminated, setTerminated] = useState(state?.session?.status === SessionStatus.TERMINATED);
+	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	useEffect(() => {
 		if (!scrollContainerRef || !scrollContainerRef.current) { return; }
@@ -64,11 +62,8 @@ export default function Session(props) {
 	}, [isAtBottom, scrollContainerRef?.current]);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
-
 	const chatBusyState = messages?.length === 0 ||sentLastMessage || !lastMessageFeedback;
-	async function fetchSessions() {
-		await API.getSessions({ resourceSlug }, setSessionData, setError, router);
-	}
+
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);
 	}
@@ -114,27 +109,7 @@ export default function Session(props) {
 				.sort((ma, mb) => ma.ts - mb.ts);
 		});
 	}
-	function handleSocketStatus(status) {
-		log('Received chat status %s', status);
-		if (!status) { return; }
-		setChatContext({
-			status,
-		});
-	}
-	function handleSocketType(type) {
-		log('Received chat type %s', type);
-		if (!type) { return; }
-		setChatContext({
-			type,
-		});
-	}
-	function handleSocketTokens(tokens) {
-		log('Received chat type %s', tokens);
-		if (!tokens) { return; }
-		setChatContext({
-			tokens,
-		});
-	}
+
 	function scrollToBottom(behavior: string='instant') {
 		//scroll to bottom when messages added (if currently at bottom)
 		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
@@ -148,17 +123,6 @@ export default function Session(props) {
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages]);
-	function sendFeedbackMessage(message: string) {
-		socketContext.emit('message', {
-			room: sessionId,
-			authorName: account.name,
-			incoming: true,
-			message: {
-				type: 'text',
-				text: message,
-			}
-		});
-	}
 
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
@@ -169,9 +133,6 @@ export default function Session(props) {
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
-		socketContext.on('status', handleSocketStatus);
-		socketContext.on('tokens', handleSocketTokens);
-		socketContext.on('type', handleSocketType);
 		socketContext.on('joined', handleSocketJoined);
 		joinSessionRoom();
 	}
@@ -179,9 +140,6 @@ export default function Session(props) {
 		socketContext.off('connect', joinSessionRoom);
 		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('message', handleSocketMessage);
-		socketContext.off('status', handleSocketStatus);
-		socketContext.off('tokens', handleSocketTokens);
-		socketContext.off('type', handleSocketType);
 		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
@@ -190,17 +148,9 @@ export default function Session(props) {
 			resourceSlug,
 			sessionId: router?.query?.sessionId,
 		}, (res) => {
-			dispatch(res);
-			if (res && res?.session) {
-				setChatContext({
-					prompt: res.session.prompt,
-					status: res.session.status,
-					type: res.session.type,
-					tokens: res.session.tokensUsed,
-					scrollToBottom,
-				});
-				setAuthorAvatarMap(res.avatarMap||{});
-			}
+			setAuthorAvatarMap(res.avatarMap||{});
+			setSession(res?.session||{});
+			setApp(res?.app||{});
 		}, setError, router);
 		API.getMessages({
 			resourceSlug,
@@ -237,10 +187,10 @@ export default function Session(props) {
 		};
 	}, [resourceSlug, router?.query?.sessionId]);
 	useEffect(() => {
-		if (currentSession !== router?.query?.sessionId) {
+		if (currentSessionId !== router?.query?.sessionId) {
 			setMessages([]);
 			setLoading(true);
-			setCurrentSession(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
+			setCurrentSessionId(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
 		}
 	}, [router?.query?.sessionId]);
 
@@ -256,8 +206,8 @@ export default function Session(props) {
 	}
 
 	function sendMessage(e, reset) {
-		e.preventDefault();
-		const message: string = e.target.prompt ? e.target.prompt.value : e.target.value;
+		e.preventDefault && e.preventDefault();
+		const message: string = typeof e === 'string' ? e : (e.target.prompt ? e.target.prompt.value : e.target.value);
 		if (!message || message.trim().length === 0) { return null; }
 		socketContext.emit('message', {
 			room: sessionId,
@@ -292,7 +242,6 @@ export default function Session(props) {
 						isFeedback={m?.isFeedback}
 						isLastMessage={mi === marr.length-1}
 						isLastSeen={false /*lastSeenMessageId && lastSeenMessageId === m?._id*/}
-						sendMessage={sendFeedbackMessage}
 						displayType={m?.displayType || m?.message?.displayType}
 						tokens={(m?.chunks ? m.chunks.reduce((acc, c) => { return acc + (c.tokens || 0); }, 0) : 0) + (m?.tokens || m?.message?.tokens || 0)}
 						chunking={m?.chunks?.length > 0}
@@ -306,6 +255,12 @@ export default function Session(props) {
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 				</div>}
 			</div>
+			{messages.length < 3 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+				<ConversationStarters
+					sendMessage={message => sendMessage(message, null)}
+					conversationStarters={app?.chatAppConfig?.conversationStarters}
+				/>
+			</div>}
 			<div className='flex flex-col mt-auto pt-4 border-t'>
 				<div className='flex flex-row justify-center pb-3'>
 					<div className='flex items-start space-x-4 basis-1/2'>

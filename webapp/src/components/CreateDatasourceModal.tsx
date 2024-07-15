@@ -2,10 +2,11 @@ import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import CreateDatasourceForm from 'components/CreateDatasourceForm'; // Assuming this component is similar to ModelForm but for datasources
 import { useAccountContext } from 'context/account';
+import FormContext from 'context/connectorform';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateDatasourceModal({ open, setOpen, callback }) {
+export default function CreateDatasourceModal({ open, setOpen, callback, initialStep }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -50,10 +51,10 @@ export default function CreateDatasourceModal({ open, setOpen, callback }) {
 						>
 							<Dialog.Panel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 md:w-full lg:w-1/2 m-10'>
 								<Dialog.Title as='h3' className='text-lg font-medium text-gray-900'>
-								Create a Datasource
+									Create a Datasource
 								</Dialog.Title>
 								<div className='pt-4'>
-									<CreateDatasourceForm compact={true} callback={callback} models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={2} />
+									<CreateDatasourceForm compact={true} callback={callback} models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={initialStep} />
 								</div>
 							</Dialog.Panel>
 						</Transition.Child>

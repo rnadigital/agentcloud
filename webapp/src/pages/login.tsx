@@ -2,6 +2,7 @@ import {
 	EyeIcon,
 	EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import ButtonSpinner from 'components/ButtonSpinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -17,14 +18,20 @@ export default function Login() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [showPassword, setShowPassword] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
 
 	async function login(e) {
-		e.preventDefault();
-		await API.login({
-			email: e.target.email.value,
-			password: e.target.password.value,
-		}, null, setError, router);
+		setSubmitting(true);
+		try {
+			e.preventDefault();
+			await API.login({
+				email: e.target.email.value,
+				password: e.target.password.value,
+			}, null, setError, router);
+		} finally {
+			setSubmitting(false);
+		}
 	}
 
 	return (
@@ -105,6 +112,7 @@ export default function Login() {
 									type='submit'
 									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
+									{submitting && <ButtonSpinner className='mt-1 me-1' />}
                   					Sign in
 								</button>
 							</div>

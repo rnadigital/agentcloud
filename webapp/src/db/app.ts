@@ -63,7 +63,7 @@ export function getAppsByTeam(teamId: db.IdOrStr): Promise<App[]> {
 			}
 		},
 		...CREW_JOIN_STAGES
-	]).toArray();
+	]).sort({ _id: -1 }).toArray();
 }
 
 export async function addApp(app: App): Promise<InsertResult> {

@@ -6,7 +6,6 @@ import {
 import ButtonSpinner from 'components/ButtonSpinner';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { Fragment,useEffect, useState } from 'react';

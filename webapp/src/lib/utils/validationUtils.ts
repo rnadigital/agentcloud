@@ -1,6 +1,7 @@
 const PARENT_OBJECT_FIELD_NAME = '';
 
 function chainValidations(object, validations: { field: string, validation: ValidationUtilOptions, validateIf?: ValidationCondition, disallowDotSplit?: boolean }[], fieldDescriptions) {
+	validations = validations.filter(x => x);
 	if (object && validations && validations.length > 0) {
 		for (let v in validations) {
 			const validation = validations[v];
@@ -65,7 +66,10 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.exists === true && object[fieldName] === undefined) {
 				error = `${fieldDescription} does not exist`;
 			}
-			if (validations.notEmpty === true && (item == null || item === '')) {
+			if (validations.ofType != null && item && typeof item !== validations.ofType) {
+				error = `${fieldDescription} is an invalid type, should be "${validations.ofType}"`;
+			}
+			if (validations.notEmpty === true && (item == null || item === '' || (Array.isArray(item) && item?.length === 0))) {
 				error = `${fieldDescription} is empty`;
 			}
 			if (validations.lengthMin > 0 && (item == null || item.length < validations.lengthMin)) {
@@ -74,7 +78,7 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 			if (validations.lengthMax > 0 && (item == null || item.length > validations.lengthMax)) {
 				error = `${fieldDescription} is too long`;
 			}
-			if (validations.hasLength >= 0 && (item == null || item.length != validations.hasLength)) {
+			if (validations.hasLength >= 0 && (item?.length && item.length != validations.hasLength)) {
 				error = `${fieldDescription} is not of the right length`;
 			}
 			if (validations.enum && validations.enum.length > 0 && (item == null || item.length < 0 || validations.enum.indexOf(item) < 0)) {
@@ -122,6 +126,7 @@ function validateField(object: any, fieldName: string, validations: ValidationUt
 }
 
 type ValidationUtilOptions = {
+	ofType?: string,
 	exists?: boolean,
 	notEmpty?: boolean,
 	lengthMin?: number,

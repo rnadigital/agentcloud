@@ -20,7 +20,6 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
-// import DebugLogs from 'components/DebugLogs';
 import BillingBanner from 'components/BillingBanner';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
@@ -86,17 +85,11 @@ const agentNavigation: any[] = [
 		base: '/model',
 		icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
 	},
-	{
-		name: 'Credentials',
-		href: '/credentials',
-		base: '/credential',
-		icon: <KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
-	},
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const teamNavigation = [
-	{ name: 'Team Members', href: '/team', base: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
+	{ name: 'Team', href: '/team', base: '/team', icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
 const userNavigation = [
@@ -113,11 +106,14 @@ export default withRouter(function Layout(props) {
 
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, switching } = accountContext as any;
-	const { stripeEndsAt, stripePlan } = account?.stripe || {};
+	const { account, csrf, switching, team } = accountContext as any;
+	const { currentTeam } = account || {};
+	const { stripeEndsAt, stripePlan, stripeCancelled } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const showNavs = !noNavPages.includes(router.pathname);
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -209,7 +205,7 @@ export default withRouter(function Layout(props) {
 													{agentNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Platform</div>}
 													<ul role='list' className='-mx-2 space-y-1'>
 														{agentNavigation.map((item) => {
-															return (<li key={item.name} className='ps-4'>
+															return (<li key={item.name}>
 																<Link
 																	suppressHydrationWarning
 																	href={`/${resourceSlug}${item.href}`}
@@ -228,7 +224,7 @@ export default withRouter(function Layout(props) {
 														<PreviewSessionList />
 													</ul>
 												</li>
-												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4'>
+												<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4 ps-6'>
 													{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin </div>}
 													<ul role='list' className='-mx-2 mt-2 space-y-1'>
 														{teamNavigation.map((item) => (
@@ -266,7 +262,7 @@ export default withRouter(function Layout(props) {
 																Account
 															</Link>
 														</li>
-														<li key='billing'>
+														{isOrgOwner && <li key='billing'>
 															<Link
 																href='/billing'
 																className={classNames(
@@ -282,7 +278,7 @@ export default withRouter(function Layout(props) {
 																/>
 																Billing
 															</Link>
-														</li>
+														</li>}
 														{/*<li>
 															<Link
 																href='/settings'
@@ -373,7 +369,7 @@ export default withRouter(function Layout(props) {
 								</li>
 							</ul>
 
-							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600'>
+							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
 								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
 								<ul role='list' className='-mx-2 mt-2 space-y-1'>
 									{teamNavigation.map((item) => (
@@ -410,7 +406,7 @@ export default withRouter(function Layout(props) {
 											Account
 										</Link>
 									</li>
-									<li key='billing'>
+									{isOrgOwner && <li key='billing'>
 										<Link
 											href='/billing'
 											className={classNames(
@@ -426,7 +422,7 @@ export default withRouter(function Layout(props) {
 											/>
 											Billing
 										</Link>
-									</li>
+									</li>}
 									{/*<li>
 										<Link
 											href='/settings'
@@ -465,7 +461,7 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} />
+					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />
 					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'
@@ -506,12 +502,12 @@ export default withRouter(function Layout(props) {
 								</>
 							</form>*/}
 							<div className='flex flex-1 justify-end items-center'>
-								{chatContext?.tokens != null && <span
+								{chatContext?.tokens ? <span
 									className='me-2 whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
 								>
 									<CreditCardIcon className='h-5 w-5' />
 									Tokens used: {chatContext?.tokens||0}
-								</span>}
+								</span> : null}
 								{chatContext?.status && chatContext?.type && <span
 									className='whitespace-nowrap cursor-pointer h-6 capitalize inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 dark:ring-slate-600 dark:bg-slate-800 dark:text-white'
 									onClick={chatContext.scrollToBottom}
@@ -526,9 +522,6 @@ export default withRouter(function Layout(props) {
 								{/* Notification Bell */}
 								<NotificationBell />
 
-								{/* debug logs
-								<DebugLogs />*/}
-								
 								{/* Separator */}
 								<div
 									className='hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10'
@@ -618,8 +611,17 @@ export default withRouter(function Layout(props) {
 					</main>
 				</div>
 			</div>
-			<div className={`transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
-			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''}`} />
+			<div className={`transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''} text-center ps-[280px] content-center`}>
+				<img
+					className='pulsate m-auto'
+					src='/images/agentcloud-full-black-bg-trans.png'
+					alt='Agentcloud'
+					width={200}
+					height={150}
+				/>
+				<em>Switching team...</em>
+			</div>
+			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''} text-center`} />
 			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-center text-gray-700 text-xs bg-white dark:bg-slate-900 dark:text-slate-400`}>
 				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH && `-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}</div>
 			</footer>

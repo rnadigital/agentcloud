@@ -14,6 +14,7 @@ export type AccountTeam = {
 	id: ObjectId;
 	name: string;
 	ownerId: ObjectId;
+	//permissions: Binary; //TODO?
 }
 
 export type AccountOrg = {
@@ -21,6 +22,7 @@ export type AccountOrg = {
 	name: string;
 	ownerId: ObjectId;
 	teams: AccountTeam[];
+	//permissions: Binary; //TODO?
 }
 
 // OAuth data for account
@@ -169,16 +171,6 @@ export function setAccountOauth(userId: db.IdOrStr, oauthId: AccountOAuthId, pro
 	});
 }
 
-export function setPlanDebug(userId: db.IdOrStr, plan: SubscriptionPlan): Promise<any> {
-	return AccountCollection().updateOne({
-		_id: toObjectId(userId),
-	}, {
-		$set: {
-			'stripe.stripePlan': plan,
-		},
-	});
-}
-
 export function setStripePlan(stripeCustomerId: string, plan: SubscriptionPlan): Promise<any> {
 	return AccountCollection().updateOne({
 		'stripe.stripeCustomerId': stripeCustomerId,
@@ -226,4 +218,20 @@ export function setAccountPermissions(userId: db.IdOrStr, permissions: Permissio
 
 export function addAccount(account: Account): Promise<InsertResult> {
 	return AccountCollection().insertOne(account);
+}
+
+export function updateTeamOwnerInAccounts(orgId: db.IdOrStr, teamId: db.IdOrStr, newOwnerId: db.IdOrStr): Promise<any> {
+	return AccountCollection().updateMany({
+		'orgs.id': toObjectId(orgId),
+		'orgs.teams.id': toObjectId(teamId),
+	}, {
+		$set: {
+			'orgs.$[org].teams.$[team].ownerId': toObjectId(newOwnerId),
+		}
+	}, {
+		arrayFilters: [
+			{ 'org.id': toObjectId(orgId) },
+			{ 'team.id': toObjectId(teamId) }
+		]
+	});
 }

@@ -24,7 +24,7 @@ from init.env_variables import SOCKET_URL, BASE_PATH, AGENT_BACKEND_SOCKET_TOKEN
 from socketio.simple_client import SimpleClient
 from socketio.exceptions import DisconnectedError
 import json
-from build.build_group import ChatBuilder
+from crew.build_group import ChatBuilder
 from messaging.send_message_to_socket import send
 import requests
 from models.canopy_server import ChatRequest

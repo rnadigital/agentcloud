@@ -17,7 +17,7 @@ export type MetadataFieldInfo = {
 };
 
 export type SelfQueryRetrieverConfig = {
-	k?: number;
+	k?: number; //top k, unused atm
 	metadata_field_info: MetadataFieldInfo[];
 };
 
@@ -26,6 +26,12 @@ export type TimeWeightedRetrieverConfig = {
 };
 
 export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
+
+export enum ToolState {
+	PENDING = 'pending',
+	READY = 'ready',
+	ERROR = 'error'
+}
 
 export type Tool = {
 	_id?: ObjectId;
@@ -38,20 +44,28 @@ export type Tool = {
  	retriever_type?: Retriever;
 	retriever_config?: RetrieverConfig;
  	datasourceId?: ObjectId;
+ 	state?: ToolState;
 	data?: {
+		runtime?: string;
 		builtin?: boolean;
 		name: string;
 		description?: string;
+		apiKey?: string;
+		environmentVariables?: Record<string,string>;
 		parameters?: {
 			//type: string;
 			properties: Record<string,FunctionProperty>;
 			required?: string[];
 		};
 		code?: string;
+		requirements?: string;
 		openAPIMatchKey?: string;
 	},
-	credentialId?: ObjectId; //links to a credential 
 	icon?: IconAttachment;
+	hidden?: boolean;
+ 	functionId?: string;
+ 	revisionId?: ObjectId;
+ 	functionLogs?: string;
 };
 
 export type FunctionProperty = {

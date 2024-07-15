@@ -32,7 +32,6 @@ import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
 import * as appController from 'controllers/app';
 import * as assetController from 'controllers/asset';
-import * as credentialController from 'controllers/credential';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
@@ -59,12 +58,6 @@ export default function router(server, app) {
 		scope: ['profile', 'email'],
 	}));
 	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/hubspot', useSession, useJWT, myPassport.authenticate('hubspot', {
-		scope: 'crm.objects.line_items.read content crm.schemas.deals.read crm.schemas.line_items.read crm.objects.owners.read forms tickets crm.objects.marketing_events.read sales-email-read crm.objects.companies.read crm.lists.read crm.objects.deals.read crm.schemas.contacts.read crm.objects.contacts.read crm.schemas.companies.read crm.objects.quotes.read',
-	}));
-	oauthRouter.get('/hubspot/callback', useSession, useJWT, myPassport.authenticate('hubspot', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/stripe', useSession, useJWT, myPassport.authenticate('stripe'));
-	oauthRouter.get('/stripe/callback', useSession, useJWT, myPassport.authenticate('stripe', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
 	server.use('/auth', useSession, myPassport.session(), oauthRouter);
 
 	// Body and query parsing middleware
@@ -83,18 +76,16 @@ export default function router(server, app) {
 	server.get('/billing', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.billingPage.bind(null, app));
 	server.get('/account.json', authedMiddlewareChain, checkAccountQuery, setPermissions, accountController.accountJson);
 
-	//Remove: for debug/testing, docker logs
-	server.get('/logs.json', authedMiddlewareChain, accountController.dockerLogsJson);
-
+	//TODO: move and rename all these
 	server.post('/stripe-portallink', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.createPortalLink);
+	server.post('/stripe-plan', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.requestChangePlan);
+	server.post('/stripe-plan-confirm', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.confirmChangePlan);
+	server.get('/stripe-has-paymentmethod', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.hasPaymentMethod);
+	server.get('/stripe-ready', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, stripeController.checkReady);
 
 	// Account endpoints
 	const accountRouter = Router({ mergeParams: true, caseSensitive: true });
 	accountRouter.post('/login', unauthedMiddlewareChain, accountController.login);
-
-	//TODO: remove
-	accountRouter.post('/admin', authedMiddlewareChain, accountController.adminApi);
-
 	accountRouter.post('/register', unauthedMiddlewareChain, accountController.register);
 	accountRouter.post('/requestchangepassword', unauthedMiddlewareChain, accountController.requestChangePassword);
 	accountRouter.post('/changepassword', unauthedMiddlewareChain, accountController.changePassword);
@@ -109,7 +100,6 @@ export default function router(server, app) {
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
-	teamRouter.post('/airbyte/jobs', airbyteProxyController.triggerJobApi);
 
 	//sessions
 	teamRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json', sessionController.sessionMessagesJson);
@@ -123,59 +113,56 @@ export default function router(server, app) {
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
 	teamRouter.get('/agents.json', agentController.agentsJson);
-	teamRouter.get('/agent/add', agentController.agentAddPage.bind(null, app));
+	teamRouter.get('/agent/add', hasPerms.one(Permissions.CREATE_AGENT), agentController.agentAddPage.bind(null, app));
 	teamRouter.get('/agent/:agentId([a-f0-9]{24}).json', agentController.agentJson);
-	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', agentController.agentEditPage.bind(null, app));
-	teamRouter.post('/forms/agent/add', agentController.addAgentApi);
-	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', agentController.editAgentApi);
-	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', agentController.deleteAgentApi);
+	teamRouter.get('/agent/:agentId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_AGENT), agentController.agentEditPage.bind(null, app));
+	teamRouter.post('/forms/agent/add', hasPerms.one(Permissions.CREATE_AGENT), agentController.addAgentApi);
+	teamRouter.post('/forms/agent/:agentId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_AGENT), agentController.editAgentApi);
+	teamRouter.delete('/forms/agent/:agentId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_AGENT), agentController.deleteAgentApi);
 
 	//tasks
 	teamRouter.get('/tasks', taskController.tasksPage.bind(null, app));
 	teamRouter.get('/tasks.json', taskController.tasksJson);
-	teamRouter.get('/task/add', taskController.taskAddPage.bind(null, app));
+	teamRouter.get('/task/add', hasPerms.one(Permissions.CREATE_TASK), taskController.taskAddPage.bind(null, app));
 	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
-	teamRouter.get('/task/:taskId([a-f0-9]{24})/edit', taskController.taskEditPage.bind(null, app));
-	teamRouter.post('/forms/task/add', taskController.addTaskApi);
-	teamRouter.post('/forms/task/:taskId([a-f0-9]{24})/edit', taskController.editTaskApi);
-	teamRouter.delete('/forms/task/:taskId([a-f0-9]{24})', taskController.deleteTaskApi);
+	teamRouter.get('/task/:taskId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TASK), taskController.taskEditPage.bind(null, app));
+	teamRouter.post('/forms/task/add', hasPerms.one(Permissions.CREATE_TASK), taskController.addTaskApi);
+	teamRouter.post('/forms/task/:taskId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TASK), taskController.editTaskApi);
+	teamRouter.delete('/forms/task/:taskId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_TASK), taskController.deleteTaskApi);
 
 	//apps
 	teamRouter.get('/apps', appController.appsPage.bind(null, app));
 	teamRouter.get('/apps.json', appController.appsJson);
-	teamRouter.get('/app/add', appController.appAddPage.bind(null, app));
+	teamRouter.get('/app/add', hasPerms.one(Permissions.CREATE_APP), appController.appAddPage.bind(null, app));
 	teamRouter.get('/app/:appId([a-f0-9]{24}).json', appController.appJson);
-	teamRouter.get('/app/:appId([a-f0-9]{24})/edit', appController.appEditPage.bind(null, app));
-	teamRouter.post('/forms/app/add', appController.addAppApi);
-	teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', appController.editAppApi);
-	teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', appController.deleteAppApi);
-
-	//credentials
-	teamRouter.get('/credentials', credentialController.credentialsPage.bind(null, app));
-	teamRouter.get('/credentials.json', credentialController.credentialsJson);
-	teamRouter.get('/credential/add', credentialController.credentialAddPage.bind(null, app));
-	teamRouter.get('/credential/:credentialId([a-f0-9]{24}).json', credentialController.credentialJson);
-	teamRouter.post('/forms/credential/add', credentialController.addCredentialApi);
-	teamRouter.delete('/forms/credential/:credentialId([a-f0-9]{24})', credentialController.deleteCredentialApi);
+	teamRouter.get('/app/:appId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_APP), appController.appEditPage.bind(null, app));
+	teamRouter.post('/forms/app/add', hasPerms.one(Permissions.CREATE_APP), appController.addAppApi);
+	teamRouter.post('/forms/app/:appId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_APP), appController.editAppApi);
+	teamRouter.delete('/forms/app/:appId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_APP), appController.deleteAppApi);
 
 	//tools
 	teamRouter.get('/tools', toolController.toolsPage.bind(null, app));
 	teamRouter.get('/tools.json', toolController.toolsJson);
-	teamRouter.get('/tool/add', toolController.toolAddPage.bind(null, app));
+	teamRouter.get('/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.toolAddPage.bind(null, app));
 	teamRouter.get('/tool/:toolId([a-f0-9]{24}).json', toolController.toolJson);
-	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', toolController.toolEditPage.bind(null, app));
-	teamRouter.post('/forms/tool/add', toolController.addToolApi);
-	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', toolController.editToolApi);
-	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', toolController.deleteToolApi);
+	teamRouter.get('/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.toolEditPage.bind(null, app));
+	teamRouter.post('/forms/tool/add', hasPerms.one(Permissions.CREATE_TOOL), toolController.addToolApi);
+	teamRouter.post('/forms/tool/:toolId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TOOL), toolController.editToolApi);
+	teamRouter.delete('/forms/tool/:toolId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_TOOL), toolController.deleteToolApi);
+	
+	teamRouter.post('/forms/revision/:revisionId([a-f0-9]{24})/apply', hasPerms.one(Permissions.EDIT_TOOL), toolController.applyToolRevisionApi);
+	//TODO: permission for deleting tool revisions
+	//TODO: endpoint to download source as zip?
+	teamRouter.delete('/forms/revision/:revisionId([a-f0-9]{24})', hasPerms.one(Permissions.EDIT_TOOL), toolController.deleteToolRevisionApi);
 
 	//models
 	teamRouter.get('/models', modelController.modelsPage.bind(null, app));
 	teamRouter.get('/models.json', modelController.modelsJson);
 	teamRouter.get('/model/:modelId([a-f0-9]{24}).json', modelController.modelJson);
-	teamRouter.get('/model/add', modelController.modelAddPage.bind(null, app));
-	teamRouter.post('/forms/model/add', modelController.modelAddApi);
-	teamRouter.post('/forms/model/:modelId([a-f0-9]{24})/edit', modelController.editModelApi);
-	teamRouter.delete('/forms/model/:modelId([a-f0-9]{24})', modelController.deleteModelApi);
+	teamRouter.get('/model/add', hasPerms.one(Permissions.CREATE_MODEL), modelController.modelAddPage.bind(null, app));
+	teamRouter.post('/forms/model/add', hasPerms.one(Permissions.CREATE_MODEL), modelController.modelAddApi);
+	teamRouter.post('/forms/model/:modelId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_MODEL), modelController.editModelApi);
+	teamRouter.delete('/forms/model/:modelId([a-f0-9]{24})', hasPerms.one(Permissions.DELETE_MODEL), modelController.deleteModelApi);
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
@@ -199,6 +186,7 @@ export default function router(server, app) {
 	teamRouter.post('/forms/team/:memberId([a-f0-9]{24})/edit', hasPerms.one(Permissions.EDIT_TEAM_MEMBER), teamController.editTeamMemberApi);
 	teamRouter.post('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), fetchUsage, checkSubscriptionLimit(PlanLimitsKeys.users), teamController.inviteTeamMemberApi);
 	teamRouter.delete('/forms/team/invite', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.deleteTeamMemberApi);
+	teamRouter.post('/forms/team/transfer-ownership', hasPerms.any(Permissions.ORG_OWNER, Permissions.TEAM_OWNER), teamController.transferTeamOwnershipApi);
 	teamRouter.post('/forms/team/add', hasPerms.one(Permissions.ADD_TEAM_MEMBER), checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]), teamController.addTeamApi);
 
 	//assets

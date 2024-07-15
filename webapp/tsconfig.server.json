@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "incremental": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "outDir": "dist",
@@ -27,6 +28,9 @@
       ],
       "middleware/*": [
         "lib/middleware/*"
+      ],
+      "function/*": [
+        "lib/function/*"
       ],
       "misc/*": [
         "lib/misc/*"

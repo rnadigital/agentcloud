@@ -6,8 +6,8 @@ const tabs = [
 	{ i: 0, name: 'Streams', href: '#tab-0', icon: TableCellsIcon, excludeSourceTypes: 'file' },
 	{ i: 1, name: 'Job History', href: '#tab-1', icon: ClockIcon, excludeSourceTypes: 'file' },
 	{ i: 2, name: 'Schedule', href: '#tab-2', icon: CalendarDaysIcon, excludeSourceTypes: 'file' },
-	{ i: 3, name: 'Visualisation', href: '#tab-3', icon: CubeTransparentIcon },
-	{ i: 4, name: 'Settings', href: '#tab-4', icon: Cog6ToothIcon },
+	//{ i: 3, name: 'Visualisation', href: '#tab-3', icon: CubeTransparentIcon },
+	//{ i: 4, name: 'Settings', href: '#tab-4', icon: Cog6ToothIcon },
 ];
 
 function classNames(...classes) {

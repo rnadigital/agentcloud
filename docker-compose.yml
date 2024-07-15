@@ -37,9 +37,12 @@ services:
         # - NEXT_PUBLIC_ENABLE_GOOGLE_OAUTH=
         # - NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=
         - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+        - NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE=${GCS_BUCKET_NAME_PRIVATE}
         - NEXT_PUBLIC_HUBSPOT_MEETING_LINK=https://meetings.hubspot.com/andrew520
+        - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
         - POSTHOG_KEY=
         - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+        - NEXT_PUBLIC_STORAGE_PROVIDER=local
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -50,7 +53,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
-      - RABBITMQ_STREAM=streaming
+      - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
       - RABBITMQ_ROUTING_KEY=key
       - RABBITMQ_USERNAME=guest
@@ -71,6 +74,7 @@ services:
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
       - NEXT_PUBLIC_GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE=${GCS_BUCKET_NAME_PRIVATE}
       - OAUTH_GITHUB_CLIENT_ID=
       - OAUTH_GITHUB_CLIENT_SECRET=
       - OAUTH_GOOGLE_CLIENT_ID=
@@ -85,18 +89,23 @@ services:
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - GCS_BUCKET_LOCATION=${GCS_BUCKET_LOCATION}
       - STRIPE_FREE_PLAN_PRICE_ID=price_1P0zlRDxQ9GZKzvoYUAzWMSv
-      - STRIPE_PRO_PLAN_PRICE_ID=price_1OAMHSDxQ9GZKzvoBbDryhiZ
-      - STRIPE_TEAMS_PLAN_PRICE_ID=price_1P0xEGDxQ9GZKzvoTDfMJK6f
-      - STRIPE_ADDON_USERS_PRICE_ID=price_1PFnQmDxQ9GZKzvoS4cRlCtt
-      - STRIPE_ADDON_STORAGE_PRICE_ID=price_1PGClWDxQ9GZKzvoiB8SNOrV      
+      - STRIPE_PRO_PLAN_PRICE_ID=price_1PFrOlDxQ9GZKzvo7Pcb29jS
+      - STRIPE_TEAMS_PLAN_PRICE_ID=price_1PFrGKDxQ9GZKzvotx5U0JE5
+      - STRIPE_ADDON_USERS_PRICE_ID=price_1PFrRsDxQ9GZKzvoTFCE6YTz
+      - STRIPE_ADDON_STORAGE_PRICE_ID=price_1PGClWDxQ9GZKzvoiB8SNOrV
       - STRIPE_FREE_PLAN_PRODUCT_ID=prod_Pqh9LfvzCal4Ux
       - STRIPE_PRO_PLAN_PRODUCT_ID=prod_OyItEyf2n0TZGj
       - STRIPE_TEAMS_PLAN_PRODUCT_ID=prod_PqeXHjZLXeuzyr
       - STRIPE_ADDON_USERS_PRODUCT_ID=prod_PqgU2ZCIJqDDRf
       - STRIPE_ADDON_STORAGE_PRODUCT_ID=prod_Q6Pao7IJyTNLYv
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dodwg7nfg2hW2oTyLTiTb14L00vQvEUCYO
       - NEXT_PUBLIC_STORAGE_PROVIDER=local
       - NEXT_PUBLIC_SECRET_PROVIDER=local
+      - MESSAGE_QUEUE_PROVIDER=rabbitmq
       - UPLOADS_BASE_PATH=/tmp
+      # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
+      - FUNCTION_PROVIDER=google
+      - GOOGLE_FUNCTION_LOCATION=us-central1
     volumes:
       - datasource_files:/tmp
 
@@ -120,10 +129,13 @@ services:
       - SOCKET_URL=http://webapp_next:3000/
       - DB_URL=mongodb://docker_mongo:27017/test
       - REDIS_HOST=docker_redis
-      - QDRANT_HOST=qdrant
+      - QDRANT_HOST=http://qdrant
       - MONGO_DB_NAME=test
       - MAX_RETRIES=10
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
+      # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
+      - FUNCTION_PROVIDER=google
+      - GOOGLE_FUNCTION_LOCATION=us-central1
 
   vector_db_proxy:
     restart: always
@@ -143,6 +155,7 @@ services:
       - HOST=0.0.0.0
       - PORT=9001
       - MONGO_URI=mongodb://docker_mongo:27017
+      - MONGO_DB_NAME=test
       - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_STREAM=streaming
@@ -151,12 +164,15 @@ services:
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
       - QDRANT_URI=http://qdrant:6334
+      - QDRANT_HOST=http://qdrant
+      - QDRANT_PORT=6334
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
       - WEBAPP_HOST=webapp_next
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
       - LOGGING_LEVEL=debug
+      - MONGO_DB_NAME=test
 
     volumes:
       - datasource_files:/tmp
