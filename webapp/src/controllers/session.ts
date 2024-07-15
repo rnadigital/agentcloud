@@ -5,8 +5,8 @@ import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam, unsafeGe
 import { getAppById, unsafeGetAppById } from 'db/app';
 import { getChatMessagesBySession, unsafeGetChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
-import { setSessionStatus, unsafeGetSessionById, addSession, deleteSessionById, 
-	getSessionById, getSessionsByTeam } from 'db/session';
+import { addSession, deleteSessionById, 
+	getSessionById, getSessionsByTeam,setSessionStatus, unsafeGetSessionById } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';

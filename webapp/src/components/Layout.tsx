@@ -116,7 +116,7 @@ export default withRouter(function Layout(props) {
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const path = usePathname();
-	const showNavs = !noNavPages.some(p => path.includes(p));
+	const showNavs = account && !noNavPages.some(p => path.includes(p));
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 

@@ -4,6 +4,7 @@ import { dynamicResponse } from '@dr';
 import { getOrgById } from 'db/org';
 import { getTeamById } from 'db/team';
 import debug from 'debug';
+
 import { unsafeGetSessionById } from '../../../db/session';
 const log = debug('webapp:middleware:auth:checkresourceslug');
 

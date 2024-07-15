@@ -152,7 +152,6 @@ export default function Session(props) {
 			setSession(res?.session||{});
 			setApp(res?.app||{});
 		}, setError, router);
-		console.log('API.getMessages')
 		API.getMessages({
 			resourceSlug,
 			sessionId: router?.query?.sessionId,
@@ -212,7 +211,7 @@ export default function Session(props) {
 		if (!message || message.trim().length === 0) { return null; }
 		socketContext.emit('message', {
 			room: sessionId,
-			authorName: account.name,
+			authorName: account?.name,
 			message: {
 				type: 'text',
 				text: message,

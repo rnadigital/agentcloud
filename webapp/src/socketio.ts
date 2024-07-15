@@ -14,9 +14,12 @@ import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
+import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
 import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { SessionStatus } from 'struct/session';
+
+import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
 
@@ -51,9 +54,9 @@ export function initSocket(rawHttpServer) {
 	io.use((socket, next) => {
 		fetchSession(socket.request, socket.request, next);
 	});
-	io.use((socket, next) => {
-		checkSession(socket.request, socket.request, next, socket);
-	});
+	// io.use((socket, next) => {
+	// 	checkSession(socket.request, socket.request, next, socket);
+	// });
 
 	io.on('connection', async (socket) => {
 		log('socket.id "%s" connected', socket.id);
@@ -75,20 +78,38 @@ export function initSocket(rawHttpServer) {
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
-			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(room.substring(1)) // removing _
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, room));
+			const session = await unsafeGetSessionById(socketRequest.locals.isAgentBackend ? room.substring(1) : room); // removing _
 			if (!session) {
 				log('socket.id "%s" invalid session %s', socket.id, room);
 				return;
 			}
-			/*if (session?.sharingConfig?.mode === 'public'
-				|| socketRequest?.locals?.account) {
-				//TODO
-			}*/
-			log('socket.id "%s" joined room %s', socket.id, room);
-			socket.join(room);
+			const foundApp = await unsafeGetAppById(session?.appId);
+			if (!foundApp) {
+				log('socket.id "%s" app id "%s" not found %s', socket.id, session?.appId, room);
+				return;
+			}
+			log('socket.id "%s" sent join_room %s', socket.id, room);
+			// log('foundApp', foundApp);
+			switch (foundApp?.sharingConfig?.mode as SharingMode) {
+				case SharingMode.PUBLIC:
+					// log(SharingMode.PUBLIC);
+					socket.join(room);
+					break;
+				case SharingMode.TEAM:
+					// log(SharingMode.TEAM);
+					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o => o?.teams?.some(t => t.id.toString() === session.teamId.toString()));
+					if (!sessionTeamMatch) {
+						return;
+					}
+					socket.join(room);
+					break;
+				case SharingMode.RESTRICTED:
+				default:
+					// log(SharingMode.RESTRICTED);
+					return; //TODO
+			}
 			if (socketRequest.locals.isAgentBackend === false) {
+				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
 			}
 		});
@@ -112,7 +133,6 @@ export function initSocket(rawHttpServer) {
 
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
-			const messageTimestamp = data?.message?.timestamp || Date.now();
 
 			let message;
 			if (typeof data.message !== 'object') {
@@ -135,12 +155,13 @@ export function initSocket(rawHttpServer) {
 					message = data.message; //any processing?
 					break;
 			}
-
+			const messageTimestamp = data?.message?.timestamp || Date.now();
+			const authorName = socketRequest.locals?.account?.name || (socketRequest.locals.isAgentBackend ? data.authorName : 'Me') || 'System';
 			const finalMessage = {
 				...data,
 				message,
 				incoming: socketRequest.locals.isAgentBackend === false,
-				authorName: data.authorName || 'System',
+				authorName,
 				ts: messageTimestamp,
 			};
 			if (!finalMessage?.message?.chunkId) {

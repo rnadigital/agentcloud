@@ -218,9 +218,9 @@ export function Message({
 					</div>
 				</details>		
 				: <MessageBody message={message} messageType={messageType} messageLanguage={messageLanguage} style={style} chunking={chunking} />}
-			<small suppressHydrationWarning className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : isThought ? 'text-white' : 'text-gray-500 dark:text-white'}`}>
+			<small suppressHydrationWarning={true} className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : isThought ? 'text-white' : 'text-gray-500 dark:text-white'}`}>
 				{tokens > 0 && <span className='me-1'>{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} - </span>}
-				<time suppressHydrationWarning className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
+				<time suppressHydrationWarning={true}  className='cursor-pointer' title={today ? dateString : relativeDateString} dateTime={messageDate.toISOString()}>{today ? relativeDateString : dateString}</time>
 			</small>
 		</div>
 	</div>;

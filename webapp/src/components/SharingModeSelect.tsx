@@ -1,7 +1,7 @@
 import React from 'react';
 import Select from 'react-tailwindcss-select';
-import SelectClassNames from 'styles/SelectClassNames';
 import { SharingMode } from 'struct/sharing';
+import SelectClassNames from 'styles/SelectClassNames';
 const sharingModeOptions = Object.values(SharingMode).map(mode => ({
 	label: mode,
 	value: mode,
