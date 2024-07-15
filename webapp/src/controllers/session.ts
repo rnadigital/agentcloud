@@ -1,17 +1,18 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam } from 'db/agent';
-import { getAppById } from 'db/app';
-import { getChatMessagesBySession } from 'db/chat';
-import { getCrewById, getCrewsByTeam } from 'db/crew';
-import { setSessionStatus } from 'db/session';
-import { addSession, deleteSessionById, getSessionById, getSessionsByTeam } from 'db/session';
+import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam, unsafeGetAgentNameMap } from 'db/agent';
+import { getAppById, unsafeGetAppById } from 'db/app';
+import { getChatMessagesBySession, unsafeGetChatMessagesBySession } from 'db/chat';
+import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
+import { setSessionStatus, unsafeGetSessionById, addSession, deleteSessionById, 
+	getSessionById, getSessionsByTeam } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
+import { SharingMode } from 'struct/sharing';
 
 export async function sessionsData(req, res, _next) {
 	const [crews, sessions, agents] = await Promise.all([
@@ -61,6 +62,31 @@ export async function sessionData(req, res, _next) {
 	};
 }
 
+export async function publicSessionData(req, res, _next) {
+	const session = await unsafeGetSessionById(req.params.sessionId);
+	const app = await unsafeGetAppById(session?.appId);
+	let avatarMap = {};
+	switch (app?.type) {
+		case AppType.CREW:
+			const foundCrew = await unsafeGetCrewById(app?.crewId);
+			avatarMap = await unsafeGetAgentNameMap(foundCrew?.agents);
+			break;
+		case AppType.CHAT:
+		default:
+			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
+			if (foundAgent) {
+				avatarMap = { [foundAgent.name]: foundAgent?.icon?.filename };
+			}
+			break;
+	}
+	return {
+		csrf: req.csrfToken(),
+		session,
+		app,
+		avatarMap,
+	};
+}
+
 /**
  * GET /[resourceSlug]/session/[sessionId]
  * session page html
@@ -70,6 +96,19 @@ export async function sessionPage(app, req, res, next) {
 	res.locals.data = {
 		...data,
 		account: res.locals.account,
+	};
+	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
+}
+
+/**
+ * GET /s/session/[sessionId]
+ * public session page html
+ */
+export async function publicSessionPage(app, req, res, next) {
+	const data = await sessionData(req, res, next);
+	res.locals.data = {
+		...data,
+		account: null,
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
@@ -88,12 +127,26 @@ export async function sessionMessagesData(req, res, _next) {
 	return messages;
 }
 
+export async function publicSessionMessagesData(req, res, _next) {
+	const messages = await unsafeGetChatMessagesBySession(req.params.sessionId);
+	return messages;
+}
+
 /**
  * GET /[resourceSlug]/session/[sessionId]/messages.json
  * get session messages
  */
 export async function sessionMessagesJson(req, res, next) {
 	const data = await sessionMessagesData(req, res, next);
+	return res.json(data);
+}
+
+/**
+ * GET /[resourceSlug]/session/[sessionId]/messages.json
+ * get session messages
+ */
+export async function publicSessionMessagesJson(req, res, next) {
+	const data = await publicSessionMessagesData(req, res, next);
 	return res.json(data);
 }
 
@@ -144,6 +197,10 @@ export async function addSessionApi(req, res, next) {
 	    tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		appId: toObjectId(app?._id),
+		sharingConfig: {
+			permissions: {},
+			mode: SharingMode.PUBLIC,
+		}
 	});
 
 	taskQueue.add('execute_rag', {

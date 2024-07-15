@@ -5,6 +5,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { SessionStatus } from 'struct/session';
+import { SharingConfig } from 'struct/sharing';
 
 export type Session = {
 	_id?: ObjectId;
@@ -17,6 +18,7 @@ export type Session = {
 	status: SessionStatus;
 	appId?: ObjectId;
 	previewLabel?: string;
+	sharingConfig: SharingConfig;
 }
 
 export function SessionCollection(): any {

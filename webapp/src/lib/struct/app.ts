@@ -2,30 +2,33 @@
 
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
+import { SharingConfig } from 'struct/sharing';
 
 export enum AppType {
 	CHAT = 'chat',
 	CREW = 'crew',
 }
 
+export type ChatAppConfig = {
+	agentId: ObjectId;
+	conversationStarters: string[];
+}
+
 export type App = {
 	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
+	orgId: ObjectId;
+	teamId: ObjectId;
 	name: string;
-	description?: string;
+	description: string;
 	type: AppType;
-	author?: string;
-	tags?: string[];
-	visibility?: any; //TODO: perms
+	author: string;
+	tags: string[];
 	icon: IconAttachment;
 	hidden?: boolean;
-	//TODO crewAppConfig for AppType.CREW ?
-	crewId?: ObjectId;
+	sharingConfig: SharingConfig;
+	chatAppConfig?: ChatAppConfig;
+	//TODO: create a "CrewAppConfig" for these:
 	memory?: boolean;
 	cache?: boolean;
-	chatAppConfig?: { //AppType.CHAT
-		agentId: ObjectId;
-		conversationStarters: string[];
-	}
-};
+	crewId?: ObjectId;
+}

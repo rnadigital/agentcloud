@@ -17,6 +17,12 @@ export function getCrewById(teamId: db.IdOrStr, crewId: db.IdOrStr): Promise<Cre
 	});
 }
 
+export function unsafeGetCrewById(crewId: db.IdOrStr): Promise<Crew> {
+	return CrewCollection().findOne({
+		_id: toObjectId(crewId),
+	});
+}
+
 export function getCrewsByTeam(teamId: db.IdOrStr): Promise<Crew[]> {
 	return CrewCollection().find({
 		teamId: toObjectId(teamId),

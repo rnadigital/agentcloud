@@ -12,6 +12,7 @@ import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
+import { SharingMode } from 'struct/sharing';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
@@ -114,12 +115,13 @@ export async function addAppApi(req, res, next) {
 	const {
 		name, description, process, agents, memory, cache, managerModelId, tasks, iconId, tags,
 		conversationStarters, toolIds, agentId, agentName, role, goal, backstory, modelId,
-		type, run
+		type, run, sharingMode,
 	}  = req.body;
 
 	const isChatApp = type as AppType === AppType.CHAT;
 	let validationError = chainValidations(req.body, [
-		{ field: 'type', validation: { notEmpty: true, inSet: new Set([AppType.CHAT, AppType.CREW]) }},
+		{ field: 'sharingMode', validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }},
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(AppType)) }},
 		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'description', validation: { notEmpty: true, ofType: 'string' }},
 		{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' }},
@@ -225,6 +227,10 @@ export async function addAppApi(req, res, next) {
 					.filter(x => x),
 			},
 		}),
+		sharingConfig: {
+			permissions: {}, //TODO once we have per-user, team, org perms
+			mode: sharingMode as SharingMode,
+		}
 	});
 
 	return dynamicResponse(req, res, 200, run ? { _id: addedApp.insertedId } : { _id: addedApp.insertedId, redirect: `/${req.params.resourceSlug}/apps` });

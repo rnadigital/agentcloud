@@ -296,6 +296,9 @@ export async function ApiCall(route, method='get', body, dispatch, errorCallback
 	// Make request, catch errors, and finally{} to always end progress bar
 	let response;
 	try {
+		if (location && location.pathname.startsWith('/s/')) {
+			route = `/s${route}`;
+		}
 		response = await fetch(route, requestOptions);
 	} catch (e) {
 		console.error(e);

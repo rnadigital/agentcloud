@@ -152,6 +152,7 @@ export default function Session(props) {
 			setSession(res?.session||{});
 			setApp(res?.app||{});
 		}, setError, router);
+		console.log('API.getMessages')
 		API.getMessages({
 			resourceSlug,
 			sessionId: router?.query?.sessionId,

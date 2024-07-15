@@ -14,8 +14,8 @@ import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
-import {  ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
-import { getSessionById, setSessionStatus, unsafeGetSessionById , unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
+import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
+import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
 import { SessionStatus } from 'struct/session';
 
 export const io = new Server();
@@ -33,7 +33,7 @@ export function initSocket(rawHttpServer) {
 			socket.request['locals'] = {};
 		}
 		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
-		log('socket.id %s backendToken %s', socket.id, backendToken);
+		log('socket.id %O backendToken %O', socket.id, backendToken);
 		socket.request['locals'].isAgentBackend = backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length && timingSafeEqual(
 			Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as String),
 			Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
@@ -82,6 +82,10 @@ export function initSocket(rawHttpServer) {
 				log('socket.id "%s" invalid session %s', socket.id, room);
 				return;
 			}
+			/*if (session?.sharingConfig?.mode === 'public'
+				|| socketRequest?.locals?.account) {
+				//TODO
+			}*/
 			log('socket.id "%s" joined room %s', socket.id, room);
 			socket.join(room);
 			if (socketRequest.locals.isAgentBackend === false) {

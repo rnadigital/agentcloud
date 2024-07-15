@@ -1,6 +1,6 @@
 'use strict';
 
-import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam } from '@mw/auth/checkresourceslug';
+import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam, setSessionOrgAndTeam } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionBoolean,
@@ -93,6 +93,17 @@ export default function router(server, app) {
 	accountRouter.post('/logout', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.logout);
 	accountRouter.post('/switch', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
 	server.use('/forms/account', accountRouter);
+
+	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})', csrfMiddleware, setSessionOrgAndTeam, sessionController.publicSessionPage.bind(null, app));
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json',  csrfMiddleware, setSessionOrgAndTeam, sessionController.sessionMessagesJson);
+	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
+
+	// Airbyte webhooks
+	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
+	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
+	server.use('/webhook', webhookRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 
@@ -200,12 +211,6 @@ export default function router(server, app) {
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
-
-	// Airbyte webhooks
-	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
-	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
-	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
-	server.use('/webhook', webhookRouter);
 
 	server.use('/:resourceSlug([a-f0-9]{24})', authedMiddlewareChain, checkResourceSlug, setPermissions, teamRouter);
 
