@@ -16,7 +16,7 @@ import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { priceToPlanMap,SubscriptionPlan } from 'struct/billing';
+import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 const log = debug('webapp:middleware:lib:account:create');

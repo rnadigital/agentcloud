@@ -2,34 +2,35 @@
 
 import { dynamicResponse } from '@dr';
 import { setStripeCustomerId, updateStripeCustomer } from 'db/account';
-import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutsession';
-import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
+import { addCheckoutSession } from 'db/checkoutsession';
+import { unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
-import { io } from '@socketio';
-import { addNotification } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { NotificationType } from 'struct/notification';
+// import { io } from '@socketio';
+// import { addNotification } from 'db/notification';
+// import { NotificationType } from 'struct/notification';
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
 	if (Array.isArray(sub?.items?.data) && sub?.items?.data.length > 0) {
 		for (let item of sub?.items?.data) {
-			switch (item.price.id) {
-				case process.env.STRIPE_FREE_PLAN_PRICE_ID:
-				case process.env.STRIPE_PRO_PLAN_PRICE_ID:
-				case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
+			switch (item.plan.product) {
+				case process.env.STRIPE_FREE_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_PRO_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_ENTERPRISE_PLAN_PRODUCT_ID:
 					planItem = item;
 					break;
-				case process.env.STRIPE_ADDON_USERS_PRICE_ID:
+				case process.env.STRIPE_ADDON_USERS_PRODUCT_ID:
 					addonUsersItem = item;
 					break;
-				case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
+				case process.env.STRIPE_ADDON_STORAGE_PRODUCT_ID:
 					addonStorageItem = item;
 					break;
 			}
@@ -107,7 +108,7 @@ export async function webhookHandler(req, res, next) {
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
 			//Note: 0 to set them on else case
 			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: priceToPlanMap[planItem.price.id],
+				stripePlan: productToPlanMap[planItem.price.product],
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -127,7 +128,7 @@ export async function webhookHandler(req, res, next) {
 			
 			//Note: null to not update them unless required
 			const update = {
-				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : { stripePlan: SubscriptionPlan.FREE }),
+				...(planItem ? { stripePlan: productToPlanMap[planItem.price.product] } : { stripePlan: SubscriptionPlan.FREE }),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
