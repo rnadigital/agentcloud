@@ -79,7 +79,6 @@ export async function modelAddApi(req, res, next) {
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	console.log(validationError, 'one');
 
 	const configValidations = Object.entries(ModelTypeRequirements[type])
 		.filter((en: any) => en[1].optional !== true)
