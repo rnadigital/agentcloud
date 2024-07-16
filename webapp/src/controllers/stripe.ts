@@ -12,9 +12,7 @@ const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-// import { io } from '@socketio';
-// import { addNotification } from 'db/notification';
-// import { NotificationType } from 'struct/notification';
+import { chainValidations } from 'utils/validationUtils';
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
@@ -37,7 +35,7 @@ function destructureSubscription(sub) {
 		}
 	}
 	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
-} 
+}
 
 export async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
@@ -66,7 +64,7 @@ export async function webhookHandler(req, res, next) {
 
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
-	
+
 	if (!STRIPE_WEBHOOK_SECRET) {
 		log('missing STRIPE_WEBHOOK_SECRET');
 		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
@@ -109,7 +107,7 @@ export async function webhookHandler(req, res, next) {
 			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
 
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
-			
+
 			//Note: null to not update them unless required
 			const update = {
 				...(planItem ? { stripePlan: productToPlanMap[planItem.price.product] } : { stripePlan: SubscriptionPlan.FREE }),
@@ -117,7 +115,7 @@ export async function webhookHandler(req, res, next) {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end*1000 : null,
+				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end * 1000 : null,
 				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
 			if (subscriptionUpdated['cancel_at_period_end'] === true) {
@@ -180,6 +178,14 @@ export async function hasPaymentMethod(req, res, next) {
 
 export async function requestChangePlan(req, res, next) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
+	], { plan: 'Plan' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
 
@@ -224,7 +230,7 @@ export async function requestChangePlan(req, res, next) {
 		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
 		quantity: users,
 	});
-	
+
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
@@ -254,6 +260,14 @@ export async function requestChangePlan(req, res, next) {
 
 export async function confirmChangePlan(req, res, next) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
+	], { plan: 'Plan' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
@@ -261,7 +275,7 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
+	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe || {});
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -280,7 +294,7 @@ export async function confirmChangePlan(req, res, next) {
 		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
-	
+
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
 	const planItemId = planItem?.id;
@@ -305,7 +319,7 @@ export async function confirmChangePlan(req, res, next) {
 		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
 		quantity: users,
 	});
-	
+
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
@@ -352,8 +366,8 @@ export async function confirmChangePlan(req, res, next) {
 	// };
 	// await addNotification(notification);
 	// io.to(res.locals.matchingTeam.id).emit('notification', notification);
-	
-	return dynamicResponse(req, res, 200, { });
+
+	return dynamicResponse(req, res, 200, {});
 }
 
 export async function createPortalLink(req, res, next) {
