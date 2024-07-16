@@ -1,14 +1,16 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import StripeClient from 'lib/stripe';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationUtils';
+import { getSubscriptionsDetails } from 'controllers/stripe';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
-import { addVerification, getAndDeleteVerification,VerificationTypes } from '../db/verification';
-import * as ses from '../lib/email/ses';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setStripeCustomerId, updateStripeCustomer, verifyAccount } from 'db/account';
+import { addVerification, getAndDeleteVerification,VerificationTypes } from 'db/verification';
+import * as ses from 'lib/email/ses';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -203,10 +205,29 @@ export async function verifyToken(req, res) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
+	let foundCheckoutSession;
 	if (!deletedVerification || !deletedVerification.token) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+		const checkoutSessionId = req.body?.token;
+		foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
+		if (!foundCheckoutSession) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+		}
 	}
-	const foundAccount = await getAccountById(deletedVerification.accountId);
+	if (foundCheckoutSession) {
+		const stripeCustomerId = foundCheckoutSession?.customer as string;
+		const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(stripeCustomerId);
+		await setStripeCustomerId(newAccountId, customerId);
+		await updateStripeCustomer(customerId, {
+			stripePlan: priceToPlanMap[planItem.price.id],
+			stripeAddons: {
+				users: addonUsersItem ? addonUsersItem.quantity : 0,
+				storage: addonStorageItem ? addonStorageItem.quantity : 0,
+			},
+			stripeEndsAt: foundCheckoutSession?.current_period_end*1000,
+		});
+	}
+	const accountId = deletedVerification?.accountId || '';
+	const foundAccount = await getAccountById(accountId);
 	if (!foundAccount.passwordHash) {
 		const password = req.body.password;
 		if (!password || typeof password !== 'string' || password.length === 0) {

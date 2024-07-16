@@ -160,7 +160,7 @@ export async function publicSessionMessagesJson(req, res, next) {
  */
 export async function addSessionApi(req, res, next) {
 
-	let { id: appId }  = req.body;
+	let { id: appId, skipRun }  = req.body;
 
 	const app: App = await getAppById(req.params.resourceSlug, appId);
 	if (!app) {
@@ -203,10 +203,12 @@ export async function addSessionApi(req, res, next) {
 		}
 	});
 
-	taskQueue.add('execute_rag', {
-		type: app?.type,
-		sessionId: addedSession.insertedId.toString(),
-	});
+	if (!skipRun) {
+		taskQueue.add('execute_rag', {
+			type: app?.type,
+			sessionId: addedSession.insertedId.toString(),
+		});
+	}
 
 	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}` });
 

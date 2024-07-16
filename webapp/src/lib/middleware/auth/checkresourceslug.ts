@@ -1,11 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { unsafeGetAppById } from 'db/app';
 import { getOrgById } from 'db/org';
+import { unsafeGetSessionById } from 'db/session';
 import { getTeamById } from 'db/team';
 import debug from 'debug';
 
-import { unsafeGetSessionById } from '../../../db/session';
 const log = debug('webapp:middleware:auth:checkresourceslug');
 
 export async function checkResourceSlug(req, res, next) {
@@ -146,31 +147,31 @@ export async function setDefaultOrgAndTeam(req, res, next) { //TODO: project any
 	next();
 
 }
+export async function setParamOrgAndTeam(req, res, next) { //TODO: project any sensitive org props away here
 
-export async function setSessionOrgAndTeam(req, res, next) { //TODO: project any sensitive org props away here
-
-	const { sessionId, resourceSlug } = (req.params||{});
-	if (!sessionId) {
-		// return res.status(403).send({ error: 'No current organization available' });
-		log('Invalid sessionId %s', sessionId);
+	const { sessionId, appId, resourceSlug } = (req.params||{});
+	if (!sessionId && !appId) {
+		log('no sessionId or appId in setParamOrgAndTeam %O', req.params);
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
 
-	const foundSession = await unsafeGetSessionById(sessionId);
-	if (!foundSession) {
-		log('Session not found');
+	const foundObject = sessionId
+		? await unsafeGetSessionById(sessionId)
+		: await unsafeGetAppById(appId);
+	if (!foundObject) {
+		log('Session not found %O', req.params);
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
 
-	if (foundSession?.teamId.toString() !== resourceSlug.toString()) {
-		log('Mismatch between sessionId and resourceSlug');
+	if (foundObject?.teamId.toString() !== resourceSlug.toString()) {
+		log('Mismatch between foundObject and resourceSlug %O', req.params);
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
 
-	const { orgId: currentOrg, teamId: currentTeam } = foundSession;
+	const { orgId: currentOrg, teamId: currentTeam } = foundObject;
 
 	//TODO: cache in redis
 	const foundOrg = await getOrgById(currentOrg);

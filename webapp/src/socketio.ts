@@ -182,9 +182,9 @@ export function initSocket(rawHttpServer) {
 				teamId: session.teamId,
 				sessionId: session._id,
 				authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
-				authorName: finalMessage?.authorName || 'AgentCloud',
+				authorName: finalMessage.authorName,
 				ts: finalMessage.ts || messageTimestamp,
-				isFeedback: finalMessage?.isFeedback || false,
+				isFeedback: finalMessage.isFeedback === true,
 				chunkId: finalMessage.message.chunkId || null,
 				message: finalMessage,
 			};

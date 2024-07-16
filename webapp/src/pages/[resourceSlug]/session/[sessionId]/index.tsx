@@ -62,7 +62,7 @@ export default function Session(props) {
 	}, [isAtBottom, scrollContainerRef?.current]);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
-	const chatBusyState = messages?.length === 0 ||sentLastMessage || !lastMessageFeedback;
+	const chatBusyState = sentLastMessage || (messages.length > 0 && !lastMessageFeedback);
 
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);
@@ -255,7 +255,7 @@ export default function Session(props) {
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 				</div>}
 			</div>
-			{messages.length < 3 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+			{messages?.length === 0 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
 				<ConversationStarters
 					sendMessage={message => sendMessage(message, null)}
 					conversationStarters={app?.chatAppConfig?.conversationStarters}

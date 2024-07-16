@@ -28,6 +28,7 @@ export default function Apps(props) {
 		await API.addSession({
 			_csrf: csrf,
 			resourceSlug,
+			skipRun: true,
 			id: appId,
 		}, null, setError, router);
 	}
@@ -75,7 +76,9 @@ export default function Apps(props) {
 		/>}
 
 		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
-			{filteredApps.map((a, ai) => (<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />))}
+			{filteredApps.map((a, ai) => (
+				<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />
+			))}
 		</div>
 
 	</>);

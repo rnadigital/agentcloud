@@ -1,6 +1,6 @@
 'use strict';
 
-import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam, setSessionOrgAndTeam } from '@mw/auth/checkresourceslug';
+import { checkAccountQuery, checkResourceSlug, setDefaultOrgAndTeam, setParamOrgAndTeam } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
 	checkSubscriptionBoolean,
@@ -95,8 +95,9 @@ export default function router(server, app) {
 	server.use('/forms/account', accountRouter);
 
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
-	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})', csrfMiddleware, setSessionOrgAndTeam, sessionController.publicSessionPage.bind(null, app));
-	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json',  csrfMiddleware, setSessionOrgAndTeam, sessionController.sessionMessagesJson);
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})', csrfMiddleware, setParamOrgAndTeam, sessionController.publicSessionPage.bind(null, app));
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24})/messages.json',  csrfMiddleware, setParamOrgAndTeam, sessionController.sessionMessagesJson);
+	// publicAppRouter.get('/app/:appId([a-f0-9]{24})', csrfMiddleware, setParamOrgAndTeam, appController.appEditPage.bind(null, app));
 	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
 
 	// Airbyte webhooks

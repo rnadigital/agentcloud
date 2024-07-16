@@ -23,25 +23,25 @@ const log = debug('webapp:middleware:lib:account:create');
 
 //TODO: relocate
 const invitationEmail = token => `
-	You have been invited to join AgentCloud. To accept the invitation and set up your account, please click the link below:
-	
-	Accept the invitation by clicking here: ${process.env.URL_APP}/verify?token=${token}&newpassword=true
+You have been invited to join AgentCloud. To accept the invitation and set up your account, please click the link below:
 
-	If you did not expect this invitation, please disregard this email.
+Accept the invitation by clicking here: ${process.env.URL_APP}/verify?token=${token}&newpassword=true
 
-	Best regards,
-	The AgentCloud Team
+If you did not expect this invitation, please disregard this email.
+
+Best regards,
+The AgentCloud Team
 `;
 
 const verificationEmail = token => `
-	Thank you for signing up with AgentCloud! To complete your registration, please verify your email address by clicking the link below:
-	
-	Please verify your email by clicking here: ${process.env.URL_APP}/verify?token=${token}
+Thank you for signing up with AgentCloud! To complete your registration, please verify your email address by clicking the link below:
 
-	If you did not sign up for an account, please ignore this email.
+Please verify your email by clicking here: ${process.env.URL_APP}/verify?token=${token}
 
-	Best regards,
-	The AgentCloud Team
+If you did not sign up for an account, please ignore this email.
+
+Best regards,
+The AgentCloud Team
 `;
 
 export default async function createAccount(

@@ -7,14 +7,14 @@ import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
-const log = debug('webapp:stripe');
-import { io } from '@socketio';
-import { addNotification } from 'db/notification';
+import { planToPriceMap, priceToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import createAccount from 'lib/account/create';
+import { planToPriceMap, priceToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { NotificationType } from 'struct/notification';
+
+const log = debug('webapp:stripe');
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
@@ -86,34 +86,7 @@ export async function webhookHandler(req, res, next) {
 	switch (event.type) {
 
 		case 'checkout.session.completed': {
-			const checkoutSession = event.data.object;
-			const paymentLink = checkoutSession.payment_link;
-			if (!paymentLink) {
-				log('Completed checkout session without .data.object.payment_link:', checkoutSession);
-				break;
-			}
-			const foundPaymentLink = await unsafeGetPaymentLinkById(paymentLink);
-			if (!foundPaymentLink) {
-				log('No payment link found for payment link id:', paymentLink);
-				break;
-			}
-			await addCheckoutSession({
-				accountId: foundPaymentLink.accountId,
-				checkoutSessionId: checkoutSession.id,
-				payload: checkoutSession,
-				createdDate: new Date(),
-			});
-			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
-			//Note: 0 to set them on else case
-			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: priceToPlanMap[planItem.price.id],
-				stripeAddons: {
-					users: addonUsersItem ? addonUsersItem.quantity : 0,
-					storage: addonStorageItem ? addonStorageItem.quantity : 0,
-				},
-				stripeEndsAt: checkoutSession?.current_period_end*1000,
-			});
+			
 			break;
 		}
 

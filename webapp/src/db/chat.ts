@@ -60,6 +60,13 @@ export function unsafeGetChatMessagesBySession(sessionId: db.IdOrStr): Promise<C
 	}).toArray();
 }
 
+export async function sessionHasMessages(sessionId: db.IdOrStr): Promise<boolean> {
+	const foundMessage = await ChatCollection().findOne({
+		sessionId: toObjectId(sessionId),
+	});
+	return foundMessage != null;
+}
+
 export function getAgentMessageForSession(sessionId: db.IdOrStr): Promise<ChatMessage> {
 	return ChatCollection().findOne({
 		sessionId: toObjectId(sessionId),
