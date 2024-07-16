@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import ButtonSpinner from 'components/ButtonSpinner';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -9,7 +10,6 @@ import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan } from 'struct/billing';
-import ButtonSpinner from 'components/ButtonSpinner';
 
 export default function InviteForm({ callback }: { callback?: Function }) {
 
