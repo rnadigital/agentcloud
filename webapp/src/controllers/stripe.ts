@@ -86,34 +86,18 @@ export async function webhookHandler(req, res, next) {
 	// Handle the event
 	switch (event.type) {
 
-		case 'checkout.session.completed': {
+		case 'setup_intent.succeeded': {
 			const checkoutSession = event.data.object;
-			const paymentLink = checkoutSession.payment_link;
-			if (!paymentLink) {
-				log('Completed checkout session without .data.object.payment_link:', checkoutSession);
-				break;
-			}
-			const foundPaymentLink = await unsafeGetPaymentLinkById(paymentLink);
-			if (!foundPaymentLink) {
-				log('No payment link found for payment link id:', paymentLink);
-				break;
-			}
-			await addCheckoutSession({
-				accountId: foundPaymentLink.accountId,
-				checkoutSessionId: checkoutSession.id,
-				payload: checkoutSession,
-				createdDate: new Date(),
+			const stripeCustomerId = checkoutSession?.customer;
+			const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
+				limit: 1,
 			});
-			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
-			//Note: 0 to set them on else case
-			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: productToPlanMap[planItem.price.product],
-				stripeAddons: {
-					users: addonUsersItem ? addonUsersItem.quantity : 0,
-					storage: addonStorageItem ? addonStorageItem.quantity : 0,
+			const newPaymentMethodId = checkoutSession?.payment_method;
+			// Set the customer's default payment method
+			const updatedCustomer = await StripeClient.get().customers.update(stripeCustomerId, {
+				invoice_settings: {
+					default_payment_method: newPaymentMethodId,
 				},
-				stripeEndsAt: checkoutSession?.current_period_end*1000,
 			});
 			break;
 		}
