@@ -12,7 +12,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import MessagesState
-from langgraph.graph import START, END, StateGraph
+from langgraph.graph import START, StateGraph
 from socketio import SimpleClient
 from socketio.exceptions import ConnectionError
 
@@ -108,7 +108,7 @@ class ChatAssistant:
         return tool_class.factory(agentcloud_tool)
 
     def init_graph(self):
-        def call_model(state):
+        async def call_model(state, config):
             messages = state["messages"]
             if isinstance(self.chat_model.bound, ChatAnthropic):
                 if isinstance(messages[0], SystemMessage) and not isinstance(messages[1], HumanMessage):
@@ -118,9 +118,11 @@ class ChatAssistant:
                     # to work around the "roles must alternate between "user" and "assistant"..." error
                     messages.insert(-2, HumanMessage(content="<< dummy message >>"))
 
-            response = self.chat_model.invoke(messages)
-            # We return a list, because this will get added to the existing list
-            return {"messages": [response]}
+            # Refer: https://langchain-ai.github.io/langgraph/how-tos/streaming-tokens/
+            # Note: Anthropic does not currently support streaming tool calls. Attempting to stream will yield
+            # a single final message. See https://python.langchain.com/v0.1/docs/integrations/chat/anthropic/#streaming
+            response = await self.chat_model.ainvoke(messages, config)
+            return {"messages": response}
 
         def invoke_human_input(state):
             """
@@ -198,13 +200,8 @@ class ChatAssistant:
         first = True
 
         try:
-            async for event in self.workflow.astream_events(
-                    {
-                        "messages": messages,
-                    },
-                    config=config,
-                    version="v1",
-            ):
+            async for event in self.workflow.astream_events({"messages": messages},
+                                                            config=config, version="v1"):
                 if self.stop_generating_check():
                     self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
                                         first=True, chunk_id=str(uuid.uuid4()),
@@ -227,19 +224,6 @@ class ChatAssistant:
                                                 display_type="bubble")
                         first = False
                         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
-
-                    # chain chunk
-                    # case "on_chain_stream":
-                    #     content = (event.get('data', {})
-                    #         .get('chunk', {})
-                    #         .get('tools'))
-                    #     if content:
-                    #         content = content.get('messages')[0].content
-                    #         chunk = repr(content)
-                    #         self.send_to_socket(content, SocketEvents.MESSAGE, first, chunk_id, datetime.now().timestamp() * 1000,
-                    #                              "bubble")
-                    #         first = False
-                    #         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}", flush=True)
 
                     # parser chunk
                     case "on_parser_stream":
