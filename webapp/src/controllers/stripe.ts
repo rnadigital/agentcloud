@@ -87,9 +87,6 @@ export async function webhookHandler(req, res, next) {
 		case 'setup_intent.succeeded': {
 			const checkoutSession = event.data.object;
 			const stripeCustomerId = checkoutSession?.customer;
-			const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
-				limit: 1,
-			});
 			const newPaymentMethodId = checkoutSession?.payment_method;
 			// Set the customer's default payment method
 			const updatedCustomer = await StripeClient.get().customers.update(stripeCustomerId, {
