@@ -58,7 +58,7 @@ export async function inviteTeamMemberApi(req, res) {
 	let validationError = chainValidations(req.body, [
 		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 		{ field: 'email', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.values(Roles)) } },
+		{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(Roles)) } },
 	], { name: 'Name', email: 'Email', template: 'Template' });
 
 	if (validationError) {
