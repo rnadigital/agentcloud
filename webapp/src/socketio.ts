@@ -170,11 +170,10 @@ export function initSocket(rawHttpServer) {
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
 				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}
-			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(finalMessage.room)
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, finalMessage.room));
+			const session = await unsafeGetSessionById(finalMessage.room);
 			if (!session) {
-				return log('socket.id "%s" message invalid session %s', socket.id, finalMessage.room);
+				log('socket.id "%s" invalid session %s', socket.id, finalMessage.room);
+				return;
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
 			const chunk: ChatChunk = { ts: finalMessage.ts, chunk: finalMessage.message.text, tokens: finalMessage?.message?.tokens };
