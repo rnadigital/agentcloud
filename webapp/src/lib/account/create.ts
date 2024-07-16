@@ -156,7 +156,7 @@ export default async function createAccount(
 			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
-				trial_period_days: 30,
+				trial_period_days: 14,
 				trial_settings: {
 					end_behavior: {
 						missing_payment_method: 'cancel',

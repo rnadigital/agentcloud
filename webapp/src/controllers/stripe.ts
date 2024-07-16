@@ -34,7 +34,7 @@ function destructureSubscription(sub) {
 			}
 		}
 	}
-	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
+	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub?.id };
 }
 
 export async function getSubscriptionsDetails(stripeCustomerId: string) {
