@@ -30,11 +30,13 @@ class CustomHumanInput(BaseTool):
     args_schema: Type[BaseModel] = HumanInputParams
     session_id: str = None
     socket_client: SimpleClient = None
+    author_name: Optional[str] = Field(default="System")
 
-    def __init__(self, socket_client: SimpleClient, session_id: str, **kwargs: Any):
+    def __init__(self, socket_client: SimpleClient, session_id: str, author_name: str = "System", **kwargs: Any):
         super().__init__(**kwargs)
         self.session_id = session_id
         self.socket_client = socket_client
+        self.author_name = author_name
 
     @staticmethod
     def extract_message(text):
@@ -91,7 +93,7 @@ class CustomHumanInput(BaseTool):
                 SocketEvents.MESSAGE,
                 SocketMessage(
                     room=self.session_id,
-                    authorName="system",
+                    authorName=self.author_name,
                     message=Message(
                         chunkId=str(uuid4()),
                         text=CustomHumanInput.extract_message(text),

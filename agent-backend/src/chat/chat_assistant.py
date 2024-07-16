@@ -4,8 +4,9 @@ import re
 import uuid
 from datetime import datetime
 
+from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseLanguageModel
-from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
+from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, AIMessage
 from langchain_core.tools import tool, BaseTool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.graph import CompiledGraph
@@ -109,6 +110,14 @@ class ChatAssistant:
     def init_graph(self):
         def call_model(state):
             messages = state["messages"]
+            if isinstance(self.chat_model.bound, ChatAnthropic):
+                if isinstance(messages[0], SystemMessage) and not isinstance(messages[1], HumanMessage):
+                    # to work around the "first message is not user message" error
+                    messages.insert(1, HumanMessage(content="<< dummy message >>"))
+                if len(messages) >= 3 and isinstance(messages[-2], AIMessage) and isinstance(messages[-3], AIMessage):
+                    # to work around the "roles must alternate between "user" and "assistant"..." error
+                    messages.insert(-2, HumanMessage(content="<< dummy message >>"))
+
             response = self.chat_model.invoke(messages)
             # We return a list, because this will get added to the existing list
             return {"messages": [response]}
@@ -122,7 +131,7 @@ class ChatAssistant:
             response = self.chat_model.invoke(messages)
             return {"messages": [response]}
 
-        human_input_tool = CustomHumanInput(self.socket, self.session_id)
+        human_input_tool = CustomHumanInput(self.socket, self.session_id, author_name=self.agent_name)
 
         self.chat_model = self.chat_model.bind_tools(self.tools + [human_input_tool])
 
@@ -210,11 +219,12 @@ class ChatAssistant:
                     case "on_chat_model_stream":
                         content = event['data']['chunk'].content
                         chunk = repr(content)
-                        self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
-                                            first=first, chunk_id=chunk_id,
-                                            timestamp=datetime.now().timestamp() * 1000,
-                                            author_name=self.agent_name.capitalize(),
-                                            display_type="bubble")
+                        if type(content) is str:
+                            self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
+                                                first=first, chunk_id=chunk_id,
+                                                timestamp=datetime.now().timestamp() * 1000,
+                                                author_name=self.agent_name.capitalize(),
+                                                display_type="bubble")
                         first = False
                         logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
 
@@ -287,7 +297,7 @@ class ChatAssistant:
                        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
 
         if type(text) != str:
-            text = "NON STRING MESSAGE"
+            text = str(text)
 
         # Set default timestamp if not provided
         if timestamp is None:
