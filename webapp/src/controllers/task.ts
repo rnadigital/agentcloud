@@ -1,15 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentsByTeam,removeAgentsModel } from 'db/agent';
+import { getAgentById, getAgentsByTeam } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { getDatasourcesByTeam } from 'db/datasource';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
-import { getReadyToolsById,getToolsByTeam } from 'db/tool';
+import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
-import toSnakeCase from 'misc/tosnakecase';
-import { Task } from 'struct/task';
 
 export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
@@ -89,17 +86,22 @@ export async function taskAddPage(app, req, res, next) {
 
 export async function addTaskApi(req, res, next) {
 
-	const { name, description, requiresHumanInput, expectedOutput, toolIds, asyncExecution, agentId, iconId }  = req.body;
-
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, lengthMin: 1, customError: 'Name must not be empty.' }},
-		{ field: 'description', validation: { notEmpty: true, lengthMin: 1, customError: 'Description must not be empty.' }},
-		// Include other fields as necessary
-	], { name: 'Name', description: 'Description', expectedOutput: 'Expected Output', toolIds: 'Tool IDs' });
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
+		{ field: 'expectedOutput', validation: { ofType: 'string' } },
+		{ field: 'toolIds', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' } },
+		{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
+		{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'iconId', validation: { ofType: 'string' } },
+	], { name: 'Name', description: 'Description', requiresHumanInput: 'Requires Human Input', expectedOutput: 'Expected Output', toolIds: 'Tool IDs', asyncExecution: 'Async Execution', agentId: 'Agent ID', iconId: 'Icon ID' });
 
-	if (validationError ) {
+	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
+	const { name, description, requiresHumanInput, expectedOutput, toolIds, asyncExecution, agentId, iconId } = req.body;
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
@@ -116,7 +118,7 @@ export async function addTaskApi(req, res, next) {
 	if (!foundAgent) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
-	
+
 	const foundIcon = await getAssetById(iconId);
 
 	const addedTask = await addTask({
@@ -141,7 +143,21 @@ export async function addTaskApi(req, res, next) {
 
 export async function editTaskApi(req, res, next) {
 
-	const { name, requiresHumanInput, description, expectedOutput, toolIds, asyncExecution, agentId }  = req.body;
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
+		{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'toolIds', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' } },
+		{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
+		{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
+	], { name: 'Name', description: 'Description', requiresHumanInput: 'Requires Human Input', expectedOutput: 'Expected Output', toolIds: 'Tool IDs', asyncExecution: 'Async Execution', agentId: 'Agent ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { name, requiresHumanInput, description, expectedOutput, toolIds, asyncExecution, agentId } = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -182,6 +198,14 @@ export async function editTaskApi(req, res, next) {
 */
 export async function deleteTaskApi(req, res, next) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'taskId', validation: { notEmpty: true, ofType: 'string' } },
+	], { taskId: 'Task ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const { taskId } = req.body;
 
 	if (!taskId || typeof taskId !== 'string' || taskId.length !== 24) {
@@ -193,6 +217,6 @@ export async function deleteTaskApi(req, res, next) {
 		//TODO: reference handling?
 	]);
 
-	return dynamicResponse(req, res, 302, { });
+	return dynamicResponse(req, res, 302, {});
 
 }
