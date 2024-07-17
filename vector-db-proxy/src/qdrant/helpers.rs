@@ -1,14 +1,14 @@
-use anyhow::{anyhow, Result};
-
-use qdrant_client::client::QdrantClient;
-use qdrant_client::prelude::Value;
-use qdrant_client::qdrant::point_id::PointIdOptions;
-use qdrant_client::qdrant::vectors::VectorsOptions;
-use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
-use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
+
+use anyhow::{anyhow, Result};
 use mongodb::Database;
+use qdrant_client::client::QdrantClient;
+use qdrant_client::prelude::Value;
+use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
+use qdrant_client::qdrant::point_id::PointIdOptions;
+use qdrant_client::qdrant::vectors::VectorsOptions;
+use serde_json::json;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -115,30 +115,30 @@ pub async fn embed_payload(
             let embedding_field_name_lower = embedding_field_name.to_lowercase();
             if let Some(value) = payload.remove(&embedding_field_name_lower) {
                 //Renaming the embedding field to page_content
-                payload.insert("page_content".to_string(), value);
-            }
-            if let Ok(metadata) = json!(payload).try_into() {
-                // Embedding sentences using OpenAI ADA2
-                let embedding_vec = embed_text(mongo_conn, _id, vec![embedding_field_name], &embedding_model).await?;
-                // Construct PointStruct to insert into DB
-                // todo: need to break this out so that this happens in a different method so we can re-use this for files
-                if !embedding_vec.is_empty() {
-                    if let Some(embedding) = embedding_vec.into_iter().next() {
-                        let point = PointStruct::new(
-                            Uuid::new_v4().to_string(),
-                            HashMap::from([(
-                                String::from(embedding_model.to_str().unwrap()),
-                                embedding.to_owned(),
-                            )]),
-                            metadata,
-                        );
-                        return Ok(point);
+                payload.insert("page_content".to_string(), value.clone());
+                if let Ok(metadata) = json!(payload).try_into() {
+                    // Embedding sentences using OpenAI ADA2
+                    let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()],&embedding_model).await?;
+                    // Construct PointStruct to insert into DB
+                    // todo: need to break this out so that this happens in a different method so we can re-use this for files
+                    if !embedding_vec.is_empty() {
+                        if let Some(embedding) = embedding_vec.into_iter().next() {
+                            let point = PointStruct::new(
+                                Uuid::new_v4().to_string(),
+                                HashMap::from([(
+                                    String::from(embedding_model.to_str().unwrap()),
+                                    embedding.to_owned(),
+                                )]),
+                                metadata,
+                            );
+                            return Ok(point);
+                        }
                     }
+                } else {
+                    return Err(anyhow!(
+                        "Could not convert payload to JSON type. Aborting embedding!"
+                    ));
                 }
-            } else {
-                return Err(anyhow!(
-                    "Could not convert payload to JSON type. Aborting embedding!"
-                ));
             }
         } else {
             return Err(anyhow!(
