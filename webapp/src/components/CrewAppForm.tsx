@@ -13,18 +13,13 @@ import InfoAlert from 'components/InfoAlert';
 import ModelSelect from 'components/models/ModelSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { App, AppType } from 'struct/app';
+import { AppType } from 'struct/app';
+import { modelOptions,ModelType } from 'struct/model';
 
-// @ts-ignore
-const Markdown = dynamic(() => import('react-markdown'), {
-	loading: () => <p className='markdown-content p-2'>Loading...</p>,
-	ssr: false,
-});
 import { ProcessImpl } from '../lib/struct/crew';
 
 export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew={}, app={}, editing, compact=false, callback, fetchFormData }
@@ -147,7 +142,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 			modal = <CreateTaskModal open={modalOpen !== false} setOpen={setModalOpen} callback={createTaskCallback} />;
 			break;
 		case 'model':
-			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' />;
+			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' modelTypeFilters={[ModelType.GROQ,ModelType.OPENAI,ModelType.OLLAMA,ModelType.FASTEMBED,ModelType.COHERE,ModelType.ANTHROPIC]} />;
 			break;
 		case 'tool':
 			modal = <InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='Not implemented' />;
@@ -214,16 +209,6 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 									rows={3}
 								/>
 							</div>
-							{/*<div className='rounded shadow-sm w-full'>
-								<span className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Preview
-								</span>
-								<Markdown
-									className={'markdown-content p-2'}
-								>
-									{description}
-								</Markdown>
-							</div>*/}
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
