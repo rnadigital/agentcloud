@@ -159,7 +159,7 @@ export default async function createAccount(
 				trial_period_days: 14,
 				trial_settings: {
 					end_behavior: {
-						missing_payment_method: 'cancel',
+						missing_payment_method: 'pause',
 					}
 				}
 			});
