@@ -5,7 +5,7 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateModelModal({ open, setOpen, callback, modelFilter=null }) {
+export default function CreateModelModal({ open, setOpen, callback, modelFilter=null, modelTypeFilters=[] }) {
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -57,7 +57,7 @@ export default function CreateModelModal({ open, setOpen, callback, modelFilter=
 										</Dialog.Title>
 									</div>
 								</div>
-								<ModelForm compact={true} callback={callback} fetchModelFormData={fetchModelFormData} modelFilter={modelFilter} />
+								<ModelForm compact={true} callback={callback} fetchModelFormData={fetchModelFormData} modelFilter={modelFilter} modelTypeFilters={modelTypeFilters} />
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

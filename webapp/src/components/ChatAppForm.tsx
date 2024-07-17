@@ -2,42 +2,25 @@
 
 import * as API from '@api';
 import {
-	HandRaisedIcon,
 	PlayIcon
 } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
-import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
-import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
-import InfoAlert from 'components/InfoAlert';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
-import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import ParameterForm from 'components/ParameterForm';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect,useReducer,useState } from 'react';
-import Select from 'react-tailwindcss-select';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App,AppType } from 'struct/app';
-import { ModelType, ModelTypeRequirements } from 'struct/model';
-import { ModelEmbeddingLength,ModelList } from 'struct/model';
+import { ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
-import SelectClassNames from 'styles/SelectClassNames';
-
-// @ts-ignore
-const Markdown = dynamic(() => import('react-markdown'), {
-	loading: () => <p className='markdown-content p-2'>Loading...</p>,
-	ssr: false,
-});
-import { ProcessImpl } from 'struct/crew';
 
 export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], callback, fetchFormData, editing }
 	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
@@ -190,6 +173,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 				setOpen={setModalOpen}
 				callback={modelCallback}
 				modelFilter='llm'
+				modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
 			/>;
 			break;
 		case 'tool':
@@ -390,6 +374,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 								callbackKey='modelId'
 								setCallbackKey={null}
 								modelFilter='llm'
+								modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
 							/>
 
 							<ToolsSelect

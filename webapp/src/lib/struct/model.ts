@@ -9,6 +9,15 @@ export enum ModelType {
   GROQ = 'groq'
 }
 
+export const modelOptions = [
+	{ value: ModelType.OPENAI, label: 'OpenAI' },
+	{ value: ModelType.OLLAMA, label: 'Ollama' },
+	{ value: ModelType.FASTEMBED, label: 'FastEmbed' },
+	{ value: ModelType.COHERE, label: 'Cohere' },
+	{ value: ModelType.ANTHROPIC, label: 'Anthropic' },
+	{ value: ModelType.GROQ, label: 'Groq' }
+];
+
 export const ModelTypes = Object.values(ModelType);
 
 interface FieldRequirement {
