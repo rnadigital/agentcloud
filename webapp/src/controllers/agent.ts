@@ -81,7 +81,7 @@ export async function agentEditPage(app, req, res, next) {
  * GET /[resourceSlug]/agent/[agentId].json
  * team page html
  */
-export async function agentJson(app, req, res, next) {
+export async function agentJson(req, res, next) {
 	const data = await agentData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
