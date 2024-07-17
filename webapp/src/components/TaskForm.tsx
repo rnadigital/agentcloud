@@ -202,7 +202,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 											</span>
 										</span>
 										{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
-										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{optionTool?.state} {data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
+										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
 									</li>);
 					            }}
 							/>
