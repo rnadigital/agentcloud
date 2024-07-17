@@ -112,13 +112,14 @@ pub async fn embed_payload(
             let mut payload: HashMap<String, serde_json::Value> =
                 hash_map_values_as_serde_values!(data);
             // Convert embedding_field_name to lowercase
-            let embedding_field_name_lower = embedding_field_name.to_lowercase();
-            if let Some(value) = payload.remove(&embedding_field_name_lower) {
+            // todo: this is too opinionated. this should happen outside of this function so that
+            // this method is more generic
+            if let Some(value) = payload.remove(&embedding_field_name.to_lowercase()) {
                 //Renaming the embedding field to page_content
                 payload.insert("page_content".to_string(), value.clone());
                 if let Ok(metadata) = json!(payload).try_into() {
                     // Embedding sentences using OpenAI ADA2
-                    let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()],&embedding_model).await?;
+                    let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
                     // Construct PointStruct to insert into DB
                     // todo: need to break this out so that this happens in a different method so we can re-use this for files
                     if !embedding_vec.is_empty() {
