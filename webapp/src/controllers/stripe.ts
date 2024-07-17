@@ -97,6 +97,7 @@ export async function webhookHandler(req, res, next) {
 			break;
 		}
 
+		case 'customer.subscription.created':
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
 
@@ -105,6 +106,7 @@ export async function webhookHandler(req, res, next) {
 
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
 
+			log('Customer subscription update planItem %O', planItem);
 			//Note: null to not update them unless required
 			const update = {
 				...(planItem ? { stripePlan: productToPlanMap[planItem.price.product] } : { stripePlan: SubscriptionPlan.FREE }),
@@ -115,20 +117,23 @@ export async function webhookHandler(req, res, next) {
 				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end * 1000 : null,
 				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
-			if (subscriptionUpdated['cancel_at_period_end'] === true) {
-				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
-				update['stripeCancelled'] = true;
-			}
+			log('Customer subscription update 1 %O', update);
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
 				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
+			} else if (subscriptionUpdated['cancel_at_period_end'] === true) {
+				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
+				update['stripeCancelled'] = true;
+			} else {
+				update['stripeEndsAt'] = subscriptionUpdated.current_period_end * 1000;
+				update['stripeCancelled'] = false;
 			}
-			if (update['stripeEndsAt'] > Date.now() && update['stripeCancelled'] === true) {
+			if (Date.now() >= update['stripeEndsAt'] && update['stripeCancelled'] === true) {
 				update['stripePlan'] = SubscriptionPlan.FREE;
 			}
-			log('Customer subscription update %O', update);
+			log('Customer subscription update 2 %O', update);
 			await updateStripeCustomer(subscriptionUpdated.customer, update);
 			break;
 		}
@@ -136,6 +141,17 @@ export async function webhookHandler(req, res, next) {
 		case 'customer.subscription.deleted': {
 			const subscriptionDeleted = event.data.object;
 			await updateStripeCustomer(subscriptionDeleted.customer, {
+				stripePlan: SubscriptionPlan.FREE,
+				stripeAddons: { users: 0, storage: 0 },
+				stripeCancelled: true,
+				stripeTrial: false,
+			});
+			break;
+		}
+
+		case 'customer.subscription.paused': {
+			const subscriptionPaused = event.data.object;
+			await updateStripeCustomer(subscriptionPaused.customer, {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
@@ -198,9 +214,9 @@ export async function requestChangePlan(req, res, next) {
 
 	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
 
-	if (!subscriptionId) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
-	}
+	// if (!subscriptionId) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	// }
 
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
@@ -280,9 +296,9 @@ export async function confirmChangePlan(req, res, next) {
 
 	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
 
-	if (!subscriptionId) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
-	}
+	// if (!subscriptionId) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	// }
 
 	const plan = req.body.plan;
 	const planPrice = planToPriceMap[plan];
@@ -338,10 +354,17 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
 
-	const subscription = await StripeClient.get().subscriptions.update(subscriptionId, {
-		items,
-		...(stripeTrial === true ? { trial_end: 'now' } : {}),
-	});
+	if (subscriptionId) {
+		await StripeClient.get().subscriptions.update(subscriptionId, {
+			items,
+			...(stripeTrial === true ? { trial_end: 'now' } : {}),
+		});
+	} else {
+		await StripeClient.get().subscriptions.create({
+			customer: stripeCustomerId,
+			items,
+		});
+	}
 
 	// const notification = {
 	//     orgId: toObjectId(res.locals.matchingOrg.id.toString()),
