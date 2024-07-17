@@ -1,7 +1,9 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
+import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationUtils';
@@ -144,8 +146,12 @@ export async function requestChangePassword(req, res) {
 
 	const foundAccount = await getAccountByEmail(email);
 	if (foundAccount) {
+
 		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
 			.then(verificationToken => {
+
+				const emailBody = render(PasswordResetEmail({ passwordResetURL: `${process.env.URL_APP}/changepassword?token=${verificationToken}` }));
+
 				ses.sendEmail({
 					from: process.env.FROM_EMAIL_ADDRESS,
 					bcc: null,
@@ -153,16 +159,7 @@ export async function requestChangePassword(req, res) {
 					replyTo: null,
 					to: [email],
 					subject: 'Password reset verification',
-					body: `We received a request to reset your password for your AgentCloud account.
-
-If you initiated this request, please click the link below to reset your password:
-
-${process.env.URL_APP}/changepassword?token=${verificationToken}
-
-If you did not request a password reset, no further action is required, and you can safely disregard this email.
-
-Thank you,
-The AgentCloud Team`,
+					body: emailBody
 				});
 			});
 	}
