@@ -107,7 +107,7 @@ export default function DatasourceTable({ datasources, fetchDatasources }: { dat
 						const processingOrEmbedding = [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource?.status);
 						//note: until we have a better way to set the state after it is "ready"
 						const { total, success ,failure } = (datasource?.recordCount || {});
-						const finished = total === null || (((success||0)+(failure||0)) >= total);
+						const finished = total === null || (((success||0)+(failure||0)) >= total && total > 0);
 						return (
 							<tr key={datasource._id} className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700 transition-all opacity-1 duration-700 ${deletingMap[datasource._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`} style={{ borderColor: deletingMap[datasource._id] ? 'red' : '' }}>
 								<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
