@@ -661,9 +661,13 @@ export async function deleteDatasourceApi(req, res, next) {
 		const connectionBody = {
 			connectionId: datasource.connectionId,
 		};
-		const deletedConnection = await connectionsApi
-			.deleteConnection(connectionBody, connectionBody)
-			.then(res => res.data);
+		try {
+			const deletedConnection = await connectionsApi
+				.deleteConnection(connectionBody, connectionBody)
+				.then(res => res.data);
+		} catch (e) {
+			console.warn(e);
+		}
 	}
 
 	// Delete the source file in GCS if this is a file
@@ -684,9 +688,16 @@ export async function deleteDatasourceApi(req, res, next) {
 		const sourceBody = {
 			sourceId: datasource.sourceId,
 		};
-		const deletedSource = await sourcesApi
-			.deleteSource(sourceBody, sourceBody)
-			.then(res => res.data);
+		try {
+			const deletedSource = await sourcesApi
+				.deleteSource(sourceBody, sourceBody)
+				.then(res => res.data);
+		} catch (e) {
+			log(e);
+			if (e?.response?.data?.title !== 'resource-not-found') {
+				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
+			}
+		}
 	}
 
 	// Delete the datasourcein the db
