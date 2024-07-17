@@ -1,22 +1,18 @@
 'use strict';
 
+import * as API from '@api';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import SubscriptionModal from 'components/SubscriptionModal';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
-import React, { useEffect, useState } from 'react';
-import Select from 'react-tailwindcss-select';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
-import { ModelType, ModelTypeRequirements } from 'struct/model';
-import { ModelList } from 'struct/model';
-import SelectClassNames from 'styles/SelectClassNames';
+import { modelOptions,ModelType } from 'struct/model';
 
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-
-export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing, compact, fetchModelFormData, callback, modelFilter }: { _model?: any, editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function, modelFilter?: string }) { //TODO: fix any type
+export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing, compact, fetchModelFormData, callback, modelFilter, modelTypeFilters }: { _model?: any, editing?: boolean, compact?: boolean, fetchModelFormData?: Function, callback?: Function, modelFilter?: string, modelTypeFilters?: ModelType[] }) { //TODO: fix any type
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -26,10 +22,8 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 	const { resourceSlug } = router.query;
 	const [modelState, setModelState] = useState(_model);
 	const [modelName, setModelName] = useState(modelState?.name || '');
-	const [debouncedValue, setDebouncedValue] = useState(null);
-	const [modalOpen, setModalOpen] = useState(false);
 	const [config, setConfig] = useReducer(configReducer, modelState?.config || {});
-
+	const filteredModelOptions = modelOptions.filter(option => modelTypeFilters.length === 0 || modelTypeFilters.includes(option.value));
 	function configReducer(state, action) {
 		return {
 			...state,
@@ -124,12 +118,9 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 								}}
 							>
 								<option disabled value=''>Select a type...</option>
-								<option value={ModelType.OPENAI}>OpenAI</option>
-								<option value={ModelType.OLLAMA}>Ollama</option>
-								<option value={ModelType.FASTEMBED}>FastEmbed</option>
-								<option value={ModelType.COHERE}>Cohere</option>
-								<option value={ModelType.ANTHROPIC}>Anthropic</option>
-								<option value={ModelType.GROQ}>Groq</option>
+								{filteredModelOptions.map(option => (
+									<option key={option.value} value={option.value}>{option.label}</option>
+								))}
 							</select>
 						</div>
 					</div>

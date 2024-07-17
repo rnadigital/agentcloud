@@ -19,7 +19,7 @@ import path from 'path';
 import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceScheduleType,DatasourceStatus } from 'struct/datasource';
+import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
@@ -112,9 +112,9 @@ export async function testDatasourceApi(req, res, next) {
 	const { connectorId, datasourceName, datasourceDescription, sourceConfig } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
+		{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
 	], {
 		datasourceName: 'Name',
 		datasourceDescription: 'Description',
@@ -184,7 +184,6 @@ export async function testDatasourceApi(req, res, next) {
 			.then(res => res.data);
 		log('createdSource', createdSource);
 	} catch (e) {
-		console.error(e);
 		return dynamicResponse(req, res, 400, { error: `Failed to create datasource: ${e?.response?.data?.detail || e}` });
 	}
 
@@ -283,14 +282,14 @@ export async function addDatasourceApi(req, res, next) {
 	} = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'embeddingField', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'scheduleType', validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }},
-		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) } },
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+		{ field: 'embeddingField', validation: {  ofType: 'string' } },
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+		{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'scheduleType', validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) } },
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
 		//TODO: validation for retriever_config and streams?
 	], {
 		datasourceName: 'Name',
@@ -478,9 +477,9 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	} = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' }},
-		{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true }},
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+		{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
+		{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true } },
 		//TODO: more validations?
 	], {
 		datasourceName: 'Name',
@@ -492,11 +491,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const validMetadata = (req.body.metadata_field_info||[])
+	const validMetadata = (req.body.metadata_field_info || [])
 		.every(obj => {
 			return typeof obj?.name === 'string'
-			&& typeof obj?.description === 'string'
-			&& ['string', 'integer', 'float'].includes(obj?.type);
+				&& typeof obj?.description === 'string'
+				&& ['string', 'integer', 'float'].includes(obj?.type);
 		});
 	if (!validMetadata) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
@@ -662,9 +661,13 @@ export async function deleteDatasourceApi(req, res, next) {
 		const connectionBody = {
 			connectionId: datasource.connectionId,
 		};
-		const deletedConnection = await connectionsApi
-			.deleteConnection(connectionBody, connectionBody)
-			.then(res => res.data);
+		try {
+			const deletedConnection = await connectionsApi
+				.deleteConnection(connectionBody, connectionBody)
+				.then(res => res.data);
+		} catch (e) {
+			console.warn(e);
+		}
 	}
 
 	// Delete the source file in GCS if this is a file
@@ -685,9 +688,16 @@ export async function deleteDatasourceApi(req, res, next) {
 		const sourceBody = {
 			sourceId: datasource.sourceId,
 		};
-		const deletedSource = await sourcesApi
-			.deleteSource(sourceBody, sourceBody)
-			.then(res => res.data);
+		try {
+			const deletedSource = await sourcesApi
+				.deleteSource(sourceBody, sourceBody)
+				.then(res => res.data);
+		} catch (e) {
+			log(e);
+			if (e?.response?.data?.title !== 'resource-not-found') {
+				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
+			}
+		}
 	}
 
 	// Delete the datasourcein the db
@@ -711,10 +721,10 @@ export async function uploadFileApi(req, res, next) {
 	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+		{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) } },
 	], {
 		datasourceName: 'Name',
 		datasourceDescription: 'Description',
@@ -725,23 +735,26 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const validMetadata = (req.body?.retriever_config?.metadata_field_info||[])
+	const validMetadata = (req.body?.retriever_config?.metadata_field_info || [])
 		.every(obj => {
 			return typeof obj?.name === 'string'
-			&& typeof obj?.description === 'string'
-			&& ['string', 'integer', 'float'].includes(obj?.type);
+				&& typeof obj?.description === 'string'
+				&& ['string', 'integer', 'float'].includes(obj?.type);
 		});
 	if (!validMetadata) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
+	
 	}
-
-	let validationErrorRetrieverConfig = chainValidations(retriever_config, [
-		{ field: 'decay_rate', validation: { notEmpty: retriever === Retriever.TIME_WEIGHTED, numberFromInclusive: 0 }},
-		// { field: 'k', validation: { notEmpty: retriever === Retriever.SELF_QUERY, numberFromInclusive: 0 }},
+	if (retriever_config) {
+		
+		let validationErrorRetrieverConfig = chainValidations(retriever_config, [
+			{ field: 'decay_rate', validation: { notEmpty: retriever === Retriever.TIME_WEIGHTED, numberFromInclusive: 0 } },
 		//Note: topk unused currently
-	], {});
-	if (validationErrorRetrieverConfig) {
-		return dynamicResponse(req, res, 400, { error: validationErrorRetrieverConfig });
+		], { decay_rate: 'Decay Rate' });
+
+		if (validationErrorRetrieverConfig) {
+			return dynamicResponse(req, res, 400, { error: validationErrorRetrieverConfig });
+		}
 	}
 
 	const uploadedFile = req.files.file;

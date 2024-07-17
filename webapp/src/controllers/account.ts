@@ -1,16 +1,15 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import StripeClient from 'lib/stripe';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import createAccount from 'lib/account/create';
-import { chainValidations } from 'lib/utils/validationUtils';
 import { getSubscriptionsDetails } from 'controllers/stripe';
-
 import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setStripeCustomerId, updateStripeCustomer, verifyAccount } from 'db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from 'db/verification';
+import jwt from 'jsonwebtoken';
+import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
+import StripeClient from 'lib/stripe';
+import { chainValidations } from 'lib/utils/validationUtils';
 
 export async function accountData(req, res, _next) {
 	return {

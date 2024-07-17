@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import ButtonSpinner from 'components/ButtonSpinner';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -9,7 +10,6 @@ import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan } from 'struct/billing';
-import SelectClassNames from 'styles/SelectClassNames';
 
 export default function InviteForm({ callback }: { callback?: Function }) {
 
@@ -20,12 +20,14 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 	const { resourceSlug } = router.query;
 	const [email, setEmail] = useState('');
 	const [name, setName] = useState('');
+	const [inviting, setInviting] = useState(false);
 	const [role, setRole] = useState(RoleOptions[0]);
 	const [error, setError] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [selectedRole, setSelectedRole] = useState(RoleOptions[0].value);
 
 	async function handleSubmit(e) {
+		setInviting(true);
 		e.preventDefault();
 		if (!stripePlan || ![SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
 			return setSubscriptionModalOpen(true);
@@ -50,11 +52,19 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 			}, null);
 		} catch (err) {
 			toast.error('Error sending invitation');
+		} finally {
+			setInviting(false);
 		}
 	}
 
 	return (<>
-		<SubscriptionModal open={subscriptionModalOpen !== false} setOpen={setSubscriptionModalOpen} title='Upgrade Required' text='You must be on the Teams plan to invite team members.' buttonText='Upgrade' />
+		<SubscriptionModal
+			open={subscriptionModalOpen !== false}
+			setOpen={setSubscriptionModalOpen}
+			title='Upgrade Required'
+			text='You must be on the Teams plan to invite team members.'
+			buttonText='Upgrade'
+		/>
 		<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
 			<div className='space-y-4'>
 				<div>
@@ -118,6 +128,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 						type='submit'
 						className='rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500'
 					>
+						{inviting && <ButtonSpinner className='mt-1 me-1' />}
 						Invite
 					</button>
 				</div>

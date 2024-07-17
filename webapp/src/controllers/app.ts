@@ -12,6 +12,7 @@ import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
+import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
 export async function appsData(req, res, _next) {
@@ -176,10 +177,20 @@ export async function addAppApi(req, res, next) {
 			if (!chatAgent) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 			}
+			const chatAgentModel = await getModelById(req.params.resourceSlug, chatAgent?.modelId);
+			if (!chatAgentModel) {
+				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
+			}
+			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(chatAgentModel?.type)) {
+				return dynamicResponse(req, res, 400, { error: 'Only models with OpenAI or Anthropic models are supported for chat apps.' });
+			}
 		} else if (modelId) { //
 			const foundModel = await getModelById(req.params.resourceSlug, modelId);
 			if (!foundModel) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(foundModel?.type)) {
+				return dynamicResponse(req, res, 400, { error: 'Only OpenAI and Anthropic models are supported for chat app agents.' });
 			}
 			chatAgent = await addAgent({
 				orgId: res.locals.matchingOrg.id,
@@ -285,6 +296,7 @@ export async function editAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	//TODO: refactor and make not mostly duplicated between add and edit APIs
 	let chatAgent;
 	if (!isChatApp) {
 		await updateCrew(req.params.resourceSlug, app.crewId, {
@@ -310,10 +322,20 @@ export async function editAppApi(req, res, next) {
 			if (!chatAgent) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 			}
+			const chatAgentModel = await getModelById(req.params.resourceSlug, chatAgent?.modelId);
+			if (!chatAgentModel) {
+				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
+			}
+			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(chatAgentModel?.type)) {
+				return dynamicResponse(req, res, 400, { error: 'Only models with OpenAI or Anthropic models are supported for chat apps.' });
+			}
 		} else if (modelId) {
 			const foundModel = await getModelById(req.params.resourceSlug, modelId);
 			if (!foundModel) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
+			}
+			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(foundModel?.type)) {
+				return dynamicResponse(req, res, 400, { error: 'Only OpenAI and Anthropic models are supported for chat app agents.' });
 			}
 			chatAgent = await addAgent({
 				orgId: res.locals.matchingOrg.id,

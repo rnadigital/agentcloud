@@ -72,6 +72,7 @@ app.prepare()
 		});
 
 		const router = (await import('./router')).default;
+
 		router(server, app);
 
 		server.all('*', (req, res) => {

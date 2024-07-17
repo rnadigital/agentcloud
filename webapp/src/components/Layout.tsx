@@ -20,12 +20,13 @@ import {
 	XMarkIcon,
 } from '@heroicons/react/24/outline';
 import AgentAvatar from 'components/AgentAvatar';
-import BillingBanner from 'components/BillingBanner';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
 import { SessionStatus } from 'components/SessionCards';
+//import BillingBanner from 'components/BillingBanner';
+import TrialNag from 'components/TrialNag';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -109,7 +110,7 @@ export default withRouter(function Layout(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, switching, team } = accountContext as any;
 	const { currentTeam } = account || {};
-	const { stripeEndsAt, stripePlan, stripeCancelled } = account?.stripe || {};
+	const { stripeEndsAt, stripePlan, stripeCancelled, stripeTrial } = account?.stripe || {};
 	const { children } = props as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
@@ -371,6 +372,11 @@ export default withRouter(function Layout(props) {
 							</ul>
 
 							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
+								{stripeTrial && <TrialNag
+									stripeEndsAt={stripeEndsAt}
+									stripePlan={stripePlan}
+									stripeCancelled={stripeCancelled}
+								/>}
 								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
 								<ul role='list' className='-mx-2 mt-2 space-y-1'>
 									{teamNavigation.map((item) => (
@@ -462,7 +468,7 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />
+					{/*<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />*/}
 					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
 						<button
 							type='button'

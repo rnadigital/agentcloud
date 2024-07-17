@@ -1,5 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -63,13 +64,13 @@ export default function SubscriptionModal({ open, setOpen, title = 'Upgrade Requ
 									</div>
 								</div>
 								<div className='mt-5 sm:mt-6'>
-									<button
+									<Link
 										type='button'
 										className='inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-										onClick={getPaymentLink}
+										href='/billing'
 									>
 										{buttonText}
-									</button>
+									</Link>
 								</div>
 							</Dialog.Panel>
 						</Transition.Child>

@@ -13,6 +13,7 @@ import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { SharingMode } from 'struct/sharing';
+import { chainValidations } from 'utils/validationUtils';
 
 export async function sessionsData(req, res, _next) {
 	const [crews, sessions, agents] = await Promise.all([
@@ -162,7 +163,16 @@ export async function addSessionApi(req, res, next) {
 
 	let { id: appId, skipRun }  = req.body;
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'id', validation: { notEmpty: true, ofType: 'string' } },
+	], { id: 'Id' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const app: App = await getAppById(req.params.resourceSlug, appId);
+
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -191,10 +201,10 @@ export async function addSessionApi(req, res, next) {
 	const addedSession = await addSession({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
-	    name: app.name,
-	    startDate: new Date(),
-    	lastUpdatedDate: new Date(),
-	    tokensUsed: 0,
+		name: app.name,
+		startDate: new Date(),
+		lastUpdatedDate: new Date(),
+		tokensUsed: 0,
 		status: SessionStatus.STARTED,
 		appId: toObjectId(app?._id),
 		sharingConfig: {
@@ -223,7 +233,15 @@ export async function addSessionApi(req, res, next) {
  */
 export async function deleteSessionApi(req, res, next) {
 
-	const { sessionId }  = req.body;
+	const { sessionId } = req.body;
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string' } },
+	], { sessionId: 'Session ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	if (!sessionId || typeof sessionId !== 'string' || sessionId.length !== 24) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -248,10 +266,14 @@ export async function deleteSessionApi(req, res, next) {
  */
 export async function cancelSessionApi(req, res, next) {
 
-	const { sessionId }  = req.body;
+	const { sessionId } = req.body;
 
-	if (!sessionId || typeof sessionId !== 'string' || sessionId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } },
+	], { sessionId: 'Session ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);

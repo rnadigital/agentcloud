@@ -79,8 +79,10 @@ export const subscriptionPlans: SubscriptionPlanConfig[] = [
 	},
 	{
 		plan: SubscriptionPlan.ENTERPRISE,
-		priceId: undefined,
-		productId: undefined,
+		priceId: undefined, //Note: would be different for every customer
+		productId: process.env.STRIPE_ENTERPRISE_PLAN_PRODUCT_ID,
+		/* Note: just for whether subscriptioncard should render the buttons,
+		   doesnt change limits or whether the plan can actually have addons. */
 		storageAddon: false,
 		usersAddon: false,
 		title: 'Agent Cloud Enterprise',
@@ -99,6 +101,13 @@ export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subs
 	acc[plan] = priceId;
 	return acc;
 }, {} as Record<SubscriptionPlan, string | undefined>);
+
+export const productToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, productId }) => {
+	if (productId) {
+		acc[productId] = plan;
+	}
+	return acc;
+}, {} as Record<string, SubscriptionPlan>);
 
 export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
 	if (priceId) {
@@ -204,7 +213,7 @@ export const pricingMatrix: PricingMatrix = {
 		embeddingModels: ModelTypes,
 	},
 	[SubscriptionPlan.TEAMS]: {
-		users: 100,
+		users: 10,
 		orgs: 1,
 		teams: 1000,
 		fileUploads: true,

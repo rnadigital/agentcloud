@@ -16,7 +16,7 @@ async fn handle_embedding(
     mongo_connection: Arc<RwLock<Database>>,
     qdrant: Arc<RwLock<QdrantClient>>,
     metadata: HashMap<String, String>,
-    text: String,
+    embedding_field_name: String,
     datasource_id: String,
     embedding_model_name: String,
 ) {
@@ -32,7 +32,7 @@ async fn handle_embedding(
     match embed_payload(
         mongo_connection.clone(),
         &metadata,
-        &text,
+        &embedding_field_name,
         Some(datasource_id_clone),
         EmbeddingModels::from(embedding_model_name)).await {
         Ok(point_struct) => {
@@ -90,7 +90,7 @@ pub async fn process_incoming_messages(
                                     }
                                 }
                                 let metadata = convert_serde_value_to_hashmap_string(data_obj.to_owned());
-                                if let Some(text_field) = embedding_field {
+                                if let Some(embedding_field_name) = embedding_field {
                                     let mongo_connection_clone = Arc::clone(&mongo_connection);
                                     let qdrant_connection_clone = Arc::clone(&qdrant_conn);
                                     let embed_text_worker = tokio::spawn(async move {
@@ -98,7 +98,7 @@ pub async fn process_incoming_messages(
                                             mongo_connection_clone,
                                             qdrant_connection_clone,
                                             metadata,
-                                            text_field,
+                                            embedding_field_name,
                                             datasources_clone,
                                             embedding_model_name,
                                         ).await;

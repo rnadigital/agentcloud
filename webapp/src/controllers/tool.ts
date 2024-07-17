@@ -8,20 +8,17 @@ import { removeAgentsTool } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
-import { addTool, deleteToolById, editTool, editToolUnsafe,getToolById, getToolsByTeam,getToolsForDatasource } from 'db/tool';
-import { addToolRevision, deleteRevisionsForTool, deleteToolRevisionById,getRevisionsForTool, getToolRevisionById} from 'db/toolrevision';
+import { addTool, deleteToolById, editTool, editToolUnsafe, getToolById, getToolsByTeam, getToolsForDatasource } from 'db/tool';
+import { addToolRevision, deleteRevisionsForTool, deleteToolRevisionById, getRevisionsForTool, getToolRevisionById } from 'db/toolrevision';
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
-import * as redisClient from 'lib/redis/redis';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
-import { ObjectId } from 'mongodb';
-import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
-import { NotificationDetails,NotificationType, WebhookType } from 'struct/notification';
-import { Retriever, Tool,ToolState,ToolType, ToolTypes } from 'struct/tool';
+import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
+import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationUtils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -103,20 +100,24 @@ export async function toolAddPage(app, req, res, next) {
 
 function validateTool(tool) {
 	return chainValidations(tool, [
-		{ field: 'name', validation: { notEmpty: true }},
-		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes))}},
-		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever))}},
-		{ field: 'description', validation: { notEmpty: true, lengthMin: 2 }, validateIf: { field: 'type', condition: (value) => value === ToolType.RAG_TOOL }},
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL }},
-		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'data.parameters', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'data.environmentVariables', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL }},
-		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'naame', validation: { regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$','gm'),
-			customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed' },
-		validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }},
-		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL }},
+		{ field: 'name', validation: { notEmpty: true } },
+		{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes)) } },
+		{ field: 'retriever', validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) } },
+		{ field: 'description', validation: { notEmpty: true, lengthMin: 2 }, validateIf: { field: 'type', condition: (value) => value === ToolType.RAG_TOOL } },
+		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' }, validateIf: { field: 'type', condition: (value) => value == ToolType.RAG_TOOL } },
+		{ field: 'data.description', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'data.parameters', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'data.environmentVariables', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value !== ToolType.RAG_TOOL } },
+		{ field: 'schema', validation: { notEmpty: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL } },
+		{
+			field: 'naame', validation: {
+				regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$', 'gm'),
+				customError: 'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed'
+			},
+			validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL }
+		},
+		{ field: 'data.parameters.properties', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.API_TOOL } },
+		{ field: 'data.parameters.code', validation: { objectHasKeys: true }, validateIf: { field: 'type', condition: (value) => value == ToolType.FUNCTION_TOOL } },
 	], {
 		name: 'Name',
 		retriever_type: 'Retrieval Strategy',
@@ -134,6 +135,7 @@ export async function addToolApi(req, res, next) {
 	const { name, type, data, schema, datasourceId, description, iconId, retriever, retriever_config } = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
+
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -166,13 +168,13 @@ export async function addToolApi(req, res, next) {
 	const addedTool = await addTool({
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
-	    name,
-	    description,
-	 	type: type as ToolType,
+		name,
+		description,
+		type: type as ToolType,
 		datasourceId: toObjectId(datasourceId),
-	 	retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
-	 	schema: schema,
+		retriever_type: retriever || null,
+		retriever_config: retriever_config || {}, //TODO: validation
+		schema: schema,
 		data: toolData,
 		icon: foundIcon ? {
 			id: foundIcon._id,
@@ -221,7 +223,7 @@ export async function addToolApi(req, res, next) {
 							functionId,
 							type: ToolType.FUNCTION_TOOL,
 						}, {
-							revisionId: toObjectId(addedRevision?.insertedId),						
+							revisionId: toObjectId(addedRevision?.insertedId),
 							state: isActive ? ToolState.READY : ToolState.ERROR,
 							...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null }),
 						});
@@ -236,19 +238,19 @@ export async function addToolApi(req, res, next) {
 							functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
-						    orgId: toObjectId(res.locals.matchingOrg.id),
-						    teamId: toObjectId(req.params.resourceSlug),
-						    target: {
+							orgId: toObjectId(res.locals.matchingOrg.id),
+							teamId: toObjectId(req.params.resourceSlug),
+							target: {
 								id: addedTool?.insertedId.toString(),
 								collection: CollectionName.Tools,
 								property: '_id',
 								objectId: true,
-						    },
-						    title: 'Tool Deployment',
-						    date: new Date(),
-						    seen: false,
+							},
+							title: 'Tool Deployment',
+							date: new Date(),
+							seen: false,
 							// stuff specific to notification type
-						    description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+							description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
 							type: NotificationType.Tool,
 							details: {
 								// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well
@@ -275,9 +277,10 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime }  = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime } = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
+
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -297,7 +300,7 @@ export async function editToolApi(req, res, next) {
 	//await FunctionProviderFactory.getFunctionProvider().getFunctionLogs('5ec2b2cb-e701-4713-9df7-c22208daaf06')
 	//	.then(res => { log('function logs %s', res); })
 	//	.catch(e => { log(e); });
-	
+
 	const isFunctionTool = type as ToolType === ToolType.FUNCTION_TOOL;
 
 	//Check if any keys that are used by the cloud function have changed
@@ -312,7 +315,7 @@ export async function editToolApi(req, res, next) {
 		return !isDeepStrictEqual(current, prev);
 	});
 	log('Tool %s (%s) functionNeedsUpdate: %s', existingTool?.name, existingTool?._id, functionNeedsUpdate);
-	
+
 	const toolData = {
 		...data,
 		builtin: false,
@@ -324,13 +327,13 @@ export async function editToolApi(req, res, next) {
 	};
 
 	await editTool(req.params.resourceSlug, toolId, {
-	    name,
-	 	type: type as ToolType,
-	    description,
-	 	schema: schema,
-	 	datasourceId: toObjectId(datasourceId),
-	 	retriever_type: retriever || null,
-	 	retriever_config: retriever_config || {}, //TODO: validation
+		name,
+		type: type as ToolType,
+		description,
+		schema: schema,
+		datasourceId: toObjectId(datasourceId),
+		retriever_type: retriever || null,
+		retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
 		state: functionNeedsUpdate
 			? ToolState.PENDING
@@ -393,19 +396,19 @@ export async function editToolApi(req, res, next) {
 							return functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
-						    orgId: toObjectId(existingTool.orgId.toString()),
-						    teamId: toObjectId(existingTool.teamId.toString()),
-						    target: {
+							orgId: toObjectId(existingTool.orgId.toString()),
+							teamId: toObjectId(existingTool.teamId.toString()),
+							target: {
 								id: existingTool._id.toString(),
 								collection: CollectionName.Tools,
 								property: '_id',
 								objectId: true,
-						    },
-						    title: 'Tool Deployment',
-						    date: new Date(),
-						    seen: false,
+							},
+							title: 'Tool Deployment',
+							date: new Date(),
+							seen: false,
 							// stuff specific to notification type
-						    description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+							description: `Custom code tool "${name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
 							type: NotificationType.Tool,
 							details: {
 								// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well
@@ -442,7 +445,15 @@ export async function editToolApi(req, res, next) {
 
 export async function applyToolRevisionApi(req, res, next) {
 
-	const { revisionId }  = req.body;
+	let validationError = chainValidations(req.body, [
+		{ field: 'revisionId', validation: { notEmpty: true, ofType: 'string' } },
+	], { revisionId: 'Revision ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { revisionId } = req.body;
 
 	const existingRevision = await getToolRevisionById(req.params.resourceSlug, revisionId);
 	if (!existingRevision) {
@@ -453,14 +464,14 @@ export async function applyToolRevisionApi(req, res, next) {
 	if (!existingTool) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
-	
+
 	const isFunctionTool = existingTool.type === ToolType.FUNCTION_TOOL;
 	if (!isFunctionTool) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid input' });
 	}
 
 	const toolData = existingRevision.content.data;
-	
+
 	await editTool(req.params.resourceSlug, existingRevision.toolId, {
 		data: toolData,
 		state: ToolState.PENDING,
@@ -505,19 +516,19 @@ export async function applyToolRevisionApi(req, res, next) {
 						return functionProvider.deleteFunction(functionId);
 					}
 					const notification = {
-					    orgId: toObjectId(existingTool.orgId.toString()),
-					    teamId: toObjectId(existingTool.teamId.toString()),
-					    target: {
+						orgId: toObjectId(existingTool.orgId.toString()),
+						teamId: toObjectId(existingTool.teamId.toString()),
+						target: {
 							id: existingTool._id.toString(),
 							collection: CollectionName.Tools,
 							property: '_id',
 							objectId: true,
-					    },
-					    title: 'Tool Deployment',
-					    date: new Date(),
-					    seen: false,
+						},
+						title: 'Tool Deployment',
+						date: new Date(),
+						seen: false,
 						// stuff specific to notification type
-					    description: `Custom code tool "${existingTool.name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
+						description: `Custom code tool "${existingTool.name}" ${isActive ? 'deployed successfully' : 'failed to deploy'}.`,
 						type: NotificationType.Tool,
 						details: {
 							// TODO: if possible in future include the failure reason/error logs in here, and attach to the tool as well
@@ -547,7 +558,7 @@ export async function applyToolRevisionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Error deploying or testing function' });
 	}
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 
@@ -559,11 +570,16 @@ export async function applyToolRevisionApi(req, res, next) {
  * @apiParam {String} toolID tool id
  */
 export async function deleteToolApi(req, res, next) {
-	const { toolId } = req.body;
 
-	if (!toolId || typeof toolId !== 'string' || toolId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let validationError = chainValidations(req.body, [
+		{ field: 'toolId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } },
+	], { toolId: 'Tool ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
+	const { toolId } = req.body;
 
 	const existingTool: Tool = await getToolById(req.params.resourceSlug, toolId);
 
@@ -593,6 +609,14 @@ export async function deleteToolApi(req, res, next) {
 }
 
 export async function deleteToolRevisionApi(req, res, next) {
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'revisionId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } },
+	], { revisionId: 'Revision ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	const { revisionId/*, toolId*/ } = req.params;
 

@@ -16,7 +16,7 @@ import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { priceToPlanMap,SubscriptionPlan } from 'struct/billing';
+import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 const log = debug('webapp:middleware:lib:account:create');
@@ -156,10 +156,10 @@ export default async function createAccount(
 			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
-				trial_period_days: 30,
+				trial_period_days: 14,
 				trial_settings: {
 					end_behavior: {
-						missing_payment_method: 'cancel',
+						missing_payment_method: 'pause',
 					}
 				}
 			});

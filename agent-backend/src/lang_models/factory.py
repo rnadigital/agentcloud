@@ -117,8 +117,7 @@ def _build_anthropic_model(model: models.mongo.Model) -> BaseLanguageModel:
         **model.model_dump(
             exclude_none=True,
             exclude_unset=True,
-        ).get('config'),
-        model_name=model.config.get('model')
+        ).get('config')
     )
 
 
