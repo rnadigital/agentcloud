@@ -99,7 +99,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		});
 		setCallbackKey(null);
 	};
-
 	const toolCallback = async (addedToolId, body) => {
 		await fetchAgentFormData && fetchAgentFormData();
 		setModalOpen(false);
@@ -124,7 +123,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			modal = null;
 			break;
 	}
-
+	
 	return (<>
 		{modal}		
 		<form onSubmit={agentPost}>

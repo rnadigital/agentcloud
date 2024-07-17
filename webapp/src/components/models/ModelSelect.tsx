@@ -16,7 +16,6 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 			return modelFilter === m?.modelType;
 		})
 		.filter(m => { //filter by type
-			console.log('model', m);
 			return modelTypeFilters.length === 0
 				|| modelTypeFilters.includes(m.type);
 		});
