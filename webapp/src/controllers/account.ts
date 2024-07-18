@@ -1,10 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
 import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, setStripeCustomerId, updateStripeCustomer, verifyAccount } from 'db/account';
 import { addVerification, getAndDeleteVerification,VerificationTypes } from 'db/verification';
+import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
@@ -59,8 +61,8 @@ export async function accountJson(req, res, next) {
 export async function login(req, res) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin:1, ofType: 'string' }},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
+		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
 	], { email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -98,10 +100,10 @@ export async function login(req, res) {
 export async function register(req, res) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' }},
-		{ field: 'checkoutSession', validation: { ofType: 'string' }},
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin:1, ofType: 'string'}},
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'checkoutSession', validation: { ofType: 'string' } },
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
+		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
 	], { name: 'Name', email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -115,8 +117,8 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const { emailVerified } = await createAccount(email, name, password, 'TEAM_MEMBER', checkoutSession);
-	
+	const { emailVerified } = await createAccount({ email, name, password, roleTemplate: 'TEAM_MEMBER', checkoutSession });
+
 	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
 
 }
@@ -138,7 +140,7 @@ export async function requestChangePassword(req, res) {
 	const { email } = req.body;
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }},
+		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
 	], { email: 'Email' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -146,8 +148,12 @@ export async function requestChangePassword(req, res) {
 
 	const foundAccount = await getAccountByEmail(email);
 	if (foundAccount) {
+
 		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
 			.then(verificationToken => {
+
+				const emailBody = render(PasswordResetEmail({ passwordResetURL: `${process.env.URL_APP}/changepassword?token=${verificationToken}` }));
+
 				ses.sendEmail({
 					from: process.env.FROM_EMAIL_ADDRESS,
 					bcc: null,
@@ -155,16 +161,7 @@ export async function requestChangePassword(req, res) {
 					replyTo: null,
 					to: [email],
 					subject: 'Password reset verification',
-					body: `We received a request to reset your password for your AgentCloud account.
-
-If you initiated this request, please click the link below to reset your password:
-
-${process.env.URL_APP}/changepassword?token=${verificationToken}
-
-If you did not request a password reset, no further action is required, and you can safely disregard this email.
-
-Thank you,
-The AgentCloud Team`,
+					body: emailBody
 				});
 			});
 	}
@@ -178,8 +175,8 @@ The AgentCloud Team`,
 export async function changePassword(req, res) {
 	const { password, token } = req.body;
 	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
-		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
+		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
 	], { name: 'Name', email: 'Email', password: 'Password' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -199,7 +196,7 @@ export async function changePassword(req, res) {
  */
 export async function verifyToken(req, res) {
 	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' }},
+		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
 	], { token: 'Token' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -248,13 +245,13 @@ export async function verifyToken(req, res) {
 export async function switchTeam(req, res, _next) {
 
 	let validationError = chainValidations(req.body, [
-		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
+		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
 	], { orgId: 'Org ID', teamId: 'Team ID' });
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	
+
 	const { orgId, teamId } = req.body;
 
 	const switchOrg = res.locals.account.orgs.find(o => o.id.toString() === orgId);

@@ -4,6 +4,7 @@
     "incremental": true,
     "esModuleInterop": true,
     "module": "commonjs",
+    "jsx":"react",
     "outDir": "dist",
     "noEmit": false,
     "baseUrl": "./src",
