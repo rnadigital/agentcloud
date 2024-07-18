@@ -1,8 +1,4 @@
 import * as API from '@api';
-import {
-	EyeIcon,
-	EyeSlashIcon,
-} from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
@@ -14,17 +10,16 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 export interface RegisterFormValues {
-    name: string
-    email: string;
-    password: string;
-    tos: boolean;
+	name: string
+	email: string;
+	password: string;
+	tos: boolean;
 }
 
 export default function Register() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
-	const [showPassword, setShowPassword] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [checkoutSession, setCheckoutSession]: any = useState('');
 
@@ -71,7 +66,7 @@ export default function Register() {
 					<div className='bg-white dark:bg-slate-800 px-6 py-8 shadow sm:rounded-lg sm:px-8'>
 
 						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5'>
-                        Create your account
+							Create your account
 						</h2>
 
 						{checkoutSession && (
@@ -91,7 +86,7 @@ export default function Register() {
 								type='text'
 								disabled={false}
 							/>
-                            
+
 							<InputField<RegisterFormValues>
 								name='email'
 								control={control}
@@ -114,37 +109,29 @@ export default function Register() {
 									rules={{
 										required: 'Password is required',
 										pattern: {
-											value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-											message: 'Password must be at least 8 characters long and contain at least one letter and one number',
+											value: /^.*(?=.{8,})(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "]).*$/,
+											message: 'Password must be at least 8 characters long and contain at least one letter, one number, and one special character',
 										},
 									}}
 									label='Password'
-									type={showPassword ? 'text' : 'password'}
+									type='password'
 									disabled={false}
 								/>
-
-								<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3 mt-5'>
-									{showPassword
-										? <EyeIcon className='h-4 w-4 text-gray-400' aria-hidden='true' />
-										: <EyeSlashIcon className='h-4 w-4 text-gray-400' aria-hidden='true' />}
-								</div>
 							</div>
 
-							<div className='flex items-center justify-between'>
-								<div className='flex items-start'>
-									<InputField<RegisterFormValues>
-										name='tos'
-										control={control}
-										type='checkbox'
-										rules={{
-											required: 'You must agree to the terms of service and privacy policy',
-										}}
-									/>
-									<label htmlFor='tos' className='ml-3 block text-sm text-gray-900 dark:text-slate-400'>
-                                        I agree to the <a href='https://www.agentcloud.dev/legal/terms' target='_blank' className='text-indigo-600' rel='noreferrer'>terms of service</a> and <a href='https://www.agentcloud.dev/legal/privacy' target='_blank' className='text-indigo-600' rel='noreferrer'>privacy policy</a>.
+							<div className='flex items-center justify-start'>
+								<InputField<RegisterFormValues>
+									name='tos'
+									control={control}
+									type='checkbox'
+									rules={{
+										required: 'You must agree to the terms of service and privacy policy',
+									}}
+								/>
+								<label htmlFor='tos' className='ml-3 block text-sm text-gray-900 dark:text-slate-400'>
+										I agree to the <a href='https://www.agentcloud.dev/legal/terms' target='_blank' className='text-indigo-600' rel='noreferrer'>terms of service</a> and <a href='https://www.agentcloud.dev/legal/privacy' target='_blank' className='text-indigo-600' rel='noreferrer'>privacy policy</a>.
 
-									</label>
-								</div>
+								</label>
 							</div>
 
 							<div>
@@ -153,7 +140,7 @@ export default function Register() {
 									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-4'
 								>
 									{submitting && <ButtonSpinner className='mt-1 me-1' />}
-                                    Create account
+									Create account
 								</button>
 
 							</div>
@@ -163,9 +150,9 @@ export default function Register() {
 						</form>
 
 						<p className='mt-4 text-sm text-gray-900'>
-                            Already have an account?{' '}
+							Already have an account?{' '}
 							<Link href='/login' className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'>
-                                Sign in
+								Sign in
 							</Link>
 						</p>
 
@@ -189,7 +176,7 @@ export default function Register() {
 										<path fill='#fbc02d' d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12   s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20    s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'></path><path fill='#e53935' d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039   l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'></path><path fill='#4caf50' d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'></path><path fill='#1565c0' d='M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571   c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'></path>
 									</svg>
 									<span className='text-sm font-semibold leading-6'>
-                                            Continue with Google</span>
+										Continue with Google</span>
 								</Link>}
 
 								{process.env.NEXT_PUBLIC_ENABLE_GITHUB_OAUTH && <Link

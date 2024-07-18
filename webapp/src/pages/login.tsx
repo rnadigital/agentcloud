@@ -26,7 +26,6 @@ export default function Login() {
 
 	const router = useRouter();
 	const [error, setError] = useState();
-	const [showPassword, setShowPassword] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
 
@@ -91,20 +90,15 @@ export default function Login() {
 									rules={{
 										required: 'Password is required',
 										pattern: {
-											value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-											message: 'Password must be at least 8 characters long and contain at least one letter and one number',
+											value: /^.*(?=.{8,})(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "]).*$/,
+											message: 'Password must be at least 8 characters long and contain at least one letter, one number, and one special character',
 										},
 									}}
 									label='Password'
-									type={showPassword ? 'text' : 'password'}
+									type='password'
 									disabled={false}
 								/>
 
-								<div onClick={() => setShowPassword(o => !o)} className='cursor-pointer absolute inset-y-0 right-0 flex items-center pr-3 mt-5'>
-									{showPassword
-										? <EyeIcon className='h-4 w-4 text-gray-400' aria-hidden='true' />
-										: <EyeSlashIcon className='h-4 w-4 text-gray-400' aria-hidden='true' />}
-								</div>
 							</div>
 							
 							<div className='flex items-center justify-end mt-2'>
