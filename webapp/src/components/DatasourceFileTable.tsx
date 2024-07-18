@@ -72,7 +72,6 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 				</thead>
 				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
 					{datasources.map((datasource) => {
-						const processingOrEmbedding = [DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(datasource?.status);
 						return (<tr key={datasource._id} className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'>
 							<td className='px-6 py-3 whitespace-nowrap flex items-center' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<div className='flex items-cente'>
@@ -85,7 +84,7 @@ export default function DatasourceFileTable({ datasources, fetchDatasources }: {
 								</div>
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
-								<DatasourceStatusIndicator datasource={datasource} processingOrEmbedding={processingOrEmbedding} />
+								<DatasourceStatusIndicator datasource={datasource} />
 							</td>
 							<td className='px-6 py-3 whitespace-nowrap' onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}>
 								<span suppressHydrationWarning className='text-sm text-gray-900 dark:text-white'>
