@@ -253,9 +253,7 @@ export async function testDatasourceApi(req, res, next) {
 		discoveredSchema,
 		createdDate: new Date(),
 		status: DatasourceStatus.DRAFT,
-		recordCount: {
-			total: 0,
-		}
+		recordCount: { total: 0 },
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -569,6 +567,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		connectionId: datasource.connectionId,
 		connectionSettings: connectionBody,
 		descriptionsMap,
+		...(sync ? { recordCount: { total: 0 } } : {}),
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -605,6 +604,10 @@ export async function syncDatasourceApi(req, res, next) {
 		.then(res => res.data)
 		.catch(err => err.data);
 	log('createdJob', createdJob);
+
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		recordCount: { total: 0 },
+	});
 
 	// Update the datasource with the connection settings and sync date
 	// await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());

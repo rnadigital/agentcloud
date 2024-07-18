@@ -4,6 +4,7 @@ use mongodb::bson::oid::ObjectId;
 use mongodb::{Collection, Database};
 use std::str::FromStr;
 use mongodb::options::{FindOneOptions};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::mongo::models::{DataSources, Model};
 
@@ -138,12 +139,14 @@ pub async fn get_model_credentials(
 
 pub async fn increment_by_one(db: &Database, datasource_id: &str, field_path: &str) -> Result<()> {
     let datasources_collection = db.collection::<DataSources>("datasources");
-    let filter = doc! {"_id": ObjectId::from_str(datasource_id).unwrap()};  // This filter applies to all documents, or specify criteria to select a document
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id).unwrap()};
+    let start = SystemTime::now();
+	let current_unix_timestamp = start.duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
     let update = doc! {
         "$inc": { field_path: 1 },
+        "$set": { "recordCount.lastUpdated": current_unix_timestamp }
     };
     let update_options = mongodb::options::UpdateOptions::default();
-
     match datasources_collection.update_one(filter, update, update_options).await {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -151,4 +154,4 @@ pub async fn increment_by_one(db: &Database, datasource_id: &str, field_path: &s
             Err(anyhow!("Failed to increment variable. Error: {}", e))
         }
     }
-} 
+}

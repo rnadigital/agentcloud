@@ -188,7 +188,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			await Promise.all([
 				addNotification(notification),
 				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY),
+				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
 				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded),
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);

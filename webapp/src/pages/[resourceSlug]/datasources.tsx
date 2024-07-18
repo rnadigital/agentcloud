@@ -33,7 +33,7 @@ export default function Datasources(props) {
 	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
 
-	async function fetchDatasources() {
+	async function fetchDatasources(silent=false) {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
 	}
 
@@ -62,7 +62,7 @@ export default function Datasources(props) {
 				//If there are any embedding datasources, refresh periodically
 				fetchDatasources();
 			}
-		}, 30000);
+		}, 10000);
 		return () => {
 			clearInterval(interval);
 		};
@@ -86,7 +86,6 @@ export default function Datasources(props) {
 
 		<DatasourceFileTable datasources={filteredDatasources.filter(d => d?.sourceType === 'file')} fetchDatasources={fetchDatasources} />
 
-		{/*(stripePlan && pricingMatrix[stripePlan].dataConnections) && <>*/}
 		<span className='py-8 h-1'></span>
 
 		<PageTitleWithNewButton list={filteredDatasources} title='Data Connections' buttonText='New Connection' onClick={() => setOpen(true)} />
@@ -102,7 +101,6 @@ export default function Datasources(props) {
 		/>
 
 		<DatasourceTable datasources={filteredDatasources.filter(d => d?.sourceType !== 'file')} fetchDatasources={fetchDatasources} />
-		{/*</>*/}
 
 	</>);
 
