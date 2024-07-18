@@ -110,7 +110,7 @@ class ChatAssistant:
     def init_graph(self):
         async def call_model(state, config):
             messages = state["messages"]
-            if isinstance(self.chat_model.bound, ChatAnthropic):
+            if self._chat_model_is_anthropic():
                 if isinstance(messages[0], SystemMessage) and not isinstance(messages[1], HumanMessage):
                     # to work around the "first message is not user message" error
                     messages.insert(1, HumanMessage(content="<< dummy message >>"))
@@ -186,6 +186,9 @@ class ChatAssistant:
         system_message = SystemMessage(content=self.system_message)
         asyncio.run(self.stream_execute([system_message], config))
 
+    def _chat_model_is_anthropic(self) -> bool:
+        return isinstance(self.chat_model.bound, ChatAnthropic)
+
     def stop_generating_check(self):
         try:
             stop_flag = redis_con.get(f"{self.session_id}_stop")
@@ -193,6 +196,15 @@ class ChatAssistant:
             return stop_flag == "1"
         except:
             return False
+
+    @staticmethod
+    def _parse_anthropic_chunk(chunk_content: list) -> str:
+        if len(chunk_content) > 0:
+            if "text" in chunk_content[0]:
+                return chunk_content[0]["text"]
+            elif "partial_json" in chunk_content[0]:
+                return chunk_content[0]["partial_json"]
+        return ""
 
     async def stream_execute(self, messages: list[BaseMessage], config: dict):
         chunk_id = str(uuid.uuid4())
@@ -216,6 +228,8 @@ class ChatAssistant:
                     case "on_chat_model_stream":
                         content = event['data']['chunk'].content
                         chunk = repr(content)
+                        content = self._parse_anthropic_chunk(content) \
+                            if self._chat_model_is_anthropic() else content
                         if type(content) is str:
                             self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
                                                 first=first, chunk_id=chunk_id,
@@ -280,7 +294,7 @@ class ChatAssistant:
     def send_to_socket(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
                        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
 
-        if type(text) != str:
+        if type(text) is str:
             text = str(text)
 
         # Set default timestamp if not provided
