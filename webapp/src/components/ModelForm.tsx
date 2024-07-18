@@ -97,7 +97,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 					{/* TODO: other form params here */}
 					<div className='sm:col-span-12'>
 						<label htmlFor='type' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Type
+							Vendor
 						</label>
 						<div className='mt-2'>
 							<select
