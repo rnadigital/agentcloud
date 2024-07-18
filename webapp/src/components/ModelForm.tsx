@@ -23,7 +23,7 @@ export default function ModelForm({ _model = { type: ModelType.OPENAI }, editing
 	const [modelState, setModelState] = useState(_model);
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [config, setConfig] = useReducer(configReducer, modelState?.config || {});
-	const filteredModelOptions = modelOptions.filter(option => modelTypeFilters.length === 0 || modelTypeFilters.includes(option.value));
+	const filteredModelOptions = modelOptions.filter(option => !modelTypeFilters || modelTypeFilters.length === 0 || modelTypeFilters.includes(option.value));
 	function configReducer(state, action) {
 		return {
 			...state,
