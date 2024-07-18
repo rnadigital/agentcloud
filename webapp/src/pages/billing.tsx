@@ -36,13 +36,22 @@ export default function Billing(props) {
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 
+	const getPayload = () => {
+		return {
+			_csrf: csrf,
+			plan: selectedPlan,
+			...(stagedChange?.users ? { users: stagedChange.users } : {}),
+			...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
+		};
+	};
+
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
 		return async (e) => {
 			e.preventDefault();
 			const res = await apiMethod({
-				_csrf: csrf,
+				_csrf: getPayload()._csrf,
 			}, null, toast.error, null);
 			if (res.redirect && typeof window !== undefined) {
 				window.open(res.redirect, '_blank').focus();
@@ -56,15 +65,6 @@ export default function Billing(props) {
 			API.getAccount({ resourceSlug }, dispatch, setError, router);
 		}
 	}
-
-	const getPayload = () => {
-		return {
-			_csrf: csrf,
-			plan: selectedPlan,
-			...(stagedChange?.users ? { users: stagedChange.users } : {}),
-			...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
-		};
-	};
 
 	useEffect(() => {
 		API.checkStripeReady(x => {
