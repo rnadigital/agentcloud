@@ -622,7 +622,7 @@ export default withRouter(function Layout(props) {
 				<em>Switching team...</em>
 			</div>
 			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''} text-center`} />
-			<footer className={`${showNavs ? 'lg:pl-72' : ''} mt-auto text-gray-500 text-sm bg-gray-50 px-8 pb-10 sm:flex items-center`}>
+			<footer className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm bg-gray-50 px-8 pb-10 sm:flex items-center`}>
 				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH && `-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}</div>
 				<div className='flex gap-x-2 ml-auto'>
 					<a href='https://www.linkedin.com/company/rna-digital/' target='_blank' rel='noopener noreferrer' className=''>
