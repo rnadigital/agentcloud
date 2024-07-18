@@ -39,14 +39,17 @@ export default function Billing(props) {
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
-		return (e) => {
+		return async (e) => {
 			e.preventDefault();
-			apiMethod({
-				_csrf: e.target._csrf.value,
-			}, null, setError, router);
+			const res = await apiMethod({
+				_csrf: csrf,
+			}, null, toast.error, null);
+			if (res.redirect && typeof window !== undefined) {
+				window.open(res.redirect, '_blank').focus();
+			}
 		};
 	}
-	const [getPaymentLink, getPortalLink] = stripeMethods.map(createApiCallHandler);
+	const [getPortalLink] = stripeMethods.map(createApiCallHandler);
 
 	function fetchAccount() {
 		if (resourceSlug) {
@@ -119,11 +122,7 @@ ${missingEnvs.join('\n')}`} />);
 			/>
 			<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
 				<button
-					onClick={() => {
-						API.getPortalLink({
-							_csrf: csrf,
-						}, null, toast.error, router);
-					}}
+					onClick={getPortalLink}
 					disabled={!stripeCustomerId}
 					className={'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
 				>
