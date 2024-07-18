@@ -10,12 +10,12 @@ export enum ModelType {
 }
 
 export const modelOptions = [
-	{ value: ModelType.OPENAI, label: 'OpenAI' },
-	{ value: ModelType.OLLAMA, label: 'Ollama' },
-	{ value: ModelType.FASTEMBED, label: 'FastEmbed' },
-	{ value: ModelType.COHERE, label: 'Cohere' },
-	{ value: ModelType.ANTHROPIC, label: 'Anthropic' },
-	{ value: ModelType.GROQ, label: 'Groq' }
+	{ value: ModelType.OPENAI, label: 'OpenAI', iconURL: '/images/onboarding/openai.png', recommended: true },
+	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.png' },
+	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.png' },
+	{ value: ModelType.COHERE, label: 'Cohere', iconURL: '/images/onboarding/cohere.png' },
+	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.png' },
+	{ value: ModelType.GROQ, label: 'Groq', iconURL: '/images/onboarding/groq.png' }
 ];
 
 export const ModelTypes = Object.values(ModelType);
@@ -25,7 +25,7 @@ interface FieldRequirement {
 	optional?: boolean;
 }
 
-interface ModelRequirements {
+export interface ModelRequirements {
 	[key: string]: FieldRequirement;
 }
 

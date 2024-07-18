@@ -40,6 +40,7 @@ const noNavPages = [
 	'/requestchangepassword',
 	'/verify',
 	'/redirect',
+	'/onboarding',
 ];
 
 const agentNavigation: any[] = [
@@ -112,7 +113,9 @@ export default withRouter(function Layout(props) {
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
-	const showNavs = !noNavPages.includes(router.pathname);
+	// const showNavs = !noNavPages.includes(router.pathname.em);
+	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
+
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];

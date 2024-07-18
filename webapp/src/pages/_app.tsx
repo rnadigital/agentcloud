@@ -10,8 +10,8 @@ import { ChatWrapper } from 'context/chat';
 import { NotificationWrapper } from 'context/notifications';
 import { SocketWrapper } from 'context/socket';
 import { StepWrapper } from 'context/stepwrapper';
-import Head from 'next/head';
-import Router from 'next/router';
+import { usePathname } from 'next/navigation';
+import Router, { useRouter } from 'next/router';
 import NProgress from 'nprogress';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
@@ -39,7 +39,6 @@ Router.events.on('routeChangeComplete', (url) => NProgress.done());
 Router.events.on('routeChangeError', (_url) => NProgress.done());
 
 export default function App({ Component, pageProps }) {
-
 	useEffect(() => {
 		if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 			posthog.debug(false);
@@ -78,6 +77,7 @@ export default function App({ Component, pageProps }) {
 									</style>
 									<Component {...pageProps} />
 								</Layout>
+						
 							</StepWrapper>
 						</NotificationWrapper>
 					</SocketWrapper>

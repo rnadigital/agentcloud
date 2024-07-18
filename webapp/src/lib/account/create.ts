@@ -138,7 +138,8 @@ export default async function createAccount({
 					storage: 0
 				},
 				stripeTrial: false
-			}
+			},
+			onboarded: false
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);

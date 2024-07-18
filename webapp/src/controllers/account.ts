@@ -80,6 +80,11 @@ export async function login(req, res) {
 		if (passwordMatch === true) {
 			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 			req.session.token = token; //jwt (cookie)
+			
+			if (account.onboarded === false) {
+				return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/onboarding`, token });
+			}
+
 			return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
 		}
 	} catch (e) {

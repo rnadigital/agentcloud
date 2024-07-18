@@ -87,6 +87,7 @@
     "react-email": "^2.1.5",
     "react-hook-form": "^7.52.0",
     "react-markdown": "^6.0.3",
+    "react-responsive": "^10.0.0",
     "react-select": "^5.7.5",
     "react-syntax-highlighter": "^15.5.0",
     "react-tailwindcss-select": "^1.8.5",

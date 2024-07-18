@@ -47,6 +47,7 @@ export type Account = {
 	stripe?: AccountStripeData;
 	oauth?: OAuthRecordType;
 	permissions: Binary;
+	onboarded: boolean;
 }
 
 export function AccountCollection(): any {
