@@ -17,6 +17,8 @@ import {
 	Text,
 } from '@react-email/components';
 import * as React from 'react';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env' });
 
 interface PasswordResetProps {
     passwordResetURL: string;
@@ -44,7 +46,7 @@ const PasswordResetEmail= ({ passwordResetURL }:PasswordResetProps) => {
 						<Section className='bg-white'>
 							<Section className='py-5'>
 								<Img
-									src='https://i.ibb.co/S7f1QSV/light.png'
+									src={`${process.env.URL_APP}/images/email/logo-light.png`}
 									height='50'
 									alt="AgentCloud's Logo"
 									className='mx-auto'
