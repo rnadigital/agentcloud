@@ -41,20 +41,18 @@ const VerificationEmail = ({ verificationURL }:VerificationEmailProps) => {
 				<Body className='bg-white text-gray-900 pt-8'>
 					<Container className='p-5 mx-auto bg-gray-50'>
 						<Section className='bg-white'>
-							<Section className='flex items-center justify-center  py-5'>
+							<Section className='py-5'>
 								<Img
-									src='https://mintlify.s3-us-west-1.amazonaws.com/rna/logo/light.svg'
+									src='https://i.ibb.co/S7f1QSV/light.png'
 									height='50'
 									alt="AgentCloud's Logo"
+									className='mx-auto'
 								/>
 							</Section>
 							<Section className='p-6'>
 								<Heading className='text-gray-800 font-bold text-xl mb-4'>Welcome to Agent Cloud</Heading>
 								<Text className='text-gray-800 mb-4'>
-                                    You’re ine step away from completing  your account registration. Please confirm your account through the link
-								</Text>
-								<Text className='text-gray-800 mb-4'>
-                                    You’re ine step away from completing  your account registration. Please confirm your account through the link
+                                    You’re one step away from completing  your account registration. Please confirm your account through the link
 								</Text>
 
 								<Button

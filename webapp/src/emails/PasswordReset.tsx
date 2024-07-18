@@ -42,11 +42,12 @@ const PasswordResetEmail= ({ passwordResetURL }:PasswordResetProps) => {
 				<Body className='bg-white text-gray-900 pt-8'>
 					<Container className='p-5 mx-auto bg-gray-50'>
 						<Section className='bg-white'>
-							<Section className='flex items-center justify-center  py-5'>
+							<Section className='py-5'>
 								<Img
-									src='https://mintlify.s3-us-west-1.amazonaws.com/rna/logo/light.svg'
+									src='https://i.ibb.co/S7f1QSV/light.png'
 									height='50'
 									alt="AgentCloud's Logo"
+									className='mx-auto'
 								/>
 							</Section>
 							<Section className='p-6 text-center'>
