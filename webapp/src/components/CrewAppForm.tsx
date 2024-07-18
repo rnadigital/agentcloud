@@ -7,24 +7,19 @@ import {
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
-// import CreateToolModal from 'components/modal/CreateToolModal';
+import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
 import ModelSelect from 'components/models/ModelSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { App, AppType } from 'struct/app';
+import { AppType } from 'struct/app';
+import { modelOptions,ModelType } from 'struct/model';
 
-// @ts-ignore
-const Markdown = dynamic(() => import('react-markdown'), {
-	loading: () => <p className='markdown-content p-2'>Loading...</p>,
-	ssr: false,
-});
 import { ProcessImpl } from '../lib/struct/crew';
 
 export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*toolChoices = [], */ modelChoices=[], crew={}, app={}, editing, compact=false, callback, fetchFormData }
@@ -39,7 +34,7 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 	const [crewState, setCrew] = useState(crew);
 	const [appState, setApp] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
-	const [managerModel, setManagerModel] = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
+	const [managerModel, setManagerModel]: any = useState(initialModel ? { label: initialModel.name, value: initialModel._id }: null);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
@@ -132,6 +127,12 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 		setIcon(addedIcon);
 	};
 
+	const modelCallback = async (addedModelId, body) => {
+		await fetchFormData && fetchFormData();
+		setModalOpen(false);
+		setManagerModel({ value: addedModelId, name: body?.name });
+	};
+
 	let modal;
 	switch (modalOpen) {
 		case 'agent':
@@ -139,6 +140,9 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 			break;
 		case 'task':
 			modal = <CreateTaskModal open={modalOpen !== false} setOpen={setModalOpen} callback={createTaskCallback} />;
+			break;
+		case 'model':
+			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' modelTypeFilters={[ModelType.GROQ,ModelType.OPENAI,ModelType.OLLAMA,ModelType.FASTEMBED,ModelType.COHERE,ModelType.ANTHROPIC]} />;
 			break;
 		case 'tool':
 			modal = <InfoAlert textColor='black' className='rounded bg-orange-200 p-4' message='Not implemented' />;
@@ -205,16 +209,6 @@ export default function CrewAppForm({ agentChoices = [], taskChoices = [], /*too
 									rows={3}
 								/>
 							</div>
-							{/*<div className='rounded shadow-sm w-full'>
-								<span className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Preview
-								</span>
-								<Markdown
-									className={'markdown-content p-2'}
-								>
-									{description}
-								</Markdown>
-							</div>*/}
 						</div>
 						<div className='sm:col-span-12'>
 							<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

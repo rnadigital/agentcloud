@@ -10,11 +10,9 @@ import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { ModelEmbeddingLength } from 'struct/model';
+import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
-import SelectClassNames from 'styles/SelectClassNames';
 
 export default function AgentForm({ agent = {}, models = [], tools=[], groups=[], editing, compact=false, callback, fetchAgentFormData }
 	: { agent?: any, models?: any[], tools?: any[], groups?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchAgentFormData?: Function }) { //TODO: fix any types
@@ -101,7 +99,6 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 		});
 		setCallbackKey(null);
 	};
-
 	const toolCallback = async (addedToolId, body) => {
 		await fetchAgentFormData && fetchAgentFormData();
 		setModalOpen(false);
@@ -117,7 +114,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 	let modal;
 	switch (modalOpen) {
 		case 'model':
-			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' />;
+			modal = <CreateModelModal open={modalOpen !== false} setOpen={setModalOpen} callback={modelCallback} modelFilter='llm' modelTypeFilters={[ModelType.GROQ, ModelType.OPENAI, ModelType.OLLAMA, ModelType.COHERE, ModelType.ANTHROPIC]} />;
 			break;
 		case 'tool':
 			modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />;
@@ -126,7 +123,7 @@ export default function AgentForm({ agent = {}, models = [], tools=[], groups=[]
 			modal = null;
 			break;
 	}
-
+	
 	return (<>
 		{modal}		
 		<form onSubmit={agentPost}>

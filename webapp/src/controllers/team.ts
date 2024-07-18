@@ -2,25 +2,20 @@
 
 import { dynamicResponse } from '@dr';
 import Permission from '@permission';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import bcrypt from 'bcrypt';
 import {
-	Account, addAccount, changeAccountPassword, getAccountByEmail,
-	getAccountById, getAccountTeamMember, OAuthRecordType, pushAccountOrg,
-	pushAccountTeam, setCurrentTeam, updateTeamOwnerInAccounts, verifyAccount
+	getAccountByEmail,
+	getAccountById, getAccountTeamMember, pushAccountOrg,
+	pushAccountTeam, updateTeamOwnerInAccounts
 } from 'db/account';
 import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions, updateTeamOwner } from 'db/team';
-import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import createAccount from 'lib/account/create';
-import * as ses from 'lib/email/ses';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
-import { Binary, ObjectId } from 'mongodb';
+import { Binary, } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
-
-import { addOrg, getOrgById } from '../db/org';
+import { chainValidations } from 'utils/validationUtils';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([
@@ -59,12 +54,21 @@ export async function teamJson(req, res, next) {
  * @apiParam {String} email Email of person to invite
  */
 export async function inviteTeamMemberApi(req, res) {
-	const { name, email, template } = req.body;
-	if (!email || typeof email !== 'string' || email.length === 0
-		|| (template && !Roles[template])) {
-		return dynamicResponse(req, res, 403, { error: 'Invalid inputs' });
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'email', validation: { notEmpty: true, ofType: 'string' } },
+		{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(Roles)) } },
+	], { name: 'Name', email: 'Email', template: 'Template' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
 	}
+
+	const { name, email, template } = req.body;
+
 	let foundAccount = await getAccountByEmail(email);
+
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
@@ -102,6 +106,15 @@ export async function inviteTeamMemberApi(req, res) {
  * @apiParam {String} email Email of person to invite
  */
 export async function deleteTeamMemberApi(req, res) {
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'memberId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+	], { memberId: 'Member ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const { memberId } = req.body;
 	//account with that memberId
 	const memberAccount = await getAccountById(memberId);
@@ -136,6 +149,15 @@ export async function deleteTeamMemberApi(req, res) {
  * @apiParam {String} teamName Name of new team
  */
 export async function addTeamApi(req, res) {
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'teamName', validation: { notEmpty: true, ofType: 'string' } },
+	], { teamName: 'Team Name' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const { teamName } = req.body;
 	if (!teamName || typeof teamName !== 'string' || teamName.length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -244,9 +266,18 @@ export async function memberEditPage(app, req, res, next) {
  * 
  */
 export async function transferTeamOwnershipApi(req, res) {
+
+	let validationError = chainValidations(req.body, [
+		{ field: 'newOwnerId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+	], { newOwnerId: 'New Owner ID' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const { resourceSlug } = req.params;
 	const { newOwnerId } = req.body;
-	console.log(newOwnerId, res.locals.matchingTeam.ownerId.toString());
+
 	if (newOwnerId === res.locals.matchingTeam.ownerId.toString()) {
 		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
 	}

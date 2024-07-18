@@ -25,6 +25,7 @@ const dev = process.env.NODE_ENV !== 'production'
 	, handle = app.getRequestHandler();
 
 import { dynamicResponse } from '@dr';
+import PassportManager from '@mw/passportmanager';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
@@ -59,6 +60,7 @@ app.prepare()
 		await functionProvider.init();
 		await initGlobalTools();
 		await ses.init();
+		await PassportManager.init();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);
@@ -72,6 +74,7 @@ app.prepare()
 		});
 
 		const router = (await import('./router')).default;
+
 		router(server, app);
 
 		server.all('*', (req, res) => {

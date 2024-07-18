@@ -106,18 +106,18 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 					Most popular
 				</span>
 			)}
-			{currentPlan && (<>
-				<div className='flex items-center'>
-					<span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-800 text-sm rounded-lg'>
-						Current Plan
-					</span>
-				</div>
-				{price > 0 && (
+			{currentPlan && (<div className='flex items-center'>
+				{stripeTrial && <span className='px-2 py-[0.5px] me-2 bg-white text-orange-800 border border-orange-800 text-sm rounded-lg'>
+						Trial
+				</span>}
+				{price > 0 ? (
 					<span suppressHydrationWarning className={`text-sm px-2 py-[0.5px] me-2 bg-white text-${stripeCancelled ? 'orange-700' : 'green-800'} border border-${stripeCancelled ? 'orange-800' : 'green-800'} text-sm rounded-lg`}>
 						{stripeCancelled === true ? 'Ends' : 'Renews'} {new Date(stripeEndsAt).toDateString()}
 					</span>
-				)}
-			</>)}
+				 	) : <span className='px-2 py-[0.5px] me-2 bg-white text-blue-800 border border-blue-800 text-sm rounded-lg'>
+						Current Plan
+				</span>}
+			</div>)}
 			<div className='flex justify-center align-middle mt-4'>
 				<img className='rounded-md w-24 h-24 lg:w-48 lg:h-48' src={`/images/agentcloud-mark-white-bg-black-${plan}.png`} />
 			</div>

@@ -2,41 +2,40 @@
 
 import { dynamicResponse } from '@dr';
 import { setStripeCustomerId, updateStripeCustomer } from 'db/account';
-import { addCheckoutSession, getCheckoutSessionByAccountId } from 'db/checkoutsession';
-import { addPaymentLink, unsafeGetPaymentLinkById } from 'db/paymentlink';
+import { addCheckoutSession } from 'db/checkoutsession';
+import { unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
-import { planToPriceMap, priceToPlanMap, priceToProductMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:stripe');
-import { io } from '@socketio';
-import { addNotification } from 'db/notification';
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { NotificationType } from 'struct/notification';
+import { chainValidations } from 'utils/validationUtils';
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
 	if (Array.isArray(sub?.items?.data) && sub?.items?.data.length > 0) {
 		for (let item of sub?.items?.data) {
-			switch (item.price.id) {
-				case process.env.STRIPE_FREE_PLAN_PRICE_ID:
-				case process.env.STRIPE_PRO_PLAN_PRICE_ID:
-				case process.env.STRIPE_TEAMS_PLAN_PRICE_ID:
+			switch (item.plan.product) {
+				case process.env.STRIPE_FREE_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_PRO_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_TEAMS_PLAN_PRODUCT_ID:
+				case process.env.STRIPE_ENTERPRISE_PLAN_PRODUCT_ID:
 					planItem = item;
 					break;
-				case process.env.STRIPE_ADDON_USERS_PRICE_ID:
+				case process.env.STRIPE_ADDON_USERS_PRODUCT_ID:
 					addonUsersItem = item;
 					break;
-				case process.env.STRIPE_ADDON_STORAGE_PRICE_ID:
+				case process.env.STRIPE_ADDON_STORAGE_PRODUCT_ID:
 					addonStorageItem = item;
 					break;
 			}
 		}
 	}
-	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub.id };
-} 
+	return { planItem, addonUsersItem, addonStorageItem, subscriptionId: sub?.id };
+}
 
 export async function getSubscriptionsDetails(stripeCustomerId: string) {
 	try {
@@ -65,7 +64,7 @@ export async function webhookHandler(req, res, next) {
 
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
-	
+
 	if (!STRIPE_WEBHOOK_SECRET) {
 		log('missing STRIPE_WEBHOOK_SECRET');
 		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
@@ -85,38 +84,20 @@ export async function webhookHandler(req, res, next) {
 	// Handle the event
 	switch (event.type) {
 
-		case 'checkout.session.completed': {
+		case 'setup_intent.succeeded': {
 			const checkoutSession = event.data.object;
-			const paymentLink = checkoutSession.payment_link;
-			if (!paymentLink) {
-				log('Completed checkout session without .data.object.payment_link:', checkoutSession);
-				break;
-			}
-			const foundPaymentLink = await unsafeGetPaymentLinkById(paymentLink);
-			if (!foundPaymentLink) {
-				log('No payment link found for payment link id:', paymentLink);
-				break;
-			}
-			await addCheckoutSession({
-				accountId: foundPaymentLink.accountId,
-				checkoutSessionId: checkoutSession.id,
-				payload: checkoutSession,
-				createdDate: new Date(),
-			});
-			await setStripeCustomerId(foundPaymentLink.accountId, checkoutSession.customer);
-			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(checkoutSession.customer);
-			//Note: 0 to set them on else case
-			await updateStripeCustomer(checkoutSession.customer, {
-				stripePlan: priceToPlanMap[planItem.price.id],
-				stripeAddons: {
-					users: addonUsersItem ? addonUsersItem.quantity : 0,
-					storage: addonStorageItem ? addonStorageItem.quantity : 0,
+			const stripeCustomerId = checkoutSession?.customer;
+			const newPaymentMethodId = checkoutSession?.payment_method;
+			// Set the customer's default payment method
+			const updatedCustomer = await StripeClient.get().customers.update(stripeCustomerId, {
+				invoice_settings: {
+					default_payment_method: newPaymentMethodId,
 				},
-				stripeEndsAt: checkoutSession?.current_period_end*1000,
 			});
 			break;
 		}
 
+		case 'customer.subscription.created':
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
 
@@ -124,31 +105,35 @@ export async function webhookHandler(req, res, next) {
 			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
 
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
-			
+
+			log('Customer subscription update planItem %O', planItem);
 			//Note: null to not update them unless required
 			const update = {
-				...(planItem ? { stripePlan: priceToPlanMap[planItem.price.id] } : { stripePlan: SubscriptionPlan.FREE }),
+				...(planItem ? { stripePlan: productToPlanMap[planItem.price.product] } : { stripePlan: SubscriptionPlan.FREE }),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
 					storage: addonStorageItem ? addonStorageItem.quantity : 0,
 				},
-				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end*1000 : null,
+				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end * 1000 : null,
 				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
-			if (subscriptionUpdated['cancel_at_period_end'] === true) {
-				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
-				update['stripeCancelled'] = true;
-			}
+			log('Customer subscription update 1 %O', update);
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
 				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
+			} else if (subscriptionUpdated['cancel_at_period_end'] === true) {
+				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
+				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
+				update['stripeCancelled'] = true;
+			} else {
+				update['stripeEndsAt'] = subscriptionUpdated.current_period_end * 1000;
+				update['stripeCancelled'] = false;
 			}
-			if (update['stripeEndsAt'] > Date.now() && update['stripeCancelled'] === true) {
+			if (Date.now() >= update['stripeEndsAt'] && update['stripeCancelled'] === true) {
 				update['stripePlan'] = SubscriptionPlan.FREE;
 			}
-			log('Customer subscription update %O', update);
+			log('Customer subscription update 2 %O', update);
 			await updateStripeCustomer(subscriptionUpdated.customer, update);
 			break;
 		}
@@ -156,6 +141,17 @@ export async function webhookHandler(req, res, next) {
 		case 'customer.subscription.deleted': {
 			const subscriptionDeleted = event.data.object;
 			await updateStripeCustomer(subscriptionDeleted.customer, {
+				stripePlan: SubscriptionPlan.FREE,
+				stripeAddons: { users: 0, storage: 0 },
+				stripeCancelled: true,
+				stripeTrial: false,
+			});
+			break;
+		}
+
+		case 'customer.subscription.paused': {
+			const subscriptionPaused = event.data.object;
+			await updateStripeCustomer(subscriptionPaused.customer, {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
@@ -195,6 +191,14 @@ export async function hasPaymentMethod(req, res, next) {
 
 export async function requestChangePlan(req, res, next) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
+	], { plan: 'Plan' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
 
@@ -210,9 +214,9 @@ export async function requestChangePlan(req, res, next) {
 
 	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
 
-	if (!subscriptionId) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
-	}
+	// if (!subscriptionId) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	// }
 
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
@@ -239,7 +243,7 @@ export async function requestChangePlan(req, res, next) {
 		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
 		quantity: users,
 	});
-	
+
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
@@ -269,6 +273,14 @@ export async function requestChangePlan(req, res, next) {
 
 export async function confirmChangePlan(req, res, next) {
 
+	let validationError = chainValidations(req.body, [
+		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
+	], { plan: 'Plan' });
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
@@ -276,7 +288,7 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe||{});
+	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe || {});
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
@@ -284,9 +296,9 @@ export async function confirmChangePlan(req, res, next) {
 
 	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
 
-	if (!subscriptionId) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
-	}
+	// if (!subscriptionId) {
+	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
+	// }
 
 	const plan = req.body.plan;
 	const planPrice = planToPriceMap[plan];
@@ -295,7 +307,7 @@ export async function confirmChangePlan(req, res, next) {
 		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
-	
+
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
 	const planItemId = planItem?.id;
@@ -320,7 +332,7 @@ export async function confirmChangePlan(req, res, next) {
 		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
 		quantity: users,
 	});
-	
+
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
@@ -342,10 +354,17 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
 
-	const subscription = await StripeClient.get().subscriptions.update(subscriptionId, {
-		items,
-		...(stripeTrial === true ? { trial_end: 'now' } : {}),
-	});
+	if (subscriptionId) {
+		await StripeClient.get().subscriptions.update(subscriptionId, {
+			items,
+			...(stripeTrial === true ? { trial_end: 'now' } : {}),
+		});
+	} else {
+		await StripeClient.get().subscriptions.create({
+			customer: stripeCustomerId,
+			items,
+		});
+	}
 
 	// const notification = {
 	//     orgId: toObjectId(res.locals.matchingOrg.id.toString()),
@@ -367,8 +386,8 @@ export async function confirmChangePlan(req, res, next) {
 	// };
 	// await addNotification(notification);
 	// io.to(res.locals.matchingTeam.id).emit('notification', notification);
-	
-	return dynamicResponse(req, res, 200, { });
+
+	return dynamicResponse(req, res, 200, {});
 }
 
 export async function createPortalLink(req, res, next) {

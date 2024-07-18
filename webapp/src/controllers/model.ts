@@ -74,7 +74,8 @@ export async function modelAddApi(req, res, next) {
 		{ field: 'type', validation: { inSet: new Set(Object.values(ModelType)) }},
 		{ field: 'model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
 		{ field: 'config.model', validation: { inSet: new Set(ModelList[type as ModelType]||[]) }},
-	], { name: 'Name', model: 'Model'});
+	], { name: 'Name', model: 'Model', type: 'Type', config: 'Config' });
+
 	if (validationError) {	
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -82,9 +83,12 @@ export async function modelAddApi(req, res, next) {
 	const configValidations = Object.entries(ModelTypeRequirements[type])
 		.filter((en: any) => en[1].optional !== true)
 		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
-	let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
-	if (validationErrorConfig) {
-		return dynamicResponse(req, res, 400, { error: validationErrorConfig });
+		
+	if (configValidations.length > 0) {
+		let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
+		if (validationErrorConfig) {
+			return dynamicResponse(req, res, 400, { error: validationErrorConfig });
+		}
 	}
 
 	// Insert model to db

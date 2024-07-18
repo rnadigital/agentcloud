@@ -38,7 +38,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 	profile.email = primaryEmail;
 	const account: Account = await getAccountByOAuthOrEmail(profile.id, profile.provider, profile.email);
 	log('githubCallback account', account);
-	await createUpdateAccountOauth(account, profile.displayName, profile.email, profile.provider, profile.id);	
+	await createUpdateAccountOauth(account, profile.email, profile.displayName, profile.provider, profile.id);
 	done(null, profile);
 }
 
@@ -49,7 +49,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 	profile.email = verifiedEmail;
 	const account: Account = await getAccountByOAuthOrEmail(profile.id, profile.provider, profile.email);
 	log('googleCallback account', account);
-	await createUpdateAccountOauth(account, profile.displayName, verifiedEmail, profile.provider, profile.id);
+	await createUpdateAccountOauth(account, verifiedEmail, profile.displayName, profile.provider, profile.id);
 	done(null, profile);
 }
 

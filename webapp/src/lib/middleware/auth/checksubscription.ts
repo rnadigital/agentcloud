@@ -32,7 +32,8 @@ export async function fetchUsage(req, res, next) {
 			[PlanLimitsKeys.users]: teamMembersCount,
 		};
 
-		res.locals.limits = pricingMatrix[stripePlan];
+		//TODO: freeze pricingmatrix, switch to structured copy/"deep" copy
+		res.locals.limits = JSON.parse(JSON.stringify(pricingMatrix[stripePlan]));
 
 		next();
 
@@ -98,11 +99,11 @@ export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 			limits.maxVectorStorageBytes += (stripeAddons?.storage * (1024*1024*1024));
 		}
 		
-		log(`plan: ${stripePlan}, addons: ${stripeAddons}, limit: ${limit}, usage: ${usage}, usage[limit]: ${usage[limit]}, limits[limit]: ${limits[limit]}`);
+		log('plan: %O, addons: %O, limit: %O, usage: %O, usage[limit]: %O, limits[limit]: %O', stripePlan, stripeAddons, limit, usage, usage[limit], limits[limit]);
 		// @ts-ignore
 		if ((!usage || !stripePlan)
 			|| (usage && stripePlan && usage[limit] >= limits[limit])) {
-			return dynamicResponse(req, res, 400, { error: `Usage for "${limit}" exceeded (${usage[limit]}/${res.locals.subscription[limit]}).` });
+			return dynamicResponse(req, res, 400, { error: `${limit} limit reached (${usage[limit]}/${limits[limit]}).` });
 		}
 		next();
 	});
