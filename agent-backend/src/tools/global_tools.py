@@ -10,7 +10,7 @@ from socketio import SimpleClient
 
 from messaging.send_message_to_socket import send
 from models.sockets import SocketEvents, SocketMessage, Message
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from abc import ABC, abstractmethod
 from models.mongo import Tool, Datasource, Model
 
