@@ -4,11 +4,13 @@ import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import bcrypt from 'bcrypt';
-import { Account, addAccount, changeAccountPassword, getAccountByEmail,
-	getAccountById, 	getAccountTeamMember, OAuthRecordType, pushAccountOrg,
-	pushAccountTeam, setCurrentTeam, updateTeamOwnerInAccounts,verifyAccount } from 'db/account';
+import {
+	Account, addAccount, changeAccountPassword, getAccountByEmail,
+	getAccountById, getAccountTeamMember, OAuthRecordType, pushAccountOrg,
+	pushAccountTeam, setCurrentTeam, updateTeamOwnerInAccounts, verifyAccount
+} from 'db/account';
 import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions, updateTeamOwner } from 'db/team';
-import { addVerification, getAndDeleteVerification,VerificationTypes } from 'db/verification';
+import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
@@ -66,7 +68,8 @@ export async function inviteTeamMemberApi(req, res) {
 	const invitingTeam = res.locals.matchingOrg.teams
 		.find(t => t.id.toString() === req.params.resourceSlug);
 	if (!foundAccount) {
-		const { addedAccount } = await createAccount(email, name, null, template, true);
+		const { addedAccount } = await createAccount({ email, name, roleTemplate: template, invite: true, teamName: invitingTeam.name });
+
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
 	} else {
@@ -88,7 +91,7 @@ export async function inviteTeamMemberApi(req, res) {
 		await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 	}
 	//member invited
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 }
 
 /**
@@ -102,7 +105,7 @@ export async function deleteTeamMemberApi(req, res) {
 	const { memberId } = req.body;
 	//account with that memberId
 	const memberAccount = await getAccountById(memberId);
-	if (memberAccount) {	
+	if (memberAccount) {
 		const foundTeam = await getTeamById(req.params.resourceSlug);
 		const org = res.locals.matchingOrg;//await getOrgById(foundTeam.orgId);
 		if (!org) {
@@ -122,7 +125,7 @@ export async function deleteTeamMemberApi(req, res) {
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}
-	return dynamicResponse(req, res, 302, {  });
+	return dynamicResponse(req, res, 302, {});
 }
 
 /**
@@ -167,7 +170,7 @@ export async function editTeamMemberApi(req, res) {
 
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
-	
+
 	if (memberId === res.locals.matchingTeam.ownerId.toString()) {
 		return dynamicResponse(req, res, 400, { error: 'Team owner permissions can\'t be edited' });
 	}
@@ -177,12 +180,12 @@ export async function editTeamMemberApi(req, res) {
 	}
 
 	const editingMember = await getAccountById(req.params.memberId);
-	
+
 	let updatingPermissions;
 	if (template) {
 		updatingPermissions = new Permission(Roles[template].base64);
 	} else {
-		updatingPermissions = new Permission(editingMember.permissions.toString('base64'));		
+		updatingPermissions = new Permission(editingMember.permissions.toString('base64'));
 		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
 	}
 	await setMemberPermissions(resourceSlug, memberId, updatingPermissions);
@@ -190,7 +193,7 @@ export async function editTeamMemberApi(req, res) {
 	//For the bits that are org level, set those in the org map
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
 
-	return dynamicResponse(req, res, 200, { });
+	return dynamicResponse(req, res, 200, {});
 
 }
 

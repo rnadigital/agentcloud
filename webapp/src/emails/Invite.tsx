@@ -20,9 +20,10 @@ import * as React from 'react';
 interface InviteProps {
 	name: string;
     inviteURL: string;
+	teamName: string
 }
 
-const InviteEmail = ({ inviteURL, name }:InviteProps) => {
+const InviteEmail = ({ inviteURL, name, teamName }:InviteProps) => {
 	return (
 		<Html>
 			<Head />
@@ -42,17 +43,19 @@ const InviteEmail = ({ inviteURL, name }:InviteProps) => {
 				<Body className='bg-white text-gray-900 pt-8'>
 					<Container className='p-5 mx-auto bg-gray-50'>
 						<Section className='bg-white'>
-							<Section className='flex items-center justify-center  py-5'>
+							<Section className='py-5'>
 								<Img
-									src='https://mintlify.s3-us-west-1.amazonaws.com/rna/logo/light.svg'
+									src='https://i.ibb.co/S7f1QSV/light.png'
 									height='50'
 									alt="AgentCloud's Logo"
+									className='mx-auto'
 								/>
 							</Section>
 							<Section className='p-6 text-center'>
 								<Heading className='text-gray-800 font-bold text-xl mb-4 text-left'>Hi {name},</Heading>
 								<Text className='text-gray-800 mb-4 text-left'>
-									You have been invited to join AgentCloud. To accept the invitation and set up your account, please click the link below.
+									You have been invited to join {teamName} onAgentCloud.
+									To accept the invitation and set up your account, please click the link below.
 								</Text>
 
 								<Button

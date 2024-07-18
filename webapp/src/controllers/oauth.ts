@@ -92,7 +92,7 @@ export async function deserializeHandler(obj, done) {
 
 async function createUpdateAccountOauth(account, email, name, provider, profileId) {
 	if (!account) {
-		await createAccount(email, name || email, null, 'TEAM_MEMBER', false, provider as OAUTH_PROVIDER, profileId);
+		await createAccount({ email, name: name || email, roleTemplate:'TEAM_MEMBER', provider, profileId});
 	} else {
 		//existing account, check if it has the oauth ID else update it
 		if (!account.oauth || !account.oauth[provider]) {
