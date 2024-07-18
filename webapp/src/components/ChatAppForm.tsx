@@ -14,6 +14,7 @@ import ParameterForm from 'components/ParameterForm';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+import SharingModeSelect from 'components/SharingModeSelect';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -21,6 +22,7 @@ import { toast } from 'react-toastify';
 import { App,AppType } from 'struct/app';
 import { ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
+import { SharingMode } from 'struct/sharing';
 
 export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agentChoices=[], callback, fetchFormData, editing }
 	: { app?: App, toolChoices?: any[], modelChoices?: any[], agentChoices?: any, callback?: Function, fetchFormData?: Function, editing?: boolean }) { //TODO: fix any types
@@ -35,6 +37,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing||agentChoices?.length===0);
+	const [sharingMode, setSharingMode]: SharingMode = useState(SharingMode.TEAM);
 
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name||'');
@@ -87,6 +90,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 			name: appName,
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
+			sharingMode,
 			run,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
@@ -396,6 +400,11 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							/>
 
 						</>}
+
+						<SharingModeSelect
+							sharingMode={sharingMode}
+							setSharingMode={setSharingMode}
+						/>
 
 					</div>
 				</div>

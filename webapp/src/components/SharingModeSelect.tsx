@@ -15,7 +15,6 @@ const SharingModeSelect = ({ title='Sharing Mode', sharingMode, setSharingMode }
 			</label>
 			<div className='mt-2'>
 				<Select
-					isClearable
 					primaryColor={'indigo'}
 					classNames={SelectClassNames}
 					value={sharingMode ? { label: sharingMode, value: sharingMode } : null}
@@ -23,11 +22,6 @@ const SharingModeSelect = ({ title='Sharing Mode', sharingMode, setSharingMode }
 						setSharingMode(v ? v.value : null);
 					}}
 					options={sharingModeOptions}
-					formatOptionLabel={data => (
-						<span className='capitalize'>
-							{data.label}
-						</span>
-					)}
 				/>
 			</div>
 		</div>
