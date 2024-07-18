@@ -15,7 +15,7 @@ import setPermissions from '@mw/auth/setpermissions';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import homeRedirect from '@mw/homeredirect';
-import myPassport from '@mw/mypassport';
+import PassportManager from '@mw/passportmanager';
 import * as hasPerms from '@mw/permissions/hasperms';
 import renderStaticPage from '@mw/render/staticpage';
 import bodyParser from 'body-parser';
@@ -49,16 +49,17 @@ export default function router(server, app) {
 	server.post('/stripe-webhook', express.raw({type: 'application/json'}), stripeController.webhookHandler);
 
 	// Oauth handlers
-	server.use(myPassport.initialize());
+	const passportInstance = PassportManager.getPassport();
+	server.use(passportInstance.initialize());
 	const oauthRouter = Router({ mergeParams: true, caseSensitive: true });
 	oauthRouter.get('/redirect', useSession, useJWT, fetchSession, renderStaticPage(app, '/redirect'));
-	oauthRouter.get('/github', useSession, useJWT, myPassport.authenticate('github'));
-	oauthRouter.get('/github/callback', useSession, useJWT, myPassport.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	oauthRouter.get('/google', useSession, useJWT, myPassport.authenticate('google', {
+	oauthRouter.get('/github', useSession, useJWT, passportInstance.authenticate('github'));
+	oauthRouter.get('/github/callback', useSession, useJWT, passportInstance.authenticate('github', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	oauthRouter.get('/google', useSession, useJWT, passportInstance.authenticate('google', {
 		scope: ['profile', 'email'],
 	}));
-	oauthRouter.get('/google/callback', useSession, useJWT, myPassport.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
-	server.use('/auth', useSession, myPassport.session(), oauthRouter);
+	oauthRouter.get('/google/callback', useSession, useJWT, passportInstance.authenticate('google', { failureRedirect: '/login' }), fetchSession, (_req, res) => { res.redirect(`/auth/redirect?to=${encodeURIComponent('/account')}`); });
+	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware
 	server.set('query parser', 'simple');
