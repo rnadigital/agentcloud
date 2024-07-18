@@ -2,7 +2,7 @@ from langchain.chains.query_constructor.schema import AttributeInfo
 from langchain.retrievers import SelfQueryRetriever as LC_SelfQueryRetriever
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.vectorstores import VectorStore
-from langchain.retrievers.self_query.qdrant import QdrantTranslator
+from langchain_community.query_constructors.qdrant import QdrantTranslator
 from langchain.chains.query_constructor.ir import (
     Comparator,
 )

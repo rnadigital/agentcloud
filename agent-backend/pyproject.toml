@@ -23,7 +23,7 @@ diskcache = "^5.6.3"
 sse-starlette = "^1.8.2"
 chromadb = "^0.4.22"
 replicate = "^0.23.1"
-crewai = { git = "https://github.com/rnadigital/crewAI.git", branch = "develop-merge" }
+crewai = { git = "https://github.com/rnadigital/crewAI.git", branch = "sync-0.36.0" }
 onnxruntime = "1.17.0"
 fastembed = "^0.2.2"
 qdrant-client = "^1.8.0"
@@ -37,12 +37,14 @@ stackapi = "^0.3.0"
 youtube-search = "^2.1.2"
 langchain-google-vertexai = "^1.0.3"
 langchain-cohere = "^0.1.4"
-langchain-anthropic = "^0.1.12"
+langchain-anthropic = "^0.1.20"
 google-cloud-logging = "^3.10.0"
 langchain-groq = "^0.1.4"
 apify-client = "^1.7.0"
-langgraph = "0.0.51"
-anthropic = "0.26.1"
+langgraph = "^0.0.51"
+
+# Temporary freeze to fix issue with FastEmbed models. TODO: Remove this line when langchain-community > 0.2.7 is released
+langchain-community = "0.2.6"
 
 
 [build-system]
