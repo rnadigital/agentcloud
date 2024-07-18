@@ -91,7 +91,7 @@ const teamNavigation = [
 ];
 
 const userNavigation = [
-	{ name: 'My Account', href: '/account' },
+	//{ name: 'My Account', href: '/account' },
 	{ name: 'Billing', href: '/billing' },
 	{ name: 'Sign out', href: '#', logout: true },
 ];
@@ -243,7 +243,7 @@ export default withRouter(function Layout(props) {
 																</Link>
 															</li>
 														))}
-														<li key='account'>
+														{/* <li key='account'>
 															<Link
 																href='/account'
 																className={classNames(
@@ -259,7 +259,7 @@ export default withRouter(function Layout(props) {
 																/>
 																Account
 															</Link>
-														</li>
+														</li> */}
 														{isOrgOwner && <li key='billing'>
 															<Link
 																href='/billing'
@@ -368,11 +368,6 @@ export default withRouter(function Layout(props) {
 							</ul>
 
 							<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
-								{stripeTrial && <TrialNag
-									stripeEndsAt={stripeEndsAt}
-									stripePlan={stripePlan}
-									stripeCancelled={stripeCancelled}
-								/>}
 								{teamNavigation.length > 0 && <div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>}
 								<ul role='list' className='-mx-2 mt-2 space-y-1'>
 									{teamNavigation.map((item) => (
@@ -458,6 +453,7 @@ export default withRouter(function Layout(props) {
 										</form>
 									</li>
 								</ul>
+								<TrialNag />
 							</span>
 						</nav>}
 					</div>
