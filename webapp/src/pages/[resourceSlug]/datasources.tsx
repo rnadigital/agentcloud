@@ -58,10 +58,7 @@ export default function Datasources(props) {
 	//Backup polling for refresing while datasources are embedding, to supplement socket or fallback in case of failed socket connection
 	useEffect(() => {
 		const interval = setInterval(() => {
-			if (datasources && datasources.some(d => d?.status === DatasourceStatus.EMBEDDING)) {
-				//If there are any embedding datasources, refresh periodically
-				fetchDatasources();
-			}
+			fetchDatasources();
 		}, 10000);
 		return () => {
 			clearInterval(interval);
