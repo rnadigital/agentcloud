@@ -309,6 +309,7 @@ export default withRouter(function Layout(props) {
 															</form>
 														</li>
 													</ul>
+													<TrialNag />
 												</li>
 											</ul>
 										</nav>}
@@ -387,7 +388,7 @@ export default withRouter(function Layout(props) {
 											</Link>
 										</li>
 									))}
-									<li>
+									{/* <li>
 										<Link
 											href='/account'
 											className={classNames(
@@ -403,7 +404,7 @@ export default withRouter(function Layout(props) {
 											/>
 											Account
 										</Link>
-									</li>
+									</li> */}
 									{isOrgOwner && <li key='billing'>
 										<Link
 											href='/billing'
