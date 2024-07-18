@@ -90,7 +90,7 @@ export default function Login() {
 									rules={{
 										required: 'Password is required',
 										pattern: {
-											value: /^.*(?=.{8,})(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "]).*$/,
+											value:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "=]).{8,}$/,
 											message: 'Password must be at least 8 characters long and contain at least one letter, one number, and one special character',
 										},
 									}}
