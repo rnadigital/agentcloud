@@ -3,6 +3,7 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import SuccessAlert from 'components/SuccessAlert';
+import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -109,7 +110,7 @@ export default function Register() {
 									rules={{
 										required: 'Password is required',
 										pattern: {
-											value:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "=]).{8,}$/,
+											value: passwordPattern,
 											message: 'Password must be at least 8 characters long and contain at least one letter, one number, and one special character',
 										},
 									}}

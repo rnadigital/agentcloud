@@ -1,19 +1,19 @@
+import * as API from '@api';
 import {
 	EyeIcon,
 	EyeSlashIcon,
 } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
+import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
+import InfoAlert from 'components/InfoAlert';
+import SuccessAlert from 'components/SuccessAlert';
+import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-
-import * as API from '../api';
-import ErrorAlert from '../components/ErrorAlert';
-import InfoAlert from '../components/InfoAlert';
-import SuccessAlert from '../components/SuccessAlert';
 
 export interface LoginFormValues {
 	name: string
@@ -90,7 +90,7 @@ export default function Login() {
 									rules={{
 										required: 'Password is required',
 										pattern: {
-											value:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$%&? "=]).{8,}$/,
+											value: passwordPattern,
 											message: 'Password must be at least 8 characters long and contain at least one letter, one number, and one special character',
 										},
 									}}

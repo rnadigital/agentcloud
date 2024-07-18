@@ -15,8 +15,8 @@ import {
 	Tailwind,
 	Text,
 } from '@react-email/components';
-import * as React from 'react';
 import dotenv from 'dotenv';
+import * as React from 'react';
 dotenv.config({ path: '.env' });
 
 interface InviteProps {
