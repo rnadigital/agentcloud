@@ -10,6 +10,7 @@ import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
+import { productToPlanMap } from 'struct/billing';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -205,19 +206,20 @@ export async function verifyToken(req, res) {
 	}
 	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
 	let foundCheckoutSession;
-	if (!deletedVerification || !deletedVerification.token) {
+	if (!deletedVerification || !deletedVerification.token || !deletedVerification.accountId) {
 		const checkoutSessionId = req.body?.token;
 		foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
 		if (!foundCheckoutSession) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 		}
 	}
+	const accountId = deletedVerification.accountId;
 	if (foundCheckoutSession) {
 		const stripeCustomerId = foundCheckoutSession?.customer as string;
 		const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(stripeCustomerId);
-		await setStripeCustomerId(newAccountId, customerId);
-		await updateStripeCustomer(customerId, {
-			stripePlan: priceToPlanMap[planItem.price.id],
+		await setStripeCustomerId(accountId, stripeCustomerId);
+		await updateStripeCustomer(stripeCustomerId, {
+			stripePlan: productToPlanMap[planItem.price.product],
 			stripeAddons: {
 				users: addonUsersItem ? addonUsersItem.quantity : 0,
 				storage: addonStorageItem ? addonStorageItem.quantity : 0,
@@ -225,7 +227,6 @@ export async function verifyToken(req, res) {
 			stripeEndsAt: foundCheckoutSession?.current_period_end*1000,
 		});
 	}
-	const accountId = deletedVerification?.accountId || '';
 	const foundAccount = await getAccountById(accountId);
 	if (!foundAccount.passwordHash) {
 		const password = req.body.password;

@@ -1,18 +1,14 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { setStripeCustomerId, updateStripeCustomer } from 'db/account';
-import { addCheckoutSession } from 'db/checkoutsession';
-import { unsafeGetPaymentLinkById } from 'db/paymentlink';
+import { updateStripeCustomer } from 'db/account';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
-import createAccount from 'lib/account/create';
 import StripeClient from 'lib/stripe';
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { planToPriceMap, priceToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
-import { planToPriceMap, priceToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationUtils';
 
 const log = debug('webapp:stripe');
@@ -92,7 +88,7 @@ export async function webhookHandler(req, res, next) {
 			const stripeCustomerId = checkoutSession?.customer;
 			const newPaymentMethodId = checkoutSession?.payment_method;
 			// Set the customer's default payment method
-			const updatedCustomer = await StripeClient.get().customers.update(stripeCustomerId, {
+			await StripeClient.get().customers.update(stripeCustomerId, {
 				invoice_settings: {
 					default_payment_method: newPaymentMethodId,
 				},
