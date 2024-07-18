@@ -793,33 +793,34 @@ version = "0.36.0"
 description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
 optional = false
 python-versions = ">=3.10,<=3.13"
-files = [
-    {file = "crewai-0.36.0.tar.gz", hash = "sha256:7210b3b20c3dc993c62377e953e3c82bff524537a6d81b4079962d2643ce2f61"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-appdirs = ">=1.4.4,<2.0.0"
-click = ">=8.1.7,<9.0.0"
-embedchain = ">=0.1.114,<0.2.0"
+appdirs = "^1.4.4"
+click = "^8.1.7"
+embedchain = "^0.1.114"
 instructor = "1.3.3"
-json-repair = ">=0.25.2,<0.26.0"
-jsonref = ">=1.1.0,<2.0.0"
+json-repair = "^0.25.2"
+jsonref = "^1.1.0"
 langchain = ">0.2,<=0.3"
-openai = ">=1.13.3,<2.0.0"
-opentelemetry-api = ">=1.22.0,<2.0.0"
-opentelemetry-exporter-otlp-proto-http = ">=1.22.0,<2.0.0"
-opentelemetry-sdk = ">=1.22.0,<2.0.0"
-pydantic = ">=2.4.2,<3.0.0"
-python-dotenv = ">=1.0.0,<2.0.0"
-regex = ">=2023.12.25,<2024.0.0"
+openai = "^1.13.3"
+opentelemetry-api = "^1.22.0"
+opentelemetry-exporter-otlp-proto-http = "^1.22.0"
+opentelemetry-sdk = "^1.22.0"
+pydantic = "^2.4.2"
+python-dotenv = "^1.0.0"
+regex = "^2023.12.25"
 
 [package.extras]
 agentops = ["agentops (>=0.1.9,<0.2.0)"]
 tools = ["crewai-tools (>=0.4.8,<0.5.0)"]
 
 [package.source]
-type = "file"
-url = "../../crewAI/dist/crewai-0.36.0.tar.gz"
+type = "git"
+url = "https://github.com/rnadigital/crewAI.git"
+reference = "c3cada9fe94ea0e3078acaa130aa5dd7c94e6a20"
+resolved_reference = "c3cada9fe94ea0e3078acaa130aa5dd7c94e6a20"
 
 [[package]]
 name = "curl-cffi"
@@ -2988,6 +2989,7 @@ files = [
     {file = "msgpack-1.0.8-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:5fbb160554e319f7b22ecf530a80a3ff496d38e8e07ae763b9e82fadfe96f273"},
     {file = "msgpack-1.0.8-cp39-cp39-win32.whl", hash = "sha256:f9af38a89b6a5c04b7d18c492c8ccf2aee7048aff1ce8437c4683bb5a1df893d"},
     {file = "msgpack-1.0.8-cp39-cp39-win_amd64.whl", hash = "sha256:ed59dd52075f8fc91da6053b12e8c89e37aa043f8986efd89e61fae69dc1b011"},
+    {file = "msgpack-1.0.8-py3-none-any.whl", hash = "sha256:24f727df1e20b9876fa6e95f840a2a2651e34c0ad147676356f4bf5fbb0206ca"},
     {file = "msgpack-1.0.8.tar.gz", hash = "sha256:95c02b0e27e706e48d0e5426d1710ca78e0f0628d6e89d5b5a5b91a5f12274f3"},
 ]
 
@@ -4401,7 +4403,6 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
-    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -5916,4 +5917,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "05118ac4e94725799ac4490a70e253bffe883e276b11669359ae8c984417e4d5"
+content-hash = "9e8e85edc4dd8f7d81a48121f55f03cbd171c0445c1d763ac643e0c6d132f142"
