@@ -277,7 +277,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 							/>
 						</div>
 
-						<AgentsSelect
+						{agentChoices ?.length > 0 && <AgentsSelect
 							agentChoices={agentChoices}
 							agentsState={agentsState}
 							onChange={agentsState => {
@@ -289,7 +289,7 @@ export default function ChatAppForm({ app, toolChoices=[], modelChoices=[], agen
 								setAgentsState(null);
 							}}
 							multiple={false}
-						/>
+						/>}
 
 						{showAgentForm && <>
 
