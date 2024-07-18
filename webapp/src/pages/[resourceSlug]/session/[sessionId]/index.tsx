@@ -255,7 +255,7 @@ export default function Session(props) {
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 				</div>}
 			</div>
-			{messages.length < 3 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+			{messages.length < 4 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
 				<ConversationStarters
 					sendMessage={message => sendMessage(message, null)}
 					conversationStarters={app?.chatAppConfig?.conversationStarters}

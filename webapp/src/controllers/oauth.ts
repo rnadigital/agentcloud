@@ -1,13 +1,13 @@
 'use strict';
 
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import { Account, addAccount, getAccountByOAuthOrEmail, setAccountOauth } from 'db/account';
 import debug from 'debug';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
 import SecretKeys from 'secret/secretkeys';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
-import { Account, addAccount, getAccountByOAuthOrEmail, setAccountOauth } from '../db/account';
 import { addOrg } from '../db/org';
 import { addTeam } from '../db/team';
 const log = debug('webapp:oauth');
