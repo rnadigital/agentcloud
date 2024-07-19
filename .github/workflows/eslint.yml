@@ -10,10 +10,10 @@
 name: ESLint
 
 on:
-  #push:
-  #  branches: [ "292-todo-list" ]
+  push:
+    branches: [ "develop", "master", "292-todo-list" ]
   pull_request:
-    branches: [ "292-todo-list" ]
+    branches: [ "develop", "master", "292-todo-list" ]
 
 jobs:
   eslint:
