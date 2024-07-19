@@ -1,9 +1,9 @@
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 import { NotificationType, WebhookType } from 'struct/notification';
-import { useAccountContext } from 'context/account';
 
 let socketio;
 if (typeof window !== 'undefined') {
@@ -64,7 +64,7 @@ export function SocketWrapper({ children }) {
 	function tryReconnect() {
 		if (sharedSocket.connected === false
 			&& sharedSocket.connecting === false) {
-			sharedSocket.connect()
+			sharedSocket.connect();
 		}
 	}
 
@@ -74,7 +74,7 @@ export function SocketWrapper({ children }) {
 		return () => {
 			clearInterval(reconnectInterval);
 		};
-	}, [])
+	}, []);
 
 	return (
 		<SocketContext.Provider value={[sharedSocket, notificationTrigger, sessionTrigger] as any}>
