@@ -262,7 +262,7 @@ export default function Session(props) {
 				/>
 			</div>}
 			<div className='flex flex-col mt-auto pt-4 border-t'>
-				<div className='flex flex-row justify-center pb-3'>
+				<div className='flex flex-row justify-center'>
 					<div className='flex items-start space-x-4 basis-1/2'>
 						{!terminated && account && <div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
 							<span className={'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'}>
