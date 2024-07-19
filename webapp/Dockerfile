@@ -1,5 +1,5 @@
 # First Stage: Build
-FROM node:latest as builder
+FROM node:20 as builder
 
 WORKDIR /app
 
@@ -43,11 +43,14 @@ ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE=$NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE
 ENV NEXT_PUBLIC_ENABLE_GITHUB_OAUTH=$NEXT_PUBLIC_ENABLE_GITHUB_OAUTH
 
-# Disable Next.js telemetry and build the application
-RUN npx next telemetry disable && npm run build
+# Disable Next.js telemetry
+RUN npx next telemetry disable
+
+# Build the application
+RUN npm run build
 
 # Second Stage: Runtime
-FROM node:latest
+FROM node:20
 
 WORKDIR /app
 
