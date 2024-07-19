@@ -461,8 +461,10 @@ export default withRouter(function Layout(props) {
 				</div>}
 
 				<div className={classNames(showNavs ? 'lg:pl-72' : '', 'flex flex-col flex-1')}>
-					{/*<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />*/}
-					{showNavs && <div className={`sticky top-[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px] z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8`}>
+					{/*<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />
+					[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px]
+					*/}
+					{showNavs && <div className={'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'}>
 						<button
 							type='button'
 							className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
@@ -622,7 +624,7 @@ export default withRouter(function Layout(props) {
 				<em>Switching team...</em>
 			</div>
 			<div className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching===false?'opacity-0':''} text-center`} />
-			<footer className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm bg-gray-50 px-8 pb-10 sm:flex items-center`}>
+			<footer className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm bg-gray-50 px-8 sm:flex items-center`}>
 				<div className='py-3'>© {new Date().getFullYear()} RNA Digital - v{packageJson.version}{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH && `-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}</div>
 				<div className='flex gap-x-2 ml-auto'>
 					<a href='https://www.linkedin.com/company/rna-digital/' target='_blank' rel='noopener noreferrer' className=''>
