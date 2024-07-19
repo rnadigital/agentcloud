@@ -3,12 +3,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 import { NotificationType, WebhookType } from 'struct/notification';
+import { useAccountContext } from 'context/account';
 
 let socketio;
 if (typeof window !== 'undefined') {
-	socketio = io(/*{
-		transports: ["websocket", "polling"],
-	}*/);
+	socketio = io({
+		'reconnection': true,
+		'reconnectionAttempts': 100
+	});
 }
 
 const SocketContext = createContext(socketio);
@@ -16,31 +18,40 @@ const SocketContext = createContext(socketio);
 export function SocketWrapper({ children }) {
 
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const [accountContext]: any = useAccountContext();
+	const { account } = accountContext as any;
+	const { resourceSlug } = router.query || account?.currentTeam;
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
+	const [_room, setRoom] = useState(resourceSlug);
 
 	//TODO: move these into a "trigger" context for global events, maybe switch to useReducer
 	const [notificationTrigger, setNotificationTrigger] = useState(null);
 	const [sessionTrigger, setSessionTrigger] = useState(false);
 
+	function handleNotification(notification) {
+		if (notification?.description) {
+			toast.success(notification?.description);
+		}
+		setNotificationTrigger(notification);
+	}
+
 	function joinRoomAndListen() {
 		if (!sharedSocket || !resourceSlug) { return; }
-		sharedSocket.emit('join_room', resourceSlug);		
-		sharedSocket.on('notification', notification => {
-			if (notification?.description
-				&& notification?.type === NotificationType.Webhook
-				&& notification?.details?.webhookType === WebhookType.SuccessfulSync) {
-				toast.success(notification?.description);
+		setRoom(oldRoom => {
+			if (oldRoom !== resourceSlug) {
+				sharedSocket.emit('leave_room', oldRoom);
+				sharedSocket.emit('join_room', resourceSlug);
+				sharedSocket.off('notification', handleNotification);
+				sharedSocket.on('notification', handleNotification);
 			}
-		    setNotificationTrigger(notification);
+			return resourceSlug;
 		});
 	}
 
 	useEffect(() => {
 		joinRoomAndListen();
-		//TODO: handle leaving old room on changing resourceSlug
 		return () => {
-			sharedSocket?.off('notification');
+			sharedSocket?.off('notification', handleNotification);
 		};
 	}, [sharedSocket, resourceSlug]);
 
@@ -49,6 +60,21 @@ export function SocketWrapper({ children }) {
 			setSessionTrigger(!sessionTrigger);
 		}
 	}, [router.asPath]);
+
+	function tryReconnect() {
+		if (sharedSocket.connected === false
+			&& sharedSocket.connecting === false) {
+			sharedSocket.connect()
+		}
+	}
+
+	useEffect(() => {
+		sharedSocket.connect();
+		const reconnectInterval = setInterval(tryReconnect, 10000);
+		return () => {
+			clearInterval(reconnectInterval);
+		};
+	}, [])
 
 	return (
 		<SocketContext.Provider value={[sharedSocket, notificationTrigger, sessionTrigger] as any}>
