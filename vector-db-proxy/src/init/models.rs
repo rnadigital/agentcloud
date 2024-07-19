@@ -25,6 +25,7 @@ pub struct GlobalData {
     pub use_gpu: String,
     pub logging_level: String,
     pub message_queue_provider: String,
+    pub google_app_creds: String,
 }
 
 impl GlobalData {
@@ -58,6 +59,7 @@ impl GlobalData {
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
             message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER").unwrap_or("rabbitmq".to_string()),
+            google_app_creds: dotenv::var("GOOGLE_APPLICATION_CREDENTIALS").unwrap()
         }
     }
 }

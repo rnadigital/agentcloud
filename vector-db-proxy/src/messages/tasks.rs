@@ -24,6 +24,7 @@ pub async fn get_message_queue(
     message_queue_provider: MessageQueueProvider,
 ) -> QueueConnectionTypes {
     let global_data = GLOBAL_DATA.read().await;
+    println!("GOOGLE APPLICATION CREDENTIALS: {}", global_data.google_app_creds);
     match message_queue_provider {
         MessageQueueProvider::RABBITMQ => {
             println!("Using RabbitMQ as the streaming Queue!");
