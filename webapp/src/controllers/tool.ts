@@ -335,9 +335,7 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: retriever_config || {}, //TODO: validation
 		data: toolData,
-		state: functionNeedsUpdate
-			? ToolState.PENDING
-			: ToolState.READY,
+		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {}),
 	});
 
 	let functionProvider;
