@@ -501,31 +501,17 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									</select>
 								</div>
 							</div>
-							{toolRetriever === Retriever.TIME_WEIGHTED && <div className='mt-2'>
-								<label htmlFor='toolTimeWeightField' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Time Weight Field
-								</label>
-								<div>
-									<select
-										required
-										id='toolTimeWeightField'
-										name='toolTimeWeightField'
-										className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-										value={toolTimeWeightField}
-										onChange={(e) => setToolTimeWeightField(e.target.value)}
-									>
-										{streamState?.streams?.map((stream, ei) => {
-											const foundStreamSchema = discoveredSchema?.catalog?.streams?.find(st => st?.stream?.name === stream);
-											const foundSchemaKeys = streamState?.selectedFieldsMap[stream]
-												|| Object.keys(foundStreamSchema?.stream?.jsonSchema?.properties);
-											return <optgroup label={stream} key={`embeddingField_optgroup_${ei}`}>
-												{foundSchemaKeys
-													.map((sk, ski) => (<option key={`embeddingField_option_${ski}`} value={sk}>{sk}</option>))}
-											</optgroup>;
-										})}
-									</select>
-								</div>
-							</div>}
+							{toolRetriever === Retriever.TIME_WEIGHTED && <RetrievalStrategyComponent
+								toolRetriever={toolRetriever}
+								setToolRetriever={setToolRetriever}
+								toolDecayRate={toolDecayRate}
+								setToolDecayRate={setToolDecayRate}
+								currentDatasource={null}
+								defaultRetriever={Retriever.SELF_QUERY}
+							// toolTimeWeightField={toolTimeWeightField}
+							// setToolTimeWeightField={setToolTimeWeightField}
+							// schema={['example']}
+							/>}
 							<div>
 								<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Embedding Model

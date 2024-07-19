@@ -1,6 +1,6 @@
 import InfoAlert from 'components/InfoAlert';
 import React, { useEffect } from 'react';
-import { Retriever, ToolType } from 'struct/tool';
+import { MetadataFieldInfo, Retriever, ToolType } from 'struct/tool';
 
 interface RetrievalStrategyProps {
 	toolRetriever: Retriever;
@@ -10,7 +10,7 @@ interface RetrievalStrategyProps {
 	currentDatasource?: { sourceType: string };
 	toolTimeWeightField?: string;
 	setToolTimeWeightField?: (value: string) => void;
-	schema?: any;
+	metadataFieldInfo?: MetadataFieldInfo[];
 	defaultRetriever?: Retriever;
 }
 
@@ -22,7 +22,7 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	currentDatasource,
 	toolTimeWeightField,
 	setToolTimeWeightField,
-	schema,
+	metadataFieldInfo,
 	defaultRetriever,
 }) => {
 	useEffect(() => {
@@ -53,7 +53,10 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 							<option value={Retriever.SELF_QUERY}>Self Query</option>
 						</> }
 						<option value={Retriever.MULTI_QUERY}>Multi Query</option>
-						{currentDatasource?.sourceType !== 'file' && <option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>}
+						{currentDatasource?.sourceType !== 'file'
+							&& toolTimeWeightField
+							&& setToolTimeWeightField
+							&& <option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>}
 					</select>
 				</div>
 			</div>
@@ -100,16 +103,15 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 								value={toolTimeWeightField}
 								onChange={(e) => setToolTimeWeightField(e.target.value)}
 							>
-								{schema?.streams?.map((stream, ei) => {
-									const foundStreamSchema = schema?.streams?.find(st => st?.stream?.name === stream?.stream?.name);
-									const foundStreamProperties = foundStreamSchema?.stream?.jsonSchema?.properties;
-									if (!foundStreamProperties) { return; }
-									const foundSchemaKeys = Object.keys(foundStreamProperties);
-									return <optgroup label={stream?.stream?.name} key={`timeWeightField_optgroup_${ei}`}>
-										{foundSchemaKeys
-											.map((sk, ski) => (<option key={`timeWeightField_option_${ski}`} value={sk}>{sk}</option>))}
-									</optgroup>;
-								})}
+								{metadataFieldInfo?.map((column, ei) => (
+									<option
+										className='capitalize'
+										key={`timeWeightField_option_${ei}`}
+										value={column?.name}
+									>
+										{column?.name}
+									</option>
+								))}
 							</select>
 						</div>
 					</div>}

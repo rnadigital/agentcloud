@@ -215,6 +215,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 							</label>
 							<div className='mt-2'>
 								<Select
+									isClearable
 									isSearchable
 						            primaryColor={'indigo'}
 						            classNames={{
