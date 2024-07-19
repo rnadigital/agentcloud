@@ -26,6 +26,7 @@ export default function Session(props) {
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [_chatContext, setChatContext]: any = useChatContext();
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
@@ -36,6 +37,7 @@ export default function Session(props) {
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
+	const [showConversationStarters, setShowConversationStarters] = useState(true);
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
@@ -62,7 +64,7 @@ export default function Session(props) {
 	}, [isAtBottom, scrollContainerRef?.current]);
 	const sentLastMessage = !messages || (messages.length > 0 && messages[messages.length-1].incoming);
 	const lastMessageFeedback = !messages || (messages.length > 0 && messages[messages.length-1].isFeedback);
-	const chatBusyState = messages?.length === 0 ||sentLastMessage || !lastMessageFeedback;
+	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
 
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);
@@ -122,7 +124,14 @@ export default function Session(props) {
 	}
 	useEffect(() => {
 		scrollToBottom();
+		if (showConversationStarters
+			&& messages.slice(0, 4).some(message => message.incoming === true)) {
+			setShowConversationStarters(false);
+		}
 	}, [messages]);
+	useEffect(() => {
+		setShowConversationStarters(false);
+	}, [sessionId]);
 
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
@@ -151,6 +160,7 @@ export default function Session(props) {
 			setAuthorAvatarMap(res.avatarMap||{});
 			setSession(res?.session||{});
 			setApp(res?.app||{});
+			setChatContext(res);
 		}, setError, router);
 		API.getMessages({
 			resourceSlug,
@@ -173,6 +183,9 @@ export default function Session(props) {
 				.sort((ma, mb) => ma.ts - mb.ts);
 			if (sortedMessages && sortedMessages.length > 0) {
 				setLastSeenMessageId(sortedMessages[sortedMessages.length-1]._id);
+			}
+			if (!sortedMessages.slice(0, 4).some(message => message.incoming === true)) {
+				setShowConversationStarters(true);
 			}
 			setMessages(sortedMessages);
 			setLoading(false);
@@ -255,7 +268,7 @@ export default function Session(props) {
 					<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 				</div>}
 			</div>
-			{messages.length < 4 && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+			{showConversationStarters && !chatBusyState && app?.chatAppConfig?.conversationStarters && <div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
 				<ConversationStarters
 					sendMessage={message => sendMessage(message, null)}
 					conversationStarters={app?.chatAppConfig?.conversationStarters}

@@ -18,6 +18,7 @@ export function ChatWrapper({ children }) {
 	}
 
 	function updateSharedState(update: any) {
+		// log('updateSharedState', update);
 		if (update == null) {
 			return setSharedState({});
 		}

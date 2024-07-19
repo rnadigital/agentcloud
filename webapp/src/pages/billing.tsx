@@ -54,7 +54,12 @@ export default function Billing(props) {
 				_csrf: getPayload()._csrf,
 			}, null, toast.error, null);
 			if (res.redirect && typeof window !== undefined) {
-				window.open(res.redirect, '_blank').focus();
+				const openedWindow = window.open(res.redirect, '_blank');
+				openedWindow?.focus();
+				if (!openedWindow) {
+					//Something prevented opening new tab e.g. adblocker, or an open file selector
+					window.location = res.redirect;
+				}
 			}
 		};
 	}

@@ -3,6 +3,7 @@ import {
 	ChevronDownIcon,
 } from '@heroicons/react/20/solid';
 import {
+	ArrowPathIcon,
 	ArrowRightOnRectangleIcon,
 	Bars3Icon,
 	CircleStackIcon,
@@ -30,6 +31,7 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
 
@@ -464,7 +466,7 @@ export default withRouter(function Layout(props) {
 					{/*<BillingBanner stripePlan={stripePlan} stripeEndsAt={stripeEndsAt} stripeCancelled={stripeCancelled} />
 					[${(stripePlan && stripeEndsAt && (stripeEndsAt > Date.now())) ? 28 : 0}px]
 					*/}
-					{showNavs && <div className={'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'}>
+					{showNavs && <div className={'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-4'}>
 						<button
 							type='button'
 							className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
@@ -480,9 +482,20 @@ export default withRouter(function Layout(props) {
 							aria-hidden='true'
 						/>
 
-						<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap'>
-							{chatContext?.prompt && chatContext.prompt}
-						</h5>
+						{chatContext?.app?.name && <h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
+							<button
+								onClick={() => {
+									API.addSession({
+										_csrf: csrf,
+										resourceSlug,
+										id: chatContext?.app?._id,
+									}, null, toast.error, router);
+								}}
+								className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded'>
+								<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
+							</button>
+							<span>{chatContext.app.name}</span>
+						</h5>}
 
 						<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>
 							{/*<form className='relative flex flex-1' action='#' method='GET'>
