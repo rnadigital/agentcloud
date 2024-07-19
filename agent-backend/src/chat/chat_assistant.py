@@ -313,6 +313,9 @@ class ChatAssistant:
         if timestamp is None:
             timestamp = int(datetime.now().timestamp() * 1000)
 
+        if (len(text.rstrip()) == 0 and first == True) or len(text) == 0:
+            return # Don't send empty first messages
+
         # send the message
         send(
             self.socket,
