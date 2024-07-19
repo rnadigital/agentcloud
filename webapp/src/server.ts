@@ -46,7 +46,7 @@ const log = debug('webapp:server');
 app.prepare()
 	.then(async () => {
 
-		await airbyteSetup.init();
+		await airbyteSetup.init()
 		await db.connect();
 		await migrate();
 		const secretProvider = SecretProviderFactory.getSecretProvider();
