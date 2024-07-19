@@ -253,7 +253,13 @@ class ChatAssistant:
                     # tool started being used
                     case "on_tool_start":
                         logging.debug(f"{kind}:\n{event}")
-                        tool_name = event.get('name').replace('_', ' ').capitalize()
+
+                        # No longer sending human input tool usage start/end messages
+                        raw_tool_name = event.get('name')
+                        if raw_tool_name == 'human_input':
+                            continue
+
+                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
                         tool_chunk_id[tool_name] = str(uuid.uuid4())
                         self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
                                             first=True, chunk_id=tool_chunk_id[tool_name],
@@ -263,7 +269,13 @@ class ChatAssistant:
                     # tool finished being used
                     case "on_tool_end":
                         logging.debug(f"{kind}:\n{event}")
-                        tool_name = event.get('name').replace('_', ' ').capitalize()
+
+                        # No longer sending human input tool usage start/end messages
+                        raw_tool_name = event.get('name')
+                        if raw_tool_name == 'human_input':
+                            continue
+
+                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
                         self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
                                             first=True, chunk_id=tool_chunk_id[tool_name],
                                             timestamp=datetime.now().timestamp() * 1000,
