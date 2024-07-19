@@ -598,19 +598,23 @@ export async function syncDatasourceApi(req, res, next) {
 		connectionId: datasource.connectionId,
 		jobType: 'sync',
 	};
-	await setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.PROCESSING);
-	const createdJob = await jobsApi
-		.createJob(null, jobBody)
-		.then(res => res.data)
-		.catch(err => err.data);
-	log('createdJob', createdJob);
 
+	try {
+		const createdJob = await jobsApi
+			.createJob(null, jobBody)
+			.then(res => res.data);
+		log('createdJob', createdJob);
+	} catch (e) {
+		log(e);
+		console.log(e);
+		return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+	}
+
+	//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		recordCount: { total: 0 },
+		status: DatasourceStatus.PROCESSING
 	});
-
-	// Update the datasource with the connection settings and sync date
-	// await setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date());
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
