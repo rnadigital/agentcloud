@@ -105,6 +105,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => { /* noop */ };
 	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
+	const [topK, setTopK] = useState(tool?.retriever_config?.k || 4);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(tool?.retriever_config?.decay_rate || 0.5);
 	useEffect(() => {
 		if (toolRetriever !== Retriever.TIME_WEIGHTED) {
@@ -177,6 +178,7 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 					...(tool?.retriever_config || {}),
 					timeWeightField: toolTimeWeightField,
 					decay_rate: toolDecayRate,
+					k: topK,
 				}, // TODO
 			};
 			switch (toolType) {
@@ -384,6 +386,8 @@ export default function ToolForm({ tool = {}, revisions = [], datasources = [], 
 								setToolTimeWeightField={setToolTimeWeightField}
 								metadataFieldInfo={tool.retriever_config?.metadata_field_info}
 								currentDatasource={currentDatasource}
+								topK={topK}
+								setTopK={setTopK}
 							/>
 
 						</div>

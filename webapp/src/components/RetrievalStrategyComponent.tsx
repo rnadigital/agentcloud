@@ -12,6 +12,8 @@ interface RetrievalStrategyProps {
 	setToolTimeWeightField?: (value: string) => void;
 	metadataFieldInfo?: MetadataFieldInfo[];
 	defaultRetriever?: Retriever;
+	topK?: number;
+	setTopK?: (value: number) => void;
 }
 
 const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
@@ -24,12 +26,15 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	setToolTimeWeightField,
 	metadataFieldInfo,
 	defaultRetriever,
+	topK = 4,
+	setTopK,
 }) => {
 	useEffect(() => {
 		if (defaultRetriever) {
 			setToolRetriever(defaultRetriever || Retriever.SELF_QUERY);
 		}
 	}, []);
+
 	return (
 		<div>
 			<div className='mt-2'>
@@ -118,8 +123,26 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 				</>
 			)}
 
-			{/*toolRetriever === Retriever.SELF_QUERY && ... */}
-			
+			<div className='mt-2'>
+				<label htmlFor='topK' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+					Top K Results
+				</label>
+				<div>
+					<input
+						type='number'
+						id='topK'
+						name='topK'
+						required
+						min='1'
+						value={topK}
+						onChange={e => setTopK(parseInt(e.target.value, 10))}
+						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+					/>
+				</div>
+			</div>
+
+			{topK > 10 && <InfoAlert className='w-full my-2 m-0 p-4 bg-orange-300 rounded' message='High values (>10) for Top K will make queries slower and increase token cost as your agents have to process more data.' textColor='black' />}
+
 		</div>
 	);
 };
