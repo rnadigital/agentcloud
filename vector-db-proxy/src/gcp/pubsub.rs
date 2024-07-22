@@ -21,6 +21,9 @@ pub async fn subscribe_to_topic(
     connection_details: PubSubConnect,
 ) -> Result<MessageStream> {
     // Create pubsub client.
+    let cred_file = try_auth_to_google().await.unwrap();
+    let client_config = ClientConfig::default().with_credentials(cred_file).await.unwrap();
+    
     match ClientConfig::default().with_auth().await {
         Ok(client_config) => {
             match Client::new(client_config).await {

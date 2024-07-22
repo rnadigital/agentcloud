@@ -20,7 +20,10 @@ RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." \
 RUN sed -i 's#src/dummy.rs#src/main.rs#' Cargo.toml
 
 #TODO: only copy whats necessary
-COPY . . 
+COPY . .
+
+ARG GCP_SERVICE_ACCOUNT_JSON
+ENV GOOGLE_APPLICATION_CREDENTIALS_JSON=$GCP_SERVICE_ACCOUNT_JSON
 
 RUN if [ "$RELEASE" = "true" ] ; then echo "Running Release..." \
 	&& cargo build --release \
