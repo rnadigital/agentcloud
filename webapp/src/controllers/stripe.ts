@@ -7,7 +7,7 @@ import { unsafeGetPaymentLinkById } from 'db/paymentlink';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
-import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
+import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan, SubscriptionPlanConfig, subscriptionPlans } from 'struct/billing';
 const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
@@ -221,18 +221,18 @@ export async function requestChangePlan(req, res, next) {
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
 	const plan = req.body.plan;
-	const planPrice = planToPriceMap[plan];
+	const planPriceId = planToPriceMap[plan];
 
 	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
 		process.env.STRIPE_PRO_PLAN_PRICE_ID,
-		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPriceId)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
 
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
-			price: planPrice,
+			price: planPriceId,
 			quantity: 1
 		}
 	];
@@ -301,10 +301,10 @@ export async function confirmChangePlan(req, res, next) {
 	// }
 
 	const plan = req.body.plan;
-	const planPrice = planToPriceMap[plan];
+	const planPriceId = planToPriceMap[plan];
 	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
 		process.env.STRIPE_PRO_PLAN_PRICE_ID,
-		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPriceId)) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
 
@@ -343,7 +343,18 @@ export async function confirmChangePlan(req, res, next) {
 		limit: 1,
 	});
 
-	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
+	const foundPlan: SubscriptionPlanConfig = subscriptionPlans
+		.find(plan => {
+			return plan.priceId === planPriceId;
+		});
+	if (!foundPlan) {
+		return dynamicResponse(req, res, 400, { error: 'Could not find plan in pricing table' });
+	}
+
+	console.log(foundPlan);
+
+	if ((!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0)
+		&& foundPlan.price > 0) {
 		const checkoutSession = await StripeClient.get().checkout.sessions.create({
 			ui_mode: 'embedded',
 			customer: stripeCustomerId,

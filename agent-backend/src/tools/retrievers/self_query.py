@@ -74,7 +74,8 @@ class SelfQueryRetriever(BaseToolRetriever):
             vectorstore=vector_store,
             document_contents=tool.description,
             metadata_field_info=self.metadata_field_info,
-            verbose=True
+            verbose=True,
+            search_kwargs={'k': tool.retriever_config.k}
         )
         super().__init__()
 

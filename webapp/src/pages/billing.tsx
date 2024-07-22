@@ -213,6 +213,9 @@ ${missingEnvs.join('\n')}`} />);
 									setLast4(res?.last4);
 									setContinued(true);
 									setShowConfirmModal(true);
+								} else if (getPayload().plan === SubscriptionPlan.FREE) {
+									setContinued(true);
+									setShowConfirmModal(true);
 								} else {
 									resolve(null);
 									setShowPaymentModal(true);

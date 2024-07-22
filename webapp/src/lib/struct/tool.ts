@@ -17,12 +17,23 @@ export type MetadataFieldInfo = {
 };
 
 export type SelfQueryRetrieverConfig = {
-	k?: number; //top k, unused atm
+	k?: number;
 	metadata_field_info: MetadataFieldInfo[];
 };
 
 export type TimeWeightedRetrieverConfig = {
+	k?: number;
 	decay_rate?: number;
+};
+
+export type SimilaritySearchRetrieverConfig = {
+	k?: number;
+	//TODO: any specific configs?
+};
+
+export type MultiQueryRetrieverConfig = {
+	k?: number;
+	//TODO: any specific configs?
 };
 
 export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;

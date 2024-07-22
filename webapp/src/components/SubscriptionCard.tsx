@@ -1,22 +1,15 @@
 import * as API from '@api';
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
-import ConfirmModal from 'components/ConfirmModal';
-import ErrorAlert from 'components/ErrorAlert';
-import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-import InfoAlert from 'components/InfoAlert';
+import classNames from 'components//ClassNames';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 
 export default function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
@@ -26,7 +19,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 	const { csrf, account } = accountContext as any;
 	const { stripeEndsAt, stripeTrial, stripeAddons, stripeCancelled } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
-	const numberPrice = typeof price === 'number';
+	const isEnterprise = plan === SubscriptionPlan.ENTERPRISE;
 	const [editedAddons, setEditedAddons] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -98,7 +91,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 		<div
 			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 border ${selectedPlan === plan
 				? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-1'
-				: 'border hover:shadow-lg hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
+				: 'border hover:shadow-md bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
 			onClick={() => setSelectedPlan(plan)}
 		>
 			{!currentPlan && isPopular && (
@@ -126,13 +119,13 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 			</div>
 			<div className='mt-1 min-h-[80px]'>
 				{description}
-				{price > 0		//and not free plan
+				{price > 0	//and not free plan
 					&& plan !== SubscriptionPlan.ENTERPRISE //and not customisable on enterprise
 					&& renderAddons(addons)}
 			</div>
 			<div className='mt-4 flex flex-row'>
-				<span className='text-4xl font-bold'>{numberPrice && '$'}{price}</span>
-				{numberPrice && (
+				<span className='text-4xl font-bold'>${isEnterprise ? 'Custom' : price}</span>
+				{!isEnterprise && (
 					<span className='text-sm text-gray-500 flex flex-col ps-1'>
 						<span>per</span>
 						<span>month</span>
@@ -171,10 +164,10 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 							setTimeout(() => setSubmitting(false), 500);
 						}
 					}}		
-					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && (!stripeCancelled || price === 0))}
-					className={editedAddons || (!currentPlan && selectedPlan === plan)
-						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
-						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+					// disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && (!stripeCancelled || price === 0))}
+					className={classNames(editedAddons || (!currentPlan && selectedPlan === plan)
+						? 'mt-4 transition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
+						: 'mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600')}
 				>
 					{submitting && <ButtonSpinner className='mt-1 me-2' />}
 					{submitting

@@ -30,7 +30,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 		fetchFormData && fetchFormData();
 	}
 	return (
-		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-gray-50 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
+		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-white border dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<span className='flex justify-between'>
 					<span className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${app.type === AppType.CHAT

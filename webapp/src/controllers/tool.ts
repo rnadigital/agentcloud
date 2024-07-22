@@ -277,7 +277,7 @@ export async function addToolApi(req, res, next) {
 
 export async function editToolApi(req, res, next) {
 
-	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config, runtime } = req.body;
+	const { name, type, data, toolId, schema, description, datasourceId, retriever, retriever_config } = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
 

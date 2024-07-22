@@ -59,6 +59,7 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('');
 	const [modelId, setModelId] = useState('');
+	const [topK, setTopK] = useState(4);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [cronTimezone, setCronTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
@@ -310,6 +311,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							// schema={['example']}
 							defaultRetriever={Retriever.RAW}
 							currentDatasource={null}
+							topK={topK}
+							setTopK={setTopK}
 						/>
 					</div>
 				</DropZone>;
@@ -407,6 +410,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 									// toolTimeWeightField={toolTimeWeightField}
 									// setToolTimeWeightField={setToolTimeWeightField}
 									// schema={['example']}
+										topK={topK}
+										setTopK={setTopK}
 									/>
 									<DatasourceScheduleForm
 										scheduleType={scheduleType}
@@ -511,6 +516,8 @@ export default function CreateDatasourceForm({ models, compact, callback, fetchD
 							// toolTimeWeightField={toolTimeWeightField}
 							// setToolTimeWeightField={setToolTimeWeightField}
 							// schema={['example']}
+								topK={topK}
+								setTopK={setTopK}
 							/>}
 							<div>
 								<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
