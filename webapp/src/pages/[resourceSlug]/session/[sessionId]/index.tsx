@@ -275,7 +275,7 @@ export default function Session(props) {
 				<title>{`Session - ${sessionId}`}</title>
 			</Head>
 			<div
-				className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1'
+				className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
@@ -330,25 +330,7 @@ export default function Session(props) {
 				)}
 				<div className='flex flex-col mt-auto pt-4 border-t'>
 					<div className='flex flex-row justify-center'>
-						<div className='flex items-start space-x-4 basis-1/2'>
-							{!terminated && account && (
-								<div className='min-w-max w-9 h-9 rounded-full flex items-center justify-center select-none'>
-									<span
-										className={
-											'overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1'
-										}
-									>
-										<AgentAvatar
-											agent={{
-												name: account.email,
-												icon: {
-													/* TODO */
-												}
-											}}
-										/>
-									</span>
-								</div>
-							)}
+						<div className='flex items-start space-x-4 xl:basis-1/2 lg:basis-3/4 px-4 basis-full'>
 							<div className='min-w-0 flex-1 h-full'>
 								{messages ? (
 									terminated ? (

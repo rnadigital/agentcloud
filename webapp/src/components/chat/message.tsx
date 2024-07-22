@@ -204,7 +204,7 @@ export function Message({
 
 	const profilePicture = (
 		<div
-			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2' : 'me-2'} select-none`}
+			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2 mt-auto' : 'me-2'} select-none`}
 		>
 			<span
 				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}
@@ -247,7 +247,7 @@ export function Message({
 
 	const authorNameSection = (
 		/*!sameAuthorAsPrevious && */ <div
-			className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'border-t dark:border-slate-600' : ''} ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}
+			className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-600' : ''} ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}
 		>
 			<div className='invisible xl:visible col-span-1'></div>
 			<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
@@ -259,7 +259,7 @@ export function Message({
 
 	const messageBodySection = (
 		<div
-			className={`shadow-sm flex max-w-96 transition-colors ${incoming ? 'bg-indigo-500' : isThought ? 'bg-slate-700 text-white' : 'bg-gray-50 dark:bg-slate-900'} rounded-lg ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'border border-yellow-200 dark:bg-yellow-700 dark:border-yellow-600' : ''}`}
+			className={`shadow-sm flex transition-colors ${incoming ? 'bg-indigo-500' : isThought ? 'bg-slate-700 text-white' : 'bg-white dark:bg-slate-900'} rounded-lg ${incoming ? 'rounded-br-none' : 'rounded-tl-none'} ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'dark:bg-yellow-700 dark:border-yellow-600' : ''}`}
 		>
 			<div className={`${incoming ? 'text-white' : ''} w-full`}>
 				{isThought ? (
