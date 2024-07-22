@@ -27,6 +27,7 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 			<div className='mt-2'>
 				<Select
 					isClearable
+					isSearchable
 					primaryColor={'indigo'}
 					classNames={SelectClassNames}
 					value={foundModel ? { label: foundModel.name, value: foundModel._id } : null}

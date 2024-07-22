@@ -118,7 +118,7 @@ export default function DropZone({ modalOpen, children, setFiles, files, modelId
 		</form>
 	</>;
 
-	const fileUploader = <label {...getRootProps({className: 'dropzone'})} htmlFor='file' className='block text-center border-2 border-dashed p-4 rounded mb-4'>
+	const fileUploader = <label {...getRootProps({className: 'dropzone'})} htmlFor='file' className='block text-center border-2 border-dashed p-4 rounded mb-4 bg-white'>
 		<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
 		{!isDragActive && 'Click here or drop a file to upload'}
 		{isDragActive && "Drop it like it's hot!"}
