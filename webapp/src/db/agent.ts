@@ -143,12 +143,14 @@ export async function getAgentNameMap(
 }
 
 export async function unsafeGetAgentNameMap(agentIds: db.IdOrStr[] = []): Promise<Agent[]> {
-	const agents = await AgentCollection().find({
-		_id: {
-			$in: agentIds.map(toObjectId)
-		},
-	}).toArray();
-	return (agents||[]).reduce((acc, x) => {
+	const agents = await AgentCollection()
+		.find({
+			_id: {
+				$in: agentIds.map(toObjectId)
+			}
+		})
+		.toArray();
+	return (agents || []).reduce((acc, x) => {
 		acc[x.name] = x?.icon?.filename;
 		return acc;
 	}, {});

@@ -12,7 +12,7 @@ export enum AppType {
 export type ChatAppConfig = {
 	agentId: ObjectId;
 	conversationStarters: string[];
-}
+};
 
 export type App = {
 	_id?: ObjectId;
@@ -31,4 +31,4 @@ export type App = {
 	memory?: boolean;
 	cache?: boolean;
 	crewId?: ObjectId;
-}
+};

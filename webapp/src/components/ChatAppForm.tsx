@@ -50,7 +50,7 @@ export default function ChatAppForm({
 	const [error, setError] = useState();
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
-	const [showAgentForm, setShowAgentForm]: any = useState(editing||agentChoices?.length===0);
+	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(SharingMode.TEAM);
 
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
@@ -385,10 +385,7 @@ export default function ChatAppForm({
 										/>
 									</div>
 
-									<SharingModeSelect
-										sharingMode={sharingMode}
-										setSharingMode={setSharingMode}
-									/>
+									<SharingModeSelect sharingMode={sharingMode} setSharingMode={setSharingMode} />
 
 									<div className='sm:col-span-12 flex flex-row gap-4'>
 										<div className='isolate space-y-px rounded-md shadow-sm w-full'>

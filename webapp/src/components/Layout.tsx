@@ -40,7 +40,7 @@ const noNavPages = [
 	'/requestchangepassword',
 	'/verify',
 	'/redirect',
-	'/s/',
+	'/s/'
 ];
 
 const agentNavigation: any[] = [

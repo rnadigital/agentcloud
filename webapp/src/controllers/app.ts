@@ -140,7 +140,10 @@ export async function addAppApi(req, res, next) {
 	let validationError = chainValidations(
 		req.body,
 		[
-			{ field: 'sharingMode', validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }},
+			{
+				field: 'sharingMode',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
+			},
 
 			{
 				field: 'type',
@@ -291,21 +294,21 @@ export async function addAppApi(req, res, next) {
 				}
 			: null,
 		type,
-		...(type as AppType === AppType.CREW ? {
-			crewId: addedCrew ? addedCrew.insertedId : null,
-			memory: memory === true,
-			cache: cache === true,
-		}: {
-			chatAppConfig: {
-				agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
-				conversationStarters: (conversationStarters||[])
-					.map(x => x.trim())
-					.filter(x => x),
-			},
-		}),
+		...((type as AppType) === AppType.CREW
+			? {
+					crewId: addedCrew ? addedCrew.insertedId : null,
+					memory: memory === true,
+					cache: cache === true
+				}
+			: {
+					chatAppConfig: {
+						agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
+						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x)
+					}
+				}),
 		sharingConfig: {
 			permissions: {}, //TODO once we have per-user, team, org perms
-			mode: sharingMode as SharingMode,
+			mode: sharingMode as SharingMode
 		}
 	});
 

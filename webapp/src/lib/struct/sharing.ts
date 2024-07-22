@@ -3,9 +3,9 @@
 import { Binary } from 'mongodb';
 
 export enum SharingMode {
-    RESTRICTED = 'restricted',
-    TEAM = 'team' ,
-    PUBLIC = 'public',
+	RESTRICTED = 'restricted',
+	TEAM = 'team',
+	PUBLIC = 'public'
 }
 
 /* Note: While the permissions object is intended to hold permissions presence
@@ -14,6 +14,6 @@ export enum SharingMode {
  * Keys are intended to be user, team, or org IDs with a mapping to permissions.
  */
 export type SharingConfig = {
-	permissions: Record<string,Binary> | {}; //Note: string keys, not ObjectId
-    mode: SharingMode;
+	permissions: Record<string, Binary> | {}; //Note: string keys, not ObjectId
+	mode: SharingMode;
 };

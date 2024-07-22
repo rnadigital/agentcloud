@@ -12,7 +12,6 @@ import React, { useEffect, useState } from 'react';
 import { AppType } from 'struct/app';
 
 export default function ViewApp(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -22,18 +21,28 @@ export default function ViewApp(props) {
 	const { app, tools, agents, tasks, models, datasources } = state;
 
 	async function startSession(appId) {
-		await API.addSession({
-			_csrf: csrf,
-			resourceSlug,
-			id: appId,
-		}, null, setError, router);
+		await API.addSession(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				id: appId
+			},
+			null,
+			setError,
+			router
+		);
 	}
 
 	async function fetchAppFormData() {
-		API.getApp({
-			resourceSlug,
-			appId: router.query.appId,
-		}, dispatch, setError, router);
+		API.getApp(
+			{
+				resourceSlug,
+				appId: router.query.appId
+			},
+			dispatch,
+			setError,
+			router
+		);
 	}
 	useEffect(() => {
 		fetchAppFormData();
@@ -43,17 +52,25 @@ export default function ViewApp(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{app.name}</title>
+			</Head>
 
-		<Head>
-			<title>{app.name}</title>
-		</Head>
-
-		<AppCard app={app} startSession={startSession} fetchFormData={fetchAppFormData} />		
-		
-	</>);
+			<AppCard app={app} startSession={startSession} fetchFormData={fetchAppFormData} />
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

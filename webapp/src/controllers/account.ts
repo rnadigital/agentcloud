@@ -4,6 +4,17 @@ import { dynamicResponse } from '@dr';
 import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
+import {
+	Account,
+	changeAccountPassword,
+	getAccountByEmail,
+	getAccountById,
+	setCurrentTeam,
+	setStripeCustomerId,
+	updateStripeCustomer,
+	verifyAccount
+} from 'db/account';
+import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
@@ -11,17 +22,6 @@ import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
 import { productToPlanMap } from 'struct/billing';
-import {
-	Account,
-	changeAccountPassword,
-	getAccountByEmail,
-	getAccountById,
-	setCurrentTeam,
-	verifyAccount,
-	updateStripeCustomer,
-	setStripeCustomerId
-} from 'db/account';
-import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -248,7 +248,10 @@ export async function verifyToken(req, res) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
+	const deletedVerification = await getAndDeleteVerification(
+		req.body.token,
+		VerificationTypes.VERIFY_EMAIL
+	);
 	let accountId = deletedVerification.accountId;
 	let stripeCustomerId;
 	let foundCheckoutSession;
@@ -263,15 +266,16 @@ export async function verifyToken(req, res) {
 		//accountId = ...
 	}
 	if (foundCheckoutSession && stripeCustomerId && accountId) {
-		const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(stripeCustomerId);
+		const { planItem, addonUsersItem, addonStorageItem } =
+			await getSubscriptionsDetails(stripeCustomerId);
 		await setStripeCustomerId(accountId, stripeCustomerId);
 		await updateStripeCustomer(stripeCustomerId, {
 			stripePlan: productToPlanMap[planItem.price.product],
 			stripeAddons: {
 				users: addonUsersItem ? addonUsersItem.quantity : 0,
-				storage: addonStorageItem ? addonStorageItem.quantity : 0,
+				storage: addonStorageItem ? addonStorageItem.quantity : 0
 			},
-			stripeEndsAt: foundCheckoutSession?.current_period_end*1000,
+			stripeEndsAt: foundCheckoutSession?.current_period_end * 1000
 		});
 	}
 	const foundAccount = await getAccountById(accountId);

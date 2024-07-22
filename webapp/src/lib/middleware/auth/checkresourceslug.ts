@@ -139,9 +139,10 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 
 	next();
 }
-export async function setParamOrgAndTeam(req, res, next) { //TODO: project any sensitive org props away here
+export async function setParamOrgAndTeam(req, res, next) {
+	//TODO: project any sensitive org props away here
 
-	const { sessionId, appId, resourceSlug } = (req.params||{});
+	const { sessionId, appId, resourceSlug } = req.params || {};
 	if (!sessionId && !appId) {
 		log('no sessionId or appId in setParamOrgAndTeam %O', req.params);
 		req.session.destroy();
@@ -189,5 +190,4 @@ export async function setParamOrgAndTeam(req, res, next) { //TODO: project any s
 	res.locals.matchingTeam = foundTeam;
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
 	next();
-
 }

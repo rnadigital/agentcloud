@@ -16,7 +16,13 @@ import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
 import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
-import { getSessionById, setSessionStatus, unsafeGetSessionById, unsafeSetSessionStatus, unsafeSetSessionUpdatedDate } from 'db/session';
+import {
+	getSessionById,
+	setSessionStatus,
+	unsafeGetSessionById,
+	unsafeSetSessionStatus,
+	unsafeSetSessionUpdatedDate
+} from 'db/session';
 import { SessionStatus } from 'struct/session';
 
 import { SharingMode } from './lib/struct/sharing';
@@ -36,10 +42,12 @@ export function initSocket(rawHttpServer) {
 		}
 		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
 		log('socket.id %O backendToken %O', socket.id, backendToken);
-		socket.request['locals'].isAgentBackend = backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length && timingSafeEqual(
-			Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as String),
-			Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
-		);
+		socket.request['locals'].isAgentBackend =
+			backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length &&
+			timingSafeEqual(
+				Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as String),
+				Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
+			);
 		socket.request['locals'].isSocket = true;
 		log('socket locals %O', socket.request['locals']);
 		next();
@@ -81,7 +89,9 @@ export function initSocket(rawHttpServer) {
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
-			const session = await unsafeGetSessionById(socketRequest.locals.isAgentBackend ? room.substring(1) : room); // removing _
+			const session = await unsafeGetSessionById(
+				socketRequest.locals.isAgentBackend ? room.substring(1) : room
+			); // removing _
 			if (!session) {
 				log('socket.id "%s" invalid session %s', socket.id, room);
 				return;
@@ -100,7 +110,9 @@ export function initSocket(rawHttpServer) {
 					break;
 				case SharingMode.TEAM:
 					// log(SharingMode.TEAM);
-					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o => o?.teams?.some(t => t.id.toString() === session.teamId.toString()));
+					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
+						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
+					);
 					if (!sessionTeamMatch) {
 						return;
 					}
@@ -164,13 +176,16 @@ export function initSocket(rawHttpServer) {
 					break;
 			}
 			const messageTimestamp = data?.message?.timestamp || Date.now();
-			const authorName = socketRequest.locals?.account?.name || (socketRequest.locals.isAgentBackend ? data.authorName : 'Me') || 'System';
+			const authorName =
+				socketRequest.locals?.account?.name ||
+				(socketRequest.locals.isAgentBackend ? data.authorName : 'Me') ||
+				'System';
 			const finalMessage = {
 				...data,
 				message,
 				incoming: socketRequest.locals.isAgentBackend === false,
 				authorName,
-				ts: messageTimestamp,
+				ts: messageTimestamp
 			};
 			if (!finalMessage?.message?.chunkId) {
 				finalMessage.message.chunkId = uuidv4();
@@ -193,7 +208,8 @@ export function initSocket(rawHttpServer) {
 				orgId: session.orgId,
 				teamId: session.teamId,
 				sessionId: session._id,
-				authorId: socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
+				authorId:
+					socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
 				authorName: finalMessage.authorName,
 				ts: finalMessage.ts || messageTimestamp,
 				isFeedback: finalMessage.isFeedback === true,

@@ -19,7 +19,7 @@ export type Session = {
 	appId?: ObjectId;
 	previewLabel?: string;
 	sharingConfig: SharingConfig;
-}
+};
 
 export function SessionCollection(): any {
 	return db.db().collection('sessions');

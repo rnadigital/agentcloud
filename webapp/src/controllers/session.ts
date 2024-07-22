@@ -1,12 +1,24 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAgentById, getAgentNameMap, getAgentsById, getAgentsByTeam, unsafeGetAgentNameMap } from 'db/agent';
+import {
+	getAgentById,
+	getAgentNameMap,
+	getAgentsById,
+	getAgentsByTeam,
+	unsafeGetAgentNameMap
+} from 'db/agent';
 import { getAppById, unsafeGetAppById } from 'db/app';
 import { getChatMessagesBySession, unsafeGetChatMessagesBySession } from 'db/chat';
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
-import { addSession, deleteSessionById, 
-	getSessionById, getSessionsByTeam,setSessionStatus, unsafeGetSessionById } from 'db/session';
+import {
+	addSession,
+	deleteSessionById,
+	getSessionById,
+	getSessionsByTeam,
+	setSessionStatus,
+	unsafeGetSessionById
+} from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { taskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
@@ -84,7 +96,7 @@ export async function publicSessionData(req, res, _next) {
 		csrf: req.csrfToken(),
 		session,
 		app,
-		avatarMap,
+		avatarMap
 	};
 }
 
@@ -109,7 +121,7 @@ export async function publicSessionPage(app, req, res, next) {
 	const data = await sessionData(req, res, next);
 	res.locals.data = {
 		...data,
-		account: null,
+		account: null
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
@@ -160,8 +172,7 @@ export async function publicSessionMessagesJson(req, res, next) {
  * @apiParam {String} type team | task Type of session
  */
 export async function addSessionApi(req, res, next) {
-
-	let { id: appId, skipRun }  = req.body;
+	let { id: appId, skipRun } = req.body;
 
 	let validationError = chainValidations(
 		req.body,
@@ -211,14 +222,14 @@ export async function addSessionApi(req, res, next) {
 		appId: toObjectId(app?._id),
 		sharingConfig: {
 			permissions: {},
-			mode: SharingMode.PUBLIC,
+			mode: SharingMode.PUBLIC
 		}
 	});
 
 	if (!skipRun) {
 		taskQueue.add('execute_rag', {
 			type: app?.type,
-			sessionId: addedSession.insertedId.toString(),
+			sessionId: addedSession.insertedId.toString()
 		});
 	}
 

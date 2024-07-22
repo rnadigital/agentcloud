@@ -54,15 +54,17 @@ export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> 
 }
 
 export function unsafeGetAppById(appId: db.IdOrStr): Promise<App> {
-	const res = AppCollection().aggregate([
-		{
-			$match: {
-				_id: toObjectId(appId),
-			}
-		},
-		...CREW_JOIN_STAGES
-	]).toArray();
-	return res.then(docs => docs.length > 0 ? docs[0] : null);
+	const res = AppCollection()
+		.aggregate([
+			{
+				$match: {
+					_id: toObjectId(appId)
+				}
+			},
+			...CREW_JOIN_STAGES
+		])
+		.toArray();
+	return res.then(docs => (docs.length > 0 ? docs[0] : null));
 }
 
 export function getAppByCrewId(teamId: db.IdOrStr, crewId: db.IdOrStr): Promise<App> {
