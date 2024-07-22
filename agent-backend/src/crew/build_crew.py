@@ -118,11 +118,6 @@ class CrewAIBuilder:
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
 
-            if any([x.requiresHumanInput for x in self.tasks_models.values()]):
-                human = CustomHumanInput(self.socket, self.session_id)
-                agent_tools_objs["human_input"] = human
-                # print(agent_tools_objs.values())
-
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     exclude_none=True, exclude_unset=True,
@@ -146,6 +141,10 @@ class CrewAIBuilder:
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
             task_tools_objs = search_subordinate_keys(self.crew_tools, key)
+            if task.requiresHumanInput:
+                human = CustomHumanInput(self.socket, self.session_id)
+                task_tools_objs["human_input"] = human
+
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude={"id"}),
                 agent=agent_obj, tools=task_tools_objs.values()
