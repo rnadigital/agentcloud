@@ -8,17 +8,27 @@ import { toast } from 'react-toastify';
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 
-export default function SubscriptionModal({ open, setOpen, title = 'Upgrade Required', text, buttonText = 'Upgrade' }) {
-
+export default function SubscriptionModal({
+	open,
+	setOpen,
+	title = 'Upgrade Required',
+	text,
+	buttonText = 'Upgrade'
+}) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
-		API.getPortalLink({
-			_csrf: csrf,
-		}, null, toast.error, router);
+		API.getPortalLink(
+			{
+				_csrf: csrf
+			},
+			null,
+			toast.error,
+			router
+		);
 	}
 
 	return (
@@ -53,13 +63,14 @@ export default function SubscriptionModal({ open, setOpen, title = 'Upgrade Requ
 										<CreditCardIcon className='h-6 w-6 text-yellow-600' aria-hidden='true' />
 									</div>
 									<div className='mt-3 text-center sm:mt-5'>
-										<Dialog.Title as='h3' className='text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='text-base font-semibold leading-6 text-gray-900'
+										>
 											{title}
 										</Dialog.Title>
 										<div className='mt-2'>
-											<p className='text-sm text-gray-500'>
-												{text}
-											</p>
+											<p className='text-sm text-gray-500'>{text}</p>
 										</div>
 									</div>
 								</div>

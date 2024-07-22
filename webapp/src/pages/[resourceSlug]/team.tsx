@@ -11,7 +11,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function Team(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, teamName, permissions } = accountContext as any;
 	const router = useRouter();
@@ -32,34 +31,45 @@ export default function Team(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`Team Members - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`Team Members - ${teamName}`}</title>
-		</Head>
-
-		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Team Members</h3>
-		</div>
-
-		{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
-		{team && team.length > 0 && <div className='flex flex-wrap gap-4 my-4'>
-			{team[0].members.map(member => (
-				<TeamMemberCard team={team} key={member._id} member={member} callback={fetchTeam} />
-			))}
-		</div>}
-
-		{permissions.get(Permissions.ADD_TEAM_MEMBER) && <>
 			<div className='border-b pb-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
+				<h3 className='pl-2 font-semibold text-gray-900'>Team Members</h3>
 			</div>
-			<InviteForm callback={fetchTeam} />
-		</>}
 
-	</>);
+			{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
+			{team && team.length > 0 && (
+				<div className='flex flex-wrap gap-4 my-4'>
+					{team[0].members.map(member => (
+						<TeamMemberCard team={team} key={member._id} member={member} callback={fetchTeam} />
+					))}
+				</div>
+			)}
 
-};
+			{permissions.get(Permissions.ADD_TEAM_MEMBER) && (
+				<>
+					<div className='border-b pb-2 my-2'>
+						<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
+					</div>
+					<InviteForm callback={fetchTeam} />
+				</>
+			)}
+		</>
+	);
+}
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
-};
+}

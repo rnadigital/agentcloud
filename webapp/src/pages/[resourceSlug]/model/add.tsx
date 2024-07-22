@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function AddModel(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -29,18 +28,25 @@ export default function AddModel(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`New Model - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`New Model - ${teamName}`}</title>
-		</Head>
-
-		<ModelForm fetchModelFormData={fetchModels} />
-
-	</>);
-
+			<ModelForm fetchModelFormData={fetchModels} />
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

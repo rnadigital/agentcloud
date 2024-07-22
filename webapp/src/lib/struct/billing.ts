@@ -13,7 +13,7 @@ export const stripeEnvs: string[] = [
 	'STRIPE_ADDON_USERS_PRODUCT_ID',
 	'STRIPE_ADDON_STORAGE_PRODUCT_ID',
 	'STRIPE_WEBHOOK_SECRET',
-	'STRIPE_ACCOUNT_SECRET',
+	'STRIPE_ACCOUNT_SECRET'
 ];
 
 // account.stripe data
@@ -25,15 +25,15 @@ export type AccountStripeData = {
 	stripeAddons?: {
 		users?: number;
 		storage?: number;
-	}
+	};
 	stripeTrial?: boolean;
-}
+};
 
 export enum SubscriptionPlan {
-    FREE = 'Free',
-    PRO = 'Pro',
-    TEAMS = 'Teams',
-    ENTERPRISE = 'Enterprise'
+	FREE = 'Free',
+	PRO = 'Pro',
+	TEAMS = 'Teams',
+	ENTERPRISE = 'Enterprise'
 }
 
 export interface SubscriptionPlanConfig {
@@ -92,36 +92,53 @@ export const subscriptionPlans: SubscriptionPlanConfig[] = [
 ];
 
 // Convert subscriptionPlans to a map where the plan is the key and the object is the value
-export const subscriptionPlansMap: Record<SubscriptionPlan, SubscriptionPlanConfig> = subscriptionPlans.reduce((acc, planConfig) => {
-	acc[planConfig.plan] = planConfig;
-	return acc;
-}, {} as Record<SubscriptionPlan, SubscriptionPlanConfig>);
+export const subscriptionPlansMap: Record<SubscriptionPlan, SubscriptionPlanConfig> =
+	subscriptionPlans.reduce(
+		(acc, planConfig) => {
+			acc[planConfig.plan] = planConfig;
+			return acc;
+		},
+		{} as Record<SubscriptionPlan, SubscriptionPlanConfig>
+	);
 
-export const planToPriceMap: Record<SubscriptionPlan, string | undefined> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
-	acc[plan] = priceId;
-	return acc;
-}, {} as Record<SubscriptionPlan, string | undefined>);
+export const planToPriceMap: Record<SubscriptionPlan, string | undefined> =
+	subscriptionPlans.reduce(
+		(acc, { plan, priceId }) => {
+			acc[plan] = priceId;
+			return acc;
+		},
+		{} as Record<SubscriptionPlan, string | undefined>
+	);
 
-export const productToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, productId }) => {
-	if (productId) {
-		acc[productId] = plan;
-	}
-	return acc;
-}, {} as Record<string, SubscriptionPlan>);
+export const productToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce(
+	(acc, { plan, productId }) => {
+		if (productId) {
+			acc[productId] = plan;
+		}
+		return acc;
+	},
+	{} as Record<string, SubscriptionPlan>
+);
 
-export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce((acc, { plan, priceId }) => {
-	if (priceId) {
-		acc[priceId] = plan;
-	}
-	return acc;
-}, {} as Record<string, SubscriptionPlan>);
+export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlans.reduce(
+	(acc, { plan, priceId }) => {
+		if (priceId) {
+			acc[priceId] = plan;
+		}
+		return acc;
+	},
+	{} as Record<string, SubscriptionPlan>
+);
 
-export const priceToProductMap: Record<string, string> = subscriptionPlans.reduce((acc, { priceId, productId }) => {
-	if (productId) {
-		acc[priceId] = productId;
-	}
-	return acc;
-}, {} as Record<string, string>);
+export const priceToProductMap: Record<string, string> = subscriptionPlans.reduce(
+	(acc, { priceId, productId }) => {
+		if (productId) {
+			acc[priceId] = productId;
+		}
+		return acc;
+	},
+	{} as Record<string, string>
+);
 
 export type PlanLimits = {
 	users: number | 'Custom';
@@ -159,13 +176,13 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	maxVectorStorageBytes: 'maxVectorStorageBytes',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
-	embeddingModels: 'embeddingModels',
+	embeddingModels: 'embeddingModels'
 };
 
 // Object to hold the limits for each plan, using computed property names
 export type PricingMatrix = {
-    [key in SubscriptionPlan]: PlanLimits;
-}
+	[key in SubscriptionPlan]: PlanLimits;
+};
 
 //TODO: change this
 enum Connectors {
@@ -175,7 +192,7 @@ enum Connectors {
 	HUBSPOT = '36c891d9-4bd9-43ac-bad2-10e12756272c',
 	GOOGLE_BIGQUERY = 'bfd1ddf8-ae8a-4620-b1d7-55597d2ba08c',
 	AIRTABLE = '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212',
-	NOTION = '6e00b415-b02e-4160-bf02-58176a0ae687',
+	NOTION = '6e00b415-b02e-4160-bf02-58176a0ae687'
 }
 
 export const pricingMatrix: PricingMatrix = {
@@ -186,11 +203,11 @@ export const pricingMatrix: PricingMatrix = {
 		fileUploads: true,
 		dataConnections: false,
 		allowedConnectors: [],
-		maxFileUploadBytes: (5 * 1024 * 1024), //5MB
-		maxVectorStorageBytes: (100 * 1024 * 1024), //100MB
+		maxFileUploadBytes: 5 * 1024 * 1024, //5MB
+		maxVectorStorageBytes: 100 * 1024 * 1024, //100MB
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI],
-		embeddingModels: [ModelType.OPENAI],
+		embeddingModels: [ModelType.OPENAI]
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -204,13 +221,13 @@ export const pricingMatrix: PricingMatrix = {
 			Connectors.HUBSPOT,
 			Connectors.GOOGLE_BIGQUERY,
 			Connectors.AIRTABLE,
-			Connectors.NOTION,
+			Connectors.NOTION
 		],
-		maxFileUploadBytes: (25 * 1024 * 1024), //25MB
-		maxVectorStorageBytes: (1 * 1024 * 1024 * 1024), //1GB
+		maxFileUploadBytes: 25 * 1024 * 1024, //25MB
+		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes,
+		embeddingModels: ModelTypes
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
@@ -219,23 +236,24 @@ export const pricingMatrix: PricingMatrix = {
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],
-		maxFileUploadBytes: (50 * 1024 * 1024), //50MB
-		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
+		maxFileUploadBytes: 50 * 1024 * 1024, //50MB
+		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes,
+		embeddingModels: ModelTypes
 	},
-	[SubscriptionPlan.ENTERPRISE]: { //TODO
-		users: 10**6,
-		orgs: 10**6,
-		teams: 10**6,
+	[SubscriptionPlan.ENTERPRISE]: {
+		//TODO
+		users: 10 ** 6,
+		orgs: 10 ** 6,
+		teams: 10 ** 6,
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],
-		maxFileUploadBytes: (1 * 1024 * 1024 * 1024), //1GB (until we have "custom")
-		maxVectorStorageBytes: (10 * 1024 * 1024 * 1024), //10GB
+		maxFileUploadBytes: 1 * 1024 * 1024 * 1024, //1GB (until we have "custom")
+		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes,
+		embeddingModels: ModelTypes
 	}
 };

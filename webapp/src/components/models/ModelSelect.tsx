@@ -1,27 +1,41 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { ModelEmbeddingLength } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ModelSelect({ models, modelId, label, onChange, setModalOpen, callbackKey, setCallbackKey, modelFilter=null, modelTypeFilters=[] }) {
+export default function ModelSelect({
+	models,
+	modelId,
+	label,
+	onChange,
+	setModalOpen,
+	callbackKey,
+	setCallbackKey,
+	modelFilter = null,
+	modelTypeFilters = []
+}) {
 	const foundModel = models.find(m => m._id === modelId);
 	const filteredModels = models
-		.filter(m => { //Filter by llm vs embedding
-			if (!modelFilter) { return true; }
+		.filter(m => {
+			//Filter by llm vs embedding
+			if (!modelFilter) {
+				return true;
+			}
 			if (typeof m === 'string') {
-				return modelFilter == 'embedding'
-					? ModelEmbeddingLength[m]
-					: !ModelEmbeddingLength[m];
+				return modelFilter == 'embedding' ? ModelEmbeddingLength[m] : !ModelEmbeddingLength[m];
 			}
 			return modelFilter === m?.modelType;
 		})
-		.filter(m => { //filter by type
-			return modelTypeFilters.length === 0
-				|| modelTypeFilters.includes(m.type);
+		.filter(m => {
+			//filter by type
+			return modelTypeFilters.length === 0 || modelTypeFilters.includes(m.type);
 		});
 	return (
 		<div className='sm:col-span-12'>
-			<label htmlFor='modelId' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+			<label
+				htmlFor='modelId'
+				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+			>
 				{label}
 			</label>
 			<div className='mt-2'>
@@ -38,9 +52,9 @@ export default function ModelSelect({ models, modelId, label, onChange, setModal
 						}
 						onChange(v);
 					}}
-					options={[{ label: '+ New model', value: null }]
-						.concat(filteredModels
-							.map(c => ({ label: c.name || c._id || '', value: c._id || '' })))}
+					options={[{ label: '+ New model', value: null }].concat(
+						filteredModels.map(c => ({ label: c.name || c._id || '', value: c._id || '' }))
+					)}
 					formatOptionLabel={data => {
 						const optionCred = models.find(oc => oc._id === data.value);
 						return (

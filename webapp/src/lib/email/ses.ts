@@ -1,6 +1,6 @@
 'use strict';
 
-import { SendEmailCommand,SESClient } from '@aws-sdk/client-ses';
+import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import debug from 'debug';
 import SecretKeys from 'lib/secret/secretkeys';
 import SecretProviderFactory from 'secret/index';
@@ -15,12 +15,14 @@ export async function init() {
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		amazonAccessID = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
 		amazonSecretAccessKey = await secretProvider.getSecret(SecretKeys.AMAZON_SECRET_ACCESS_KEY);
-		if (!amazonAccessID) { return; }
+		if (!amazonAccessID) {
+			return;
+		}
 		sesClient = new SESClient({
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: amazonAccessID,
-				secretAccessKey: amazonSecretAccessKey,
+				secretAccessKey: amazonSecretAccessKey
 			}
 		});
 	} catch (e) {
@@ -30,26 +32,28 @@ export async function init() {
 }
 
 export async function sendEmail(options) {
-	if (!sesClient) { return; }
+	if (!sesClient) {
+		return;
+	}
 	log('Sending email', options);
 	const emailParams = {
 		Source: options.from,
 		Destination: {
 			BccAddresses: options.bcc,
 			CcAddresses: options.cc,
-			ToAddresses: options.to,
+			ToAddresses: options.to
 		},
 		Message: {
 			Subject: {
-				Data: options.subject,
+				Data: options.subject
 			},
 			Body: {
 				Html: {
-					Data: options.body,
-				},
-			},
+					Data: options.body
+				}
+			}
 		},
-		ReplyToAddresses: options.replyTo,
+		ReplyToAddresses: options.replyTo
 	};
 
 	try {

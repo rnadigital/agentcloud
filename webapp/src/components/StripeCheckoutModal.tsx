@@ -1,8 +1,6 @@
 import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
+import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -16,21 +14,25 @@ const StripeCheckoutModal = ({
 	getPayload,
 	setShow,
 	setStagedChange,
-	onComplete,
+	onComplete
 }) => {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const router = useRouter();
 	const cancelButtonRef = useRef(null);
 
 	const fetchClientSecret = useCallback(() => {
 		return new Promise((resolve, reject) => {
-			API.confirmChangePlan(getPayload(), res => {
-				if (res?.clientSecret) {
-					resolve(res.clientSecret);
-				}
-				reject(null);
-			}, reject, router);
+			API.confirmChangePlan(
+				getPayload(),
+				res => {
+					if (res?.clientSecret) {
+						resolve(res.clientSecret);
+					}
+					reject(null);
+				},
+				reject,
+				router
+			);
 		});
 	}, []);
 
@@ -71,7 +73,7 @@ const StripeCheckoutModal = ({
 									options={{
 										// @ts-ignore
 										fetchClientSecret,
-										onComplete,
+										onComplete
 									}}
 								>
 									<EmbeddedCheckout />

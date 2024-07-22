@@ -18,14 +18,14 @@ export async function addLog(logEntry: Log): Promise<InsertOneResult<Log>> {
 // Function to retrieve a log by its ID
 export async function getLogById(logId: db.IdOrStr): Promise<Log | null> {
 	return LogsCollection().findOne({
-		_id: toObjectId(logId),
+		_id: toObjectId(logId)
 	});
 }
 
 // Function to delete a log by its ID
 export async function deleteLogById(logId: db.IdOrStr): Promise<boolean> {
 	const result = await LogsCollection().deleteOne({
-		_id: toObjectId(logId),
+		_id: toObjectId(logId)
 	});
 	return result.deletedCount > 0;
 }

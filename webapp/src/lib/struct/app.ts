@@ -5,7 +5,7 @@ import { IconAttachment } from 'struct/asset';
 
 export enum AppType {
 	CHAT = 'chat',
-	CREW = 'crew',
+	CREW = 'crew'
 }
 
 export type App = {
@@ -24,8 +24,9 @@ export type App = {
 	crewId?: ObjectId;
 	memory?: boolean;
 	cache?: boolean;
-	chatAppConfig?: { //AppType.CHAT
+	chatAppConfig?: {
+		//AppType.CHAT
 		agentId: ObjectId;
 		conversationStarters: string[];
-	}
+	};
 };

@@ -7,7 +7,6 @@ import { useAccountContext } from '../context/account';
 import AgentForm from './AgentForm';
 
 export default function CreateAgentModal({ open, setOpen, callback }) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -19,11 +18,11 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
 	}
-	
+
 	useEffect(() => {
 		fetchAgentFormData();
 	}, []);
-	
+
 	return (
 		<Transition.Root show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
@@ -53,7 +52,10 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible md:min-w-[400px]'>
 								<div>
 									<div className=''>
-										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'
+										>
 											Create an agent
 										</Dialog.Title>
 									</div>

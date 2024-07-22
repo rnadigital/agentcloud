@@ -25,9 +25,12 @@ export async function getAssetById(assetId: db.IdOrStr): Promise<Asset | null> {
 }
 
 // Function to update an asset by its ID
-export async function updateAsset(assetId: db.IdOrStr, updateData: Partial<Asset>): Promise<boolean> {
+export async function updateAsset(
+	assetId: db.IdOrStr,
+	updateData: Partial<Asset>
+): Promise<boolean> {
 	const result = await assetCollection().updateOne(
-		{ _id: toObjectId(assetId) }, 
+		{ _id: toObjectId(assetId) },
 		{ $set: updateData }
 	);
 	return result.matchedCount > 0;

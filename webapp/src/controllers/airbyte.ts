@@ -5,7 +5,13 @@ import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
-import { getDatasourceById, getDatasourceByIdUnsafe, setDatasourceLastSynced, setDatasourceStatus, setDatasourceTotalRecordCount } from 'db/datasource';
+import {
+	getDatasourceById,
+	getDatasourceByIdUnsafe,
+	setDatasourceLastSynced,
+	setDatasourceStatus,
+	setDatasourceTotalRecordCount
+} from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationUtils';
@@ -23,10 +29,11 @@ log.log = console.log.bind(console); //set namespace to log
  * get the specification for an airbyte source
  */
 export async function specificationJson(req, res, next) {
-
-	let validationError = chainValidations(req.query, [
-		{ field: 'sourceDefinitionId', validation: { notEmpty: true, ofType: 'string' }},
-	], { sourceDefinitionId: 'Source Definition ID' });
+	let validationError = chainValidations(
+		req.query,
+		[{ field: 'sourceDefinitionId', validation: { notEmpty: true, ofType: 'string' } }],
+		{ sourceDefinitionId: 'Source Definition ID' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -35,10 +42,14 @@ export async function specificationJson(req, res, next) {
 	try {
 		data = await getSpecification(req, res, next);
 	} catch (e) {
-		return dynamicResponse(req, res, 400, { error: `Falied to fetch connector specification: ${e}` });
+		return dynamicResponse(req, res, 400, {
+			error: `Falied to fetch connector specification: ${e}`
+		});
 	}
 	if (!data) {
-		return dynamicResponse(req, res, 400, { error: `No connector found for specification ID: ${req.query.sourceDefinitionId}` });
+		return dynamicResponse(req, res, 400, {
+			error: `No connector found for specification ID: ${req.query.sourceDefinitionId}`
+		});
 	}
 	return res.json({ ...data, account: res.locals.account });
 }
@@ -48,12 +59,13 @@ export async function specificationJson(req, res, next) {
  * list airbyte sync jobs for a connection
  */
 export async function listJobsApi(req, res, next) {
-
 	const { datasourceId } = req.query;
 
-	let validationError = chainValidations(req.query, [
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-	], { datasourceId: 'Datasource ID' });
+	let validationError = chainValidations(
+		req.query,
+		[{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ datasourceId: 'Datasource ID' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -69,18 +81,15 @@ export async function listJobsApi(req, res, next) {
 	const jobBody = {
 		connectionId: datasource.connectionId,
 		jobType: 'sync',
-		limit: 20, //TODO: expose on frontend, pagination, etc
+		limit: 20 //TODO: expose on frontend, pagination, etc
 	};
 	// log('jobBody %O', jobBody);
-	const jobsRes = await jobsApi
-		.listJobs(jobBody)
-		.then(res => res.data);
+	const jobsRes = await jobsApi.listJobs(jobBody).then(res => res.data);
 	// log('listJobs %O', jobsRes);
 
 	return dynamicResponse(req, res, 200, {
-		jobs: (jobsRes?.data || []),
+		jobs: jobsRes?.data || []
 	});
-
 }
 
 /**
@@ -88,12 +97,13 @@ export async function listJobsApi(req, res, next) {
  * list airbyte sync jobs for a connection
  */
 export async function discoverSchemaApi(req, res, next) {
-
 	const { datasourceId } = req.query;
 
-	let validationError = chainValidations(req.query, [
-		{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' }},
-	], { datasourceId: 'Datasource ID' });
+	let validationError = chainValidations(
+		req.query,
+		[{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ datasourceId: 'Datasource ID' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -107,7 +117,7 @@ export async function discoverSchemaApi(req, res, next) {
 	// Discover the schema
 	const internalApi = await getAirbyteInternalApi();
 	const discoverSchemaBody = {
-		sourceId: datasource.sourceId,
+		sourceId: datasource.sourceId
 		// disable_cache: true, //Note: should this always be true?
 	};
 	log('discoverSchemaBody %O', discoverSchemaBody);
@@ -117,9 +127,8 @@ export async function discoverSchemaApi(req, res, next) {
 	log('discoveredSchema %O', discoveredSchema);
 
 	return dynamicResponse(req, res, 200, {
-		discoveredSchema,
+		discoveredSchema
 	});
-
 }
 
 function extractWebhookSuccesfulDetails(data) {
@@ -157,14 +166,16 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 	//TODO: validate some kind of webhook key
 
-	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(req.body?.blocks || []);
+	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(
+		req.body?.blocks || []
+	);
 	if (jobId && datasourceId) {
 		const datasource = await getDatasourceByIdUnsafe(datasourceId);
 		if (datasource) {
 			//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
 			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 			const jobBody = {
-				jobId,
+				jobId
 			};
 			const notification = {
 				orgId: toObjectId(datasource.orgId.toString()),
@@ -173,25 +184,26 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					id: datasourceId,
 					collection: CollectionName.Notifications,
 					property: '_id',
-					objectId: true,
+					objectId: true
 				},
 				title: 'Sync Completed',
 				date: new Date(),
 				seen: false,
 				// stuff specific to notification type
-				description: datasource?.sourceType === 'file'
-					? `Your sync for datasource "${datasource.name}" has completed.`
-					: `Embedding is in progress for datasource "${datasource.name}".`,
+				description:
+					datasource?.sourceType === 'file'
+						? `Your sync for datasource "${datasource.name}" has completed.`
+						: `Embedding is in progress for datasource "${datasource.name}".`,
 				type: NotificationType.Webhook,
 				details: {
-					webhookType: WebhookType.SuccessfulSync,
-				} as NotificationDetails,
+					webhookType: WebhookType.SuccessfulSync
+				} as NotificationDetails
 			};
 			await Promise.all([
 				addNotification(notification),
 				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
 				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
-				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded),
+				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded)
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);
 		}
@@ -200,7 +212,6 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	}
 
 	return dynamicResponse(req, res, 200, {});
-
 }
 
 export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
@@ -220,7 +231,7 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 				id: datasourceId,
 				collection: CollectionName.Notifications,
 				property: '_id',
-				objectId: true,
+				objectId: true
 			},
 			title: 'Embedding Successful',
 			date: new Date(),
@@ -229,8 +240,8 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 			description: `Embedding completed for datasource "${datasource.name}".`,
 			type: NotificationType.Webhook,
 			details: {
-				webhookType: WebhookType.EmbeddingCompleted,
-			} as NotificationDetails,
+				webhookType: WebhookType.EmbeddingCompleted
+			} as NotificationDetails
 		};
 		await Promise.all([
 			addNotification(notification),
@@ -240,5 +251,4 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	}
 
 	return dynamicResponse(req, res, 200, {});
-
 }

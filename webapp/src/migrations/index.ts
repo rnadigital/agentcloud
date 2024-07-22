@@ -14,6 +14,6 @@ fs.readdirSync(__dirname).forEach(file => {
 });
 
 const sortedVersions = migrationVersions.sort(semver.compare);
-const migrationVersion = sortedVersions[sortedVersions.length-1];
+const migrationVersion = sortedVersions[sortedVersions.length - 1];
 
 export { migrationVersions, migrationVersion };

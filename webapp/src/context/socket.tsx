@@ -8,15 +8,14 @@ import { NotificationType, WebhookType } from 'struct/notification';
 let socketio;
 if (typeof window !== 'undefined') {
 	socketio = io({
-		'reconnection': true,
-		'reconnectionAttempts': 100
+		reconnection: true,
+		reconnectionAttempts: 100
 	});
 }
 
 const SocketContext = createContext(socketio);
 
 export function SocketWrapper({ children }) {
-
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
@@ -36,7 +35,9 @@ export function SocketWrapper({ children }) {
 	}
 
 	function joinRoomAndListen() {
-		if (!sharedSocket || !resourceSlug) { return; }
+		if (!sharedSocket || !resourceSlug) {
+			return;
+		}
 		setRoom(oldRoom => {
 			if (oldRoom !== resourceSlug) {
 				sharedSocket.emit('leave_room', oldRoom);
@@ -62,8 +63,7 @@ export function SocketWrapper({ children }) {
 	}, [router.asPath]);
 
 	function tryReconnect() {
-		if (sharedSocket.connected === false
-			&& sharedSocket.connecting === false) {
+		if (sharedSocket.connected === false && sharedSocket.connecting === false) {
 			sharedSocket.connect();
 		}
 	}
@@ -81,7 +81,6 @@ export function SocketWrapper({ children }) {
 			{children}
 		</SocketContext.Provider>
 	);
-
 }
 
 export function useSocketContext() {

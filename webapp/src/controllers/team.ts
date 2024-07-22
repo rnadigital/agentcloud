@@ -4,28 +4,37 @@ import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import {
 	getAccountByEmail,
-	getAccountById, getAccountTeamMember, pushAccountOrg,
-	pushAccountTeam, updateTeamOwnerInAccounts
+	getAccountById,
+	getAccountTeamMember,
+	pushAccountOrg,
+	pushAccountTeam,
+	updateTeamOwnerInAccounts
 } from 'db/account';
-import { addTeam, addTeamMember, getTeamById, getTeamWithMembers, removeTeamMember, setMemberPermissions, updateTeamOwner } from 'db/team';
+import {
+	addTeam,
+	addTeamMember,
+	getTeamById,
+	getTeamWithMembers,
+	removeTeamMember,
+	setMemberPermissions,
+	updateTeamOwner
+} from 'db/team';
 import createAccount from 'lib/account/create';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
 import toObjectId from 'misc/toobjectid';
-import { Binary, } from 'mongodb';
+import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function teamData(req, res, _next) {
-	const [team] = await Promise.all([
-		getTeamWithMembers(req.params.resourceSlug),
-	]);
+	const [team] = await Promise.all([getTeamWithMembers(req.params.resourceSlug)]);
 	return {
 		team,
-		csrf: req.csrfToken(),
+		csrf: req.csrfToken()
 	};
-};
+}
 
 /**
  * GET /[resourceSlug]/team
@@ -54,12 +63,15 @@ export async function teamJson(req, res, next) {
  * @apiParam {String} email Email of person to invite
  */
 export async function inviteTeamMemberApi(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'email', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(Roles)) } },
-	], { name: 'Name', email: 'Email', template: 'Template' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'email', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(Roles)) } }
+		],
+		{ name: 'Name', email: 'Email', template: 'Template' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -69,10 +81,17 @@ export async function inviteTeamMemberApi(req, res) {
 
 	let foundAccount = await getAccountByEmail(email);
 
-	const invitingTeam = res.locals.matchingOrg.teams
-		.find(t => t.id.toString() === req.params.resourceSlug);
+	const invitingTeam = res.locals.matchingOrg.teams.find(
+		t => t.id.toString() === req.params.resourceSlug
+	);
 	if (!foundAccount) {
-		const { addedAccount } = await createAccount({ email, name, roleTemplate: template, invite: true, teamName: invitingTeam.name });
+		const { addedAccount } = await createAccount({
+			email,
+			name,
+			roleTemplate: template,
+			invite: true,
+			teamName: invitingTeam.name
+		});
 
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
@@ -88,7 +107,7 @@ export async function inviteTeamMemberApi(req, res) {
 		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
 		await pushAccountOrg(foundAccount._id, {
 			...res.locals.matchingOrg,
-			teams: [invitingTeam],
+			teams: [invitingTeam]
 		});
 	} else {
 		//otherwise theyre already in the org, just push the single team to the matching org
@@ -106,10 +125,11 @@ export async function inviteTeamMemberApi(req, res) {
  * @apiParam {String} email Email of person to invite
  */
 export async function deleteTeamMemberApi(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'memberId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-	], { memberId: 'Member ID' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'memberId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ memberId: 'Member ID' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -120,7 +140,7 @@ export async function deleteTeamMemberApi(req, res) {
 	const memberAccount = await getAccountById(memberId);
 	if (memberAccount) {
 		const foundTeam = await getTeamById(req.params.resourceSlug);
-		const org = res.locals.matchingOrg;//await getOrgById(foundTeam.orgId);
+		const org = res.locals.matchingOrg; //await getOrgById(foundTeam.orgId);
 		if (!org) {
 			return dynamicResponse(req, res, 403, { error: 'User org not found' });
 		} else {
@@ -149,10 +169,11 @@ export async function deleteTeamMemberApi(req, res) {
  * @apiParam {String} teamName Name of new team
  */
 export async function addTeamApi(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'teamName', validation: { notEmpty: true, ofType: 'string' } },
-	], { teamName: 'Team Name' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'teamName', validation: { notEmpty: true, ofType: 'string' } }],
+		{ teamName: 'Team Name' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -169,16 +190,19 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary((new Permission(Roles.TEAM_ADMIN.base64).array)),
+			[res.locals.account._id.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array)
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
 	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
 		id: addedTeam.insertedId,
 		name: teamName,
-		ownerId: toObjectId(res.locals.account._id),
+		ownerId: toObjectId(res.locals.account._id)
 	});
-	return dynamicResponse(req, res, 200, { _id: addedTeam.insertedId, orgId: res.locals.matchingOrg.id });
+	return dynamicResponse(req, res, 200, {
+		_id: addedTeam.insertedId,
+		orgId: res.locals.matchingOrg.id
+	});
 }
 
 /**
@@ -189,12 +213,11 @@ export async function addTeamApi(req, res) {
  * @apiParam {String} teamName Name of new team
  */
 export async function editTeamMemberApi(req, res) {
-
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
 
 	if (memberId === res.locals.matchingTeam.ownerId.toString()) {
-		return dynamicResponse(req, res, 400, { error: 'Team owner permissions can\'t be edited' });
+		return dynamicResponse(req, res, 400, { error: "Team owner permissions can't be edited" });
 	}
 
 	if (template && !Roles[template]) {
@@ -216,19 +239,22 @@ export async function editTeamMemberApi(req, res) {
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
 
 	return dynamicResponse(req, res, 200, {});
-
 }
 
 export async function teamMemberData(req, res, _next) {
 	const [teamMember] = await Promise.all([
-		getAccountTeamMember(req.params.memberId, req.params.resourceSlug),
+		getAccountTeamMember(req.params.memberId, req.params.resourceSlug)
 	]);
-	teamMember.permissions = calcPerms(teamMember, res.locals.matchingOrg, res.locals.matchingTeam).base64;
+	teamMember.permissions = calcPerms(
+		teamMember,
+		res.locals.matchingOrg,
+		res.locals.matchingTeam
+	).base64;
 	return {
 		teamMember,
-		csrf: req.csrfToken(),
+		csrf: req.csrfToken()
 	};
-};
+}
 
 /**
  * GET /[resourceSlug]/team/[memberId].json
@@ -253,23 +279,24 @@ export async function memberEditPage(app, req, res, next) {
  * @api {post} /forms/team/transfer-ownership Transfer Team Ownership
  * @apiName TransferTeamOwnership
  * @apiGroup Team
- * 
+ *
  * @apiParam {String} resourceSlug The ID of the team.
  * @apiParam {String} newOwnerId The ID of the new owner.
  * @apiParam {String} _csrf CSRF token for security.
- * 
+ *
  * @apiPermission ORG_OWNER, TEAM_OWNER
- * 
+ *
  * @apiSuccess {String} message Success message indicating the team owner was updated.
- * 
+ *
  * @apiError {String} error Error message detailing the failure.
- * 
+ *
  */
 export async function transferTeamOwnershipApi(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'newOwnerId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-	], { newOwnerId: 'New Owner ID' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'newOwnerId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ newOwnerId: 'New Owner ID' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -281,8 +308,10 @@ export async function transferTeamOwnershipApi(req, res) {
 	if (newOwnerId === res.locals.matchingTeam.ownerId.toString()) {
 		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
 	}
-	if (res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString()
-		&& !res.locals.permissions.get(Permissions.ORG_OWNER)) {
+	if (
+		res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString() &&
+		!res.locals.permissions.get(Permissions.ORG_OWNER)
+	) {
 		return dynamicResponse(req, res, 403, { error: 'Permission denied' });
 	}
 	const newOwner = await getAccountById(newOwnerId);
@@ -291,7 +320,7 @@ export async function transferTeamOwnershipApi(req, res) {
 	}
 	await Promise.all([
 		updateTeamOwner(resourceSlug, newOwnerId),
-		updateTeamOwnerInAccounts(res.locals.matchingOrg.id, resourceSlug, newOwnerId),
+		updateTeamOwnerInAccounts(res.locals.matchingOrg.id, resourceSlug, newOwnerId)
 	]);
 	return dynamicResponse(req, res, 200, { message: 'Team ownership transferred successfully' });
 }

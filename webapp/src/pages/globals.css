@@ -3,63 +3,59 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 250, 250, 250;
-  --background-end-rgb: 255, 255, 255;
+	--foreground-rgb: 0, 0, 0;
+	--background-start-rgb: 250, 250, 250;
+	--background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+	:root {
+		--foreground-rgb: 255, 255, 255;
+		--background-start-rgb: 0, 0, 0;
+		--background-end-rgb: 0, 0, 0;
+	}
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+	color: rgb(var(--foreground-rgb));
+	background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
+		rgb(var(--background-start-rgb));
 }
 
 /* styles.css or your Tailwind CSS file */
 .toast-container {
-  @apply bg-green-500 text-white p-4 rounded-lg shadow-lg;
+	@apply bg-green-500 text-white p-4 rounded-lg shadow-lg;
 }
 
 /* Customize the appearance of the toast body */
 .toast-body {
-  @apply text-base;
+	@apply text-base;
 }
 
 .Toastify__toast-container {
-  margin-top: 65px!important;
+	margin-top: 65px !important;
 }
 
 .Toastify__toast {
-  --toastify-toast-min-height: 20px;
+	--toastify-toast-min-height: 20px;
 }
 
 .ad-100 {
-  animation-delay: 100ms
+	animation-delay: 100ms;
 }
 .ad-300 {
-  animation-delay: 300ms
+	animation-delay: 300ms;
 }
 .ad-500 {
-  animation-delay: 500ms
+	animation-delay: 500ms;
 }
 
 /* Global Styles for Markdown Content */
 .markdown-content {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  line-height: 1.6;
-  word-wrap: break-word;
-  margin: auto;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	line-height: 1.6;
+	word-wrap: break-word;
+	margin: auto;
 }
 
 /* Headings */
@@ -69,204 +65,209 @@ body {
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-  line-height: 1.25;
+	margin-top: 24px;
+	margin-bottom: 16px;
+	font-weight: 600;
+	line-height: 1.25;
 }
 
 .markdown-content h1 {
-  font-size: 2em;
+	font-size: 2em;
 }
 
 .markdown-content h2 {
-  font-size: 1.5em;
+	font-size: 1.5em;
 }
 
 .markdown-content h3 {
-  font-size: 1.25em;
+	font-size: 1.25em;
 }
 
 /* Links */
 .markdown-content a {
-  color: #007bff;
-  text-decoration: none;
+	color: #007bff;
+	text-decoration: none;
 }
 
 .markdown-content a:hover {
-  text-decoration: underline;
+	text-decoration: underline;
 }
 
 /* Lists */
 .markdown-content ul,
 .markdown-content ol {
-  padding-left: 2em;
-  list-style: auto;
+	padding-left: 2em;
+	list-style: auto;
 }
 
 /* Blockquotes */
 .markdown-content blockquote {
-  padding: 0 1em;
-  color: #6c757d;
-  border-left: 0.25em solid #d1d5da;
+	padding: 0 1em;
+	color: #6c757d;
+	border-left: 0.25em solid #d1d5da;
 }
 
 /* Code */
 .markdown-content > pre {
-  overflow-x: auto;
-  border-radius: 4px;
+	overflow-x: auto;
+	border-radius: 4px;
 }
 
 .markdown-content code {
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 87.5%;
-  color: #e83e8c;
-  word-break: break-word;
+	font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+	font-size: 87.5%;
+	color: #e83e8c;
+	word-break: break-word;
 }
 
 .markdown-content pre > code {
-  font-size: 90%;
-  color: inherit;
-  word-break: normal;
-  white-space: pre;
-  background-color: transparent;
-  border: 0;
+	font-size: 90%;
+	color: inherit;
+	word-break: normal;
+	white-space: pre;
+	background-color: transparent;
+	border: 0;
 }
 
 /* Images */
 .markdown-content img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin: 0 auto;
 }
 
 /* Horizontal rule */
 .markdown-content hr {
-  margin: 24px 0;
-  border: 0;
-  border-top: 1px solid #d1d5da;
+	margin: 24px 0;
+	border: 0;
+	border-top: 1px solid #d1d5da;
 }
 
 /* Tables */
 .markdown-content table {
-  width: 100%;
-  border-collapse: collapse;
+	width: 100%;
+	border-collapse: collapse;
 }
 
 .markdown-content table th,
 .markdown-content table td {
-  padding: 8px 16px;
-  border: 1px solid #d1d5da;
+	padding: 8px 16px;
+	border: 1px solid #d1d5da;
 }
 
 .markdown-content table th {
-  background-color: #f6f8fa;
-  font-weight: 600;
+	background-color: #f6f8fa;
+	font-weight: 600;
 }
 
 .markdown-content table tr:nth-child(even) td {
-  background-color: #f6f8fa;
+	background-color: #f6f8fa;
 }
 
 .markdown-content :not(:first-child) {
-  margin-top: 0.5em;
+	margin-top: 0.5em;
 }
 
 .markdown-content pre * {
-  margin-top: unset!important;
+	margin-top: unset !important;
 }
 
 .overlay-container {
-  position: relative;
-  display: inline-block;  /* This ensures the container fits its children's size. Adjust as needed. */
-  border-radius: 0 0 4px 4px;
-  overflow: hidden;
-  width: 100%;
+	position: relative;
+	display: inline-block; /* This ensures the container fits its children's size. Adjust as needed. */
+	border-radius: 0 0 4px 4px;
+	overflow: hidden;
+	width: 100%;
 }
 
 .overlay-button {
-  position: absolute;
-  bottom: 10px;  /* Adjust this value as per your requirement for distance from bottom */
-  left: 50%;
-  transform: translateX(-50%);  /* Center the button */
-  padding: 5px 10px;
+	position: absolute;
+	bottom: 10px; /* Adjust this value as per your requirement for distance from bottom */
+	left: 50%;
+	transform: translateX(-50%); /* Center the button */
+	padding: 5px 10px;
 }
 
 .overlay-gradient {
-  position: relative;
-  pointer-events: none;
+	position: relative;
+	pointer-events: none;
 }
 
 .overlay-gradient::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(80,80,80,1) 100%);
-  pointer-events: none; /* Ensures the overlay doesn't interfere with clicks on the element */
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(80, 80, 80, 1) 100%);
+	pointer-events: none; /* Ensures the overlay doesn't interfere with clicks on the element */
 }
 
 .light.overlay-gradient::after {
-  background: linear-gradient(to bottom, transparent 0%, transparent 50%, rgba(249,250,251, 1) 100%) !important;
+	background: linear-gradient(
+		to bottom,
+		transparent 0%,
+		transparent 50%,
+		rgba(249, 250, 251, 1) 100%
+	) !important;
 }
 
 .noscrollbar::-webkit-scrollbar {
-  display: none;
+	display: none;
 }
 .noscrollbar {
-  scrollbar-width: none;
+	scrollbar-width: none;
 }
 div.grow.pl-2\.5.py-2.pr-2.flex.flex-wrap.gap-1 {
-  width: 80%!important;
+	width: 80% !important;
 }
 div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
-  overflow: hidden;
+	overflow: hidden;
 }
 .tooltip {
-  position: relative;
-  display: inline-block;
+	position: relative;
+	display: inline-block;
 }
 
 .tooltip .tooltiptext {
-  visibility: hidden;
-  width: 350px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-  position: absolute;
-  z-index: 50;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -173px;
+	visibility: hidden;
+	width: 350px;
+	background-color: black;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px 0;
+	position: absolute;
+	z-index: 50;
+	bottom: 125%;
+	left: 50%;
+	margin-left: -173px;
 }
 
 .tooltip .tooltiptext::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: black transparent transparent transparent;
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: black transparent transparent transparent;
 }
 
 .tooltip:hover .tooltiptext {
-  visibility: visible;
+	visibility: visible;
 }
 .invert-menu {
-  transform: translateY(calc(-100% - 50px));
+	transform: translateY(calc(-100% - 50px));
 }
 
 .barberpole {
 	height: 24px; /* Adjust height as needed */
 	width: 100%; /* Adjust width as needed */
-	background: linear-gradient(to left, rgba(0,0,0,0.05) 0%, white 50%, rgba(0,0,0,0.05) 100%);
+	background: linear-gradient(to left, rgba(0, 0, 0, 0.05) 0%, white 50%, rgba(0, 0, 0, 0.05) 100%);
 	background-size: 10% 100%;
 	animation: slide 6s linear infinite;
 	color: black;
@@ -274,11 +275,15 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 
 @media (prefers-color-scheme: dark) {
 	.barberpole {
-		background: linear-gradient(to left, rgba(255, 255, 255, 0.05) 0%, rgba(0,0,0,0.25) 50%, rgba(255, 255, 255, 0.05) 100%);
+		background: linear-gradient(
+			to left,
+			rgba(255, 255, 255, 0.05) 0%,
+			rgba(0, 0, 0, 0.25) 50%,
+			rgba(255, 255, 255, 0.05) 100%
+		);
 		color: white;
 	}
 }
-
 
 @keyframes slide {
 	from {

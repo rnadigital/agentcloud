@@ -4,11 +4,11 @@ export enum SessionStatus {
 	WAITING = 'waiting',
 	WARNING = 'warning',
 	ERRORED = 'error',
-	TERMINATED = 'terminated',
+	TERMINATED = 'terminated'
 }
 
 export enum FeedbackOption {
 	EXIT = 'exit',
 	CONTINUE = 'continue',
-	CANCEL = 'cancel',
+	CANCEL = 'cancel'
 }

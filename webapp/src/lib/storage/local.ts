@@ -14,14 +14,15 @@ if (typeof fs?.mkdir === 'function') {
 }
 
 class LocalStorageProvider extends StorageProvider {
-
 	static allowedDeleteErorCodes: string[] = ['ENOENT'];
 
 	#basePath: string;
 
 	constructor() {
 		super();
-		if (typeof fs?.mkdir !== 'function') { return; }
+		if (typeof fs?.mkdir !== 'function') {
+			return;
+		}
 		this.#basePath = process.env.UPLOADS_BASE_PATH || './uploads';
 		this.init();
 	}
@@ -46,7 +47,12 @@ class LocalStorageProvider extends StorageProvider {
 		}
 	}
 
-	async uploadBuffer(filename: string, content: Buffer, contentType: string, isPublic = false): Promise<any> {
+	async uploadBuffer(
+		filename: string,
+		content: Buffer,
+		contentType: string,
+		isPublic = false
+	): Promise<any> {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, content);
@@ -73,8 +79,6 @@ class LocalStorageProvider extends StorageProvider {
 	getBasePath() {
 		return '/static';
 	}
-
 }
 
 export default new LocalStorageProvider();
-

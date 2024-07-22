@@ -5,8 +5,13 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateModelModal({ open, setOpen, callback, modelFilter=null, modelTypeFilters=[] }) {
-
+export default function CreateModelModal({
+	open,
+	setOpen,
+	callback,
+	modelFilter = null,
+	modelTypeFilters = []
+}) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -52,12 +57,21 @@ export default function CreateModelModal({ open, setOpen, callback, modelFilter=
 							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible md:min-w-[400px]'>
 								<div>
 									<div>
-										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'
+										>
 											Create a model
 										</Dialog.Title>
 									</div>
 								</div>
-								<ModelForm compact={true} callback={callback} fetchModelFormData={fetchModelFormData} modelFilter={modelFilter} modelTypeFilters={modelTypeFilters} />
+								<ModelForm
+									compact={true}
+									callback={callback}
+									fetchModelFormData={fetchModelFormData}
+									modelFilter={modelFilter}
+									modelTypeFilters={modelTypeFilters}
+								/>
 							</Dialog.Panel>
 						</Transition.Child>
 					</div>

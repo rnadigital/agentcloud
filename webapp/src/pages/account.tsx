@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function Account(props) {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -30,7 +29,6 @@ export default function Account(props) {
 
 	return (
 		<>
-
 			<Head>
 				<title>Account</title>
 			</Head>
@@ -42,12 +40,18 @@ export default function Account(props) {
 			</div>
 
 			<p>{/* TODO */}</p>
-
 		</>
 	);
-
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

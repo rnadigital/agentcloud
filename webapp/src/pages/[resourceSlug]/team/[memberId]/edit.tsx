@@ -13,7 +13,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function EditTeamMember(props) {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, team, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -38,7 +37,6 @@ export default function EditTeamMember(props) {
 
 	return (
 		<>
-
 			<Head>
 				<title>Edit Team Member</title>
 			</Head>
@@ -49,13 +47,22 @@ export default function EditTeamMember(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
 			</div>
 
-			<PermissionsEditor editingPermission={new Permission(teamMember?.permissions)} filterBits={TEAM_BITS} />
-
+			<PermissionsEditor
+				editingPermission={new Permission(teamMember?.permissions)}
+				filterBits={TEAM_BITS}
+			/>
 		</>
 	);
-
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

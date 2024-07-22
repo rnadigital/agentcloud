@@ -22,13 +22,13 @@ export default function FlowPage(props) {
 		agents: false,
 		tools: false,
 		tasks: false,
-		datasources: false,
+		datasources: false
 	});
 
-	const toggleSection = (section) => {
-		setExpandSections((prevState) => ({
+	const toggleSection = section => {
+		setExpandSections(prevState => ({
 			...prevState,
-			[section]: !prevState[section],
+			[section]: !prevState[section]
 		}));
 	};
 
@@ -66,16 +66,20 @@ export default function FlowPage(props) {
 									onClick={() => toggleSection('agents')}
 								>
 									<span>Agents</span>
-									{expandSections.agents ? <ChevronDownIcon className='w-5 h-5' /> : <ChevronRightIcon className='w-5 h-5' />}
+									{expandSections.agents ? (
+										<ChevronDownIcon className='w-5 h-5' />
+									) : (
+										<ChevronRightIcon className='w-5 h-5' />
+									)}
 								</button>
 								{expandSections.agents && (
 									<div className='pl-4'>
 										<ul>
-											{agents.map((agent) => (
+											{agents.map(agent => (
 												<li
 													key={agent._id}
 													draggable
-													onDragStart={(event) => onDragStart(event, 'agent', agent)}
+													onDragStart={event => onDragStart(event, 'agent', agent)}
 													className='cursor-pointer'
 												>
 													{agent.name}
@@ -91,16 +95,20 @@ export default function FlowPage(props) {
 									onClick={() => toggleSection('tools')}
 								>
 									<span>Tools</span>
-									{expandSections.tools ? <ChevronDownIcon className='w-5 h-5' /> : <ChevronRightIcon className='w-5 h-5' />}
+									{expandSections.tools ? (
+										<ChevronDownIcon className='w-5 h-5' />
+									) : (
+										<ChevronRightIcon className='w-5 h-5' />
+									)}
 								</button>
 								{expandSections.tools && (
 									<div className='pl-4'>
 										<ul>
-											{tools.map((tool) => (
+											{tools.map(tool => (
 												<li
 													key={tool._id}
 													draggable
-													onDragStart={(event) => onDragStart(event, 'tool', tool)}
+													onDragStart={event => onDragStart(event, 'tool', tool)}
 													className='cursor-pointer'
 												>
 													{tool.name}
@@ -116,16 +124,20 @@ export default function FlowPage(props) {
 									onClick={() => toggleSection('tasks')}
 								>
 									<span>Tasks</span>
-									{expandSections.tasks ? <ChevronDownIcon className='w-5 h-5' /> : <ChevronRightIcon className='w-5 h-5' />}
+									{expandSections.tasks ? (
+										<ChevronDownIcon className='w-5 h-5' />
+									) : (
+										<ChevronRightIcon className='w-5 h-5' />
+									)}
 								</button>
 								{expandSections.tasks && (
 									<div className='pl-4'>
 										<ul>
-											{tasks.map((task) => (
+											{tasks.map(task => (
 												<li
 													key={task._id}
 													draggable
-													onDragStart={(event) => onDragStart(event, 'task', task)}
+													onDragStart={event => onDragStart(event, 'task', task)}
 													className='cursor-pointer'
 												>
 													{task.name}
@@ -141,16 +153,20 @@ export default function FlowPage(props) {
 									onClick={() => toggleSection('datasources')}
 								>
 									<span>Datasources</span>
-									{expandSections.datasources ? <ChevronDownIcon className='w-5 h-5' /> : <ChevronRightIcon className='w-5 h-5' />}
+									{expandSections.datasources ? (
+										<ChevronDownIcon className='w-5 h-5' />
+									) : (
+										<ChevronRightIcon className='w-5 h-5' />
+									)}
 								</button>
 								{expandSections.datasources && (
 									<div className='pl-4'>
 										<ul>
-											{datasources.map((datasource) => (
+											{datasources.map(datasource => (
 												<li
 													key={datasource._id}
 													draggable
-													onDragStart={(event) => onDragStart(event, 'datasource', datasource)}
+													onDragStart={event => onDragStart(event, 'datasource', datasource)}
 													className='cursor-pointer'
 												>
 													{datasource.name}
@@ -171,7 +187,14 @@ export default function FlowPage(props) {
 	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }
-

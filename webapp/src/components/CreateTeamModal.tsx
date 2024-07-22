@@ -6,11 +6,10 @@ import * as API from '../api';
 import TeamForm from './TeamForm';
 
 export default function CreateTeamModal({ open, setOpen, callback }) {
-
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState();
-	
+
 	return (
 		<Transition.Root show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
@@ -40,7 +39,10 @@ export default function CreateTeamModal({ open, setOpen, callback }) {
 							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-6 overflow-visible md:min-w-[400px]'>
 								<div>
 									<div className=''>
-										<Dialog.Title as='h3' className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='mb-4 border-b pb-4 text-base font-semibold leading-6 text-gray-900'
+										>
 											New Team
 										</Dialog.Title>
 									</div>

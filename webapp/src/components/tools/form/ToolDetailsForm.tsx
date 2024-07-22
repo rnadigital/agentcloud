@@ -9,7 +9,7 @@ export default function ToolDetailsForm({
 	toolDescription,
 	setToolDescription,
 	isBuiltin,
-	initialType,
+	initialType
 }) {
 	return (
 		<>
@@ -28,26 +28,31 @@ export default function ToolDetailsForm({
 				</div>
 			</div>
 
-			{!isBuiltin && initialType === null && <div>
-				<label className='text-base font-semibold text-gray-900'>Tool Type</label>
+			{!isBuiltin && initialType === null && (
 				<div>
-					<select
-						required
-						name='toolType'
-						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
-						value={toolType}
-						onChange={(e) => setToolType(e.target.value as ToolType)}
-					>
-						<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
-						<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-						{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
-					</select>
+					<label className='text-base font-semibold text-gray-900'>Tool Type</label>
+					<div>
+						<select
+							required
+							name='toolType'
+							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+							value={toolType}
+							onChange={e => setToolType(e.target.value as ToolType)}
+						>
+							<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
+							<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
+							{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
+						</select>
+					</div>
 				</div>
-			</div>}
+			)}
 
 			<div>
 				<label className='text-base font-semibold text-gray-900'>Description</label>
-				<p className='text-sm'><strong>Tip:</strong> A verbose and detailed description helps agents to better understand when to use this tool.</p>
+				<p className='text-sm'>
+					<strong>Tip:</strong> A verbose and detailed description helps agents to better understand
+					when to use this tool.
+				</p>
 				<div>
 					<textarea
 						required

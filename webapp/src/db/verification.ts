@@ -9,7 +9,7 @@ import toObjectId from '../lib/misc/toobjectid';
 export enum VerificationTypes {
 	VERIFY_EMAIL = 'email',
 	CHANGE_PASSWORD = 'change_password',
-	TEAM_INVITE = 'team_invite',
+	TEAM_INVITE = 'team_invite'
 }
 
 export type VerificationType = VerificationTypes;
@@ -19,18 +19,21 @@ export type Verification = {
 	token: string;
 	accountId: ObjectId;
 	type: VerificationType;
-}
+};
 
 export function VerificationCollection(): any {
 	return db.db().collection('verifications');
 }
 
-export async function addVerification(accountId: db.IdOrStr, type: VerificationType): Promise<string> {
+export async function addVerification(
+	accountId: db.IdOrStr,
+	type: VerificationType
+): Promise<string> {
 	const randomBytesHex: string = await randomBytes(64).toString('hex');
 	await VerificationCollection().insertOne({
 		token: randomBytesHex,
 		accountId: toObjectId(accountId),
-		type,
+		type
 	});
 	return randomBytesHex;
 }
@@ -39,6 +42,6 @@ export function getAndDeleteVerification(token: string, type: VerificationType):
 	// Note: findOneAndDelete to be atomic, prevent double use
 	return VerificationCollection().findOneAndDelete({
 		token,
-		type,
+		type
 	});
 }

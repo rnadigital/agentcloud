@@ -14,7 +14,7 @@ export type Group = {
 
 export enum ProcessImpl {
 	SEQUENTIAL = 'sequential',
-	HIERARCHICAL = 'hierarchical',
+	HIERARCHICAL = 'hierarchical'
 }
 
 export type Crew = {
@@ -27,4 +27,4 @@ export type Crew = {
 	process: ProcessImpl;
 	managerModelId?: ObjectId;
 	hidden?: boolean;
-};	
+};
