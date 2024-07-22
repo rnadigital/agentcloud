@@ -10,16 +10,18 @@ import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
-import { productToPlanMap } from 'struct/billing';w
+import { productToPlanMap } from 'struct/billing';
 import {
 	Account,
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
 	setCurrentTeam,
-	verifyAccount
-} from '../db/account';
-import { addVerification, getAndDeleteVerification, VerificationTypes } from '../db/verification';
+	verifyAccount,
+	updateStripeCustomer,
+	setStripeCustomerId
+} from 'db/account';
+import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 
 export async function accountData(req, res, _next) {
 	return {
