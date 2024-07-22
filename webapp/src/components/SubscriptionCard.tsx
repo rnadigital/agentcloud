@@ -1,23 +1,17 @@
 import * as API from '@api';
-import {
-	EmbeddedCheckout,
-	EmbeddedCheckoutProvider} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import ButtonSpinner from 'components/ButtonSpinner';
-import ConfirmModal from 'components/ConfirmModal';
-import ErrorAlert from 'components/ErrorAlert';
-import Invoice from 'components/Invoice';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-import InfoAlert from 'components/InfoAlert';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
+
+import classNames from './ClassNames';
 
 export default function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
@@ -171,10 +165,10 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 							setTimeout(() => setSubmitting(false), 500);
 						}
 					}}		
-					disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && (!stripeCancelled || price === 0))}
-					className={editedAddons || (!currentPlan && selectedPlan === plan)
-						? 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
-						: 'mt-4 tran;sition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+					// disabled={(selectedPlan !== plan) || submitting || (currentPlan && !editedAddons && (!stripeCancelled || price === 0))}
+					className={classNames(editedAddons || (!currentPlan && selectedPlan === plan)
+						? 'mt-4 transition-colors flex w-full justify-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:bg-gray-600'
+						: 'mt-4 transition-colors flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600')}
 				>
 					{submitting && <ButtonSpinner className='mt-1 me-2' />}
 					{submitting
