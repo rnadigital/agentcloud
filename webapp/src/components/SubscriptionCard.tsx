@@ -9,9 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import classNames from 'components//ClassNames';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
-
-import classNames from './ClassNames';
 
 export default function SubscriptionCard({ title, link = null, plan = null, price = null, description = null, icon = null,
 	isPopular = false, selectedPlan, setSelectedPlan, usersAddon, storageAddon, setStagedChange, showConfirmModal, stripePlan }) {
@@ -20,7 +19,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 	const { csrf, account } = accountContext as any;
 	const { stripeEndsAt, stripeTrial, stripeAddons, stripeCancelled } = account?.stripe || {};
 	const currentPlan = plan === stripePlan;
-	const numberPrice = typeof price === 'number';
+	const isEnterprise = plan === SubscriptionPlan.ENTERPRISE;
 	const [editedAddons, setEditedAddons] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -120,13 +119,13 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 			</div>
 			<div className='mt-1 min-h-[80px]'>
 				{description}
-				{price > 0		//and not free plan
+				{price > 0	//and not free plan
 					&& plan !== SubscriptionPlan.ENTERPRISE //and not customisable on enterprise
 					&& renderAddons(addons)}
 			</div>
 			<div className='mt-4 flex flex-row'>
-				<span className='text-4xl font-bold'>{numberPrice && '$'}{price}</span>
-				{numberPrice && (
+				<span className='text-4xl font-bold'>${isEnterprise ? 'Custom' : price}</span>
+				{!isEnterprise && (
 					<span className='text-sm text-gray-500 flex flex-col ps-1'>
 						<span>per</span>
 						<span>month</span>

@@ -43,7 +43,7 @@ export interface SubscriptionPlanConfig {
 	storageAddon: boolean;
 	usersAddon: boolean;
 	title: string;
-	price: number | string;
+	price: number;
 	isPopular?: boolean;
 	link?: string;
 }
@@ -86,7 +86,7 @@ export const subscriptionPlans: SubscriptionPlanConfig[] = [
 		storageAddon: false,
 		usersAddon: false,
 		title: 'Agent Cloud Enterprise',
-		price: 'Custom',
+		price: Infinity,
 		link: process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK
 	}
 ];
