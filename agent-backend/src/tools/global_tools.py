@@ -38,12 +38,15 @@ class CustomHumanInput(BaseTool):
         self.socket_client = socket_client
         self.author_name = author_name
 
+    def __hash__(self):
+        return id(self)
+
     @staticmethod
     def extract_message(text):
         try:
             #NOTE: testing
             return text
-            
+
             if isinstance(text, str) and text.startswith('{'):
                 text_json = json.loads(text)
                 if len(text_json) > 1:
@@ -127,7 +130,7 @@ class GlobalBaseTool(BaseTool, ABC):
     @classmethod
     @abstractmethod
     def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]], **kwargs) -> BaseTool:
-        """ 
+        """
             cls: class type instance - tells you what class was is calling this class-level method
             tool: tool model. Need to copy or extract mandatory BaseTool fields such as name, description, args_schema
             datasources: datasource mongo object. Used to instantiate datasources such as Vector DB
@@ -135,6 +138,9 @@ class GlobalBaseTool(BaseTool, ABC):
             kwargs: other arguments. future proofing method for when we need to pass other mongo model data or app/team configuration to the tool
         """
         pass
+
+    def __hash__(self):
+        return id(self)
 
 
 class openapi_request:
