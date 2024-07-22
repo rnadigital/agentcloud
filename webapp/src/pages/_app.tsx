@@ -75,7 +75,6 @@ export default function App({ Component, pageProps }) {
 									<style>{''}</style>
 									<Component {...pageProps} />
 								</Layout>
-						
 							</StepWrapper>
 						</NotificationWrapper>
 					</SocketWrapper>

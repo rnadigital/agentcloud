@@ -12,7 +12,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { ModelEmbeddingLength, ModelList, modelOptions,  ModelType, ModelTypeRequirements } from 'struct/model';
+import {
+	ModelEmbeddingLength,
+	ModelList,
+	modelOptions,
+	ModelType,
+	ModelTypeRequirements
+} from 'struct/model';
 
 import OnboardingSelect from './OnboardingSelect';
 
@@ -39,7 +45,6 @@ interface LLMConfigurationFormValues {
 }
 
 const LLMConfigurationForm = () => {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	console.log(csrf);
@@ -49,16 +54,30 @@ const LLMConfigurationForm = () => {
 	const [isMounted, setIsMounted] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
-	const { control, watch, resetField, handleSubmit  } = useForm<LLMConfigurationFormValues>({ defaultValues: { LLMType: modelOptions[0], embeddingType: modelOptions[0] } });
+	const { control, watch, resetField, handleSubmit } = useForm<LLMConfigurationFormValues>({
+		defaultValues: { LLMType: modelOptions[0], embeddingType: modelOptions[0] }
+	});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
 
-	const modelList = [{ label: null, value: null }, ...ModelList[LLMType.value].filter(model => !ModelEmbeddingLength[model]).map(model => ({
-		label: model,
-		value: model,
-		...(model === 'gpt-4o' ? { recommended: true } : {})
-	}))] || [];
-	const embeddingModelList = [{ label: null, value: null }, ...ModelList[embeddingType?.value].filter(model => ModelEmbeddingLength[model]).map(model => ({ label: model, value: model }))] || [];
+	const modelList =
+		[
+			{ label: null, value: null },
+			...ModelList[LLMType.value]
+				.filter(model => !ModelEmbeddingLength[model])
+				.map(model => ({
+					label: model,
+					value: model,
+					...(model === 'gpt-4o' ? { recommended: true } : {})
+				}))
+		] || [];
+	const embeddingModelList =
+		[
+			{ label: null, value: null },
+			...ModelList[embeddingType?.value]
+				.filter(model => ModelEmbeddingLength[model])
+				.map(model => ({ label: model, value: model }))
+		] || [];
 
 	const isOpenAISelectedLLMType = LLMType.value === ModelType.OPENAI;
 	const isOpenAISelectedEmbeddingType = embeddingType.value === ModelType.OPENAI;
@@ -90,7 +109,6 @@ const LLMConfigurationForm = () => {
 	const { isTablet, isMobile } = useResponsive();
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
-
 		setSubmitting(true);
 		if (data.LLMModel) {
 			const body = {
@@ -104,16 +122,20 @@ const LLMConfigurationForm = () => {
 					...(data.api_key && { api_key: data.api_key }),
 					...(data.groq_api_key && { groq_api_key: data.groq_api_key }),
 					...(data.cohere_api_key && { cohere_api_key: data.cohere_api_key }),
-					...(data.base_url && { base_url: data.base_url }),
+					...(data.base_url && { base_url: data.base_url })
 				}
 			};
 
-			await API.addModel(body, () => {
-				toast.success('Added Model');
-			}, (res) => {
-				toast.error(res);
-			}, null);
-
+			await API.addModel(
+				body,
+				() => {
+					toast.success('Added Model');
+				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
 		}
 
 		if (data.embeddingModel) {
@@ -128,27 +150,29 @@ const LLMConfigurationForm = () => {
 					...(data.embedding_api_key && { api_key: data.embedding_api_key }),
 					...(data.embedding_cohre_api_key && { cohre_api_key: data.embedding_cohre_api_key }),
 					...(data.embedding_groq_api_key && { groq_api_key: data.embedding_groq_api_key }),
-					...(data.embedding_base_url && { base_url: data.embedding_base_url }),
+					...(data.embedding_base_url && { base_url: data.embedding_base_url })
 				}
 			};
-			await API.addModel(body, () => {
-				toast.success('Added Model');
-			}, (res) => {
-				toast.error(res);
-			}, null);
+			await API.addModel(
+				body,
+				() => {
+					toast.success('Added Model');
+				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
 		}
 
-		await API.updateOnboardedStatus({
-		}, null, null, router);
+		await API.updateOnboardedStatus({}, null, null, router);
 		setSubmitting(false);
-
 	};
 
 	const updateOnboardedStatus = async () => {
 		setSubmitting(true);
 		try {
-			await API.updateOnboardedStatus({
-			}, null, null, router);
+			await API.updateOnboardedStatus({}, null, null, router);
 		} finally {
 			setSubmitting(false);
 		}
@@ -179,10 +203,8 @@ const LLMConfigurationForm = () => {
 			<div className='mt-14 flex gap-8 flex-col md:flex-row'>
 				<div className='flex-1'>
 					<div className='text-sm flex gap-1'>
-						<span>
-							Select LLM
-						</span>
-						<ToolTip content='Hello world' >
+						<span>Select LLM</span>
+						<ToolTip content='Hello world'>
 							<span className='cursor-pointer'>
 								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
 							</span>
@@ -190,42 +212,61 @@ const LLMConfigurationForm = () => {
 					</div>
 					<div className='flex'>
 						<div className='w-1/2 sm:w-2/5'>
-							<OnboardingSelect<LLMConfigurationFormValues> options={modelOptions} classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }} control={control} name='LLMType' />
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={modelOptions}
+								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
+								control={control}
+								name='LLMType'
+							/>
 						</div>
 						<div className='w-1/2 sm:flex-1'>
-							<OnboardingSelect<LLMConfigurationFormValues> options={modelList} classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }} control={control} name='LLMModel' />
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={modelList}
+								classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }}
+								control={control}
+								name='LLMModel'
+							/>
 						</div>
 					</div>
 
-					<div className={clsx('flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1', { 'bg-white': !isOpenAISelectedLLMType })}>
-						{isOpenAISelectedLLMType &&
+					<div
+						className={clsx(
+							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
+							{ 'bg-white': !isOpenAISelectedLLMType }
+						)}
+					>
+						{isOpenAISelectedLLMType && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
 								<div>Best for overall speed, cost, performance, and tool integration</div>
-							</>}
+							</>
+						)}
 					</div>
 
-					{isMobile && <div className='mt-2'>
-						{LLMModelRequiredFields.length > 0 && LLMModelRequiredFields.map(field => <div key={field.name} className='mt-2'>
-							<InputField<LLMConfigurationFormValues>
-								name={field.name as keyof LLMConfigurationFormValues}
-								rules={{ required: LLMModel?.value ? `${field.label} is required` : false }}
-								label={field.label}
-								type='text'
-								control={control}
-								placeholder={field.placeholder}
-								disabled={!LLMModel || !LLMModel.value}
-							/>
-						</div>)}
-					</div>}
+					{isMobile && (
+						<div className='mt-2'>
+							{LLMModelRequiredFields.length > 0 &&
+								LLMModelRequiredFields.map(field => (
+									<div key={field.name} className='mt-2'>
+										<InputField<LLMConfigurationFormValues>
+											name={field.name as keyof LLMConfigurationFormValues}
+											rules={{ required: LLMModel?.value ? `${field.label} is required` : false }}
+											label={field.label}
+											type='text'
+											control={control}
+											placeholder={field.placeholder}
+											disabled={!LLMModel || !LLMModel.value}
+										/>
+									</div>
+								))}
+						</div>
+					)}
 				</div>
 
 				<div className='flex-1'>
 					<div className='text-sm flex gap-1'>
-						<span>
-							Select Embedding
-						</span>
-						<ToolTip content='Hello world' >
+						<span>Select Embedding</span>
+						<ToolTip content='Hello world'>
 							<span className='cursor-pointer'>
 								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
 							</span>
@@ -233,93 +274,119 @@ const LLMConfigurationForm = () => {
 					</div>
 					<div className='flex'>
 						<div className='w-1/2 sm:w-2/5'>
-							<OnboardingSelect<LLMConfigurationFormValues> options={modelOptions} classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }} control={control} name='embeddingType' />
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={modelOptions}
+								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
+								control={control}
+								name='embeddingType'
+							/>
 						</div>
 						<div className='flex-1'>
-							<OnboardingSelect<LLMConfigurationFormValues> options={embeddingModelList} classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }} control={control} name='embeddingModel' />
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={embeddingModelList}
+								classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }}
+								control={control}
+								name='embeddingModel'
+							/>
 						</div>
-
 					</div>
 
-					<div className={clsx('flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1', { 'bg-white': !isOpenAISelectedEmbeddingType })}>
-						{isOpenAISelectedEmbeddingType &&
+					<div
+						className={clsx(
+							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
+							{ 'bg-white': !isOpenAISelectedEmbeddingType }
+						)}
+					>
+						{isOpenAISelectedEmbeddingType && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
-								<div>
-									Excellent for RAG, with great cost efficiency and performance.
-								</div>
-							</>}
+								<div>Excellent for RAG, with great cost efficiency and performance.</div>
+							</>
+						)}
 					</div>
 
-					{isMobile && EmbeddingModelRequiredFields.length > 0 && EmbeddingModelRequiredFields.map(field => <div key={field.name} className='mt-2'>
-						<InputField<LLMConfigurationFormValues>
-							name={field.name as keyof LLMConfigurationFormValues}
-							rules={{ required: embeddingModel?.value ? `${field.label} is required` : false }}
-							label={field.label}
-							type='text'
-							control={control}
-							placeholder={field.placeholder}
-							disabled={!LLMModel || !LLMModel.value}
-						/>
-					</div>)}
+					{isMobile &&
+						EmbeddingModelRequiredFields.length > 0 &&
+						EmbeddingModelRequiredFields.map(field => (
+							<div key={field.name} className='mt-2'>
+								<InputField<LLMConfigurationFormValues>
+									name={field.name as keyof LLMConfigurationFormValues}
+									rules={{ required: embeddingModel?.value ? `${field.label} is required` : false }}
+									label={field.label}
+									type='text'
+									control={control}
+									placeholder={field.placeholder}
+									disabled={!LLMModel || !LLMModel.value}
+								/>
+							</div>
+						))}
 				</div>
 			</div>
 
-			{isTablet && <div className='flex gap-8 mt-4'>
-				<div className='flex-1'>
-					{LLMModelRequiredFields.length > 0 && LLMModelRequiredFields.map(field => (
-						<div key={field.name}>
-							<InputField<LLMConfigurationFormValues>
-								name={field.name as keyof LLMConfigurationFormValues}
-								rules={{ required: LLMModel?.value ? `${field.label} is required` : false }}
-								label={field.label}
-								type='text'
-								control={control}
-								placeholder={field.placeholder}
-								disabled={!LLMModel || !LLMModel.value}
-							/>
-						</div>
-					))}
+			{isTablet && (
+				<div className='flex gap-8 mt-4'>
+					<div className='flex-1'>
+						{LLMModelRequiredFields.length > 0 &&
+							LLMModelRequiredFields.map(field => (
+								<div key={field.name}>
+									<InputField<LLMConfigurationFormValues>
+										name={field.name as keyof LLMConfigurationFormValues}
+										rules={{ required: LLMModel?.value ? `${field.label} is required` : false }}
+										label={field.label}
+										type='text'
+										control={control}
+										placeholder={field.placeholder}
+										disabled={!LLMModel || !LLMModel.value}
+									/>
+								</div>
+							))}
+					</div>
+					<div className='flex-1'>
+						{EmbeddingModelRequiredFields.length > 0 &&
+							EmbeddingModelRequiredFields.map(field => (
+								<div key={field.name}>
+									<InputField<LLMConfigurationFormValues>
+										name={field.name as keyof LLMConfigurationFormValues}
+										rules={{
+											required: embeddingModel?.value ? `${field.label} is required` : false
+										}}
+										label={field.label}
+										type='text'
+										control={control}
+										placeholder={field.placeholder}
+										// value={embeddingAPIKeyValue}
+										disabled={!embeddingModel || !embeddingModel.value}
+									/>
+								</div>
+							))}
+					</div>
 				</div>
-				<div className='flex-1'>
-					{EmbeddingModelRequiredFields.length > 0 && EmbeddingModelRequiredFields.map(field => (
-						<div key={field.name}>
-							<InputField<LLMConfigurationFormValues>
-								name={field.name as keyof LLMConfigurationFormValues}
-								rules={{ required: embeddingModel?.value ? `${field.label} is required` : false }}
-								label={field.label}
-								type='text'
-								control={control}
-								placeholder={field.placeholder}
-								// value={embeddingAPIKeyValue}
-								disabled={!embeddingModel || !embeddingModel.value}
-							/>
-						</div>
-					))}
-				</div>
-			</div>}
+			)}
 
 			<hr className='mt-14 mb-5' />
 			<div className='flex'>
-				<button className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm' type='button'
+				<button
+					className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm'
+					type='button'
 					onClick={updateOnboardedStatus}
 				>
 					I&apos;ll do this later
 				</button>
-				<button className='ml-auto w-[140px] h-[41px] disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm' type='submit' disabled={!LLMModel?.value && !embeddingModel?.value}>
-					{submitting ? <ButtonSpinner className='mt-1 me-2' /> :
+				<button
+					className='ml-auto w-[140px] h-[41px] disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm'
+					type='submit'
+					disabled={!LLMModel?.value && !embeddingModel?.value}
+				>
+					{submitting ? (
+						<ButtonSpinner className='mt-1 me-2' />
+					) : (
 						<>
-							<span className='text-sm'>
-								Get Started
-							</span>
+							<span className='text-sm'>Get Started</span>
 							<ChevronRightIcon className='ml-2 h-5 w-5' />
 						</>
-					}
-
+					)}
 				</button>
-
 			</div>
-
 		</form>
 	);
 };

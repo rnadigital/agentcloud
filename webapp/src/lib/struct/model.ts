@@ -10,7 +10,12 @@ export enum ModelType {
 }
 
 export const modelOptions = [
-	{ value: ModelType.OPENAI, label: 'OpenAI', iconURL: '/images/onboarding/openai.png', recommended: true },
+	{
+		value: ModelType.OPENAI,
+		label: 'OpenAI',
+		iconURL: '/images/onboarding/openai.png',
+		recommended: true
+	},
 	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.png' },
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.png' },
 	{ value: ModelType.COHERE, label: 'Cohere', iconURL: '/images/onboarding/cohere.png' },
