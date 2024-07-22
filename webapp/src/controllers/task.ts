@@ -94,7 +94,12 @@ export async function addTaskApi(req, res, next) {
 			{ field: 'expectedOutput', validation: { ofType: 'string' } },
 			{
 				field: 'toolIds',
-				validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tools'
+				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
 			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
@@ -179,7 +184,12 @@ export async function editTaskApi(req, res, next) {
 			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
 				field: 'toolIds',
-				validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' }
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tools'
+				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
 			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } }

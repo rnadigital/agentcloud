@@ -154,7 +154,12 @@ export async function addAppApi(req, res, next) {
 			{ field: 'agents', validation: { notEmpty: !isChatApp } },
 			{
 				field: 'tasks',
-				validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tasks'
+				}
 			},
 			{
 				field: 'agents',
@@ -357,7 +362,12 @@ export async function editAppApi(req, res, next) {
 			{ field: 'agents', validation: { notEmpty: !isChatApp } },
 			{
 				field: 'tasks',
-				validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tasks' }
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tasks'
+				}
 			},
 			{
 				field: 'agents',
