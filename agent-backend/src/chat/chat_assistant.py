@@ -260,9 +260,14 @@ class ChatAssistant:
                             continue
 
                         tool_name = raw_tool_name.replace('_', ' ').capitalize()
-                        tool_chunk_id[tool_name] = str(uuid.uuid4())
+
+                        # Use event->run_id as key for tool_chunk_id as that is guaranteed to be unique
+                        # and won't be overwritten on concurrent runs of the same tool
+                        run_id = event["run_id"]
+                        tool_chunk_id[run_id] = str(uuid.uuid4())
+
                         self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[tool_name],
+                                            first=True, chunk_id=tool_chunk_id[run_id],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline")
 
@@ -275,12 +280,14 @@ class ChatAssistant:
                         if raw_tool_name == 'human_input':
                             continue
 
+                        run_id = event["run_id"]
+
                         tool_name = raw_tool_name.replace('_', ' ').capitalize()
                         self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[tool_name],
+                                            first=True, chunk_id=tool_chunk_id[run_id],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline", overwrite=True)
-                        del tool_chunk_id[tool_name]
+                        del tool_chunk_id[run_id]
 
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
                     case _:
