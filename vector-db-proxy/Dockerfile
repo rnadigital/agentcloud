@@ -48,6 +48,10 @@ FROM rust:1.77.2
 WORKDIR /app
 ARG RELEASE
 ENV IS_RELEASE=$RELEASE
+ARG GCP_SERVICE_ACCOUNT_JSON
+RUN echo "GCP_SERVICE_ACCOUNT_JSON: ${GCP_SERVICE_ACCOUNT_JSON}"
+ENV GOOGLE_APPLICATION_CREDENTIALS_JSON=$GCP_SERVICE_ACCOUNT_JSON
+RUN echo "GOOGLE_APPLICATION_CREDENTIALS_JSON: ${GOOGLE_APPLICATION_CREDENTIALS_JSON}"
 COPY --from=builder /usr/local/src/vector-db-proxy/target/release/vector-db-proxy /app/vector-db-proxy-release
 COPY --from=builder /usr/local/src/vector-db-proxy/target/debug/vector-db-proxy /app/vector-db-proxy-debug
 # Only copy runtime dependencies if necessary
