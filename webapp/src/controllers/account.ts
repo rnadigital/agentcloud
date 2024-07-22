@@ -8,16 +8,23 @@ import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationUtils';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
+import {
+	Account,
+	changeAccountPassword,
+	getAccountByEmail,
+	getAccountById,
+	setCurrentTeam,
+	verifyAccount
+} from '../db/account';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 
 export async function accountData(req, res, _next) {
 	return {
 		team: res.locals.matchingTeam,
-		csrf: req.csrfToken(),
+		csrf: req.csrfToken()
 	};
-};
+}
 
 /**
  * GET /account
@@ -57,11 +64,17 @@ export async function accountJson(req, res, next) {
  * @apiParam {String} password Password of account.
  */
 export async function login(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
-		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
-	], { email: 'Email', password: 'Password' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{
+				field: 'email',
+				validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }
+			},
+			{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } }
+		],
+		{ email: 'Email', password: 'Password' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -80,7 +93,10 @@ export async function login(req, res) {
 		if (passwordMatch === true) {
 			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 			req.session.token = token; //jwt (cookie)
-			return dynamicResponse(req, res, 302, { redirect: `/${account.currentTeam.toString()}/apps`, token });
+			return dynamicResponse(req, res, 302, {
+				redirect: `/${account.currentTeam.toString()}/apps`,
+				token
+			});
 		}
 	} catch (e) {
 		console.error(e);
@@ -88,7 +104,6 @@ export async function login(req, res) {
 	}
 
 	return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
-
 }
 
 /**
@@ -96,13 +111,19 @@ export async function login(req, res) {
  * regiser
  */
 export async function register(req, res) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'checkoutSession', validation: { ofType: 'string' } },
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
-		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
-	], { name: 'Name', email: 'Email', password: 'Password' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'checkoutSession', validation: { ofType: 'string' } },
+			{
+				field: 'email',
+				validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }
+			},
+			{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } }
+		],
+		{ name: 'Name', email: 'Email', password: 'Password' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -115,10 +136,17 @@ export async function register(req, res) {
 		return dynamicResponse(req, res, 409, { error: 'Account already exists with this email' });
 	}
 
-	const { emailVerified } = await createAccount({ email, name, password, roleTemplate: 'TEAM_MEMBER', checkoutSession });
+	const { emailVerified } = await createAccount({
+		email,
+		name,
+		password,
+		roleTemplate: 'TEAM_MEMBER',
+		checkoutSession
+	});
 
-	return dynamicResponse(req, res, 302, { redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify' });
-
+	return dynamicResponse(req, res, 302, {
+		redirect: emailVerified ? '/login?verifysuccess=true&noverify=1' : '/verify'
+	});
 }
 
 /**
@@ -137,31 +165,39 @@ export function logout(req, res) {
 export async function requestChangePassword(req, res) {
 	const { email } = req.body;
 
-	let validationError = chainValidations(req.body, [
-		{ field: 'email', validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' } },
-	], { email: 'Email' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{
+				field: 'email',
+				validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }
+			}
+		],
+		{ email: 'Email' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const foundAccount = await getAccountByEmail(email);
 	if (foundAccount) {
+		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD).then(verificationToken => {
+			const emailBody = render(
+				PasswordResetEmail({
+					passwordResetURL: `${process.env.URL_APP}/changepassword?token=${verificationToken}`
+				})
+			);
 
-		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD)
-			.then(verificationToken => {
-
-				const emailBody = render(PasswordResetEmail({ passwordResetURL: `${process.env.URL_APP}/changepassword?token=${verificationToken}` }));
-
-				ses.sendEmail({
-					from: process.env.FROM_EMAIL_ADDRESS,
-					bcc: null,
-					cc: null,
-					replyTo: null,
-					to: [email],
-					subject: 'Password reset verification',
-					body: emailBody
-				});
+			ses.sendEmail({
+				from: process.env.FROM_EMAIL_ADDRESS,
+				bcc: null,
+				cc: null,
+				replyTo: null,
+				to: [email],
+				subject: 'Password reset verification',
+				body: emailBody
 			});
+		});
 	}
 	return dynamicResponse(req, res, 302, { redirect: '/verify' });
 }
@@ -172,14 +208,21 @@ export async function requestChangePassword(req, res) {
  */
 export async function changePassword(req, res) {
 	const { password, token } = req.body;
-	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
-		{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
-	], { name: 'Name', email: 'Email', password: 'Password' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
+			{ field: 'password', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } }
+		],
+		{ name: 'Name', email: 'Email', password: 'Password' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	const deletedVerification = await getAndDeleteVerification(token, VerificationTypes.CHANGE_PASSWORD);
+	const deletedVerification = await getAndDeleteVerification(
+		token,
+		VerificationTypes.CHANGE_PASSWORD
+	);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid password reset token' });
 	}
@@ -193,13 +236,18 @@ export async function changePassword(req, res) {
  * logout
  */
 export async function verifyToken(req, res) {
-	let validationError = chainValidations(req.body, [
-		{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } },
-	], { token: 'Token' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } }],
+		{ token: 'Token' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	const deletedVerification = await getAndDeleteVerification(req.body.token, VerificationTypes.VERIFY_EMAIL);
+	const deletedVerification = await getAndDeleteVerification(
+		req.body.token,
+		VerificationTypes.VERIFY_EMAIL
+	);
 	if (!deletedVerification || !deletedVerification.token) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 	}
@@ -222,11 +270,14 @@ export async function verifyToken(req, res) {
  * switch teams
  */
 export async function switchTeam(req, res, _next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'orgId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-		{ field: 'teamId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-	], { orgId: 'Org ID', teamId: 'Team ID' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'orgId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+			{ field: 'teamId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }
+		],
+		{ orgId: 'Org ID', teamId: 'Team ID' }
+	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -242,5 +293,4 @@ export async function switchTeam(req, res, _next) {
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
 	return res.json({});
-
 }

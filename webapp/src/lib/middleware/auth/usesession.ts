@@ -22,7 +22,7 @@ const sessionStore = session({
 		httpOnly: true,
 		secure: false, //TODO: check https
 		sameSite: 'strict',
-		maxAge: 1000 * 60 * 60 * 24 * 30, //1 month
+		maxAge: 1000 * 60 * 60 * 24 * 30 //1 month
 	}
 });
 

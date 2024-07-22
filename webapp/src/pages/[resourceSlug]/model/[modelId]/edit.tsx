@@ -16,10 +16,15 @@ export default function EditModel(props) {
 	const { model } = state;
 
 	async function fetchModelFormData() {
-		await API.getModel({
-			resourceSlug,
-			modelId,
-		}, dispatch, setError, router);
+		await API.getModel(
+			{
+				resourceSlug,
+				modelId
+			},
+			dispatch,
+			setError,
+			router
+		);
 	}
 
 	useEffect(() => {
@@ -27,7 +32,7 @@ export default function EditModel(props) {
 	}, [resourceSlug]);
 
 	if (model == null) {
-		return <Spinner/>;
+		return <Spinner />;
 	}
 
 	return (
@@ -41,17 +46,20 @@ export default function EditModel(props) {
 			</div>
 
 			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
-				<ModelForm
-					_model={model}
-					fetchModelFormData={fetchModelFormData}
-					editing={true}
-				/>
+				<ModelForm _model={model} fetchModelFormData={fetchModelFormData} editing={true} />
 			</span>
-
 		</>
 	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

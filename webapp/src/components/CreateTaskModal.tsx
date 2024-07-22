@@ -5,10 +5,9 @@ import { Dialog, Transition } from '@headlessui/react';
 import TaskForm from 'components/TaskForm';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import { Fragment, useEffect,useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
 export default function CreateTaskModal({ open, setOpen, callback }) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -57,7 +56,13 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 										Add New Task
 									</Dialog.Title>
 									<div className='mt-2'>
-										<TaskForm compact={true} callback={callback} tools={tools} agents={agents} fetchTaskFormData={fetchTaskFormData} />
+										<TaskForm
+											compact={true}
+											callback={callback}
+											tools={tools}
+											agents={agents}
+											fetchTaskFormData={fetchTaskFormData}
+										/>
 									</div>
 								</div>
 							</Dialog.Panel>

@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useAccountContext } from '../context/account';
 
 export default function Index() {
-
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
 
@@ -16,9 +15,16 @@ export default function Index() {
 	}
 
 	return null;
-
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale}) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

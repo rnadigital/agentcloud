@@ -14,20 +14,26 @@ export function VersionCollection(): any {
 }
 
 export function setVersion(ver: string) {
-	return VersionCollection().replaceOne({
-		'_id': 'version',
-	}, {
-		'_id': 'version',
-		'version': ver,
-	}, {
-		upsert: true,
-	});
+	return VersionCollection().replaceOne(
+		{
+			_id: 'version'
+		},
+		{
+			_id: 'version',
+			version: ver
+		},
+		{
+			upsert: true
+		}
+	);
 }
 
 export async function migrate() {
-	let currentVersion = await VersionCollection().findOne({
-		'_id': 'version'
-	}).then(res => res ? res.version : null);
+	let currentVersion = await VersionCollection()
+		.findOne({
+			_id: 'version'
+		})
+		.then(res => (res ? res.version : null));
 	if (!currentVersion) {
 		//set latest version if version doesn't exist i.e new install
 		log(`New database, setting latest version: ${migrationVersion}`);

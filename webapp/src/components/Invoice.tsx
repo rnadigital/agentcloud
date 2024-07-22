@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
-import { Fragment, useEffect,useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, last4 }) => {
 	const [submitting, setSubmitting] = useState(false);
@@ -11,7 +11,7 @@ const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, la
 		setSubmitting(false);
 	}, [session?.id]);
 
-	const formatCurrency = (amount) => {
+	const formatCurrency = amount => {
 		return (amount / 100).toFixed(2);
 	};
 
@@ -19,11 +19,16 @@ const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, la
 
 	return (
 		<Transition.Root show={show === true} as={Fragment}>
-			<Dialog as='div' className='relative z-50' initialFocus={cancelButtonRef} onClose={() => {
-				if (!submitting) {
-					cancelFunction();
-				}
-			}}>
+			<Dialog
+				as='div'
+				className='relative z-50'
+				initialFocus={cancelButtonRef}
+				onClose={() => {
+					if (!submitting) {
+						cancelFunction();
+					}
+				}}
+			>
 				<Transition.Child
 					as={Fragment}
 					enter='ease-out duration-300'
@@ -50,22 +55,32 @@ const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, la
 							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 md:min-w-[400px]'>
 								<div className='mb-6'>
 									<div className='mt-3 text-center w-full'>
-										<Dialog.Title as='h3' className='text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='text-base font-semibold leading-6 text-gray-900'
+										>
 											Subscription summary:
 										</Dialog.Title>
 										<div className='mt-2'>
 											<div className='dark:bg-gray-900'>
 												<ul className='bg-white shadow-md rounded-lg divide-y dark:bg-gray-800 dark:divide-gray-700'>
-													{lineItems?.map((item) => (
-														<li key={item.id} className='p-4 flex justify-between dark:text-indigo-300'>
-															<span>{item.quantity} x {item.description}</span>
+													{lineItems?.map(item => (
+														<li
+															key={item.id}
+															className='p-4 flex justify-between dark:text-indigo-300'
+														>
+															<span>
+																{item.quantity} x {item.description}
+															</span>
 															<span>${formatCurrency(item.amount_total)}</span>
 														</li>
 													))}
 												</ul>
 												<div className='mt-4 p-4 bg-white shadow-md rounded-lg flex justify-between dark:bg-gray-800 dark:text-indigo-300'>
 													<span className='font-bold'>Total</span>
-													<span className='font-bold'>${formatCurrency(session?.amount_total)}</span>
+													<span className='font-bold'>
+														${formatCurrency(session?.amount_total)}
+													</span>
 												</div>
 											</div>
 										</div>

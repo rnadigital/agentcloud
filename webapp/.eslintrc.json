@@ -3,9 +3,11 @@
 		"*.config.js",
 		"*.config.ts",
 		"node_modules/"
-		
 	],
-	"extends": "next/core-web-vitals",
+	"extends": [
+		"next/core-web-vitals",
+		"plugin:prettier/recommended"
+	],
 	"parserOptions": {
 		"ecmaVersion": "latest"
 	},
@@ -13,53 +15,7 @@
 		"simple-import-sort"
 	],
 	"rules": {
-    	"block-spacing": [
-    		"error",
-    		"always"
-    	],
-    	"keyword-spacing": [
-    		"error",
-    		{ "before": true, "after": true }
-    	],
-    	"space-before-blocks": [
-    		"error",
-    		"always"
-    	],
-		"no-tabs": 0,
-		"brace-style": [
-			"error",
-			"1tbs",
-			{ "allowSingleLine": true }
-		],
-		"indent": [
-			"error",
-			"tab",
-			{ "SwitchCase": 1, "ignoreComments": true, "MemberExpression": 1 }
-		],
-		"jsx-quotes": [
-			"error",
-			"prefer-single"
-		],
 		"simple-import-sort/imports": "error",
-		"quotes": [
-			"error",
-			"single",
-			{ "avoidEscape": true }
-		],
-		"semi": [
-			"error",
-			"always"
-		],
-		"curly": [
-			"error"
-		],
-		"no-multiple-empty-lines": [
-			"error",
-			{ "max": 1 }
-		],
-		"no-template-curly-in-string": [
-			"error"
-		],
 		"react-hooks/exhaustive-deps": "off",
 		"@next/next/no-img-element": "off",
 		"import/no-anonymous-default-export": "off",

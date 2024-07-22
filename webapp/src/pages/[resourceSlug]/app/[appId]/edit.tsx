@@ -11,7 +11,6 @@ import React, { useEffect, useState } from 'react';
 import { AppType } from 'struct/app';
 
 export default function EditApp(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -21,10 +20,15 @@ export default function EditApp(props) {
 	const { app, tools, agents, tasks, models, datasources } = state;
 
 	async function fetchAppFormData() {
-		API.getApp({
-			resourceSlug,
-			appId: router.query.appId,
-		}, dispatch, setError, router);
+		API.getApp(
+			{
+				resourceSlug,
+				appId: router.query.appId
+			},
+			dispatch,
+			setError,
+			router
+		);
 	}
 	useEffect(() => {
 		fetchAppFormData();
@@ -34,43 +38,52 @@ export default function EditApp(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`Edit App - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`Edit App - ${teamName}`}</title>
-		</Head>
+			<div className='border-b pb-2 my-2 mb-6'>
+				<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
+			</div>
 
-		<div className='border-b pb-2 my-2 mb-6'>
-			<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
-		</div>
-
-		{app.type as AppType === AppType.CHAT
-			? <ChatAppForm
-				editing={true}
-				app={app}
-				fetchFormData={fetchAppFormData}
-				// datasourceChoices={datasources}
-				agentChoices={agents}
-				modelChoices={models}
-				// taskChoices={tasks}
-				toolChoices={tools}
-			/>
-			: <CrewAppForm
-				editing={true}
-				app={app}
-				crew={app?.crew}
-				fetchFormData={fetchAppFormData}
-				// datasourceChoices={datasources}
-				agentChoices={agents}
-				modelChoices={models}
-				taskChoices={tasks}
-				// toolChoices={tools} 
-			/>
-		}
-
-	</>);
+			{(app.type as AppType) === AppType.CHAT ? (
+				<ChatAppForm
+					editing={true}
+					app={app}
+					fetchFormData={fetchAppFormData}
+					// datasourceChoices={datasources}
+					agentChoices={agents}
+					modelChoices={models}
+					// taskChoices={tasks}
+					toolChoices={tools}
+				/>
+			) : (
+				<CrewAppForm
+					editing={true}
+					app={app}
+					crew={app?.crew}
+					fetchFormData={fetchAppFormData}
+					// datasourceChoices={datasources}
+					agentChoices={agents}
+					modelChoices={models}
+					taskChoices={tasks}
+					// toolChoices={tools}
+				/>
+			)}
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

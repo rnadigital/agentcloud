@@ -17,7 +17,9 @@ class RabbitMQProvider extends MessageQueueProvider {
 
 	async init() {
 		try {
-			this.#connection = await connect(`amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`);
+			this.#connection = await connect(
+				`amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`
+			);
 			this.#channel = await this.#connection.createChannel();
 			await this.#channel.assertExchange(process.env.QUEUE_NAME, 'direct', { durable: true });
 			log('RabbitMQ connection and channel established.');
@@ -31,7 +33,12 @@ class RabbitMQProvider extends MessageQueueProvider {
 		log('message %O', message);
 		log('metadata %O', metadata);
 		try {
-			await this.#channel?.publish(process.env.RABBITMQ_EXCHANGE, process.env.RABBITMQ_ROUTING_KEY, Buffer.from(message), { headers: metadata });
+			await this.#channel?.publish(
+				process.env.RABBITMQ_EXCHANGE,
+				process.env.RABBITMQ_ROUTING_KEY,
+				Buffer.from(message),
+				{ headers: metadata }
+			);
 			log('Message sent successfully.');
 		} catch (error) {
 			log(`Error in sending message: ${error.message}`);

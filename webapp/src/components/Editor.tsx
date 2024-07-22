@@ -1,12 +1,6 @@
 // Courtesy of AlbinoGeek: https://github.com/react-monaco-editor/react-monaco-editor/issues/271#issuecomment-986612363
 import Editor from '@monaco-editor/react';
-import {
-	Dispatch,
-	MutableRefObject,
-	SetStateAction,
-	useEffect,
-	useRef
-} from 'react';
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef } from 'react';
 
 //
 // So... typings weren't working when I implemented Monaco, and we had to ship,
@@ -18,7 +12,7 @@ import {
 export type MonacoEditorOptions = {
 	stopRenderingLineAfter: number;
 	fontSize?: string;
-}
+};
 
 export type MonacoEditorA = MutableRefObject<any>;
 export type MonacoEditorB = MutableRefObject<any>;
@@ -63,22 +57,24 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 		}
 	});
 
-	return <Editor
-		height={height||'42.9'} // preference
-		language='python'   // preference
-		onChange={(value, _event) => {
-			setCode(value);
-		}}
-		onMount={(editor, monaco) => {
-			monacoEditorRef.current = monaco.editor;
-			editorRef.current = editor;
-		}}
-		//@ts-ignore
-		options={editorOptions}
-		theme='vs-dark' // preference
-		value={code}
-		width='100%'    // preference
-	/>;
+	return (
+		<Editor
+			height={height || '42.9'} // preference
+			language='python' // preference
+			onChange={(value, _event) => {
+				setCode(value);
+			}}
+			onMount={(editor, monaco) => {
+				monacoEditorRef.current = monaco.editor;
+				editorRef.current = editor;
+			}}
+			//@ts-ignore
+			options={editorOptions}
+			theme='vs-dark' // preference
+			value={code}
+			width='100%' // preference
+		/>
+	);
 };
 
 export default ScriptEditor;

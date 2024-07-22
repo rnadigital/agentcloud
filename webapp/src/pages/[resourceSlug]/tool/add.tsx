@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function AddTool(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -29,22 +28,31 @@ export default function AddTool(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`New Tool - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`New Tool - ${teamName}`}</title>
-		</Head>
+			{tools.length > 0 && (
+				<div className='border-b pb-2 my-2'>
+					<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
+				</div>
+			)}
 
-		{tools.length > 0 && <div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
-		</div>}
-
-		<ToolForm datasources={datasources} fetchFormData={fetchTools} initialType={null} />
-
-	</>);
-
+			<ToolForm datasources={datasources} fetchFormData={fetchTools} initialType={null} />
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

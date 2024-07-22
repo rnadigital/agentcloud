@@ -27,7 +27,7 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	metadataFieldInfo,
 	defaultRetriever,
 	topK = 4,
-	setTopK,
+	setTopK
 }) => {
 	useEffect(() => {
 		if (defaultRetriever) {
@@ -38,7 +38,10 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 	return (
 		<div>
 			<div className='mt-2'>
-				<label htmlFor='toolRetriever' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+				<label
+					htmlFor='toolRetriever'
+					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+				>
 					Retrieval Strategy
 				</label>
 				<div>
@@ -48,20 +51,25 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 						name='toolRetriever'
 						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 						value={toolRetriever}
-						onChange={(e) => setToolRetriever(e.target.value as Retriever)}
+						onChange={e => setToolRetriever(e.target.value as Retriever)}
 					>
-						{defaultRetriever === Retriever.SELF_QUERY ? <>
-							<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
-							<option value={Retriever.RAW}>Raw Similarity Search</option>
-						</> : <>
-							<option value={Retriever.RAW}>Raw Similarity Search (Default)</option>
-							<option value={Retriever.SELF_QUERY}>Self Query</option>
-						</> }
+						{defaultRetriever === Retriever.SELF_QUERY ? (
+							<>
+								<option value={Retriever.SELF_QUERY}>Self Query (Default)</option>
+								<option value={Retriever.RAW}>Raw Similarity Search</option>
+							</>
+						) : (
+							<>
+								<option value={Retriever.RAW}>Raw Similarity Search (Default)</option>
+								<option value={Retriever.SELF_QUERY}>Self Query</option>
+							</>
+						)}
 						<option value={Retriever.MULTI_QUERY}>Multi Query</option>
-						{currentDatasource?.sourceType !== 'file'
-							&& toolTimeWeightField
-							&& setToolTimeWeightField
-							&& <option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>}
+						{currentDatasource?.sourceType !== 'file' &&
+							toolTimeWeightField &&
+							setToolTimeWeightField && (
+								<option value={Retriever.TIME_WEIGHTED}>Time Weighted</option>
+							)}
 					</select>
 				</div>
 			</div>
@@ -69,7 +77,10 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 			{toolRetriever === Retriever.TIME_WEIGHTED && (
 				<>
 					<div className='mt-2'>
-						<label htmlFor='toolDecayRate' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+						<label
+							htmlFor='toolDecayRate'
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
 							Decay Rate
 						</label>
 						<div>
@@ -89,42 +100,52 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 								<span>0</span>
 								<span>
 									<div className='w-full text-center mb-2'>{toolDecayRate}</div>
-									{(toolDecayRate === 1 || toolDecayRate === 0) && <InfoAlert message='A decay rate of exactly 0 or 1 is equivalent to default similarity search' />}
+									{(toolDecayRate === 1 || toolDecayRate === 0) && (
+										<InfoAlert message='A decay rate of exactly 0 or 1 is equivalent to default similarity search' />
+									)}
 								</span>
 								<span>1</span>
 							</div>
 						</div>
 					</div>
-					{setToolTimeWeightField && <div className='mt-2'>
-						<label htmlFor='toolTimeWeightField' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							Time Weight Field
-						</label>
-						<div>
-							<select
-								required
-								id='toolTimeWeightField'
-								name='toolTimeWeightField'
-								className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								value={toolTimeWeightField}
-								onChange={(e) => setToolTimeWeightField(e.target.value)}
+					{setToolTimeWeightField && (
+						<div className='mt-2'>
+							<label
+								htmlFor='toolTimeWeightField'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 							>
-								{metadataFieldInfo?.map((column, ei) => (
-									<option
-										className='capitalize'
-										key={`timeWeightField_option_${ei}`}
-										value={column?.name}
-									>
-										{column?.name}
-									</option>
-								))}
-							</select>
+								Time Weight Field
+							</label>
+							<div>
+								<select
+									required
+									id='toolTimeWeightField'
+									name='toolTimeWeightField'
+									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									value={toolTimeWeightField}
+									onChange={e => setToolTimeWeightField(e.target.value)}
+								>
+									{metadataFieldInfo?.map((column, ei) => (
+										<option
+											className='capitalize'
+											key={`timeWeightField_option_${ei}`}
+											value={column?.name}
+										>
+											{column?.name}
+										</option>
+									))}
+								</select>
+							</div>
 						</div>
-					</div>}
+					)}
 				</>
 			)}
 
 			<div className='mt-2'>
-				<label htmlFor='topK' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+				<label
+					htmlFor='topK'
+					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+				>
 					Top K Results
 				</label>
 				<div>
@@ -141,8 +162,13 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 				</div>
 			</div>
 
-			{topK > 10 && <InfoAlert className='w-full my-2 m-0 p-4 bg-orange-300 rounded' message='High values (>10) for Top K will make queries slower and increase token cost as your agents have to process more data.' textColor='black' />}
-
+			{topK > 10 && (
+				<InfoAlert
+					className='w-full my-2 m-0 p-4 bg-orange-300 rounded'
+					message='High values (>10) for Top K will make queries slower and increase token cost as your agents have to process more data.'
+					textColor='black'
+				/>
+			)}
 		</div>
 	);
 };

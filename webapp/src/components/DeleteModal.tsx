@@ -3,12 +3,16 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Fragment, useRef, useState } from 'react';
 
 export default function DeleteModal({ open, title, message, confirmFunction, cancelFunction }) {
-
 	const cancelButtonRef = useRef(null);
 
 	return (
 		<Transition.Root show={open} as={Fragment}>
-			<Dialog as='div' className='relative z-50' initialFocus={cancelButtonRef} onClose={cancelFunction}>
+			<Dialog
+				as='div'
+				className='relative z-50'
+				initialFocus={cancelButtonRef}
+				onClose={cancelFunction}
+			>
 				<Transition.Child
 					as={Fragment}
 					enter='ease-out duration-300'
@@ -38,13 +42,14 @@ export default function DeleteModal({ open, title, message, confirmFunction, can
 										<ExclamationTriangleIcon className='h-6 w-6 text-red-600' aria-hidden='true' />
 									</div>
 									<div className='mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left'>
-										<Dialog.Title as='h3' className='text-base font-semibold leading-6 text-gray-900'>
+										<Dialog.Title
+											as='h3'
+											className='text-base font-semibold leading-6 text-gray-900'
+										>
 											{title}
 										</Dialog.Title>
 										<div className='mt-2'>
-											<p className='text-sm text-gray-500'>
-												{message}
-											</p>
+											<p className='text-sm text-gray-500'>{message}</p>
 										</div>
 									</div>
 								</div>

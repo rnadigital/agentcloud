@@ -1,6 +1,6 @@
 'use strict';
 
-import {Tool, ToolType} from 'struct/tool';
+import { Tool, ToolType } from 'struct/tool';
 
 const GlobalTools: Tool[] = [
 	{
@@ -29,11 +29,13 @@ The returned data includes essential details like the paper's title, authors, ab
 	},
 	{
 		name: 'Search Wikipedia',
-		description: 'This tool takes a string query as input and fetches relevant pages from Wikipedia.',
+		description:
+			'This tool takes a string query as input and fetches relevant pages from Wikipedia.',
 		type: ToolType.FUNCTION_TOOL,
 		data: {
 			name: 'search_wikipedia',
-			description: 'This tool takes a string query as input and fetches relevant pages from Wikipedia.',
+			description:
+				'This tool takes a string query as input and fetches relevant pages from Wikipedia.',
 			code: '',
 			parameters: {
 				type: 'object',
@@ -55,43 +57,54 @@ The returned data includes essential details like the paper's title, authors, ab
 		data: {
 			code: '',
 			name: 'search_wikidata',
-			description: 'This tool takes a string query as input and fetches relevant data from Wikidata.',
+			description:
+				'This tool takes a string query as input and fetches relevant data from Wikidata.',
 			parameters: {
 				type: 'object',
 				required: ['query'],
-				properties: {query: {type: 'string', description: 'The search query to send to Wikidata'}}
+				properties: {
+					query: { type: 'string', description: 'The search query to send to Wikidata' }
+				}
 			},
 			builtin: true
 		}
 	},
 	{
 		name: 'Search DuckDuckGo',
-		description: 'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
+		description:
+			'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
 		type: ToolType.FUNCTION_TOOL,
 		data: {
 			code: '',
 			name: 'search_duckduckgo',
-			description: 'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
+			description:
+				'This tool takes a string query as input and fetches relevant data from DuckDuckGo.',
 			parameters: {
 				type: 'object',
 				required: ['query'],
-				properties: {query: {type: 'string', description: 'The search query to send to DuckDuckGo'}}
+				properties: {
+					query: { type: 'string', description: 'The search query to send to DuckDuckGo' }
+				}
 			},
 			builtin: true
 		}
 	},
 	{
 		name: 'Search StackExchange',
-		description: 'This tool takes a string query as input and fetches relevant data from StackExchange.',
+		description:
+			'This tool takes a string query as input and fetches relevant data from StackExchange.',
 		type: ToolType.FUNCTION_TOOL,
 		data: {
 			code: '',
 			name: 'search_stackexchange',
-			description: 'This tool takes a string query as input and fetches relevant data from StackExchange.',
+			description:
+				'This tool takes a string query as input and fetches relevant data from StackExchange.',
 			parameters: {
 				type: 'object',
 				required: ['query'],
-				properties: {query: {type: 'string', description: 'The search query to send to StackExchange'}}
+				properties: {
+					query: { type: 'string', description: 'The search query to send to StackExchange' }
+				}
 			},
 			builtin: true
 		}
@@ -103,11 +116,14 @@ The returned data includes essential details like the paper's title, authors, ab
 		data: {
 			code: '',
 			name: 'search_youtube',
-			description: 'This tool takes a string query as input and fetches relevant data from YouTube.',
+			description:
+				'This tool takes a string query as input and fetches relevant data from YouTube.',
 			parameters: {
 				type: 'object',
 				required: ['query'],
-				properties: {query: {type: 'string', description: 'The search query to send to YouTube'}}
+				properties: {
+					query: { type: 'string', description: 'The search query to send to YouTube' }
+				}
 			},
 			builtin: true
 		}
@@ -125,7 +141,7 @@ The returned data includes essential details like the paper's title, authors, ab
 				type: 'object',
 				required: ['query'],
 				properties: {
-					query: {type: 'string', description: 'The search query to send to Google'}
+					query: { type: 'string', description: 'The search query to send to Google' }
 				}
 			},
 			builtin: true
@@ -144,7 +160,7 @@ The returned data includes essential details like the paper's title, authors, ab
 				type: 'object',
 				required: ['query'],
 				properties: {
-					query: {type: 'string', description: 'The search query to send to Google'},
+					query: { type: 'string', description: 'The search query to send to Google' }
 				}
 			},
 			builtin: true

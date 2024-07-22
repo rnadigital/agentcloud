@@ -1,12 +1,14 @@
 import { Logging } from '@google-cloud/logging';
 import archiver from 'archiver';
 import debug from 'debug';
-import { StandardRequirements,WrapToolCode } from 'function/base';
+import { StandardRequirements, WrapToolCode } from 'function/base';
 import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
 import { Readable } from 'stream';
 import { DeployFunctionArgs } from 'struct/function';
-const protopath = protofiles.getProtoPath('../../google-proto-files/google/cloud/audit/audit_log.proto');
+const protopath = protofiles.getProtoPath(
+	'../../google-proto-files/google/cloud/audit/audit_log.proto'
+);
 const root = protofiles.loadSync(protopath);
 const auditLogProto = root.lookupType('google.cloud.audit.AuditLog');
 import FunctionProvider from './provider';
@@ -51,7 +53,7 @@ severity>=WARNING`;
 		const [entries] = await this.#loggingClient.getEntries({
 			filter,
 			pageSize: limit,
-			orderBy: 'timestamp desc',
+			orderBy: 'timestamp desc'
 		});
 		return entries
 			.map(entry => {
@@ -74,7 +76,13 @@ severity>=WARNING`;
 			.join('\n');
 	}
 
-	async deployFunction({ id, code, requirements, runtime = 'python310', environmentVariables = {} }: DeployFunctionArgs): Promise<string> {
+	async deployFunction({
+		id,
+		code,
+		requirements,
+		runtime = 'python310',
+		environmentVariables = {}
+	}: DeployFunctionArgs): Promise<string> {
 		const functionPath = `functions/${id}`;
 		const codeBuffer = Buffer.from(WrapToolCode(code));
 		const requirementsBuffer = Buffer.from(`${requirements}\n${StandardRequirements.join('\n')}`);
@@ -91,7 +99,11 @@ severity>=WARNING`;
 		const zipBuffer = Buffer.concat(zipChunks);
 
 		// Upload the ZIP file to GCS
-		await this.#storageProvider.uploadBuffer(`${functionPath}/function.zip`, zipBuffer, 'application/zip');
+		await this.#storageProvider.uploadBuffer(
+			`${functionPath}/function.zip`,
+			zipBuffer,
+			'application/zip'
+		);
 
 		// Construct the fully qualified location
 		const location = `projects/${this.#projectId}/locations/${this.#location}`;
@@ -104,7 +116,8 @@ severity>=WARNING`;
 			log(existingFunction);
 			functionExists = true;
 		} catch (err) {
-			if (err.code !== 5) { // 5 means NOT_FOUND
+			if (err.code !== 5) {
+				// 5 means NOT_FOUND
 				log(err);
 				throw err;
 			}
@@ -120,21 +133,21 @@ severity>=WARNING`;
 					source: {
 						storageSource: {
 							bucket: this.#bucket,
-							object: `${functionPath}/function.zip`,
-						},
+							object: `${functionPath}/function.zip`
+						}
 					},
-					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {}),
+					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {})
 				},
 				serviceConfig: {
 					availableMemory: '256M', // TODO: allow user to configure
 					timeoutSeconds: 60, // TODO: allow user to configure
 					// ingressSettings: 'ALLOW_ALL',
-					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {}),
+					...(Object.keys(environmentVariables).length > 0 ? { environmentVariables } : {})
 				},
-				environment: 'GEN_2',
+				environment: 'GEN_2'
 			},
-			parent: `projects/${this.#projectId}/locations/${this.#location}`,	
-			functionId: `function-${id}`,
+			parent: `projects/${this.#projectId}/locations/${this.#location}`,
+			functionId: `function-${id}`
 		};
 		log('Function create request for %s %O', functionName, request);
 
@@ -146,7 +159,9 @@ severity>=WARNING`;
 			} else {
 				request.location = location;
 				[response] = await this.#functionsClient.createFunction(request);
-				log(`Function created successfully: ${functionName} https://console.cloud.google.com/functions/details/${this.#location}/${functionName}?env=gen2&project=${this.#projectId}&tab=source`);
+				log(
+					`Function created successfully: ${functionName} https://console.cloud.google.com/functions/details/${this.#location}/${functionName}?env=gen2&project=${this.#projectId}&tab=source`
+				);
 			}
 		} catch (e) {
 			log(JSON.stringify(e, null, 2));
@@ -191,7 +206,7 @@ severity>=WARNING`;
 			log('In waitForFunctionToBeActive loop for ID: %s', functionId);
 			await new Promise(resolve => setTimeout(resolve, 5000));
 		}
-	
+
 		return false;
 	}
 
@@ -212,8 +227,6 @@ severity>=WARNING`;
 			throw error;
 		}
 	}
-
 }
 
 export default new GoogleFunctionProvider();
-

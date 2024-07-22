@@ -18,22 +18,25 @@ export function CheckoutSessionCollection(): any {
 	return db.db().collection('checkoutsessions');
 }
 
-export function getCheckoutSessionById(accountId: db.IdOrStr, checkoutSessionId: string): Promise<CheckoutSession> {
+export function getCheckoutSessionById(
+	accountId: db.IdOrStr,
+	checkoutSessionId: string
+): Promise<CheckoutSession> {
 	return CheckoutSessionCollection().findOne({
 		checkoutSessionId: checkoutSessionId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }
 
 export function unsafeGetCheckoutSessionById(checkoutSessionId: string): Promise<CheckoutSession> {
 	return CheckoutSessionCollection().findOne({
-		checkoutSessionId: checkoutSessionId,
+		checkoutSessionId: checkoutSessionId
 	});
 }
 
 export function getCheckoutSessionByAccountId(accountId: db.IdOrStr): Promise<CheckoutSession> {
 	return CheckoutSessionCollection().findOne({
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }
 
@@ -41,9 +44,12 @@ export async function addCheckoutSession(checkoutSession: CheckoutSession): Prom
 	return CheckoutSessionCollection().insertOne(checkoutSession);
 }
 
-export function deleteCheckoutSessionById(accountId: db.IdOrStr, checkoutSessionId: string): Promise<any> {
+export function deleteCheckoutSessionById(
+	accountId: db.IdOrStr,
+	checkoutSessionId: string
+): Promise<any> {
 	return CheckoutSessionCollection().deleteOne({
 		checkoutSessionId: checkoutSessionId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }

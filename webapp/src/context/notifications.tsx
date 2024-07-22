@@ -9,7 +9,6 @@ const log = debug('webapp:context:notifications');
 const NotificationContext = createContext({});
 
 export function NotificationWrapper({ children }) {
-
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [sharedState, setSharedState] = useState([]);
@@ -18,15 +17,22 @@ export function NotificationWrapper({ children }) {
 
 	function refreshNotificationContext() {
 		log('refreshNotificationContext()');
-		if (!resourceSlug) { return; }
-		API.getNotifications({
-			resourceSlug,
-		}, (data) => {
-			log('refreshNotificationContext', data);
-			setSharedState(data?.notifications);
-		}, null, null);
+		if (!resourceSlug) {
+			return;
+		}
+		API.getNotifications(
+			{
+				resourceSlug
+			},
+			data => {
+				log('refreshNotificationContext', data);
+				setSharedState(data?.notifications);
+			},
+			null,
+			null
+		);
 	}
-	
+
 	useEffect(() => {
 		refreshNotificationContext();
 	}, [notificationTrigger]); //TODO: what should be the variables?
@@ -36,7 +42,6 @@ export function NotificationWrapper({ children }) {
 			{children}
 		</NotificationContext.Provider>
 	);
-
 }
 
 export function useNotificationContext() {

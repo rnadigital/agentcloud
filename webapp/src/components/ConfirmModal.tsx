@@ -2,9 +2,16 @@
 
 import { Dialog, Transition } from '@headlessui/react';
 import ButtonSpinner from 'components/ButtonSpinner';
-import { Fragment,useState } from 'react';
+import { Fragment, useState } from 'react';
 
-export default function ConfirmModal({ open, setOpen, confirmFunction, cancelFunction, title, message }) {
+export default function ConfirmModal({
+	open,
+	setOpen,
+	confirmFunction,
+	cancelFunction,
+	title,
+	message
+}) {
 	const [submitting, setSubmitting] = useState(false);
 	return (
 		<Transition.Root show={open} as={Fragment}>
@@ -38,9 +45,7 @@ export default function ConfirmModal({ open, setOpen, confirmFunction, cancelFun
 										{title}
 									</Dialog.Title>
 									<div className='mt-2'>
-										<p className='text-sm text-gray-500'>
-											{message}
-										</p>
+										<p className='text-sm text-gray-500'>{message}</p>
 									</div>
 									<div className='mt-4 flex justify-end space-x-2'>
 										<button

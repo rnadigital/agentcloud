@@ -1,12 +1,12 @@
 'use strict';
 
 export enum ModelType {
-  OPENAI = 'open_ai',
-  FASTEMBED = 'fastembed',
-  OLLAMA = 'ollama',
-  COHERE = 'cohere',
-  ANTHROPIC = 'anthropic',
-  GROQ = 'groq'
+	OPENAI = 'open_ai',
+	FASTEMBED = 'fastembed',
+	OLLAMA = 'ollama',
+	COHERE = 'cohere',
+	ANTHROPIC = 'anthropic',
+	GROQ = 'groq'
 }
 
 export const modelOptions = [
@@ -32,22 +32,22 @@ interface ModelRequirements {
 export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
 		api_key: { type: 'string' },
-		org_id: { type: 'string', optional: true },
+		org_id: { type: 'string', optional: true }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
 		base_url: { type: 'string' },
-		api_key: { type: 'string' },
+		api_key: { type: 'string' }
 	},
 	[ModelType.COHERE]: {
-		cohere_api_key: { type: 'string' },
+		cohere_api_key: { type: 'string' }
 	},
 	[ModelType.ANTHROPIC]: {
-		api_key: { type: 'string' },
+		api_key: { type: 'string' }
 	},
 	[ModelType.GROQ]: {
-		groq_api_key: { type: 'string' },
-	},
+		groq_api_key: { type: 'string' }
+	}
 	// Add more types here if needed
 };
 
@@ -81,20 +81,15 @@ export const ModelList = {
 		'phi3:instruct',
 		'llama3:8b-instruct-fp16',
 		'mixtral:instruct',
-		'nomic-embed-text',
+		'nomic-embed-text'
 	],
-	[ModelType.COHERE]: [
-		'command-r-plus',
-	],
+	[ModelType.COHERE]: ['command-r-plus'],
 	[ModelType.ANTHROPIC]: [
 		'claude-3-opus-20240229',
 		'claude-3-sonnet-20240229',
-		'claude-3-haiku-20240307',
+		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: [
-		'llama3-70b-8192',
-		'mixtral-8x7b-32768'
-	],
+	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768']
 };
 
 export const ModelEmbeddingLength = {
@@ -108,5 +103,5 @@ export const ModelEmbeddingLength = {
 	'fast-bge-small-zh-v1.5': 512,
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
-	'nomic-embed-text': 8192,
+	'nomic-embed-text': 8192
 };

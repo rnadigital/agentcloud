@@ -2,9 +2,7 @@
 import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/20/solid';
-import {
-	EllipsisHorizontalIcon,
-} from '@heroicons/react/20/solid';
+import { EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
 import classNames from 'components/ClassNames';
 import { useAccountContext } from 'context/account';
@@ -20,22 +18,31 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	async function deleteApp(appId) {
-		await API.deleteApp({
-			_csrf: csrf,
-			resourceSlug,
-			appId,
-		}, () => {
-			toast.success('App deleted successfully');
-		}, toast.error, router);
+		await API.deleteApp(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				appId
+			},
+			() => {
+				toast.success('App deleted successfully');
+			},
+			toast.error,
+			router
+		);
 		fetchFormData && fetchFormData();
 	}
 	return (
 		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-white border dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<span className='flex justify-between'>
-					<span className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${app.type === AppType.CHAT
-						? 'bg-blue-100 text-blue-800 border-blue-300'
-						: 'bg-green-100 text-green-800 border-green-300'}`}>
+					<span
+						className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${
+							app.type === AppType.CHAT
+								? 'bg-blue-100 text-blue-800 border-blue-300'
+								: 'bg-green-100 text-green-800 border-green-300'
+						}`}
+					>
 						{app.type === AppType.CHAT ? 'Chat' : 'Process'}
 					</span>
 					<Menu as='div' className=''>
@@ -69,7 +76,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 								<Menu.Item>
 									{({ active }) => (
 										<button
-											onClick={(e) => {
+											onClick={e => {
 												e.stopPropagation();
 												e.preventDefault();
 												deleteApp(app._id);

@@ -1,9 +1,7 @@
 'use strict';
 
 import * as API from '@api';
-import {
-	HandRaisedIcon,
-} from '@heroicons/react/20/solid';
+import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolSelectIcons from 'components/ToolSelectIcons';
@@ -19,9 +17,25 @@ import { NotificationType } from 'struct/notification';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function TaskForm({ task = {}, tools = [], agents = [], datasources = [], editing, compact = false, callback, fetchTaskFormData }
-	: { task?: any, tools?: any[], agents?: any[], datasources?: any[], editing?: boolean, compact?: boolean, callback?: Function, fetchTaskFormData?: Function }) {
-
+export default function TaskForm({
+	task = {},
+	tools = [],
+	agents = [],
+	datasources = [],
+	editing,
+	compact = false,
+	callback,
+	fetchTaskFormData
+}: {
+	task?: any;
+	tools?: any[];
+	agents?: any[];
+	datasources?: any[];
+	editing?: boolean;
+	compact?: boolean;
+	callback?: Function;
+	fetchTaskFormData?: Function;
+}) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -32,16 +46,19 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 
 	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
-	const initialTools = toolIds && toolIds
-		.map(tid => {
-			const foundTool = tools.find(t => t._id === tid);
-			if (!foundTool) { return null; }
-			return { label: foundTool.name, value: foundTool._id, disabled: false };
-		})
-		.filter(t => t);
+	const initialTools =
+		toolIds &&
+		toolIds
+			.map(tid => {
+				const foundTool = tools.find(t => t._id === tid);
+				if (!foundTool) {
+					return null;
+				}
+				return { label: foundTool.name, value: foundTool._id, disabled: false };
+			})
+			.filter(t => t);
 
-	const preferredAgent = agents
-		.find(a => a?._id === taskState?.agentId);
+	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -54,68 +71,87 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
-			requiresHumanInput: e.target.requiresHumanInput.checked,
+			requiresHumanInput: e.target.requiresHumanInput.checked
 		};
 		if (editing) {
-			await API.editTask(taskState._id, body, () => {
-				toast.success('Task Updated');
-			}, (res) => {
-				toast.error(res);
-			}, null);
+			await API.editTask(
+				taskState._id,
+				body,
+				() => {
+					toast.success('Task Updated');
+				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
 		} else {
-			const addedTask: any = await API.addTask(body, () => {
-				toast.success('Added new task');
-			}, (res) => {
-				toast.error(res);
-			}, compact ? null : router);
+			const addedTask: any = await API.addTask(
+				body,
+				() => {
+					toast.success('Added new task');
+				},
+				res => {
+					toast.error(res);
+				},
+				compact ? null : router
+			);
 			callback && addedTask && callback(addedTask._id, body);
 		}
 	}
 
-	const toolCallback = async (addedToolId) => {
-		await fetchTaskFormData && fetchTaskFormData();
+	const toolCallback = async addedToolId => {
+		(await fetchTaskFormData) && fetchTaskFormData();
 		setModalOpen(false);
 		setTask(oldTask => {
 			return {
 				...oldTask,
-				toolIds: [...(taskState?.toolIds||[]), addedToolId],
+				toolIds: [...(taskState?.toolIds || []), addedToolId]
 			};
 		});
 	};
 
-	const agentCallback = async (addedAgentId) => {
-		await fetchTaskFormData && fetchTaskFormData();
+	const agentCallback = async addedAgentId => {
+		(await fetchTaskFormData) && fetchTaskFormData();
 		setModalOpen(false);
 		setTask(oldTask => {
 			return {
 				...oldTask,
-				agentId: addedAgentId,
+				agentId: addedAgentId
 			};
 		});
 	};
 
 	useEffect(() => {
-		if (notificationTrigger
-			&& notificationTrigger?.type === NotificationType.Tool) {
+		if (notificationTrigger && notificationTrigger?.type === NotificationType.Tool) {
 			fetchTaskFormData();
 		}
 	}, [resourceSlug, notificationTrigger]);
 
 	return (
 		<>
-			{modalOpen === 'agent'
-				? <CreateAgentModal open={modalOpen !== false} setOpen={setModalOpen} callback={agentCallback} />
-				: <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={toolCallback} />}
-			<form onSubmit={taskPost}>
-				<input
-					type='hidden'
-					name='_csrf'
-					value={csrf}
+			{modalOpen === 'agent' ? (
+				<CreateAgentModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={agentCallback}
 				/>
+			) : (
+				<CreateToolModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={toolCallback}
+				/>
+			)}
+			<form onSubmit={taskPost}>
+				<input type='hidden' name='_csrf' value={csrf} />
 				<div className={`space-y-${compact ? '6' : '12'}`}>
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
 						<div className='col-span-full'>
-							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label
+								htmlFor='name'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
 								Name<span className='text-red-700'> *</span>
 							</label>
 							<input
@@ -129,7 +165,10 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 						</div>
 
 						<div className='col-span-full'>
-							<label htmlFor='description' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label
+								htmlFor='description'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
@@ -144,7 +183,10 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 						</div>
 
 						<div className='col-span-full'>
-							<label htmlFor='expectedOutput' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label
+								htmlFor='expectedOutput'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
 								Expected Output
 							</label>
 							<textarea
@@ -159,7 +201,10 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 
 						{/* Tool selection */}
 						<div className='col-span-full'>
-							<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							<label
+								htmlFor='toolIds'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
 								Tools
 							</label>
 							<Select
@@ -168,10 +213,15 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
-								value={taskState?.toolIds?.map(x => ({ value: x, label: tools.find(tx => tx._id === x)?.name}))}
+								value={taskState?.toolIds?.map(x => ({
+									value: x,
+									label: tools.find(tx => tx._id === x)?.name
+								}))}
 								onChange={(v: any) => {
 									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
-									if (v?.some(val => val?.disabled)) { return; }
+									if (v?.some(val => val?.disabled)) {
+										return;
+									}
 									if (v?.some(vals => vals.value === null)) {
 										//Create new pressed
 										return setModalOpen('tool');
@@ -179,91 +229,117 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 									setTask(oldTask => {
 										return {
 											...oldTask,
-											toolIds: v?.map(x => x.value),
+											toolIds: v?.map(x => x.value)
 										};
 									});
 								}}
-								options={[{ label: '+ New Tool', value: null /*, disabled: false*/ }].concat(tools.map(t => ({ label: t.name, value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/ })))}
-					            formatOptionLabel={data => {
+								options={[{ label: '+ New Tool', value: null /*, disabled: false*/ }].concat(
+									tools.map(t => ({
+										label: t.name,
+										value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/
+									}))
+								)}
+								formatOptionLabel={data => {
 									const optionTool = tools.find(oc => oc._id === data.value);
 									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
-					                return (<li
-					                	//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''} 
-										className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
-											data.isSelected
-												? 'bg-blue-100 text-blue-500'
-												: 'dark:text-white'
-										}`}
-									>
-										<span className='tooltip z-100'>
-											{ToolSelectIcons[optionTool?.type]}
-											<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
-												{optionTool?.type} tool
+									return (
+										<li
+											//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''}
+											className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
+												data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
+											}`}
+										>
+											<span className='tooltip z-100'>
+												{ToolSelectIcons[optionTool?.type]}
+												<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
+													{optionTool?.type} tool
+												</span>
 											</span>
-										</span>
-										{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
-										<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}</span>
-									</li>);
-					            }}
+											{optionTool?.state && (
+												<span className='ms-2'>
+													<ToolStateBadge state={optionTool.state} />
+												</span>
+											)}
+											<span className='ms-2 w-full overflow-hidden text-ellipsis'>
+												{data.label}
+												{optionTool
+													? ` - ${optionTool?.data?.description || optionTool?.description}`
+													: ''}
+											</span>
+										</li>
+									);
+								}}
 							/>
 						</div>
 
 						{/* Preferred agent */}
 						<div className='col-span-full'>
-							<label htmlFor='preferredAgent' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Preferred Agent
+							<label
+								htmlFor='preferredAgent'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
+								Preferred Agent
 							</label>
 							<div className='mt-2'>
 								<Select
 									isClearable
 									isSearchable
-						            primaryColor={'indigo'}
-						            classNames={{
-										menuButton: () => 'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+									primaryColor={'indigo'}
+									classNames={{
+										menuButton: () =>
+											'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
 										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
 										list: 'dark:bg-slate-700',
 										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) => `block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`,
-						            }}
-						            value={preferredAgent ? { label: preferredAgent.name, value: preferredAgent._id } : null}
-						            onChange={(v: any) => {
+										listItem: (value?: { isSelected?: boolean }) =>
+											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
+									}}
+									value={
+										preferredAgent
+											? { label: preferredAgent.name, value: preferredAgent._id }
+											: null
+									}
+									onChange={(v: any) => {
 										if (v?.value == null) {
 											return setModalOpen('agent');
 										}
 										setTask(oldTask => {
 											return {
 												...oldTask,
-												agentId: v?.value,
+												agentId: v?.value
 											};
 										});
-        						   	}}
-						            options={agents
-						            	.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-						            	.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
-						            formatOptionLabel={(data: any) => {
-						            	const optionAgent = agents.find(ac => ac._id === data.value);
-						                return (<li
-						                    className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-						                        data.isSelected
-						                            ? 'bg-blue-100 text-blue-500'
-						                            : 'dark:text-white'
-						                    }`}
-						                >
-						                    {data.label}{optionAgent ? ` - ${optionAgent.role}` : null} 
-								            {data.allowDelegation && <span className='tooltip z-100'>
-									            <span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
-       												<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
-       											</span>
-							        			<span className='tooltiptext'>
-													This agent allows automatic task delegation.
-												</span>
-											</span>}
-						                </li>);
-						            }}
-						        />
+									}}
+									options={agents
+										.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
+										.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+									formatOptionLabel={(data: any) => {
+										const optionAgent = agents.find(ac => ac._id === data.value);
+										return (
+											<li
+												className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
+												}`}
+											>
+												{data.label}
+												{optionAgent ? ` - ${optionAgent.role}` : null}
+												{data.allowDelegation && (
+													<span className='tooltip z-100'>
+														<span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
+															<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
+														</span>
+														<span className='tooltiptext'>
+															This agent allows automatic task delegation.
+														</span>
+													</span>
+												)}
+											</li>
+										);
+									}}
+								/>
 							</div>
 						</div>
-						
+
 						{/* Async execution checkbox 
 						<div className='col-span-full'>
 							<div className='mt-2'>
@@ -289,12 +365,15 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								</div>
 							</div>
 						</div>*/}
-						
+
 						{/* human_input tool checkbox */}
 						<div className='col-span-full'>
 							<div className='mt-2'>
 								<div className='sm:col-span-12'>
-									<label htmlFor='requiresHumanInput' className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									<label
+										htmlFor='requiresHumanInput'
+										className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+									>
 										<input
 											type='checkbox'
 											id='requiresHumanInput'
@@ -304,7 +383,7 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 												setTask(oldTask => {
 													return {
 														...oldTask,
-														requiresHumanInput: e.target.checked,
+														requiresHumanInput: e.target.checked
 													};
 												});
 											}}
@@ -315,14 +394,11 @@ export default function TaskForm({ task = {}, tools = [], agents = [], datasourc
 								</div>
 							</div>
 						</div>
-
 					</div>
 				</div>
 
 				<div className='mt-6 flex items-center justify-between gap-x-6'>
-					{!compact && <Link href={`/${resourceSlug}/tasks`}>
-						Back
-					</Link>}
+					{!compact && <Link href={`/${resourceSlug}/tasks`}>Back</Link>}
 					<button
 						type='submit'
 						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}

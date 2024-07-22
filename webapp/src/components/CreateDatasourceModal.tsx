@@ -54,7 +54,13 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 									Create a Datasource
 								</Dialog.Title>
 								<div className='pt-4'>
-									<CreateDatasourceForm compact={true} callback={callback} models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={initialStep} />
+									<CreateDatasourceForm
+										compact={true}
+										callback={callback}
+										models={models}
+										fetchDatasourceFormData={fetchDatasourceFormData}
+										initialStep={initialStep}
+									/>
 								</div>
 							</Dialog.Panel>
 						</Transition.Child>

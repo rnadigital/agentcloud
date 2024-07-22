@@ -12,35 +12,40 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
-export default function TaskCards({ tasks, fetchTasks }: { tasks: any[], fetchTasks?: any }) {
-
+export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTasks?: any }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 
 	async function deleteTask(taskId) {
-		API.deleteTask({
-			_csrf: csrf,
-			resourceSlug,
-			taskId,
-		}, () => {
-			fetchTasks();
-			toast('Deleted task');
-		}, () => {
-			toast.error('Error deleting task');
-		}, router);
+		API.deleteTask(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				taskId
+			},
+			() => {
+				fetchTasks();
+				toast('Deleted task');
+			},
+			() => {
+				toast.error('Error deleting task');
+			},
+			router
+		);
 	}
 
 	return (
 		<div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5'>
-			{tasks.map((task) => (
-				<div key={task._id} className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm'>
+			{tasks.map(task => (
+				<div
+					key={task._id}
+					className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm'
+				>
 					<div className='flex flex-col'>
 						<h3 className='text-sm font-semibold truncate'>
-							<Link href={`/${resourceSlug}/task/${task._id}/edit`}>
-								{task.name}
-							</Link>
+							<Link href={`/${resourceSlug}/task/${task._id}/edit`}>{task.name}</Link>
 						</h3>
 						<p className='text-sm font-medium truncate'>
 							&quot;<em>{task.description}</em>&quot;
