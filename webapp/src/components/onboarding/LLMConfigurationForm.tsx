@@ -266,7 +266,7 @@ const LLMConfigurationForm = () => {
 				<div className='flex-1'>
 					<div className='text-sm flex gap-1'>
 						<span>Select Embedding</span>
-						<ToolTip content='Hello world'>
+						<ToolTip content='Embedding models are used to when storing your data into the vector DB and by the Agent for RAG retrieval'>
 							<span className='cursor-pointer'>
 								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
 							</span>
@@ -281,7 +281,7 @@ const LLMConfigurationForm = () => {
 								name='embeddingType'
 							/>
 						</div>
-						<div className='flex-1'>
+						<div className='w-1/2 sm:flex-1'>
 							<OnboardingSelect<LLMConfigurationFormValues>
 								options={embeddingModelList}
 								classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }}
