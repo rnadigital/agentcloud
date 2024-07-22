@@ -14,7 +14,6 @@ import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
@@ -25,12 +24,16 @@ export default function Apps(props) {
 	const filteredApps = apps?.filter(x => !x.hidden);
 
 	async function startSession(appId) {
-		await API.addSession({
-			_csrf: csrf,
-			resourceSlug,
-			skipRun: true,
-			id: appId,
-		}, null, setError, router);
+		await API.addSession(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				id: appId
+			},
+			null,
+			setError,
+			router
+		);
 	}
 
 	async function fetchApps() {
@@ -46,45 +49,72 @@ export default function Apps(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`Apps - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`Apps - ${teamName}`}</title>
-		</Head>
+			<PageTitleWithNewButton
+				list={filteredApps}
+				title='Apps'
+				buttonText='New App'
+				href='/app/add'
+			/>
 
-		<PageTitleWithNewButton list={filteredApps} title='Apps' buttonText='New App' href='/app/add' />
+			{error && <ErrorAlert error={error} />}
 
-		{error && <ErrorAlert error={error} />}
+			{apps.length === 0 && (
+				<NewButtonSection
+					link={`/${resourceSlug}/app/add`}
+					emptyMessage={'No apps'}
+					icon={
+						<svg
+							className='mx-auto h-12 w-12 text-gray-400'
+							fill='none'
+							viewBox='0 0 24 24'
+							stroke='currentColor'
+							aria-hidden='true'
+						>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={1.5}
+								stroke='currentColor'
+								className='w-6 h-6'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z'
+								/>
+							</svg>
+						</svg>
+					}
+					message={'Get started by creating an app.'}
+					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
+					buttonMessage={'New App'}
+				/>
+			)}
 
-		{apps.length === 0 && <NewButtonSection
-			link={`/${resourceSlug}/app/add`}
-			emptyMessage={'No apps'}
-			icon={<svg
-				className='mx-auto h-12 w-12 text-gray-400'
-				fill='none'
-				viewBox='0 0 24 24'
-				stroke='currentColor'
-				aria-hidden='true'
-			>
-				<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-6 h-6'>
-					<path strokeLinecap='round' strokeLinejoin='round' d='M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z' />
-				</svg>
-			</svg>}
-			message={'Get started by creating an app.'}
-			buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
-			buttonMessage={'New App'}
-		/>}
+			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
+				{filteredApps.map((a, ai) => (
+					<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />
+				))}
+			</div>
+		</>
+	);
+}
 
-		<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
-			{filteredApps.map((a, ai) => (
-				<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />
-			))}
-		</div>
-
-	</>);
-
-};
-
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
-};
+}

@@ -110,7 +110,7 @@ class ChatAssistant:
     def init_graph(self):
         async def call_model(state, config):
             messages = state["messages"]
-            if isinstance(self.chat_model.bound, ChatAnthropic):
+            if self._chat_model_is_anthropic():
                 if isinstance(messages[0], SystemMessage) and not isinstance(messages[1], HumanMessage):
                     # to work around the "first message is not user message" error
                     messages.insert(1, HumanMessage(content="<< dummy message >>"))
@@ -186,6 +186,9 @@ class ChatAssistant:
         system_message = SystemMessage(content=self.system_message)
         asyncio.run(self.stream_execute([system_message], config))
 
+    def _chat_model_is_anthropic(self) -> bool:
+        return isinstance(self.chat_model.bound, ChatAnthropic)
+
     def stop_generating_check(self):
         try:
             stop_flag = redis_con.get(f"{self.session_id}_stop")
@@ -193,6 +196,15 @@ class ChatAssistant:
             return stop_flag == "1"
         except:
             return False
+
+    @staticmethod
+    def _parse_anthropic_chunk(chunk_content: list) -> str:
+        if len(chunk_content) > 0:
+            if "text" in chunk_content[0]:
+                return chunk_content[0]["text"]
+            elif "partial_json" in chunk_content[0]:
+                return chunk_content[0]["partial_json"]
+        return ""
 
     async def stream_execute(self, messages: list[BaseMessage], config: dict):
         chunk_id = str(uuid.uuid4())
@@ -216,6 +228,8 @@ class ChatAssistant:
                     case "on_chat_model_stream":
                         content = event['data']['chunk'].content
                         chunk = repr(content)
+                        content = self._parse_anthropic_chunk(content) \
+                            if self._chat_model_is_anthropic() else content
                         if type(content) is str:
                             self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
                                                 first=first, chunk_id=chunk_id,
@@ -239,22 +253,41 @@ class ChatAssistant:
                     # tool started being used
                     case "on_tool_start":
                         logging.debug(f"{kind}:\n{event}")
-                        tool_name = event.get('name').replace('_', ' ').capitalize()
-                        tool_chunk_id[tool_name] = str(uuid.uuid4())
+
+                        # No longer sending human input tool usage start/end messages
+                        raw_tool_name = event.get('name')
+                        if raw_tool_name == 'human_input':
+                            continue
+
+                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
+
+                        # Use event->run_id as key for tool_chunk_id as that is guaranteed to be unique
+                        # and won't be overwritten on concurrent runs of the same tool
+                        run_id = event["run_id"]
+                        tool_chunk_id[run_id] = str(uuid.uuid4())
+
                         self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[tool_name],
+                                            first=True, chunk_id=tool_chunk_id[run_id],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline")
 
                     # tool finished being used
                     case "on_tool_end":
                         logging.debug(f"{kind}:\n{event}")
-                        tool_name = event.get('name').replace('_', ' ').capitalize()
+
+                        # No longer sending human input tool usage start/end messages
+                        raw_tool_name = event.get('name')
+                        if raw_tool_name == 'human_input':
+                            continue
+
+                        run_id = event["run_id"]
+
+                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
                         self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[tool_name],
+                                            first=True, chunk_id=tool_chunk_id[run_id],
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline", overwrite=True)
-                        del tool_chunk_id[tool_name]
+                        del tool_chunk_id[run_id]
 
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
                     case _:
@@ -280,12 +313,15 @@ class ChatAssistant:
     def send_to_socket(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
                        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
 
-        if type(text) != str:
+        if type(text) is str:
             text = str(text)
 
         # Set default timestamp if not provided
         if timestamp is None:
             timestamp = int(datetime.now().timestamp() * 1000)
+
+        if (len(text.rstrip()) == 0 and first == True) or len(text) == 0:
+            return # Don't send empty first messages
 
         # send the message
         send(

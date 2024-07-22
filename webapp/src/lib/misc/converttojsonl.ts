@@ -1,6 +1,6 @@
 'use strict';
 
-export default function convertStringToJsonl(inputString, delimiter='\n') {
+export default function convertStringToJsonl(inputString, delimiter = '\n') {
 	// Split the string into lines
 	const lines = inputString.split(delimiter);
 	// Map each line to a JSON object and then to a string

@@ -19,16 +19,19 @@ export function PortalLinkCollection(): any {
 	return db.db().collection('portallinks');
 }
 
-export function getPortalLinkById(accountId: db.IdOrStr, portalLinkId: string): Promise<PortalLink> {
+export function getPortalLinkById(
+	accountId: db.IdOrStr,
+	portalLinkId: string
+): Promise<PortalLink> {
 	return PortalLinkCollection().findOne({
 		portalLinkId: portalLinkId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }
 
 export function unsafeGetPortalLinkById(portalLinkId: string): Promise<PortalLink> {
 	return PortalLinkCollection().findOne({
-		portalLinkId: portalLinkId,
+		portalLinkId: portalLinkId
 	});
 }
 
@@ -39,6 +42,6 @@ export async function addPortalLink(portalLink: PortalLink): Promise<InsertResul
 export function deletePortalLinkById(accountId: db.IdOrStr, portalLinkId: string): Promise<any> {
 	return PortalLinkCollection().deleteOne({
 		portalLinkId: portalLinkId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }

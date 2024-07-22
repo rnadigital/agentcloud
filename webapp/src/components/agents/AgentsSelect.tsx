@@ -2,13 +2,28 @@ import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 
-export default function AgentsSelect({ agentChoices, agentsState, onChange, setModalOpen, multiple, disabled }
-	: { agentChoices: any[], agentsState: any, onChange: Function, setModalOpen: Function, multiple?: boolean, disabled?: boolean }) {
-
+export default function AgentsSelect({
+	agentChoices,
+	agentsState,
+	onChange,
+	setModalOpen,
+	multiple,
+	disabled
+}: {
+	agentChoices: any[];
+	agentsState: any;
+	onChange: Function;
+	setModalOpen: Function;
+	multiple?: boolean;
+	disabled?: boolean;
+}) {
 	return (
 		<div className='sm:col-span-12'>
-			<label htmlFor='members' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-				Agent{multiple?'s':null}
+			<label
+				htmlFor='members'
+				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+			>
+				Agent{multiple ? 's' : null}
 			</label>
 			<div className='mt-2'>
 				<Select
@@ -26,7 +41,7 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 						listItem: (value?: { isSelected?: boolean }) =>
 							`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${
 								value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'
-							}`,
+							}`
 					}}
 					value={agentsState?.length ? agentsState : null}
 					onChange={(v: any) => {
@@ -42,8 +57,13 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 							onChange(v);
 						}
 					}}
-					options={[{ label: '+ Create new agent', value: null, allowDelegation: false }]
-						.concat(agentChoices.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })))}
+					options={[{ label: '+ Create new agent', value: null, allowDelegation: false }].concat(
+						agentChoices.map(a => ({
+							label: a.name,
+							value: a._id,
+							allowDelegation: a.allowDelegation
+						}))
+					)}
 					formatOptionLabel={(data: any) => {
 						const optionAgent = agentChoices.find(ac => ac._id === data.value);
 						return (
@@ -59,7 +79,9 @@ export default function AgentsSelect({ agentChoices, agentsState, onChange, setM
 										<span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
 											<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
 										</span>
-										<span className='tooltiptext'>This agent allows automatic task delegation.</span>
+										<span className='tooltiptext'>
+											This agent allows automatic task delegation.
+										</span>
 									</span>
 								)}
 							</li>

@@ -65,9 +65,7 @@ export default async function createAccount({
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			[newAccountId.toString()]: new Binary(
-				new Permission(Roles.ORG_ADMIN.base64).array
-			)
+			[newAccountId.toString()]: new Binary(new Permission(Roles.ORG_ADMIN.base64).array)
 		}
 	});
 	const addedTeam = await addTeam({
@@ -78,9 +76,7 @@ export default async function createAccount({
 		dateCreated: new Date(),
 		permissions: {
 			// [newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
-			[newAccountId.toString()]: new Binary(
-				new Permission(Roles.TEAM_ADMIN.base64).array
-			)
+			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array)
 		}
 	});
 	const orgId = addedOrg.insertedId;
@@ -88,19 +84,13 @@ export default async function createAccount({
 
 	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
-	const amazonKey = await secretProvider.getSecret(
-		SecretKeys.AMAZON_ACCESS_ID
-	);
+	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
 	const emailVerified = amazonKey == null;
 	const passwordHash = password ? await bcrypt.hash(password, 12) : null;
-	const oauth = provider
-		? { [provider]: { id: profileId } }
-		: ({} as OAuthRecordType);
+	const oauth = provider ? { [provider]: { id: profileId } } : ({} as OAuthRecordType);
 
 	// get stripe secret
-	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(
-		SecretKeys.STRIPE_ACCOUNT_SECRET
-	);
+	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
 	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
@@ -130,9 +120,7 @@ export default async function createAccount({
 			permissions: new Binary(Roles.REGISTERED_USER.array),
 			stripe: {
 				stripeCustomerId: null,
-				stripePlan: STRIPE_ACCOUNT_SECRET
-					? SubscriptionPlan.FREE
-					: SubscriptionPlan.ENTERPRISE,
+				stripePlan: STRIPE_ACCOUNT_SECRET ? SubscriptionPlan.FREE : SubscriptionPlan.ENTERPRISE,
 				stripeAddons: {
 					users: 0,
 					storage: 0
@@ -146,15 +134,9 @@ export default async function createAccount({
 	if (STRIPE_ACCOUNT_SECRET) {
 		let foundCheckoutSession;
 		if (checkoutSession) {
-			log(
-				'Account creation attempted with checkoutSession %s',
-				checkoutSession
-			);
+			log('Account creation attempted with checkoutSession %s', checkoutSession);
 			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
-			foundCheckoutSession =
-				await StripeClient.get().checkout.sessions.retrieve(
-					checkoutSession
-				);
+			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSession);
 			const customerId = foundCheckoutSession?.customer as string;
 			const { planItem, addonUsersItem, addonStorageItem } =
 				await getSubscriptionsDetails(customerId);
@@ -181,15 +163,14 @@ export default async function createAccount({
 				trial_period_days: 14,
 				trial_settings: {
 					end_behavior: {
-						missing_payment_method: 'pause',
+						missing_payment_method: 'pause'
 					}
 				}
 			});
 			log('Subscription created for new user: %O', subscription);
 			await setStripeCustomerId(newAccountId, stripeCustomer.id);
 			await updateStripeCustomer(stripeCustomer.id, {
-				stripePlan:
-					priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
+				stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
 				stripeEndsAt: subscription.current_period_end * 1000,
 				stripeTrial: true
 			});
@@ -202,17 +183,17 @@ export default async function createAccount({
 
 		const emailBody = invite
 			? render(
-				InviteEmail({
-					inviteURL: `${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
-					name,
-					teamName
-				})
-			  )
+					InviteEmail({
+						inviteURL: `${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
+						name,
+						teamName
+					})
+				)
 			: render(
-				VerificationEmail({
-					verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}`
-				})
-			  );
+					VerificationEmail({
+						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}`
+					})
+				);
 
 		await ses.sendEmail({
 			from: process.env.FROM_EMAIL_ADDRESS,
@@ -220,9 +201,7 @@ export default async function createAccount({
 			cc: null,
 			replyTo: null,
 			to: [email],
-			subject: invite
-				? "You've been invited to Agentcloud 🎉"
-				: 'Verify your email',
+			subject: invite ? "You've been invited to Agentcloud 🎉" : 'Verify your email',
 			body: emailBody
 		});
 	}

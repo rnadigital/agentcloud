@@ -1,8 +1,8 @@
 import React from 'react';
 import ContentLoader from 'react-content-loader';
 
-const LoadingPlaceholder = (props) => (
-	<ContentLoader 
+const LoadingPlaceholder = props => (
+	<ContentLoader
 		speed={2}
 		width={'100%'}
 		height={30}
@@ -16,4 +16,3 @@ const LoadingPlaceholder = (props) => (
 );
 
 export default LoadingPlaceholder;
-

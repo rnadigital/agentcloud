@@ -9,7 +9,7 @@ export async function notificationsData(req, res, _next) {
 	// const notifications = await getAllNotificationsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
-		notifications,
+		notifications
 	};
 }
 
@@ -23,18 +23,16 @@ export async function notificationsJson(req, res, next) {
 }
 
 export async function markNotificationsSeenApi(req, res, next) {
-
 	const { notificationIds } = req.body;
 
-	const notificationMongoIds = notificationIds && notificationIds
-		.filter(ni => typeof ni === 'string')
-		.map(ni => toObjectId(ni));
+	const notificationMongoIds =
+		notificationIds &&
+		notificationIds.filter(ni => typeof ni === 'string').map(ni => toObjectId(ni));
 	if (!notificationIds) {
-		return dynamicResponse(req, res, 200, { }); //error or?
+		return dynamicResponse(req, res, 200, {}); //error or?
 	}
 
 	await markNotificationsSeen(req.params.resourceSlug, notificationMongoIds);
-	
-	return dynamicResponse(req, res, 200, { });
 
+	return dynamicResponse(req, res, 200, {});
 }

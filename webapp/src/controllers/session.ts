@@ -19,13 +19,13 @@ export async function sessionsData(req, res, _next) {
 	const [crews, sessions, agents] = await Promise.all([
 		getCrewsByTeam(req.params.resourceSlug),
 		getSessionsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		crews,
 		sessions,
-		agents,
+		agents
 	};
 }
 
@@ -59,7 +59,7 @@ export async function sessionData(req, res, _next) {
 		csrf: req.csrfToken(),
 		session,
 		app,
-		avatarMap,
+		avatarMap
 	};
 }
 
@@ -96,7 +96,7 @@ export async function sessionPage(app, req, res, next) {
 	const data = await sessionData(req, res, next);
 	res.locals.data = {
 		...data,
-		account: res.locals.account,
+		account: res.locals.account
 	};
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
@@ -157,15 +157,17 @@ export async function publicSessionMessagesJson(req, res, next) {
  * @apiGroup session
  *
  * @apiParam {String} prompt The prompt text
- * @apiParam {String} type team | task Type of session 
+ * @apiParam {String} type team | task Type of session
  */
 export async function addSessionApi(req, res, next) {
 
 	let { id: appId, skipRun }  = req.body;
 
-	let validationError = chainValidations(req.body, [
-		{ field: 'id', validation: { notEmpty: true, ofType: 'string' } },
-	], { id: 'Id' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'id', validation: { notEmpty: true, ofType: 'string' } }],
+		{ id: 'Id' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -220,8 +222,9 @@ export async function addSessionApi(req, res, next) {
 		});
 	}
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}` });
-
+	return dynamicResponse(req, res, 302, {
+		redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}`
+	});
 }
 
 /**
@@ -232,12 +235,13 @@ export async function addSessionApi(req, res, next) {
  * @apiParam {String} sessionId the session id
  */
 export async function deleteSessionApi(req, res, next) {
-
 	const { sessionId } = req.body;
 
-	let validationError = chainValidations(req.body, [
-		{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string' } },
-	], { sessionId: 'Session ID' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string' } }],
+		{ sessionId: 'Session ID' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -253,8 +257,9 @@ export async function deleteSessionApi(req, res, next) {
 	}
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/apps`*/ });
-
+	return dynamicResponse(req, res, 200, {
+		/*redirect: `/${req.params.resourceSlug}/apps`*/
+	});
 }
 
 /**
@@ -265,12 +270,13 @@ export async function deleteSessionApi(req, res, next) {
  * @apiParam {String} sessionId the session id
  */
 export async function cancelSessionApi(req, res, next) {
-
 	const { sessionId } = req.body;
 
-	let validationError = chainValidations(req.body, [
-		{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } },
-	], { sessionId: 'Session ID' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'sessionId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } }],
+		{ sessionId: 'Session ID' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -283,6 +289,7 @@ export async function cancelSessionApi(req, res, next) {
 	await setSessionStatus(req.params.resourceSlug, sessionId, SessionStatus.TERMINATED);
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, { /*redirect: `/${req.params.resourceSlug}/apps`*/ });
-
+	return dynamicResponse(req, res, 200, {
+		/*redirect: `/${req.params.resourceSlug}/apps`*/
+	});
 }

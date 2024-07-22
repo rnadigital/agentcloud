@@ -24,9 +24,10 @@ logerror.log = console.error.bind(console);
 
 const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64')}`;
 const provider = process.env.MESSAGE_QUEUE_PROVIDER;
-const destinationDefinitionId = provider === 'rabbitmq'
-	? 'e06ad785-ad6f-4647-b2e8-3027a5c59454' // RabbitMQ destination id
-	: '356668e2-7e34-47f3-a3b0-67a8a481b692'; // Google Pub/Sub destination id
+const destinationDefinitionId =
+	provider === 'rabbitmq'
+		? 'e06ad785-ad6f-4647-b2e8-3027a5c59454' // RabbitMQ destination id
+		: '356668e2-7e34-47f3-a3b0-67a8a481b692'; // Google Pub/Sub destination id
 
 // Function to fetch instance configuration
 async function fetchInstanceConfiguration() {
@@ -38,21 +39,24 @@ async function fetchInstanceConfiguration() {
 
 // Function to skip the setup screen
 async function skipSetupScreen() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration/setup`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: authorizationHeader
-		},
-		body: JSON.stringify({
-			email: 'example@example.org',
-			anonymousDataCollection: false,
-			securityCheck: 'ignored',
-			organizationName: 'example',
-			initialSetupComplete: true,
-			displaySetupWizard: false
-		})
-	});
+	const response = await fetch(
+		`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration/setup`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: authorizationHeader
+			},
+			body: JSON.stringify({
+				email: 'example@example.org',
+				anonymousDataCollection: false,
+				securityCheck: 'ignored',
+				organizationName: 'example',
+				initialSetupComplete: true,
+				displaySetupWizard: false
+			})
+		}
+	);
 	return response.json();
 }
 
@@ -106,8 +110,8 @@ async function deleteDestination(destinationId: string) {
 			Authorization: authorizationHeader
 		},
 		body: JSON.stringify({
-			destinationId,
-		}),
+			destinationId
+		})
 	});
 }
 
@@ -121,7 +125,11 @@ async function getDestinationConfiguration(provider: string) {
 		} catch (e) {
 			host = (await lookup(host, { family: 4 }))?.address;
 			if (!host) {
-				log('Error getting host in getDestinationConfiguration host: %s, process.env.RABBITMQ_HOST: %s', host, process.env.RABBITMQ_HOST);
+				log(
+					'Error getting host in getDestinationConfiguration host: %s, process.env.RABBITMQ_HOST: %s',
+					host,
+					process.env.RABBITMQ_HOST
+				);
 			}
 		}
 		log('getDestinationConfiguration host %s', host);
@@ -139,17 +147,26 @@ async function getDestinationConfiguration(provider: string) {
 		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 			if (!credentialsPath) {
-				log('missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				log(
+					'missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s',
+					process.env.GOOGLE_APPLICATION_CREDENTIALS
+				);
 				process.exit(1);
 			}
 			log('credentialsContent %s', credentialsPath);
 			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
 			if (!credentialsContent) {
-				log('Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+				log(
+					'Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s',
+					process.env.GOOGLE_APPLICATION_CREDENTIALS
+				);
 				process.exit(1);
 			}
 		} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-			log('process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s', process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+			log(
+				'process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s',
+				process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+			);
 			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 		} else {
 			log('google application credentials missing private_key, fetching from secret store');
@@ -165,7 +182,7 @@ async function getDestinationConfiguration(provider: string) {
 			topic_id: process.env.QUEUE_NAME,
 			credentials_json: credentialsContent,
 			ordering_enabled: false,
-			batching_enabled: false,
+			batching_enabled: false
 		};
 	}
 }
@@ -185,7 +202,8 @@ async function updateWebhookUrls(workspaceId: string) {
 					notificationType: ['slack'],
 					slackConfiguration: {
 						//Note: WEBAPP_WEBHOOK_URL for development
-						webhook: process.env.WEBAPP_WEBHOOK_URL || `${process.env.URL_APP}/webhook/sync-successful`,
+						webhook:
+							process.env.WEBAPP_WEBHOOK_URL || `${process.env.URL_APP}/webhook/sync-successful`
 					}
 				}
 			}
@@ -220,14 +238,17 @@ export async function init() {
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
 		log('destinationsList: %s', destinationsList?.destinations?.map(x => x.name)?.join());
 
-		let airbyteAdminDestination = destinationsList.destinations?.find(d => d?.destinationDefinitionId === destinationDefinitionId);
+		let airbyteAdminDestination = destinationsList.destinations?.find(
+			d => d?.destinationDefinitionId === destinationDefinitionId
+		);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
 		if (airbyteAdminDestination) {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
 			const newConfig = await getDestinationConfiguration(provider);
 			const configMismatch = Object.keys(newConfig).some(key => {
-				if (currentConfig[key] === '**********') { //hidden fields
+				if (currentConfig[key] === '**********') {
+					//hidden fields
 					return false; // Skip password/credentials json comparison
 				}
 				return currentConfig[key] !== newConfig[key];
@@ -244,11 +265,17 @@ export async function init() {
 			}
 		} else {
 			if (!provider) {
-				log('Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
+				log(
+					'Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:',
+					process.env.MESSAGE_QUEUE_PROVIDER
+				);
 				process.exit(1);
 			}
 			log(`Creating ${provider} destination`);
-			airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider as 'rabbitmq' | 'google');
+			airbyteAdminDestination = await createDestination(
+				airbyteAdminWorkspaceId,
+				provider as 'rabbitmq' | 'google'
+			);
 			log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 			if (!airbyteAdminDestination.destinationId) {
 				process.exit(1);
@@ -261,7 +288,6 @@ export async function init() {
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
-
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}

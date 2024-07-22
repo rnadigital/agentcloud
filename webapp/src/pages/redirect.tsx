@@ -1,16 +1,13 @@
-import {
-	CheckCircleIcon,
-} from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React  from 'react';
+import React from 'react';
 
 export default function Redirect() {
-
 	const router = useRouter();
 	const { to } = router.query;
 	if (typeof window !== 'undefined') {
-		router.push(to as string || '/login');
+		router.push((to as string) || '/login');
 	}
 
 	return (
@@ -29,8 +26,6 @@ export default function Redirect() {
 					</div>
 				</div>
 			</div>
-
 		</>
 	);
-
 }

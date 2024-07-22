@@ -30,11 +30,7 @@ export function StepWrapper({ children }) {
 		}
 	}, [router?.asPath]);
 
-	return (
-		<StepContext.Provider value={{ step, setStep }}>
-			{children}
-		</StepContext.Provider>
-	);
+	return <StepContext.Provider value={{ step, setStep }}>{children}</StepContext.Provider>;
 }
 
 export function useStepContext() {

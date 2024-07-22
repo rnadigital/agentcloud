@@ -8,15 +8,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { capitalizeFirstLetter } from 'utils/capitalizeFirstLetter';
 import { toSentenceCase } from 'utils/toSentenceCase';
 
-const InputField = ({
-	name,
-	testId,
-	type,
-	disabled,
-	property,
-	isRequired
-}: FormFieldProps) => {
-
+const InputField = ({ name, testId, type, disabled, property, isRequired }: FormFieldProps) => {
 	const { control } = useFormContext();
 
 	return (
@@ -24,7 +16,8 @@ const InputField = ({
 			name={name}
 			control={control}
 			rules={{
-				required: isRequired && `${property.title ? property.title : toSentenceCase(name)} is required.`
+				required:
+					isRequired && `${property.title ? property.title : toSentenceCase(name)} is required.`
 			}}
 			render={({ field, fieldState }) => {
 				const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,11 +59,13 @@ const InputField = ({
 
 								{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 							</label>
-							{property.description && <ToolTip content={property.description} allowHTML interactive>
-								<div className='cursor-pointer'>
-									<InformationCircleIcon className='h-4 w-4' />
-								</div>
-							</ToolTip>}
+							{property.description && (
+								<ToolTip content={property.description} allowHTML interactive>
+									<div className='cursor-pointer'>
+										<InformationCircleIcon className='h-4 w-4' />
+									</div>
+								</ToolTip>
+							)}
 						</div>
 						<input
 							{...field}
@@ -82,13 +77,14 @@ const InputField = ({
 							onChange={handleChange}
 							value={value}
 							className={clsx(
-								type !== 'checkbox' && 'mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 px-2',
+								type !== 'checkbox' &&
+									'mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 px-2',
 								{
 									'ring-gray-300 focus:ring-indigo-600': !fieldState.error,
 									'ring-red-500 focus:ring-red-500': fieldState.error,
 									'bg-gray-200 cursor-not-allowed': disabled,
 									'appearance-none': type === 'date', // Add this line
-									'h-5 align-left w-5 mt-2': type === 'checkbox', // Add this line
+									'h-5 align-left w-5 mt-2': type === 'checkbox' // Add this line
 								}
 							)}
 						/>

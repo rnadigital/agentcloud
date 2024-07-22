@@ -6,7 +6,7 @@ import { SharingConfig } from 'struct/sharing';
 
 export enum AppType {
 	CHAT = 'chat',
-	CREW = 'crew',
+	CREW = 'crew'
 }
 
 export type ChatAppConfig = {

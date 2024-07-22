@@ -1,12 +1,12 @@
 'use strict';
 
 export enum ModelType {
-  OPENAI = 'open_ai',
-  FASTEMBED = 'fastembed',
-  OLLAMA = 'ollama',
-  COHERE = 'cohere',
-  ANTHROPIC = 'anthropic',
-  GROQ = 'groq'
+	OPENAI = 'open_ai',
+	FASTEMBED = 'fastembed',
+	OLLAMA = 'ollama',
+	COHERE = 'cohere',
+	ANTHROPIC = 'anthropic',
+	GROQ = 'groq'
 }
 
 export const modelOptions = [
@@ -32,56 +32,39 @@ interface ModelRequirements {
 export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
 		api_key: { type: 'string' },
-		org_id: { type: 'string', optional: true },
+		org_id: { type: 'string', optional: true }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
 		base_url: { type: 'string' },
-		api_key: { type: 'string' },
+		api_key: { type: 'string' }
 	},
 	[ModelType.COHERE]: {
-		cohere_api_key: { type: 'string' },
+		cohere_api_key: { type: 'string' }
 	},
 	[ModelType.ANTHROPIC]: {
-		api_key: { type: 'string' },
+		api_key: { type: 'string' }
 	},
 	[ModelType.GROQ]: {
-		groq_api_key: { type: 'string' },
-	},
+		groq_api_key: { type: 'string' }
+	}
 	// Add more types here if needed
 };
 
 export const ModelList = {
 	[ModelType.OPENAI]: [
 		'gpt-4o',
-		'gpt-4o-2024-05-13',
+		'gpt-4o-mini',
 		'gpt-4-turbo',
-		'gpt-4-turbo-2024-04-09',
-		'gpt-4-turbo-preview',
-		'gpt-4-0125-preview',
-		'gpt-4-1106-preview',
-		'gpt-4-vision-preview',
-		'gpt-4-1106-vision-preview',
 		'gpt-4',
-		'gpt-4-0613',
-		'gpt-4-32k',
-		'gpt-4-32k-0613',
-		'gpt-3.5-turbo-0125',
 		'gpt-3.5-turbo',
-		'gpt-3.5-turbo-1106',
-		'gpt-3.5-turbo-instruct',
-		'gpt-3.5-turbo-16k',
-		'gpt-3.5-turbo-0613',
-		'gpt-3.5-turbo-16k-0613',
 		'text-embedding-3-large',
 		'text-embedding-3-small',
 		'text-embedding-ada-002'
 	],
 	[ModelType.FASTEMBED]: [
 		'fast-bge-small-en',
-		'fast-bge-small-en-v1.5',
 		'fast-bge-base-en',
-		'fast-bge-base-en-v1.5',
 		'fast-all-MiniLM-L6-v2',
 		'fast-multilingual-e5-large'
 	],
@@ -98,20 +81,15 @@ export const ModelList = {
 		'phi3:instruct',
 		'llama3:8b-instruct-fp16',
 		'mixtral:instruct',
-		'nomic-embed-text',
+		'nomic-embed-text'
 	],
-	[ModelType.COHERE]: [
-		'command-r-plus',
-	],
+	[ModelType.COHERE]: ['command-r-plus'],
 	[ModelType.ANTHROPIC]: [
 		'claude-3-opus-20240229',
 		'claude-3-sonnet-20240229',
-		'claude-3-haiku-20240307',
+		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: [
-		'llama3-70b-8192',
-		'mixtral-8x7b-32768'
-	],
+	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768']
 };
 
 export const ModelEmbeddingLength = {
@@ -125,5 +103,5 @@ export const ModelEmbeddingLength = {
 	'fast-bge-small-zh-v1.5': 512,
 	'fast-all-MiniLM-L6-v2': 384,
 	'fast-multilingual-e5-large': 1024,
-	'nomic-embed-text': 8192,
+	'nomic-embed-text': 8192
 };

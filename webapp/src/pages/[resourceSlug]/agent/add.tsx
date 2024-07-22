@@ -9,7 +9,6 @@ import AgentForm from '../../../components/AgentForm';
 import { useAccountContext } from '../../../context/account';
 
 export default function AddAgent(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -30,20 +29,27 @@ export default function AddAgent(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`New Agent - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`New Agent - ${teamName}`}</title>
-		</Head>
-
-		<span className='sm:w-full md:w-1/2 xl:w-1/3'>
-			<AgentForm models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
-		</span>
-
-	</>);
-
+			<span className='sm:w-full md:w-1/2 xl:w-1/3'>
+				<AgentForm models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+			</span>
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

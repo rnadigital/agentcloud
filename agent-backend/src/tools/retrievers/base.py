@@ -36,7 +36,9 @@ class BaseToolRetriever(ABC):
 
     def format_results(self, results):
         self.logger.debug(f"{self.__class__.__name__} results: {results}")
-        return "\n".join(map(self._result_getter, results))
+        # Note: multi query retriever doesn't have a top k, so we'll slice the array here instead (for now).
+        k = self.tool.retriever_config.k or 4
+        return '\n'.join(map(self._result_getter, results[:k]))
 
     @staticmethod
     def _result_getter(result):

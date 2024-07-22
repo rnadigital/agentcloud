@@ -1,6 +1,4 @@
-import {
-	ArrowPathIcon,
-} from '@heroicons/react/20/solid';
+import { ArrowPathIcon } from '@heroicons/react/20/solid';
 import ToolSelectIcons from 'components/ToolSelectIcons';
 import ToolStateBadge from 'components/ToolStateBadge';
 import React, { useEffect, useState } from 'react';
@@ -8,11 +6,21 @@ import Select from 'react-tailwindcss-select';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
-export default function ToolsSelect({ title='Tools', addNewTitle='+ New Tool', tools, toolState, onChange, setModalOpen, enableAddNew=true }) {
-
+export default function ToolsSelect({
+	title = 'Tools',
+	addNewTitle = '+ New Tool',
+	tools,
+	toolState,
+	onChange,
+	setModalOpen,
+	enableAddNew = true
+}) {
 	return (
 		<div className='sm:col-span-12'>
-			<label htmlFor='toolIds' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+			<label
+				htmlFor='toolIds'
+				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+			>
 				{title}
 			</label>
 			<div className='mt-2'>
@@ -32,17 +40,21 @@ export default function ToolsSelect({ title='Tools', addNewTitle='+ New Tool', t
 						onChange(v);
 					}}
 					options={(enableAddNew
-						? [{
-							label: addNewTitle,
-							value: null,
-							disabled: false,
-						}]
+						? [
+								{
+									label: addNewTitle,
+									value: null,
+									disabled: false
+								}
+							]
 						: []
-					).concat(tools.map(tool => ({
-						label: tool.name,
-						value: tool._id,
-						disabled: false, //tool.state && tool.state !== 'READY',
-					})))}
+					).concat(
+						tools.map(tool => ({
+							label: tool.name,
+							value: tool._id,
+							disabled: false //tool.state && tool.state !== 'READY',
+						}))
+					)}
 					formatOptionLabel={data => {
 						const optionTool = tools.find(tool => tool._id === data.value);
 						const isReady = true; //!optionTool?.state || optionTool?.state as ToolState === ToolState.READY;
@@ -59,9 +71,16 @@ export default function ToolsSelect({ title='Tools', addNewTitle='+ New Tool', t
 										{optionTool?.type} tool
 									</span>
 								</span>
-								{optionTool?.state && <span className='ms-2'><ToolStateBadge state={optionTool.state} /></span>}
+								{optionTool?.state && (
+									<span className='ms-2'>
+										<ToolStateBadge state={optionTool.state} />
+									</span>
+								)}
 								<span className='ms-2 w-full overflow-hidden text-ellipsis'>
-									{data.label}{optionTool ? ` - ${optionTool?.data?.description || optionTool?.description}` : ''}
+									{data.label}
+									{optionTool
+										? ` - ${optionTool?.data?.description || optionTool?.description}`
+										: ''}
 								</span>
 							</li>
 						);

@@ -8,9 +8,9 @@ export type Asset = {
 	originalFilename: string;
 	mimeType: string;
 	uploadedAt: Date;
-}
+};
 
 export type IconAttachment = {
 	id: ObjectId;
-	filename: string;	
-}
+	filename: string;
+};

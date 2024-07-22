@@ -4,7 +4,7 @@ from abc import abstractmethod
 from typing import Type, Optional
 
 from langchain_core.tools import ToolException
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 
 from models.mongo import Tool
 from tools.global_tools import GlobalBaseTool

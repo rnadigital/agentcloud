@@ -12,7 +12,9 @@ class StripeClient {
 		try {
 			// Get stripe secret
 			const secretProvider = SecretProviderFactory.getSecretProvider();
-			const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
+			const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(
+				SecretKeys.STRIPE_ACCOUNT_SECRET
+			);
 
 			// Initialize the Stripe client
 			this.#stripeClient = new Stripe(STRIPE_ACCOUNT_SECRET);

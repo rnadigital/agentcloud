@@ -1,5 +1,4 @@
 export default function SearchFilter({ filter, setFilter }) {
-
 	return (
 		<div className='input-group mb-3'>
 			<div className='input-group-prepend'>
@@ -7,8 +6,12 @@ export default function SearchFilter({ filter, setFilter }) {
 					<i className='bi bi-search' />
 				</span>
 			</div>
-			<input onChange={e => setFilter(e.target.value||'')} type='text' className='form-control' placeholder='Search' />
+			<input
+				onChange={e => setFilter(e.target.value || '')}
+				type='text'
+				className='form-control'
+				placeholder='Search'
+			/>
 		</div>
 	);
-
 }

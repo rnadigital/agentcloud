@@ -12,9 +12,9 @@ import {
 	ReactFlowProvider,
 	useEdgesState,
 	useNodesState,
-	useReactFlow,
+	useReactFlow
 } from '@xyflow/react';
-import React, { ChangeEventHandler,useCallback, useRef, useState } from 'react';
+import React, { ChangeEventHandler, useCallback, useRef, useState } from 'react';
 
 export default function Flow() {
 	const [colorMode, setColorMode] = useState<ColorMode>('dark');
@@ -24,12 +24,12 @@ export default function Flow() {
 	const reactFlowInstance = useReactFlow();
 
 	const onConnect: OnConnect = useCallback(
-		(connection) => setEdges((edges) => addEdge(connection, edges)),
+		connection => setEdges(edges => addEdge(connection, edges)),
 		[setEdges]
 	);
 
 	const onDrop = useCallback(
-		(event) => {
+		event => {
 			event.preventDefault();
 			const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
 			const type = event.dataTransfer.getData('application/reactflow');
@@ -37,27 +37,29 @@ export default function Flow() {
 			if (typeof type === 'undefined' || !type) {
 				return;
 			}
-			const position = reactFlowInstance && reactFlowInstance.screenToFlowPosition({
-				x: event.clientX - 150,
-				y: event.clientY - 30,
-			});
+			const position =
+				reactFlowInstance &&
+				reactFlowInstance.screenToFlowPosition({
+					x: event.clientX - 150,
+					y: event.clientY - 30
+				});
 			console.log('position', position);
 			const newNode = {
 				id: `${type}-${+new Date()}`,
 				type,
 				position,
-				data: { label: nodeData.name },
+				data: { label: nodeData.name }
 			};
 
-			setNodes((nds) => nds.concat(newNode));
+			setNodes(nds => nds.concat(newNode));
 		},
 		[setNodes]
 	);
 
-	const onChange: ChangeEventHandler<HTMLSelectElement> = (evt) =>
+	const onChange: ChangeEventHandler<HTMLSelectElement> = evt =>
 		setColorMode(evt.target.value as ColorMode);
 
-	const onDragOver = useCallback((event) => {
+	const onDragOver = useCallback(event => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = 'move';
 	}, []);

@@ -5,27 +5,16 @@ import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import { ChangeEvent } from 'react';
-import {
-	Controller,
-	useFieldArray,
-	useFormContext,
-} from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { toSentenceCase } from 'utils/toSentenceCase';
 
 import InputField from './InputField';
 
-const ArrayField = ({
-	name,
-	testId,
-	type,
-	disabled,
-	property,
-	isRequired
-}: FormFieldProps) => {
+const ArrayField = ({ name, testId, type, disabled, property, isRequired }: FormFieldProps) => {
 	const { control } = useFormContext();
 	const { fields, append, remove } = useFieldArray({
 		control,
-		name,
+		name
 	});
 
 	let inputType;
@@ -76,11 +65,13 @@ const ArrayField = ({
 
 					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 				</label>
-				{property.description && <ToolTip content={property.description} allowHTML interactive>
-					<div className='cursor-pointer'>
-						<InformationCircleIcon className='h-4 w-4' />
-					</div>
-				</ToolTip>}
+				{property.description && (
+					<ToolTip content={property.description} allowHTML interactive>
+						<div className='cursor-pointer'>
+							<InformationCircleIcon className='h-4 w-4' />
+						</div>
+					</ToolTip>
+				)}
 			</div>
 			{fields.map((field, index) => (
 				<div key={field.id} className='flex items-center mt-2'>
@@ -134,8 +125,8 @@ const ArrayField = ({
 											{
 												'ring-gray-300 focus:ring-indigo-600': !fieldState.error,
 												'ring-red-500 focus:ring-red-500': fieldState.error,
-												'bg-gray-200 cursor-not-allowed': disabled,
-											},
+												'bg-gray-200 cursor-not-allowed': disabled
+											}
 										)}
 									/>
 									<div className='text-red-500 mt-2 text-xs'>
@@ -145,11 +136,7 @@ const ArrayField = ({
 							);
 						}}
 					/>
-					<button
-						type='button'
-						onClick={() => remove(index)}
-						className='ml-2 text-red-500'
-					>
+					<button type='button' onClick={() => remove(index)} className='ml-2 text-red-500'>
 						Remove
 					</button>
 				</div>

@@ -2,7 +2,7 @@
 
 export enum OAUTH_PROVIDER {
 	GOOGLE = 'google',
-	GITHUB = 'github',
+	GITHUB = 'github'
 }
 
 export type OAuthStrategy = {
@@ -14,4 +14,4 @@ export type OAuthStrategy = {
 	};
 	path: string;
 	extra?: any; // Stuff like scope (this object is a different shape depending on provider hence any)
-}
+};

@@ -14,7 +14,9 @@ class TimeWeightedRetriever(BaseToolRetriever):
         self.retriever = CustomTimeWeightedVectorStoreRetriever(
             vectorstore=vector_store,
             time_weight_field_name=tool.retriever_config.timeWeightField,
-            decay_rate=tool.retriever_config.decay_rate)
+            decay_rate=tool.retriever_config.decay_rate,
+            k=tool.retriever_config.k
+        )
         super().__init__()
 
     def format_results(self, results):

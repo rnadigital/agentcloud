@@ -2,7 +2,7 @@ from langchain.chains.query_constructor.schema import AttributeInfo
 from langchain.retrievers import SelfQueryRetriever as LC_SelfQueryRetriever
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.vectorstores import VectorStore
-from langchain.retrievers.self_query.qdrant import QdrantTranslator
+from langchain_community.query_constructors.qdrant import QdrantTranslator
 from langchain.chains.query_constructor.ir import (
     Comparator,
 )
@@ -74,7 +74,8 @@ class SelfQueryRetriever(BaseToolRetriever):
             vectorstore=vector_store,
             document_contents=tool.description,
             metadata_field_info=self.metadata_field_info,
-            verbose=True
+            verbose=True,
+            search_kwargs={'k': tool.retriever_config.k}
         )
         super().__init__()
 

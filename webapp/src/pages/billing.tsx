@@ -18,7 +18,6 @@ import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
-
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const { stripeCustomerId, stripePlan } = account?.stripe || {};
@@ -36,17 +35,39 @@ export default function Billing(props) {
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 
+	const getPayload = () => {
+		return {
+			_csrf: csrf,
+			plan: selectedPlan,
+			...(stagedChange?.users ? { users: stagedChange.users } : {}),
+			...(stagedChange?.storage ? { storage: stagedChange.storage } : {})
+		};
+	};
+
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
-		return (e) => {
+		return async e => {
 			e.preventDefault();
-			apiMethod({
-				_csrf: e.target._csrf.value,
-			}, null, setError, router);
+			const res = await apiMethod(
+				{
+					_csrf: getPayload()._csrf
+				},
+				null,
+				toast.error,
+				null
+			);
+			if (res.redirect && typeof window !== undefined) {
+				const openedWindow = window.open(res.redirect, '_blank');
+				openedWindow?.focus();
+				if (!openedWindow) {
+					//Something prevented opening new tab e.g. adblocker, or an open file selector
+					window.location = res.redirect;
+				}
+			}
 		};
 	}
-	const [getPaymentLink, getPortalLink] = stripeMethods.map(createApiCallHandler);
+	const [getPortalLink] = stripeMethods.map(createApiCallHandler);
 
 	function fetchAccount() {
 		if (resourceSlug) {
@@ -54,25 +75,24 @@ export default function Billing(props) {
 		}
 	}
 
-	const getPayload = () => {
-		return {
-			_csrf: csrf,
-			plan: selectedPlan,
-			...(stagedChange?.users ? { users: stagedChange.users } : {}),
-			...(stagedChange?.storage ? { storage: stagedChange.storage } : {}),
-		};
-	};
-
 	useEffect(() => {
-		API.checkStripeReady(x => {
-			setMissingEnvs(x.missingEnvs);
-			fetchAccount();
-			API.hasPaymentMethod(res => {
-				if (res && res?.ok === true && res?.last4) {
-					setLast4(res?.last4);
-				}
-			}, toast.error, router);
-		}, toast.error, router);
+		API.checkStripeReady(
+			x => {
+				setMissingEnvs(x.missingEnvs);
+				fetchAccount();
+				API.hasPaymentMethod(
+					res => {
+						if (res && res?.ok === true && res?.last4) {
+							setLast4(res?.last4);
+						}
+					},
+					toast.error,
+					router
+				);
+			},
+			toast.error,
+			router
+		);
 	}, [resourceSlug]);
 
 	useEffect(() => {
@@ -98,8 +118,12 @@ export default function Billing(props) {
 	}
 
 	if (missingEnvs.length > 0) {
-		return (<ErrorAlert error={`Stripe functionality is missing the following:
-${missingEnvs.join('\n')}`} />);
+		return (
+			<ErrorAlert
+				error={`Stripe functionality is missing the following:
+${missingEnvs.join('\n')}`}
+			/>
+		);
 	}
 
 	return (
@@ -119,13 +143,11 @@ ${missingEnvs.join('\n')}`} />);
 			/>
 			<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
 				<button
-					onClick={() => {
-						API.getPortalLink({
-							_csrf: csrf,
-						}, null, toast.error, router);
-					}}
+					onClick={getPortalLink}
 					disabled={!stripeCustomerId}
-					className={'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'}
+					className={
+						'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'
+					}
 				>
 					Open Customer Portal
 				</button>
@@ -136,7 +158,7 @@ ${missingEnvs.join('\n')}`} />);
 			</div>
 
 			<div className='flex flex-row flex-wrap gap-4 py-4 items-center'>
-				{plans.map((plan) => (
+				{plans.map(plan => (
 					<SubscriptionCard
 						key={plan.plan}
 						title={plan.title}
@@ -159,15 +181,20 @@ ${missingEnvs.join('\n')}`} />);
 				open={showConfirmModal}
 				setOpen={setShowConfirmModal}
 				confirmFunction={async () => {
-					await API.confirmChangePlan(getPayload(), res => {
-						setTimeout(() => {
-							toast.success('Subscription updated successfully');
-							setStagedChange(null);
-							setShowConfirmModal(false);
-							setShowPaymentModal(false);
-							setShow(false);
-						}, 500);
-					}, toast.error, router);
+					await API.confirmChangePlan(
+						getPayload(),
+						res => {
+							setTimeout(() => {
+								toast.success('Subscription updated successfully');
+								setStagedChange(null);
+								setShowConfirmModal(false);
+								setShowPaymentModal(false);
+								setShow(false);
+							}, 500);
+						},
+						toast.error,
+						router
+					);
 				}}
 				cancelFunction={async () => {
 					setShowConfirmModal(false);
@@ -186,11 +213,15 @@ ${missingEnvs.join('\n')}`} />);
 				setStagedChange={setStagedChange}
 				onComplete={() => {
 					setShowPaymentModal(false);
-					API.hasPaymentMethod(res => {
-						if (res && res?.ok === true && res?.last4) {
-							setLast4(res?.last4);
-						}
-					}, toast.error, router);
+					API.hasPaymentMethod(
+						res => {
+							if (res && res?.ok === true && res?.last4) {
+								setLast4(res?.last4);
+							}
+						},
+						toast.error,
+						router
+					);
 					setContinued(true);
 				}}
 			/>
@@ -204,16 +235,23 @@ ${missingEnvs.join('\n')}`} />);
 				confirmFunction={async () => {
 					return new Promise((resolve, reject) => {
 						try {
-							API.hasPaymentMethod(res => {
-								if (res && res?.ok === true) {
-									setLast4(res?.last4);
-									setContinued(true);
-									setShowConfirmModal(true);
-								} else {
-									resolve(null);
-									setShowPaymentModal(true);
-								}
-							}, toast.error, router);
+							API.hasPaymentMethod(
+								res => {
+									if (res && res?.ok === true) {
+										setLast4(res?.last4);
+										setContinued(true);
+										setShowConfirmModal(true);
+									} else if (getPayload().plan === SubscriptionPlan.FREE) {
+										setContinued(true);
+										setShowConfirmModal(true);
+									} else {
+										resolve(null);
+										setShowPaymentModal(true);
+									}
+								},
+								toast.error,
+								router
+							);
 						} catch (e) {
 							console.error(e);
 							toast.success('Error updating subscription - please contact support');
@@ -222,11 +260,18 @@ ${missingEnvs.join('\n')}`} />);
 					});
 				}}
 			/>
-
 		</>
 	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

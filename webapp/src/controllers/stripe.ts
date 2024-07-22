@@ -5,13 +5,19 @@ import { updateStripeCustomer } from 'db/account';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
+import {
+	planToPriceMap,
+	productToPlanMap,
+	stripeEnvs,
+	SubscriptionPlan,
+	SubscriptionPlanConfig,
+	subscriptionPlans
+} from 'struct/billing';
+const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { planToPriceMap, productToPlanMap, stripeEnvs, SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationUtils';
-
-const log = debug('webapp:stripe');
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
@@ -60,7 +66,6 @@ export async function getSubscriptionsDetails(stripeCustomerId: string) {
  * @api {post} /stripe-webhook
  */
 export async function webhookHandler(req, res, next) {
-
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
 
@@ -82,7 +87,6 @@ export async function webhookHandler(req, res, next) {
 
 	// Handle the event
 	switch (event.type) {
-
 		case 'setup_intent.succeeded': {
 			const checkoutSession = event.data.object;
 			const stripeCustomerId = checkoutSession?.customer;
@@ -90,8 +94,8 @@ export async function webhookHandler(req, res, next) {
 			// Set the customer's default payment method
 			await StripeClient.get().customers.update(stripeCustomerId, {
 				invoice_settings: {
-					default_payment_method: newPaymentMethodId,
-				},
+					default_payment_method: newPaymentMethodId
+				}
 			});
 			break;
 		}
@@ -103,18 +107,24 @@ export async function webhookHandler(req, res, next) {
 			//NOTE: when updating plans, only UPDATED items come through, not the original plan, so we need to get the plan regardless
 			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
 
-			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(subscriptionUpdated.customer);
+			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(
+				subscriptionUpdated.customer
+			);
 
 			log('Customer subscription update planItem %O', planItem);
 			//Note: null to not update them unless required
 			const update = {
-				...(planItem ? { stripePlan: productToPlanMap[planItem.price.product] } : { stripePlan: SubscriptionPlan.FREE }),
+				...(planItem
+					? { stripePlan: productToPlanMap[planItem.price.product] }
+					: { stripePlan: SubscriptionPlan.FREE }),
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
-					storage: addonStorageItem ? addonStorageItem.quantity : 0,
+					storage: addonStorageItem ? addonStorageItem.quantity : 0
 				},
-				stripeEndsAt: subscriptionUpdated?.current_period_end ? subscriptionUpdated?.current_period_end * 1000 : null,
-				stripeTrial: subscriptionUpdated?.status === 'trialing', // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+				stripeEndsAt: subscriptionUpdated?.current_period_end
+					? subscriptionUpdated?.current_period_end * 1000
+					: null,
+				stripeTrial: subscriptionUpdated?.status === 'trialing' // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
 			};
 			log('Customer subscription update 1 %O', update);
 			if (subscriptionUpdated['status'] === 'canceled') {
@@ -143,7 +153,7 @@ export async function webhookHandler(req, res, next) {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
-				stripeTrial: false,
+				stripeTrial: false
 			});
 			break;
 		}
@@ -154,7 +164,7 @@ export async function webhookHandler(req, res, next) {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
-				stripeTrial: false,
+				stripeTrial: false
 			});
 			break;
 		}
@@ -166,33 +176,38 @@ export async function webhookHandler(req, res, next) {
 
 	// Return a 200 response to acknowledge receipt of the event
 	res.status(200).send();
-
 }
 
 export async function hasPaymentMethod(req, res, next) {
-
 	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
 
 	if (!stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+		return dynamicResponse(req, res, 400, {
+			error: 'Missing Stripe Customer ID - please contact support'
+		});
 	}
 
 	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
-		limit: 1,
+		limit: 1
 	});
 
 	const hasPaymentMethods = paymentMethods?.data?.length > 0;
 	const last4 = hasPaymentMethods ? paymentMethods.data[0].card.last4 : null;
 
 	return dynamicResponse(req, res, 200, { ok: hasPaymentMethods, last4 });
-
 }
 
 export async function requestChangePlan(req, res, next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
-	], { plan: 'Plan' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{
+				field: 'plan',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) }
+			}
+		],
+		{ plan: 'Plan' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -208,10 +223,13 @@ export async function requestChangePlan(req, res, next) {
 	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
 
 	if (!stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+		return dynamicResponse(req, res, 400, {
+			error: 'Missing Stripe Customer ID - please contact support'
+		});
 	}
 
-	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } =
+		await getSubscriptionsDetails(stripeCustomerId);
 
 	// if (!subscriptionId) {
 	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
@@ -220,18 +238,22 @@ export async function requestChangePlan(req, res, next) {
 	const users = req.body.users || 0;
 	const storage = req.body.storage || 0;
 	const plan = req.body.plan;
-	const planPrice = planToPriceMap[plan];
+	const planPriceId = planToPriceMap[plan];
 
-	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
-		process.env.STRIPE_PRO_PLAN_PRICE_ID,
-		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+	if (
+		![
+			process.env.STRIPE_FREE_PLAN_PRICE_ID,
+			process.env.STRIPE_PRO_PLAN_PRICE_ID,
+			process.env.STRIPE_TEAMS_PLAN_PRICE_ID
+		].includes(planPriceId)
+	) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
 
 	const planItemId = planItem?.id;
 	const items: any[] = [
 		{
-			price: planPrice,
+			price: planPriceId,
 			quantity: 1
 		}
 	];
@@ -240,13 +262,13 @@ export async function requestChangePlan(req, res, next) {
 	const usersItemId = addonUsersItem?.id;
 	items.push({
 		price: process.env.STRIPE_ADDON_USERS_PRICE_ID,
-		quantity: users,
+		quantity: users
 	});
 
 	const storageItemId = addonStorageItem?.id;
 	items.push({
 		price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID,
-		quantity: storage,
+		quantity: storage
 	});
 
 	const createdCheckoutSession = await StripeClient.get().checkout.sessions.create({
@@ -254,27 +276,38 @@ export async function requestChangePlan(req, res, next) {
 		success_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
 		line_items: items.filter(i => i.quantity > 0),
 		currency: 'USD',
-		mode: 'subscription',
+		mode: 'subscription'
 	});
-	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(createdCheckoutSession.id, {
-		expand: ['line_items'], //Note: necessary because .create() does not return non-expanded fields
-	});
+	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(
+		createdCheckoutSession.id,
+		{
+			expand: ['line_items'] //Note: necessary because .create() does not return non-expanded fields
+		}
+	);
 
 	return dynamicResponse(req, res, 302, {
 		checkoutSession: {
 			id: checkoutSession.id, //for useEffect
 			line_items: checkoutSession.line_items,
 			amount_total: checkoutSession.amount_total,
-			plan, users, storage,
+			plan,
+			users,
+			storage
 		}
 	});
 }
 
 export async function confirmChangePlan(req, res, next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'plan', validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) } },
-	], { plan: 'Plan' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{
+				field: 'plan',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SubscriptionPlan)) }
+			}
+		],
+		{ plan: 'Plan' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -287,23 +320,30 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let { stripeTrial, stripePlan, stripeCustomerId } = (res.locals.account?.stripe || {});
+	let { stripeTrial, stripePlan, stripeCustomerId } = res.locals.account?.stripe || {};
 
 	if (!stripeCustomerId) {
-		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+		return dynamicResponse(req, res, 400, {
+			error: 'Missing Stripe Customer ID - please contact support'
+		});
 	}
 
-	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } = await getSubscriptionsDetails(stripeCustomerId);
+	const { planItem, addonUsersItem, addonStorageItem, subscriptionId } =
+		await getSubscriptionsDetails(stripeCustomerId);
 
 	// if (!subscriptionId) {
 	// 	return dynamicResponse(req, res, 400, { error: 'Invalid subscription ID - please contact support' });
 	// }
 
 	const plan = req.body.plan;
-	const planPrice = planToPriceMap[plan];
-	if (![process.env.STRIPE_FREE_PLAN_PRICE_ID,
-		process.env.STRIPE_PRO_PLAN_PRICE_ID,
-		process.env.STRIPE_TEAMS_PLAN_PRICE_ID].includes(planPrice)) {
+	const planPriceId = planToPriceMap[plan];
+	if (
+		![
+			process.env.STRIPE_FREE_PLAN_PRICE_ID,
+			process.env.STRIPE_PRO_PLAN_PRICE_ID,
+			process.env.STRIPE_TEAMS_PLAN_PRICE_ID
+		].includes(planPriceId)
+	) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid plan selection' });
 	}
 
@@ -313,7 +353,9 @@ export async function confirmChangePlan(req, res, next) {
 	const items: any[] = [
 		{
 			//TODO: check might be redundant now
-			...(planItem?.price?.id === planToPriceMap[req.body.plan] ? { id: planItemId } : { price: planToPriceMap[req.body.plan] }),
+			...(planItem?.price?.id === planToPriceMap[req.body.plan]
+				? { id: planItemId }
+				: { price: planToPriceMap[req.body.plan] }),
 			quantity: 1
 		}
 	];
@@ -321,7 +363,7 @@ export async function confirmChangePlan(req, res, next) {
 	if (planItemId && planItem?.price?.id !== planToPriceMap[req.body.plan]) {
 		items.push({
 			id: planItemId,
-			deleted: true,
+			deleted: true
 		});
 	}
 
@@ -329,26 +371,40 @@ export async function confirmChangePlan(req, res, next) {
 	const usersItemId = addonUsersItem?.id;
 	items.push({
 		...(usersItemId ? { id: usersItemId } : { price: process.env.STRIPE_ADDON_USERS_PRICE_ID }),
-		quantity: users,
+		quantity: users
 	});
 
 	const storageItemId = addonStorageItem?.id;
 	items.push({
-		...(storageItemId ? { id: storageItemId } : { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
-		quantity: storage,
+		...(storageItemId
+			? { id: storageItemId }
+			: { price: process.env.STRIPE_ADDON_STORAGE_PRICE_ID }),
+		quantity: storage
 	});
 
 	const paymentMethods = await StripeClient.get().customers.listPaymentMethods(stripeCustomerId, {
-		limit: 1,
+		limit: 1
 	});
 
-	if (!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) {
+	const foundPlan: SubscriptionPlanConfig = subscriptionPlans.find(plan => {
+		return plan.priceId === planPriceId;
+	});
+	if (!foundPlan) {
+		return dynamicResponse(req, res, 400, { error: 'Could not find plan in pricing table' });
+	}
+
+	console.log(foundPlan);
+
+	if (
+		(!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) &&
+		foundPlan.price > 0
+	) {
 		const checkoutSession = await StripeClient.get().checkout.sessions.create({
 			ui_mode: 'embedded',
 			customer: stripeCustomerId,
 			redirect_on_completion: 'never',
 			currency: 'USD',
-			mode: 'setup',
+			mode: 'setup'
 		});
 		return dynamicResponse(req, res, 302, { clientSecret: checkoutSession.client_secret });
 	}
@@ -356,12 +412,12 @@ export async function confirmChangePlan(req, res, next) {
 	if (subscriptionId) {
 		await StripeClient.get().subscriptions.update(subscriptionId, {
 			items,
-			...(stripeTrial === true ? { trial_end: 'now' } : {}),
+			...(stripeTrial === true ? { trial_end: 'now' } : {})
 		});
 	} else {
 		await StripeClient.get().subscriptions.create({
 			customer: stripeCustomerId,
-			items,
+			items
 		});
 	}
 
@@ -390,7 +446,6 @@ export async function confirmChangePlan(req, res, next) {
 }
 
 export async function createPortalLink(req, res, next) {
-
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
@@ -401,12 +456,14 @@ export async function createPortalLink(req, res, next) {
 	const customerId = res.locals.account?.stripe?.stripeCustomerId;
 
 	if (!customerId) {
-		return dynamicResponse(req, res, 400, { error: 'Missing Stripe Customer ID - please contact support' });
+		return dynamicResponse(req, res, 400, {
+			error: 'Missing Stripe Customer ID - please contact support'
+		});
 	}
 
 	const portalLink = await StripeClient.get().billingPortal.sessions.create({
 		customer: customerId,
-		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`,
+		return_url: `${process.env.URL_APP}/auth/redirect?to=${encodeURIComponent('/billing')}`
 	});
 
 	await addPortalLink({
@@ -414,23 +471,23 @@ export async function createPortalLink(req, res, next) {
 		portalLinkId: portalLink.id,
 		url: portalLink.url,
 		payload: portalLink,
-		createdDate: new Date(),
+		createdDate: new Date()
 	});
 
 	return dynamicResponse(req, res, 302, { redirect: portalLink.url });
 }
 
 export async function checkReady(req, res, next) {
-
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const missingEnvs = [];
 
-	await Promise.all(stripeEnvs.map(async k => {
-		if (process.env[k] == null && (await secretProvider.getSecret(k)) == null) {
-			missingEnvs.push(k);
-		}
-	}));
+	await Promise.all(
+		stripeEnvs.map(async k => {
+			if (process.env[k] == null && (await secretProvider.getSecret(k)) == null) {
+				missingEnvs.push(k);
+			}
+		})
+	);
 
 	return dynamicResponse(req, res, 200, { missingEnvs });
-
 }
