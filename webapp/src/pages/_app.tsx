@@ -24,7 +24,7 @@ if (typeof window !== 'undefined') {
 	posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
 		api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
 		// Enable debug mode in development
-		loaded: (posthog) => {
+		loaded: posthog => {
 			if (process.env.NODE_ENV === 'development') {
 				posthog.debug();
 			}
@@ -34,9 +34,9 @@ if (typeof window !== 'undefined') {
 }
 
 NProgress.configure({ showSpinner: false });
-Router.events.on('routeChangeStart', (url) => NProgress.start());
-Router.events.on('routeChangeComplete', (url) => NProgress.done());
-Router.events.on('routeChangeError', (_url) => NProgress.done());
+Router.events.on('routeChangeStart', url => NProgress.start());
+Router.events.on('routeChangeComplete', url => NProgress.done());
+Router.events.on('routeChangeError', _url => NProgress.done());
 
 export default function App({ Component, pageProps }) {
 	useEffect(() => {
@@ -72,9 +72,7 @@ export default function App({ Component, pageProps }) {
 									limit={3}
 								/>
 								<Layout {...pageProps}>
-									<style>
-										{''}
-									</style>
+									<style>{''}</style>
 									<Component {...pageProps} />
 								</Layout>
 						

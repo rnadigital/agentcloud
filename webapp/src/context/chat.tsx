@@ -8,7 +8,6 @@ const log = debug('webapp:context');
 const ChatContext = createContext({});
 
 export function ChatWrapper({ children }) {
-
 	const router = useRouter();
 	const [sharedState, setSharedState] = useState({});
 
@@ -18,28 +17,26 @@ export function ChatWrapper({ children }) {
 	}
 
 	function updateSharedState(update: any) {
+		// log('updateSharedState', update);
 		if (update == null) {
 			return setSharedState({});
 		}
 		setSharedState(oldState => {
 			return {
 				...oldState,
-				...update,
+				...update
 			};
 		});
 	}
 
 	useEffect(() => {
-		if (router?.asPath
-			&& !router.asPath.includes('/session/')) {
+		if (router?.asPath && !router.asPath.includes('/session/')) {
 			setSharedState(null);
 		}
 	}, [router.asPath]);
 
 	return (
-		<ChatContext.Provider value={[sharedState, updateSharedState]}>
-			{children}
-		</ChatContext.Provider>
+		<ChatContext.Provider value={[sharedState, updateSharedState]}>{children}</ChatContext.Provider>
 	);
 }
 

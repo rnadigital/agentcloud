@@ -1,9 +1,23 @@
 import Link from 'next/link';
 import React from 'react';
 
-export default function NewButtonSection({ link, emptyMessage, icon, message, buttonIcon, buttonMessage, disabled }:
-	{ link: string, emptyMessage: string, icon: any, message: string, buttonIcon: any, buttonMessage: string, disabled?: boolean}) {
-
+export default function NewButtonSection({
+	link,
+	emptyMessage,
+	icon,
+	message,
+	buttonIcon,
+	buttonMessage,
+	disabled
+}: {
+	link: string;
+	emptyMessage: string;
+	icon: any;
+	message: string;
+	buttonIcon: any;
+	buttonMessage: string;
+	disabled?: boolean;
+}) {
 	return (
 		<div className='text-center py-4'>
 			{icon}

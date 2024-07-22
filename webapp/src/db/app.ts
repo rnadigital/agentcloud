@@ -22,7 +22,8 @@ const CREW_JOIN_STAGES = [
 		}
 	},
 	{
-		$set: { // or $addFields
+		$set: {
+			// or $addFields
 			crew: '$crewInfo' // Rename "crewInfo" to "crew".
 		}
 	},
@@ -38,50 +39,62 @@ export function AppCollection(): any {
 }
 
 export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> {
-	const res = AppCollection().aggregate([
-		{
-			$match: {
-				_id: toObjectId(appId),
-				teamId: toObjectId(teamId),
-			}
-		},
-		...CREW_JOIN_STAGES
-	]).toArray();
-	return res.then(docs => docs.length > 0 ? docs[0] : null);
+	const res = AppCollection()
+		.aggregate([
+			{
+				$match: {
+					_id: toObjectId(appId),
+					teamId: toObjectId(teamId)
+				}
+			},
+			...CREW_JOIN_STAGES
+		])
+		.toArray();
+	return res.then(docs => (docs.length > 0 ? docs[0] : null));
 }
 
 export function getAppByCrewId(teamId: db.IdOrStr, crewId: db.IdOrStr): Promise<App> {
-	const res = AppCollection().findOne({crewId});
-	return res.then(docs => docs.length > 0 ? docs[0] : null);
+	const res = AppCollection().findOne({ crewId });
+	return res.then(docs => (docs.length > 0 ? docs[0] : null));
 }
 
 export function getAppsByTeam(teamId: db.IdOrStr): Promise<App[]> {
-	return AppCollection().aggregate([
-		{
-			$match: {
-				teamId: toObjectId(teamId),
-			}
-		},
-		...CREW_JOIN_STAGES
-	]).sort({ _id: -1 }).toArray();
+	return AppCollection()
+		.aggregate([
+			{
+				$match: {
+					teamId: toObjectId(teamId)
+				}
+			},
+			...CREW_JOIN_STAGES
+		])
+		.sort({ _id: -1 })
+		.toArray();
 }
 
 export async function addApp(app: App): Promise<InsertResult> {
 	return AppCollection().insertOne(app);
 }
 
-export async function updateApp(teamId: db.IdOrStr, appId: db.IdOrStr, app: Partial<App>): Promise<InsertResult> {
-	return AppCollection().updateOne({
-		_id: toObjectId(appId),
-		teamId: toObjectId(teamId),
-	}, {
-		$set: app,
-	});
+export async function updateApp(
+	teamId: db.IdOrStr,
+	appId: db.IdOrStr,
+	app: Partial<App>
+): Promise<InsertResult> {
+	return AppCollection().updateOne(
+		{
+			_id: toObjectId(appId),
+			teamId: toObjectId(teamId)
+		},
+		{
+			$set: app
+		}
+	);
 }
 
 export function deleteAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<any> {
 	return AppCollection().deleteOne({
 		_id: toObjectId(appId),
-		teamId: toObjectId(teamId),
+		teamId: toObjectId(teamId)
 	});
 }

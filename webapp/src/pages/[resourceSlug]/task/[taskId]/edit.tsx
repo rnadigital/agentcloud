@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function EditTask(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -17,10 +16,15 @@ export default function EditTask(props) {
 	const { task, tools, agents, datasources } = state; // Assuming tasks need tools
 
 	async function fetchTaskFormData() {
-		await API.getTask({
-			resourceSlug,
-			taskId,
-		}, dispatch, setError, router);
+		await API.getTask(
+			{
+				resourceSlug,
+				taskId
+			},
+			dispatch,
+			setError,
+			router
+		);
 	}
 
 	useEffect(() => {
@@ -28,7 +32,7 @@ export default function EditTask(props) {
 	}, [resourceSlug]);
 
 	if (task == null) {
-		return <Spinner/>;
+		return <Spinner />;
 	}
 
 	return (
@@ -51,11 +55,18 @@ export default function EditTask(props) {
 					editing={true}
 				/>
 			</span>
-
 		</>
 	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

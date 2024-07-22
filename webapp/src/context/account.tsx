@@ -9,45 +9,53 @@ const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
 	return {
-		orgName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name || 'Loading...',
-		teamName: data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.teams.find(t => t.id == data?.account?.currentTeam)?.name || 'Loading...',
+		orgName:
+			data?.account?.orgs?.find(o => o.id === data?.account?.currentOrg)?.name || 'Loading...',
+		teamName:
+			data?.account?.orgs
+				?.find(o => o.id === data?.account?.currentOrg)
+				?.teams.find(t => t.id == data?.account?.currentTeam)?.name || 'Loading...'
 	};
 }
 
 export function AccountWrapper({ children, pageProps }) {
-
 	const router = useRouter();
-	const { resourceSlug, memberId } = (router?.query||{});
+	const { resourceSlug, memberId } = router?.query || {};
 	const [sharedState, setSharedState] = useState({
 		...pageProps,
 		...getTeamAndOrgName(pageProps),
 		switching: false,
-		permissions: new Permission(pageProps?.account?.permissions),
+		permissions: new Permission(pageProps?.account?.permissions)
 	});
 
 	function refreshAccountContext() {
-		API.getAccount({
-			...(resourceSlug ? { resourceSlug } : { resourceSlug: sharedState?.account?.currentTeam }),
-			...(memberId ? { memberId } : {}),
-		}, (data) => {
-			const updatedState = {
-				...pageProps,
-				...data,
-				...getTeamAndOrgName(data),
-				switching: false,
-			};;
-			if (data?.account?.permissions) {
-				updatedState['permissions'] = new Permission(data?.account?.permissions);
-			}
-			setSharedState(updatedState);
-		}, null, null);
+		API.getAccount(
+			{
+				...(resourceSlug ? { resourceSlug } : { resourceSlug: sharedState?.account?.currentTeam }),
+				...(memberId ? { memberId } : {})
+			},
+			data => {
+				const updatedState = {
+					...pageProps,
+					...data,
+					...getTeamAndOrgName(data),
+					switching: false
+				};
+				if (data?.account?.permissions) {
+					updatedState['permissions'] = new Permission(data?.account?.permissions);
+				}
+				setSharedState(updatedState);
+			},
+			null,
+			null
+		);
 	}
 
 	function setSwitchingContext(switching: boolean) {
 		setSharedState({
 			...sharedState,
 			...getTeamAndOrgName(sharedState),
-			switching,
+			switching
 		});
 	}
 
@@ -63,10 +71,10 @@ export function AccountWrapper({ children, pageProps }) {
 
 	useEffect(() => {
 		if (sharedState?.account?.name) {
-			posthog.identify(
-				sharedState.account._id,
-				{ email: sharedState.account.email, name: sharedState.account.name },
-			);
+			posthog.identify(sharedState.account._id, {
+				email: sharedState.account.email,
+				name: sharedState.account.name
+			});
 		} else {
 			posthog.reset();
 		}

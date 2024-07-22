@@ -9,7 +9,10 @@ export default class MessageQueueProviderFactory {
 			case 'google':
 				return GooglePubSubProvider;
 			default:
-				console.error('Invalid MESSAGE_QUEUE_PROVIDER env value:', process.env.MESSAGE_QUEUE_PROVIDER);
+				console.error(
+					'Invalid MESSAGE_QUEUE_PROVIDER env value:',
+					process.env.MESSAGE_QUEUE_PROVIDER
+				);
 				process.exit(1);
 		}
 	}

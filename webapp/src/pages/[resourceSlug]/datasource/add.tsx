@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 const CreateDatasourceForm = dynamic(() => import('components/CreateDatasourceForm'), {
-	ssr: false,
+	ssr: false
 });
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
@@ -12,7 +12,6 @@ import React, { useEffect, useState } from 'react';
 import * as API from '../../../api';
 
 export default function AddDatasource(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -22,7 +21,7 @@ export default function AddDatasource(props) {
 	const [models, setModels] = useState();
 
 	async function fetchDatasourceFormData() {
-		await API.getModels({ resourceSlug }, (res) => setModels(res?.models), setError, router);
+		await API.getModels({ resourceSlug }, res => setModels(res?.models), setError, router);
 	}
 
 	useEffect(() => {
@@ -33,22 +32,33 @@ export default function AddDatasource(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`New Datasource - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`New Datasource - ${teamName}`}</title>
-		</Head>
+			<div className='pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
+			</div>
 
-		<div className='pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>New Datasource</h3>
-		</div>
-
-		<CreateDatasourceForm models={models} fetchDatasourceFormData={fetchDatasourceFormData} initialStep={2} />
-
-	</>);
-
+			<CreateDatasourceForm
+				models={models}
+				fetchDatasourceFormData={fetchDatasourceFormData}
+				initialStep={2}
+			/>
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

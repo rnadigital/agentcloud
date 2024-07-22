@@ -4,7 +4,6 @@ import MessageQueueProvider from 'queue/provider';
 const log = debug('webapp:queue:google');
 
 class GooglePubSubProvider extends MessageQueueProvider {
-
 	#pubsubClient: PubSub;
 
 	constructor() {
@@ -34,7 +33,6 @@ class GooglePubSubProvider extends MessageQueueProvider {
 			throw error;
 		}
 	}
-
 }
 
 export default new GooglePubSubProvider();

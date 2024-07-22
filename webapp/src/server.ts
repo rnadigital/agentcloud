@@ -1,8 +1,6 @@
 'use strict';
 
-process
-	.on('uncaughtException', console.error)
-	.on('unhandledRejection', console.error);
+process.on('uncaughtException', console.error).on('unhandledRejection', console.error);
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
@@ -11,18 +9,21 @@ if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
 	try {
 		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
 	} catch (e) {
-		console.warn('NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',  e);
+		console.warn(
+			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
+			e
+		);
 	}
 }
 
 import express from 'express';
 import * as http from 'http';
 import next from 'next';
-const dev = process.env.NODE_ENV !== 'production'
-	, hostname = 'localhost'
-	, port = 3000
-	, app = next({ dev, hostname, port })
-	, handle = app.getRequestHandler();
+const dev = process.env.NODE_ENV !== 'production',
+	hostname = 'localhost',
+	port = 3000,
+	app = next({ dev, hostname, port }),
+	handle = app.getRequestHandler();
 
 import { dynamicResponse } from '@dr';
 import PassportManager from '@mw/passportmanager';
@@ -43,9 +44,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { initSocket } from './socketio';
 const log = debug('webapp:server');
 
-app.prepare()
+app
+	.prepare()
 	.then(async () => {
-
 		await airbyteSetup.init();
 		await db.connect();
 		await migrate();
@@ -81,10 +82,13 @@ app.prepare()
 			return handle(req, res);
 		});
 
-		server.use((err, req, res, _next) => { //TODO: remove
+		server.use((err, req, res, _next) => {
+			//TODO: remove
 			const uuid = uuidv4();
 			console.error('An error occurred', uuid, err);
-			return dynamicResponse(req, res, 400, { error: `An error occurred. Please contact support with code: ${uuid}` });
+			return dynamicResponse(req, res, 400, {
+				error: `An error occurred. Please contact support with code: ${uuid}`
+			});
 		});
 
 		rawHttpServer.listen(parseInt(process.env.EXPRESS_PORT), process.env.EXPRESS_HOST, () => {
@@ -92,7 +96,9 @@ app.prepare()
 				log('SENT READY SIGNAL TO PM2');
 				process.send('ready');
 			}
-			log(`Ready on http${dev?'':'s'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`);
+			log(
+				`Ready on http${dev ? '' : 's'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`
+			);
 		});
 
 		//graceful stop handling
@@ -103,12 +109,11 @@ app.prepare()
 			process.exit(0);
 		};
 		process.on('SIGINT', gracefulStop);
-		process.on('message', (message) => {
+		process.on('message', message => {
 			if (message === 'shutdown') {
 				gracefulStop();
 			}
 		});
-
 	})
 	.catch(err => {
 		console.error(err.stack);

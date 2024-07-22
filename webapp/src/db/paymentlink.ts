@@ -19,16 +19,19 @@ export function PaymentLinkCollection(): any {
 	return db.db().collection('paymentlinks');
 }
 
-export function getPaymentLinkById(accountId: db.IdOrStr, paymentLinkId: string): Promise<PaymentLink> {
+export function getPaymentLinkById(
+	accountId: db.IdOrStr,
+	paymentLinkId: string
+): Promise<PaymentLink> {
 	return PaymentLinkCollection().findOne({
 		paymentLinkId: paymentLinkId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }
 
 export function unsafeGetPaymentLinkById(paymentLinkId: string): Promise<PaymentLink> {
 	return PaymentLinkCollection().findOne({
-		paymentLinkId: paymentLinkId,
+		paymentLinkId: paymentLinkId
 	});
 }
 
@@ -39,6 +42,6 @@ export async function addPaymentLink(paymentLink: PaymentLink): Promise<InsertRe
 export function deletePaymentLinkById(accountId: db.IdOrStr, paymentLinkId: string): Promise<any> {
 	return PaymentLinkCollection().deleteOne({
 		paymentLinkId: paymentLinkId,
-		accountId: toObjectId(accountId),
+		accountId: toObjectId(accountId)
 	});
 }

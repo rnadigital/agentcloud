@@ -4,22 +4,27 @@ import debug from 'debug';
 const log = debug('webapp:airbyte:getSpecification');
 
 export default async function getSpecification(req, res, _next) {
-	const base64Credentials = Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64');
+	const base64Credentials = Buffer.from(
+		`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`
+	).toString('base64');
 	let schema;
 	try {
 		const body = {
 			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-			sourceDefinitionId: req.query.sourceDefinitionId,
+			sourceDefinitionId: req.query.sourceDefinitionId
 		};
 		log(body);
-		const res = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definition_specifications/get`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Basic ${base64Credentials}`,
-			},
-			body: JSON.stringify(body),
-		});
+		const res = await fetch(
+			`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definition_specifications/get`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Basic ${base64Credentials}`
+				},
+				body: JSON.stringify(body)
+			}
+		);
 		schema = await res.json();
 		schema.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
 		// log(JSON.stringify(schema, null, 2));
@@ -29,6 +34,6 @@ export default async function getSpecification(req, res, _next) {
 	}
 	return {
 		csrf: req.csrfToken(),
-		schema,
+		schema
 	};
 }

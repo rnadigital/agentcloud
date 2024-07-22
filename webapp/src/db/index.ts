@@ -9,7 +9,7 @@ export type IdOrStr = string | ObjectId;
 
 let _client;
 
-export async function connect() {		
+export async function connect() {
 	_client = new MongoClient(process.env.DB_URL);
 	log('connecting to mongodb');
 	await _client.connect();

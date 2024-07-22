@@ -25,7 +25,7 @@ export default function AddTask(props) {
 	}, [resourceSlug]);
 
 	if (tasks == null) {
-		return <Spinner/>;
+		return <Spinner />;
 	}
 
 	return (
@@ -42,11 +42,18 @@ export default function AddTask(props) {
 					fetchTaskFormData={fetchTaskFormData}
 				/>
 			</span>
-
 		</>
 	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

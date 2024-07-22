@@ -10,8 +10,8 @@ import FormSection from './FormSection';
 
 interface DynamicFormProps {
 	schema: Schema;
-	datasourcePost: (arg: any) => Promise<void>
-	error?: string
+	datasourcePost: (arg: any) => Promise<void>;
+	error?: string;
 }
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
@@ -20,8 +20,12 @@ const ISODatePattern2 = '^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2
 const DatePattern = '^[0-9]{2}-[0-9]{2}-[0-9]{4}$';
 const YYYYMMDDPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}$';
 
-function findPatterns(obj: any): { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } {
-	const foundPatterns: { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' } = {};
+function findPatterns(obj: any): {
+	[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
+} {
+	const foundPatterns: {
+		[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
+	} = {};
 
 	function search(obj: any, parentKey: string = '') {
 		if (typeof obj !== 'object' || obj === null) {
@@ -63,13 +67,18 @@ function findPatterns(obj: any): { [key: string]: 'ISODatePattern' | 'ISODateSix
 	return foundPatterns;
 }
 
-function updateDateStrings(obj: any, patterns: { [key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern' }, parentKey: string = '') {
+function updateDateStrings(
+	obj: any,
+	patterns: {
+		[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
+	},
+	parentKey: string = ''
+) {
 	Object.keys(obj).forEach(key => {
 		const currentKey = parentKey ? `${parentKey}.${key}` : key;
 		if (typeof obj[key] === 'object') {
 			updateDateStrings(obj[key], patterns, currentKey);
 		} else if (typeof obj[key] === 'string') {
-
 			const pattern = patterns[currentKey];
 			switch (pattern) {
 				case 'YYYYMMDDPattern':
@@ -115,7 +124,11 @@ const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProp
 			<FormSection properties={schema.properties} requiredFields={schema.required} />
 			{schema.additionalProperties && <AdditionalFields />}
 
-			{error && <div className='mb-4'><ErrorAlert error={error} /></div>}
+			{error && (
+				<div className='mb-4'>
+					<ErrorAlert error={error} />
+				</div>
+			)}
 			<button
 				disabled={submitting}
 				type='submit'
@@ -129,4 +142,3 @@ const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProp
 };
 
 export default DynamicConnectorForm;
-

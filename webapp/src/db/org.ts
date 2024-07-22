@@ -15,8 +15,8 @@ export type Org = {
 	members: ObjectId[];
 	name: string;
 	dateCreated: Date;
-	permissions: Record<string,Binary>;
-}
+	permissions: Record<string, Binary>;
+};
 
 export function OrgCollection(): any {
 	return db.db().collection('orgs');
@@ -24,7 +24,7 @@ export function OrgCollection(): any {
 
 export function getOrgById(orgId: db.IdOrStr): Promise<Org> {
 	return OrgCollection().findOne({
-		_id: toObjectId(orgId),
+		_id: toObjectId(orgId)
 	});
 }
 
@@ -33,47 +33,59 @@ export function addOrg(org: Org): Promise<InsertResult> {
 }
 
 export function addTeamToOrg(orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any> {
-	return OrgCollection().updateOne({
-		_id: toObjectId(orgId),
-	}, {
-		$addToSet: {
-			teamIds: toObjectId(teamId),
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
 		},
-	});
+		{
+			$addToSet: {
+				teamIds: toObjectId(teamId)
+			}
+		}
+	);
 }
 
 export function addOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
-	return OrgCollection().updateOne({
-		_id: toObjectId(orgId),
-	}, {
-		$push: {
-			admins: toObjectId(accountId), //Note: is the members array now redeundant that we have memberIds in the permissions map?
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
 		},
-		$set: {
-			[`permissions.${accountId}`]: new Binary((new Permission(Roles.REGISTERED_USER.base64).array)),
+		{
+			$push: {
+				admins: toObjectId(accountId) //Note: is the members array now redeundant that we have memberIds in the permissions map?
+			},
+			$set: {
+				[`permissions.${accountId}`]: new Binary(new Permission(Roles.REGISTERED_USER.base64).array)
+			}
 		}
-	});
+	);
 }
 
 export function removeOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
-	return OrgCollection().updateOne({
-		_id: toObjectId(orgId),
-	}, {
-		$pullAll: {
-			admins: [toObjectId(accountId)],
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
 		},
-		$unset: {
-			[`permissions.${accountId}`]: ''
+		{
+			$pullAll: {
+				admins: [toObjectId(accountId)]
+			},
+			$unset: {
+				[`permissions.${accountId}`]: ''
+			}
 		}
-	});
+	);
 }
 
 export function renameOrg(orgId: db.IdOrStr, newName: string): Promise<any> {
-	return OrgCollection().updateOne({
-		_id: toObjectId(orgId),
-	}, {
-		$set: {
-			name: newName,
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
 		},
-	});
+		{
+			$set: {
+				name: newName
+			}
+		}
+	);
 }

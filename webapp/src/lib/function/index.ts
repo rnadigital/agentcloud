@@ -7,7 +7,7 @@ export default class FunctionProviderFactory {
 			case 'google':
 				return GoogleFunctionProvider;
 			case 'local':
-				// return LocalFunctionProvider;
+			// return LocalFunctionProvider;
 			default:
 				console.error('Invalid FUNCTION_PROVIDER env value:', process.env.FUNCTION_PROVIDER);
 				process.exit(1);

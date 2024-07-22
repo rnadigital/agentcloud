@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const labelStyles = {width:16, height:16};
+const labelStyles = { width: 16, height: 16 };
 
 export default function BackButton({ to }) {
 	return (

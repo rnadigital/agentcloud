@@ -1,10 +1,21 @@
 use anyhow::anyhow;
 use anyhow::Result;
+use google_cloud_auth::credentials::CredentialsFile;
 use google_cloud_pubsub::client::{Client, ClientConfig};
 use google_cloud_pubsub::subscription::{MessageStream, SubscriptionConfig};
 use google_cloud_pubsub::topic::TopicConfig;
 
 use crate::gcp::models::PubSubConnect;
+
+pub async fn try_auth_to_google() -> Result<CredentialsFile> {
+    match CredentialsFile::new().await {
+        Ok(creds) => Ok(creds),
+        Err(e) => {
+            Err(anyhow!("There was an error authenticating to GCP. Error: {}", e))
+        }
+    }
+}
+
 
 pub async fn subscribe_to_topic(
     connection_details: PubSubConnect,

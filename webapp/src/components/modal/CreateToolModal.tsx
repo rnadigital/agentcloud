@@ -3,10 +3,9 @@ import { Dialog, Transition } from '@headlessui/react';
 import ToolForm from 'components/tools/ToolForm';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import { Fragment, useEffect,useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
-export default function CreateToolModal({ open, setOpen, callback, initialType=null }) {
-
+export default function CreateToolModal({ open, setOpen, callback, initialType = null }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -18,7 +17,7 @@ export default function CreateToolModal({ open, setOpen, callback, initialType=n
 	async function fetchToolFormData() {
 		await API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
-	
+
 	useEffect(() => {
 		fetchToolFormData();
 	}, []);
@@ -58,7 +57,7 @@ export default function CreateToolModal({ open, setOpen, callback, initialType=n
 										<ToolForm
 											compact={true}
 											callback={callback}
-											datasources={datasources} 
+											datasources={datasources}
 											initialType={initialType}
 										/>
 									</div>

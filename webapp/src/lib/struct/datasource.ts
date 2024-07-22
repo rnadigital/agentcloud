@@ -1,4 +1,3 @@
-
 'use strict';
 
 import { ObjectId } from 'mongodb';
@@ -10,7 +9,7 @@ export type DatasourceStream = {
 
 export enum DatasourceScheduleType {
 	CRON = 'cron',
-	MANUAL = 'manual',
+	MANUAL = 'manual'
 }
 
 export type DatasourceConnectionSettings = {
@@ -36,14 +35,14 @@ export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
 	EMBEDDING = 'embedding', //vector db proxy -> qdrant
-	READY = 'ready', //synced/embedded
+	READY = 'ready' //synced/embedded
 }
 
 export const datasourceStatusColors = {
 	[DatasourceStatus.DRAFT]: 'bg-yellow-500',
 	[DatasourceStatus.PROCESSING]: 'bg-blue-300',
 	[DatasourceStatus.EMBEDDING]: 'bg-yellow-500',
-	[DatasourceStatus.READY]: 'bg-green-500',
+	[DatasourceStatus.READY]: 'bg-green-500'
 };
 
 export type DatasourceRecordCount = {
@@ -77,5 +76,5 @@ export type Datasource = {
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
-	descriptionsMap?: Record<string,string>;
+	descriptionsMap?: Record<string, string>;
 };

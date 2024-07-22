@@ -8,14 +8,15 @@ ROOT.setAll(Permission.allPermissions);
 const NOT_LOGGED_IN = new Permission();
 
 const REGISTERED_USER = new Permission();
-REGISTERED_USER.setAll([Permissions.EDIT_ORG, Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
-
-const ORG_ADMIN = new Permission();
-ORG_ADMIN.setAll([
+REGISTERED_USER.setAll([
+	Permissions.EDIT_ORG,
 	Permissions.CREATE_TEAM,
 	Permissions.EDIT_TEAM,
-	Permissions.DELETE_TEAM,
+	Permissions.DELETE_TEAM
 ]);
+
+const ORG_ADMIN = new Permission();
+ORG_ADMIN.setAll([Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
 
 const TEAM_MEMBER = new Permission();
 TEAM_MEMBER.setAll([
@@ -51,13 +52,19 @@ TEAM_MEMBER.setAll([
 const TEAM_ADMIN = new Permission();
 TEAM_ADMIN.setAll(TEAM_BITS);
 
-const Roles: any = Object.seal(Object.freeze(Object.preventExtensions({
+const Roles: any = Object.seal(
+	Object.freeze(
+		Object.preventExtensions({
+			ROOT,
+			NOT_LOGGED_IN,
+			REGISTERED_USER,
 
-	ROOT, NOT_LOGGED_IN, REGISTERED_USER,
-
-	ORG_ADMIN, TEAM_MEMBER, TEAM_ADMIN
-
-})));
+			ORG_ADMIN,
+			TEAM_MEMBER,
+			TEAM_ADMIN
+		})
+	)
+);
 
 export type RoleKey = keyof typeof Roles;
 
@@ -67,4 +74,3 @@ export const RoleOptions = [
 ];
 
 export default Roles;
-

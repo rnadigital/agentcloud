@@ -12,20 +12,20 @@ export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		tasks,
-		agents,
+		agents
 	};
 }
 
 /**
-* GET /[resourceSlug]/tasks
-* task page html
-*/
+ * GET /[resourceSlug]/tasks
+ * task page html
+ */
 export async function tasksPage(app, req, res, next) {
 	const data = await tasksData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
@@ -33,9 +33,9 @@ export async function tasksPage(app, req, res, next) {
 }
 
 /**
-* GET /[resourceSlug]/tasks.json
-* team tasks json data
-*/
+ * GET /[resourceSlug]/tasks.json
+ * team tasks json data
+ */
 export async function tasksJson(req, res, next) {
 	const data = await tasksData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
@@ -45,29 +45,29 @@ export async function taskData(req, res, _next) {
 	const [task, tools, agents] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
 		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
+		getAgentsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		task,
-		agents,
+		agents
 	};
 }
 
 /**
-* GET /[resourceSlug]/task/:taskId.json
-* task json data
-*/
+ * GET /[resourceSlug]/task/:taskId.json
+ * task json data
+ */
 export async function taskJson(req, res, next) {
 	const data = await taskData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
 
 /**
-* GET /[resourceSlug]/task/:taskId/edit
-* task edit page html
-*/
+ * GET /[resourceSlug]/task/:taskId/edit
+ * task edit page html
+ */
 export async function taskEditPage(app, req, res, next) {
 	const data = await taskData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
@@ -75,9 +75,9 @@ export async function taskEditPage(app, req, res, next) {
 }
 
 /**
-* GET /[resourceSlug]/task/add
-* task add page html
-*/
+ * GET /[resourceSlug]/task/add
+ * task add page html
+ */
 export async function taskAddPage(app, req, res, next) {
 	const data = await taskData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
@@ -85,23 +85,52 @@ export async function taskAddPage(app, req, res, next) {
 }
 
 export async function addTaskApi(req, res, next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-		{ field: 'expectedOutput', validation: { ofType: 'string' } },
-		{ field: 'toolIds', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' } },
-		{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-		{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'iconId', validation: { ofType: 'string' } },
-	], { name: 'Name', description: 'Description', requiresHumanInput: 'Requires Human Input', expectedOutput: 'Expected Output', toolIds: 'Tool IDs', asyncExecution: 'Async Execution', agentId: 'Agent ID', iconId: 'Icon ID' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
+			{ field: 'expectedOutput', validation: { ofType: 'string' } },
+			{
+				field: 'toolIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tools'
+				}
+			},
+			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
+			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'iconId', validation: { ofType: 'string' } }
+		],
+		{
+			name: 'Name',
+			description: 'Description',
+			requiresHumanInput: 'Requires Human Input',
+			expectedOutput: 'Expected Output',
+			toolIds: 'Tool IDs',
+			asyncExecution: 'Async Execution',
+			agentId: 'Agent ID',
+			iconId: 'Icon ID'
+		}
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const { name, description, requiresHumanInput, expectedOutput, toolIds, asyncExecution, agentId, iconId } = req.body;
+	const {
+		name,
+		description,
+		requiresHumanInput,
+		expectedOutput,
+		toolIds,
+		asyncExecution,
+		agentId,
+		iconId
+	} = req.body;
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
@@ -131,33 +160,64 @@ export async function addTaskApi(req, res, next) {
 		agentId: toObjectId(agentId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
-		icon: foundIcon ? {
-			id: foundIcon._id,
-			filename: foundIcon.filename,
-		} : null,
+		icon: foundIcon
+			? {
+					id: foundIcon._id,
+					filename: foundIcon.filename
+				}
+			: null
 	});
 
-	return dynamicResponse(req, res, 302, { _id: addedTask.insertedId, redirect: `/${req.params.resourceSlug}/tasks` });
-
+	return dynamicResponse(req, res, 302, {
+		_id: addedTask.insertedId,
+		redirect: `/${req.params.resourceSlug}/tasks`
+	});
 }
 
 export async function editTaskApi(req, res, next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
-		{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
-		{ field: 'toolIds', validation: { hasLength: 24, asArray: true, ofType: 'string', customError: 'Invalid Tools' } },
-		{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-		{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
-	], { name: 'Name', description: 'Description', requiresHumanInput: 'Requires Human Input', expectedOutput: 'Expected Output', toolIds: 'Tool IDs', asyncExecution: 'Async Execution', agentId: 'Agent ID' });
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
+			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
+			{
+				field: 'toolIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Tools'
+				}
+			},
+			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
+			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } }
+		],
+		{
+			name: 'Name',
+			description: 'Description',
+			requiresHumanInput: 'Requires Human Input',
+			expectedOutput: 'Expected Output',
+			toolIds: 'Tool IDs',
+			asyncExecution: 'Async Execution',
+			agentId: 'Agent ID'
+		}
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const { name, requiresHumanInput, description, expectedOutput, toolIds, asyncExecution, agentId } = req.body;
+	const {
+		name,
+		requiresHumanInput,
+		description,
+		expectedOutput,
+		toolIds,
+		asyncExecution,
+		agentId
+	} = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -185,22 +245,24 @@ export async function editTaskApi(req, res, next) {
 		agentId: toObjectId(agentId)
 	});
 
-	return dynamicResponse(req, res, 302, { /*redirect: `/${req.params.resourceSlug}/tasks`*/ });
-
+	return dynamicResponse(req, res, 302, {
+		/*redirect: `/${req.params.resourceSlug}/tasks`*/
+	});
 }
 
 /**
-* @api {delete} /forms/task/[taskId] Delete a task
-* @apiName delete
-* @apiGroup Task
-*
-* @apiParam {String} taskId task id
-*/
+ * @api {delete} /forms/task/[taskId] Delete a task
+ * @apiName delete
+ * @apiGroup Task
+ *
+ * @apiParam {String} taskId task id
+ */
 export async function deleteTaskApi(req, res, next) {
-
-	let validationError = chainValidations(req.body, [
-		{ field: 'taskId', validation: { notEmpty: true, ofType: 'string' } },
-	], { taskId: 'Task ID' });
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'taskId', validation: { notEmpty: true, ofType: 'string' } }],
+		{ taskId: 'Task ID' }
+	);
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
@@ -213,10 +275,9 @@ export async function deleteTaskApi(req, res, next) {
 	}
 
 	await Promise.all([
-		deleteTaskById(req.params.resourceSlug, taskId),
+		deleteTaskById(req.params.resourceSlug, taskId)
 		//TODO: reference handling?
 	]);
 
 	return dynamicResponse(req, res, 302, {});
-
 }

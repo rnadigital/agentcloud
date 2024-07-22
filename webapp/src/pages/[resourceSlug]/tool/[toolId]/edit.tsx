@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function EditTool(props) {
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -18,10 +17,15 @@ export default function EditTool(props) {
 	const { tool, revisions, datasources } = state;
 
 	function fetchTool() {
-		API.getTool({
-			resourceSlug: resourceSlug,
-			toolId: router.query.toolId,
-		}, dispatch, setError, router);
+		API.getTool(
+			{
+				resourceSlug: resourceSlug,
+				toolId: router.query.toolId
+			},
+			dispatch,
+			setError,
+			router
+		);
 	}
 
 	useEffect(() => {
@@ -32,22 +36,36 @@ export default function EditTool(props) {
 		return <Spinner />;
 	}
 
-	return (<>
+	return (
+		<>
+			<Head>
+				<title>{`Edit Tool - ${teamName}`}</title>
+			</Head>
 
-		<Head>
-			<title>{`Edit Tool - ${teamName}`}</title>
-		</Head>
+			<div className='border-b pb-2 my-2'>
+				<h3 className='pl-2 font-semibold text-gray-900'>Edit Tool</h3>
+			</div>
 
-		<div className='border-b pb-2 my-2'>
-			<h3 className='pl-2 font-semibold text-gray-900'>Edit Tool</h3>
-		</div>
-
-		<ToolForm tool={tool} datasources={datasources} editing={true} revisions={revisions} fetchFormData={fetchTool} initialType={null} />
-
-	</>);
-
+			<ToolForm
+				tool={tool}
+				datasources={datasources}
+				editing={true}
+				revisions={revisions}
+				fetchFormData={fetchTool}
+				initialType={null}
+			/>
+		</>
+	);
 }
 
-export async function getServerSideProps({ req, res, query, resolvedUrl, locale, locales, defaultLocale }) {
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }
