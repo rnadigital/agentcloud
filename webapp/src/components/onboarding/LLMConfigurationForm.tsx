@@ -1,15 +1,18 @@
+import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
 import ToolTip from 'components/shared/ToolTip';
 import { useAccountContext } from 'context/account';
 import useResponsive from 'hooks/useResponsive';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ModelEmbeddingLength, ModelList, modelOptions, ModelRequirements, ModelType, ModelTypeRequirements } from 'struct/model';
+import { toast } from 'react-toastify';
+import { ModelEmbeddingLength, ModelList, modelOptions,  ModelType, ModelTypeRequirements } from 'struct/model';
 
 import OnboardingSelect from './OnboardingSelect';
 
@@ -32,16 +35,21 @@ interface LLMConfigurationFormValues {
 	base_url: string;
 	cohere_api_key: string;
 	groq_api_key: string;
+	embedding_base_url: string;
 }
 
 const LLMConfigurationForm = () => {
 
 	const [accountContext]: any = useAccountContext();
-	const { account } = accountContext;
+	const { account, csrf } = accountContext;
+	console.log(csrf);
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 
-	const { control, watch, resetField, handleSubmit, formState: { errors } } = useForm<LLMConfigurationFormValues>({ defaultValues: { LLMType: modelOptions[0], embeddingType: modelOptions[0] } });
+	const [isMounted, setIsMounted] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
+
+	const { control, watch, resetField, handleSubmit  } = useForm<LLMConfigurationFormValues>({ defaultValues: { LLMType: modelOptions[0], embeddingType: modelOptions[0] } });
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
 
@@ -63,8 +71,6 @@ const LLMConfigurationForm = () => {
 	// 	? `${llmAPIKey.substring(0, 3)}${'X'.repeat(llmAPIKey.length - 3)}`
 	// 	: llmAPIKey;
 
-	console.log(ModelTypeRequirements[embeddingType?.value]);
-
 	const LLMModelRequiredFields = Object.keys(ModelTypeRequirements[LLMType.value])
 		.filter(key => !ModelTypeRequirements[LLMType.value][key].optional)
 		.map(key => {
@@ -83,22 +89,74 @@ const LLMConfigurationForm = () => {
 
 	const { isTablet, isMobile } = useResponsive();
 
-	const onSubmit = (data: LLMConfigurationFormValues) => {
+	const onSubmit = async (data: LLMConfigurationFormValues) => {
 
-		// if (data.llmAPIKey) {
+		setSubmitting(true);
+		if (data.LLMModel) {
+			const body = {
+				_csrf: csrf,
+				resourceSlug,
+				name: data.LLMType.label,
+				model: data.LLMModel.value,
+				type: data.LLMType.value,
+				config: {
+					model: data.LLMModel.value,
+					...(data.api_key && { api_key: data.api_key }),
+					...(data.groq_api_key && { groq_api_key: data.groq_api_key }),
+					...(data.cohere_api_key && { cohere_api_key: data.cohere_api_key }),
+					...(data.base_url && { base_url: data.base_url }),
+				}
+			};
 
-		// const body = {
-		// 	_csrf: '',
-		// 	resourceSlug,
-		// 	name: data.LLMType.label,
-		// 	model: data.LLMModel.value,
+			await API.addModel(body, () => {
+				toast.success('Added Model');
+			}, (res) => {
+				toast.error(res);
+			}, null);
 
-		// };
+		}
 
-		// }
+		if (data.embeddingModel) {
+			const body = {
+				_csrf: csrf,
+				resourceSlug,
+				name: data.embeddingType.label,
+				model: data.embeddingModel.value,
+				type: data.embeddingType.value,
+				config: {
+					model: data.embeddingModel.value,
+					...(data.embedding_api_key && { api_key: data.embedding_api_key }),
+					...(data.embedding_cohre_api_key && { cohre_api_key: data.embedding_cohre_api_key }),
+					...(data.embedding_groq_api_key && { groq_api_key: data.embedding_groq_api_key }),
+					...(data.embedding_base_url && { base_url: data.embedding_base_url }),
+				}
+			};
+			await API.addModel(body, () => {
+				toast.success('Added Model');
+			}, (res) => {
+				toast.error(res);
+			}, null);
+		}
 
-		console.log(data);
+		await API.updateOnboardedStatus({
+		}, null, null, router);
+		setSubmitting(false);
+
 	};
+
+	const updateOnboardedStatus = async () => {
+		setSubmitting(true);
+		try {
+			await API.updateOnboardedStatus({
+			}, null, null, router);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	useEffect(() => {
 		if (LLMType) {
@@ -111,6 +169,10 @@ const LLMConfigurationForm = () => {
 			resetField('embeddingModel');
 		}
 	}, [embeddingType]);
+
+	if (!isMounted) {
+		return null;
+	}
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)}>
@@ -127,10 +189,10 @@ const LLMConfigurationForm = () => {
 						</ToolTip>
 					</div>
 					<div className='flex'>
-						<div className='w-1/2 md:w-2/5'>
+						<div className='w-1/2 sm:w-2/5'>
 							<OnboardingSelect<LLMConfigurationFormValues> options={modelOptions} classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }} control={control} name='LLMType' />
 						</div>
-						<div className='w-1/2 md:flex-1'>
+						<div className='w-1/2 sm:flex-1'>
 							<OnboardingSelect<LLMConfigurationFormValues> options={modelList} classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }} control={control} name='LLMModel' />
 						</div>
 					</div>
@@ -147,7 +209,7 @@ const LLMConfigurationForm = () => {
 						{LLMModelRequiredFields.length > 0 && LLMModelRequiredFields.map(field => <div key={field.name} className='mt-2'>
 							<InputField<LLMConfigurationFormValues>
 								name={field.name as keyof LLMConfigurationFormValues}
-								rules={{ required: LLMModel.value ? `${field.label} is required` : false }}
+								rules={{ required: LLMModel?.value ? `${field.label} is required` : false }}
 								label={field.label}
 								type='text'
 								control={control}
@@ -170,7 +232,7 @@ const LLMConfigurationForm = () => {
 						</ToolTip>
 					</div>
 					<div className='flex'>
-						<div className='w-1/2 md:w-2/5'>
+						<div className='w-1/2 sm:w-2/5'>
 							<OnboardingSelect<LLMConfigurationFormValues> options={modelOptions} classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }} control={control} name='embeddingType' />
 						</div>
 						<div className='flex-1'>
@@ -192,7 +254,7 @@ const LLMConfigurationForm = () => {
 					{isMobile && EmbeddingModelRequiredFields.length > 0 && EmbeddingModelRequiredFields.map(field => <div key={field.name} className='mt-2'>
 						<InputField<LLMConfigurationFormValues>
 							name={field.name as keyof LLMConfigurationFormValues}
-							rules={{ required: embeddingModel.value ? `${field.label} is required` : false }}
+							rules={{ required: embeddingModel?.value ? `${field.label} is required` : false }}
 							label={field.label}
 							type='text'
 							control={control}
@@ -240,15 +302,20 @@ const LLMConfigurationForm = () => {
 			<hr className='mt-14 mb-5' />
 			<div className='flex'>
 				<button className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm' type='button'
-					onClick={() => router.push(`/${resourceSlug}/apps`)}
+					onClick={updateOnboardedStatus}
 				>
 					I&apos;ll do this later
 				</button>
-				<button className='ml-auto w-[140px] h-[41px] disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm' type='submit'>
-					<span className='text-sm'>
-						Get Started
-					</span>
-					<ChevronRightIcon className='ml-2 h-5 w-5' />
+				<button className='ml-auto w-[140px] h-[41px] disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm' type='submit' disabled={!LLMModel?.value && !embeddingModel?.value}>
+					{submitting ? <ButtonSpinner className='mt-1 me-2' /> :
+						<>
+							<span className='text-sm'>
+								Get Started
+							</span>
+							<ChevronRightIcon className='ml-2 h-5 w-5' />
+						</>
+					}
+
 				</button>
 
 			</div>

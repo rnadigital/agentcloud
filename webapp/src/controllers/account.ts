@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationUtils';
 
-import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, verifyAccount } from '../db/account';
+import { Account, changeAccountPassword, getAccountByEmail, getAccountById, setCurrentTeam, updateAccountOnboarded, verifyAccount } from '../db/account';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from '../db/verification';
 import * as ses from '../lib/email/ses';
 
@@ -248,4 +248,11 @@ export async function switchTeam(req, res, _next) {
 
 	return res.json({});
 
+}
+
+export async function updateOnboardedStatus(req, res ) {
+	const userId = res.locals.account._id;
+	await updateAccountOnboarded(userId);
+
+	return dynamicResponse(req, res, 302, { redirect: `/${res.locals.account.currentTeam.toString()}/apps`});
 }

@@ -93,6 +93,8 @@ export default function router(server, app) {
 	accountRouter.post('/verify', unauthedMiddlewareChain, accountController.verifyToken);
 	accountRouter.post('/logout', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.logout);
 	accountRouter.post('/switch', unauthedMiddlewareChain, setDefaultOrgAndTeam, checkSession, setSubscriptionLocals, csrfMiddleware, accountController.switchTeam);
+	accountRouter.post('/onboarded', unauthedMiddlewareChain, accountController.updateOnboardedStatus);
+
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });

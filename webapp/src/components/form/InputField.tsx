@@ -28,7 +28,6 @@ const InputField = <TFieldValues extends FieldValues>({
 	placeholder,
 	value
 }: FormFieldProps<TFieldValues>) => {
-	console.log(rules, name);
 
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +37,6 @@ const InputField = <TFieldValues extends FieldValues>({
 			control={control}
 			rules={rules}
 			render={({ field, fieldState }) => {
-				console.log(fieldState,name);
 
 				return (
 					<div className='flex flex-col justify-center'>

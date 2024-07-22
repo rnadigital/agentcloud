@@ -236,3 +236,10 @@ export function updateTeamOwnerInAccounts(orgId: db.IdOrStr, teamId: db.IdOrStr,
 		]
 	});
 }
+
+export function updateAccountOnboarded(userId: ObjectId): Promise<any> {
+	return AccountCollection().updateOne(
+		{ _id: toObjectId(userId) },
+		{ $set: { onboarded: true } }
+	);
+}
