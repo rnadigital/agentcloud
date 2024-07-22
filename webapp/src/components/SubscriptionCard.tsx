@@ -91,7 +91,7 @@ export default function SubscriptionCard({ title, link = null, plan = null, pric
 		<div
 			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 border ${selectedPlan === plan
 				? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-1'
-				: 'border hover:shadow-lg hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
+				: 'border hover:shadow-md bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'}`}
 			onClick={() => setSelectedPlan(plan)}
 		>
 			{!currentPlan && isPopular && (
