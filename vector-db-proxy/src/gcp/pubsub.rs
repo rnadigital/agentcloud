@@ -6,8 +6,11 @@ use google_cloud_pubsub::subscription::{MessageStream, SubscriptionConfig};
 use google_cloud_pubsub::topic::TopicConfig;
 
 use crate::gcp::models::PubSubConnect;
+use crate::init::env_variables::GLOBAL_DATA;
 
 pub async fn try_auth_to_google() -> Result<CredentialsFile> {
+    let global_data = GLOBAL_DATA.read().await;
+    println!("GOOGLE_APPLICATION_CREDENTIALS_JSON: {:?}", global_data.google_creds);
     match CredentialsFile::new().await {
         Ok(creds) => Ok(creds),
         Err(e) => {
