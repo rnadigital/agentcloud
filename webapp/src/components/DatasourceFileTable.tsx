@@ -61,7 +61,7 @@ export default function DatasourceFileTable({
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 			{datasources?.length > 0 && (
 				<table className='min-w-full divide-y divide-gray-200'>
-					<thead className='bg-gray-50 dark:bg-slate-800 dark:!border-slate-700'>
+					<thead className='bg-white dark:bg-slate-800 dark:!border-slate-700'>
 						<tr>
 							<th
 								scope='col'
