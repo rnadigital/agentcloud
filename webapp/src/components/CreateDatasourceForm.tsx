@@ -73,7 +73,7 @@ export default function CreateDatasourceForm({
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState('');
-	const [cronExpression, setCronExpression] = useState('* * * * * *');
+	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
 	const [topK, setTopK] = useState(4);
 	const foundModel = models && models.find(m => m._id === modelId);

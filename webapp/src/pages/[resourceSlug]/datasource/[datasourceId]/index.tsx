@@ -10,6 +10,7 @@ import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
+import { convertQuartzToCron } from 'lib/airbyte/cronconverter';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
@@ -38,7 +39,7 @@ export default function Datasource(props) {
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState(0);
-	const [cronExpression, setCronExpression] = useState('');
+	const [cronExpression, setCronExpression] = useState('0 0 * * *');
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
 	const numStreams = datasource?.connectionSettings?.configurations?.streams?.length || 0;
 	async function fetchDatasource() {
@@ -52,10 +53,7 @@ export default function Datasource(props) {
 				if (datasource) {
 					const { scheduleType, cronExpression } = datasource?.connectionSettings?.schedule || {};
 					setScheduleType(scheduleType);
-					setCronExpression(cronExpression);
-					//setTimeUnit(basicSchedule?.timeUnit);
-					//setUnits(basicSchedule?.units);
-					//setCronTimezone(cron?.cronTimezone);
+					setCronExpression(convertQuartzToCron(cronExpression));
 				}
 				dispatch(res);
 			},
@@ -432,7 +430,7 @@ export default function Datasource(props) {
 								<>
 									<p>
 										Cron Expression:{' '}
-										<strong>{datasource.connectionSettings.schedule.cronExpression}</strong>
+										<strong>{convertQuartzToCron(datasource.connectionSettings.schedule.cronExpression)}</strong>
 									</p>
 								</>
 							)}

@@ -10,7 +10,7 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
-import convertCronToQuartz from 'lib/airbyte/cronconverter';
+import { convertCronToQuartz } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationUtils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
@@ -483,6 +483,7 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 			.then(res => res.data);
 		log('updatedConnection', updatedConnection);
 	} catch (e) {
+		console.log(JSON.stringify(e, null, 2));
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
