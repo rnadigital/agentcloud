@@ -266,8 +266,8 @@ export async function verifyToken(req, res) {
 		const stripeCustomer = await StripeClient.get().customers.retrieve(stripeCustomerId);
 		if (!stripeCustomer) {
 			return dynamicResponse(req, res, 400, { error: 'Customer not found' });
-		}	
-		const { name, email } = stripeCustomer;	
+		}
+		const { name, email } = stripeCustomer;
 		const emailAccount: Account = await getAccountByEmail(email);
 		if (emailAccount) {
 			return dynamicResponse(req, res, 400, { error: 'Account already exists' });
