@@ -9,9 +9,10 @@ const Markdown = dynamic(() => import('react-markdown'), {
 	ssr: false
 });
 import 'react-js-cron/dist/styles.css';
-
+import { useAccountContext } from 'context/account';
 import { Cron } from 'react-js-cron';
 import rehypeRaw from 'rehype-raw';
+import { pricingMatrix } from 'struct/billing';
 
 export default function DatasourceScheduleForm({
 	scheduleType,
@@ -23,6 +24,10 @@ export default function DatasourceScheduleForm({
 	cronExpression,
 	setCronExpression
 }) {
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
+	const { account } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
+	const cronProps = pricingMatrix[stripePlan]?.syncFrequencyCron;
 	return (
 		<>
 			<label
@@ -64,7 +69,7 @@ export default function DatasourceScheduleForm({
 							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white mb-4'
 						/>
 					</div>
-					<Cron value={cronExpression} setValue={setCronExpression} />
+					<Cron value={cronExpression} setValue={setCronExpression} {...cronProps} />
 				</>
 			)}
 		</>

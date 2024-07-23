@@ -154,6 +154,10 @@ export type PlanLimits = {
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
+	syncFrequencyCron: {
+		disabled?: boolean;
+		allowedPeriods?: string[];
+	};
 	//TODO: keep updated to agentcloud priing sheet
 };
 
@@ -175,7 +179,8 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	maxVectorStorageBytes: 'maxVectorStorageBytes',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
-	embeddingModels: 'embeddingModels'
+	embeddingModels: 'embeddingModels',
+	syncFrequencyCron: 'syncFrequencyCron'
 };
 
 // Object to hold the limits for each plan, using computed property names
@@ -206,7 +211,10 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 100 * 1024 * 1024, //100MB
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI],
-		embeddingModels: [ModelType.OPENAI]
+		embeddingModels: [ModelType.OPENAI],
+		syncFrequencyCron: {
+			disabled: true,
+		}
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -226,7 +234,10 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		syncFrequencyCron: {
+			allowedPeriods: ['year', 'month', 'week', 'day']
+		}
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
@@ -239,7 +250,10 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		syncFrequencyCron: {
+			allowedPeriods: ['year', 'month', 'week', 'day', 'hour']
+		}
 	},
 	[SubscriptionPlan.ENTERPRISE]: {
 		//TODO
@@ -253,6 +267,9 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		syncFrequencyCron: {
+			allowedPeriods: ['year', 'month', 'week', 'day', 'hour', 'minute'],
+		}
 	}
 };
