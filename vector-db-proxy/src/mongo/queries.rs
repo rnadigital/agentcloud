@@ -11,18 +11,17 @@ use crate::mongo::models::{DataSources, Model};
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
     let filter_options = FindOneOptions::builder().projection(doc! {"discoveredSchema": 0, "connectionSettings": 0}).build();
-    match datasources_collection
-        .find_one(
-            doc! {"_id": ObjectId::from_str(datasource_id).unwrap()},
-            filter_options,
-        )
-        .await
-    {
-        Ok(datasource) => Ok(match datasource {
-            Some(d) => return Ok(Some(d)),
-            None => None,
-        }),
-        Err(e) => Err(anyhow!("Some error: {}", e)),
+    if let Ok(object_id) = ObjectId::from_str(datasource_id) {
+        match datasources_collection
+            .find_one(doc! {"_id": object_id}, filter_options)
+            .await
+        {
+            Ok(Some(datasource)) => Ok(Some(datasource)),
+            Ok(None) => Ok(None),
+            Err(e) => Err(anyhow!("Some error: {}", e)),
+        }
+    } else {
+        Ok(None)
     }
 }
 
