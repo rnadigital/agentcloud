@@ -3,22 +3,25 @@
 import { dynamicResponse } from '@dr';
 import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
-import PasswordResetEmail from 'emails/PasswordReset';
-import jwt from 'jsonwebtoken';
-import createAccount from 'lib/account/create';
-import { chainValidations } from 'lib/utils/validationUtils';
-
+import { getSubscriptionsDetails } from 'controllers/stripe';
 import {
 	Account,
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
 	setCurrentTeam,
-	updateAccountOnboarded,
+	setStripeCustomerId,
+	updateStripeCustomer,
 	verifyAccount
-} from '../db/account';
-import { addVerification, getAndDeleteVerification, VerificationTypes } from '../db/verification';
-import * as ses from '../lib/email/ses';
+} from 'db/account';
+import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
+import PasswordResetEmail from 'emails/PasswordReset';
+import jwt from 'jsonwebtoken';
+import createAccount from 'lib/account/create';
+import * as ses from 'lib/email/ses';
+import StripeClient from 'lib/stripe';
+import { chainValidations } from 'lib/utils/validationUtils';
+import { productToPlanMap } from 'struct/billing';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -84,7 +87,7 @@ export async function login(req, res) {
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
 
-	if (!account) {
+	if (!account || !account?.emailVerified) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
@@ -124,7 +127,6 @@ export async function register(req, res) {
 		req.body,
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'checkoutSession', validation: { ofType: 'string' } },
 			{
 				field: 'email',
 				validation: { notEmpty: true, regexMatch: /^\S+@\S+\.\S+$/, ofType: 'string' }
@@ -138,7 +140,7 @@ export async function register(req, res) {
 	}
 
 	const email = req.body.email.toLowerCase();
-	const { name, password, checkoutSession } = req.body;
+	const { name, password } = req.body;
 
 	const existingAccount: Account = await getAccountByEmail(email);
 	if (existingAccount) {
@@ -149,8 +151,7 @@ export async function register(req, res) {
 		email,
 		name,
 		password,
-		roleTemplate: 'TEAM_MEMBER',
-		checkoutSession
+		roleTemplate: 'TEAM_MEMBER'
 	});
 
 	return dynamicResponse(req, res, 302, {
@@ -257,20 +258,68 @@ export async function verifyToken(req, res) {
 		req.body.token,
 		VerificationTypes.VERIFY_EMAIL
 	);
-	if (!deletedVerification || !deletedVerification.token) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+	const { password, token } = req.body;
+	let accountId = deletedVerification?.accountId;
+	let stripeCustomerId;
+	let foundCheckoutSession;
+	if (!deletedVerification || !deletedVerification.token || !accountId) {
+		//Assuming the token isn't a verification but a stripe checkoutsession ID
+		const checkoutSessionId = token;
+		foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
+		if (!foundCheckoutSession || foundCheckoutSession.status !== 'complete') {
+			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+		}
+		const stripeCustomerId = foundCheckoutSession?.customer;
+		// Retrieve customer details from Stripe
+		const stripeCustomer = await StripeClient.get().customers.retrieve(stripeCustomerId);
+		if (!stripeCustomer) {
+			return dynamicResponse(req, res, 400, { error: 'Customer not found' });
+		}
+		const { name, email } = stripeCustomer;
+		const emailAccount: Account = await getAccountByEmail(email);
+		if (emailAccount) {
+			return dynamicResponse(req, res, 400, { error: 'Account already exists' });
+		}
+		const { addedAccount } = await createAccount({
+			email,
+			name,
+			password,
+			roleTemplate: 'TEAM_MEMBER',
+			checkoutSessionId
+		});
+		if (!addedAccount.insertedId) {
+			return dynamicResponse(req, res, 400, { error: 'Account creation error' });
+		}
+		accountId = addedAccount.insertedId;
 	}
-	const foundAccount = await getAccountById(deletedVerification.accountId);
+
+	/*
+	if (foundCheckoutSession && stripeCustomerId && accountId) {
+		const { planItem, addonUsersItem, addonStorageItem } =
+			await getSubscriptionsDetails(stripeCustomerId);
+		await setStripeCustomerId(accountId, stripeCustomerId);
+		await updateStripeCustomer(stripeCustomerId, {
+			stripePlan: productToPlanMap[planItem.price.product],
+			stripeAddons: {
+				users: addonUsersItem ? addonUsersItem.quantity : 0,
+				storage: addonStorageItem ? addonStorageItem.quantity : 0
+			},
+			stripeEndsAt: foundCheckoutSession?.current_period_end * 1000
+		});
+	}
+	*/
+
+	const foundAccount = await getAccountById(accountId);
+	console.log('foundAccount', foundAccount);
 	if (!foundAccount.passwordHash) {
-		const password = req.body.password;
 		if (!password || typeof password !== 'string' || password.length === 0) {
 			//Note: invite is invalidated at this point, but form is required so likelihood of legit issue is ~0
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 		const newPasswordHash = await bcrypt.hash(password, 12);
-		await changeAccountPassword(deletedVerification.accountId, newPasswordHash);
+		await changeAccountPassword(accountId, newPasswordHash);
 	}
-	await verifyAccount(deletedVerification.accountId);
+	await verifyAccount(accountId);
 	return dynamicResponse(req, res, 302, { redirect: '/login?verifysuccess=true' });
 }
 

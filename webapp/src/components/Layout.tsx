@@ -607,7 +607,7 @@ export default withRouter(function Layout(props) {
 									{/* Profile dropdown */}
 									{account && (
 										<Menu as='div' className='relative'>
-											<Menu.Button className='-m-1.5 flex items-center'>
+											<Menu.Button className='flex items-center'>
 												<span className='sr-only'>Open user menu</span>
 												{/*<ResolvedImage
 											className='h-8 w-8 rounded-full bg-gray-50'

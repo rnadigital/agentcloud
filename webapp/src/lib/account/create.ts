@@ -36,7 +36,7 @@ interface CreateAccountArgs {
 	invite?: boolean;
 	provider?: OAUTH_PROVIDER;
 	profileId?: string | number;
-	checkoutSession?: string;
+	checkoutSessionId?: string;
 	teamName?: string;
 }
 
@@ -48,7 +48,7 @@ export default async function createAccount({
 	invite,
 	provider,
 	profileId,
-	checkoutSession,
+	checkoutSessionId,
 	teamName
 }: CreateAccountArgs): Promise<{
 	emailVerified: boolean;
@@ -85,7 +85,7 @@ export default async function createAccount({
 	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
-	const emailVerified = amazonKey == null;
+	let emailVerified = amazonKey == null;
 	const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 	const oauth = provider ? { [provider]: { id: profileId } } : ({} as OAuthRecordType);
 
@@ -134,10 +134,11 @@ export default async function createAccount({
 
 	if (STRIPE_ACCOUNT_SECRET) {
 		let foundCheckoutSession;
-		if (checkoutSession) {
-			log('Account creation attempted with checkoutSession %s', checkoutSession);
+		if (checkoutSessionId) {
+			emailVerified = true; //checkoutsession is only sent currently in the verify flow
+			log('Account creation attempted with checkoutSession %s', checkoutSessionId);
 			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
-			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSession);
+			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
 			const customerId = foundCheckoutSession?.customer as string;
 			const { planItem, addonUsersItem, addonStorageItem } =
 				await getSubscriptionsDetails(customerId);
@@ -157,7 +158,7 @@ export default async function createAccount({
 				email,
 				name
 			});
-			// Subscribe customer to 'Pro' plan with a 30-day trial
+			// Subscribe customer to 'Pro' plan with a 14 day trial
 			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
@@ -178,10 +179,10 @@ export default async function createAccount({
 		}
 	}
 
+	//TODO: send a "welcome" email even if emailVerified is true/created from checkout session
+
 	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
-		console.log('sending email');
-
 		const emailBody = invite
 			? render(
 					InviteEmail({

@@ -36,7 +36,7 @@ export default function NotificationBell() {
 
 	return (
 		<Menu as='div' className='relative'>
-			<Menu.Button className='-m-1.5 flex items-center'>
+			<Menu.Button className='flex items-center'>
 				<span className='sr-only'>View notifications</span>
 				<BellIcon className='h-6 w-6' aria-hidden='true' />
 				{notificationContext?.length > 0 && (

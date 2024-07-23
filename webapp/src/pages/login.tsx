@@ -30,14 +30,7 @@ export default function Login() {
 	async function login(data: LoginFormValues) {
 		setSubmitting(true);
 		try {
-			await API.login(
-				{
-					...data
-				},
-				null,
-				setError,
-				router
-			);
+			await API.login(data, null, setError, router);
 		} finally {
 			setSubmitting(false);
 		}
