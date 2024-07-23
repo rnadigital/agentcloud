@@ -1,6 +1,7 @@
 'use strict';
 
 import { TrashIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
 import { useRouter } from 'next/router';
@@ -9,6 +10,8 @@ import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
+import CloneModelModal, { ModelConfig } from './modal/CloneModelModal';
+import Modal from './modal/Modal';
 
 export default function ModelTable({ models, fetchModels }: { models: any[]; fetchModels?: any }) {
 	const [accountContext]: any = useAccountContext();
@@ -19,6 +22,8 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 	const [deletingMap, setDeletingMap] = useState({});
 	const [error, setError] = useState(null);
 	const [open, setOpen] = useState(false);
+	const [openModal, setOpenModal] = useState(false);
+	const [modelConfig, setModelConfig] = useState<ModelConfig>(null);
 
 	async function deleteModel() {
 		setDeletingMap(oldMap => {
@@ -70,6 +75,10 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 
 	return (
 		<>
+			{modelConfig && openModal && (
+				<CloneModelModal close={() => setOpenModal(false)} modelConfig={modelConfig} />
+			)}
+
 			<DeleteModal
 				open={open}
 				confirmFunction={deleteModel}
@@ -152,6 +161,18 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 											className='text-red-500 hover:text-red-700'
 										>
 											<TrashIcon className='h-5 w-5' aria-hidden='true' />
+										</button>
+										<button
+											className='ml-2'
+											onClick={() => {
+												setModelConfig(model);
+												setOpenModal(true);
+											}}
+										>
+											<ClipboardDocumentIcon
+												className='h-5 w-5 text-blue-500 hover:text-blue-400'
+												aria-hidden='true'
+											/>
 										</button>
 									</td>
 								</tr>

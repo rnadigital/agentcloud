@@ -40,6 +40,7 @@ export default function ModelForm({
 	const [modelState, setModelState] = useState(_model);
 	const [modelName, setModelName] = useState(modelState?.name || '');
 	const [config, setConfig] = useReducer(configReducer, modelState?.config || {});
+
 	const filteredModelOptions = modelOptions.filter(
 		option =>
 			!modelTypeFilters || modelTypeFilters.length === 0 || modelTypeFilters.includes(option.value)

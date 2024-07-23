@@ -18,6 +18,7 @@ export default function Models(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
+
 	const { models } = state;
 	const filteredModels = models?.filter(x => !x.hidden);
 	function fetchModels() {
