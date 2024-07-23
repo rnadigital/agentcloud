@@ -87,7 +87,7 @@ export async function login(req, res) {
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
 
-	if (!account) {
+	if (!account || !account?.emailVerified) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
