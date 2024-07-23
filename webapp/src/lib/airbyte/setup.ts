@@ -177,6 +177,7 @@ async function getDestinationConfiguration(provider: string) {
 		}
 
 		log('credentialsContent %O', credentialsContent);
+		console.log('=== credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
