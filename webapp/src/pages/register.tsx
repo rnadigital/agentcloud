@@ -21,29 +21,13 @@ export default function Register() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [submitting, setSubmitting] = useState(false);
-	const [checkoutSession, setCheckoutSession]: any = useState('');
 
 	const { control, handleSubmit } = useForm<RegisterFormValues>();
-
-	useEffect(() => {
-		const { checkoutSession } = router.query;
-		if (checkoutSession) {
-			setCheckoutSession(checkoutSession);
-		}
-	}, [router.query]);
 
 	async function register(data: RegisterFormValues) {
 		setSubmitting(true);
 		try {
-			await API.register(
-				{
-					...data,
-					checkoutSession
-				},
-				null,
-				setError,
-				router
-			);
+			await API.register(data, null, setError, router);
 		} finally {
 			setSubmitting(false);
 		}
@@ -72,9 +56,6 @@ export default function Register() {
 							Create your account
 						</h2>
 
-						{checkoutSession && (
-							<SuccessAlert message='Thanks for subscribing, please create the primary billing account for this org.' />
-						)}
 						<form className='space-y-2' onSubmit={handleSubmit(register)}>
 							<InputField<RegisterFormValues>
 								name='name'
