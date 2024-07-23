@@ -258,7 +258,7 @@ export async function verifyToken(req, res) {
 		//Assuming the token isn't a verification but a stripe checkoutsession ID
 		const checkoutSessionId = token;
 		foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
-		if (!foundCheckoutSession) {
+		if (!foundCheckoutSession || foundCheckoutSession.status !== 'complete') {
 			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 		}
 		const stripeCustomerId = foundCheckoutSession?.customer;
@@ -266,10 +266,12 @@ export async function verifyToken(req, res) {
 		const stripeCustomer = await StripeClient.get().customers.retrieve(stripeCustomerId);
 		if (!stripeCustomer) {
 			return dynamicResponse(req, res, 400, { error: 'Customer not found' });
+		}	
+		const { name, email } = stripeCustomer;	
+		const emailAccount: Account = await getAccountByEmail(email);
+		if (emailAccount) {
+			return dynamicResponse(req, res, 400, { error: 'Account already exists' });
 		}
-		// Delete the checkout session after retrieving the customer details
-		await StripeClient.get().checkout.sessions.expire(checkoutSessionId);
-		const { name, email } = stripeCustomer;
 		const { addedAccount } = await createAccount({
 			email,
 			name,
