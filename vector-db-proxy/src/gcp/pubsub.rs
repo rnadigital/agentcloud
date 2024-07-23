@@ -13,7 +13,7 @@ pub async fn subscribe_to_topic(
     let client_config = ClientConfig::default()
         .with_auth()
         .await
-        .unwrap_or_default();
+        .unwrap();
     let client = Client::new(client_config)
         .await
         .unwrap();
