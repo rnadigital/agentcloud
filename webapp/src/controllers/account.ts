@@ -11,6 +11,7 @@ import {
 	getAccountById,
 	setCurrentTeam,
 	setStripeCustomerId,
+	updateAccountOnboarded,
 	updateStripeCustomer,
 	verifyAccount
 } from 'db/account';
