@@ -39,9 +39,6 @@ export default function Datasource(props) {
 	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState(0);
 	const [cronExpression, setCronExpression] = useState('');
-	const [cronTimezone, setCronTimezone] = useState(
-		Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-	);
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
 	const numStreams = datasource?.connectionSettings?.configurations?.streams?.length || 0;
 	async function fetchDatasource() {
@@ -192,8 +189,7 @@ export default function Datasource(props) {
 				scheduleType,
 				timeUnit,
 				units,
-				cronExpression,
-				cronTimezone
+				cronExpression
 			};
 			// console.log(body);
 			await API.updateDatasourceSchedule(
@@ -452,8 +448,6 @@ export default function Datasource(props) {
 							setUnits={setUnits}
 							cronExpression={cronExpression}
 							setCronExpression={setCronExpression}
-							cronTimezone={cronTimezone}
-							setCronTimezone={setCronTimezone}
 						/>
 					)}
 					<div className='flex space-x-2'>

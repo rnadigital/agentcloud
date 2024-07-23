@@ -73,13 +73,10 @@ export default function CreateDatasourceForm({
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('minutes');
 	const [units, setUnits] = useState('');
-	const [cronExpression, setCronExpression] = useState('');
+	const [cronExpression, setCronExpression] = useState('* * * * * *');
 	const [modelId, setModelId] = useState('');
 	const [topK, setTopK] = useState(4);
 	const foundModel = models && models.find(m => m._id === modelId);
-	const [cronTimezone, setCronTimezone] = useState(
-		Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-	);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
@@ -173,7 +170,6 @@ export default function CreateDatasourceForm({
 					timeUnit,
 					units,
 					cronExpression,
-					cronTimezone,
 					datasourceName,
 					datasourceDescription,
 					embeddingField
@@ -208,7 +204,6 @@ export default function CreateDatasourceForm({
 					units,
 					modelId,
 					cronExpression,
-					cronTimezone,
 					streams: streamState.streams,
 					selectedFieldsMap: streamState.selectedFieldsMap,
 					descriptionsMap: streamState.descriptionsMap,
@@ -501,8 +496,6 @@ export default function CreateDatasourceForm({
 												setUnits={setUnits}
 												cronExpression={cronExpression}
 												setCronExpression={setCronExpression}
-												cronTimezone={cronTimezone}
-												setCronTimezone={setCronTimezone}
 											/>
 										</div>
 										{spec.schema && (

@@ -10,6 +10,7 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
+import convertCronToQuartz from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationUtils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
@@ -368,7 +369,7 @@ export async function addDatasourceApi(req, res, next) {
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression
+			cronExpression: convertCronToQuartz(cronExpression) //Airbyte uses a special snowflake cron syntax and this mostly works.
 		};
 	} else {
 		connectionBody['schedule'] = {
@@ -468,7 +469,7 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression
+			cronExpression: convertCronToQuartz(cronExpression)
 		};
 	} else {
 		connectionBody['schedule'] = {
@@ -561,7 +562,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression
+			cronExpression: convertCronToQuartz(cronExpression)
 		};
 	} else {
 		connectionBody['schedule'] = {
