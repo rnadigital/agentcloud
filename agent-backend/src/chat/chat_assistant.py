@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import traceback
 import uuid
 from datetime import datetime
 
@@ -293,10 +294,7 @@ class ChatAssistant:
                     case _:
                         logging.debug(f"unhandled {kind} event")
         except Exception as chunk_error:
-            import sys, traceback
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            err_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            logging.error(err_lines)
+            logging.error(traceback.format_exc())
             self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
                                 first=True, chunk_id=str(uuid.uuid4()),
                                 timestamp=datetime.now().timestamp() * 1000,
