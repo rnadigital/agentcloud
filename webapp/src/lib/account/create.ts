@@ -127,7 +127,8 @@ export default async function createAccount({
 				},
 				stripeTrial: false
 			},
-			onboarded: false
+			//SET ONBOARDED TO TRUE FOR NOW
+			onboarded: true
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
