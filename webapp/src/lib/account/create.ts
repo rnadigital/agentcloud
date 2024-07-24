@@ -20,12 +20,14 @@ import VerificationEmail from 'emails/Verification';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
+
 const log = debug('webapp:middleware:lib:account:create');
 
 interface CreateAccountArgs {
@@ -92,6 +94,7 @@ export default async function createAccount({
 	// get stripe secret
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
+	const hasCreateModelPermission = Roles[roleTemplate].get(Permissions.CREATE_MODEL);
 	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
 		addAccount({
@@ -127,8 +130,7 @@ export default async function createAccount({
 				},
 				stripeTrial: false
 			},
-			//SET ONBOARDED TO TRUE FOR NOW
-			onboarded: true
+			onboarded: hasCreateModelPermission ? false : true
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
