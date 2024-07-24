@@ -131,7 +131,7 @@ export default function ChatAppForm({
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
-			iconId: icon?._id
+			iconId: icon.id
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {
@@ -182,7 +182,7 @@ export default function ChatAppForm({
 	const iconCallback = async addedIcon => {
 		(await fetchFormData) && fetchFormData();
 		setModalOpen(false);
-		setIcon(addedIcon);
+		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
 
 	async function createDatasourceCallback(createdDatasource) {
