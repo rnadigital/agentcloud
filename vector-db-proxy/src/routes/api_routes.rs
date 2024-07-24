@@ -18,7 +18,7 @@ use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVect
 
 use crate::mongo::client::start_mongo_connection;
 use crate::mongo::models::Model;
-use crate::mongo::queries::{get_embedding_model, get_embedding_model_and_embedding_key};
+use crate::mongo::queries::{get_model, get_model_and_embedding_key};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
@@ -98,7 +98,7 @@ pub async fn check_collection_exists(
     let collection_name_clone = collection_name.clone();
     let qdrant = Qdrant::new(qdrant_conn.to_owned(), collection_name);
     let mongo = start_mongo_connection().await.unwrap();
-    return match get_embedding_model_and_embedding_key(&mongo, &collection_name_clone)
+    return match get_model_and_embedding_key(&mongo, &collection_name_clone)
         .await
     {
         Ok((model_parameter_result, _)) => match model_parameter_result {
@@ -261,7 +261,7 @@ pub async fn bulk_upsert_data_to_collection(
     let mongodb_connection = start_mongo_connection().await.unwrap();
     let collection_name_clone_2 = collection_name.clone();
     let model_parameters: Model =
-        get_embedding_model(&mongodb_connection, collection_name_clone_2.as_str())
+        get_model(&mongodb_connection, collection_name_clone_2.as_str())
             .await
             .unwrap()
             .unwrap();
