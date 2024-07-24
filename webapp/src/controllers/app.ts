@@ -349,7 +349,8 @@ export async function editAppApi(req, res, next) {
 		goal,
 		backstory,
 		modelId,
-		run
+		run,
+		sharingMode,
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -361,6 +362,10 @@ export async function editAppApi(req, res, next) {
 	let validationError = chainValidations(
 		req.body,
 		[
+			{
+				field: 'sharingMode',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
+			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' } },
@@ -512,7 +517,11 @@ export async function editAppApi(req, res, next) {
 						agentId: toObjectId(agentId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x)
 					}
-				})
+				}),
+		sharingConfig: {
+			permissions: {}, //TODO once we have per-user, team, org perms
+			mode: sharingMode as SharingMode
+		}
 	});
 
 	return dynamicResponse(req, res, 200, {
