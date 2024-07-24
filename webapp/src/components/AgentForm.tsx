@@ -96,7 +96,7 @@ export default function AgentForm({
 			toolIds: (toolState || [])
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
-			iconId: icon?._id
+			iconId: icon.id
 		};
 		if (editing) {
 			await API.editAgent(
@@ -147,7 +147,7 @@ export default function AgentForm({
 	const iconCallback = async addedIcon => {
 		(await fetchAgentFormData) && fetchAgentFormData();
 		setModalOpen(false);
-		setIcon(addedIcon);
+		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
 
 	let modal;

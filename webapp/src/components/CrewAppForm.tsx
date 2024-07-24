@@ -98,7 +98,7 @@ export default function CrewAppForm({
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon?._id,
+			iconId: icon.id,
 			type: AppType.CREW,
 			run
 		};
@@ -173,7 +173,7 @@ export default function CrewAppForm({
 	const iconCallback = async addedIcon => {
 		(await fetchFormData) && fetchFormData();
 		setModalOpen(false);
-		setIcon(addedIcon);
+		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
 
 	const modelCallback = async (addedModelId, body) => {
