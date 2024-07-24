@@ -3,11 +3,13 @@ import { InformationCircleIcon } from '@heroicons/react/20/solid';
 export default function InfoAlert({
 	message,
 	textColor = 'blue',
-	className = null
+	className = null,
+	children = null
 }: {
 	message: any;
 	textColor?: string;
 	className?: string;
+	children?: any;
 }) {
 	return (
 		message && (
@@ -20,6 +22,7 @@ export default function InfoAlert({
 						<h3 className={`text-sm font-medium text-${textColor}-800`}>{message}</h3>
 					</div>
 				</div>
+				{children}
 			</div>
 		)
 	);

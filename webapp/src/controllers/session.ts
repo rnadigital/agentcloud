@@ -77,7 +77,7 @@ export async function sessionData(req, res, _next) {
 
 export async function publicSessionData(req, res, _next) {
 	const session = await unsafeGetSessionById(req.params.sessionId);
-	const app = await unsafeGetAppById(session?.appId);
+	const app = await unsafeGetAppById(session?.appId || req.params.appId);
 	let avatarMap = {};
 	switch (app?.type) {
 		case AppType.CREW:
@@ -118,11 +118,12 @@ export async function sessionPage(app, req, res, next) {
  * public session page html
  */
 export async function publicSessionPage(app, req, res, next) {
-	const data = await sessionData(req, res, next);
+	const data = await publicSessionData(req, res, next);
 	res.locals.data = {
 		...data,
 		account: null
 	};
+	console.log(res.locals.data);
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
 }
 
@@ -185,6 +186,8 @@ export async function addSessionApi(req, res, next) {
 	}
 
 	const app: App = await getAppById(req.params.resourceSlug, appId);
+
+	//TODO: check if anonymous/public chat app and reject if sharing mode isnt public
 
 	if (!app) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

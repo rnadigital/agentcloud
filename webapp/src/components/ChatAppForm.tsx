@@ -4,8 +4,10 @@ import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
+import CopyToClipboardInput from 'components/CopyToClipboardInput';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
+import InfoAlert from 'components/InfoAlert';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
@@ -51,8 +53,8 @@ export default function ChatAppForm({
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
-	const [sharingMode, setSharingMode] = useState(SharingMode.TEAM);
-
+	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
+	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name || '');
 	const [description, setDescription] = useState(app?.description || '');
@@ -270,7 +272,7 @@ export default function ChatAppForm({
 				<input type='hidden' name='_csrf' value={csrf} />
 
 				<div className='space-y-4'>
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 md:col-span-2'>
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4'>
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='name'
@@ -285,7 +287,7 @@ export default function ChatAppForm({
 					</div>
 
 					<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
-						<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 md:col-span-2'>
+						<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6'>
 							<div className='sm:col-span-12'>
 								<label
 									htmlFor='appName'
@@ -328,6 +330,21 @@ export default function ChatAppForm({
 							</div>
 
 							<SharingModeSelect sharingMode={sharingMode} setSharingMode={setSharingMode} />
+							{sharingMode === SharingMode.PUBLIC && (
+								<>
+									<InfoAlert
+										textColor='black'
+										className='rounded bg-yellow-200 p-4 -mt-3 sm:col-span-12'
+										message='Public apps can be accessed by anyone, potentially incurring token costs.'
+									>
+										{editing && (
+											<CopyToClipboardInput
+												dataToCopy={`${origin}/s/${resourceSlug}/app/${app._id}`}
+											/>
+										)}
+									</InfoAlert>
+								</>
+							)}
 
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

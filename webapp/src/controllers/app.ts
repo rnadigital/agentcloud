@@ -104,6 +104,16 @@ export async function appEditPage(app, req, res, next) {
 }
 
 /**
+ * GET /[resourceSlug]/app/[appId]/edit
+ * App edit page html
+ */
+// export async function publicAppPage(app, req, res, next) {
+// 	const data = await publicAppData(req, res, next); //TODO: public variant
+// 	res.locals.data = { ...data, account: res.locals.account };
+// 	return app.render(req, res, `/${req.params.resourceSlug}/app/${req.params.appId}`);
+// }
+
+/**
  * @api {post} /forms/app/add Add an app
  * @apiName add
  * @apiGroup App
@@ -350,7 +360,7 @@ export async function editAppApi(req, res, next) {
 		backstory,
 		modelId,
 		run,
-		sharingMode,
+		sharingMode
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router

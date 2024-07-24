@@ -236,7 +236,17 @@ export default function router(server, app) {
 		setParamOrgAndTeam,
 		sessionController.sessionMessagesJson
 	);
-	// publicAppRouter.get('/app/:appId([a-f0-9]{24})', csrfMiddleware, setParamOrgAndTeam, appController.appEditPage.bind(null, app));
+	publicAppRouter.get(
+		'/app/:appId([a-f0-9]{24})',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		sessionController.publicSessionPage.bind(null, app)
+	);
+	publicAppRouter.post(
+		'/forms/app/:appId([a-f0-9]{24})/start',
+		setParamOrgAndTeam,
+		sessionController.addSessionApi
+	);
 	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
 
 	// Airbyte webhooks

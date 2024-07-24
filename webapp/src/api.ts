@@ -73,6 +73,17 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function publicStartApp(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/s/${body.resourceSlug}/forms/app/${body.id}/start`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/app/add`,
@@ -678,7 +689,7 @@ export async function ApiCall(
 	// Make request, catch errors, and finally{} to always end progress bar
 	let response;
 	try {
-		if (location && location.pathname.startsWith('/s/')) {
+		if (location && location.pathname.startsWith('/s/') && !route.startsWith('/s/')) {
 			route = `/s${route}`;
 		}
 		response = await fetch(route, requestOptions);

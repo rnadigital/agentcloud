@@ -79,6 +79,9 @@ export function initSocket(rawHttpServer) {
 		socket.on('join_room', async (room: string) => {
 			const socketRequest = socket.request as any;
 			log('socket.id "%s" join_room %s', socket.id, room);
+			if (!room) {
+				return;
+			}
 			if (
 				socketRequest?.locals?.account?.orgs?.some(o =>
 					o?.teams?.some(t => t.id.toString() === room)
