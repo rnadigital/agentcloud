@@ -200,6 +200,8 @@ enum Connectors {
 	NOTION = '6e00b415-b02e-4160-bf02-58176a0ae687'
 }
 
+export const ConnectorsSet = new Set(Object.values(Connectors));
+
 export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.FREE]: {
 		users: 1,

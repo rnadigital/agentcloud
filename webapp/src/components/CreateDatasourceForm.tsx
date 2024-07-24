@@ -16,7 +16,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
-import { pricingMatrix } from 'struct/billing';
+import { ConnectorsSet, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 import { DatasourceScheduleType } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { Retriever } from 'struct/tool';
@@ -138,16 +138,25 @@ export default function CreateDatasourceForm({
 	let connectorOptions: any = connectors
 		? Object.keys(connectors).filter(key => connectors[key]?.connector_type === 'source')
 		: [];
-	//Note: uncomment if you want to hide unavailable due to plan connectors
-	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
-	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
-	// }
-	connectorOptions = connectorOptions.map(key => ({
-		value: connectors[key]?.definitionId,
-		label: connectors[key]?.name_oss || 'test',
-		icon: connectors[key]?.iconUrl_oss,
-		supportLevel: connectors[key]?.supportLevel_oss
-	}));
+	connectorOptions = connectorOptions
+		.map(key => {
+			const proHasConnector = ConnectorsSet.has(connectors[key]?.definitionId);
+			return {
+				value: connectors[key]?.definitionId,
+				label: connectors[key]?.name_oss || 'test',
+				icon: connectors[key]?.iconUrl_oss,
+				supportLevel: connectors[key]?.supportLevel_oss,
+				plan:
+					stripePlan === SubscriptionPlan.FREE
+						? `Available on ${proHasConnector ? SubscriptionPlan.PRO : SubscriptionPlan.TEAMS} +`
+						: stripePlan === SubscriptionPlan.PRO && !proHasConnector
+							? `Available on ${SubscriptionPlan.TEAMS} +`
+							: null
+			};
+		})
+		.sort((a, b) => {
+			return b.plan === null ? 1 : 0;
+		});
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();
@@ -390,7 +399,8 @@ export default function CreateDatasourceForm({
 									if (
 										!stripePlan ||
 										!pricingMatrix[stripePlan].dataConnections ||
-										(pricingMatrix[stripePlan].allowedConnectors.length > 0 &&
+										(v?.value &&
+											pricingMatrix[stripePlan].allowedConnectors.length > 0 &&
 											!pricingMatrix[stripePlan].allowedConnectors.includes(v.value))
 									) {
 										return setSubscriptionModalOpen(true);
@@ -422,10 +432,17 @@ export default function CreateDatasourceForm({
 													)}
 													{data.label}
 												</span>
-												<span
-													className={`px-1 rounded-full bg-${data.supportLevel === 'certified' ? 'green' : 'gray'}-100 text-${data.supportLevel === 'certified' ? 'green' : 'gray'}-700`}
-												>
-													{data.supportLevel}
+												<span className='space-x-2'>
+													<span
+														className={`px-1 rounded-full bg-${data.supportLevel === 'certified' ? 'green' : 'gray'}-100 text-${data.supportLevel === 'certified' ? 'green' : 'gray'}-700`}
+													>
+														{data.supportLevel}
+													</span>
+													{/*data.plan && (
+														<span className={`px-1 rounded-full bg-orange-100 text-gray-700`}>
+															{data.plan}
+														</span>
+													)*/}
 												</span>
 											</span>
 										</li>
