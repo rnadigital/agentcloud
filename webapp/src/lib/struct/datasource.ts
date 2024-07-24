@@ -77,4 +77,5 @@ export type Datasource = {
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
 	descriptionsMap?: Record<string, string>;
+	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };
