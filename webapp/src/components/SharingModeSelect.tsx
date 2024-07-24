@@ -2,6 +2,8 @@ import React from 'react';
 import Select from 'react-tailwindcss-select';
 import { SharingMode } from 'struct/sharing';
 import SelectClassNames from 'styles/SelectClassNames';
+import InfoAlert from 'components/InfoAlert';
+
 const sharingModeOptions = [
 	{
 		label: 'Team Only',
@@ -44,6 +46,11 @@ const SharingModeSelect = ({ title = 'Sharing Mode', sharingMode, setSharingMode
 					}}
 				/>
 			</div>
+			{sharingMode === SharingMode.PUBLIC && <InfoAlert
+				textColor='black'
+				className='rounded bg-yellow-200 p-4 mt-3'
+				message='Public apps can be accessed by anyone, potentially incurring token costs.'
+			/>}
 		</div>
 	);
 };
