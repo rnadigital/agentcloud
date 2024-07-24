@@ -18,6 +18,7 @@ import fetchSession from '@mw/auth/fetchsession';
 import setPermissions from '@mw/auth/setpermissions';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
+import onboardedMiddleware from '@mw/checkonboarded';
 import homeRedirect from '@mw/homeredirect';
 import PassportManager from '@mw/passportmanager';
 import * as hasPerms from '@mw/permissions/hasperms';
@@ -28,7 +29,7 @@ import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 
-const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
+const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
 const authedMiddlewareChain = [
 	...unauthedMiddlewareChain,
 	checkSession,
@@ -223,6 +224,7 @@ export default function router(server, app) {
 	accountRouter.post(
 		'/onboarded',
 		unauthedMiddlewareChain,
+		checkSession,
 		accountController.updateOnboardedStatus
 	);
 
