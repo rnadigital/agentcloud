@@ -9,7 +9,16 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-export default function AddApp(props) {
+interface AddAppProps {
+	apps: any[];
+	tools: any[];
+	agents: any[];
+	tasks: any[];
+	models: any[];
+	datasources: any[];
+}
+
+export default function AddApp(props: AddAppProps) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();

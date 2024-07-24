@@ -7,8 +7,10 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
+	HomeIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
+	QueueListIcon,
 	UserGroupIcon,
 	UserIcon,
 	WrenchScrewdriverIcon,
@@ -45,7 +47,11 @@ const noNavPages = [
 ];
 
 const agentNavigation: any[] = [
-	// { name: 'Home', href: '/home', icon: HomeIcon },
+	{
+		name: 'Get Started',
+		href: '/getstarted',
+		icon: <QueueListIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+	},
 	{
 		name: 'Apps',
 		href: '/apps',
