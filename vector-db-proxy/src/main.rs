@@ -22,7 +22,6 @@ use routes::api_routes::{
 };
 
 use crate::data::processing_incoming_messages::process_incoming_messages;
-use crate::gcp::pubsub::try_auth_to_google;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::init::env_variables::set_all_env_vars;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
@@ -76,8 +75,6 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
 
-    let _ = try_auth_to_google().await.unwrap();
-    
     let message_queue_provider = MessageQueueProvider::from(global_data.message_queue_provider.clone());
 
     // Instantiate client connections
