@@ -28,13 +28,15 @@ interface OnboardingSelectProps<TFieldValues extends FieldValues> {
 	};
 	control: Control<TFieldValues>;
 	name: Path<TFieldValues>;
+	placeholder?: string;
 }
 
 const OnboardingSelect = <TFieldValues extends FieldValues>({
 	options,
 	classNames,
 	control,
-	name
+	name,
+	placeholder
 }: OnboardingSelectProps<TFieldValues>) => {
 	return (
 		<Controller
@@ -54,7 +56,9 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 									>
 										<span className='flex items-center'>
 											{value?.iconURL && <img src={value?.iconURL} className='h-6 w-6 mr-2' />}
-											<span className='block truncate'>{value?.label}</span>
+											<span className={clsx('block truncate', { 'text-gray-400': !value?.label })}>
+												{value?.label || placeholder}
+											</span>
 										</span>
 										<span className='ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none'>
 											<ChevronDownIcon

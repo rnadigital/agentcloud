@@ -9,6 +9,7 @@ import {
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
+	setAccountRole,
 	setCurrentTeam,
 	setStripeCustomerId,
 	updateAccountOnboarded,
@@ -360,5 +361,15 @@ export async function updateOnboardedStatus(req, res) {
 
 	return dynamicResponse(req, res, 302, {
 		redirect: `/${res.locals.account.currentTeam.toString()}/apps`
+	});
+}
+
+export async function updateRole(req, res) {
+	const { role } = req.body;
+	const userId = res.locals.account._id;
+	await setAccountRole(userId, role);
+
+	return dynamicResponse(req, res, 302, {
+		redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
 	});
 }

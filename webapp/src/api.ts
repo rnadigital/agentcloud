@@ -52,6 +52,10 @@ export function updateOnboardedStatus(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/onboarded', 'POST', body, dispatch, errorCallback, router);
 }
 
+export function updateRole(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/role', 'POST', body, dispatch, errorCallback, router);
+}
+
 // Apps
 export function getApps(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/apps.json`, 'GET', null, dispatch, errorCallback, router);

@@ -228,6 +228,8 @@ export default function router(server, app) {
 		accountController.updateOnboardedStatus
 	);
 
+	accountRouter.post('/role', unauthedMiddlewareChain, checkSession, accountController.updateRole);
+
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
