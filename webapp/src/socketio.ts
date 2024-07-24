@@ -105,11 +105,9 @@ export function initSocket(rawHttpServer) {
 			// log('foundApp', foundApp);
 			switch (foundApp?.sharingConfig?.mode as SharingMode) {
 				case SharingMode.PUBLIC:
-					// log(SharingMode.PUBLIC);
 					socket.join(room);
 					break;
 				case SharingMode.TEAM:
-					// log(SharingMode.TEAM);
 					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
 						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
 					);
@@ -118,9 +116,8 @@ export function initSocket(rawHttpServer) {
 					}
 					socket.join(room);
 					break;
-				case SharingMode.RESTRICTED:
+				//case SharingMode.RESTRICTED:
 				default:
-					// log(SharingMode.RESTRICTED);
 					return; //TODO
 			}
 			if (socketRequest.locals.isAgentBackend === false) {
