@@ -327,6 +327,8 @@ export default function ChatAppForm({
 								</div>
 							</div>
 
+							<SharingModeSelect sharingMode={sharingMode} setSharingMode={setSharingMode} />
+
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Conversation Starters
@@ -384,8 +386,6 @@ export default function ChatAppForm({
 											}}
 										/>
 									</div>
-
-									<SharingModeSelect sharingMode={sharingMode} setSharingMode={setSharingMode} />
 
 									<div className='sm:col-span-12 flex flex-row gap-4'>
 										<div className='isolate space-y-px rounded-md shadow-sm w-full'>

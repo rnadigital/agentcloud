@@ -9,7 +9,7 @@ import {
 	RegisterOptions,
 	useFormContext
 } from 'react-hook-form';
-import { capitalizeFirstLetter } from 'utils/capitalizeFirstLetter';
+import { capitalize } from 'utils/capitalize';
 
 interface FormFieldProps<TFieldValues extends FieldValues> {
 	name: Path<TFieldValues>;
@@ -73,7 +73,7 @@ const InputField = <TFieldValues extends FieldValues>({
 						</div>
 						{type !== 'checkbox' && (
 							<div className='text-red-500 mt-2 text-xs'>
-								{fieldState.error && capitalizeFirstLetter(fieldState.error.message)}
+								{fieldState.error && capitalize(fieldState.error.message)}
 							</div>
 						)}
 					</div>
