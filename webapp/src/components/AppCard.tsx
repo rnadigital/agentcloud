@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
+import { SharingMode } from '../lib/struct/sharing';
 
 export default function AppCard({ app, startSession, fetchFormData }) {
 	const { description, name, icon } = app;
@@ -45,6 +46,11 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 					>
 						{app.type === AppType.CHAT ? 'Chat' : 'Process'}
 					</span>
+					{app?.sharingConfig?.mode === SharingMode.PUBLIC && <span
+						className='h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-yellow-100 text-yellow-800 border-yellow-300'
+					>
+						Public
+					</span>}
 					<Menu as='div' className=''>
 						<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
 							<span className='sr-only'>Open options</span>
