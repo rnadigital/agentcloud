@@ -37,20 +37,22 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 		<div className='w-full max-w-sm rounded-xl overflow-hidden bg-white border dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<span className='flex justify-between'>
-					<span
-						className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${
-							app.type === AppType.CHAT
-								? 'bg-blue-100 text-blue-800 border-blue-300'
-								: 'bg-green-100 text-green-800 border-green-300'
-						}`}
-					>
-						{app.type === AppType.CHAT ? 'Chat' : 'Process'}
+					<span className='space-x-2'>
+						<span
+							className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${
+								app.type === AppType.CHAT
+									? 'bg-blue-100 text-blue-800 border-blue-300'
+									: 'bg-green-100 text-green-800 border-green-300'
+							}`}
+						>
+							{app.type === AppType.CHAT ? 'Chat' : 'Process'}
+						</span>
+						{app?.sharingConfig?.mode === SharingMode.PUBLIC && <span
+							className='h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-yellow-100 text-yellow-800 border-yellow-300'
+						>
+							Public
+						</span>}
 					</span>
-					{app?.sharingConfig?.mode === SharingMode.PUBLIC && <span
-						className='h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-yellow-100 text-yellow-800 border-yellow-300'
-					>
-						Public
-					</span>}
 					<Menu as='div' className=''>
 						<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
 							<span className='sr-only'>Open options</span>
