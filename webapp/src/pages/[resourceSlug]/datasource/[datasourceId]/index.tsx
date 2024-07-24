@@ -8,9 +8,9 @@ import { StreamsList } from 'components/DatasourceStream';
 import DatasourceTabs from 'components/DatasourceTabs';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
+import { convertQuartzToCron } from 'lib/airbyte/cronconverter';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { convertQuartzToCron } from 'lib/airbyte/cronconverter';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
@@ -26,6 +26,7 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 export default function Datasource(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const { resourceSlug, datasourceId } = router.query;
 	const [state, dispatch] = useState(props);
@@ -37,7 +38,7 @@ export default function Datasource(props) {
 	const [error, setError] = useState();
 	const { datasource } = state;
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
-	const [timeUnit, setTimeUnit] = useState('minutes');
+	const [timeUnit, setTimeUnit] = useState('day');
 	const [units, setUnits] = useState(0);
 	const [cronExpression, setCronExpression] = useState('0 0 * * *');
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
@@ -53,7 +54,8 @@ export default function Datasource(props) {
 				if (datasource) {
 					const { scheduleType, cronExpression } = datasource?.connectionSettings?.schedule || {};
 					setScheduleType(scheduleType);
-					setCronExpression(convertQuartzToCron(cronExpression));
+					cronExpression && setCronExpression(convertQuartzToCron(cronExpression));
+					datasource?.timeUnit && setTimeUnit(datasource.timeUnit);
 				}
 				dispatch(res);
 			},
@@ -186,7 +188,6 @@ export default function Datasource(props) {
 				datasourceId,
 				scheduleType,
 				timeUnit,
-				units,
 				cronExpression
 			};
 			// console.log(body);
@@ -412,60 +413,30 @@ export default function Datasource(props) {
 			)}
 
 			{tab === 2 && datasource.sourceType !== 'file' && (
-				<div className='space-y-3'>
-					{editingSchedule === false && (
-						<div className='my-2'>
-							<p>
-								Sync schedule type:{' '}
-								<strong className='capitalize'>
-									{datasource.connectionSettings.schedule?.scheduleType || 'Manual'}
-								</strong>
-							</p>
-							{/*datasource.connectionSettings.schedule.scheduleType === DatasourceScheduleType.BASICSCHEDULE && <>
-					<p>Time Unit: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.timeUnit}</strong></p>
-					<p>Units: <strong>{datasource.connectionSettings.scheduleData.basicSchedule.units}</strong></p>
-				</>*/}
-							{datasource?.connectionSettings?.schedule?.scheduleType ===
-								DatasourceScheduleType.CRON && (
-								<>
-									<p>
-										Cron Expression:{' '}
-										<strong>{convertQuartzToCron(datasource.connectionSettings.schedule.cronExpression)}</strong>
-									</p>
-								</>
-							)}
-						</div>
-					)}
-					{editingSchedule && (
-						<DatasourceScheduleForm
-							scheduleType={scheduleType}
-							setScheduleType={setScheduleType}
-							timeUnit={timeUnit}
-							setTimeUnit={setTimeUnit}
-							units={units}
-							setUnits={setUnits}
-							cronExpression={cronExpression}
-							setCronExpression={setCronExpression}
-						/>
-					)}
+				<div>
+					<DatasourceScheduleForm
+						scheduleType={scheduleType}
+						setScheduleType={setScheduleType}
+						timeUnit={timeUnit}
+						setTimeUnit={setTimeUnit}
+						units={units}
+						setUnits={setUnits}
+						cronExpression={cronExpression}
+						setCronExpression={setCronExpression}
+					/>
 					<div className='flex space-x-2'>
 						<button
 							onClick={async e => {
-								if (!editingSchedule) {
-									e.preventDefault();
-									setEditingSchedule(true);
-								} else {
-									await updateSchedule(e);
-									setEditingSchedule(false);
-								}
+								await updateSchedule(e);
+								setEditingSchedule(false);
 							}}
 							disabled={submitting['updateStreams']}
 							type='submit'
 							className={
-								'flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+								'flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-200'
 							}
 						>
-							{editingSchedule === true ? 'Save Schedule' : 'Edit Schedule'}
+							Save
 						</button>
 						{editingSchedule && (
 							<button

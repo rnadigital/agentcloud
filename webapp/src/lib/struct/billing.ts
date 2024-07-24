@@ -154,9 +154,10 @@ export type PlanLimits = {
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
-	syncFrequencyCron: {
+	cronProps: {
 		disabled?: boolean;
 		allowedPeriods?: string[];
+		allowedDropdowns?: string[];
 	};
 	//TODO: keep updated to agentcloud priing sheet
 };
@@ -180,7 +181,7 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
 	embeddingModels: 'embeddingModels',
-	syncFrequencyCron: 'syncFrequencyCron'
+	cronProps: 'cronProps'
 };
 
 // Object to hold the limits for each plan, using computed property names
@@ -212,8 +213,8 @@ export const pricingMatrix: PricingMatrix = {
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI],
 		embeddingModels: [ModelType.OPENAI],
-		syncFrequencyCron: {
-			disabled: true,
+		cronProps: {
+			disabled: true
 		}
 	},
 	[SubscriptionPlan.PRO]: {
@@ -235,8 +236,10 @@ export const pricingMatrix: PricingMatrix = {
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
-		syncFrequencyCron: {
-			allowedPeriods: ['year', 'month', 'week', 'day']
+		cronProps: {
+			allowedPeriods: ['year', 'month', 'week', 'day'],
+			//allowedDropdowns: ['period', 'months', 'month-days']
+			allowedDropdowns: ['period']
 		}
 	},
 	[SubscriptionPlan.TEAMS]: {
@@ -251,8 +254,10 @@ export const pricingMatrix: PricingMatrix = {
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
-		syncFrequencyCron: {
-			allowedPeriods: ['year', 'month', 'week', 'day', 'hour']
+		cronProps: {
+			allowedPeriods: ['year', 'month', 'week', 'day', 'hour'],
+			//allowedDropdowns: ['period', 'months', 'month-days', 'hours'],
+			allowedDropdowns: ['period']
 		}
 	},
 	[SubscriptionPlan.ENTERPRISE]: {
@@ -268,8 +273,9 @@ export const pricingMatrix: PricingMatrix = {
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
-		syncFrequencyCron: {
+		cronProps: {
 			allowedPeriods: ['year', 'month', 'week', 'day', 'hour', 'minute'],
+			allowedDropdowns: ['period']
 		}
 	}
 };

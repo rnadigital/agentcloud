@@ -25,3 +25,22 @@ export function convertQuartzToCron(cronExpression: string): string {
 	}
 	return splitOriginalCronExpression.join(' ').replaceAll('?', '*'); //Adjust format for day of month/week syntax
 }
+
+export function convertUnitToCron(timeUnit: string) {
+	switch (timeUnit) {
+		case 'minute':
+			return '0 * * ? * *'; // At second :00 of every minute
+		case 'hour':
+			return '0 0 * ? * *'; // At second :00 of minute :00 of every hour
+		case 'day':
+			return '0 0 0 * * ?'; // At 00:00:00am every day
+		case 'week':
+			return '0 0 0 ? * MON'; // At 00:00:00am, on every Monday, every month
+		case 'month':
+			return '0 0 0 1 * ?'; // Every month on the 1st, at 00:00:00am
+		case 'year':
+			return '0 0 0 1 JAN ? *'; // At 00:00:00am, on the 1st day, in January
+		default:
+			throw new Error('Invalid time unit');
+	}
+}

@@ -71,7 +71,7 @@ export default function CreateDatasourceForm({
 	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-	const [timeUnit, setTimeUnit] = useState('minutes');
+	const [timeUnit, setTimeUnit] = useState('day');
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');

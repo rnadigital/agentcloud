@@ -23,7 +23,7 @@ function classNames(...classes) {
 export default function DatasourceTabs({ callback, current, datasource }) {
 	return (
 		<div>
-			<div className='sm:hidden'>
+			{/*<div className='sm:hidden'>
 				<select
 					onClick={(e: any) => callback(e?.target?.value)}
 					id='tabs'
@@ -38,7 +38,9 @@ export default function DatasourceTabs({ callback, current, datasource }) {
 					))}
 				</select>
 			</div>
-			<div className='hidden sm:block'>
+			<div className='hidden sm:block'>*/}
+
+			<div>
 				<div className='border-b border-gray-200'>
 					<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
 						{tabs

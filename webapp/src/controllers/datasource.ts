@@ -10,7 +10,7 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
-import { convertCronToQuartz } from 'lib/airbyte/cronconverter';
+import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationUtils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
@@ -114,14 +114,18 @@ export async function datasourceAddPage(app, req, res, next) {
 }
 
 export async function testDatasourceApi(req, res, next) {
-	const { connectorId, datasourceName, datasourceDescription, sourceConfig } = req.body;
+	const { connectorId, datasourceName, datasourceDescription, sourceConfig, timeUnit } = req.body;
+
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
 
 	let validationError = chainValidations(
 		req.body,
 		[
 			{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } }
+			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 		],
 		{
 			datasourceName: 'Name',
@@ -279,7 +283,8 @@ export async function testDatasourceApi(req, res, next) {
 		discoveredSchema,
 		createdDate: new Date(),
 		status: DatasourceStatus.DRAFT,
-		recordCount: { total: 0 }
+		recordCount: { total: 0 },
+		timeUnit: timeUnit
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -300,8 +305,12 @@ export async function addDatasourceApi(req, res, next) {
 		modelId,
 		embeddingField,
 		retriever,
-		retriever_config
+		retriever_config,
+		timeUnit
 	} = req.body;
+
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
 
 	let validationError = chainValidations(
 		req.body,
@@ -319,7 +328,8 @@ export async function addDatasourceApi(req, res, next) {
 				field: 'scheduleType',
 				validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }
 			},
-			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } }
+			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
+			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 			//TODO: validation for retriever_config and streams?
 		],
 		{
@@ -369,7 +379,8 @@ export async function addDatasourceApi(req, res, next) {
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression: convertCronToQuartz(cronExpression) //Airbyte uses a special snowflake cron syntax and this mostly works.
+			//cronExpression: convertCronToQuartz(cronExpression) //Airbyte uses a special snowflake cron syntax and this mostly works.
+			cronExpression: convertUnitToCron(timeUnit)
 		};
 	} else {
 		connectionBody['schedule'] = {
@@ -444,7 +455,18 @@ export async function addDatasourceApi(req, res, next) {
 }
 
 export async function updateDatasourceScheduleApi(req, res, next) {
-	const { datasourceId, scheduleType, cronExpression } = req.body;
+	const { datasourceId, scheduleType, cronExpression, timeUnit } = req.body;
+
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }],
+		{}
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 
 	if (!datasourceId || typeof datasourceId !== 'string') {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -469,7 +491,8 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	if (scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression: convertCronToQuartz(cronExpression)
+			//cronExpression: convertCronToQuartz(cronExpression)
+			cronExpression: convertUnitToCron(timeUnit)
 		};
 	} else {
 		connectionBody['schedule'] = {
@@ -490,7 +513,8 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	// Update the datasource with the connection settings
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: datasource.connectionId,
-		connectionSettings: connectionBody
+		connectionSettings: connectionBody,
+		timeUnit: timeUnit
 	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
@@ -499,15 +523,26 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 }
 
 export async function updateDatasourceStreamsApi(req, res, next) {
-	const { datasourceId, streams, sync, descriptionsMap, cronExpression, metadata_field_info } =
-		req.body;
+	const {
+		datasourceId,
+		streams,
+		sync,
+		descriptionsMap,
+		cronExpression,
+		timeUnit,
+		metadata_field_info
+	} = req.body;
+
+	const currentPlan = res.locals?.subscription?.stripePlan;
+	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
 
 	let validationError = chainValidations(
 		req.body,
 		[
 			{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
 			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
-			{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true } }
+			{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true } },
+			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 			//TODO: more validations?
 		],
 		{
@@ -563,7 +598,8 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			cronExpression: convertCronToQuartz(cronExpression)
+			//cronExpression: convertCronToQuartz(cronExpression)
+			cronExpression: convertUnitToCron(timeUnit)
 		};
 	} else {
 		connectionBody['schedule'] = {
