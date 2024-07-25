@@ -22,7 +22,7 @@ const SharingModeSelect = ({
 	showInfoAlert = false,
 	app
 }) => {
-	return (
+	return (<>
 		<div className='sm:col-span-12'>
 			<label
 				htmlFor='sharingMode'
@@ -52,9 +52,11 @@ const SharingModeSelect = ({
 					}}
 				/>
 			</div>
-			{showInfoAlert && sharingMode === SharingMode.PUBLIC && <SharingModeInfoAlert app={app} />}
 		</div>
-	);
+		{showInfoAlert && sharingMode === SharingMode.PUBLIC && <div className='col-span-12'>
+			<SharingModeInfoAlert app={app} />
+		</div>}
+	</>);
 };
 
 export default SharingModeSelect;
