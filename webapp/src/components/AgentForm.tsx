@@ -96,7 +96,7 @@ export default function AgentForm({
 			toolIds: (toolState || [])
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
-			iconId: icon.id
+			iconId: icon?.id
 		};
 		if (editing) {
 			await API.editAgent(

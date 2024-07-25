@@ -12,7 +12,7 @@ use tokio::task;
 use crate::init::env_variables::GLOBAL_DATA;
 
 use crate::llm::models::{EmbeddingModels, FastEmbedModels};
-use crate::mongo::queries::get_model_credentials;
+use crate::mongo::queries::get_model;
 
 pub async fn embed_text(
     mongo_conn: Arc<RwLock<Database>>,
@@ -130,7 +130,7 @@ pub async fn embed_text(
             Some(m) => {
                 // initiate variables
                 let mongodb_connection = mongo_conn.read().await;
-                match get_model_credentials(&mongodb_connection, datasource_id.as_str()).await {
+                match get_model(&mongodb_connection, datasource_id.as_str()).await {
                     Ok(model) => {
                         if let Some(model_obj) = model {
                             let backoff = backoff::ExponentialBackoffBuilder::new()

@@ -7,7 +7,7 @@ use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
 use crate::llm::models::EmbeddingModels;
-use crate::mongo::queries::{get_embedding_model_and_embedding_key, increment_by_one};
+use crate::mongo::queries::{get_model_and_embedding_key, increment_by_one};
 use crate::qdrant::helpers::embed_payload;
 use crate::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
@@ -75,7 +75,7 @@ pub async fn process_incoming_messages(
         match serde_json::from_str(message.as_str()) {
             Ok::<Value, _>(message_data) => {
                 let mongo = mongo_connection.read().await;
-                match get_embedding_model_and_embedding_key(&mongo, datasource_id.as_str())
+                match get_model_and_embedding_key(&mongo, datasource_id.as_str())
                     .await
                 {
                     Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
