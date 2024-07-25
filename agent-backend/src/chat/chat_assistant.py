@@ -1,40 +1,27 @@
 import asyncio
 import logging
 import re
-import traceback
-import uuid
-from datetime import datetime
 
-from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseLanguageModel
-from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage, AIMessage
-from langchain_core.tools import tool, BaseTool
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph.graph import CompiledGraph
-from langgraph.prebuilt import ToolNode
-from langgraph.graph import MessagesState
-from langgraph.graph import START, StateGraph
+from langchain_core.messages import SystemMessage
+from langchain_core.tools import BaseTool
 from socketio import SimpleClient
 from socketio.exceptions import ConnectionError
 
+from chat.agents.base import BaseChatAgent
+from chat.agents.factory import chat_agent_factory
 from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN
 from init.mongo_session import start_mongo_session
 from lang_models import model_factory as language_model_factory
-from messaging.send_message_to_socket import send
 from models.mongo import App, Tool, Datasource, Model, ToolType, Agent
-from models.sockets import SocketEvents, SocketMessage, Message
-from redisClient.utilities import RedisClass
 from tools import RagTool, GoogleCloudFunctionTool
 from tools.builtin_tools import BuiltinTools
-from tools.global_tools import CustomHumanInput
-
-redis_con = RedisClass()
 
 
 class ChatAssistant:
     chat_model: BaseLanguageModel
     tools: list[BaseTool]
-    workflow: CompiledGraph
+    chat_agent: BaseChatAgent
     system_message: str
     agent_name: str
 
@@ -44,7 +31,8 @@ class ChatAssistant:
         self.mongo_client = start_mongo_session()
         self.init_socket()
         self.init_app_state()
-        self.init_graph()
+        self.chat_agent = chat_agent_factory(chat_model=self.chat_model, tools=self.tools, agent_name=self.agent_name,
+                                             session_id=session_id, socket=self.socket)
 
     def init_socket(self):
         try:
@@ -108,235 +96,7 @@ class ChatAssistant:
 
         return tool_class.factory(agentcloud_tool)
 
-    def init_graph(self):
-        async def call_model(state, config):
-            messages = state["messages"]
-            if self._chat_model_is_anthropic():
-                if isinstance(messages[0], SystemMessage) and not isinstance(messages[1], HumanMessage):
-                    # to work around the "first message is not user message" error
-                    messages.insert(1, HumanMessage(content="<< dummy message >>"))
-                if len(messages) >= 3 and isinstance(messages[-2], AIMessage) and isinstance(messages[-3], AIMessage):
-                    # to work around the "roles must alternate between "user" and "assistant"..." error
-                    messages.insert(-2, HumanMessage(content="<< dummy message >>"))
-
-            # Refer: https://langchain-ai.github.io/langgraph/how-tos/streaming-tokens/
-            # Note: Anthropic does not currently support streaming tool calls. Attempting to stream will yield
-            # a single final message. See https://python.langchain.com/v0.1/docs/integrations/chat/anthropic/#streaming
-            response = await self.chat_model.ainvoke(messages, config)
-            return {"messages": response}
-
-        def invoke_human_input(state):
-            """
-            Same as `call_model` except it appends a prompt to invoke the human input tool to message state
-            """
-            messages = (state["messages"] +
-                        [HumanMessage(content="Use the human_input tool to ask the user what assistance they need")])
-            response = self.chat_model.invoke(messages)
-            return {"messages": [response]}
-
-        human_input_tool = CustomHumanInput(self.socket, self.session_id, author_name=self.agent_name)
-
-        self.chat_model = self.chat_model.bind_tools(self.tools + [human_input_tool])
-
-        human_input_node = ToolNode([human_input_tool])
-        tools_node = ToolNode(self.tools)
-
-        workflow = StateGraph(MessagesState)
-        workflow.add_node("chat_model", call_model)
-        workflow.add_node("human_input", human_input_node)
-        workflow.add_node("tools", tools_node)
-        workflow.add_node("human_input_invoker", invoke_human_input)
-
-        workflow.add_edge(START, "human_input_invoker")
-        workflow.add_edge("human_input_invoker", "human_input")
-        workflow.add_edge("human_input", "chat_model")
-        workflow.add_edge("tools", "chat_model")
-
-        def should_continue(state):
-            messages = state["messages"]
-            last_message = messages[-1]
-            # If there is no function call, then we finish
-            if not last_message.tool_calls:
-                return "end"
-            # allow for human-in-the-loop flow
-            elif last_message.tool_calls[0]["name"] == "human_input":
-                return "human_input"
-            # Otherwise if there is, we continue
-            else:
-                return "continue"
-
-        workflow.add_conditional_edges(
-            "chat_model",
-            should_continue,
-            {
-                # If `tools`, then we call the tool node.
-                "continue": "tools",
-                "human_input": "human_input",
-                # Otherwise we finish and go back to human input invoker. Always end with human_input_invoker
-                "end": "human_input_invoker"
-            },
-        )
-
-        # Set up memory
-        memory = MemorySaver()
-
-        self.workflow = workflow.compile(checkpointer=memory)
-
     def run(self):
         config = {"configurable": {"thread_id": self.session_id}}
         system_message = SystemMessage(content=self.system_message)
-        asyncio.run(self.stream_execute([system_message], config))
-
-    def _chat_model_is_anthropic(self) -> bool:
-        return isinstance(self.chat_model.bound, ChatAnthropic)
-
-    def stop_generating_check(self):
-        try:
-            stop_flag = redis_con.get(f"{self.session_id}_stop")
-            logging.debug(f"stop_generating_check for session: {self.session_id}, stop_flag: {stop_flag}")
-            return stop_flag == "1"
-        except:
-            return False
-
-    @staticmethod
-    def _parse_anthropic_chunk(chunk_content: list) -> str:
-        if len(chunk_content) > 0:
-            if "text" in chunk_content[0]:
-                return chunk_content[0]["text"]
-            elif "partial_json" in chunk_content[0]:
-                return chunk_content[0]["partial_json"]
-        return ""
-
-    async def stream_execute(self, messages: list[BaseMessage], config: dict):
-        chunk_id = str(uuid.uuid4())
-        tool_chunk_id = {}
-        first = True
-
-        try:
-            async for event in self.workflow.astream_events({"messages": messages},
-                                                            config=config, version="v1"):
-                if self.stop_generating_check():
-                    self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
-                                        first=True, chunk_id=str(uuid.uuid4()),
-                                        timestamp=datetime.now().timestamp() * 1000,
-                                        display_type="inline")
-                    return
-
-                kind = event["event"]
-                logging.debug(f"{kind}:\n{event}")
-                match kind:
-                    # message chunk
-                    case "on_chat_model_stream":
-                        content = event['data']['chunk'].content
-                        chunk = repr(content)
-                        content = self._parse_anthropic_chunk(content) \
-                            if self._chat_model_is_anthropic() else content
-                        if type(content) is str:
-                            self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
-                                                first=first, chunk_id=chunk_id,
-                                                timestamp=datetime.now().timestamp() * 1000,
-                                                author_name=self.agent_name.capitalize(),
-                                                display_type="bubble")
-                        first = False
-                        logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
-
-                    # parser chunk
-                    case "on_parser_stream":
-                        logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
-
-                    # tool chat message finished
-                    case "on_chain_end":
-                        # Reset chunk_id
-                        chunk_id = str(uuid.uuid4())
-                        # Reset first
-                        first = True
-
-                    # tool started being used
-                    case "on_tool_start":
-                        logging.debug(f"{kind}:\n{event}")
-
-                        # No longer sending human input tool usage start/end messages
-                        raw_tool_name = event.get('name')
-                        if raw_tool_name == 'human_input':
-                            continue
-
-                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
-
-                        # Use event->run_id as key for tool_chunk_id as that is guaranteed to be unique
-                        # and won't be overwritten on concurrent runs of the same tool
-                        run_id = event["run_id"]
-                        tool_chunk_id[run_id] = str(uuid.uuid4())
-
-                        self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[run_id],
-                                            timestamp=datetime.now().timestamp() * 1000,
-                                            display_type="inline")
-
-                    # tool finished being used
-                    case "on_tool_end":
-                        logging.debug(f"{kind}:\n{event}")
-
-                        # No longer sending human input tool usage start/end messages
-                        raw_tool_name = event.get('name')
-                        if raw_tool_name == 'human_input':
-                            continue
-
-                        run_id = event["run_id"]
-
-                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
-                        self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[run_id],
-                                            timestamp=datetime.now().timestamp() * 1000,
-                                            display_type="inline", overwrite=True)
-                        del tool_chunk_id[run_id]
-
-                    # see https://python.langchain.com/docs/expression_language/streaming#event-reference
-                    case _:
-                        logging.debug(f"unhandled {kind} event")
-        except Exception as chunk_error:
-            logging.error(traceback.format_exc())
-            self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
-                                first=True, chunk_id=str(uuid.uuid4()),
-                                timestamp=datetime.now().timestamp() * 1000,
-                                display_type="inline")
-            # TODO: if debug:
-            self.send_to_socket(text=f"""Stack trace:
-                ```
-                {chunk_error}
-                ```
-                """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
-                                timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
-            pass
-
-    def send_to_socket(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
-                       timestamp=None, display_type='bubble', author_name='System', overwrite=False):
-
-        if type(text) is str:
-            text = str(text)
-
-        # Set default timestamp if not provided
-        if timestamp is None:
-            timestamp = int(datetime.now().timestamp() * 1000)
-
-        if (len(text.rstrip()) == 0 and first == True) or len(text) == 0:
-            return # Don't send empty first messages
-
-        # send the message
-        send(
-            self.socket,
-            SocketEvents(event),
-            SocketMessage(
-                room=self.session_id,
-                authorName=author_name,
-                message=Message(
-                    chunkId=chunk_id,
-                    text=text,
-                    first=first,
-                    tokens=1,
-                    timestamp=timestamp,
-                    displayType=display_type,
-                    overwrite=overwrite,
-                )
-            ),
-            "both"
-        )
+        asyncio.run(self.chat_agent.stream_execute([system_message], config))
