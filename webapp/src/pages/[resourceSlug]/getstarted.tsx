@@ -1,11 +1,27 @@
 import { CheckBadgeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useAccountContext } from 'context/account';
+import { useStepContext } from 'context/stepwrapper';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import React from 'react';
 
 const GetStarted = () => {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, teamName, csrf } = accountContext as any;
+	const { step, setStep } = useStepContext();
+	const router = useRouter();
+
+	const { resourceSlug } = router.query;
+
+	const handleCreateChatApp = () => {
+		setStep(1);
+		router.push(`/${resourceSlug}/app/add`);
+	};
+
+	const handleCreateProcessApp = () => {
+		setStep(2);
+		router.push(`/${resourceSlug}/app/add`);
+	};
 
 	return (
 		<>
@@ -37,7 +53,10 @@ const GetStarted = () => {
 								</div>
 							</div>
 
-							<button className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'>
+							<button
+								className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'
+								onClick={handleCreateChatApp}
+							>
 								+ Create
 							</button>
 						</div>
@@ -70,7 +89,10 @@ const GetStarted = () => {
 								</div>
 							</div>
 
-							<button className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'>
+							<button
+								className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'
+								onClick={handleCreateProcessApp}
+							>
 								+ Create
 							</button>
 						</div>

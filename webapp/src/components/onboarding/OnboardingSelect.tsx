@@ -7,7 +7,7 @@ import {
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment } from 'react';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
 
 interface Option {
