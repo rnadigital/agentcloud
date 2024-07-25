@@ -7,30 +7,28 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
-	HomeIcon,
+	MoonIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
 	QueueListIcon,
+	SunIcon,
 	UserGroupIcon,
-	UserIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon
 } from '@heroicons/react/24/outline';
-import clsx from 'clsx';
 import AgentAvatar from 'components/AgentAvatar';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
 import { SessionStatus } from 'components/SessionCards';
-//import BillingBanner from 'components/BillingBanner';
 import TrialNag from 'components/TrialNag';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { Fragment, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
@@ -123,6 +121,8 @@ const userNavigation = [
 	{ name: 'Sign out', href: '#', logout: true }
 ];
 
+import { ThemeContext } from 'context/themecontext';
+
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 import { useChatContext } from '../context/chat';
@@ -140,6 +140,8 @@ export default withRouter(function Layout(props) {
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	// const showNavs = !noNavPages.includes(router.pathname.em);
 	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
+
+	const { theme, toggleTheme } = useContext(ThemeContext);
 
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -601,6 +603,13 @@ export default withRouter(function Layout(props) {
 										</span>
 									)}
 								</div>
+								<button onClick={toggleTheme}>
+									{theme === 'dark' ? (
+										<MoonIcon className='text-white h-6 w-6' />
+									) : (
+										<SunIcon className='h-6 w-6' />
+									)}
+								</button>
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
