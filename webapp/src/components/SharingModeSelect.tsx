@@ -1,4 +1,4 @@
-import InfoAlert from 'components/InfoAlert';
+import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
 import React from 'react';
 import Select from 'react-tailwindcss-select';
 import { SharingMode } from 'struct/sharing';
@@ -15,7 +15,13 @@ const sharingModeOptions = [
 	}
 ];
 
-const SharingModeSelect = ({ title = 'Sharing Mode', sharingMode, setSharingMode }) => {
+const SharingModeSelect = ({
+	title = 'Sharing Mode',
+	sharingMode,
+	setSharingMode,
+	showInfoAlert = false,
+	app
+}) => {
 	return (
 		<div className='sm:col-span-12'>
 			<label
@@ -46,6 +52,7 @@ const SharingModeSelect = ({ title = 'Sharing Mode', sharingMode, setSharingMode
 					}}
 				/>
 			</div>
+			{showInfoAlert && sharingMode === SharingMode.PUBLIC && <SharingModeInfoAlert app={app} />}
 		</div>
 	);
 };

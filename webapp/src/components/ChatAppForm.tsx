@@ -329,22 +329,12 @@ export default function ChatAppForm({
 								</div>
 							</div>
 
-							<SharingModeSelect sharingMode={sharingMode} setSharingMode={setSharingMode} />
-							{sharingMode === SharingMode.PUBLIC && (
-								<>
-									<InfoAlert
-										textColor='black'
-										className='rounded bg-yellow-200 p-4 -mt-3 sm:col-span-12'
-										message='Public apps can be accessed by anyone, potentially incurring token costs.'
-									>
-										{editing && (
-											<CopyToClipboardInput
-												dataToCopy={`${origin}/s/${resourceSlug}/app/${app._id}`}
-											/>
-										)}
-									</InfoAlert>
-								</>
-							)}
+							<SharingModeSelect
+								sharingMode={sharingMode}
+								setSharingMode={setSharingMode}
+								showInfoAlert={true}
+								app={app}
+							/>
 
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
