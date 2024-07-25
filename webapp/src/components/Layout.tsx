@@ -603,13 +603,16 @@ export default withRouter(function Layout(props) {
 										</span>
 									)}
 								</div>
-								<button onClick={toggleTheme}>
-									{theme === 'dark' ? (
-										<MoonIcon className='text-white h-6 w-6' />
-									) : (
-										<SunIcon className='h-6 w-6' />
-									)}
-								</button>
+								{/* TODO: enable theme switching when we have proper dark mode styling */}
+								{false && (
+									<button onClick={toggleTheme}>
+										{theme === 'dark' ? (
+											<MoonIcon className='text-white h-6 w-6' />
+										) : (
+											<SunIcon className='h-6 w-6' />
+										)}
+									</button>
+								)}
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
