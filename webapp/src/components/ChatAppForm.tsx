@@ -402,7 +402,7 @@ export default function ChatAppForm({
 											>
 												System Message
 											</label>
-											<div className='relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='role'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -422,7 +422,7 @@ export default function ChatAppForm({
 													}}
 												/>
 											</div>
-											<div className='relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800  relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='goal'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -442,7 +442,7 @@ export default function ChatAppForm({
 													}}
 												/>
 											</div>
-											<div className='relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800  overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='backstory'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
