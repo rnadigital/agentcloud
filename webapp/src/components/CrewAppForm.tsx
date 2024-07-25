@@ -98,7 +98,7 @@ export default function CrewAppForm({
 			cache: appCache,
 			managerModelId: managerModel?.value,
 			tasks: tasksState.map(x => x.value),
-			iconId: icon.id,
+			iconId: icon?.id,
 			type: AppType.CREW,
 			run
 		};
