@@ -92,6 +92,9 @@ export async function publicSessionData(req, res, _next) {
 			}
 			break;
 	}
+	if (app?.sharingConfig?.mode !== SharingMode.PUBLIC) {
+		return; // TODO: make this actually
+	}
 	return {
 		csrf: req.csrfToken(),
 		session,
@@ -119,6 +122,9 @@ export async function sessionPage(app, req, res, next) {
  */
 export async function publicSessionPage(app, req, res, next) {
 	const data = await publicSessionData(req, res, next);
+	if (!data) {
+		return next(); //404
+	}
 	res.locals.data = {
 		...data,
 		account: null
