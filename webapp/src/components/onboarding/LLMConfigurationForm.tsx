@@ -55,7 +55,12 @@ const LLMConfigurationForm = () => {
 	const [submitting, setSubmitting] = useState(false);
 
 	const { control, watch, resetField, handleSubmit } = useForm<LLMConfigurationFormValues>({
-		defaultValues: { LLMType: modelOptions[0], embeddingType: modelOptions[0] }
+		defaultValues: {
+			LLMType: modelOptions[0],
+			embeddingType: modelOptions[0],
+			LLMModel: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+			embeddingModel: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' }
+		}
 	});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
@@ -194,6 +199,8 @@ const LLMConfigurationForm = () => {
 		}
 	}, [embeddingType]);
 
+	console.log(LLMModel);
+
 	if (!isMounted) {
 		return null;
 	}
@@ -232,10 +239,10 @@ const LLMConfigurationForm = () => {
 					<div
 						className={clsx(
 							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
-							{ 'bg-white': !isOpenAISelectedLLMType }
+							{ 'bg-white': LLMModel?.value !== 'gpt-4o-mini' }
 						)}
 					>
-						{isOpenAISelectedLLMType && (
+						{LLMModel?.value === 'gpt-4o-mini' && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
 								<div>Best for overall speed, cost, performance, and tool integration</div>
@@ -294,10 +301,10 @@ const LLMConfigurationForm = () => {
 					<div
 						className={clsx(
 							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
-							{ 'bg-white': !isOpenAISelectedEmbeddingType }
+							{ 'bg-white': embeddingModel?.value !== 'text-embedding-3-small' }
 						)}
 					>
-						{isOpenAISelectedEmbeddingType && (
+						{embeddingModel?.value === 'text-embedding-3-small' && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
 								<div>Excellent for RAG, with great cost efficiency and performance.</div>
