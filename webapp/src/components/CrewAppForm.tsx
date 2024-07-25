@@ -17,8 +17,9 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
 import { modelOptions, ModelType } from 'struct/model';
-
-import { ProcessImpl } from '../lib/struct/crew';
+import { ProcessImpl } from 'struct/crew';
+import SharingModeSelect from 'components/SharingModeSelect';
+import { SharingMode } from 'struct/sharing';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -55,6 +56,7 @@ export default function CrewAppForm({
 	const [managerModel, setManagerModel]: any = useState(
 		initialModel ? { label: initialModel.name, value: initialModel._id } : null
 	);
+	const [sharingMode, setSharingMode] = useState(appState?.sharingConfig?.mode || SharingMode.TEAM);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
@@ -100,7 +102,8 @@ export default function CrewAppForm({
 			tasks: tasksState.map(x => x.value),
 			iconId: icon?.id,
 			type: AppType.CREW,
-			run
+			run,
+			sharingMode,
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -277,6 +280,7 @@ export default function CrewAppForm({
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
 							</div>
+							
 							<div className='sm:col-span-12 flex flex-row gap-4'>
 								<div className='w-full'>
 									<label
@@ -297,6 +301,14 @@ export default function CrewAppForm({
 									/>
 								</div>
 							</div>
+
+							<SharingModeSelect
+								sharingMode={sharingMode}
+								setSharingMode={setSharingMode}
+								showInfoAlert={true}
+								app={app}
+							/>
+
 							<div className='sm:col-span-12'>
 								<label
 									htmlFor='members'
