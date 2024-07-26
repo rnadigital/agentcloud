@@ -27,6 +27,7 @@ export interface FieldRequirement {
 	optional?: boolean;
 	tooltip?: string;
 	placeholder?: string;
+	inputProps?: any;
 }
 
 interface ModelRequirements {
@@ -35,32 +36,38 @@ interface ModelRequirements {
 
 export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
-		api_key: { type: 'string' },
-		org_id: { type: 'string', optional: true }
+		api_key: { type: 'text' },
+		org_id: { type: 'text', optional: true }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
-		base_url: { type: 'string' },
-		api_key: { type: 'string' }
+		base_url: { type: 'text', tooltip: 'Ollama URL (not localhost)' },
+		api_key: { type: 'text' }
 	},
 	[ModelType.COHERE]: {
-		cohere_api_key: { type: 'string' }
+		cohere_api_key: { type: 'text' }
 	},
 	[ModelType.ANTHROPIC]: {
-		api_key: { type: 'string' }
+		api_key: { type: 'text' }
 	},
 	[ModelType.GROQ]: {
-		groq_api_key: { type: 'string' }
+		groq_api_key: { type: 'text' }
 	},
 	[ModelType.VERTEX]: {
-		credentials: { type: 'string', tooltip: 'GCP service account JSON', placeholder: '{ ... }' },
+		credentials: { type: 'text', tooltip: 'GCP service account JSON', placeholder: '{ ... }' },
+		temperature: {
+			type: 'range',
+			inputProps: { min: 0, max: 1, step: 0.01 },
+			optional: true,
+			tooltip: 'Model temperature'
+		},
 		location: {
-			type: 'string',
+			type: 'text',
 			optional: true,
 			tooltip: 'GCP location',
 			placeholder: 'us-central1'
 		},
-		project: { type: 'string', optional: true, tooltip: 'GCP project name' }
+		project: { type: 'text', optional: true, tooltip: 'GCP project name' }
 	}
 };
 
@@ -98,8 +105,9 @@ export const ModelList = {
 	],
 	[ModelType.COHERE]: ['command-r-plus'],
 	[ModelType.ANTHROPIC]: [
-		'claude-3-opus-20240229',
+		'claude-3-5-sonnet-20240620',
 		'claude-3-sonnet-20240229',
+		'claude-3-opus-20240229',
 		'claude-3-haiku-20240307'
 	],
 	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
