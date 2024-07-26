@@ -16,8 +16,7 @@ from redisClient.utilities import RedisClass
 
 class BaseChatAgent:
     """
-    Runtime for the chatbot. Contains the graph, orchestrates flow of messages between the nodes,
-    calls tools, and responds with appropriate messages to the user's input.
+    Base class for the chatbot agent runtime.
     """
 
     def __init__(self, chat_model: BaseLanguageModel, tools: list[BaseTool], agent_name: str, session_id: str,

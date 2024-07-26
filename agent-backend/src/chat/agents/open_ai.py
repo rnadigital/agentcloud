@@ -7,7 +7,11 @@ from chat.agents.base import BaseChatAgent
 from tools.global_tools import CustomHumanInput
 
 
-class DefaultChatAgent(BaseChatAgent):
+class OpenAIChatAgent(BaseChatAgent):
+    """
+    Contains the graph, defines flow of messages between the nodes, calls tools
+    """
+
     async def call_model(self, state, config):
         messages = state["messages"]
         response = await self.chat_model.ainvoke(messages, config)

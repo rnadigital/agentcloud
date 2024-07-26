@@ -101,10 +101,12 @@ def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_t
 
 def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
     credentials_info = json.loads(model.config.get('credentials'))
+    model_config = model.model_dump(exclude_none=True, exclude_unset=True).get('config')
+
+    model_params = exclude_items(model_config, ['credentials'])
     credentials = service_account.Credentials.from_service_account_info(credentials_info)
-    model_config = model.model_dump(exclude_none=True, exclude_unset=True, ).get('config')
-    params = exclude_items(model_config, ['credentials'])
-    return ChatVertexAI(**params, credentials=credentials)
+
+    return ChatVertexAI(**model_params, credentials=credentials)
 
 
 def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
