@@ -10,7 +10,7 @@ use crate::gcp::models::PubSubConnect;
 use crate::llm::models::EmbeddingModels;
 use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
 use crate::mongo::models::ChunkingStrategy;
-use crate::mongo::queries::{get_datasource, get_embedding_model};
+use crate::mongo::queries::{get_datasource, get_model};
 use crate::qdrant::helpers::construct_point_struct;
 use crate::qdrant::utils::Qdrant;
 use crate::messages::task_handoff::send_task;
@@ -54,7 +54,7 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
     match get_datasource(&mongodb_connection, datasource_id).await {
         Ok(datasource) => {
             if let Some(ds) = datasource {
-                if let Ok(Some(model_parameters)) = get_embedding_model(&mongodb_connection, datasource_id).await {
+                if let Ok(Some(model_parameters)) = get_model(&mongodb_connection, datasource_id).await {
                     if let Some(stream_type) = stream_type {
                         if let Ok(_json) = serde_json::from_str(message_string.as_str()) {
                             let message_data: Value = _json; // this is necessary because  you can not do type annotation inside a if let Ok() expression

@@ -86,6 +86,7 @@
     "react-dropzone": "^14.2.3",
     "react-email": "^2.1.5",
     "react-hook-form": "^7.52.0",
+    "react-js-cron": "^5.0.1",
     "react-markdown": "^6.0.3",
     "react-responsive": "^10.0.0",
     "react-select": "^5.7.5",
