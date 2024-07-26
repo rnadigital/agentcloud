@@ -461,7 +461,7 @@ export default function ChatAppForm({
 										callbackKey='modelId'
 										setCallbackKey={null}
 										modelFilter='llm'
-										modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
+										modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX]}
 									/>
 
 									<ToolsSelect
