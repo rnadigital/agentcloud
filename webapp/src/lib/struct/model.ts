@@ -6,7 +6,8 @@ export enum ModelType {
 	OLLAMA = 'ollama',
 	COHERE = 'cohere',
 	ANTHROPIC = 'anthropic',
-	GROQ = 'groq'
+	GROQ = 'groq',
+	VERTEX = 'vertex'
 }
 
 export const modelOptions = [
@@ -15,14 +16,17 @@ export const modelOptions = [
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed' },
 	{ value: ModelType.COHERE, label: 'Cohere' },
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic' },
-	{ value: ModelType.GROQ, label: 'Groq' }
+	{ value: ModelType.GROQ, label: 'Groq' },
+	{ value: ModelType.VERTEX, label: 'Vertex' }
 ];
 
 export const ModelTypes = Object.values(ModelType);
 
-interface FieldRequirement {
+export interface FieldRequirement {
 	type: string;
 	optional?: boolean;
+	tooltip?: string;
+	placeholder?: string;
 }
 
 interface ModelRequirements {
@@ -47,19 +51,28 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	},
 	[ModelType.GROQ]: {
 		groq_api_key: { type: 'string' }
+	},
+	[ModelType.VERTEX]: {
+		credentials: { type: 'string', tooltip: 'GCP service account JSON', placeholder: '{ ... }' },
+		location: {
+			type: 'string',
+			optional: true,
+			tooltip: 'GCP location',
+			placeholder: 'us-central1'
+		},
+		project: { type: 'string', optional: true, tooltip: 'GCP project name' }
 	}
-	// Add more types here if needed
 };
 
 export const ModelList = {
 	[ModelType.OPENAI]: [
-		'gpt-4o',
 		'gpt-4o-mini',
+		'gpt-4o',
 		'gpt-4-turbo',
 		'gpt-4',
 		'gpt-3.5-turbo',
-		'text-embedding-3-large',
 		'text-embedding-3-small',
+		'text-embedding-3-large',
 		'text-embedding-ada-002'
 	],
 	[ModelType.FASTEMBED]: [
@@ -89,7 +102,8 @@ export const ModelList = {
 		'claude-3-sonnet-20240229',
 		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768']
+	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
+	[ModelType.VERTEX]: ['gemini-pro']
 };
 
 export const ModelEmbeddingLength = {

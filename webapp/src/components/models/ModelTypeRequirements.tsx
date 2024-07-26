@@ -1,9 +1,17 @@
+import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import React from 'react';
 import Select from 'react-tailwindcss-select';
 import { ModelEmbeddingLength, ModelList, ModelTypeRequirements } from 'struct/model';
+import { FieldRequirement } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
-const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter = null }) => {
+const ModelTypeRequirementsComponent = ({
+	type,
+	config,
+	setConfig,
+	modelFilter = null,
+	defaultModel = null
+}) => {
 	const { requiredFields, optionalFields } = Object.entries(ModelTypeRequirements[type])
 		.filter(e => e[1])
 		.reduce(
@@ -17,7 +25,7 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter =
 			},
 			{ requiredFields: [], optionalFields: [] }
 		);
-	const renderInput = ([key, req]: any, ei) => {
+	const renderInput = ([key, req]: [string, FieldRequirement], ei) => {
 		return (
 			<div key={`modelName_${type}_${ei}`}>
 				<label
@@ -25,6 +33,14 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter =
 					className='capitalize block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 				>
 					{key.replaceAll('_', ' ')}
+					{req?.tooltip && (
+						<span className='ms-1 -mb-0.5 tooltip z-100'>
+							<InformationCircleIcon className='h-4 w-4' />
+							<span className='tooltiptext text-sm capitalize !w-[200px] !-ml-[100px] whitespace-pre'>
+								{req?.tooltip}
+							</span>
+						</span>
+					)}
 				</label>
 				<div className='mt-2'>
 					<input
@@ -35,6 +51,7 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter =
 						onChange={e => setConfig(e.target)}
 						required={req?.optional !== true}
 						defaultValue={config[key]}
+						placeholder={req.placeholder}
 					/>
 				</div>
 			</div>
@@ -91,8 +108,8 @@ const ModelTypeRequirementsComponent = ({ type, config, setConfig, modelFilter =
 			)}
 			{requiredFields.map(renderInput)}
 			{optionalFields.length > 0 && (
-				<details>
-					<summary className='cursor-pointer'>Optional fields</summary>
+				<details className='space-y-4'>
+					<summary className='cursor-pointer mb-4'>Optional fields</summary>
 					{optionalFields.map(renderInput)}
 				</details>
 			)}
