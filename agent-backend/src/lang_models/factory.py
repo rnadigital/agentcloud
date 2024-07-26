@@ -96,7 +96,7 @@ def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_t
 
 
 def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
-    return ChatVertexAI(temperature=model.temperature,                
+    return ChatVertexAI(
         **model.model_dump(
             exclude_none=True,
             exclude_unset=True,
