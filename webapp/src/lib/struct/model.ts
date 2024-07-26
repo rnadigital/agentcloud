@@ -7,7 +7,7 @@ export enum ModelType {
 	COHERE = 'cohere',
 	ANTHROPIC = 'anthropic',
 	GROQ = 'groq',
-	VERTEX = 'vertex'
+	GOOGLE_VERTEX = 'google_vertex'
 }
 
 export const modelOptions = [
@@ -17,7 +17,7 @@ export const modelOptions = [
 	{ value: ModelType.COHERE, label: 'Cohere' },
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic' },
 	{ value: ModelType.GROQ, label: 'Groq' },
-	{ value: ModelType.VERTEX, label: 'Vertex' }
+	{ value: ModelType.GOOGLE_VERTEX, label: 'Google Vertex' }
 ];
 
 export const ModelTypes = Object.values(ModelType);
@@ -53,7 +53,7 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.GROQ]: {
 		groq_api_key: { type: 'text' }
 	},
-	[ModelType.VERTEX]: {
+	[ModelType.GOOGLE_VERTEX]: {
 		credentials: { type: 'text', tooltip: 'GCP service account JSON', placeholder: '{ ... }' },
 		temperature: {
 			type: 'range',
@@ -111,7 +111,7 @@ export const ModelList = {
 		'claude-3-haiku-20240307'
 	],
 	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
-	[ModelType.VERTEX]: ['gemini-pro']
+	[ModelType.GOOGLE_VERTEX]: ['gemini-pro']
 };
 
 export const ModelEmbeddingLength = {
