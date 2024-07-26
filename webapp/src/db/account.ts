@@ -84,7 +84,7 @@ export function getAccountByOAuthOrEmail(
 	};
 	if (email != null && email.length > 0) {
 		query = {
-			$or: [query, { email, emailVerified: true }]
+			$or: [query, { email /*, emailVerified: true*/ }] //Note: would cause duplicate accounts from oauth creation
 		};
 	}
 	return AccountCollection().findOne(query);
@@ -211,7 +211,8 @@ export function setAccountOauth(
 			$set: {
 				oauth: {
 					[provider]: { id: oauthId }
-				}
+				},
+				emailVerified: true
 			}
 		}
 	);
