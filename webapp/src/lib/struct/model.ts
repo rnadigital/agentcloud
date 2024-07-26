@@ -111,7 +111,7 @@ export const ModelList = {
 		'claude-3-haiku-20240307'
 	],
 	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
-	[ModelType.GOOGLE_VERTEX]: ['gemini-pro']
+	[ModelType.GOOGLE_VERTEX]: ['gemini-1.0-pro', 'gemini-1.5-pro', 'gemini-1.5-flash']
 };
 
 export const ModelEmbeddingLength = {
