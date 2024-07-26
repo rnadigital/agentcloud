@@ -256,7 +256,7 @@ export async function addAppApi(req, res, next) {
 				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(foundModel?.type)
 			) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI and Anthropic models are supported for chat app agents.'
+					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({
