@@ -85,7 +85,8 @@ export default async function createAccount({
 	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
-	let emailVerified = amazonKey == null;
+	//If there is no SES secret (email cant be sent) or this is an oauth login, don't require email verification.
+	let emailVerified = amazonKey == null || profileId != null;
 	const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 	const oauth = provider ? { [provider]: { id: profileId } } : ({} as OAuthRecordType);
 
