@@ -303,6 +303,9 @@ export async function verifyToken(req, res) {
 
 	const foundAccount = await getAccountById(accountId);
 	console.log('foundAccount', foundAccount);
+	if (!foundAccount) {
+		return dynamicResponse(req, res, 400, { error: 'Account already verified or not found' });
+	}
 	if (!foundAccount.passwordHash) {
 		if (!password || typeof password !== 'string' || password.length === 0) {
 			//Note: invite is invalidated at this point, but form is required so likelihood of legit issue is ~0

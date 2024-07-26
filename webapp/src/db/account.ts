@@ -211,7 +211,8 @@ export function setAccountOauth(
 			$set: {
 				oauth: {
 					[provider]: { id: oauthId }
-				}
+				},
+				emailVerified: true
 			}
 		}
 	);
