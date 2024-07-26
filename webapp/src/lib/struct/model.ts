@@ -67,7 +67,7 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 			tooltip: 'GCP location',
 			placeholder: 'us-central1'
 		},
-		project: { type: 'text', optional: true, tooltip: 'GCP project name' }
+		project: { type: 'text', tooltip: 'GCP project name' }
 	}
 };
 

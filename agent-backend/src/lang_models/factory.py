@@ -1,3 +1,6 @@
+import json
+
+from google.oauth2 import service_account
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
@@ -6,6 +9,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
 from langchain_google_vertexai import ChatVertexAI
 from langchain_anthropic import ChatAnthropic
 
+from utils.dict_utils import exclude_items
 from .cohere import CustomChatCohere
 import models.mongo
 from utils.model_helper import in_enums, get_enum_value_from_str_key, get_enum_key_from_value
@@ -60,7 +64,7 @@ def _build_openai_model(model: models.mongo.Model) -> BaseLanguageModel | Embedd
                 exclude_none=True,
                 exclude_unset=True,
             ).get('config'),
-       )
+        )
 
 
 def _build_azure_model(model: models.mongo.Model) -> BaseLanguageModel:
@@ -96,12 +100,11 @@ def _fastembed_standard_doc_name_swap(fastembed_model_name: str, from_standard_t
 
 
 def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
-    return ChatVertexAI(
-        **model.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-        ).get('config')
-    )
+    credentials_info = json.loads(model.config.get('credentials'))
+    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+    model_config = model.model_dump(exclude_none=True, exclude_unset=True, ).get('config')
+    params = exclude_items(model_config, ['credentials'])
+    return ChatVertexAI(**params, credentials=credentials)
 
 
 def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:
