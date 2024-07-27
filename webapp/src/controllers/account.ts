@@ -354,10 +354,16 @@ export async function switchTeam(req, res, _next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_TEAM);
-	const teamData = getTeamWithModels(teamId);
+	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
+	const teamData = await getTeamWithModels(teamId);
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
+
+	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
+		return dynamicResponse(req, res, 302, {
+			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
+		});
+	}
 
 	return res.json({});
 }
