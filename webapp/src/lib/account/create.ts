@@ -4,13 +4,7 @@ import Permission from '@permission';
 import { render } from '@react-email/render';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
-import {
-	addAccount,
-	OAuthRecordType,
-	setStripeCustomerId,
-	setStripePlan,
-	updateStripeCustomer
-} from 'db/account';
+import { addAccount, OAuthRecordType, setStripeCustomerId, updateStripeCustomer } from 'db/account';
 import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
@@ -19,6 +13,7 @@ import InviteEmail from 'emails/Invite';
 import VerificationEmail from 'emails/Verification';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
+import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
@@ -40,6 +35,8 @@ interface CreateAccountArgs {
 	profileId?: string | number;
 	checkoutSessionId?: string;
 	teamName?: string;
+	invitingTeamId?: string;
+	invitingOrgId?: string;
 }
 
 export default async function createAccount({
@@ -51,7 +48,9 @@ export default async function createAccount({
 	provider,
 	profileId,
 	checkoutSessionId,
-	teamName
+	teamName,
+	invitingTeamId,
+	invitingOrgId
 }: CreateAccountArgs): Promise<{
 	emailVerified: boolean;
 	addedAccount: InsertResult;
@@ -94,7 +93,6 @@ export default async function createAccount({
 	// get stripe secret
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
-	const hasCreateModelPermission = Roles[roleTemplate].get(Permissions.CREATE_MODEL);
 	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
 		addAccount({
@@ -116,8 +114,8 @@ export default async function createAccount({
 					]
 				}
 			],
-			currentOrg: orgId,
-			currentTeam: teamId,
+			currentOrg: toObjectId(invitingOrgId) || orgId,
+			currentTeam: toObjectId(invitingTeamId) || teamId,
 			emailVerified,
 			oauth,
 			permissions: new Binary(Roles.REGISTERED_USER.array),
@@ -130,7 +128,7 @@ export default async function createAccount({
 				},
 				stripeTrial: false
 			},
-			onboarded: hasCreateModelPermission ? false : true
+			onboarded: false
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
