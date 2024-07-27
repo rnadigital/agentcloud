@@ -634,6 +634,26 @@ export function transferTeamOwnership(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function setDefaultModel(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/team/set-default-model`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+export function getTeamModels(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/team/models.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
 
 function buildOptions(_route, method, body) {
 	// Convert method uppercase

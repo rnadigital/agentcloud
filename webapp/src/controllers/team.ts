@@ -15,7 +15,9 @@ import {
 	addTeamMember,
 	getTeamById,
 	getTeamWithMembers,
+	getTeamWithModels,
 	removeTeamMember,
+	setDefaultModel,
 	setMemberPermissions,
 	updateTeamOwner
 } from 'db/team';
@@ -55,6 +57,13 @@ export async function teamJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
+export async function teamModelsJson(req, res, next) {
+	const data = await getTeamWithModels(req.params.resourceSlug);
+	const csrf = req.csrfToken();
+
+	return res.json({ data, csrf, account: res.locals.account });
+}
+
 /**
  * @api {post} /forms/team/invite
  * @apiName invite
@@ -90,7 +99,8 @@ export async function inviteTeamMemberApi(req, res) {
 			name,
 			roleTemplate: template,
 			invite: true,
-			teamName: invitingTeam.name
+			teamName: invitingTeam.name,
+			invitingTeamId: invitingTeam.id
 		});
 
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
@@ -323,4 +333,29 @@ export async function transferTeamOwnershipApi(req, res) {
 		updateTeamOwnerInAccounts(res.locals.matchingOrg.id, resourceSlug, newOwnerId)
 	]);
 	return dynamicResponse(req, res, 200, { message: 'Team ownership transferred successfully' });
+}
+
+export async function setDefaultModelApi(req, res) {
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'modelId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
+			{ field: 'modelType', validation: { notEmpty: true, inSet: new Set(['llm', 'embedding']) } }
+		],
+		{ modelId: 'Model ID', modelType: 'Model Type' }
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { modelId, modelType } = req.body;
+
+	if (modelId && modelType) {
+		await setDefaultModel(req.params.resourceSlug, modelId, modelType);
+
+		return dynamicResponse(req, res, 200, {});
+	}
+
+	return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 }

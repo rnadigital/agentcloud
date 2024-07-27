@@ -471,6 +471,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/models.json', teamController.teamModelsJson);
 	teamRouter.get(
 		'/team/:memberId([a-f0-9]{24}).json',
 		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
@@ -510,6 +511,12 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.addTeamApi
+	);
+
+	teamRouter.post(
+		'/forms/team/set-default-model',
+		hasPerms.one(Permissions.CREATE_MODEL),
+		teamController.setDefaultModelApi
 	);
 
 	//assets

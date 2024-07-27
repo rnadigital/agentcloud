@@ -47,21 +47,37 @@ interface LLMConfigurationFormValues {
 const LLMConfigurationForm = () => {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
-	console.log(csrf);
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 
 	const [isMounted, setIsMounted] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [teamModels, setTeamModels] = useState<Response>();
 
-	const { control, watch, resetField, handleSubmit } = useForm<LLMConfigurationFormValues>({
-		defaultValues: {
-			LLMType: modelOptions[0],
-			embeddingType: modelOptions[0],
-			LLMModel: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
-			embeddingModel: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' }
-		}
-	});
+	const [userSelectedLLMType, setUserSelectedLLMType] = useState(false);
+	const [userSelectedEmbeddingType, setUserSelectedEmbeddingType] = useState(false);
+
+	const handleSetUserSelectedLLMType = () => {
+		setUserSelectedLLMType(true);
+	};
+
+	const handleSetUserSelectedEmbeddingType = () => {
+		setUserSelectedEmbeddingType(true);
+	};
+
+	const fetchDatasourceFormData = async () => {
+		await API.getTeamModels({ resourceSlug }, setTeamModels, null, router);
+	};
+
+	const { control, watch, resetField, handleSubmit, setValue, reset } =
+		useForm<LLMConfigurationFormValues>({
+			defaultValues: {
+				LLMType: modelOptions[0],
+				LLMModel: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+				embeddingModel: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
+				embeddingType: modelOptions[0]
+			}
+		});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
 
@@ -115,7 +131,7 @@ const LLMConfigurationForm = () => {
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
 		setSubmitting(true);
-		if (data.LLMModel) {
+		if (data.LLMModel.value) {
 			const body = {
 				_csrf: csrf,
 				resourceSlug,
@@ -131,11 +147,25 @@ const LLMConfigurationForm = () => {
 				}
 			};
 
-			await API.addModel(
+			const addedModel = await API.addModel(
 				body,
-				() => {
-					toast.success('Added Model');
+				() => toast.success('Added Model'),
+				res => {
+					toast.error(res);
 				},
+				null
+			);
+
+			const setDefaultModelBody = {
+				_csrf: csrf,
+				resourceSlug,
+				modelId: addedModel._id,
+				modelType: 'llm'
+			};
+
+			await API.setDefaultModel(
+				setDefaultModelBody,
+				() => toast.success('Default model set'),
 				res => {
 					toast.error(res);
 				},
@@ -143,7 +173,7 @@ const LLMConfigurationForm = () => {
 			);
 		}
 
-		if (data.embeddingModel) {
+		if (data.embeddingModel.value) {
 			const body = {
 				_csrf: csrf,
 				resourceSlug,
@@ -158,11 +188,27 @@ const LLMConfigurationForm = () => {
 					...(data.embedding_base_url && { base_url: data.embedding_base_url })
 				}
 			};
-			await API.addModel(
+			const addedModel = await API.addModel(
 				body,
 				() => {
 					toast.success('Added Model');
 				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
+
+			const setDefaultModelBody = {
+				_csrf: csrf,
+				resourceSlug,
+				modelId: addedModel._id,
+				modelType: 'embedding'
+			};
+
+			await API.setDefaultModel(
+				setDefaultModelBody,
+				() => toast.success('Default model set'),
 				res => {
 					toast.error(res);
 				},
@@ -188,18 +234,58 @@ const LLMConfigurationForm = () => {
 	}, []);
 
 	useEffect(() => {
-		if (LLMType) {
-			resetField('LLMModel');
+		if (teamModels) {
+			const teamLLMModel = teamModels?.data?.llmModel;
+			const teamEmbeddingModel = teamModels?.data?.embeddingModel;
+
+			reset({
+				LLMType: teamLLMModel
+					? { label: teamLLMModel.name, value: teamLLMModel.type }
+					: modelOptions[0],
+				embeddingType: teamEmbeddingModel
+					? { label: teamEmbeddingModel.name, value: teamEmbeddingModel.type }
+					: modelOptions[0],
+				LLMModel: teamLLMModel
+					? { label: teamLLMModel.model, value: teamLLMModel.model }
+					: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+				embeddingModel: teamEmbeddingModel
+					? { label: teamEmbeddingModel.model, value: teamEmbeddingModel.model }
+					: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
+				api_key: teamLLMModel?.config.api_key || '',
+				embedding_api_key: teamEmbeddingModel?.config.api_key || '',
+				embedding_cohre_api_key: teamEmbeddingModel?.config.cohere_api_key || '',
+				embedding_groq_api_key: teamEmbeddingModel?.config.groq_api_key || '',
+				base_url: teamLLMModel?.config.base_url || '',
+				cohere_api_key: teamLLMModel?.config.cohere_api_key || '',
+				groq_api_key: teamLLMModel?.config.groq_api_key || '',
+				embedding_base_url: teamEmbeddingModel?.config.base_url || ''
+			});
+		}
+	}, [teamModels, reset]);
+
+	useEffect(() => {
+		if (LLMType && userSelectedLLMType) {
+			resetField('LLMModel', {
+				defaultValue: { label: null, value: null }
+			});
+			setUserSelectedLLMType(false);
 		}
 	}, [LLMType]);
 
 	useEffect(() => {
-		if (embeddingType) {
-			resetField('embeddingModel');
+		if (embeddingType && userSelectedEmbeddingType) {
+			resetField('embeddingModel', {
+				defaultValue: { label: null, value: null }
+			});
+			setUserSelectedEmbeddingType(false);
 		}
 	}, [embeddingType]);
 
-	console.log(LLMModel);
+	useEffect(() => {
+		if (resourceSlug) {
+			fetchDatasourceFormData();
+		}
+	}, [resourceSlug]);
 
 	if (!isMounted) {
 		return null;
@@ -224,6 +310,7 @@ const LLMConfigurationForm = () => {
 								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
 								control={control}
 								name='LLMType'
+								callback={handleSetUserSelectedLLMType}
 							/>
 						</div>
 						<div className='w-1/2 sm:flex-1'>
@@ -286,6 +373,7 @@ const LLMConfigurationForm = () => {
 								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
 								control={control}
 								name='embeddingType'
+								callback={handleSetUserSelectedEmbeddingType}
 							/>
 						</div>
 						<div className='w-1/2 sm:flex-1'>
@@ -399,3 +487,79 @@ const LLMConfigurationForm = () => {
 };
 
 export default LLMConfigurationForm;
+
+interface Team {
+	_id: string;
+	ownerId: string;
+	name: string;
+	orgId: string;
+	members: string[];
+	dateCreated: string;
+	permissions: Record<string, string>;
+	llmModel: Model;
+	embeddingModel: Model;
+}
+
+interface Model {
+	_id: string;
+	orgId: string;
+	teamId: string;
+	name: string;
+	model: string;
+	embeddingLength: number;
+	modelType: string;
+	type: string;
+	config: {
+		model: string;
+		api_key: string;
+		base_url: string;
+		cohere_api_key: string;
+		groq_api_key: string;
+	};
+}
+
+interface Account {
+	_id: string;
+	name: string;
+	email: string;
+	orgs: Org[];
+	currentOrg: string;
+	currentTeam: string;
+	stripe: Stripe;
+	oauth: Record<string, unknown>;
+	permissions: string;
+	onboarded: boolean;
+	_stripe: Stripe;
+}
+
+interface Org {
+	id: string;
+	name: string;
+	ownerId: string;
+	teams: TeamSummary[];
+	permissions: Record<string, string>;
+}
+
+interface TeamSummary {
+	id: string;
+	name: string;
+	ownerId: string;
+	permissions: Record<string, string>;
+}
+
+interface Stripe {
+	stripeCustomerId: string;
+	stripePlan: string;
+	stripeAddons: {
+		users: number;
+		storage: number;
+	};
+	stripeTrial: boolean;
+	stripeEndsAt: number;
+}
+
+interface Response {
+	data: Team;
+	csrf: string;
+	account: Account;
+}
