@@ -15,6 +15,7 @@ interface Option {
 	value: string;
 	iconURL?: string;
 	recommended?: boolean;
+	callback?: () => void;
 }
 
 interface OnboardingSelectProps<TFieldValues extends FieldValues> {
@@ -29,6 +30,7 @@ interface OnboardingSelectProps<TFieldValues extends FieldValues> {
 	control: Control<TFieldValues>;
 	name: Path<TFieldValues>;
 	placeholder?: string;
+	callback?: () => void;
 }
 
 const OnboardingSelect = <TFieldValues extends FieldValues>({
@@ -36,15 +38,20 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 	classNames,
 	control,
 	name,
-	placeholder
+	placeholder,
+	callback
 }: OnboardingSelectProps<TFieldValues>) => {
 	return (
 		<Controller
 			name={name}
 			control={control}
 			render={({ field: { onChange, value } }) => {
+				const handleChange = (selectedOption: Option) => {
+					onChange(selectedOption);
+					callback?.();
+				};
 				return (
-					<Listbox value={value} onChange={onChange}>
+					<Listbox value={value} onChange={handleChange}>
 						{({ open }) => (
 							<>
 								<div className='mt-1 relative w-full text-sm'>
