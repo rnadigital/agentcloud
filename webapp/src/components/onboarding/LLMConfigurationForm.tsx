@@ -200,7 +200,6 @@ const LLMConfigurationForm = () => {
 			);
 
 			const setDefaultModelBody = {
-				_csrf: csrf,
 				resourceSlug,
 				modelId: addedModel._id,
 				modelType: 'embedding'
@@ -216,14 +215,14 @@ const LLMConfigurationForm = () => {
 			);
 		}
 
-		await API.updateOnboardedStatus({}, null, null, router);
+		await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
 		setSubmitting(false);
 	};
 
 	const updateOnboardedStatus = async () => {
 		setSubmitting(true);
 		try {
-			await API.updateOnboardedStatus({}, null, null, router);
+			await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
 		} finally {
 			setSubmitting(false);
 		}

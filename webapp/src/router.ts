@@ -226,6 +226,7 @@ export default function router(server, app) {
 		'/onboarded',
 		unauthedMiddlewareChain,
 		checkSession,
+		csrfMiddleware,
 		accountController.updateOnboardedStatus
 	);
 
@@ -235,6 +236,7 @@ export default function router(server, app) {
 		setDefaultOrgAndTeam,
 		checkSession,
 		setPermissions,
+		csrfMiddleware,
 		accountController.updateRole
 	);
 

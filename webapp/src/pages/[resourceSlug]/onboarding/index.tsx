@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,9 @@ interface FormValues {
 }
 
 const Onboarding = () => {
+	const [accountContext]: any = useAccountContext();
+	const { csrf } = accountContext;
+
 	const { control, handleSubmit } = useForm<FormValues>({
 		defaultValues: {
 			role: null
@@ -20,7 +24,8 @@ const Onboarding = () => {
 	const onSubmit = async (data: FormValues) => {
 		await API.updateRole(
 			{
-				role: data.role.value
+				role: data.role.value,
+				_csrf: csrf
 			},
 			null,
 			null,
@@ -49,7 +54,6 @@ const Onboarding = () => {
 						<div className='w-fit'>
 							<OnboardingSelect<FormValues>
 								options={[
-									{ value: null, label: null },
 									{ value: 'developer', label: 'Developer' },
 									{ value: 'data_engineer', label: 'Data Engineer' },
 									{ value: 'business_user', label: 'Business User' }
