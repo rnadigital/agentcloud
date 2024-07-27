@@ -1,6 +1,9 @@
 'use strict';
 
+import { getTeamModels } from '@api';
 import { dynamicResponse } from '@dr';
+import * as hasPerms from '@mw/permissions/hasperms';
+import Permission from '@permission';
 import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
@@ -16,6 +19,7 @@ import {
 	updateStripeCustomer,
 	verifyAccount
 } from 'db/account';
+import { getTeamById, getTeamWithModels } from 'db/team';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
@@ -23,6 +27,7 @@ import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
+import Permissions from 'permissions/permissions';
 import { productToPlanMap } from 'struct/billing';
 
 export async function accountData(req, res, _next) {
@@ -312,7 +317,6 @@ export async function verifyToken(req, res) {
 	*/
 
 	const foundAccount = await getAccountById(accountId);
-	console.log('foundAccount', foundAccount);
 	if (!foundAccount.passwordHash) {
 		if (!password || typeof password !== 'string' || password.length === 0) {
 			//Note: invite is invalidated at this point, but form is required so likelihood of legit issue is ~0
@@ -350,6 +354,9 @@ export async function switchTeam(req, res, _next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_TEAM);
+	const teamData = getTeamWithModels(teamId);
+
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
 	return res.json({});
@@ -368,8 +375,17 @@ export async function updateRole(req, res) {
 	const { role } = req.body;
 	const userId = res.locals.account._id;
 	await setAccountRole(userId, role);
+	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
+
+	const teamData = await getTeamWithModels(res.locals.account.currentTeam);
+
+	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
+		return dynamicResponse(req, res, 302, {
+			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
+		});
+	}
 
 	return dynamicResponse(req, res, 302, {
-		redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
+		redirect: `/${res.locals.account.currentTeam.toString()}/apps`
 	});
 }

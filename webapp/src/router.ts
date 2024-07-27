@@ -218,6 +218,7 @@ export default function router(server, app) {
 		setDefaultOrgAndTeam,
 		checkSession,
 		setSubscriptionLocals,
+		setPermissions,
 		csrfMiddleware,
 		accountController.switchTeam
 	);
@@ -228,7 +229,14 @@ export default function router(server, app) {
 		accountController.updateOnboardedStatus
 	);
 
-	accountRouter.post('/role', unauthedMiddlewareChain, checkSession, accountController.updateRole);
+	accountRouter.post(
+		'/role',
+		unauthedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setPermissions,
+		accountController.updateRole
+	);
 
 	server.use('/forms/account', accountRouter);
 
