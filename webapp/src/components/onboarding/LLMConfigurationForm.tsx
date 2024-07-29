@@ -193,7 +193,7 @@ const LLMConfigurationForm = () => {
 
 		await Promise.all(promises);
 
-		router.push(`/${resourceSlug}/getstarted`);
+		router.push(`/${resourceSlug}/app/add`);
 
 		setSubmitting(false);
 	};
@@ -431,7 +431,7 @@ const LLMConfigurationForm = () => {
 					className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm'
 					type='button'
 					onClick={() => {
-						router.push(`/${resourceSlug}/getstarted`);
+						router.push(`/${resourceSlug}/app/add`);
 					}}
 				>
 					I&apos;ll do this later
