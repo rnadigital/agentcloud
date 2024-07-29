@@ -31,16 +31,10 @@ interface LLMOption {
 interface LLMConfigurationFormValues {
 	LLMType: LLMOption;
 	LLMModel: LLMOption;
-	api_key: string;
-	embedding_api_key: string;
-	embedding_cohre_api_key: string;
-	embedding_groq_api_key: string;
 	embeddingType: LLMOption;
 	embeddingModel: LLMOption;
-	base_url: string;
-	cohere_api_key: string;
-	groq_api_key: string;
-	embedding_base_url: string;
+	llmModelConfig: Record<string, string>;
+	embeddedModelConfig: Record<string, string>;
 }
 
 const LLMConfigurationForm = () => {
@@ -115,7 +109,7 @@ const LLMConfigurationForm = () => {
 		.map(key => {
 			const label = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 			const placeholder = key.endsWith('key') ? 'Paste your API key' : `Enter the ${label}`;
-			return { name: key, label, placeholder };
+			return { name: `llmModelConfig.${key}`, label, placeholder };
 		});
 
 	const EmbeddingModelRequiredFields = Object.keys(ModelTypeRequirements[embeddingType?.value])
@@ -123,7 +117,7 @@ const LLMConfigurationForm = () => {
 		.map(key => {
 			const label = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 			const placeholder = key.endsWith('key') ? 'Paste your API key' : `Enter the ${label}`;
-			return { name: `embedding_${key}`, label, placeholder };
+			return { name: `embeddedModelConfig.${key}`, label, placeholder };
 		});
 
 	const { isTablet, isMobile } = useResponsive();
@@ -141,10 +135,7 @@ const LLMConfigurationForm = () => {
 				type: data.LLMType.value,
 				config: {
 					model: data.LLMModel.value,
-					...(data.api_key && { api_key: data.api_key }),
-					...(data.groq_api_key && { groq_api_key: data.groq_api_key }),
-					...(data.cohere_api_key && { cohere_api_key: data.cohere_api_key }),
-					...(data.base_url && { base_url: data.base_url })
+					...data.llmModelConfig
 				}
 			};
 
@@ -178,10 +169,7 @@ const LLMConfigurationForm = () => {
 				type: data.embeddingType.value,
 				config: {
 					model: data.embeddingModel.value,
-					...(data.embedding_api_key && { api_key: data.embedding_api_key }),
-					...(data.embedding_cohre_api_key && { cohere_api_key: data.embedding_cohre_api_key }),
-					...(data.embedding_groq_api_key && { groq_api_key: data.embedding_groq_api_key }),
-					...(data.embedding_base_url && { base_url: data.embedding_base_url })
+					...data.embeddedModelConfig
 				}
 			};
 
@@ -242,14 +230,12 @@ const LLMConfigurationForm = () => {
 				embeddingModel: teamEmbeddingModel
 					? { label: teamEmbeddingModel.model, value: teamEmbeddingModel.model }
 					: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
-				api_key: teamLLMModel?.config.api_key || '',
-				embedding_api_key: teamEmbeddingModel?.config.api_key || '',
-				embedding_cohre_api_key: teamEmbeddingModel?.config.cohere_api_key || '',
-				embedding_groq_api_key: teamEmbeddingModel?.config.groq_api_key || '',
-				base_url: teamLLMModel?.config.base_url || '',
-				cohere_api_key: teamLLMModel?.config.cohere_api_key || '',
-				groq_api_key: teamLLMModel?.config.groq_api_key || '',
-				embedding_base_url: teamEmbeddingModel?.config.base_url || ''
+				llmModelConfig: {
+					...(teamLLMModel?.config && { ...teamLLMModel.config })
+				},
+				embeddedModelConfig: {
+					...(teamEmbeddingModel?.config && { ...teamEmbeddingModel.config })
+				}
 			});
 		}
 	}, [teamModels, reset]);
