@@ -82,7 +82,7 @@ const LLMConfigurationForm = () => {
 				.map(model => ({
 					label: model,
 					value: model,
-					...(model === 'gpt-4o' ? { recommended: true } : {})
+					...(model === 'gpt-4o-mini' ? { recommended: true } : {})
 				}))
 		] || [];
 	const embeddingModelList =
