@@ -1,7 +1,7 @@
 import LLMConfigurationForm from 'components/onboarding/LLMConfigurationForm';
 import React from 'react';
 
-const ConfigureModels = () => {
+export default function ConfigureModels() {
 	return (
 		<main className='flex items-center flex-col'>
 			<img
@@ -31,6 +31,16 @@ const ConfigureModels = () => {
 			</section>
 		</main>
 	);
-};
+}
 
-export default ConfigureModels;
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
+}

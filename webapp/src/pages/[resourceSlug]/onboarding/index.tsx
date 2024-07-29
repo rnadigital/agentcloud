@@ -3,16 +3,19 @@ import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 interface FormValues {
 	role: { label: string; value: string };
 }
 
-const Onboarding = () => {
-	const [accountContext]: any = useAccountContext();
+export default function Onboarding() {
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
+	useEffect(() => {
+		refreshAccountContext();
+	}, []);
 
 	const { control, handleSubmit } = useForm<FormValues>({
 		defaultValues: {
@@ -82,6 +85,16 @@ const Onboarding = () => {
 			</section>
 		</main>
 	);
-};
+}
 
-export default Onboarding;
+export async function getServerSideProps({
+	req,
+	res,
+	query,
+	resolvedUrl,
+	locale,
+	locales,
+	defaultLocale
+}) {
+	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
+}

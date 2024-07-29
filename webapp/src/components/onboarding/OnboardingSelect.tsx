@@ -90,44 +90,46 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 												classNames?.listboxOptions
 											)}
 										>
-											{options.map(option => (
-												<ListboxOption
-													key={option.value}
-													className={({ focus }) =>
-														clsx(
-															focus ? 'text-white bg-indigo-600' : 'text-gray-900',
-															'cursor-default select-none relative py-2 pl-3 pr-9 min-h-9'
-														)
-													}
-													value={option}
-												>
-													{({ selected, focus }) => (
-														<>
-															<span className='flex items-center'>
-																{option.iconURL && (
-																	<img src={option.iconURL} className='h-6 w-6 mr-2' />
-																)}
-																<span
-																	className={clsx(
-																		selected
-																			? ['font-semibold', classNames?.listboxOptionSelected]
-																			: 'font-normal',
-																		'block'
+											{options
+												.filter(o => o.value)
+												.map(option => (
+													<ListboxOption
+														key={option.value}
+														className={({ focus }) =>
+															clsx(
+																focus ? 'text-white bg-indigo-600' : 'text-gray-900',
+																'cursor-default select-none relative py-2 pl-3 pr-9 min-h-9'
+															)
+														}
+														value={option}
+													>
+														{({ selected, focus }) => (
+															<>
+																<span className='flex items-center'>
+																	{option.iconURL && (
+																		<img src={option.iconURL} className='h-6 w-6 mr-2' />
 																	)}
-																>
-																	{option.label || option.value}
-																</span>
-
-																{option.recommended && (
-																	<span className='bg-gray-700 text-white text-xs font-semibold px-2 py-1 rounded ml-11'>
-																		Recommended
+																	<span
+																		className={clsx(
+																			selected
+																				? ['font-semibold', classNames?.listboxOptionSelected]
+																				: 'font-normal',
+																			'block'
+																		)}
+																	>
+																		{option.label || option.value}
 																	</span>
-																)}
-															</span>
-														</>
-													)}
-												</ListboxOption>
-											))}
+
+																	{option.recommended && (
+																		<span className='bg-gray-700 text-white text-xs font-semibold px-2 py-1 rounded ml-11'>
+																			Recommended
+																		</span>
+																	)}
+																</span>
+															</>
+														)}
+													</ListboxOption>
+												))}
 										</ListboxOptions>
 									</Transition>
 								</div>

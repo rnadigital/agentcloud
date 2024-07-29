@@ -5,6 +5,7 @@ import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
+import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import ToolTip from 'components/shared/ToolTip';
 import { useAccountContext } from 'context/account';
 import useResponsive from 'hooks/useResponsive';
@@ -19,8 +20,6 @@ import {
 	ModelType,
 	ModelTypeRequirements
 } from 'struct/model';
-
-import OnboardingSelect from './OnboardingSelect';
 
 interface LLMOption {
 	label: string;

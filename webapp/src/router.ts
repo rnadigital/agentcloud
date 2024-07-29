@@ -482,6 +482,13 @@ export default function router(server, app) {
 		datasourceController.deleteDatasourceApi
 	);
 
+	//onboarding
+	teamRouter.get('/onboarding', accountController.onboardingPage.bind(null, app));
+	teamRouter.get(
+		'/onboarding/configuremodels',
+		accountController.configureModelsPage.bind(null, app)
+	);
+
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);

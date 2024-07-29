@@ -18,6 +18,10 @@ export type Team = {
 	name: string;
 	dateCreated: Date;
 	permissions: Record<string, Binary>;
+	defaultModelConfig?: {
+		llm: ObjectId;
+		embedding: ObjectId;
+	};
 };
 
 export function TeamCollection(): any {
