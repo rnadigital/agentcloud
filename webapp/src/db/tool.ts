@@ -39,9 +39,9 @@ export function getToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Too
 }
 
 export function getFunctionToolCountByTeam(teamId: db.IdOrStr): Promise<number> {
-	return ToolCollection().estimatedDocumentCount({
+	return ToolCollection().countDocuments({
 		teamId: toObjectId(teamId),
-		type: ToolType.FUNCTION_TOOL
+		type: ToolType.FUNCTION_TOOL,
 	});
 }
 

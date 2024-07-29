@@ -182,6 +182,9 @@ export async function addToolApi(req, res, next) {
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
 
+console.log(res.locals.usage, res.locals.usage[PlanLimitsKeys.maxFunctionTools])
+console.log(res.locals.limits, res.locals.limits[PlanLimitsKeys.maxFunctionTools])
+
 	if (
 		(type as ToolType) === ToolType.FUNCTION_TOOL &&
 		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >

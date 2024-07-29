@@ -24,6 +24,7 @@ export async function fetchUsage(req, res, next) {
 
 	try {
 		const teamMembersCount = Object.keys(currentTeam.permissions).length || 0;
+		console.log(currentTeam);
 		const functionToolsCount = await getFunctionToolCountByTeam(currentTeam.id);
 
 		// Add usage data to the response locals
