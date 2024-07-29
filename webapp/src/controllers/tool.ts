@@ -376,10 +376,11 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
-	if (((existingTool.type as ToolType) !== ToolType.FUNCTION_TOOL
-		&& (type as ToolType) === ToolType.FUNCTION_TOOL)
-		&& res.locals.usage[PlanLimitsKeys.maxFunctionTools]
-			>= res.locals.limits[PlanLimitsKeys.maxFunctionTools]
+	if (
+		(existingTool.type as ToolType) !== ToolType.FUNCTION_TOOL &&
+		(type as ToolType) === ToolType.FUNCTION_TOOL &&
+		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >=
+			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
 	) {
 		return dynamicResponse(req, res, 400, {
 			error: `You have reached the limit of ${res.locals.limits[PlanLimitsKeys.maxFunctionTools]} custom functions allowed by your current plan. To add more custom functions, please upgrade your plan.`
@@ -426,8 +427,10 @@ export async function editToolApi(req, res, next) {
 	});
 
 	let functionProvider;
-	if ((existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
-		(type as ToolType) !== ToolType.FUNCTION_TOOL) {
+	if (
+		(existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
+		(type as ToolType) !== ToolType.FUNCTION_TOOL
+	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
 	} else if (functionNeedsUpdate) {
@@ -702,7 +705,7 @@ export async function deleteToolApi(req, res, next) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			await functionProvider.deleteFunction(existingTool?.functionId);
-		} catch(e) {
+		} catch (e) {
 			log(e);
 			if (e.code !== 5) {
 				return dynamicResponse(req, res, 400, {
