@@ -151,6 +151,7 @@ export type PlanLimits = {
 	allowedConnectors: string[];
 	maxFileUploadBytes: number;
 	maxVectorStorageBytes: number;
+	maxFunctionTools: number;
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
@@ -178,6 +179,7 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	allowedConnectors: 'allowedConnectors',
 	maxFileUploadBytes: 'maxFileUploadBytes',
 	maxVectorStorageBytes: 'maxVectorStorageBytes',
+	maxFunctionTools: 'maxFunctionTools',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
 	embeddingModels: 'embeddingModels',
@@ -210,6 +212,7 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 5 * 1024 * 1024, //5MB
 		maxVectorStorageBytes: 100 * 1024 * 1024, //100MB
+		maxFunctionTools: 1,
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI],
 		embeddingModels: [ModelType.OPENAI],
@@ -233,6 +236,7 @@ export const pricingMatrix: PricingMatrix = {
 		],
 		maxFileUploadBytes: 25 * 1024 * 1024, //25MB
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
+		maxFunctionTools: 1,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
@@ -251,6 +255,7 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 50 * 1024 * 1024, //50MB
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
+		maxFunctionTools: 10,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
@@ -270,6 +275,7 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 1 * 1024 * 1024 * 1024, //1GB (until we have "custom")
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
+		maxFunctionTools: 10,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,
