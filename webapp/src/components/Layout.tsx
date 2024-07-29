@@ -523,7 +523,7 @@ export default withRouter(function Layout(props) {
 					{showNavs && (
 						<div
 							className={
-								'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-4'
+								'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-4'
 							}
 						>
 							<button
@@ -616,12 +616,6 @@ export default withRouter(function Layout(props) {
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
-
-									{/* Separator */}
-									<div
-										className='hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10'
-										aria-hidden='true'
-									/>
 
 									{/* Profile dropdown */}
 									{account && (
