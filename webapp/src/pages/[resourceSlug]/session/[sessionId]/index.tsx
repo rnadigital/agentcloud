@@ -65,7 +65,9 @@ export default function Session(props) {
 		!messages || (messages.length > 0 && messages[messages.length - 1].incoming);
 	const lastMessageFeedback =
 		!messages || (messages.length > 0 && messages[messages.length - 1].isFeedback);
-	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
+	// TODO:
+	// const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
+	const chatBusyState = sentLastMessage;
 
 	async function joinSessionRoom() {
 		socketContext.emit('join_room', sessionId);

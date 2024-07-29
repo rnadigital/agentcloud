@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode
 
 from chat.agents.base import BaseChatAgent
-from tools.global_tools import CustomHumanInput
+from chat.human_input_tool import HumanInputTool
 
 
 class OpenAIChatAgent(BaseChatAgent):
@@ -27,7 +27,7 @@ class OpenAIChatAgent(BaseChatAgent):
         return {"messages": [response]}
 
     def build_graph(self):
-        human_input_tool = CustomHumanInput(self.socket, self.session_id, author_name=self.agent_name)
+        human_input_tool = HumanInputTool(socket_client=self.socket_client)
 
         self.chat_model = self.chat_model.bind_tools(self.tools + [human_input_tool])
 
