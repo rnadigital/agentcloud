@@ -394,7 +394,7 @@ export async function updateOnboardedStatus(req, res) {
 	await updateAccountOnboarded(userId);
 
 	return dynamicResponse(req, res, 302, {
-		redirect: `/${res.locals.account.currentTeam.toString()}/apps`
+		redirect: `/${res.locals.account.currentTeam.toString()}/app/add`
 	});
 }
 

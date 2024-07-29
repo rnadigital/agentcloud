@@ -130,6 +130,7 @@ const LLMConfigurationForm = () => {
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
 		setSubmitting(true);
+
 		if (data.LLMModel.value) {
 			const body = {
 				_csrf: csrf,
@@ -148,7 +149,7 @@ const LLMConfigurationForm = () => {
 
 			const addedModel = await API.addModel(
 				body,
-				() => toast.success('Added Model'),
+				null,
 				res => {
 					toast.error(res);
 				},
@@ -164,7 +165,7 @@ const LLMConfigurationForm = () => {
 
 			await API.setDefaultModel(
 				setDefaultModelBody,
-				() => toast.success('Default model set'),
+				null,
 				res => {
 					toast.error(res);
 				},
@@ -189,9 +190,7 @@ const LLMConfigurationForm = () => {
 			};
 			const addedModel = await API.addModel(
 				body,
-				() => {
-					toast.success('Added Model');
-				},
+				null,
 				res => {
 					toast.error(res);
 				},
@@ -207,7 +206,7 @@ const LLMConfigurationForm = () => {
 
 			await API.setDefaultModel(
 				setDefaultModelBody,
-				() => toast.success('Default model set'),
+				null,
 				res => {
 					toast.error(res);
 				},
@@ -215,7 +214,8 @@ const LLMConfigurationForm = () => {
 			);
 		}
 
-		await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
+		router.push(`/${resourceSlug}/getstarted`);
+
 		setSubmitting(false);
 	};
 
