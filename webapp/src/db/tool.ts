@@ -6,7 +6,7 @@ import toObjectId from 'misc/toobjectid';
 import { UpdateResult } from 'mongodb'; //TODO: put these in all other db update* return types
 import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
-import { Tool, ToolState } from 'struct/tool';
+import { Tool, ToolState, ToolType } from 'struct/tool';
 
 const log = debug('webapp:db:tools');
 
@@ -35,6 +35,13 @@ export function getToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Too
 	return ToolCollection().findOne({
 		_id: toObjectId(toolId),
 		$or: [{ teamId: toObjectId(teamId) }, { 'data.builtin': true }]
+	});
+}
+
+export function getFunctionToolCountByTeam(teamId: db.IdOrStr): Promise<number> {
+	return ToolCollection().estimatedDocumentCount({
+		teamId: toObjectId(teamId),
+		type: ToolType.FUNCTION_TOOL
 	});
 }
 

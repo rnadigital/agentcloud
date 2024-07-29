@@ -1,12 +1,14 @@
 import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
+import { getFunctionToolCountByTeam } from 'db/tool';
 import debug from 'debug';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 const log = debug('webapp:middleware:auth:checksubscription');
 
 const cache = {};
 
+//TODO: make this take a PlanLimitsKeys (or an array of) to only calculate certain usages
 export async function fetchUsage(req, res, next) {
 	const currentOrg = res.locals?.matchingOrg;
 	const currentTeam = res.locals?.matchingTeam;
@@ -21,13 +23,14 @@ export async function fetchUsage(req, res, next) {
 	}
 
 	try {
-		// Count the number of members in the team
 		const teamMembersCount = Object.keys(currentTeam.permissions).length || 0;
+		const functionToolsCount = await getFunctionToolCountByTeam(currentTeam.id);
 
 		// Add usage data to the response locals
 		res.locals.usage = {
 			...(res.locals.usage || {}),
-			[PlanLimitsKeys.users]: teamMembersCount
+			[PlanLimitsKeys.users]: teamMembersCount,
+			[PlanLimitsKeys.maxFunctionTools]: functionToolsCount
 		};
 
 		//TODO: freeze pricingmatrix, switch to structured copy/"deep" copy
