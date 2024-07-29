@@ -1,4 +1,5 @@
 import NProgress from 'nprogress';
+import { GetTeamModelsDispatch } from 'types/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -644,7 +645,7 @@ export function setDefaultModel(body, dispatch, errorCallback, router) {
 		router
 	);
 }
-export function getTeamModels(body, dispatch, errorCallback, router) {
+export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/team/models.json`,
 		'GET',
