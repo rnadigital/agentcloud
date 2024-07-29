@@ -29,20 +29,20 @@ const GetStarted = () => {
 				<title>Get Started - ${teamName}</title>
 			</Head>
 			<div>
-				<h1 className='text-gray-900 font-semibold text-xl'>
+				<h1 className='text-gray-900 font-semibold text-xl sm:text-2xl'>
 					Build Intelligent Chat and Process Apps
 				</h1>
-				<h2 className='text-gray-400 '>
+				<h2 className='text-gray-400 text-sm sm:text-base mt-2'>
 					Easily Build Intelligent Chat and Process Apps to Streamline Your Workflow
 				</h2>
-				<div className='md:flex gap-8 w-full'>
-					<div className='flex-1'>
+				<div className='md:flex gap-8 w-full mt-10'>
+					<div className='flex-1 border border-gray-200 p-4 rounded-md group'>
 						<img
 							src='/images/get-started/create-chat-app.png'
 							alt='Create Chat App'
 							// className='w-full sm:w-1/2 lg:w-1/3'
 						/>
-						<div className='flex flex-col md:flex-row'>
+						<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
 							<div className='flex'>
 								<img src='/images/get-started/chat-app-square.png' className='aspect-square h-12' />
 								<div>
@@ -54,7 +54,7 @@ const GetStarted = () => {
 							</div>
 
 							<button
-								className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'
+								className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200'
 								onClick={handleCreateChatApp}
 							>
 								+ Create
@@ -73,9 +73,9 @@ const GetStarted = () => {
 						</div>
 					</div>
 
-					<div className='flex-1'>
+					<div className='flex-1 border border-gray-200 p-4 rounded-md group'>
 						<img src='/images/get-started/create-process-app.png' alt='Create Process App' />
-						<div className='flex flex-col md:flex-row'>
+						<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
 							<div className='flex'>
 								<img
 									src='/images/get-started/process-app-square.png'
@@ -90,7 +90,7 @@ const GetStarted = () => {
 							</div>
 
 							<button
-								className='w-full md:w-24 h-9 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm'
+								className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200'
 								onClick={handleCreateProcessApp}
 							>
 								+ Create
