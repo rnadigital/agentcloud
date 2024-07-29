@@ -1,25 +1,18 @@
 'use strict';
 
-import { getTeamModels } from '@api';
 import { dynamicResponse } from '@dr';
-import * as hasPerms from '@mw/permissions/hasperms';
-import Permission from '@permission';
 import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
-import { getSubscriptionsDetails } from 'controllers/stripe';
 import {
 	Account,
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
-	setAccountRole,
 	setCurrentTeam,
-	setStripeCustomerId,
-	updateAccountOnboarded,
-	updateStripeCustomer,
+	updateRoleAndMarkOnboarded,
 	verifyAccount
 } from 'db/account';
-import { getTeamById, getTeamWithModels } from 'db/team';
+import { getTeamWithModels } from 'db/team';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
@@ -28,7 +21,6 @@ import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
 import Permissions from 'permissions/permissions';
-import { productToPlanMap } from 'struct/billing';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -389,19 +381,10 @@ export async function switchTeam(req, res, _next) {
 	return res.json({});
 }
 
-export async function updateOnboardedStatus(req, res) {
-	const userId = res.locals.account._id;
-	await updateAccountOnboarded(userId);
-
-	return dynamicResponse(req, res, 302, {
-		redirect: `/${res.locals.account.currentTeam.toString()}/app/add`
-	});
-}
-
 export async function updateRole(req, res) {
 	const { role } = req.body;
 	const userId = res.locals.account._id;
-	await setAccountRole(userId, role);
+	await updateRoleAndMarkOnboarded(userId, role);
 	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
 
 	const teamData = await getTeamWithModels(res.locals.account.currentTeam);

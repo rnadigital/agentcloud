@@ -62,15 +62,14 @@ const LLMConfigurationForm = () => {
 		await API.getTeamModels({ resourceSlug }, setTeamModels, null, router);
 	};
 
-	const { control, watch, resetField, handleSubmit, setValue, reset } =
-		useForm<LLMConfigurationFormValues>({
-			defaultValues: {
-				LLMType: modelOptions[0],
-				LLMModel: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
-				embeddingModel: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
-				embeddingType: modelOptions[0]
-			}
-		});
+	const { control, watch, resetField, handleSubmit, reset } = useForm<LLMConfigurationFormValues>({
+		defaultValues: {
+			LLMType: modelOptions[0],
+			LLMModel: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+			embeddingModel: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
+			embeddingType: modelOptions[0]
+		}
+	});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
 
@@ -193,19 +192,10 @@ const LLMConfigurationForm = () => {
 		}
 
 		await Promise.all(promises);
-		await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
+
 		router.push(`/${resourceSlug}/getstarted`);
 
 		setSubmitting(false);
-	};
-
-	const updateOnboardedStatus = async () => {
-		setSubmitting(true);
-		try {
-			await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
-		} finally {
-			setSubmitting(false);
-		}
 	};
 
 	useEffect(() => {
@@ -440,7 +430,9 @@ const LLMConfigurationForm = () => {
 				<button
 					className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm'
 					type='button'
-					onClick={updateOnboardedStatus}
+					onClick={() => {
+						router.push(`/${resourceSlug}/getstarted`);
+					}}
 				>
 					I&apos;ll do this later
 				</button>

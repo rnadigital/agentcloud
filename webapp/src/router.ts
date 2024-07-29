@@ -222,13 +222,6 @@ export default function router(server, app) {
 		csrfMiddleware,
 		accountController.switchTeam
 	);
-	accountRouter.post(
-		'/onboarded',
-		unauthedMiddlewareChain,
-		checkSession,
-		csrfMiddleware,
-		accountController.updateOnboardedStatus
-	);
 
 	accountRouter.post(
 		'/role',

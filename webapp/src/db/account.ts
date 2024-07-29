@@ -306,18 +306,15 @@ export function updateTeamOwnerInAccounts(
 	);
 }
 
-export function updateAccountOnboarded(userId: ObjectId): Promise<any> {
-	return AccountCollection().updateOne({ _id: toObjectId(userId) }, { $set: { onboarded: true } });
-}
-
-export function setAccountRole(userId: db.IdOrStr, role: string): Promise<any> {
+export function updateRoleAndMarkOnboarded(userId: db.IdOrStr, role: string): Promise<any> {
 	return AccountCollection().updateOne(
 		{
 			_id: toObjectId(userId)
 		},
 		{
 			$set: {
-				role
+				role,
+				onboarded: true
 			}
 		}
 	);
