@@ -24,6 +24,9 @@ export function requestChangePassword(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function logout(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/logout', 'POST', body, dispatch, errorCallback, router);
+}
 export function changePassword(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/changepassword', 'POST', body, dispatch, errorCallback, router);
 }

@@ -7,6 +7,7 @@ import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -21,12 +22,16 @@ export default function Register() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [submitting, setSubmitting] = useState(false);
-
+	const posthog = usePostHog();
 	const { control, handleSubmit } = useForm<RegisterFormValues>();
 
 	async function register(data: RegisterFormValues) {
 		setSubmitting(true);
 		try {
+			posthog.capture('signUp', {
+				name: data.name,
+				email: data.email
+			});
 			await API.register(data, null, setError, router);
 		} finally {
 			setSubmitting(false);
