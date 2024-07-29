@@ -11,12 +11,12 @@ from .vertex import VertexChatAgent
 
 
 def chat_agent_factory(chat_model: BaseLanguageModel, tools: list[BaseTool],
-                       agent_name: str, session_id: str, socket: SimpleClient):
+                       agent_name: str, session_id: str, socket_client: SimpleClient):
     if isinstance(chat_model, ChatOpenAI):
-        return OpenAIChatAgent(chat_model, tools, agent_name, session_id, socket)
+        return OpenAIChatAgent(chat_model, tools, agent_name, session_id, socket_client)
     elif isinstance(chat_model, ChatAnthropic):
-        return AnthropicChatAgent(chat_model, tools, agent_name, session_id, socket)
+        return AnthropicChatAgent(chat_model, tools, agent_name, session_id, socket_client)
     elif isinstance(chat_model, ChatVertexAI):
-        return VertexChatAgent(chat_model, tools, agent_name, session_id, socket)
+        return VertexChatAgent(chat_model, tools, agent_name, session_id, socket_client)
     else:
         raise Exception("Unexpected chat model type")

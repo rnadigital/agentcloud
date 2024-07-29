@@ -27,20 +27,20 @@ class ChatAssistant:
 
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.socket = SimpleClient()
+        self.socket_client = SimpleClient()
         self.mongo_client = start_mongo_session()
         self.init_socket()
         self.init_app_state()
         self.chat_agent = chat_agent_factory(chat_model=self.chat_model, tools=self.tools, agent_name=self.agent_name,
-                                             session_id=session_id, socket=self.socket)
+                                             session_id=session_id, socket_client=self.socket_client)
 
     def init_socket(self):
         try:
             # Initialize the socket client and connect
             logging.debug(f"Socket URL: {SOCKET_URL}")
             custom_headers = {"x-agent-backend-socket-token": AGENT_BACKEND_SOCKET_TOKEN}
-            self.socket.connect(url=SOCKET_URL, headers=custom_headers)
-            self.socket.emit("join_room", f"_{self.session_id}")
+            self.socket_client.connect(url=SOCKET_URL, headers=custom_headers)
+            self.socket_client.emit("join_room", f"_{self.session_id}")
         except ConnectionError as ce:
             logging.error(f"Connection error occurred: {ce}")
             raise

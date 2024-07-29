@@ -20,12 +20,12 @@ class BaseChatAgent:
     """
 
     def __init__(self, chat_model: BaseLanguageModel, tools: list[BaseTool], agent_name: str, session_id: str,
-                 socket: SimpleClient):
+                 socket_client: SimpleClient):
         self.chat_model = chat_model
         self.tools = tools
         self.agent_name = agent_name
         self.session_id = session_id
-        self.socket = socket
+        self.socket_client = socket_client
         self.graph = self.build_graph()
         self.redis_con = RedisClass()
 
@@ -56,7 +56,7 @@ class BaseChatAgent:
 
         # send the message
         send(
-            self.socket,
+            self.socket_client,
             SocketEvents(event),
             SocketMessage(
                 room=self.session_id,
