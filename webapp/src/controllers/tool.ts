@@ -376,17 +376,19 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
-	const wasFunctionTool = (existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
+	const wasFunctionTool =
+		(existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
 		(type as ToolType) !== ToolType.FUNCTION_TOOL;
 
-	if (wasFunctionTool &&
+	if (
+		wasFunctionTool &&
 		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >
-			res.locals.limits[PlanLimitsKeys.maxFunctionTools]) {
+			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
+	) {
 		return dynamicResponse(req, res, 400, {
 			error: `You have reached the limit of ${res.locals.limits[PlanLimitsKeys.maxFunctionTools]} custom functions allowed by your current plan. To add more custom functions, please upgrade your plan.`
 		});
 	}
-
 
 	//await FunctionProviderFactory.getFunctionProvider().getFunctionLogs('5ec2b2cb-e701-4713-9df7-c22208daaf06')
 	//	.then(res => { log('function logs %s', res); })
