@@ -184,7 +184,7 @@ export async function addToolApi(req, res, next) {
 
 	if (
 		(type as ToolType) === ToolType.FUNCTION_TOOL &&
-		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >
+		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >=
 			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
 	) {
 		return dynamicResponse(req, res, 400, {
@@ -376,14 +376,10 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
-	const wasFunctionTool =
-		(existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
-		(type as ToolType) !== ToolType.FUNCTION_TOOL;
-
-	if (
-		wasFunctionTool &&
-		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >
-			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
+	if (((existingTool.type as ToolType) !== ToolType.FUNCTION_TOOL
+		&& (type as ToolType) === ToolType.FUNCTION_TOOL)
+		&& res.locals.usage[PlanLimitsKeys.maxFunctionTools]
+			>= res.locals.limits[PlanLimitsKeys.maxFunctionTools]
 	) {
 		return dynamicResponse(req, res, 400, {
 			error: `You have reached the limit of ${res.locals.limits[PlanLimitsKeys.maxFunctionTools]} custom functions allowed by your current plan. To add more custom functions, please upgrade your plan.`
@@ -430,7 +426,8 @@ export async function editToolApi(req, res, next) {
 	});
 
 	let functionProvider;
-	if (wasFunctionTool) {
+	if ((existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
+		(type as ToolType) !== ToolType.FUNCTION_TOOL) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
 	} else if (functionNeedsUpdate) {
@@ -703,7 +700,16 @@ export async function deleteToolApi(req, res, next) {
 
 	if (existingTool.type === ToolType.FUNCTION_TOOL) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.deleteFunction(existingTool?.functionId);
+		try {
+			await functionProvider.deleteFunction(existingTool?.functionId);
+		} catch(e) {
+			log(e);
+			if (e.code !== 5) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Failed to update tool'
+				});
+			}
+		}
 	} else if (existingTool.type === ToolType.RAG_TOOL) {
 		if (existingTool.datasourceId) {
 			const existingToolsForDatasource: Tool[] = await getToolsForDatasource(
