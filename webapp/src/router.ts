@@ -370,11 +370,15 @@ export default function router(server, app) {
 	teamRouter.post(
 		'/forms/tool/add',
 		hasPerms.one(Permissions.CREATE_TOOL),
+		fetchUsage,
+		// checkSubscriptionBoolean(PlanLimitsKeys.maxFunctionTools),
 		toolController.addToolApi
 	);
 	teamRouter.post(
 		'/forms/tool/:toolId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TOOL),
+		fetchUsage,
+		// checkSubscriptionBoolean(PlanLimitsKeys.maxFunctionTools),
 		toolController.editToolApi
 	);
 	teamRouter.delete(

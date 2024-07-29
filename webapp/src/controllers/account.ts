@@ -269,10 +269,15 @@ export async function verifyToken(req, res) {
 	let accountId = deletedVerification?.accountId;
 	let stripeCustomerId;
 	let foundCheckoutSession;
-	if (!deletedVerification || !deletedVerification.token || !accountId) {
+	if ((!deletedVerification || !deletedVerification.token || !accountId) && token?.length < 66) {
+		// StripeInvalidRequestError: Invalid string: 34cc47ea5d...bbe94fe52b; must be at most 66 characters
 		//Assuming the token isn't a verification but a stripe checkoutsession ID
 		const checkoutSessionId = token;
-		foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
+		try {
+			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
+		} catch (e) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
+		}
 		if (!foundCheckoutSession || foundCheckoutSession.status !== 'complete') {
 			return dynamicResponse(req, res, 400, { error: 'Invalid token' });
 		}
