@@ -29,6 +29,7 @@ import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
+import { PlanLimitsKeys } from 'struct/billing';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
@@ -148,25 +149,6 @@ function validateTool(tool) {
 				validateIf: { field: 'type', condition: value => value !== ToolType.RAG_TOOL }
 			},
 			{
-				field: 'schema',
-				validation: { notEmpty: true },
-				validateIf: { field: 'type', condition: value => value == ToolType.API_TOOL }
-			},
-			{
-				field: 'naame',
-				validation: {
-					regexMatch: new RegExp('^[\\w_][A-Za-z0-9_]*$', 'gm'),
-					customError:
-						'Name must not contain spaces or start with a number. Only alphanumeric and underscore characters allowed'
-				},
-				validateIf: { field: 'type', condition: value => value == ToolType.API_TOOL }
-			},
-			{
-				field: 'data.parameters.properties',
-				validation: { objectHasKeys: true },
-				validateIf: { field: 'type', condition: value => value == ToolType.API_TOOL }
-			},
-			{
 				field: 'data.parameters.code',
 				validation: { objectHasKeys: true },
 				validateIf: { field: 'type', condition: value => value == ToolType.FUNCTION_TOOL }
@@ -200,6 +182,16 @@ export async function addToolApi(req, res, next) {
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
 
+	if (
+		(type as ToolType) === ToolType.FUNCTION_TOOL &&
+		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >=
+			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
+	) {
+		return dynamicResponse(req, res, 400, {
+			error: `You have reached the limit of ${res.locals.limits[PlanLimitsKeys.maxFunctionTools]} custom functions allowed by your current plan. To add more custom functions, please upgrade your plan.`
+		});
+	}
+
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -224,12 +216,7 @@ export async function addToolApi(req, res, next) {
 	const toolData = {
 		...data,
 		builtin: false,
-		name:
-			(type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: (type as ToolType) === ToolType.FUNCTION_TOOL
-					? toSnakeCase(name)
-					: name
+		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
 
 	const functionId = isFunctionTool ? uuidv4() : null;
@@ -389,6 +376,17 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid toolId' });
 	}
 
+	if (
+		(existingTool.type as ToolType) !== ToolType.FUNCTION_TOOL &&
+		(type as ToolType) === ToolType.FUNCTION_TOOL &&
+		res.locals.usage[PlanLimitsKeys.maxFunctionTools] >=
+			res.locals.limits[PlanLimitsKeys.maxFunctionTools]
+	) {
+		return dynamicResponse(req, res, 400, {
+			error: `You have reached the limit of ${res.locals.limits[PlanLimitsKeys.maxFunctionTools]} custom functions allowed by your current plan. To add more custom functions, please upgrade your plan.`
+		});
+	}
+
 	//await FunctionProviderFactory.getFunctionProvider().getFunctionLogs('5ec2b2cb-e701-4713-9df7-c22208daaf06')
 	//	.then(res => { log('function logs %s', res); })
 	//	.catch(e => { log(e); });
@@ -413,12 +411,7 @@ export async function editToolApi(req, res, next) {
 	const toolData = {
 		...data,
 		builtin: false,
-		name:
-			(type as ToolType) === ToolType.API_TOOL
-				? 'openapi_request'
-				: (type as ToolType) === ToolType.FUNCTION_TOOL
-					? toSnakeCase(name)
-					: name
+		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
 
 	await editTool(req.params.resourceSlug, toolId, {
@@ -710,7 +703,16 @@ export async function deleteToolApi(req, res, next) {
 
 	if (existingTool.type === ToolType.FUNCTION_TOOL) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.deleteFunction(existingTool?.functionId);
+		try {
+			await functionProvider.deleteFunction(existingTool?.functionId);
+		} catch (e) {
+			log(e);
+			if (e.code !== 5) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Failed to update tool'
+				});
+			}
+		}
 	} else if (existingTool.type === ToolType.RAG_TOOL) {
 		if (existingTool.datasourceId) {
 			const existingToolsForDatasource: Tool[] = await getToolsForDatasource(
