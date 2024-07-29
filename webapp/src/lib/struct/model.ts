@@ -6,7 +6,8 @@ export enum ModelType {
 	OLLAMA = 'ollama',
 	COHERE = 'cohere',
 	ANTHROPIC = 'anthropic',
-	GROQ = 'groq'
+	GROQ = 'groq',
+	GOOGLE_VERTEX = 'google_vertex'
 }
 
 export const modelOptions = [
@@ -15,14 +16,18 @@ export const modelOptions = [
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed' },
 	{ value: ModelType.COHERE, label: 'Cohere' },
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic' },
-	{ value: ModelType.GROQ, label: 'Groq' }
+	{ value: ModelType.GROQ, label: 'Groq' },
+	{ value: ModelType.GOOGLE_VERTEX, label: 'Google Vertex' }
 ];
 
 export const ModelTypes = Object.values(ModelType);
 
-interface FieldRequirement {
+export interface FieldRequirement {
 	type: string;
 	optional?: boolean;
+	tooltip?: string;
+	placeholder?: string;
+	inputProps?: any;
 }
 
 interface ModelRequirements {
@@ -31,35 +36,50 @@ interface ModelRequirements {
 
 export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
-		api_key: { type: 'string' },
-		org_id: { type: 'string', optional: true }
+		api_key: { type: 'text' },
+		org_id: { type: 'text', optional: true }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
-		base_url: { type: 'string' },
-		api_key: { type: 'string' }
+		base_url: { type: 'text', tooltip: 'Ollama URL (not localhost)' },
+		api_key: { type: 'text' }
 	},
 	[ModelType.COHERE]: {
-		cohere_api_key: { type: 'string' }
+		cohere_api_key: { type: 'text' }
 	},
 	[ModelType.ANTHROPIC]: {
-		api_key: { type: 'string' }
+		api_key: { type: 'text' }
 	},
 	[ModelType.GROQ]: {
-		groq_api_key: { type: 'string' }
+		groq_api_key: { type: 'text' }
+	},
+	[ModelType.GOOGLE_VERTEX]: {
+		credentials: { type: 'text', tooltip: 'GCP service account JSON', placeholder: '{ ... }' },
+		temperature: {
+			type: 'range',
+			inputProps: { min: 0, max: 1, step: 0.01 },
+			optional: true,
+			tooltip: 'Model temperature'
+		},
+		location: {
+			type: 'text',
+			optional: true,
+			tooltip: 'GCP location',
+			placeholder: 'us-central1'
+		},
+		project: { type: 'text', tooltip: 'GCP project name' }
 	}
-	// Add more types here if needed
 };
 
 export const ModelList = {
 	[ModelType.OPENAI]: [
-		'gpt-4o',
 		'gpt-4o-mini',
+		'gpt-4o',
 		'gpt-4-turbo',
 		'gpt-4',
 		'gpt-3.5-turbo',
-		'text-embedding-3-large',
 		'text-embedding-3-small',
+		'text-embedding-3-large',
 		'text-embedding-ada-002'
 	],
 	[ModelType.FASTEMBED]: [
@@ -85,11 +105,13 @@ export const ModelList = {
 	],
 	[ModelType.COHERE]: ['command-r-plus'],
 	[ModelType.ANTHROPIC]: [
-		'claude-3-opus-20240229',
+		'claude-3-5-sonnet-20240620',
 		'claude-3-sonnet-20240229',
+		'claude-3-opus-20240229',
 		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768']
+	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
+	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
 };
 
 export const ModelEmbeddingLength = {
