@@ -85,7 +85,6 @@ export type FunctionProperty = {
 };
 
 export enum ToolType {
-	API_TOOL = 'api',
 	FUNCTION_TOOL = 'function',
 	RAG_TOOL = 'rag'
 }
