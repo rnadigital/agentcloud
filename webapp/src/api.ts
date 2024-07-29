@@ -54,7 +54,15 @@ export function updateOnboardedStatus(body, dispatch, errorCallback, router) {
 }
 
 export function updateRole(body, dispatch, errorCallback, router) {
-	return ApiCall('/forms/account/role', 'POST', body, dispatch, errorCallback, router);
+	const queryString = new URLSearchParams({ resourceSlug: body?.resourceSlug });
+	return ApiCall(
+		`/forms/account/role?${queryString}`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
 }
 
 // Apps

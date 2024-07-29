@@ -100,7 +100,8 @@ export async function inviteTeamMemberApi(req, res) {
 			roleTemplate: template,
 			invite: true,
 			teamName: invitingTeam.name,
-			invitingTeamId: invitingTeam.id
+			invitingTeamId: invitingTeam.id,
+			invitingOrgId: res.locals.matchingOrg.id
 		});
 
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);

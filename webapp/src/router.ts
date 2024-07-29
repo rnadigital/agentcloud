@@ -1,8 +1,8 @@
 'use strict';
 
 import {
-	checkAccountQuery,
 	checkResourceSlug,
+	checkResourceSlugQuery,
 	setDefaultOrgAndTeam
 } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
@@ -140,7 +140,7 @@ export default function router(server, app) {
 	server.get(
 		'/account.json',
 		authedMiddlewareChain,
-		checkAccountQuery,
+		checkResourceSlugQuery,
 		setPermissions,
 		accountController.accountJson
 	);
@@ -225,11 +225,9 @@ export default function router(server, app) {
 
 	accountRouter.post(
 		'/role',
-		unauthedMiddlewareChain,
-		setDefaultOrgAndTeam,
-		checkSession,
+		authedMiddlewareChain,
+		checkResourceSlugQuery,
 		setPermissions,
-		csrfMiddleware,
 		accountController.updateRole
 	);
 

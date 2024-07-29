@@ -13,6 +13,9 @@ interface FormValues {
 export default function Onboarding() {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
+	const router = useRouter();
+	const { resourceSlug } = router.query;
+
 	useEffect(() => {
 		refreshAccountContext();
 	}, []);
@@ -22,11 +25,11 @@ export default function Onboarding() {
 			role: null
 		}
 	});
-	const router = useRouter();
 
 	const onSubmit = async (data: FormValues) => {
 		await API.updateRole(
 			{
+				resourceSlug,
 				role: data.role.value,
 				_csrf: csrf
 			},
