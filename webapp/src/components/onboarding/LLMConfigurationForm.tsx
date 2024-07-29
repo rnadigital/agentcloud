@@ -130,9 +130,10 @@ const LLMConfigurationForm = () => {
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
 		setSubmitting(true);
+		const promises = [];
 
 		if (data.LLMModel.value) {
-			const body = {
+			const llmBody = {
 				_csrf: csrf,
 				resourceSlug,
 				name: data.LLMType.label,
@@ -147,34 +148,29 @@ const LLMConfigurationForm = () => {
 				}
 			};
 
-			const addedModel = await API.addModel(
-				body,
+			const llmPromise = API.addModel(
+				llmBody,
 				null,
 				res => {
 					toast.error(res);
 				},
 				null
-			);
+			).then(addedModel => {
+				const setDefaultModelBody = {
+					_csrf: csrf,
+					resourceSlug,
+					modelId: addedModel._id,
+					modelType: 'llm'
+				};
 
-			const setDefaultModelBody = {
-				_csrf: csrf,
-				resourceSlug,
-				modelId: addedModel._id,
-				modelType: 'llm'
-			};
+				return API.setDefaultModel(setDefaultModelBody, null, res => toast.error(res), null);
+			});
 
-			await API.setDefaultModel(
-				setDefaultModelBody,
-				null,
-				res => {
-					toast.error(res);
-				},
-				null
-			);
+			promises.push(llmPromise);
 		}
 
 		if (data.embeddingModel.value) {
-			const body = {
+			const embeddingBody = {
 				_csrf: csrf,
 				resourceSlug,
 				name: data.embeddingType.label,
@@ -183,37 +179,33 @@ const LLMConfigurationForm = () => {
 				config: {
 					model: data.embeddingModel.value,
 					...(data.embedding_api_key && { api_key: data.embedding_api_key }),
-					...(data.embedding_cohre_api_key && { cohre_api_key: data.embedding_cohre_api_key }),
+					...(data.embedding_cohre_api_key && { cohere_api_key: data.embedding_cohre_api_key }),
 					...(data.embedding_groq_api_key && { groq_api_key: data.embedding_groq_api_key }),
 					...(data.embedding_base_url && { base_url: data.embedding_base_url })
 				}
 			};
-			const addedModel = await API.addModel(
-				body,
-				null,
-				res => {
-					toast.error(res);
-				},
-				null
-			);
 
-			const setDefaultModelBody = {
-				_csrf: csrf,
-				resourceSlug,
-				modelId: addedModel._id,
-				modelType: 'embedding'
-			};
-
-			await API.setDefaultModel(
-				setDefaultModelBody,
+			const embeddingPromise = API.addModel(
+				embeddingBody,
 				null,
-				res => {
-					toast.error(res);
-				},
+				res => toast.error(res),
 				null
-			);
+			).then(addedModel => {
+				const setDefaultModelBody = {
+					_csrf: csrf,
+					resourceSlug,
+					modelId: addedModel._id,
+					modelType: 'embedding'
+				};
+
+				return API.setDefaultModel(setDefaultModelBody, null, res => toast.error(res), null);
+			});
+
+			promises.push(embeddingPromise);
 		}
 
+		await Promise.all(promises);
+		await API.updateOnboardedStatus({ _csrf: csrf }, null, null, router);
 		router.push(`/${resourceSlug}/getstarted`);
 
 		setSubmitting(false);
