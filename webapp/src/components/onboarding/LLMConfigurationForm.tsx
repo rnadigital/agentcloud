@@ -199,6 +199,7 @@ const LLMConfigurationForm = () => {
 			);
 
 			const setDefaultModelBody = {
+				_csrf: csrf,
 				resourceSlug,
 				modelId: addedModel._id,
 				modelType: 'embedding'
