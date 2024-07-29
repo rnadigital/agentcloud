@@ -1,8 +1,8 @@
 'use strict';
 
 import {
-	checkAccountQuery,
 	checkResourceSlug,
+	checkResourceSlugQuery,
 	setDefaultOrgAndTeam
 } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
@@ -18,6 +18,7 @@ import fetchSession from '@mw/auth/fetchsession';
 import setPermissions from '@mw/auth/setpermissions';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
+import onboardedMiddleware from '@mw/checkonboarded';
 import homeRedirect from '@mw/homeredirect';
 import PassportManager from '@mw/passportmanager';
 import * as hasPerms from '@mw/permissions/hasperms';
@@ -28,7 +29,7 @@ import fileUpload from 'express-fileupload';
 import Permissions from 'permissions/permissions';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 
-const unauthedMiddlewareChain = [useSession, useJWT, fetchSession];
+const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
 const authedMiddlewareChain = [
 	...unauthedMiddlewareChain,
 	checkSession,
@@ -139,7 +140,7 @@ export default function router(server, app) {
 	server.get(
 		'/account.json',
 		authedMiddlewareChain,
-		checkAccountQuery,
+		checkResourceSlugQuery,
 		setPermissions,
 		accountController.accountJson
 	);
@@ -217,9 +218,19 @@ export default function router(server, app) {
 		setDefaultOrgAndTeam,
 		checkSession,
 		setSubscriptionLocals,
+		setPermissions,
 		csrfMiddleware,
 		accountController.switchTeam
 	);
+
+	accountRouter.post(
+		'/role',
+		authedMiddlewareChain,
+		checkResourceSlugQuery,
+		setPermissions,
+		accountController.updateRole
+	);
+
 	server.use('/forms/account', accountRouter);
 
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -462,9 +473,17 @@ export default function router(server, app) {
 		datasourceController.deleteDatasourceApi
 	);
 
+	//onboarding
+	teamRouter.get('/onboarding', accountController.onboardingPage.bind(null, app));
+	teamRouter.get(
+		'/onboarding/configuremodels',
+		accountController.configureModelsPage.bind(null, app)
+	);
+
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/models.json', teamController.teamModelsJson);
 	teamRouter.get(
 		'/team/:memberId([a-f0-9]{24}).json',
 		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
@@ -504,6 +523,12 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.addTeamApi
+	);
+
+	teamRouter.post(
+		'/forms/team/set-default-model',
+		hasPerms.one(Permissions.CREATE_MODEL),
+		teamController.setDefaultModelApi
 	);
 
 	//assets

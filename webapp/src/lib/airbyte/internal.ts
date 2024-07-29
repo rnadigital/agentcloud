@@ -14,7 +14,7 @@ async function getAirbyteInternalApi() {
 	}
 	// Is there a JSON of this schema?
 	const configYaml = await fetch(
-		'https://raw.githubusercontent.com/airbytehq/airbyte-platform/master/airbyte-api/src/main/openapi/config.yaml'
+		'https://raw.githubusercontent.com/airbytehq/airbyte-platform/main/airbyte-api/server-api/src/main/openapi/config.yaml'
 	).then(res => res.text());
 	const definition = yaml.load(configYaml) as Document;
 	const api = new OpenAPIClientAxios({
