@@ -5,19 +5,27 @@ import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function TeamMemberCard({ team, member, callback }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, permissions, account } = accountContext as any;
+	const { stripePlan } = account || {};
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [selectedMember, setSelectedMember] = useState(null);
+	const posthog = usePostHog();
 
 	async function deleteMember(e) {
 		e.preventDefault();
+		posthog.capture('deleteUser', {
+			name: member.name,
+			email: member.email,
+			stripePlan
+		});
 		await API.deleteFromTeam(
 			{ resourceSlug, _csrf: csrf, memberId: member._id },
 			() => {

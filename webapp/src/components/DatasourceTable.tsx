@@ -91,7 +91,7 @@ export default function DatasourceTable({
 	return (
 		<div className='rounded-lg shadow overflow-x-scroll overflow-visible'>
 			<table className='min-w-full divide-y divide-gray-200 dark:!border-slate-700'>
-				<thead className='bg-gray-50 dark:bg-slate-800 dark:!border-slate-700'>
+				<thead className='bg-white dark:bg-slate-800 dark:!border-slate-700'>
 					<tr>
 						<th
 							scope='col'

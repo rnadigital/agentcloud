@@ -46,6 +46,7 @@ export type Account = {
 	stripe?: AccountStripeData;
 	oauth?: OAuthRecordType;
 	permissions: Binary;
+	onboarded: boolean;
 };
 
 export function AccountCollection(): any {
@@ -84,7 +85,7 @@ export function getAccountByOAuthOrEmail(
 	};
 	if (email != null && email.length > 0) {
 		query = {
-			$or: [query, { email, emailVerified: true }]
+			$or: [query, { email /*, emailVerified: true*/ }] //Note: would cause duplicate accounts from oauth creation
 		};
 	}
 	return AccountCollection().findOne(query);
@@ -211,7 +212,8 @@ export function setAccountOauth(
 			$set: {
 				oauth: {
 					[provider]: { id: oauthId }
-				}
+				},
+				emailVerified: true
 			}
 		}
 	);
@@ -300,6 +302,20 @@ export function updateTeamOwnerInAccounts(
 		},
 		{
 			arrayFilters: [{ 'org.id': toObjectId(orgId) }, { 'team.id': toObjectId(teamId) }]
+		}
+	);
+}
+
+export function updateRoleAndMarkOnboarded(userId: db.IdOrStr, role: string): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$set: {
+				role,
+				onboarded: true
+			}
 		}
 	);
 }

@@ -1,4 +1,5 @@
 import NProgress from 'nprogress';
+import { GetTeamModelsDispatch } from 'types/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -24,6 +25,9 @@ export function requestChangePassword(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function logout(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/logout', 'POST', body, dispatch, errorCallback, router);
+}
 export function changePassword(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/changepassword', 'POST', body, dispatch, errorCallback, router);
 }
@@ -47,6 +51,21 @@ export function hasPaymentMethod(dispatch, errorCallback, router) {
 }
 export function checkStripeReady(dispatch, errorCallback, router) {
 	return ApiCall('/stripe-ready', 'GET', null, dispatch, errorCallback, router);
+}
+export function updateOnboardedStatus(body, dispatch, errorCallback, router) {
+	return ApiCall('/forms/account/onboarded', 'POST', body, dispatch, errorCallback, router);
+}
+
+export function updateRole(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({ resourceSlug: body?.resourceSlug });
+	return ApiCall(
+		`/forms/account/role?${queryString}`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
 }
 
 // Apps
@@ -622,6 +641,26 @@ export function transferTeamOwnership(body, dispatch, errorCallback, router) {
 		`/${body.resourceSlug}/forms/team/transfer-ownership`,
 		'POST',
 		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+export function setDefaultModel(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/team/set-default-model`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/team/models.json`,
+		'GET',
+		null,
 		dispatch,
 		errorCallback,
 		router

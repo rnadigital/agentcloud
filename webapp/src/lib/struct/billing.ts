@@ -151,9 +151,15 @@ export type PlanLimits = {
 	allowedConnectors: string[];
 	maxFileUploadBytes: number;
 	maxVectorStorageBytes: number;
+	maxFunctionTools: number;
 	storageLocations: string[];
 	llmModels: string[];
 	embeddingModels: string[];
+	cronProps: {
+		disabled?: boolean;
+		allowedPeriods?: string[];
+		allowedDropdowns?: string[];
+	};
 	//TODO: keep updated to agentcloud priing sheet
 };
 
@@ -173,9 +179,11 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	allowedConnectors: 'allowedConnectors',
 	maxFileUploadBytes: 'maxFileUploadBytes',
 	maxVectorStorageBytes: 'maxVectorStorageBytes',
+	maxFunctionTools: 'maxFunctionTools',
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
-	embeddingModels: 'embeddingModels'
+	embeddingModels: 'embeddingModels',
+	cronProps: 'cronProps'
 };
 
 // Object to hold the limits for each plan, using computed property names
@@ -204,9 +212,13 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 5 * 1024 * 1024, //5MB
 		maxVectorStorageBytes: 100 * 1024 * 1024, //100MB
+		maxFunctionTools: 1,
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI],
-		embeddingModels: [ModelType.OPENAI]
+		embeddingModels: [ModelType.OPENAI],
+		cronProps: {
+			disabled: true
+		}
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -224,9 +236,15 @@ export const pricingMatrix: PricingMatrix = {
 		],
 		maxFileUploadBytes: 25 * 1024 * 1024, //25MB
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
+		maxFunctionTools: 1,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		cronProps: {
+			allowedPeriods: ['year', 'month', 'week', 'day'],
+			//allowedDropdowns: ['period', 'months', 'month-days']
+			allowedDropdowns: ['period']
+		}
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
@@ -237,9 +255,15 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 50 * 1024 * 1024, //50MB
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
+		maxFunctionTools: 10,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		cronProps: {
+			allowedPeriods: ['year', 'month', 'week', 'day', 'hour'],
+			//allowedDropdowns: ['period', 'months', 'month-days', 'hours'],
+			allowedDropdowns: ['period']
+		}
 	},
 	[SubscriptionPlan.ENTERPRISE]: {
 		//TODO
@@ -251,8 +275,13 @@ export const pricingMatrix: PricingMatrix = {
 		allowedConnectors: [],
 		maxFileUploadBytes: 1 * 1024 * 1024 * 1024, //1GB (until we have "custom")
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
+		maxFunctionTools: 10,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
-		embeddingModels: ModelTypes
+		embeddingModels: ModelTypes,
+		cronProps: {
+			allowedPeriods: ['year', 'month', 'week', 'day', 'hour', 'minute'],
+			allowedDropdowns: ['period']
+		}
 	}
 };

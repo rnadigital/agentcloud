@@ -237,9 +237,13 @@ export async function addAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(chatAgentModel?.type)) {
+			if (
+				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(
+					chatAgentModel?.type
+				)
+			) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only models with OpenAI or Anthropic models are supported for chat apps.'
+					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {
@@ -248,9 +252,11 @@ export async function addAppApi(req, res, next) {
 			if (!foundModel) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
 			}
-			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(foundModel?.type)) {
+			if (
+				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(foundModel?.type)
+			) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI and Anthropic models are supported for chat app agents.'
+					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({
@@ -444,9 +450,13 @@ export async function editAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(chatAgentModel?.type)) {
+			if (
+				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(
+					chatAgentModel?.type
+				)
+			) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only models with OpenAI or Anthropic models are supported for chat apps.'
+					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {

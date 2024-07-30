@@ -52,7 +52,8 @@ export default async function useJWT(req, res, next): Promise<void> {
 						token: account.token,
 						stripe: account.stripe,
 						oauth: account.oauth,
-						permissions: account.permissions
+						permissions: account.permissions,
+						onboarded: account.onboarded
 					};
 					return next();
 				}

@@ -14,6 +14,7 @@ import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
@@ -49,7 +50,7 @@ export default function ChatAppForm({
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
-
+	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name || '');
 	const [description, setDescription] = useState(app?.description || '');
@@ -127,16 +128,27 @@ export default function ChatAppForm({
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
-			iconId: icon?._id
+			iconId: icon?.id
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {
+			posthog.capture('updateApp', {
+				appId: app._id,
+				appType: AppType.CHAT,
+				appName,
+				run
+			});
 			await API.editApp(
 				app._id,
 				body,
 				() => {
 					toast.success('App Updated');
 					if (run === true) {
+						posthog.capture('startSession', {
+							appId: app._id,
+							appType: AppType.CHAT,
+							appName
+						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
@@ -156,7 +168,18 @@ export default function ChatAppForm({
 			API.addApp(
 				body,
 				res => {
+					posthog.capture('createApp', {
+						appId: app._id,
+						appType: AppType.CHAT,
+						appName,
+						run
+					});
 					if (run === true) {
+						posthog.capture('startSession', {
+							appId: app._id,
+							appType: AppType.CHAT,
+							appName
+						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
@@ -178,7 +201,7 @@ export default function ChatAppForm({
 	const iconCallback = async addedIcon => {
 		(await fetchFormData) && fetchFormData();
 		setModalOpen(false);
-		setIcon(addedIcon);
+		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
 
 	async function createDatasourceCallback(createdDatasource) {
@@ -461,7 +484,11 @@ export default function ChatAppForm({
 										callbackKey='modelId'
 										setCallbackKey={null}
 										modelFilter='llm'
-										modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
+										modelTypeFilters={[
+											ModelType.OPENAI,
+											ModelType.ANTHROPIC,
+											ModelType.GOOGLE_VERTEX
+										]}
 									/>
 
 									<ToolsSelect
