@@ -46,6 +46,7 @@ export type Account = {
 	stripe?: AccountStripeData;
 	oauth?: OAuthRecordType;
 	permissions: Binary;
+	onboarded: boolean;
 };
 
 export function AccountCollection(): any {
@@ -301,6 +302,20 @@ export function updateTeamOwnerInAccounts(
 		},
 		{
 			arrayFilters: [{ 'org.id': toObjectId(orgId) }, { 'team.id': toObjectId(teamId) }]
+		}
+	);
+}
+
+export function updateRoleAndMarkOnboarded(userId: db.IdOrStr, role: string): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$set: {
+				role,
+				onboarded: true
+			}
 		}
 	);
 }

@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { ChatBubbleLeftIcon, CogIcon } from '@heroicons/react/24/outline';
+import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import ChatAppForm from 'components/ChatAppForm';
 import CrewAppForm from 'components/CrewAppForm';
 import Spinner from 'components/Spinner';
@@ -9,7 +9,16 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-export default function AddApp(props) {
+interface AddAppProps {
+	apps: any[];
+	tools: any[];
+	agents: any[];
+	tasks: any[];
+	models: any[];
+	datasources: any[];
+}
+
+export default function AddApp(props: AddAppProps) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -30,69 +39,104 @@ export default function AddApp(props) {
 	if (apps == null) {
 		return <Spinner />;
 	}
+	const handleCreateChatApp = () => {
+		setStep(1);
+	};
 
-	const stepOptions = [
-		{
-			icon: ChatBubbleLeftIcon,
-			step: 1,
-			text: 'Chat',
-			color: 'blue'
-		},
-		{
-			icon: CogIcon,
-			step: 2,
-			text: 'Process',
-			color: 'green'
-		}
-	];
-
-	const renderStepOptions = () => (
-		<div className='grid grid-cols-2 gap-4'>
-			{stepOptions.map((option, index) => {
-				const Icon = option.icon;
-				return (
-					<div
-						key={index}
-						className='p-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer rounded-lg text-center'
-						onClick={() => setStep(option.step)}
-					>
-						<Icon className={`h-16 w-16 mx-auto text-${option.color}-500`} />
-						<h3 className='mt-4 text-xl font-semibold text-gray-700'>{option.text}</h3>
-					</div>
-				);
-			})}
-		</div>
-	);
+	const handleCreateProcessApp = () => {
+		setStep(2);
+	};
 
 	const renderStepContent = () => {
 		switch (step) {
 			case 0:
 				return (
-					<div className='p-4'>
-						<h2 className='text-2xl font-bold text-center mb-6'>
-							What type of app would you like to make?
+					<div>
+						<h1 className='text-gray-900 font-semibold text-xl sm:text-2xl'>
+							Build Intelligent Chat and Process Apps
+						</h1>
+						<h2 className='text-gray-400 text-sm sm:text-base mt-2'>
+							Easily Build Intelligent Chat and Process Apps to Streamline Your Workflow
 						</h2>
-						{renderStepOptions()}
-						<button
-							className='mt-6 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
-							onClick={() => router.push(`/${resourceSlug}/apps`)}
-						>
-							<svg
-								className='h-4 w-4 mr-2'
-								fill='none'
-								stroke='currentColor'
-								viewBox='0 0 24 24'
-								xmlns='http://www.w3.org/2000/svg'
-							>
-								<path
-									strokeLinecap='round'
-									strokeLinejoin='round'
-									strokeWidth='2'
-									d='M15 19l-7-7 7-7'
-								></path>
-							</svg>
-							<span>Back</span>
-						</button>
+						<div className='md:flex gap-8 w-full mt-10'>
+							<div className='flex-1 border border-gray-200 p-4 rounded-md group'>
+								<img
+									src='/images/get-started/create-chat-app.png'
+									alt='Create Chat App'
+									// className='w-full sm:w-1/2 lg:w-1/3'
+								/>
+								<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
+									<div className='flex'>
+										<img
+											src='/images/get-started/chat-app-square.png'
+											className='aspect-square h-12'
+										/>
+										<div>
+											<div className='text-lg font-semibold text-gray-900'>Chat App</div>
+											<div className='text-gray-500 max-w-sm'>
+												Build your chat app effortlessly with intelligent agents handling
+												conversations
+											</div>
+										</div>
+									</div>
+
+									<button
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200'
+										onClick={handleCreateChatApp}
+									>
+										+ Create
+									</button>
+								</div>
+								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
+									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit'>
+										<CheckBadgeIcon className='h-6 w-6' />
+										<div>Build customized response bot</div>
+									</div>
+
+									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit'>
+										<CheckBadgeIcon className='h-6 w-6' />
+										<div>Integrate dynamic tools</div>
+									</div>
+								</div>
+							</div>
+
+							<div className='flex-1 border border-gray-200 p-4 rounded-md group'>
+								<img src='/images/get-started/create-process-app.png' alt='Create Process App' />
+								<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
+									<div className='flex'>
+										<img
+											src='/images/get-started/process-app-square.png'
+											className='aspect-square h-12'
+										/>
+										<div>
+											<div className='text-lg font-semibold text-gray-900'>Process App</div>
+											<div className='text-gray-500 max-w-sm'>
+												Effortlessly organize tasks and automate them with intelligent agents.
+											</div>
+										</div>
+									</div>
+
+									<button
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200'
+										onClick={handleCreateProcessApp}
+									>
+										+ Create
+									</button>
+								</div>
+
+								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
+									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit'>
+										<CheckBadgeIcon className='h-6 w-6' />
+										<div>Build customized response bot</div>
+									</div>
+
+									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit'>
+										<CheckBadgeIcon className='h-6 w-6' />
+										<div>Integrate dynamic tools</div>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				);
 			case 1:

@@ -3,17 +3,16 @@
 import { dynamicResponse } from '@dr';
 import { render } from '@react-email/components';
 import bcrypt from 'bcrypt';
-import { getSubscriptionsDetails } from 'controllers/stripe';
 import {
 	Account,
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
 	setCurrentTeam,
-	setStripeCustomerId,
-	updateStripeCustomer,
+	updateRoleAndMarkOnboarded,
 	verifyAccount
 } from 'db/account';
+import { getTeamWithModels } from 'db/team';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
@@ -21,7 +20,7 @@ import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationUtils';
-import { productToPlanMap } from 'struct/billing';
+import Permissions from 'permissions/permissions';
 
 export async function accountData(req, res, _next) {
 	return {
@@ -48,6 +47,18 @@ export async function billingPage(app, req, res, next) {
 	const data = await accountData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, '/billing');
+}
+
+export async function onboardingPage(app, req, res, next) {
+	const data = await accountData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/onboarding`);
+}
+
+export async function configureModelsPage(app, req, res, next) {
+	const data = await accountData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/onboarding/configuremodels`);
 }
 
 /**
@@ -97,6 +108,14 @@ export async function login(req, res) {
 		if (passwordMatch === true) {
 			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
 			req.session.token = token; //jwt (cookie)
+
+			if (account.onboarded === false) {
+				return dynamicResponse(req, res, 302, {
+					redirect: `/${account.currentTeam.toString()}/onboarding`,
+					token
+				});
+			}
+
 			return dynamicResponse(req, res, 302, {
 				redirect: `/${account.currentTeam.toString()}/apps`,
 				token
@@ -348,7 +367,35 @@ export async function switchTeam(req, res, _next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
+	const teamData = await getTeamWithModels(teamId);
+
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
+	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
+		return dynamicResponse(req, res, 302, {
+			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
+		});
+	}
+
 	return res.json({});
+}
+
+export async function updateRole(req, res) {
+	const { role } = req.body;
+	const userId = res.locals.account._id;
+	await updateRoleAndMarkOnboarded(userId, role);
+	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
+
+	const teamData = await getTeamWithModels(res.locals.account.currentTeam);
+
+	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
+		return dynamicResponse(req, res, 302, {
+			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
+		});
+	}
+
+	return dynamicResponse(req, res, 302, {
+		redirect: `/${res.locals.account.currentTeam.toString()}/apps`
+	});
 }
