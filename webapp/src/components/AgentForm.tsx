@@ -173,7 +173,8 @@ export default function AgentForm({
 						ModelType.OPENAI,
 						ModelType.OLLAMA,
 						ModelType.COHERE,
-						ModelType.ANTHROPIC
+						ModelType.ANTHROPIC,
+						ModelType.GOOGLE_VERTEX
 					]}
 				/>
 			);

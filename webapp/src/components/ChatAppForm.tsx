@@ -252,7 +252,7 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={modelCallback}
 					modelFilter='llm'
-					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
+					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX]}
 				/>
 			);
 			break;
