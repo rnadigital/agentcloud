@@ -81,6 +81,11 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 											onClick={e => {
 												e.stopPropagation();
 												e.preventDefault();
+												posthog.capture('deleteApp', {
+													appId: app._id,
+													appType: app.type,
+													appName: app.name
+												});
 												deleteApp(app._id);
 											}}
 											className={classNames(
