@@ -701,7 +701,7 @@ export default withRouter(function Layout(props) {
 																					router
 																				);
 																			}}
-																		></button>
+																		>Log out</button>
 																	);
 																}
 																return (

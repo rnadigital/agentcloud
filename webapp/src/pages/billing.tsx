@@ -53,22 +53,6 @@ export default function Billing(props) {
 	function createApiCallHandler(apiMethod) {
 		return async e => {
 			e.preventDefault();
-			const { plan, users, storage } = getPayload();
-			const posthogBody = {
-				email: account?.email,
-				oldPlan: stripePlan,
-				oldAddons: stripeAddons,
-				newPlan: plan,
-				newAddons: { users, storage }
-			};
-			if (stripePlan === SubscriptionPlan.FREE) {
-				posthog.capture('subscribe', posthogBody);
-			} else if (plan !== stripePlan) {
-				posthog.capture('changePlan', posthogBody);
-			}
-			if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
-				posthog.capture('updateAddons', posthogBody);
-			}
 			const res = await apiMethod(
 				{
 					_csrf: getPayload()._csrf
@@ -201,6 +185,27 @@ ${missingEnvs.join('\n')}`}
 				open={showConfirmModal}
 				setOpen={setShowConfirmModal}
 				confirmFunction={async () => {
+
+					const { plan, users, storage } = getPayload();
+					const posthogBody = {
+						email: account?.email,
+						oldPlan: stripePlan,
+						oldAddons: stripeAddons,
+						newPlan: plan,
+						newAddons: { users, storage }
+					};
+					if (stripePlan === SubscriptionPlan.FREE) {
+						console.log('subscribe', posthogBody);
+						posthog.capture('subscribe', posthogBody);
+					} else if (plan !== stripePlan) {
+						console.log('changePlan', posthogBody);
+						posthog.capture('changePlan', posthogBody);
+					}
+					if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
+						console.log('updateAddons', posthogBody);
+						posthog.capture('updateAddons', posthogBody);
+					}
+
 					await API.confirmChangePlan(
 						getPayload(),
 						res => {
