@@ -194,7 +194,7 @@ export default function CreateDatasourceForm({
 					stagedDatasource => {
 						posthog.capture(posthogEvent, {
 							datasourceName,
-							connectorId: connector.value,
+							connectorId: connector?.value,
 							syncSchedule: scheduleType
 						});
 						if (stagedDatasource) {
@@ -209,7 +209,7 @@ export default function CreateDatasourceForm({
 					res => {
 						posthog.capture(posthogEvent, {
 							datasourceName,
-							connectorId: connector.value,
+							connectorId: connector?.value,
 							syncSchedule: scheduleType,
 							error: res
 						});
@@ -255,7 +255,8 @@ export default function CreateDatasourceForm({
 					() => {
 						posthog.capture(posthogEvent, {
 							datasourceName,
-							connectorId: connector.value,
+							connectorId: connector?.value,
+							numStreams: streamState?.streams?.length,
 							syncSchedule: scheduleType
 						});
 						toast.success('Added datasource');
@@ -263,8 +264,9 @@ export default function CreateDatasourceForm({
 					res => {
 						posthog.capture(posthogEvent, {
 							datasourceName,
-							connectorId: connector.value,
+							connectorId: connector?.value,
 							syncSchedule: scheduleType,
+							numStreams: streamState?.streams?.length,
 							error: res
 						});
 						toast.error(res);
@@ -276,8 +278,9 @@ export default function CreateDatasourceForm({
 		} catch (e) {
 			posthog.capture(posthogEvent, {
 				datasourceName,
-				connectorId: connector.value,
+				connectorId: connector?.value,
 				syncSchedule: scheduleType,
+				numStreams: streamState?.streams?.length,
 				error: e?.message || e
 			});
 			console.error(e);
