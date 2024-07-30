@@ -36,7 +36,7 @@ async fn handle_embedding(
         Some(datasource_id_clone),
         EmbeddingModels::from(embedding_model_name)).await {
         Ok(point_struct) => {
-            match qdrant.upsert_data_point_blocking(point_struct).await {
+            match qdrant.upsert_data_points(point_struct).await {
                 Ok(result) => {
                     match result {
                         true => {
