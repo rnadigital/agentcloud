@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { useState } from 'react';
 
 import * as API from '../api';
@@ -9,12 +10,16 @@ import ErrorAlert from '../components/ErrorAlert';
 export default function RequestChangePassword() {
 	const router = useRouter();
 	const [error, setError] = useState();
-
+	const posthog = usePostHog();
 	async function requestChangePassword(e) {
 		e.preventDefault();
+		const email = e.target.email.value;
+		posthog.capture('requestChangePassword', {
+			email
+		});
 		await API.requestChangePassword(
 			{
-				email: e.target.email.value
+				email
 			},
 			null,
 			setError,

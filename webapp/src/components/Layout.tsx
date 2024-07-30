@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import {
@@ -22,11 +23,15 @@ import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
 import { SessionStatus } from 'components/SessionCards';
 import TrialNag from 'components/TrialNag';
+import { useAccountContext } from 'context/account';
+import { useChatContext } from 'context/chat';
+import { ThemeContext } from 'context/themecontext';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { Fragment, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -115,20 +120,13 @@ const userNavigation = [
 	{ name: 'Sign out', href: '#', logout: true }
 ];
 
-import { ThemeContext } from 'context/themecontext';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import { useChatContext } from '../context/chat';
-
 export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, switching, team } = accountContext as any;
-	const { currentTeam } = account || {};
-	const { stripeEndsAt, stripePlan, stripeCancelled, stripeTrial } = account?.stripe || {};
+	const { account, csrf, switching } = accountContext as any;
 	const { children } = props as any;
 	const router = useRouter();
+	const posthog = usePostHog();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
@@ -330,19 +328,28 @@ export default withRouter(function Layout(props) {
 															</Link>
 														</li>*/}
 																<li key='logout'>
-																	<form action='/forms/account/logout' method='POST'>
-																		<input type='hidden' name='_csrf' value={csrf} />
-																		<button
-																			className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-																			type='submit'
-																		>
-																			<ArrowRightOnRectangleIcon
-																				className='h-6 w-6 shrink-0'
-																				aria-hidden='true'
-																			/>
-																			Log out
-																		</button>
-																	</form>
+																	<button
+																		className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																		onClick={() => {
+																			posthog.capture('logout', {
+																				email: account?.email
+																			});
+																			API.logout(
+																				{
+																					_csrf: csrf
+																				},
+																				null,
+																				null,
+																				router
+																			);
+																		}}
+																	>
+																		<ArrowRightOnRectangleIcon
+																			className='h-6 w-6 shrink-0'
+																			aria-hidden='true'
+																		/>
+																		Log out
+																	</button>
 																</li>
 															</ul>
 															<TrialNag />
@@ -487,19 +494,28 @@ export default withRouter(function Layout(props) {
 										</Link>
 									</li>*/}
 											<li>
-												<form className='w-full' action='/forms/account/logout' method='POST'>
-													<input type='hidden' name='_csrf' value={csrf} />
-													<button
-														className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-														type='submit'
-													>
-														<ArrowRightOnRectangleIcon
-															className='h-6 w-6 shrink-0'
-															aria-hidden='true'
-														/>
-														Log out
-													</button>
-												</form>
+												<button
+													className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+													onClick={() => {
+														posthog.capture('logout', {
+															email: account?.email
+														});
+														API.logout(
+															{
+																_csrf: csrf
+															},
+															null,
+															null,
+															router
+														);
+													}}
+												>
+													<ArrowRightOnRectangleIcon
+														className='h-6 w-6 shrink-0'
+														aria-hidden='true'
+													/>
+													Log out
+												</button>
 											</li>
 										</ul>
 										<TrialNag />
@@ -667,22 +683,25 @@ export default withRouter(function Layout(props) {
 															{({ active }) => {
 																if (item.logout) {
 																	return (
-																		<form
-																			className='w-full'
-																			action='/forms/account/logout'
-																			method='POST'
-																		>
-																			<input type='hidden' name='_csrf' value={csrf} />
-																			<button
-																				className={classNames(
-																					active ? 'bg-gray-50 dark:bg-slate-700' : '',
-																					'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-																				)}
-																				type='submit'
-																			>
-																				Log out
-																			</button>
-																		</form>
+																		<button
+																			className={classNames(
+																				active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																				'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																			)}
+																			onClick={() => {
+																				posthog.capture('logout', {
+																					email: account?.email
+																				});
+																				API.logout(
+																					{
+																						_csrf: csrf
+																					},
+																					null,
+																					null,
+																					router
+																				);
+																			}}
+																		></button>
 																	);
 																}
 																return (
