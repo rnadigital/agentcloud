@@ -6,6 +6,7 @@ import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { RoleOptions } from 'permissions/roles';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
@@ -24,14 +25,22 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 	const [error, setError] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [selectedRole, setSelectedRole] = useState(RoleOptions[0].value);
+	const posthog = usePostHog();
 
 	async function handleSubmit(e) {
 		setInviting(true);
 		e.preventDefault();
-		if (
-			!stripePlan ||
-			![SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(stripePlan)
-		) {
+		const hasPermission = [SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE].includes(
+			stripePlan
+		);
+		posthog.capture('inviteUser', {
+			name,
+			email,
+			role: selectedRole,
+			stripePlan,
+			hasPermission //plan has permission
+		});
+		if (!stripePlan || !hasPermission) {
 			return setSubscriptionModalOpen(true);
 		}
 		if (!email || !name) {

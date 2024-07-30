@@ -2,7 +2,8 @@ import { Dialog, Transition } from '@headlessui/react';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { usePostHog } from 'posthog-js/react';
+import { Fragment, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
@@ -16,8 +17,10 @@ export default function SubscriptionModal({
 	buttonText = 'Upgrade'
 }) {
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const { csrf, account } = accountContext as any;
+	const { name, email, stripePlan } = account || {};
 	const router = useRouter();
+	const posthog = usePostHog();
 
 	async function getPaymentLink(e) {
 		e.preventDefault();
@@ -30,6 +33,17 @@ export default function SubscriptionModal({
 			router
 		);
 	}
+
+	useEffect(() => {
+		if (open === true) {
+			posthog.capture('upgradeModal', {
+				name,
+				email,
+				stripePlan,
+				text
+			});
+		}
+	}, [open]);
 
 	return (
 		<Transition.Root show={open} as={Fragment}>

@@ -9,6 +9,7 @@ import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
@@ -47,6 +48,7 @@ export default function AgentForm({
 	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
+	const posthog = usePostHog();
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -82,6 +84,13 @@ export default function AgentForm({
 
 	async function agentPost(e) {
 		e.preventDefault();
+		posthog.capture(editing ? 'updateAgent' : 'createAgent', {
+			name: e.target.name.value,
+			tools: (toolState || []).length,
+			datasources: (datasourceState || []).length,
+			modelId,
+			functionModelId
+		});
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,

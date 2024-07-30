@@ -10,7 +10,7 @@ import { ChatWrapper } from 'context/chat';
 import { NotificationWrapper } from 'context/notifications';
 import { SocketWrapper } from 'context/socket';
 import { StepWrapper } from 'context/stepwrapper';
-import Head from 'next/head';
+import { ThemeProvider } from 'context/themecontext';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 import posthog from 'posthog-js';
@@ -71,10 +71,12 @@ export default function App({ Component, pageProps }) {
 									hideProgressBar={true}
 									limit={3}
 								/>
-								<Layout {...pageProps}>
-									<style>{''}</style>
-									<Component {...pageProps} />
-								</Layout>
+								<ThemeProvider>
+									<Layout {...pageProps}>
+										<style>{''}</style>
+										<Component {...pageProps} />
+									</Layout>
+								</ThemeProvider>
 							</StepWrapper>
 						</NotificationWrapper>
 					</SocketWrapper>

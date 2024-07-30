@@ -9,6 +9,7 @@ import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -24,12 +25,16 @@ export default function Login() {
 	const [error, setError] = useState();
 	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
+	const posthog = usePostHog();
 
 	const { control, handleSubmit } = useForm<LoginFormValues>();
 
 	async function login(data: LoginFormValues) {
 		setSubmitting(true);
 		try {
+			posthog.capture('login', {
+				email: data.email
+			});
 			await API.login(data, null, setError, router);
 		} finally {
 			setSubmitting(false);

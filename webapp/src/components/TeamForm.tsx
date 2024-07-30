@@ -5,6 +5,7 @@ import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
@@ -27,10 +28,17 @@ export default function TeamForm({
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const posthog = usePostHog();
 
 	async function teamPost(e) {
 		e.preventDefault();
-		if (!stripePlan || pricingMatrix[stripePlan].users === 1) {
+		const hasPermission = pricingMatrix[stripePlan].users !== 1;
+		posthog.capture('createTeam', {
+			teamName: e.target.name.value,
+			stripePlan,
+			hasPermission
+		});
+		if (!stripePlan || !hasPermission) {
 			return setSubscriptionModalOpen(true);
 		}
 		const body = {
