@@ -6,7 +6,7 @@ use tokio::sync::{RwLock};
 use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
-use crate::llm::models::EmbeddingModels;
+use crate::embeddings::models::EmbeddingModels;
 use crate::mongo::queries::{get_model_and_embedding_key, increment_by_one};
 use crate::qdrant::helpers::embed_payload;
 use crate::qdrant::utils::Qdrant;

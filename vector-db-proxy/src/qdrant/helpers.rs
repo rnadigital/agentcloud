@@ -12,8 +12,8 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::hash_map_values_as_serde_values;
-use crate::llm::models::EmbeddingModels;
-use crate::llm::utils::embed_text;
+use crate::embeddings::models::EmbeddingModels;
+use crate::embeddings::utils::embed_text;
 use crate::qdrant::models::ScrollResults;
 
 ///
