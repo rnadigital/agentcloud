@@ -26,6 +26,7 @@ const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnec
 });
 import { StreamsList } from 'components/DatasourceStream';
 import FormContext from 'context/connectorform';
+import { usePostHog } from 'posthog-js/react';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -78,6 +79,7 @@ export default function CreateDatasourceForm({
 	const [topK, setTopK] = useState(4);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
+	const posthog = usePostHog();
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -107,8 +109,19 @@ export default function CreateDatasourceForm({
 				sourceDefinitionId,
 				resourceSlug
 			},
-			setSpec,
-			setError,
+			spec => {
+				posthog.capture('getSpecification', {
+					sourceDefinitionId
+				});
+				setSpec(spec);
+			},
+			specError => {
+				posthog.capture('getSpecification', {
+					sourceDefinitionId,
+					error: specError
+				});
+				setError(specError);
+			},
 			null
 		);
 		setLoading(false);
@@ -158,6 +171,7 @@ export default function CreateDatasourceForm({
 	async function datasourcePost(data?) {
 		setSubmitting(true);
 		setError(null);
+		const posthogEvent = step === 2 ? 'testDatasource' : 'createDatasource';
 		try {
 			if (step === 2) {
 				const body = {
@@ -178,6 +192,11 @@ export default function CreateDatasourceForm({
 				await API.testDatasource(
 					body,
 					stagedDatasource => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector.value,
+							syncSchedule: scheduleType
+						});
 						if (stagedDatasource) {
 							setDatasourceId(stagedDatasource.datasourceId);
 							setDiscoveredSchema(stagedDatasource.discoveredSchema);
@@ -188,6 +207,12 @@ export default function CreateDatasourceForm({
 						// nothing to toast here
 					},
 					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector.value,
+							syncSchedule: scheduleType,
+							error: res
+						});
 						setError(res);
 					},
 					compact ? null : router
@@ -228,9 +253,20 @@ export default function CreateDatasourceForm({
 				const addedDatasource: any = await API.addDatasource(
 					body,
 					() => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector.value,
+							syncSchedule: scheduleType
+						});
 						toast.success('Added datasource');
 					},
 					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector.value,
+							syncSchedule: scheduleType,
+							error: res
+						});
 						toast.error(res);
 					},
 					compact ? null : router
@@ -238,6 +274,12 @@ export default function CreateDatasourceForm({
 				callback && addedDatasource && callback(addedDatasource._id);
 			}
 		} catch (e) {
+			posthog.capture(posthogEvent, {
+				datasourceName,
+				connectorId: connector.value,
+				syncSchedule: scheduleType,
+				error: e?.message || e
+			});
 			console.error(e);
 		} finally {
 			setSubmitting(false);
