@@ -169,14 +169,14 @@ export default function ChatAppForm({
 				body,
 				res => {
 					posthog.capture('createApp', {
-						appId: app._id,
+						appId: res._id,
 						appType: AppType.CHAT,
 						appName,
 						run
 					});
 					if (run === true) {
 						posthog.capture('startSession', {
-							appId: app._id,
+							appId: res._id,
 							appType: AppType.CHAT,
 							appName
 						});
