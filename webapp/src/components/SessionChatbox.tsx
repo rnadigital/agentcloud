@@ -1,4 +1,6 @@
 import { PaperAirplaneIcon, StopIcon } from '@heroicons/react/20/solid';
+import { useParams } from 'next/navigation';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 
 import { useAccountContext } from '../context/account';
@@ -10,12 +12,14 @@ export default function SessionChatbox({
 	chatBusyState,
 	onSubmit,
 	scrollToBottom,
-	stopGenerating
+	stopGenerating,
+	app
 }) {
 	//TODO: just get scrolltobottom from chatcontext
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
+	const posthog = usePostHog();
 
 	const [promptValue, setPromptValue] = useState('');
 
@@ -76,6 +80,11 @@ export default function SessionChatbox({
 							<button
 								onClick={e => {
 									e.preventDefault();
+									posthog.capture('terminateSession', {
+										appId: app._id,
+										appType: app.type,
+										appName: app.name
+									});
 									stopGenerating();
 								}}
 								className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'

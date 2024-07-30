@@ -185,7 +185,6 @@ ${missingEnvs.join('\n')}`}
 				open={showConfirmModal}
 				setOpen={setShowConfirmModal}
 				confirmFunction={async () => {
-
 					const { plan, users, storage } = getPayload();
 					const posthogBody = {
 						email: account?.email,
@@ -195,14 +194,11 @@ ${missingEnvs.join('\n')}`}
 						newAddons: { users, storage }
 					};
 					if (stripePlan === SubscriptionPlan.FREE) {
-						console.log('subscribe', posthogBody);
 						posthog.capture('subscribe', posthogBody);
 					} else if (plan !== stripePlan) {
-						console.log('changePlan', posthogBody);
 						posthog.capture('changePlan', posthogBody);
 					}
 					if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
-						console.log('updateAddons', posthogBody);
 						posthog.capture('updateAddons', posthogBody);
 					}
 

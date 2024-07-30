@@ -552,6 +552,11 @@ export default withRouter(function Layout(props) {
 								<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
 									<button
 										onClick={() => {
+											posthog.capture('restartSession', {
+												appId: chatContext?.app._id,
+												appType: chatContext?.app.type,
+												appName: chatContext?.app.name
+											});
 											API.addSession(
 												{
 													_csrf: csrf,
@@ -701,7 +706,9 @@ export default withRouter(function Layout(props) {
 																					router
 																				);
 																			}}
-																		>Log out</button>
+																		>
+																			Log out
+																		</button>
 																	);
 																}
 																return (

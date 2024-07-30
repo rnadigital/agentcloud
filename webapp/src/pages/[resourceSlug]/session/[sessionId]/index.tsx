@@ -339,6 +339,7 @@ export default function Session(props) {
 										</p>
 									) : (
 										<SessionChatbox
+											app={app}
 											scrollToBottom={scrollToBottom}
 											lastMessageFeedback={lastMessageFeedback}
 											chatBusyState={chatBusyState}

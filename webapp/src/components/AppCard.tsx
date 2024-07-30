@@ -7,6 +7,7 @@ import AgentAvatar from 'components/AgentAvatar';
 import classNames from 'components/ClassNames';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { Fragment } from 'react';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
@@ -17,6 +18,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 	async function deleteApp(appId) {
 		await API.deleteApp(
 			{
@@ -111,6 +113,11 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 				<button
 					className='rounded-md xl:w-24 h-10 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full inline-flex items-center self-end'
 					onClick={() => {
+						posthog.capture('startSession', {
+							appId: app._id,
+							appType: app.type,
+							appName: app.name
+						});
 						startSession(app._id);
 					}}
 				>
