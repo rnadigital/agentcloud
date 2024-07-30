@@ -44,7 +44,7 @@ const InputField = <TFieldValues extends FieldValues>({
 					<div className='flex flex-col justify-center'>
 						{label && (
 							<div className='flex items-center'>
-								<label htmlFor={name} className='mr-1 mb-2 text-sm'>
+								<label htmlFor={name} className='mr-1 mb-2 text-sm dark:text-white'>
 									{label}
 								</label>
 							</div>
@@ -58,7 +58,7 @@ const InputField = <TFieldValues extends FieldValues>({
 								disabled={disabled}
 								placeholder={placeholder}
 								className={clsx(
-									'bg-gray-50 rounded-lg border border-gray-300 w-full h-10 p-1 pl-3 text-gray-500 disabled:bg-gray-200 text-sm',
+									'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 dark:disabled:bg-gray-400 text-sm',
 									type === 'checkbox' && 'h-4 rounded-none cursor-pointer'
 								)}
 								{...(value ? { value } : {})}

@@ -7,6 +7,8 @@ import {
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
+import { useThemeContext } from 'context/themecontext';
+import cn from 'lib/cn';
 import React, { Fragment } from 'react';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
 
@@ -41,6 +43,7 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 	placeholder,
 	callback
 }: OnboardingSelectProps<TFieldValues>) => {
+	const { theme } = useThemeContext();
 	return (
 		<Controller
 			name={name}
@@ -57,13 +60,24 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 								<div className='mt-1 relative w-full text-sm'>
 									<ListboxButton
 										className={clsx(
-											'h-11 relative w-full border border-gray-300 shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500',
+											'h-11 relative w-full border border-gray-300 dark:border-gray-600 shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500',
 											classNames?.listboxButton
 										)}
 									>
-										<span className='flex items-center'>
-											{value?.iconURL && <img src={value?.iconURL} className='h-6 w-6 mr-2' />}
-											<span className={clsx('block truncate', { 'text-gray-400': !value?.label })}>
+										<span className='flex items-center dark:text-gray-300'>
+											{value?.iconURL && (
+												<img
+													src={value.iconURL}
+													className={clsx('h-6 w-6 mr-2', {
+														'dark:filter invert grayscale': theme === 'dark'
+													})}
+												/>
+											)}
+											<span
+												className={clsx('block truncate', {
+													'text-gray-400': !value?.label
+												})}
+											>
 												{value?.label || placeholder}
 											</span>
 										</span>

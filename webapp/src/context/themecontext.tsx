@@ -1,7 +1,7 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface ThemeContextProps {
-	theme?: string;
+	theme?: 'dark' | 'light';
 	toggleTheme: () => void;
 }
 
@@ -10,7 +10,7 @@ export const ThemeContext = createContext<ThemeContextProps>({
 });
 
 export const ThemeProvider = ({ children }) => {
-	const [theme, setTheme] = useState<string>();
+	const [theme, setTheme] = useState<'dark' | 'light'>();
 
 	useEffect(() => {
 		document.documentElement.className = theme;
@@ -23,3 +23,5 @@ export const ThemeProvider = ({ children }) => {
 
 	return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 };
+
+export const useThemeContext = () => useContext(ThemeContext);
