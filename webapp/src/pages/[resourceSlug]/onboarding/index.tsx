@@ -3,6 +3,7 @@ import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -15,6 +16,7 @@ export default function Onboarding() {
 	const { csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 
 	useEffect(() => {
 		refreshAccountContext();
@@ -27,6 +29,9 @@ export default function Onboarding() {
 	});
 
 	const onSubmit = async (data: FormValues) => {
+		posthog.capture('onboarding', {
+			role: data.role.value
+		});
 		await API.updateRole(
 			{
 				resourceSlug,

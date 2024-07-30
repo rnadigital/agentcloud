@@ -12,15 +12,18 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+
+import stripe from '../lib/stripe';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const { stripeCustomerId, stripePlan } = account?.stripe || {};
+	const { stripeCustomerId, stripePlan, stripeAddons } = account?.stripe || {};
 	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
 	const [_, dispatch] = useState(props);
@@ -34,6 +37,7 @@ export default function Billing(props) {
 	const [last4, setLast4] = useState(null);
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
+	const posthog = usePostHog();
 
 	const getPayload = () => {
 		return {
@@ -49,6 +53,22 @@ export default function Billing(props) {
 	function createApiCallHandler(apiMethod) {
 		return async e => {
 			e.preventDefault();
+			const { plan, users, storage } = getPayload();
+			const posthogBody = {
+				email: account?.email,
+				oldPlan: stripePlan,
+				oldAddons: stripeAddons,
+				newPlan: plan,
+				newAddons: { users, storage }
+			};
+			if (stripePlan === SubscriptionPlan.FREE) {
+				posthog.capture('subscribe', posthogBody);
+			} else if (plan !== stripePlan) {
+				posthog.capture('changePlan', posthogBody);
+			}
+			if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
+				posthog.capture('updateAddons', posthogBody);
+			}
 			const res = await apiMethod(
 				{
 					_csrf: getPayload()._csrf

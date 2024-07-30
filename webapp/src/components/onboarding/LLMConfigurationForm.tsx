@@ -10,6 +10,7 @@ import ToolTip from 'components/shared/ToolTip';
 import { useAccountContext } from 'context/account';
 import useResponsive from 'hooks/useResponsive';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -38,10 +39,11 @@ interface LLMConfigurationFormValues {
 	embeddedModelConfig: Record<string, string>;
 }
 
-const LLMConfigurationForm = () => {
+export default function LLMConfigurationForm() {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	const router = useRouter();
+	const posthog = usePostHog();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 
 	const [isMounted, setIsMounted] = useState(false);
@@ -123,6 +125,16 @@ const LLMConfigurationForm = () => {
 	const { isTablet, isMobile } = useResponsive();
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
+		posthog.capture('configuremodels', {
+			llmModel: {
+				model: data.LLMModel.value,
+				type: data.LLMType.value
+			},
+			embeddingModel: {
+				model: data.embeddingModel.value,
+				type: data.embeddingType.value
+			}
+		});
 		setSubmitting(true);
 		const promises = [];
 
@@ -265,7 +277,7 @@ const LLMConfigurationForm = () => {
 				<div className='flex-1'>
 					<div className='text-sm flex gap-1'>
 						<span>Select LLM</span>
-						<ToolTip content='Hello world'>
+						<ToolTip content='Large Language Models (LLMs) generate and understand text. Use them for text creation, customer support, data analysis, and translation. LLM models are used to power agents.'>
 							<span className='cursor-pointer'>
 								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
 							</span>
@@ -328,7 +340,7 @@ const LLMConfigurationForm = () => {
 				<div className='flex-1'>
 					<div className='text-sm flex gap-1'>
 						<span>Select Embedding</span>
-						<ToolTip content='Embedding models are used to when storing your data into the vector DB and by the Agent for RAG retrieval'>
+						<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
 							<span className='cursor-pointer'>
 								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
 							</span>
@@ -454,6 +466,4 @@ const LLMConfigurationForm = () => {
 			</div>
 		</form>
 	);
-};
-
-export default LLMConfigurationForm;
+}
