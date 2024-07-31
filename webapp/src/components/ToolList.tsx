@@ -1,4 +1,5 @@
 import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -17,6 +18,10 @@ export default function ToolList({ tools, fetchTools }) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const posthog = usePostHog();
+	const [openModal, setOpenModal] = useState(false);
+	// const [modelConfig, setModelConfig] = useState<ModelConfig>(null);
+	//
+	console.log(tools);
 
 	async function deleteTool(toolId) {
 		API.deleteTool(
@@ -75,6 +80,19 @@ export default function ToolList({ tools, fetchTools }) {
 										aria-hidden='true'
 									/>
 									Edit
+								</a>
+							</div>
+
+							<div className='flex w-0 flex-1'>
+								<a
+									href={`/${resourceSlug}/tool/${tool._id}/edit`}
+									className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
+								>
+									<ClipboardDocumentIcon
+										className='h-5 w-5 text-gray-400 dark:text-white'
+										aria-hidden='true'
+									/>
+									Clone
 								</a>
 							</div>
 							<div className='-ml-px flex w-0 flex-1'>
