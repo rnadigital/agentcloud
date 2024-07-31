@@ -275,7 +275,7 @@ export default function Session(props) {
 				<title>{`Session - ${sessionId}`}</title>
 			</Head>
 			<div
-				className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
+				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
 				<div className='overflow-y-auto' ref={scrollContainerRef}>
@@ -320,45 +320,51 @@ export default function Session(props) {
 						</div>
 					)}
 				</div>
-				{showConversationStarters && !chatBusyState && app?.chatAppConfig?.conversationStarters && (
-					<div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-						<ConversationStarters
-							sendMessage={message => sendMessage(message, null)}
-							conversationStarters={app?.chatAppConfig?.conversationStarters}
-						/>
-					</div>
-				)}
-				<div className='flex flex-col mt-auto pt-4 border-t'>
+				<div className='flex flex-col mt-auto pt-4 border-t mb-2'>
 					<div className='flex flex-row justify-center'>
-						<div className='flex items-start space-x-4 xl:basis-1/2 lg:basis-3/4 px-4 basis-full'>
-							<div className='min-w-0 flex-1 h-full'>
-								{messages ? (
-									terminated ? (
-										<p id='session-terminated' className='text-center h-full me-14 pt-3'>
-											This session was terminated.
-										</p>
-									) : (
-										<SessionChatbox
-											app={app}
-											scrollToBottom={scrollToBottom}
-											lastMessageFeedback={lastMessageFeedback}
-											chatBusyState={chatBusyState}
-											stopGenerating={stopGenerating}
-											onSubmit={sendMessage}
+						<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
+							{showConversationStarters &&
+								!chatBusyState &&
+								app?.chatAppConfig?.conversationStarters && (
+									<div className='w-full flex items-center gap-2 py-1'>
+										<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
+										<ConversationStarters
+											sendMessage={message => sendMessage(message, null)}
+											conversationStarters={app?.chatAppConfig?.conversationStarters}
 										/>
-									)
-								) : (
-									<ContentLoader
-										speed={2}
-										width={'100%'}
-										height={30}
-										viewBox='0 0 100% 10'
-										backgroundColor='#e5e5e5'
-										foregroundColor='#ffffff'
-									>
-										<rect x='0' y='10' rx='5' width='100%' height='10' />
-									</ContentLoader>
+									</div>
 								)}
+
+							<div className='flex items-start space-x-4'>
+								<div className='min-w-0 flex-1 h-full'>
+									{messages ? (
+										terminated ? (
+											<p id='session-terminated' className='text-center h-full me-14 pt-3'>
+												This session was terminated.
+											</p>
+										) : (
+											<SessionChatbox
+												app={app}
+												scrollToBottom={scrollToBottom}
+												lastMessageFeedback={lastMessageFeedback}
+												chatBusyState={chatBusyState}
+												stopGenerating={stopGenerating}
+												onSubmit={sendMessage}
+											/>
+										)
+									) : (
+										<ContentLoader
+											speed={2}
+											width={'100%'}
+											height={30}
+											viewBox='0 0 100% 10'
+											backgroundColor='#e5e5e5'
+											foregroundColor='#ffffff'
+										>
+											<rect x='0' y='10' rx='5' width='100%' height='10' />
+										</ContentLoader>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>

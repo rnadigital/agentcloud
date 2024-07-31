@@ -26,6 +26,7 @@ import TrialNag from 'components/TrialNag';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { ThemeContext } from 'context/themecontext';
+import cn from 'lib/cn';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -752,7 +753,10 @@ export default withRouter(function Layout(props) {
 			/>
 			<div className='flex bg-gray-50 w-full dark:bg-gray-800'>
 				<footer
-					className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-12 max-w-7xl w-full mx-auto`}
+					className={cn(
+						'mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-4 max-w-7xl w-full mx-auto',
+						{ 'lg:pl-80 py-0 max-w-full': showNavs }
+					)}
 				>
 					<div className='py-3'>
 						© {new Date().getFullYear()} RNA Digital - v{packageJson.version}
