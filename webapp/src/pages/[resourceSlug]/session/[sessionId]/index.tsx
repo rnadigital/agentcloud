@@ -15,12 +15,16 @@ import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
 import ContentLoader from 'react-content-loader';
+import { usePathname } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
+	const path = usePathname();
+	const isShared = path.startsWith('/s/');
 	const { resourceSlug } = router.query;
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
@@ -80,6 +84,9 @@ export default function Session(props) {
 		if (isAtBottom && message?._id) {
 			setLastSeenMessageId(message._id);
 		}
+		if (isShared && showConversationStarters) {
+			setShowConversationStarters(false);
+		}
 		const newMessage = typeof message === 'string' ? { type: null, text: message } : message;
 		setMessages(oldMessages => {
 			// There are existing messages
@@ -137,7 +144,8 @@ export default function Session(props) {
 		if (
 			session &&
 			showConversationStarters &&
-			messages.slice(0, 4).some(message => message.incoming === true)
+			(messages.slice(0, 4).some(message => message.incoming === true)
+				|| messages.length > 0 && isShared)
 		) {
 			setShowConversationStarters(false);
 		}
@@ -251,12 +259,25 @@ export default function Session(props) {
 		);
 	}
 
-	function sendMessage(e, reset) {
+	async function sendMessage(e, reset) {
 		e.preventDefault && e.preventDefault();
 		const message: string =
 			typeof e === 'string' ? e : e.target.prompt ? e.target.prompt.value : e.target.value;
 		if (!message || message.trim().length === 0) {
 			return null;
+		}
+		if (isShared && showConversationStarters) {
+			const res = await API.publicStartApp(
+				{
+					resourceSlug: app?.teamId,
+					id: app?._id
+				},
+				null,
+				toast.error,
+				null
+			);
+			res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
+			return;
 		}
 		socketContext.emit('message', {
 			room: sessionId,
@@ -349,6 +370,7 @@ export default function Session(props) {
 											scrollToBottom={scrollToBottom}
 											lastMessageFeedback={lastMessageFeedback}
 											chatBusyState={chatBusyState}
+											showConversationStarters={showConversationStarters}
 											stopGenerating={stopGenerating}
 											onSubmit={sendMessage}
 										/>

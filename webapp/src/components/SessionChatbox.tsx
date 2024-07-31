@@ -13,6 +13,7 @@ export default function SessionChatbox({
 	onSubmit,
 	scrollToBottom,
 	stopGenerating,
+	showConversationStarters,
 	app
 }) {
 	//TODO: just get scrolltobottom from chatcontext
@@ -20,7 +21,6 @@ export default function SessionChatbox({
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const posthog = usePostHog();
-
 	const [promptValue, setPromptValue] = useState('');
 
 	return (
@@ -75,7 +75,7 @@ export default function SessionChatbox({
 				</div>
 			</div>*/}
 				<div className='flex-shrink-0'>
-					{chatBusyState ? (
+					{chatBusyState && !showConversationStarters ? (
 						<div className='flex items-end basis-1/2'>
 							<button
 								onClick={e => {
@@ -94,11 +94,11 @@ export default function SessionChatbox({
 						</div>
 					) : (
 						<button
-							disabled={chatBusyState || promptValue.trim().length === 0}
+							disabled={(chatBusyState && !showConversationStarters) || promptValue.trim().length === 0}
 							type='submit'
 							className={classNames(
 								'pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
-								!chatBusyState
+								!chatBusyState || showConversationStarters
 									? 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 									: 'bg-indigo-400 cursor-wait'
 							)}

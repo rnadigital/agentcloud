@@ -25,7 +25,6 @@ const ConversationStarters = ({ session, app, sendMessage, conversationStarters 
 								toast.error,
 								null
 							);
-							console.log('res', res);
 							res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
 						}
 					}}
