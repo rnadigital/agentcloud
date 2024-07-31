@@ -168,18 +168,18 @@ export default function ChatAppForm({
 			API.addApp(
 				body,
 				res => {
-					posthog.capture('createApp', {
-						appId: app._id,
-						appType: AppType.CHAT,
-						appName,
-						run
-					});
+					// posthog.capture('createApp', {
+					// 	appId: app._id,
+					// 	appType: AppType.CHAT,
+					// 	appName,
+					// 	run
+					// });
 					if (run === true) {
-						posthog.capture('startSession', {
-							appId: app._id,
-							appType: AppType.CHAT,
-							appName
-						});
+						// posthog.capture('startSession', {
+						// 	appId: app._id,
+						// 	appType: AppType.CHAT,
+						// 	appName
+						// });
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
@@ -284,7 +284,7 @@ export default function ChatAppForm({
 	return (
 		<>
 			{modal}
-			<h2 className='text-xl font-bold mb-6'>Chat App</h2>
+			<h2 className='text-xl font-bold mb-6 dark:text-white'>Chat App</h2>
 			<form onSubmit={appPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 

@@ -1,4 +1,5 @@
 import { TrashIcon } from '@heroicons/react/20/solid';
+import cn from 'lib/cn';
 import React from 'react';
 
 export default function ParameterForm({
@@ -46,7 +47,10 @@ export default function ParameterForm({
 						value={param.name}
 						required
 						onChange={e => updateParameter(index, 'name', e.target.value)}
-						className={`${disableDescription ? 'col-span-3' : ''} rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
+						className={cn(
+							'bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm focus:ring-indigo-600',
+							{ 'col-span-3': disableDescription }
+						)}
 					/>
 					{!disableTypes && (
 						<select
