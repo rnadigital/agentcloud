@@ -76,7 +76,11 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 	return (
 		<>
 			{modelConfig && openModal && (
-				<CloneModelModal close={() => setOpenModal(false)} modelConfig={modelConfig} />
+				<CloneModelModal
+					close={() => setOpenModal(false)}
+					modelConfig={modelConfig}
+					fetchModels={fetchModels}
+				/>
 			)}
 
 			<DeleteModal
