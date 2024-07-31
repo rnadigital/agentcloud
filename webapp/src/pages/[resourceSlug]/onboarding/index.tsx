@@ -1,7 +1,9 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
+import ThemeSelector from 'components/ThemeSelector';
 import { useAccountContext } from 'context/account';
+import { useThemeContext } from 'context/themecontext';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect } from 'react';
@@ -17,6 +19,8 @@ export default function Onboarding() {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const posthog = usePostHog();
+
+	const { theme } = useThemeContext();
 
 	useEffect(() => {
 		refreshAccountContext();
@@ -45,15 +49,23 @@ export default function Onboarding() {
 	};
 
 	return (
-		<main className='flex items-center flex-col justify-center flex-1'>
+		<main className='flex items-center flex-col justify-center flex-1 dark:bg-gray-900'>
+			<div className='absolute top-2 right-2'>
+				<ThemeSelector />
+			</div>
 			<img
-				src='/images/agentcloud-full-black-bg-trans.png'
+				// src='/images/agentcloud-full-black-bg-trans.png'
+				src={
+					theme === 'dark'
+						? '/images/agentcloud-full-white-bg-trans.png'
+						: '/images/agentcloud-full-black-bg-trans.png'
+				}
 				alt='Agentcloud'
 				className='h-14 md:h-20'
 			/>
-			<section className='bg-white w-full max-w-[950px] rounded-lg shadow-sm p-8 flex flex-col gap-5'>
-				<h1 className='font-bold text-xl md:text-2xl'>Welcome to AgentCloud! 🎉</h1>
-				<div className='text-gray-600 text-lg sm:text-xl'>
+			<section className='bg-white w-full max-w-[950px] rounded-lg shadow-sm p-8 flex flex-col gap-5 dark:bg-gray-700'>
+				<h1 className='font-bold text-xl md:text-2xl dark:text-white'>Welcome to AgentCloud! 🎉</h1>
+				<div className='text-gray-600 text-lg sm:text-xl dark:text-gray-50'>
 					Let&apos;s begin by getting to know your role.
 				</div>
 				<form
@@ -61,7 +73,7 @@ export default function Onboarding() {
 					className='flex flex-col gap-4 text-lg sm:text-2xl items-center'
 				>
 					<div className='flex flex-col sm:flex-row gap-2 w-full sm:items-center'>
-						<p className='w-fit font-extrabold'>I am a</p>
+						<p className='w-fit font-extrabold dark:text-gray-50'>I am a</p>
 						<div className='w-fit'>
 							<OnboardingSelect<FormValues>
 								options={[

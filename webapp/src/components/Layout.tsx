@@ -150,7 +150,7 @@ export default withRouter(function Layout(props) {
 				<meta name='viewport' content='width=device-width initial-scale=1' />
 				<link rel='shortcut icon' href='/images/favicon.ico' />
 			</Head>
-			<div className='flex flex-col flex-1 bg-gray-50 dark:bg-dk-card'>
+			<div className='flex flex-col flex-1 bg-gray-50 dark:bg-gray-900'>
 				<Transition.Root show={sidebarOpen} as={Fragment}>
 					<Dialog as='div' className='relative z-50 lg:hidden' onClose={setSidebarOpen}>
 						<Transition.Child
