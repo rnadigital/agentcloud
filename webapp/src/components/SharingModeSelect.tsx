@@ -1,5 +1,6 @@
 import * as API from '@api';
 import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
@@ -7,7 +8,6 @@ import { toast } from 'react-toastify';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
 import SelectClassNames from 'styles/SelectClassNames';
-import { useAccountContext } from 'context/account';
 
 const sharingModeOptions = [
 	{
@@ -26,7 +26,7 @@ const SharingModeSelect = ({
 	setSharingMode,
 	shareLinkShareId,
 	setShareLinkShareId,
-	showInfoAlert = false,
+	showInfoAlert = false
 }) => {
 	const [loading, setLoading] = useState(false);
 	const [accountContext]: any = useAccountContext();

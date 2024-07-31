@@ -2,10 +2,10 @@
 
 import { dynamicResponse } from '@dr';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
+import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { ShareLinkTypes } from 'struct/sharelink';
-import debug from 'debug';
 const log = debug('webapp:controllers:sharelink');
 
 export async function addShareLinkApi(req, res, next) {
@@ -45,17 +45,20 @@ export async function addShareLinkApi(req, res, next) {
 //Note: dont really need other CRUD endpoints for these. They have an index and auto expire
 
 export async function handleRedirect(req, res, next) {
-	const { resourceSlug, shareLinkShareId } = req.params
+	const { resourceSlug, shareLinkShareId } = req.params;
 	const foundShareLink = await getShareLinkByShareId(resourceSlug, shareLinkShareId);
 	log('resourceSlug: %s, shareLinkShareId: %s', resourceSlug, shareLinkShareId);
 	log('foundShareLink: %s', foundShareLink);
-	if (!foundShareLink || !foundShareLink?.payload?.id) { //Not found or still no payload set
+	if (!foundShareLink || !foundShareLink?.payload?.id) {
+		//Not found or still no payload set
 		return dynamicResponse(req, res, 302, { redirect: '/' });
 	}
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
 			//There are no other sharinglinktypes yet
-			return dynamicResponse(req, res, 302, { redirect: `/s/${resourceSlug}/app/${foundShareLink.payload.id}` });
+			return dynamicResponse(req, res, 302, {
+				redirect: `/s/${resourceSlug}/app/${foundShareLink.payload.id}`
+			});
 	}
 }
