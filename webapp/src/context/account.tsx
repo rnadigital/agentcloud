@@ -63,6 +63,32 @@ export function AccountWrapper({ children, pageProps }) {
 		});
 	}
 
+	function setDatalayerUser(data) {
+		if (typeof window !== 'undefined') {
+			if (!data) {
+				//@ts-ignore
+				return window.acdl && delete window.acdl;
+			}
+			const { user } = data;
+			if (!user) {
+				return;
+			}
+			//@ts-ignore
+			window.acdl = {
+				user: {
+					userId: user?._id,
+					email: user?.email,
+					orgId: user?.currentOrg,
+					teamId: user?.currentTeam,
+					stripeCustomerId: user?.stripe?.stripeCustomerId,
+					...getTeamAndOrgName(data),
+					stripe: user?.stripe,
+					_stripe: user?._stripe
+				}
+			};
+		}
+	}
+
 	useEffect(() => {
 		if (!sharedState || !sharedState.account) {
 			refreshAccountContext();
@@ -79,8 +105,11 @@ export function AccountWrapper({ children, pageProps }) {
 				email: sharedState.account.email,
 				name: sharedState.account.name
 			});
+			console.log(sharedState);
+			setDatalayerUser(sharedState);
 		} else {
 			posthog.reset();
+			setDatalayerUser(null);
 		}
 	}, [sharedState?.account?.name]);
 
