@@ -4,7 +4,6 @@ use std::sync::Arc;
 use anyhow::{anyhow, Result};
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use qdrant_client::prelude::Value;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
@@ -13,8 +12,8 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::hash_map_values_as_serde_values;
-use crate::llm::models::EmbeddingModels;
-use crate::llm::utils::embed_text;
+use crate::embeddings::models::EmbeddingModels;
+use crate::embeddings::utils::embed_text;
 use crate::qdrant::models::ScrollResults;
 
 ///
@@ -111,14 +110,13 @@ pub async fn embed_payload(
         if let Some(_id) = datasource_id {
             let mut payload: HashMap<String, serde_json::Value> =
                 hash_map_values_as_serde_values!(data);
-            // Convert embedding_field_name to lowercase
             // todo: this is too opinionated. this should happen outside of this function so that
-            // this method is more generic
+            // Convert embedding_field_name to lowercase
             if let Some(value) = payload.remove(&embedding_field_name.to_lowercase()) {
                 //Renaming the embedding field to page_content
                 payload.insert("page_content".to_string(), value.clone());
                 if let Ok(metadata) = json!(payload).try_into() {
-                    // Embedding sentences using OpenAI ADA2
+                    // Embedding data
                     let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
                     // Construct PointStruct to insert into DB
                     // todo: need to break this out so that this happens in a different method so we can re-use this for files
@@ -148,18 +146,6 @@ pub async fn embed_payload(
         }
     }
     Err(anyhow!("Row is empty"))
-}
-
-pub async fn reverse_embed_payload(payload: &HashMap<String, Value>) -> Result<Vec<String>> {
-    if !payload.is_empty() {
-        if let Some(text) = payload.get("text") {
-            Ok(vec![text.to_string()])
-        } else {
-            Err(anyhow!("Payload did not contain the text field. Aborting!"))
-        }
-    } else {
-        Err(anyhow!("Payload is empty"))
-    }
 }
 
 pub async fn construct_point_struct(

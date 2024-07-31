@@ -6,6 +6,7 @@ import {
 	getAccountByEmail,
 	getAccountById,
 	getAccountTeamMember,
+	pullAccountTeam,
 	pushAccountOrg,
 	pushAccountTeam,
 	updateTeamOwnerInAccounts
@@ -166,6 +167,7 @@ export async function deleteTeamMemberApi(req, res) {
 		if (removeRes?.modifiedCount < 1) {
 			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
 		}
+		await pullAccountTeam(memberId, res.locals.matchingOrg.id, req.params.resourceSlug);
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}

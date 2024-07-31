@@ -7,7 +7,7 @@ use serde_json::Value;
 use tokio::sync::RwLock;
 use crate::data::utils::{apply_chunking_strategy_to_document, extract_text_from_file};
 use crate::gcp::models::PubSubConnect;
-use crate::llm::models::EmbeddingModels;
+use crate::embeddings::models::EmbeddingModels;
 use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
 use crate::mongo::models::ChunkingStrategy;
 use crate::mongo::queries::{get_datasource, get_model};

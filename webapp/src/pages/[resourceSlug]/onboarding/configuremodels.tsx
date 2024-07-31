@@ -20,10 +20,7 @@ export default function ConfigureModels() {
 					<p className='text-gray-700 text-sm md:text-base'>
 						The AI model you choose will be the brain of your app, interpreting data and generating
 						responses. Different models excel in different areas, so pick the one that best matches
-						your project&apos;s needs. Read more about them.{' '}
-						<a className='inline-block text-indigo-500' href='#' target='_blank' rel='noreferrer'>
-							Read more about them
-						</a>
+						your project&apos;s needs.
 					</p>
 				</div>
 

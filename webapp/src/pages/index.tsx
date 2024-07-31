@@ -11,7 +11,7 @@ export default function Index() {
 	if (!account) {
 		router.push('/login');
 	} else {
-		router.push('/account');
+		router.push(`/${account.currentTeam}/apps`);
 	}
 
 	return null;

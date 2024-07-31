@@ -14,6 +14,7 @@ import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import { timingSafeEqual } from 'crypto';
+import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
 import {
 	getSessionById,
@@ -23,6 +24,8 @@ import {
 	unsafeSetSessionUpdatedDate
 } from 'db/session';
 import { SessionStatus } from 'struct/session';
+
+import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
 
@@ -38,7 +41,7 @@ export function initSocket(rawHttpServer) {
 			socket.request['locals'] = {};
 		}
 		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
-		log('socket.id %s backendToken %s', socket.id, backendToken);
+		log('socket.id %O backendToken %O', socket.id, backendToken);
 		socket.request['locals'].isAgentBackend =
 			backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length &&
 			timingSafeEqual(
@@ -58,9 +61,9 @@ export function initSocket(rawHttpServer) {
 	io.use((socket, next) => {
 		fetchSession(socket.request, socket.request, next);
 	});
-	io.use((socket, next) => {
-		checkSession(socket.request, socket.request, next, socket);
-	});
+	// io.use((socket, next) => {
+	// 	checkSession(socket.request, socket.request, next, socket);
+	// });
 
 	io.on('connection', async socket => {
 		log('socket.id "%s" connected', socket.id);
@@ -76,6 +79,9 @@ export function initSocket(rawHttpServer) {
 		socket.on('join_room', async (room: string) => {
 			const socketRequest = socket.request as any;
 			log('socket.id "%s" join_room %s', socket.id, room);
+			if (!room) {
+				return;
+			}
 			if (
 				socketRequest?.locals?.account?.orgs?.some(o =>
 					o?.teams?.some(t => t.id.toString() === room)
@@ -86,16 +92,39 @@ export function initSocket(rawHttpServer) {
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
-			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(room.substring(1)) // removing _
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, room));
+			const session = await unsafeGetSessionById(
+				socketRequest.locals.isAgentBackend ? room.substring(1) : room
+			); // removing _
 			if (!session) {
 				log('socket.id "%s" invalid session %s', socket.id, room);
 				return;
 			}
-			log('socket.id "%s" joined room %s', socket.id, room);
-			socket.join(room);
+			const foundApp = await unsafeGetAppById(session?.appId);
+			if (!foundApp) {
+				log('socket.id "%s" app id "%s" not found %s', socket.id, session?.appId, room);
+				return;
+			}
+			log('socket.id "%s" sent join_room %s', socket.id, room);
+			// log('foundApp', foundApp);
+			switch (foundApp?.sharingConfig?.mode as SharingMode) {
+				case SharingMode.PUBLIC:
+					socket.join(room);
+					break;
+				case SharingMode.TEAM:
+					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
+						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
+					);
+					if (!sessionTeamMatch) {
+						return;
+					}
+					socket.join(room);
+					break;
+				//case SharingMode.RESTRICTED:
+				default:
+					return; //TODO
+			}
 			if (socketRequest.locals.isAgentBackend === false) {
+				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
 			}
 		});
@@ -122,7 +151,6 @@ export function initSocket(rawHttpServer) {
 		socket.on('message', async data => {
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
-			const messageTimestamp = data?.message?.timestamp || Date.now();
 
 			let message;
 			if (typeof data.message !== 'object') {
@@ -147,12 +175,16 @@ export function initSocket(rawHttpServer) {
 					message = data.message; //any processing?
 					break;
 			}
-
+			const messageTimestamp = data?.message?.timestamp || Date.now();
+			const authorName =
+				socketRequest.locals?.account?.name ||
+				(socketRequest.locals.isAgentBackend ? data.authorName : 'Me') ||
+				'System';
 			const finalMessage = {
 				...data,
 				message,
 				incoming: socketRequest.locals.isAgentBackend === false,
-				authorName: data.authorName || 'System',
+				authorName,
 				ts: messageTimestamp
 			};
 			if (!finalMessage?.message?.chunkId) {
@@ -161,11 +193,10 @@ export function initSocket(rawHttpServer) {
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
 				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}
-			const session = await (socketRequest.locals.isAgentBackend === true
-				? unsafeGetSessionById(finalMessage.room)
-				: getSessionById(socketRequest?.locals?.account?.currentTeam, finalMessage.room));
+			const session = await unsafeGetSessionById(finalMessage.room);
 			if (!session) {
-				return log('socket.id "%s" message invalid session %s', socket.id, finalMessage.room);
+				log('socket.id "%s" invalid session %s', socket.id, finalMessage.room);
+				return;
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
 			const chunk: ChatChunk = {
@@ -179,9 +210,9 @@ export function initSocket(rawHttpServer) {
 				sessionId: session._id,
 				authorId:
 					socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
-				authorName: finalMessage?.authorName || 'AgentCloud',
+				authorName: finalMessage.authorName,
 				ts: finalMessage.ts || messageTimestamp,
-				isFeedback: finalMessage?.isFeedback || false,
+				isFeedback: finalMessage.isFeedback === true,
 				chunkId: finalMessage.message.chunkId || null,
 				message: finalMessage
 			};

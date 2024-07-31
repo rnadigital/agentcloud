@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
-import { capitalizeFirstLetter } from 'utils/capitalizeFirstLetter';
+import { capitalize } from 'utils/capitalize';
 import { toSentenceCase } from 'utils/toSentenceCase';
 
 const InputField = ({ name, testId, type, disabled, property, isRequired }: FormFieldProps) => {
@@ -89,7 +89,7 @@ const InputField = ({ name, testId, type, disabled, property, isRequired }: Form
 							)}
 						/>
 						<div className='text-red-500 mt-2 text-xs'>
-							{fieldState.error && capitalizeFirstLetter(fieldState.error.message)}
+							{fieldState.error && capitalize(fieldState.error.message)}
 						</div>
 					</div>
 				);

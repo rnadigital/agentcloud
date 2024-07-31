@@ -181,35 +181,7 @@ impl Qdrant {
         }
     }
 
-    ///
-    ///
-    /// # Arguments
-    ///
-    /// * `point`: PointStruct to upload to Qdrant
-    ///
-    /// returns: Result<bool, Error>
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub async fn upsert_data_point_non_blocking(&self, point: PointStruct) -> Result<bool> {
-        log::debug!(
-            "Uploading data point to collection: {}",
-            &self.collection_name
-        );
-        let qdrant_conn = &self.client.read().await;
-        let upsert_results = qdrant_conn
-            .upsert_points(&self.collection_name, None, vec![point], None)
-            .await?;
-        match upsert_results.result.unwrap().status {
-            2 => Ok(true),
-            _ => Ok(false),
-        }
-    }
-
-    pub async fn upsert_data_point_blocking(
+    pub async fn upsert_data_points(
         &self,
         point: PointStruct,
     ) -> Result<bool> {

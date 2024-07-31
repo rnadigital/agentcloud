@@ -2,6 +2,7 @@ import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { ToolState, ToolType } from 'struct/tool';
@@ -15,6 +16,7 @@ export default function ToolList({ tools, fetchTools }) {
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 
 	async function deleteTool(toolId) {
 		API.deleteTool(
@@ -78,6 +80,12 @@ export default function ToolList({ tools, fetchTools }) {
 							<div className='-ml-px flex w-0 flex-1'>
 								<button
 									onClick={e => {
+										posthog.capture('deleteTool', {
+											name: tool.name,
+											type: tool.type,
+											toolId: tool._id,
+											revisionId: tool?.revisionId
+										});
 										deleteTool(tool._id);
 									}}
 									className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'

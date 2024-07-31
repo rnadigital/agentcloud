@@ -269,11 +269,12 @@ export async function verifyToken(req, res) {
 		req.body.token,
 		VerificationTypes.VERIFY_EMAIL
 	);
+
 	const { password, token } = req.body;
 	let accountId = deletedVerification?.accountId;
 	let stripeCustomerId;
 	let foundCheckoutSession;
-	if ((!deletedVerification || !deletedVerification.token || !accountId) && token?.length < 66) {
+	if ((!deletedVerification || !deletedVerification.token || !accountId) && token?.length <= 66) {
 		// StripeInvalidRequestError: Invalid string: 34cc47ea5d...bbe94fe52b; must be at most 66 characters
 		//Assuming the token isn't a verification but a stripe checkoutsession ID
 		const checkoutSessionId = token;
@@ -326,7 +327,6 @@ export async function verifyToken(req, res) {
 	*/
 
 	const foundAccount = await getAccountById(accountId);
-	console.log('foundAccount', foundAccount);
 	if (!foundAccount) {
 		return dynamicResponse(req, res, 400, { error: 'Account already verified or not found' });
 	}
