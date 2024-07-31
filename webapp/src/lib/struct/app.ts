@@ -31,4 +31,5 @@ export type App = {
 	memory?: boolean;
 	cache?: boolean;
 	crewId?: ObjectId;
+	shareLinkShareId?: string;
 };

@@ -57,6 +57,7 @@ export default function CrewAppForm({
 		initialModel ? { label: initialModel.name, value: initialModel._id } : null
 	);
 	const [sharingMode, setSharingMode] = useState(appState?.sharingConfig?.mode || SharingMode.TEAM);
+	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [description, setDescription] = useState(app.description || '');
@@ -103,7 +104,8 @@ export default function CrewAppForm({
 			iconId: icon?.id,
 			type: AppType.CREW,
 			run,
-			sharingMode
+			sharingMode,
+			shareLinkShareId
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -306,7 +308,8 @@ export default function CrewAppForm({
 								sharingMode={sharingMode}
 								setSharingMode={setSharingMode}
 								showInfoAlert={true}
-								app={app}
+								setShareLinkShareId={setShareLinkShareId}
+								shareLinkShareId={shareLinkShareId}
 							/>
 
 							<div className='sm:col-span-12'>

@@ -330,7 +330,8 @@ export async function addAppApi(req, res, next) {
 		sharingConfig: {
 			permissions: {}, //TODO once we have per-user, team, org perms
 			mode: sharingMode as SharingMode
-		}
+		},
+		...(shareLinkShareId ? { shareLinkShareId } : {}),
 	});
 
 	if (shareLinkShareId) {
@@ -561,7 +562,8 @@ export async function editAppApi(req, res, next) {
 		sharingConfig: {
 			permissions: {}, //TODO once we have per-user, team, org perms
 			mode: sharingMode as SharingMode
-		}
+		},
+		...(shareLinkShareId ? { shareLinkShareId } : {}),
 	});
 
 	if (shareLinkShareId) {

@@ -60,7 +60,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 									try {
 										//TODO: refactor the construction of this public app URL to some unified place
 										await navigator.clipboard.writeText(
-											`${origin}/s/${resourceSlug}/app/${app._id}`
+											`${origin}/s/${resourceSlug}/${app.shareLinkShareId}`
 										);
 										toast.success('Link copied');
 									} catch {

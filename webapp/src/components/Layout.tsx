@@ -131,9 +131,9 @@ export default withRouter(function Layout(props) {
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
-	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
-	const { theme, toggleTheme } = useContext(ThemeContext);
 	const path = usePathname();
+	const showNavs = account && !noNavPages.some(p => path.includes(p));
+	const { theme, toggleTheme } = useContext(ThemeContext);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 

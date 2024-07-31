@@ -55,6 +55,7 @@ export default function ChatAppForm({
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
+	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
@@ -122,6 +123,7 @@ export default function ChatAppForm({
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
 			sharingMode,
+			shareLinkShareId,
 			run,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
@@ -357,7 +359,8 @@ export default function ChatAppForm({
 								sharingMode={sharingMode}
 								setSharingMode={setSharingMode}
 								showInfoAlert={true}
-								app={app}
+								setShareLinkShareId={setShareLinkShareId}
+								shareLinkShareId={shareLinkShareId}
 							/>
 
 							<div className='sm:col-span-12'>
