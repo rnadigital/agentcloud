@@ -3,9 +3,9 @@
 import { TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
+import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
@@ -86,60 +86,65 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 			)}
 			<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 				<table className='min-w-full divide-y divide-gray-200'>
-					<thead className='bg-gray-50'>
+					<thead className='bg-gray-50 dark:bg-gray-700'>
 						<tr>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Name
 							</th>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Model
 							</th>
 							{/* Add more columns as necessary */}
 							<th
 								scope='col'
-								className='w-min px-6 py-3 w-20 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Embedding Length
 							</th>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'
+								className='w-min px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Actions
 							</th>
 						</tr>
 					</thead>
-					<tbody className='bg-white divide-y divide-gray-200'>
+					<tbody className='bg-white divide-y divide-gray-200 dark:bg-gray-700'>
 						{models.map(model => {
 							return (
 								<tr
 									key={model._id}
-									className={`transition-all opacity-1 duration-700 ${deletingMap[model._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`}
+									className={cn(
+										'transition-all opacity-1 duration-700',
+										deletingMap[model._id]
+											? 'bg-red-400'
+											: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-500 dark:text-gray-50'
+									)}
 									style={{ borderColor: deletingMap[model._id] ? 'red' : '' }}
 								>
 									<td
 										className={'px-6 py-4 whitespace-nowrap'}
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
-										<div className='text-sm text-gray-900'>{model.name}</div>
+										<div className='text-sm text-gray-900 dark:text-white'>{model.name}</div>
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
-										<div className='text-sm text-gray-900'>{model.model}</div>
+										<div className='text-sm text-gray-900 dark:text-white'>{model.model}</div>
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
-										<div className='text-sm text-gray-900'>
+										<div className='text-sm text-gray-900 dark:text-white'>
 											{model.embeddingLength ? model.embeddingLength : '-'}
 										</div>
 									</td>

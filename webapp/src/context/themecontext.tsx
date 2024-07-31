@@ -17,6 +17,20 @@ export const ThemeProvider = ({ children }) => {
 		localStorage.setItem('theme', theme);
 	}, [theme]);
 
+	useEffect(() => {
+		const checkDarkMode = () => {
+			const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+			setTheme(darkModeMediaQuery.matches ? 'dark' : 'light');
+		};
+
+		checkDarkMode();
+
+		const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		darkModeMediaQuery.addEventListener('change', checkDarkMode);
+
+		return () => darkModeMediaQuery.removeEventListener('change', checkDarkMode);
+	}, []);
+
 	const toggleTheme = () => {
 		setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
 	};
