@@ -41,7 +41,8 @@ export default function SessionChatbox({
 								onSubmit,
 								setPromptValue,
 								scrollToBottom,
-								chatBusyState
+								chatBusyState,
+								showConversationStarters
 							)
 						}
 						rows={Math.min(10, promptValue.split(/\r?\n/).length)}
@@ -94,7 +95,9 @@ export default function SessionChatbox({
 						</div>
 					) : (
 						<button
-							disabled={(chatBusyState && !showConversationStarters) || promptValue.trim().length === 0}
+							disabled={
+								(chatBusyState && !showConversationStarters) || promptValue.trim().length === 0
+							}
 							type='submit'
 							className={classNames(
 								'pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',

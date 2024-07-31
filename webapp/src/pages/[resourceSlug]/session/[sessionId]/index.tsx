@@ -14,8 +14,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
-import ContentLoader from 'react-content-loader';
 import { usePathname } from 'next/navigation';
+import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
 
 export default function Session(props) {
@@ -144,8 +144,8 @@ export default function Session(props) {
 		if (
 			session &&
 			showConversationStarters &&
-			(messages.slice(0, 4).some(message => message.incoming === true)
-				|| messages.length > 0 && isShared)
+			(messages.slice(0, 4).some(message => message.incoming === true) ||
+				(messages.length > 0 && isShared))
 		) {
 			setShowConversationStarters(false);
 		}

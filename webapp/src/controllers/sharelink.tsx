@@ -47,8 +47,8 @@ export async function addShareLinkApi(req, res, next) {
 export async function handleRedirect(req, res, next) {
 	const { resourceSlug, shareLinkShareId } = req.params;
 	const foundShareLink = await getShareLinkByShareId(resourceSlug, shareLinkShareId);
-	log('resourceSlug: %s, shareLinkShareId: %s', resourceSlug, shareLinkShareId);
-	log('foundShareLink: %s', foundShareLink);
+	// log('resourceSlug: %s, shareLinkShareId: %s', resourceSlug, shareLinkShareId);
+	// log('foundShareLink: %s', foundShareLink);
 	if (!foundShareLink || !foundShareLink?.payload?.id) {
 		//Not found or still no payload set
 		return dynamicResponse(req, res, 302, { redirect: '/' });

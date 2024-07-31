@@ -6,12 +6,13 @@ export default async function handleShiftNewlines(
 	onSubmit,
 	setInputValue,
 	scrollToBottom?,
-	chatBusyState?
+	chatBusyState?,
+	showConversationStarters?
 ) {
 	scrollToBottom && scrollToBottom();
 	if (e.key === 'Enter' && !e.shiftKey) {
 		e.preventDefault();
-		if (chatBusyState) {
+		if (chatBusyState && !showConversationStarters) {
 			return;
 		}
 		if (value.trim().length > 0) {
