@@ -92,7 +92,11 @@ export default function LLMConfigurationForm() {
 			{ label: null, value: null },
 			...ModelList[embeddingType?.value]
 				.filter(model => ModelEmbeddingLength[model])
-				.map(model => ({ label: model, value: model }))
+				.map(model => ({
+					label: model,
+					value: model,
+					...(model === 'text-embedding-3-small' ? { recommended: true } : {})
+				}))
 		] || [];
 
 	const isOpenAISelectedLLMType = LLMType.value === ModelType.OPENAI;
