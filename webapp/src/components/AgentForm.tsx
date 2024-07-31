@@ -376,26 +376,6 @@ export default function AgentForm({
 									purposes when enabled.
 								</p>
 							</div>
-
-							<div className='sm:col-span-12'>
-								<label
-									htmlFor='allowDelegation'
-									className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
-									<input
-										type='checkbox'
-										id='allowDelegation'
-										name='allowDelegation'
-										checked={allowDelegation}
-										onChange={e => setAllowDelegation(e.target.checked)}
-										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-									/>
-									Allow Delegation
-								</label>
-								<p className='mt-3 text-sm leading-6 text-gray-600'>
-									Allow this agent to be assigned appropriate tasks automatically.
-								</p>
-							</div>
 						</div>
 					</details>
 				</div>
