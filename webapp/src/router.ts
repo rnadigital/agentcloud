@@ -47,6 +47,7 @@ import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
 import * as sessionController from 'controllers/session';
+import * as sharelinkController from 'controllers/sharelink';
 import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
@@ -350,6 +351,9 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.DELETE_TASK),
 		taskController.deleteTaskApi
 	);
+
+	//sharelink
+	teamRouter.post('/forms/sharelink/add', sharelinkController.addShareLinkApi);
 
 	//apps
 	teamRouter.get('/apps', appController.appsPage.bind(null, app));

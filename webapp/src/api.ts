@@ -68,6 +68,18 @@ export function updateRole(body, dispatch, errorCallback, router) {
 	);
 }
 
+// Sharelinks
+export function createShareLink(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/sharelink/add`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 // Apps
 export function getApps(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/apps.json`, 'GET', null, dispatch, errorCallback, router);
