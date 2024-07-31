@@ -105,7 +105,6 @@ export function AccountWrapper({ children, pageProps }) {
 				email: sharedState.account.email,
 				name: sharedState.account.name
 			});
-			console.log(sharedState);
 			setDatalayerUser(sharedState);
 		} else {
 			posthog.reset();
