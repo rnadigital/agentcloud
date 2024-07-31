@@ -53,7 +53,7 @@ export async function checkResourceSlug(req, res, next) {
 	next();
 }
 
-export async function checkAccountQuery(req, res, next) {
+export async function checkResourceSlugQuery(req, res, next) {
 	if (!req.query?.resourceSlug) {
 		return next();
 	}
@@ -104,7 +104,6 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/login' });
 	}
-
 	//TODO: cache in redis
 	const foundOrg = await getOrgById(currentOrg);
 	if (!foundOrg) {

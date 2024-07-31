@@ -4,13 +4,7 @@ import Permission from '@permission';
 import { render } from '@react-email/render';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
-import {
-	addAccount,
-	OAuthRecordType,
-	setStripeCustomerId,
-	setStripePlan,
-	updateStripeCustomer
-} from 'db/account';
+import { addAccount, OAuthRecordType, setStripeCustomerId, updateStripeCustomer } from 'db/account';
 import { addOrg } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
@@ -19,13 +13,16 @@ import InviteEmail from 'emails/Invite';
 import VerificationEmail from 'emails/Verification';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
+import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
+import Permissions from 'permissions/permissions';
 import Roles, { RoleKey } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
+
 const log = debug('webapp:middleware:lib:account:create');
 
 interface CreateAccountArgs {
@@ -38,6 +35,8 @@ interface CreateAccountArgs {
 	profileId?: string | number;
 	checkoutSessionId?: string;
 	teamName?: string;
+	invitingTeamId?: string;
+	invitingOrgId?: string;
 }
 
 export default async function createAccount({
@@ -49,7 +48,9 @@ export default async function createAccount({
 	provider,
 	profileId,
 	checkoutSessionId,
-	teamName
+	teamName,
+	invitingTeamId,
+	invitingOrgId
 }: CreateAccountArgs): Promise<{
 	emailVerified: boolean;
 	addedAccount: InsertResult;
@@ -85,7 +86,8 @@ export default async function createAccount({
 	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
-	let emailVerified = amazonKey == null;
+	//If there is no SES secret (email cant be sent) or this is an oauth login, don't require email verification.
+	let emailVerified = amazonKey == null || profileId != null;
 	const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 	const oauth = provider ? { [provider]: { id: profileId } } : ({} as OAuthRecordType);
 
@@ -113,8 +115,8 @@ export default async function createAccount({
 					]
 				}
 			],
-			currentOrg: orgId,
-			currentTeam: teamId,
+			currentOrg: toObjectId(invitingOrgId) || orgId,
+			currentTeam: toObjectId(invitingTeamId) || teamId,
 			emailVerified,
 			oauth,
 			permissions: new Binary(Roles.REGISTERED_USER.array),
@@ -126,7 +128,8 @@ export default async function createAccount({
 					storage: 0
 				},
 				stripeTrial: false
-			}
+			},
+			onboarded: false
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
 	]);
@@ -157,11 +160,11 @@ export default async function createAccount({
 				email,
 				name
 			});
-			// Subscribe customer to 'Pro' plan with a 14 day trial
+			// Subscribe customer to 'Pro' plan with a trial
 			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
-				trial_period_days: 14,
+				trial_period_days: 7,
 				trial_settings: {
 					end_behavior: {
 						missing_payment_method: 'pause'

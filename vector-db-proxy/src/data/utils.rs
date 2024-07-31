@@ -10,7 +10,7 @@ use tokio::sync::RwLock;
 use crate::data::text_extraction::TextExtraction;
 use crate::data::models::{Document as DocumentModel, Document, FileType, Sentence};
 use crate::data::text_splitting::TextSplitting;
-use crate::llm::models::EmbeddingModels;
+use crate::embeddings::models::EmbeddingModels;
 use crate::mongo::models::ChunkingStrategy;
 
 pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {

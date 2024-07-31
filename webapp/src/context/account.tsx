@@ -5,6 +5,7 @@ import posthog from 'posthog-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 const log = debug('webapp:context');
 import Permission from '@permission';
+import { usePostHog } from 'posthog-js/react';
 const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
@@ -19,6 +20,7 @@ function getTeamAndOrgName(data) {
 }
 
 export function AccountWrapper({ children, pageProps }) {
+	const posthog = usePostHog();
 	const router = useRouter();
 	const { resourceSlug, memberId } = router?.query || {};
 	const [sharedState, setSharedState] = useState({
@@ -35,6 +37,8 @@ export function AccountWrapper({ children, pageProps }) {
 				...(memberId ? { memberId } : {})
 			},
 			data => {
+				posthog.group('org', data?.account?.currentOrg);
+				posthog.group('team', data?.account?.currentTeam);
 				const updatedState = {
 					...pageProps,
 					...data,

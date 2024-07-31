@@ -702,16 +702,6 @@ export async function deleteDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	// Delete the points in qdrant
-	try {
-		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
-	} catch (e) {
-		console.error(e);
-		return dynamicResponse(req, res, 400, {
-			error: 'Failed to delete points from vector database, please try again later.'
-		});
-	}
-
 	// Run a reset job in airbyte
 	if (datasource.connectionId) {
 		try {
@@ -769,6 +759,16 @@ export async function deleteDatasourceApi(req, res, next) {
 				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
 			}
 		}
+	}
+
+	// Delete the points in qdrant
+	try {
+		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, {
+			error: 'Failed to delete points from vector database, please try again later.'
+		});
 	}
 
 	// Delete the datasourcein the db

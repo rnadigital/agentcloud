@@ -32,7 +32,7 @@ mod data;
 mod errors;
 mod gcp;
 mod init;
-mod llm;
+mod embeddings;
 mod mongo;
 mod qdrant;
 mod rabbitmq;

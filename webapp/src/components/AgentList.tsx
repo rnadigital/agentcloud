@@ -5,6 +5,7 @@ import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
+import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -13,6 +14,7 @@ export default function AgentList({ agents, fetchAgents }) {
 	const { account, csrf, permissions } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 
 	async function deleteAgent(agentId) {
 		API.deleteAgent(
@@ -74,6 +76,12 @@ export default function AgentList({ agents, fetchAgents }) {
 								<div className='-ml-px flex w-0 flex-1'>
 									<button
 										onClick={e => {
+											posthog.capture('deleteAgent', {
+												name: agent.name,
+												id: agent._id,
+												modelId: agent.modelId,
+												functionModelId: agent.functionModelId
+											});
 											deleteAgent(agent._id);
 										}}
 										className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'

@@ -216,9 +216,9 @@ export default function CrewAppForm({
 						ModelType.GROQ,
 						ModelType.OPENAI,
 						ModelType.OLLAMA,
-						ModelType.FASTEMBED,
 						ModelType.COHERE,
-						ModelType.ANTHROPIC
+						ModelType.ANTHROPIC,
+						ModelType.GOOGLE_VERTEX
 					]}
 				/>
 			);

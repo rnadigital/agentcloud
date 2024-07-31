@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import {
@@ -7,28 +8,31 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
+	MoonIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
+	SunIcon,
 	UserGroupIcon,
-	UserIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon
 } from '@heroicons/react/24/outline';
-import clsx from 'clsx';
 import AgentAvatar from 'components/AgentAvatar';
 import classNames from 'components/ClassNames';
 import NotificationBell from 'components/NotificationBell';
 import OrgSelector from 'components/OrgSelector';
 import PreviewSessionList from 'components/PreviewSessionList';
 import { SessionStatus } from 'components/SessionCards';
-//import BillingBanner from 'components/BillingBanner';
 import TrialNag from 'components/TrialNag';
+import { useAccountContext } from 'context/account';
+import { useChatContext } from 'context/chat';
+import { ThemeContext } from 'context/themecontext';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { usePostHog } from 'posthog-js/react';
+import { Fragment, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
@@ -40,11 +44,12 @@ const noNavPages = [
 	'/requestchangepassword',
 	'/verify',
 	'/redirect',
-	'/s/'
+	'/s/',
+	'/onboarding',
+	'/onboarding/configuremodels'
 ];
 
 const agentNavigation: any[] = [
-	// { name: 'Home', href: '/home', icon: HomeIcon },
 	{
 		name: 'Apps',
 		href: '/apps',
@@ -116,23 +121,19 @@ const userNavigation = [
 	{ name: 'Sign out', href: '#', logout: true }
 ];
 
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import { useChatContext } from '../context/chat';
-
 export default withRouter(function Layout(props) {
 	const [chatContext]: any = useChatContext();
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, switching, team } = accountContext as any;
-	const { currentTeam } = account || {};
-	const { stripeEndsAt, stripePlan, stripeCancelled, stripeTrial } = account?.stripe || {};
+	const { account, csrf, switching } = accountContext as any;
 	const { children } = props as any;
 	const router = useRouter();
+	const posthog = usePostHog();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
+	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
+	const { theme, toggleTheme } = useContext(ThemeContext);
 	const path = usePathname();
-	const showNavs = account && !noNavPages.some(p => path.includes(p));
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 
@@ -325,19 +326,28 @@ export default withRouter(function Layout(props) {
 															</Link>
 														</li>*/}
 																<li key='logout'>
-																	<form action='/forms/account/logout' method='POST'>
-																		<input type='hidden' name='_csrf' value={csrf} />
-																		<button
-																			className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-																			type='submit'
-																		>
-																			<ArrowRightOnRectangleIcon
-																				className='h-6 w-6 shrink-0'
-																				aria-hidden='true'
-																			/>
-																			Log out
-																		</button>
-																	</form>
+																	<button
+																		className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																		onClick={() => {
+																			posthog.capture('logout', {
+																				email: account?.email
+																			});
+																			API.logout(
+																				{
+																					_csrf: csrf
+																				},
+																				null,
+																				null,
+																				router
+																			);
+																		}}
+																	>
+																		<ArrowRightOnRectangleIcon
+																			className='h-6 w-6 shrink-0'
+																			aria-hidden='true'
+																		/>
+																		Log out
+																	</button>
 																</li>
 															</ul>
 															<TrialNag />
@@ -482,19 +492,28 @@ export default withRouter(function Layout(props) {
 										</Link>
 									</li>*/}
 											<li>
-												<form className='w-full' action='/forms/account/logout' method='POST'>
-													<input type='hidden' name='_csrf' value={csrf} />
-													<button
-														className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
-														type='submit'
-													>
-														<ArrowRightOnRectangleIcon
-															className='h-6 w-6 shrink-0'
-															aria-hidden='true'
-														/>
-														Log out
-													</button>
-												</form>
+												<button
+													className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+													onClick={() => {
+														posthog.capture('logout', {
+															email: account?.email
+														});
+														API.logout(
+															{
+																_csrf: csrf
+															},
+															null,
+															null,
+															router
+														);
+													}}
+												>
+													<ArrowRightOnRectangleIcon
+														className='h-6 w-6 shrink-0'
+														aria-hidden='true'
+													/>
+													Log out
+												</button>
 											</li>
 										</ul>
 										<TrialNag />
@@ -512,7 +531,7 @@ export default withRouter(function Layout(props) {
 					{showNavs && (
 						<div
 							className={
-								'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-4'
+								'sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 px-4 shadow-sm sm:gap-x-6 sm:px-4'
 							}
 						>
 							<button
@@ -531,6 +550,11 @@ export default withRouter(function Layout(props) {
 								<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
 									<button
 										onClick={() => {
+											posthog.capture('restartSession', {
+												appId: chatContext?.app._id,
+												appType: chatContext?.app.type,
+												appName: chatContext?.app.name
+											});
 											API.addSession(
 												{
 													_csrf: csrf,
@@ -592,15 +616,19 @@ export default withRouter(function Layout(props) {
 										</span>
 									)}
 								</div>
+								{/* TODO: enable theme switching when we have proper dark mode styling */}
+								{false && (
+									<button onClick={toggleTheme}>
+										{theme === 'dark' ? (
+											<MoonIcon className='text-white h-6 w-6' />
+										) : (
+											<SunIcon className='h-6 w-6' />
+										)}
+									</button>
+								)}
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
-
-									{/* Separator */}
-									<div
-										className='hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10'
-										aria-hidden='true'
-									/>
 
 									{/* Profile dropdown */}
 									{account && (
@@ -658,22 +686,27 @@ export default withRouter(function Layout(props) {
 															{({ active }) => {
 																if (item.logout) {
 																	return (
-																		<form
-																			className='w-full'
-																			action='/forms/account/logout'
-																			method='POST'
+																		<button
+																			className={classNames(
+																				active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																				'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																			)}
+																			onClick={() => {
+																				posthog.capture('logout', {
+																					email: account?.email
+																				});
+																				API.logout(
+																					{
+																						_csrf: csrf
+																					},
+																					null,
+																					null,
+																					router
+																				);
+																			}}
 																		>
-																			<input type='hidden' name='_csrf' value={csrf} />
-																			<button
-																				className={classNames(
-																					active ? 'bg-gray-50 dark:bg-slate-700' : '',
-																					'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-																				)}
-																				type='submit'
-																			>
-																				Log out
-																			</button>
-																		</form>
+																			Log out
+																		</button>
 																	);
 																}
 																return (
@@ -718,110 +751,112 @@ export default withRouter(function Layout(props) {
 			<div
 				className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching === false ? 'opacity-0' : ''} text-center`}
 			/>
-			<footer
-				className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm bg-gray-50 px-8 sm:flex items-center`}
-			>
-				<div className='py-3'>
-					© {new Date().getFullYear()} RNA Digital - v{packageJson.version}
-					{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH &&
-						`-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}
-				</div>
-				<div className='flex gap-x-2 ml-auto'>
-					<a
-						href='https://discord.com/invite/ZNSSttKqqq'
-						target='_blank'
-						rel='noopener noreferrer'
-						className=''
-					>
-						<svg
-							width='32'
-							height='24'
-							viewBox='0 0 24 28'
-							fill='none'
-							xmlns='http://www.w3.org/2000/svg'
+			<div className='flex bg-gray-50 w-full'>
+				<footer
+					className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-12 max-w-7xl w-full mx-auto`}
+				>
+					<div className='py-3'>
+						© {new Date().getFullYear()} RNA Digital - v{packageJson.version}
+						{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH &&
+							`-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}
+					</div>
+					<div className='flex gap-x-2 ml-auto'>
+						<a
+							href='https://discord.com/invite/ZNSSttKqqq'
+							target='_blank'
+							rel='noopener noreferrer'
+							className=''
 						>
-							<path
-								d='M2 11.6C2 8.23969 2 6.55953 2.65396 5.27606C3.2292 4.14708 4.14708 3.2292 5.27606 2.65396C6.55953 2 8.23969 2 11.6 2H20.4C23.7603 2 25.4405 2 26.7239 2.65396C27.8529 3.2292 28.7708 4.14708 29.346 5.27606C30 6.55953 30 8.23969 30 11.6V20.4C30 23.7603 30 25.4405 29.346 26.7239C28.7708 27.8529 27.8529 28.7708 26.7239 29.346C25.4405 30 23.7603 30 20.4 30H11.6C8.23969 30 6.55953 30 5.27606 29.346C4.14708 28.7708 3.2292 27.8529 2.65396 26.7239C2 25.4405 2 23.7603 2 20.4V11.6Z'
-								fill='white'
-							/>
-							<path
-								d='M23.6361 9.33998C22.212 8.71399 20.6892 8.25903 19.0973 8C18.9018 8.33209 18.6734 8.77875 18.5159 9.13408C16.8236 8.89498 15.1469 8.89498 13.4857 9.13408C13.3283 8.77875 13.0946 8.33209 12.8974 8C11.3037 8.25903 9.77927 8.71565 8.35518 9.3433C5.48276 13.4213 4.70409 17.3981 5.09342 21.3184C6.99856 22.6551 8.84487 23.467 10.66 23.9983C11.1082 23.4189 11.5079 22.8029 11.8523 22.1536C11.1964 21.9195 10.5683 21.6306 9.9748 21.2951C10.1323 21.1856 10.2863 21.071 10.4351 20.9531C14.0551 22.5438 17.9881 22.5438 21.5649 20.9531C21.7154 21.071 21.8694 21.1856 22.0251 21.2951C21.4299 21.6322 20.8 21.9211 20.1442 22.1553C20.4885 22.8029 20.8865 23.4205 21.3364 24C23.1533 23.4687 25.0013 22.6567 26.9065 21.3184C27.3633 16.7738 26.1261 12.8335 23.6361 9.33998ZM12.3454 18.9075C11.2587 18.9075 10.3676 17.9543 10.3676 16.7937C10.3676 15.6331 11.2397 14.6783 12.3454 14.6783C13.4511 14.6783 14.3422 15.6314 14.3232 16.7937C14.325 17.9543 13.4511 18.9075 12.3454 18.9075ZM19.6545 18.9075C18.5678 18.9075 17.6767 17.9543 17.6767 16.7937C17.6767 15.6331 18.5488 14.6783 19.6545 14.6783C20.7602 14.6783 21.6514 15.6314 21.6323 16.7937C21.6323 17.9543 20.7602 18.9075 19.6545 18.9075Z'
-								fill='#6B7280'
-							/>
-						</svg>
-					</a>
-					<a
-						href='https://www.linkedin.com/company/rna-digital/'
-						target='_blank'
-						rel='noopener noreferrer'
-						className=''
-					>
-						<svg
-							width='24'
-							height='25'
-							viewBox='0 0 24 25'
-							fill='none'
-							xmlns='http://www.w3.org/2000/svg'
+							<svg
+								width='32'
+								height='24'
+								viewBox='0 0 24 28'
+								fill='none'
+								xmlns='http://www.w3.org/2000/svg'
+							>
+								<path
+									d='M2 11.6C2 8.23969 2 6.55953 2.65396 5.27606C3.2292 4.14708 4.14708 3.2292 5.27606 2.65396C6.55953 2 8.23969 2 11.6 2H20.4C23.7603 2 25.4405 2 26.7239 2.65396C27.8529 3.2292 28.7708 4.14708 29.346 5.27606C30 6.55953 30 8.23969 30 11.6V20.4C30 23.7603 30 25.4405 29.346 26.7239C28.7708 27.8529 27.8529 28.7708 26.7239 29.346C25.4405 30 23.7603 30 20.4 30H11.6C8.23969 30 6.55953 30 5.27606 29.346C4.14708 28.7708 3.2292 27.8529 2.65396 26.7239C2 25.4405 2 23.7603 2 20.4V11.6Z'
+									fill='white'
+								/>
+								<path
+									d='M23.6361 9.33998C22.212 8.71399 20.6892 8.25903 19.0973 8C18.9018 8.33209 18.6734 8.77875 18.5159 9.13408C16.8236 8.89498 15.1469 8.89498 13.4857 9.13408C13.3283 8.77875 13.0946 8.33209 12.8974 8C11.3037 8.25903 9.77927 8.71565 8.35518 9.3433C5.48276 13.4213 4.70409 17.3981 5.09342 21.3184C6.99856 22.6551 8.84487 23.467 10.66 23.9983C11.1082 23.4189 11.5079 22.8029 11.8523 22.1536C11.1964 21.9195 10.5683 21.6306 9.9748 21.2951C10.1323 21.1856 10.2863 21.071 10.4351 20.9531C14.0551 22.5438 17.9881 22.5438 21.5649 20.9531C21.7154 21.071 21.8694 21.1856 22.0251 21.2951C21.4299 21.6322 20.8 21.9211 20.1442 22.1553C20.4885 22.8029 20.8865 23.4205 21.3364 24C23.1533 23.4687 25.0013 22.6567 26.9065 21.3184C27.3633 16.7738 26.1261 12.8335 23.6361 9.33998ZM12.3454 18.9075C11.2587 18.9075 10.3676 17.9543 10.3676 16.7937C10.3676 15.6331 11.2397 14.6783 12.3454 14.6783C13.4511 14.6783 14.3422 15.6314 14.3232 16.7937C14.325 17.9543 13.4511 18.9075 12.3454 18.9075ZM19.6545 18.9075C18.5678 18.9075 17.6767 17.9543 17.6767 16.7937C17.6767 15.6331 18.5488 14.6783 19.6545 14.6783C20.7602 14.6783 21.6514 15.6314 21.6323 16.7937C21.6323 17.9543 20.7602 18.9075 19.6545 18.9075Z'
+									fill='#6B7280'
+								/>
+							</svg>
+						</a>
+						<a
+							href='https://www.linkedin.com/company/rna-digital/'
+							target='_blank'
+							rel='noopener noreferrer'
+							className=''
 						>
-							<path
-								fillRule='evenodd'
-								clipRule='evenodd'
-								d='M15.7984 9.50723C15.1519 9.47999 14.509 9.61063 13.9326 9.88631C13.3563 10.162 12.8664 10.5733 12.5109 11.0798V9.49524H9.34293V19.486H12.5333V14.6704C12.5333 13.3996 12.8448 12.1728 14.672 12.1728C16.5557 12.1728 16.8 13.6254 16.8 14.7544V19.486H20V14.1459C20 11.5234 19.2533 9.50723 15.7984 9.50723Z'
-								fill='#6B7280'
-							/>
-							<path
-								fillRule='evenodd'
-								clipRule='evenodd'
-								d='M5.6 5.48596C5.28355 5.48596 4.97421 5.57385 4.71109 5.73852C4.44797 5.90319 4.24289 6.13724 4.12179 6.41108C4.00069 6.68491 3.96901 6.98623 4.03074 7.27693C4.09248 7.56764 4.24487 7.83466 4.46863 8.04425C4.69239 8.25383 4.97749 8.39656 5.28786 8.45438C5.59823 8.51221 5.91993 8.48253 6.21229 8.3691C6.50466 8.25568 6.75454 8.0636 6.93035 7.81715C7.10616 7.57071 7.2 7.28097 7.2 6.98457C7.2 6.58711 7.03143 6.20594 6.73137 5.92489C6.43131 5.64385 6.02435 5.48596 5.6 5.48596Z'
-								fill='#6B7280'
-							/>
-							<path d='M7.2 9.50723H4V19.486H7.2V9.50723Z' fill='#6B7280' />
-						</svg>
-					</a>
-					<a
-						href='https://www.youtube.com/@monitapixels'
-						target='_blank'
-						rel='noopener noreferrer'
-						className='text-gray-500 hover:text-gray-900 dark:hover:text-white'
-					>
-						<svg
-							width='24'
-							height='25'
-							viewBox='0 0 24 25'
-							fill='none'
-							xmlns='http://www.w3.org/2000/svg'
+							<svg
+								width='24'
+								height='25'
+								viewBox='0 0 24 25'
+								fill='none'
+								xmlns='http://www.w3.org/2000/svg'
+							>
+								<path
+									fillRule='evenodd'
+									clipRule='evenodd'
+									d='M15.7984 9.50723C15.1519 9.47999 14.509 9.61063 13.9326 9.88631C13.3563 10.162 12.8664 10.5733 12.5109 11.0798V9.49524H9.34293V19.486H12.5333V14.6704C12.5333 13.3996 12.8448 12.1728 14.672 12.1728C16.5557 12.1728 16.8 13.6254 16.8 14.7544V19.486H20V14.1459C20 11.5234 19.2533 9.50723 15.7984 9.50723Z'
+									fill='#6B7280'
+								/>
+								<path
+									fillRule='evenodd'
+									clipRule='evenodd'
+									d='M5.6 5.48596C5.28355 5.48596 4.97421 5.57385 4.71109 5.73852C4.44797 5.90319 4.24289 6.13724 4.12179 6.41108C4.00069 6.68491 3.96901 6.98623 4.03074 7.27693C4.09248 7.56764 4.24487 7.83466 4.46863 8.04425C4.69239 8.25383 4.97749 8.39656 5.28786 8.45438C5.59823 8.51221 5.91993 8.48253 6.21229 8.3691C6.50466 8.25568 6.75454 8.0636 6.93035 7.81715C7.10616 7.57071 7.2 7.28097 7.2 6.98457C7.2 6.58711 7.03143 6.20594 6.73137 5.92489C6.43131 5.64385 6.02435 5.48596 5.6 5.48596Z'
+									fill='#6B7280'
+								/>
+								<path d='M7.2 9.50723H4V19.486H7.2V9.50723Z' fill='#6B7280' />
+							</svg>
+						</a>
+						<a
+							href='https://www.youtube.com/@monitapixels'
+							target='_blank'
+							rel='noopener noreferrer'
+							className='text-gray-500 hover:text-gray-900 dark:hover:text-white'
 						>
-							<path
-								fillRule='evenodd'
-								clipRule='evenodd'
-								d='M21.796 8.50275C21.7015 7.78887 21.4274 7.11025 20.9991 6.52973C20.4683 5.99795 19.7486 5.6952 18.9953 5.68688C16.2006 5.48596 12 5.48596 12 5.48596C12 5.48596 7.80143 5.48596 5.00273 5.68688C4.24968 5.69503 3.53015 5.99783 2.9999 6.52973C2.56975 7.10969 2.29516 7.78904 2.202 8.50376C2.07717 9.573 2.00974 10.6481 2 11.7245V13.2314C2.00968 14.3078 2.07711 15.3829 2.202 16.4521C2.29694 17.1675 2.56903 17.8482 2.99384 18.4332C3.60357 18.9714 4.38752 19.2738 5.20271 19.285C6.80154 19.4367 12.001 19.486 12.001 19.486C12.001 19.486 16.2036 19.486 18.9983 19.285C19.752 19.2763 20.472 18.9732 21.0031 18.4412C21.4304 17.8599 21.7038 17.1811 21.798 16.4672C21.9228 15.3979 21.9903 14.3228 22 13.2464V11.7235C21.9886 10.6471 21.9205 9.57204 21.796 8.50275ZM9.98707 15.0869V9.44104L15.4411 12.273L9.98707 15.0869Z'
-								fill='#6B7280'
-							/>
-						</svg>
-					</a>
-					<a
-						href='https://github.com/rnadigital/agentcloud'
-						target='_blank'
-						rel='noopener noreferrer'
-						className='text-gray-500 hover:text-gray-900 dark:hover:text-white'
-					>
-						<svg
-							width='24'
-							height='25'
-							viewBox='0 0 24 25'
-							fill='none'
-							xmlns='http://www.w3.org/2000/svg'
+							<svg
+								width='24'
+								height='25'
+								viewBox='0 0 24 25'
+								fill='none'
+								xmlns='http://www.w3.org/2000/svg'
+							>
+								<path
+									fillRule='evenodd'
+									clipRule='evenodd'
+									d='M21.796 8.50275C21.7015 7.78887 21.4274 7.11025 20.9991 6.52973C20.4683 5.99795 19.7486 5.6952 18.9953 5.68688C16.2006 5.48596 12 5.48596 12 5.48596C12 5.48596 7.80143 5.48596 5.00273 5.68688C4.24968 5.69503 3.53015 5.99783 2.9999 6.52973C2.56975 7.10969 2.29516 7.78904 2.202 8.50376C2.07717 9.573 2.00974 10.6481 2 11.7245V13.2314C2.00968 14.3078 2.07711 15.3829 2.202 16.4521C2.29694 17.1675 2.56903 17.8482 2.99384 18.4332C3.60357 18.9714 4.38752 19.2738 5.20271 19.285C6.80154 19.4367 12.001 19.486 12.001 19.486C12.001 19.486 16.2036 19.486 18.9983 19.285C19.752 19.2763 20.472 18.9732 21.0031 18.4412C21.4304 17.8599 21.7038 17.1811 21.798 16.4672C21.9228 15.3979 21.9903 14.3228 22 13.2464V11.7235C21.9886 10.6471 21.9205 9.57204 21.796 8.50275ZM9.98707 15.0869V9.44104L15.4411 12.273L9.98707 15.0869Z'
+									fill='#6B7280'
+								/>
+							</svg>
+						</a>
+						<a
+							href='https://github.com/rnadigital/agentcloud'
+							target='_blank'
+							rel='noopener noreferrer'
+							className='text-gray-500 hover:text-gray-900 dark:hover:text-white'
 						>
-							<path
-								fillRule='evenodd'
-								clipRule='evenodd'
-								d='M12.0061 2.48597C9.63078 2.48334 7.3322 3.34847 5.52229 4.92633C3.71237 6.50419 2.50942 8.69163 2.12903 11.0966C1.74863 13.5016 2.21566 15.967 3.4464 18.0509C4.67715 20.1347 6.59116 21.7009 8.84543 22.4687C9.34968 22.5639 9.52919 22.2463 9.52919 21.9753C9.52919 21.7301 9.51911 20.9232 9.51507 20.0667C6.73463 20.6874 6.1487 18.8574 6.1487 18.8574C5.96519 18.2374 5.57175 17.7051 5.03935 17.3564C4.13169 16.7202 5.10893 16.7357 5.10893 16.7357C5.42582 16.7805 5.72855 16.8989 5.99404 17.082C6.25952 17.265 6.48075 17.5078 6.64084 17.7919C6.77627 18.0448 6.95922 18.2676 7.17911 18.4475C7.39901 18.6274 7.6515 18.7608 7.92197 18.8399C8.19244 18.9191 8.47552 18.9425 8.75486 18.9087C9.03419 18.875 9.30423 18.7847 9.54936 18.6433C9.59395 18.1232 9.81905 17.6368 10.1837 17.2726C7.96501 17.014 5.63033 16.1347 5.63033 12.2037C5.61654 11.1851 5.98563 10.2001 6.66101 9.45309C6.35487 8.56912 6.38913 7.59863 6.75682 6.73969C6.75682 6.73969 7.59589 6.46452 9.506 7.7907C11.144 7.33141 12.8722 7.33141 14.5102 7.7907C16.4162 6.46452 17.2503 6.73969 17.2503 6.73969C17.6195 7.59798 17.6556 8.56845 17.3511 9.45309C18.0262 10.2001 18.3946 11.1852 18.3798 12.2037C18.3798 16.1419 16.0411 17.0078 13.8163 17.2612C14.0545 17.5097 14.2383 17.8075 14.3553 18.1347C14.4724 18.4619 14.52 18.8109 14.495 19.1584C14.495 20.5301 14.4829 21.6349 14.4829 21.9722C14.4829 22.2442 14.6635 22.5639 15.1697 22.4636C17.4205 21.6928 19.3306 20.1259 20.5582 18.043C21.7859 15.9601 22.2511 13.4972 21.8707 11.0947C21.4902 8.69221 20.2889 6.50693 18.4816 4.92973C16.6743 3.35253 14.3789 2.48629 12.0061 2.48597Z'
-								fill='#6B7280'
-							/>
-						</svg>
-					</a>
-				</div>
-			</footer>
+							<svg
+								width='24'
+								height='25'
+								viewBox='0 0 24 25'
+								fill='none'
+								xmlns='http://www.w3.org/2000/svg'
+							>
+								<path
+									fillRule='evenodd'
+									clipRule='evenodd'
+									d='M12.0061 2.48597C9.63078 2.48334 7.3322 3.34847 5.52229 4.92633C3.71237 6.50419 2.50942 8.69163 2.12903 11.0966C1.74863 13.5016 2.21566 15.967 3.4464 18.0509C4.67715 20.1347 6.59116 21.7009 8.84543 22.4687C9.34968 22.5639 9.52919 22.2463 9.52919 21.9753C9.52919 21.7301 9.51911 20.9232 9.51507 20.0667C6.73463 20.6874 6.1487 18.8574 6.1487 18.8574C5.96519 18.2374 5.57175 17.7051 5.03935 17.3564C4.13169 16.7202 5.10893 16.7357 5.10893 16.7357C5.42582 16.7805 5.72855 16.8989 5.99404 17.082C6.25952 17.265 6.48075 17.5078 6.64084 17.7919C6.77627 18.0448 6.95922 18.2676 7.17911 18.4475C7.39901 18.6274 7.6515 18.7608 7.92197 18.8399C8.19244 18.9191 8.47552 18.9425 8.75486 18.9087C9.03419 18.875 9.30423 18.7847 9.54936 18.6433C9.59395 18.1232 9.81905 17.6368 10.1837 17.2726C7.96501 17.014 5.63033 16.1347 5.63033 12.2037C5.61654 11.1851 5.98563 10.2001 6.66101 9.45309C6.35487 8.56912 6.38913 7.59863 6.75682 6.73969C6.75682 6.73969 7.59589 6.46452 9.506 7.7907C11.144 7.33141 12.8722 7.33141 14.5102 7.7907C16.4162 6.46452 17.2503 6.73969 17.2503 6.73969C17.6195 7.59798 17.6556 8.56845 17.3511 9.45309C18.0262 10.2001 18.3946 11.1852 18.3798 12.2037C18.3798 16.1419 16.0411 17.0078 13.8163 17.2612C14.0545 17.5097 14.2383 17.8075 14.3553 18.1347C14.4724 18.4619 14.52 18.8109 14.495 19.1584C14.495 20.5301 14.4829 21.6349 14.4829 21.9722C14.4829 22.2442 14.6635 22.5639 15.1697 22.4636C17.4205 21.6928 19.3306 20.1259 20.5582 18.043C21.7859 15.9601 22.2511 13.4972 21.8707 11.0947C21.4902 8.69221 20.2889 6.50693 18.4816 4.92973C16.6743 3.35253 14.3789 2.48629 12.0061 2.48597Z'
+									fill='#6B7280'
+								/>
+							</svg>
+						</a>
+					</div>
+				</footer>
+			</div>
 		</>
 	);
 });

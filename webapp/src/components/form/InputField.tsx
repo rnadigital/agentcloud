@@ -18,6 +18,8 @@ interface FormFieldProps<TFieldValues extends FieldValues> {
 	type: string;
 	control?: Control<TFieldValues>;
 	disabled?: boolean;
+	placeholder?: string;
+	value?: string;
 }
 
 const InputField = <TFieldValues extends FieldValues>({
@@ -26,7 +28,9 @@ const InputField = <TFieldValues extends FieldValues>({
 	label,
 	type,
 	disabled,
-	control
+	control,
+	placeholder,
+	value
 }: FormFieldProps<TFieldValues>) => {
 	const [showPassword, setShowPassword] = useState(false);
 
@@ -52,10 +56,12 @@ const InputField = <TFieldValues extends FieldValues>({
 								type={showPassword ? 'text' : type}
 								autoComplete='on'
 								disabled={disabled}
+								placeholder={placeholder}
 								className={clsx(
-									'bg-gray-50 rounded-lg border border-gray-300 w-full h-10 p-1 pl-3 text-gray-500',
+									'bg-gray-50 rounded-lg border border-gray-300 w-full h-10 p-1 pl-3 text-gray-500 disabled:bg-gray-200 text-sm',
 									type === 'checkbox' && 'h-4 rounded-none cursor-pointer'
 								)}
+								{...(value ? { value } : {})}
 							/>
 
 							{type === 'password' && (

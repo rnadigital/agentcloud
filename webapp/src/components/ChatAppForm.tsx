@@ -17,6 +17,7 @@ import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
@@ -55,6 +56,7 @@ export default function ChatAppForm({
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
 	const origin = typeof location !== 'undefined' ? location.origin : '';
+	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name || '');
 	const [description, setDescription] = useState(app?.description || '');
@@ -137,12 +139,23 @@ export default function ChatAppForm({
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {
+			posthog.capture('updateApp', {
+				appId: app._id,
+				appType: AppType.CHAT,
+				appName,
+				run
+			});
 			await API.editApp(
 				app._id,
 				body,
 				() => {
 					toast.success('App Updated');
 					if (run === true) {
+						posthog.capture('startSession', {
+							appId: app._id,
+							appType: AppType.CHAT,
+							appName
+						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
@@ -162,7 +175,18 @@ export default function ChatAppForm({
 			API.addApp(
 				body,
 				res => {
+					posthog.capture('createApp', {
+						appId: res._id,
+						appType: AppType.CHAT,
+						appName,
+						run
+					});
 					if (run === true) {
+						posthog.capture('startSession', {
+							appId: res._id,
+							appType: AppType.CHAT,
+							appName
+						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
@@ -235,7 +259,7 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={modelCallback}
 					modelFilter='llm'
-					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
+					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX]}
 				/>
 			);
 			break;
@@ -474,7 +498,11 @@ export default function ChatAppForm({
 										callbackKey='modelId'
 										setCallbackKey={null}
 										modelFilter='llm'
-										modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC]}
+										modelTypeFilters={[
+											ModelType.OPENAI,
+											ModelType.ANTHROPIC,
+											ModelType.GOOGLE_VERTEX
+										]}
 									/>
 
 									<ToolsSelect

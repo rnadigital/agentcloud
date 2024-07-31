@@ -18,6 +18,10 @@ export type Team = {
 	name: string;
 	dateCreated: Date;
 	permissions: Record<string, Binary>;
+	defaultModelConfig?: {
+		llm: ObjectId;
+		embedding: ObjectId;
+	};
 };
 
 export function TeamCollection(): any {
@@ -102,6 +106,59 @@ export function setMemberPermissions(
 	);
 }
 
+export async function getTeamWithModels(teamId: db.IdOrStr): Promise<any> {
+	return TeamCollection()
+		.aggregate([
+			{
+				$match: {
+					_id: toObjectId(teamId)
+				}
+			},
+			{
+				$lookup: {
+					from: 'models',
+					localField: 'defaultModelConfig.llm',
+					foreignField: '_id',
+					as: 'llmModel'
+				}
+			},
+			{
+				$unwind: {
+					path: '$llmModel',
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$lookup: {
+					from: 'models',
+					localField: 'defaultModelConfig.embedding',
+					foreignField: '_id',
+					as: 'embeddingModel'
+				}
+			},
+			{
+				$unwind: {
+					path: '$embeddingModel',
+					preserveNullAndEmptyArrays: true
+				}
+			},
+			{
+				$project: {
+					_id: 1,
+					ownerId: 1,
+					orgId: 1,
+					name: 1,
+					dateCreated: 1,
+					permissions: 1,
+					members: 1,
+					llmModel: 1,
+					embeddingModel: 1
+				}
+			}
+		])
+		.next();
+}
+
 export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 	return TeamCollection()
 		.aggregate([
@@ -144,11 +201,13 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 								_id: '$$member._id',
 								name: '$$member.name',
 								email: '$$member.email',
-								emailVerified: '$$member.emailVerified', //know if vreified or not (implies accepted invite)
+								emailVerified: '$$member.emailVerified', //know if verified or not (implies accepted invite)
 								memberId: '$$member._id'
 							}
 						}
-					}
+					},
+					llmModel: { $arrayElemAt: ['$llmModel', 0] },
+					embeddingModel: { $arrayElemAt: ['$embeddingModel', 0] }
 				}
 			}
 		])
@@ -163,6 +222,23 @@ export async function updateTeamOwner(teamId: db.IdOrStr, newOwnerId: db.IdOrStr
 		{
 			$set: {
 				ownerId: toObjectId(newOwnerId)
+			}
+		}
+	);
+}
+
+export async function setDefaultModel(
+	teamId: db.IdOrStr,
+	modelId: db.IdOrStr,
+	modelType: 'llm' | 'embedding'
+): Promise<any> {
+	return TeamCollection().updateOne(
+		{
+			_id: toObjectId(teamId)
+		},
+		{
+			$set: {
+				[`defaultModelConfig.${modelType}`]: toObjectId(modelId)
 			}
 		}
 	);

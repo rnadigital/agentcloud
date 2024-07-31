@@ -1,7 +1,22 @@
 import { useRouter } from 'next/router';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+	createContext,
+	Dispatch,
+	SetStateAction,
+	useContext,
+	useEffect,
+	useState
+} from 'react';
 
-const StepContext = createContext({});
+interface StepContext {
+	step: number;
+	setStep?: React.Dispatch<React.SetStateAction<number>>;
+}
+
+const StepContext = createContext<StepContext>({
+	step: 0,
+	setStep: () => {}
+});
 
 export function StepWrapper({ children }) {
 	const router = useRouter();

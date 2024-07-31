@@ -10,7 +10,7 @@ import { useReducer } from 'react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
-import { modelOptions, ModelType } from 'struct/model';
+import { ModelList, modelOptions, ModelType } from 'struct/model';
 
 export default function ModelForm({
 	_model = { type: ModelType.OPENAI },
@@ -135,7 +135,6 @@ export default function ModelForm({
 								/>
 							</div>
 						</div>
-						{/* TODO: other form params here */}
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='type'
@@ -151,13 +150,15 @@ export default function ModelForm({
 									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									value={type}
 									onChange={(e: any) => {
+										const newType: ModelType = e.target.value as ModelType;
+										const defaultModel = ModelList[newType][0];
 										setConfig({
 											name: 'model',
-											value: ''
+											value: !modelFilter && !modelTypeFilters ? defaultModel : ''
 										});
 										setModelState(oldModel => ({
 											...oldModel,
-											type: e.target.value
+											type: newType
 										}));
 									}}
 								>
