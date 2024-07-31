@@ -7,6 +7,7 @@ import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
+import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
@@ -143,7 +144,8 @@ export async function addAppApi(req, res, next) {
 		modelId,
 		type,
 		run,
-		sharingMode
+		sharingMode,
+		shareLinkShareId
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -154,7 +156,10 @@ export async function addAppApi(req, res, next) {
 				field: 'sharingMode',
 				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
 			},
-
+			{
+				field: 'shareLinkShareId',
+				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
+			},
 			{
 				field: 'type',
 				validation: { notEmpty: true, inSet: new Set([AppType.CHAT, AppType.CREW]) }
@@ -328,6 +333,16 @@ export async function addAppApi(req, res, next) {
 		}
 	});
 
+	if (shareLinkShareId) {
+		await updateShareLinkPayload({
+			teamId: toObjectId(req.params.resourceSlug),
+			shareId: shareLinkShareId,
+			payload: {
+				id: toObjectId(addedApp?.insertedId)
+			}
+		});
+	}
+
 	return dynamicResponse(
 		req,
 		res,
@@ -366,7 +381,8 @@ export async function editAppApi(req, res, next) {
 		backstory,
 		modelId,
 		run,
-		sharingMode
+		sharingMode,
+		shareLinkShareId
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -381,6 +397,10 @@ export async function editAppApi(req, res, next) {
 			{
 				field: 'sharingMode',
 				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
+			},
+			{
+				field: 'shareLinkShareId',
+				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
 			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
@@ -543,6 +563,16 @@ export async function editAppApi(req, res, next) {
 			mode: sharingMode as SharingMode
 		}
 	});
+
+	if (shareLinkShareId) {
+		await updateShareLinkPayload({
+			teamId: toObjectId(req.params.resourceSlug),
+			shareId: shareLinkShareId,
+			payload: {
+				id: toObjectId(req.params.appId)
+			}
+		});
+	}
 
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/
