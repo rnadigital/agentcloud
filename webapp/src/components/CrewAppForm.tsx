@@ -384,7 +384,7 @@ export default function CrewAppForm({
 							</div>
 						</div>*/}
 
-							<ModelSelect
+							{/*<ModelSelect
 								models={modelChoices}
 								modelId={managerModel?.value}
 								label='Chat Manager Model'
@@ -393,7 +393,7 @@ export default function CrewAppForm({
 								callbackKey=''
 								setCallbackKey={() => {}}
 								modelFilter='llm'
-							/>
+							/>*/}
 
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>

@@ -118,7 +118,7 @@ export async function addAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		managerModelId,
+		// managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -170,10 +170,10 @@ export async function addAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			{
-				field: 'managerModelId',
-				validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			},
+			// {
+			// 	field: 'managerModelId',
+			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
+			// },
 			{
 				field: 'toolIds',
 				validation: {
@@ -198,8 +198,8 @@ export async function addAppApi(req, res, next) {
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model',
-			managerModelId: 'Chat Manager Model'
+			modelId: 'Model'
+			// managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -216,8 +216,8 @@ export async function addAppApi(req, res, next) {
 			name,
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
-			process,
-			managerModelId: toObjectId(managerModelId)
+			process
+			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
 		if (agentId) {
@@ -332,7 +332,7 @@ export async function editAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		managerModelId,
+		// managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -384,10 +384,10 @@ export async function editAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			{
-				field: 'managerModelId',
-				validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			},
+			// {
+			// 	field: 'managerModelId',
+			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
+			// },
 			{
 				field: 'toolIds',
 				validation: {
@@ -412,8 +412,8 @@ export async function editAppApi(req, res, next) {
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model',
-			managerModelId: 'Chat Manager Model'
+			modelId: 'Model'
+			// managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -429,8 +429,8 @@ export async function editAppApi(req, res, next) {
 			name,
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
-			process,
-			managerModelId: toObjectId(managerModelId)
+			process
+			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
 		if (agentId) {
