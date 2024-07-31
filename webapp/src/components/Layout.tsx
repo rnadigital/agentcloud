@@ -753,7 +753,7 @@ export default withRouter(function Layout(props) {
 			/>
 			<div className='flex bg-gray-50 w-full'>
 				<footer
-					className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-12 max-w-7xl w-full mx-auto`}
+					className={`${showNavs ? 'lg:pl-80' : ''} mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-4 max-w-7xl w-full mx-auto`}
 				>
 					<div className='py-3'>
 						© {new Date().getFullYear()} RNA Digital - v{packageJson.version}
