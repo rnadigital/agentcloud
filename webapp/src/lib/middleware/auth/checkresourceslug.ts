@@ -1,9 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { unsafeGetAppById } from 'db/app';
 import { getOrgById } from 'db/org';
+import { unsafeGetSessionById } from 'db/session';
 import { getTeamById } from 'db/team';
 import debug from 'debug';
+
 const log = debug('webapp:middleware:auth:checkresourceslug');
 
 export async function checkResourceSlug(req, res, next) {
@@ -133,5 +136,57 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 	res.locals.matchingTeam = foundTeam;
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
 
+	next();
+}
+export async function setParamOrgAndTeam(req, res, next) {
+	//TODO: project any sensitive org props away here
+
+	const { sessionId, appId, resourceSlug } = req.params || {};
+	if (!sessionId && !appId) {
+		log('no sessionId or appId in setParamOrgAndTeam %O', req.params);
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+
+	const foundObject = sessionId
+		? await unsafeGetSessionById(sessionId)
+		: await unsafeGetAppById(appId);
+	if (!foundObject) {
+		log('Session not found %O', req.params);
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+
+	if (foundObject?.teamId.toString() !== resourceSlug.toString()) {
+		log('Mismatch between foundObject and resourceSlug %O', req.params);
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+
+	const { orgId: currentOrg, teamId: currentTeam } = foundObject;
+
+	//TODO: cache in redis
+	const foundOrg = await getOrgById(currentOrg);
+	if (!foundOrg) {
+		// return res.status(403).send({ error: 'No permission' });
+		log('No permission');
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+	foundOrg['id'] = foundOrg._id;
+	res.locals.matchingOrg = foundOrg;
+	res.locals.matchingOrg.permissions = foundOrg.permissions;
+
+	//TODO: cache in redis
+	const foundTeam = await getTeamById(currentTeam);
+	if (!foundTeam) {
+		// return res.status(403).send({ error: 'No permission' });
+		log('No permission');
+		req.session.destroy();
+		return dynamicResponse(req, res, 302, { redirect: '/login' });
+	}
+	foundTeam['id'] = foundTeam._id;
+	res.locals.matchingTeam = foundTeam;
+	res.locals.matchingTeam.permissions = foundTeam.permissions;
 	next();
 }

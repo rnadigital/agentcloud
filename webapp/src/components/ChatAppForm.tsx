@@ -4,11 +4,14 @@ import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
+import CopyToClipboardInput from 'components/CopyToClipboardInput';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
+import InfoAlert from 'components/InfoAlert';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
+import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -19,6 +22,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
 import { ModelType } from 'struct/model';
+import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 
 export default function ChatAppForm({
@@ -50,6 +54,9 @@ export default function ChatAppForm({
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
+	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
+	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
+	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name || '');
@@ -115,6 +122,8 @@ export default function ChatAppForm({
 			name: appName,
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
+			sharingMode,
+			shareLinkShareId,
 			run,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
@@ -289,7 +298,7 @@ export default function ChatAppForm({
 				<input type='hidden' name='_csrf' value={csrf} />
 
 				<div className='space-y-4'>
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 md:col-span-2'>
+					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-4'>
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='name'
@@ -304,7 +313,7 @@ export default function ChatAppForm({
 					</div>
 
 					<div className='grid grid-cols-1 gap-x-8 gap-y-10 pb-6 border-b border-gray-900/10 pb-12'>
-						<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 md:col-span-2'>
+						<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-6'>
 							<div className='sm:col-span-12'>
 								<label
 									htmlFor='appName'
@@ -345,6 +354,14 @@ export default function ChatAppForm({
 									/>
 								</div>
 							</div>
+
+							<SharingModeSelect
+								sharingMode={sharingMode}
+								setSharingMode={setSharingMode}
+								showInfoAlert={true}
+								setShareLinkShareId={setShareLinkShareId}
+								shareLinkShareId={shareLinkShareId}
+							/>
 
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -412,7 +429,7 @@ export default function ChatAppForm({
 											>
 												System Message
 											</label>
-											<div className='relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='role'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -432,7 +449,7 @@ export default function ChatAppForm({
 													}}
 												/>
 											</div>
-											<div className='relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800  relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='goal'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -452,7 +469,7 @@ export default function ChatAppForm({
 													}}
 												/>
 											</div>
-											<div className='relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800  overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='backstory'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'

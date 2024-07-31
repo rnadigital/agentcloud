@@ -14,14 +14,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
+import { usePathname } from 'next/navigation';
 import ContentLoader from 'react-content-loader';
+import { toast } from 'react-toastify';
 
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
-
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
+	const path = usePathname();
+	const isShared = path.startsWith('/s/');
 	const { resourceSlug } = router.query;
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
@@ -29,8 +32,8 @@ export default function Session(props) {
 	// @ts-ignore
 	const { sessionId } = router.query;
 	const [currentSessionId, setCurrentSessionId] = useState(sessionId);
-	const [session, setSession] = useState(null);
-	const [app, setApp] = useState(null);
+	const [session, setSession] = useState(props.session);
+	const [app, setApp] = useState(props.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
@@ -80,6 +83,9 @@ export default function Session(props) {
 		}
 		if (isAtBottom && message?._id) {
 			setLastSeenMessageId(message._id);
+		}
+		if (isShared && showConversationStarters) {
+			setShowConversationStarters(false);
 		}
 		const newMessage = typeof message === 'string' ? { type: null, text: message } : message;
 		setMessages(oldMessages => {
@@ -136,16 +142,19 @@ export default function Session(props) {
 	useEffect(() => {
 		scrollToBottom();
 		if (
+			session &&
 			showConversationStarters &&
-			messages.slice(0, 4).some(message => message.incoming === true)
+			(messages.slice(0, 4).some(message => message.incoming === true) ||
+				(messages.length > 0 && isShared))
 		) {
 			setShowConversationStarters(false);
 		}
 	}, [messages]);
 	useEffect(() => {
-		setShowConversationStarters(false);
+		if (session) {
+			setShowConversationStarters(false);
+		}
 	}, [sessionId]);
-
 	function handleSocketJoined(joinMessage) {
 		log('Received chat joined %s', joinMessage);
 		updateChat();
@@ -250,16 +259,29 @@ export default function Session(props) {
 		);
 	}
 
-	function sendMessage(e, reset) {
+	async function sendMessage(e, reset) {
 		e.preventDefault && e.preventDefault();
 		const message: string =
 			typeof e === 'string' ? e : e.target.prompt ? e.target.prompt.value : e.target.value;
 		if (!message || message.trim().length === 0) {
 			return null;
 		}
+		if (isShared && showConversationStarters) {
+			const res = await API.publicStartApp(
+				{
+					resourceSlug: app?.teamId,
+					id: app?._id
+				},
+				null,
+				toast.error,
+				null
+			);
+			res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
+			return;
+		}
 		socketContext.emit('message', {
 			room: sessionId,
-			authorName: account.name,
+			authorName: account?.name,
 			message: {
 				type: 'text',
 				text: message
@@ -272,7 +294,7 @@ export default function Session(props) {
 	return (
 		<>
 			<Head>
-				<title>{`Session - ${sessionId}`}</title>
+				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
 			<div
 				className='flex flex-col -mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
@@ -312,22 +334,27 @@ export default function Session(props) {
 						})}
 					{((chatBusyState && messages?.length === 0 && !terminated) ||
 						loading ||
-						(messages && messages.length === 0)) && (
-						<div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
-							<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
-							<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
-							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+						(messages && messages.length === 0)) &&
+						session != null && (
+							<div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+								<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+								<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+								<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
+							</div>
+						)}
+				</div>
+				{showConversationStarters &&
+					(!chatBusyState || !session) &&
+					app?.chatAppConfig?.conversationStarters && (
+						<div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
+							<ConversationStarters
+								sendMessage={message => sendMessage(message, null)}
+								session={session}
+								app={app}
+								conversationStarters={app?.chatAppConfig?.conversationStarters}
+							/>
 						</div>
 					)}
-				</div>
-				{showConversationStarters && !chatBusyState && app?.chatAppConfig?.conversationStarters && (
-					<div className='absolute left-1/2 bottom-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-						<ConversationStarters
-							sendMessage={message => sendMessage(message, null)}
-							conversationStarters={app?.chatAppConfig?.conversationStarters}
-						/>
-					</div>
-				)}
 				<div className='flex flex-col mt-auto pt-4 border-t'>
 					<div className='flex flex-row justify-center'>
 						<div className='flex items-start space-x-4 xl:basis-1/2 lg:basis-3/4 px-4 basis-full'>
@@ -343,6 +370,7 @@ export default function Session(props) {
 											scrollToBottom={scrollToBottom}
 											lastMessageFeedback={lastMessageFeedback}
 											chatBusyState={chatBusyState}
+											showConversationStarters={showConversationStarters}
 											stopGenerating={stopGenerating}
 											onSubmit={sendMessage}
 										/>

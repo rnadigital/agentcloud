@@ -7,12 +7,14 @@ import { getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
+import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ModelType } from 'struct/model';
+import { SharingMode } from 'struct/sharing';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
@@ -103,6 +105,16 @@ export async function appEditPage(app, req, res, next) {
 }
 
 /**
+ * GET /[resourceSlug]/app/[appId]/edit
+ * App edit page html
+ */
+// export async function publicAppPage(app, req, res, next) {
+// 	const data = await publicAppData(req, res, next); //TODO: public variant
+// 	res.locals.data = { ...data, account: res.locals.account };
+// 	return app.render(req, res, `/${req.params.resourceSlug}/app/${req.params.appId}`);
+// }
+
+/**
  * @api {post} /forms/app/add Add an app
  * @apiName add
  * @apiGroup App
@@ -131,13 +143,23 @@ export async function addAppApi(req, res, next) {
 		backstory,
 		modelId,
 		type,
-		run
+		run,
+		sharingMode,
+		shareLinkShareId
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
 	let validationError = chainValidations(
 		req.body,
 		[
+			{
+				field: 'sharingMode',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
+			},
+			{
+				field: 'shareLinkShareId',
+				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
+			},
 			{
 				field: 'type',
 				validation: { notEmpty: true, inSet: new Set([AppType.CHAT, AppType.CREW]) }
@@ -304,8 +326,23 @@ export async function addAppApi(req, res, next) {
 						agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x)
 					}
-				})
+				}),
+		sharingConfig: {
+			permissions: {}, //TODO once we have per-user, team, org perms
+			mode: sharingMode as SharingMode
+		},
+		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
+
+	if (shareLinkShareId) {
+		await updateShareLinkPayload({
+			teamId: toObjectId(req.params.resourceSlug),
+			shareId: shareLinkShareId,
+			payload: {
+				id: toObjectId(addedApp?.insertedId)
+			}
+		});
+	}
 
 	return dynamicResponse(
 		req,
@@ -344,7 +381,9 @@ export async function editAppApi(req, res, next) {
 		goal,
 		backstory,
 		modelId,
-		run
+		run,
+		sharingMode,
+		shareLinkShareId
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -356,6 +395,14 @@ export async function editAppApi(req, res, next) {
 	let validationError = chainValidations(
 		req.body,
 		[
+			{
+				field: 'sharingMode',
+				validation: { notEmpty: true, inSet: new Set(Object.values(SharingMode)) }
+			},
+			{
+				field: 'shareLinkShareId',
+				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
+			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'agentName', validation: { notEmpty: isChatApp, ofType: 'string' } },
@@ -511,8 +558,23 @@ export async function editAppApi(req, res, next) {
 						agentId: toObjectId(agentId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x)
 					}
-				})
+				}),
+		sharingConfig: {
+			permissions: {}, //TODO once we have per-user, team, org perms
+			mode: sharingMode as SharingMode
+		},
+		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
+
+	if (shareLinkShareId) {
+		await updateShareLinkPayload({
+			teamId: toObjectId(req.params.resourceSlug),
+			shareId: shareLinkShareId,
+			payload: {
+				id: toObjectId(req.params.appId)
+			}
+		});
+	}
 
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/app/${req.params.appId}/edit`*/

@@ -269,6 +269,7 @@ export async function verifyToken(req, res) {
 		req.body.token,
 		VerificationTypes.VERIFY_EMAIL
 	);
+
 	const { password, token } = req.body;
 	let accountId = deletedVerification?.accountId;
 	let stripeCustomerId;
@@ -326,7 +327,6 @@ export async function verifyToken(req, res) {
 	*/
 
 	const foundAccount = await getAccountById(accountId);
-	console.log('foundAccount', foundAccount);
 	if (!foundAccount) {
 		return dynamicResponse(req, res, 400, { error: 'Account already verified or not found' });
 	}
