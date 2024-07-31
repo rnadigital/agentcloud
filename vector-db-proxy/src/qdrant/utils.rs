@@ -198,7 +198,7 @@ impl Qdrant {
         let retry_result = async {
             loop {
                 match qdrant_conn
-                    .upsert_points(
+                    .upsert_points_blocking(
                         &self.collection_name,
                         None,
                         vec![point.clone()], // Ensure point is Clone for retries
@@ -267,7 +267,7 @@ impl Qdrant {
             Ok(result) => match result {
                 true => {
                     match qdrant_conn
-                        .upsert_points_batch(
+                        .upsert_points_batch_blocking(
                             &self.collection_name,
                             None,
                             points,
