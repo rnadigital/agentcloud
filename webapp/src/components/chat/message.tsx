@@ -218,7 +218,7 @@ export function Message({
 		//TODO: enum and handle "other" types not just like bubble
 		return (
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-800 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
 			>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
