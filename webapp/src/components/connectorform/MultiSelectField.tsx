@@ -24,7 +24,7 @@ const MultiSelectField = ({
 	return (
 		<div>
 			<div className='flex items-center'>
-				<label htmlFor={name} className='mr-1'>
+				<label htmlFor={name} className='mr-1 text-sm dark:text-slate-400'>
 					{property.title ? property.title : toSentenceCase(name)}
 					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 				</label>
@@ -49,7 +49,7 @@ const MultiSelectField = ({
 					render={({ field, fieldState }) => {
 						const handleChange = selected => {
 							if (isMultiple) {
-								const s = (selected as Option[]).map(o => o.value);
+								const s = (selected as Option[])?.map(o => o.value);
 								return field.onChange(s);
 							}
 							field.onChange((selected as Option).value);
@@ -68,6 +68,15 @@ const MultiSelectField = ({
 									isDisabled={disabled}
 									onChange={handleChange}
 									value={value}
+									classNames={{
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-transparent dark:border-slate-600',
+										menuButton: () =>
+											'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-transparent dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) =>
+											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 dark:hover:bg-slate-600 dark:text-gray-50 dark:hover:text-white`
+									}}
 								/>
 								<div className='text-red-500 mt-2 text-xs'>
 									{fieldState.error ? fieldState.error.message : ''}
