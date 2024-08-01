@@ -6,12 +6,8 @@ const ThemeSelector = () => {
 	const { theme, toggleTheme } = useContext(ThemeContext);
 
 	return (
-		<button onClick={toggleTheme} className='absolute right-5 top-2'>
-			{theme === 'dark' ? (
-				<MoonIcon className='text-white h-6 w-6' />
-			) : (
-				<SunIcon className='h-6 w-6' />
-			)}
+		<button onClick={toggleTheme} className='text-black dark:text-white'>
+			{theme === 'dark' ? <MoonIcon className='h-6 w-6' /> : <SunIcon className='h-6 w-6' />}
 		</button>
 	);
 };

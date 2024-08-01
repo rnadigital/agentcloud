@@ -37,6 +37,7 @@ import { Fragment, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
+import ThemeSelector from './ThemeSelector';
 
 const noNavPages = [
 	'/login',
@@ -133,8 +134,6 @@ export default withRouter(function Layout(props) {
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	// const showNavs = !noNavPages.includes(router.pathname.em);
 	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
-
-	const { theme, toggleTheme } = useContext(ThemeContext);
 
 	const path = usePathname();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -619,13 +618,7 @@ export default withRouter(function Layout(props) {
 										</span>
 									)}
 								</div>
-								<button onClick={toggleTheme}>
-									{theme === 'dark' ? (
-										<MoonIcon className='text-white h-6 w-6' />
-									) : (
-										<SunIcon className='h-6 w-6' />
-									)}
-								</button>
+								<ThemeSelector />
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
