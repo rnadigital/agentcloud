@@ -49,8 +49,8 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 							leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 							leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 						>
-							<Dialog.Panel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 md:w-full lg:w-1/2 m-10'>
-								<Dialog.Title as='h3' className='text-lg font-medium text-gray-900'>
+							<Dialog.Panel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 md:w-full lg:w-1/2 m-10 dark:bg-slate-800 dark:text-gray-50'>
+								<Dialog.Title as='h3' className='text-lg font-medium text-gray-900 dark:text-white'>
 									Create a Datasource
 								</Dialog.Title>
 								<div className='pt-4'>

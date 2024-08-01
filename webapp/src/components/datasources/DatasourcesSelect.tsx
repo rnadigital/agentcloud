@@ -10,7 +10,7 @@ export default function DatasourceSelector({
 }) {
 	return (
 		<div className='sm:col-span-12'>
-			<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+			<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'>
 				Datasource
 			</label>
 			<div className='mt-2'>

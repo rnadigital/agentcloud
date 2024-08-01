@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import classNames from './ClassNames';
+import cn from 'lib/cn';
 
 export default function SessionChatbox({
 	lastMessageFeedback,
@@ -31,7 +32,7 @@ export default function SessionChatbox({
 		>
 			<input type='hidden' name='_csrf' value={csrf} />
 			<input type='hidden' name='type' value='generate_team' />
-			<label className='flex overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'>
+			<label className='flex overflow-hidden rounded-3xl shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'>
 				<div className='block w-full py-1'>
 					<textarea
 						onKeyDown={e =>
@@ -81,23 +82,30 @@ export default function SessionChatbox({
 									});
 									stopGenerating();
 								}}
-								className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+								className={cn(
+									'bg-indigo-600 rounded-full p-2 grid place-items-center pointer-events-auto cursor-wait',
+									{
+										'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600':
+											!chatBusyState
+									}
+								)}
 							>
-								<StopIcon className='w-4 h-4' />
+								<StopIcon className='w-3 h-3 text-white' />
 							</button>
 						</div>
 					) : (
 						<button
 							disabled={chatBusyState || promptValue.trim().length === 0}
 							type='submit'
-							className={classNames(
-								'pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm',
-								!chatBusyState
-									? 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-									: 'bg-indigo-400 cursor-wait'
+							className={cn(
+								'bg-indigo-600 rounded-full p-2 grid place-items-center pointer-events-auto cursor-wait',
+								{
+									'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600':
+										!chatBusyState
+								}
 							)}
 						>
-							<PaperAirplaneIcon className='h-4 w-4' />
+							<PaperAirplaneIcon className='h-3 w-3 text-white' />
 						</button>
 					)}
 				</div>

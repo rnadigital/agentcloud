@@ -193,7 +193,7 @@ export default function AgentForm({
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'
 							>
 								Avatar
 							</label>
@@ -207,7 +207,7 @@ export default function AgentForm({
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'
 							>
 								Name
 							</label>
@@ -227,7 +227,7 @@ export default function AgentForm({
 					<div className='isolate space-y-px rounded-md shadow-sm'>
 						<label
 							htmlFor='systemMessage'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mb-2'
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50 mb-2'
 						>
 							System Message
 						</label>
@@ -331,7 +331,7 @@ export default function AgentForm({
 					</div>
 
 					<details>
-						<summary className='cursor-pointer mb-4'>Advanced</summary>
+						<summary className='cursor-pointer mb-4 dark:text-gray-50'>Advanced</summary>
 						<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 							<ModelSelect
 								models={models}
