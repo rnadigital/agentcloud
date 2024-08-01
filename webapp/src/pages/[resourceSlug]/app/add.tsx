@@ -17,6 +17,21 @@ interface AddAppProps {
 	models: any[];
 	datasources: any[];
 }
+const chatAppTaglines = [
+	'Build single agent chat bots (like GPTS)',
+	'Integrate RAG datasources',
+	'Add custom agent',
+	'Integrate custom tools',
+	'Embed your chat app via IFrame (coming soon)'
+];
+
+const processAppTaglines = [
+	'Build Multi-Agent Process Apps (powered by Crew AI)',
+	'Integrate RAG datasources',
+	'Add custom code tools',
+	'Add tasks',
+	'Embed your process app via IFrame (coming soon)'
+];
 
 export default function AddApp(props: AddAppProps) {
 	const [accountContext]: any = useAccountContext();
@@ -79,22 +94,16 @@ export default function AddApp(props: AddAppProps) {
 									</div>
 
 									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white'
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
 										onClick={handleCreateChatApp}
 									>
 										+ Create
 									</button>
 								</div>
 								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
-									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit dark:bg-gray-600 dark:text-white'>
-										<CheckBadgeIcon className='h-6 w-6' />
-										<div>Build customized response bot</div>
-									</div>
-
-									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit dark:bg-gray-600 dark:text-white'>
-										<CheckBadgeIcon className='h-6 w-6' />
-										<div>Integrate dynamic tools</div>
-									</div>
+									{chatAppTaglines.map((tagline, index) => (
+										<TagLine key={index} tagline={tagline} />
+									))}
 								</div>
 							</div>
 
@@ -117,23 +126,16 @@ export default function AddApp(props: AddAppProps) {
 									</div>
 
 									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white'
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
 										onClick={handleCreateProcessApp}
 									>
 										+ Create
 									</button>
 								</div>
-
 								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
-									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit dark:bg-gray-600 dark:text-white'>
-										<CheckBadgeIcon className='h-6 w-6' />
-										<div>Build customized response bot</div>
-									</div>
-
-									<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit dark:bg-gray-600 dark:text-white'>
-										<CheckBadgeIcon className='h-6 w-6' />
-										<div>Integrate dynamic tools</div>
-									</div>
+									{processAppTaglines.map((tagline, index) => (
+										<TagLine key={index} tagline={tagline} />
+									))}
 								</div>
 							</div>
 						</div>
@@ -183,3 +185,12 @@ export async function getServerSideProps({
 }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }
+
+const TagLine = ({ tagline }: { tagline: string }) => {
+	return (
+		<div className='flex text-gray-900 items-center p-1 bg-primary-50 rounded gap-1 w-fit dark:bg-gray-600 dark:text-white'>
+			<CheckBadgeIcon className='h-6 w-6' />
+			<div>{tagline}</div>
+		</div>
+	);
+};
