@@ -82,13 +82,7 @@ export default function SessionChatbox({
 									});
 									stopGenerating();
 								}}
-								className={cn(
-									'bg-indigo-600 rounded-full p-2 grid place-items-center pointer-events-auto cursor-wait',
-									{
-										'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600':
-											!chatBusyState
-									}
-								)}
+								className='pointer-events-auto inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 							>
 								<StopIcon className='w-3 h-3 text-white' />
 							</button>
