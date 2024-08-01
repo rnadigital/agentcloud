@@ -224,7 +224,7 @@ export function Message({
 				<div
 					className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}
 				>
-					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-800 rounded-lg'>
+					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
 						{completed ? (
 							<CheckCircleIcon className='fill-green-600 h-5 me-2' />
 						) : (
@@ -248,9 +248,9 @@ export function Message({
 		/*!sameAuthorAsPrevious && */ <div
 			className={cn(
 				`grid grid-cols-1 xl:grid-cols-5 dark:text-white`,
-				prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-800' : '',
-				incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800',
-				isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''
+				prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-900' : '',
+				incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-900',
+				isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-900' : ''
 			)}
 		>
 			<div className='invisible xl:visible col-span-1'></div>
@@ -321,7 +321,7 @@ export function Message({
 		<>
 			{authorNameSection}
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-900'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}
 			>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
