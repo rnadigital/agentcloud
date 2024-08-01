@@ -397,7 +397,7 @@ export default function TaskForm({
 					</div>
 				</div>
 
-				<div className='mt-6 flex items-center justify-between gap-x-6'>
+				<div className='mt-6 flex items-center justify-between gap-x-6 dark:text-indigo-200'>
 					{!compact && <Link href={`/${resourceSlug}/tasks`}>Back</Link>}
 					<button
 						type='submit'
