@@ -4,6 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
+import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { RoleOptions } from 'permissions/roles';
 import React, { useState } from 'react';
@@ -76,7 +77,10 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 			<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
 				<div className='space-y-4'>
 					<div>
-						<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label
+							htmlFor='name'
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'
+						>
 							Name
 						</label>
 						<div className='mt-1'>
@@ -87,13 +91,18 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 								id='name'
 								value={name}
 								onChange={e => setName(e.target.value)}
-								className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50'
+								className={cn(
+									'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
+								)}
 							/>
 						</div>
 					</div>
 
 					<div>
-						<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
+						<label
+							htmlFor='email'
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'
+						>
 							Email
 						</label>
 						<div className='mt-1'>
@@ -104,17 +113,25 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 								id='email'
 								value={email}
 								onChange={e => setEmail(e.target.value)}
-								className='block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50'
+								className={cn(
+									'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
+								)}
 							/>
 						</div>
 					</div>
 
 					<div>
-						<label htmlFor='role' className='block text-sm font-medium text-gray-700'>
+						<label
+							htmlFor='role'
+							className='block text-sm font-medium text-gray-700 dark:text-gray-50'
+						>
 							Role
 						</label>
 						<select
-							className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md'
+							// className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md'
+							className={cn(
+								'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
+							)}
 							name='role'
 							id='role'
 							value={selectedRole}

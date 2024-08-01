@@ -67,8 +67,8 @@ export default function TeamMemberCard({ team, member, callback }) {
 	};
 
 	return (
-		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md min-w-[200px]'>
-			<p className='mb-2 font-bold tracking-tight text-gray-900 flex space-x-4'>
+		<div className='p-4 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md min-w-[200px] dark:bg-slate-800'>
+			<p className='mb-2 font-bold tracking-tight text-gray-900 flex space-x-4 dark:text-gray-50'>
 				<span>{member.name}</span>
 				{!me && permissions.get(Permissions.EDIT_TEAM_MEMBER) && (
 					<Link href={`/${resourceSlug}/team/${member._id}/edit`}>
@@ -76,7 +76,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 					</Link>
 				)}
 			</p>
-			<p className='mb-3 font-normal text-sm text-gray-700'>{member.email}</p>
+			<p className='mb-3 font-normal text-sm text-gray-700 dark:text-gray-50'>{member.email}</p>
 			<div className='flex space-x-4 space-between w-full relative'>
 				<span
 					className={`px-3 py-1 text-sm font-semibold text-white rounded-full ${isOwner || member.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`}

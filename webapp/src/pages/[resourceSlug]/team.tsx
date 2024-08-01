@@ -38,7 +38,7 @@ export default function Team(props) {
 			</Head>
 
 			<div className='border-b pb-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900'>Team Members</h3>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Team Members</h3>
 			</div>
 
 			{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
