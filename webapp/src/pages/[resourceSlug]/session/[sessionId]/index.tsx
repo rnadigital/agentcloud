@@ -278,7 +278,7 @@ export default function Session(props) {
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
-				<div className='overflow-y-auto' ref={scrollContainerRef}>
+				<div className='overflow-y-auto py-2' ref={scrollContainerRef}>
 					{messages &&
 						messages.map((m, mi, marr) => {
 							const authorName = m?.authorName || m?.message?.authorName;
