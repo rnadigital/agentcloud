@@ -667,8 +667,8 @@ export default withRouter(function Layout(props) {
 											>
 												<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
 													{account && (
-														<div className='px-4 py-3' key='accountdetails'>
-															<p className='text-sm'>Signed in as</p>
+														<div className='px-3 py-3 dark:text-white' key='accountdetails'>
+															<p className='text-sm dark:text-gray-50'>Signed in as</p>
 															<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>
 																{account.email}
 															</p>
