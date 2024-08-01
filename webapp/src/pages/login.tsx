@@ -5,6 +5,7 @@ import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import InfoAlert from 'components/InfoAlert';
 import SuccessAlert from 'components/SuccessAlert';
+import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -26,6 +27,7 @@ export default function Login() {
 	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
 	const posthog = usePostHog();
+	const { theme } = useThemeContext();
 
 	const { control, handleSubmit } = useForm<LoginFormValues>();
 
@@ -51,7 +53,11 @@ export default function Login() {
 				<div className='sm:mx-auto sm:w-full sm:max-w-md'>
 					<img
 						className='mx-auto h-16 w-auto sm:h-20'
-						src='/images/agentcloud-full-black-bg-trans.png'
+						src={
+							theme === 'dark'
+								? '/images/agentcloud-full-white-bg-trans.png'
+								: '/images/agentcloud-full-black-bg-trans.png'
+						}
 						alt='Your Company'
 					/>
 				</div>
@@ -60,7 +66,7 @@ export default function Login() {
 					<div className='bg-white dark:bg-slate-800 px-6 py-8 shadow sm:rounded-lg sm:px-8'>
 						{error && <ErrorAlert error={error} />}
 
-						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 mt-2'>
+						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 mt-2 dark:text-white'>
 							Welcome back
 						</h2>
 						<form className='space-y-2' onSubmit={handleSubmit(login)}>
@@ -106,7 +112,7 @@ export default function Login() {
 								<div className='leading-6 text-sm'>
 									<Link
 										href='/requestchangepassword'
-										className='text-indigo-600 hover:text-indigo-500'
+										className='text-indigo-600 hover:text-indigo-500 dark:text-indigo-200'
 									>
 										Forgot password?
 									</Link>
@@ -124,9 +130,12 @@ export default function Login() {
 							</div>
 						</form>
 
-						<p className='mt-4 text-sm text-gray-900'>
+						<p className='mt-4 text-sm text-gray-900 dark:text-gray-50'>
 							Don&apos;t have an account?{' '}
-							<Link href='/register' className='leading-6 text-indigo-600 hover:text-indigo-500'>
+							<Link
+								href='/register'
+								className='leading-6 text-indigo-600 hover:text-indigo-500 dark:text-indigo-200'
+							>
 								Sign Up
 							</Link>
 						</p>
@@ -139,7 +148,9 @@ export default function Login() {
 										<div className='w-full border-t border-gray-200' />
 									</div>
 									<div className='relative flex justify-center text-sm font-medium leading-6'>
-										<span className='bg-white px-6 text-gray-500'>or</span>
+										<span className='bg-white px-6 text-gray-500 dark:bg-slate-800 dark:text-gray-50'>
+											or
+										</span>
 									</div>
 								</div>
 
@@ -174,14 +185,16 @@ export default function Login() {
 													d='M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571	c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'
 												></path>
 											</svg>
-											<span className='text-sm font-semibold leading-6'>Continue with Google</span>
+											<span className='text-sm font-semibold leading-6 dark:text-gray-50'>
+												Continue with Google
+											</span>
 										</Link>
 									)}
 
 									{process.env.NEXT_PUBLIC_ENABLE_GITHUB_OAUTH && (
 										<Link
 											href='/auth/github'
-											className='flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]'
+											className='flex w-full items-center justify-center gap-3 rounded-md bg-[#24292F] px-3 py-1.5 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F] dark:bg-slate-600'
 										>
 											<svg
 												className='h-5 w-5'

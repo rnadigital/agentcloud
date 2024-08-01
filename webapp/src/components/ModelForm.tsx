@@ -4,6 +4,7 @@ import * as API from '@api';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
+import cn from 'lib/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
@@ -111,7 +112,7 @@ export default function ModelForm({
 								<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>
 									Model
 								</h2>
-								<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-slate-400'>
+								<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-gray-50'>
 									Configure models to be used for agents and/or embedding data sources.
 								</p>
 							</div>
@@ -128,7 +129,7 @@ export default function ModelForm({
 									type='text'
 									name='modelName'
 									id='modelName'
-									className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+									className='bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
 									onChange={e => setModelName(e.target.value)}
 									required
 									value={modelName}
@@ -147,7 +148,7 @@ export default function ModelForm({
 									required
 									id='type'
 									name='type'
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-gray-50'
 									value={type}
 									onChange={(e: any) => {
 										const newType: ModelType = e.target.value as ModelType;

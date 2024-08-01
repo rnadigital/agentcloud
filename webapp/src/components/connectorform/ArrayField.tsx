@@ -60,9 +60,8 @@ const ArrayField = ({ name, testId, type, disabled, property, isRequired }: Form
 	return (
 		<div>
 			<div className='flex items-center'>
-				<label htmlFor={name} className='mr-1'>
+				<label htmlFor={name} className='mr-1 text-sm dark:text-slate-400'>
 					{property.title ? property.title : toSentenceCase(name)}
-
 					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 				</label>
 				{property.description && (

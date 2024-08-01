@@ -100,16 +100,17 @@
     "socket.io-client": "^4.7.2",
     "stripe": "^14.25.0",
     "tsconfig-paths": "^4.2.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3",
+    "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.18",
     "@types/node": "^20.7.0",
     "@types/react": "^18.2.22",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
     "postcss": "^8.4.30",
-    "prettier": "^3.3.3",
     "tailwindcss": "^3.3.3",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",

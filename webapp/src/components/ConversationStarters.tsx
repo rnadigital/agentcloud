@@ -1,5 +1,4 @@
 import * as API from '@api';
-import { ArrowUpIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { toast } from 'react-toastify';
@@ -11,7 +10,7 @@ const ConversationStarters = ({ session, app, sendMessage, conversationStarters 
 			{conversationStarters.map((starter, index) => (
 				<div
 					key={index}
-					className='flex flex-col space-x-2 p-4 bg-white rounded shadow cursor-pointer text-sm max-w-[250px]'
+					className='bg-white rounded shadow cursor-pointer text-sm max-w-[250px] truncate py-1 px-2'
 					onClick={async () => {
 						if (session != null) {
 							sendMessage(starter);
@@ -29,7 +28,6 @@ const ConversationStarters = ({ session, app, sendMessage, conversationStarters 
 						}
 					}}
 				>
-					<ArrowUpIcon className='w-5 text-gray-400 pb-2' />
 					<span className='text-gray-600'>{starter}</span>
 				</div>
 			))}

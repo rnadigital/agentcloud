@@ -9,6 +9,7 @@ import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import ToolTip from 'components/shared/ToolTip';
 import { useAccountContext } from 'context/account';
 import useResponsive from 'hooks/useResponsive';
+import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
@@ -279,7 +280,7 @@ export default function LLMConfigurationForm() {
 		<form onSubmit={handleSubmit(onSubmit)}>
 			<div className='mt-14 flex gap-8 flex-col md:flex-row'>
 				<div className='flex-1'>
-					<div className='text-sm flex gap-1'>
+					<div className='text-sm flex gap-1 dark:text-white'>
 						<span>Select LLM</span>
 						<ToolTip content='Large Language Models (LLMs) generate and understand text. Use them for text creation, customer support, data analysis, and translation. LLM models are used to power agents.'>
 							<span className='cursor-pointer'>
@@ -291,7 +292,10 @@ export default function LLMConfigurationForm() {
 						<div className='w-1/2 sm:w-2/5'>
 							<OnboardingSelect<LLMConfigurationFormValues>
 								options={modelOptions}
-								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
+								classNames={{
+									listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
+									listboxOptions: 'left-0'
+								}}
 								control={control}
 								name='LLMType'
 								callback={handleSetUserSelectedLLMType}
@@ -300,7 +304,10 @@ export default function LLMConfigurationForm() {
 						<div className='w-1/2 sm:flex-1'>
 							<OnboardingSelect<LLMConfigurationFormValues>
 								options={modelList}
-								classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }}
+								classNames={{
+									listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
+									listboxOptions: 'right-0'
+								}}
 								control={control}
 								name='LLMModel'
 							/>
@@ -308,9 +315,9 @@ export default function LLMConfigurationForm() {
 					</div>
 
 					<div
-						className={clsx(
-							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
-							{ 'bg-white': LLMModel?.value !== 'gpt-4o-mini' }
+						className={cn(
+							'flex gap-2 bg-primary-50 dark:bg-gray-600 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1 dark:text-white',
+							{ 'bg-white dark:bg-gray-700': LLMModel?.value !== 'gpt-4o-mini' }
 						)}
 					>
 						{LLMModel?.value === 'gpt-4o-mini' && (
@@ -342,7 +349,7 @@ export default function LLMConfigurationForm() {
 				</div>
 
 				<div className='flex-1'>
-					<div className='text-sm flex gap-1'>
+					<div className='text-sm flex gap-1 dark:text-white'>
 						<span>Select Embedding</span>
 						<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
 							<span className='cursor-pointer'>
@@ -354,7 +361,10 @@ export default function LLMConfigurationForm() {
 						<div className='w-1/2 sm:w-2/5'>
 							<OnboardingSelect<LLMConfigurationFormValues>
 								options={modelOptions}
-								classNames={{ listboxButton: 'rounded-l-md bg-gray-100', listboxOptions: 'left-0' }}
+								classNames={{
+									listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
+									listboxOptions: 'left-0'
+								}}
 								control={control}
 								name='embeddingType'
 								callback={handleSetUserSelectedEmbeddingType}
@@ -363,7 +373,10 @@ export default function LLMConfigurationForm() {
 						<div className='w-1/2 sm:flex-1'>
 							<OnboardingSelect<LLMConfigurationFormValues>
 								options={embeddingModelList}
-								classNames={{ listboxButton: 'rounded-r-md bg-gray-50', listboxOptions: 'right-0' }}
+								classNames={{
+									listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
+									listboxOptions: 'right-0'
+								}}
 								control={control}
 								name='embeddingModel'
 							/>
@@ -371,9 +384,9 @@ export default function LLMConfigurationForm() {
 					</div>
 
 					<div
-						className={clsx(
-							'flex gap-2 bg-primary-50 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1',
-							{ 'bg-white': embeddingModel?.value !== 'text-embedding-3-small' }
+						className={cn(
+							'flex gap-2 bg-primary-50 dark:bg-gray-600 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1 dark:text-white',
+							{ 'bg-white dark:bg-gray-700': embeddingModel?.value !== 'text-embedding-3-small' }
 						)}
 					>
 						{embeddingModel?.value === 'text-embedding-3-small' && (
@@ -433,7 +446,6 @@ export default function LLMConfigurationForm() {
 										type='text'
 										control={control}
 										placeholder={field.placeholder}
-										// value={embeddingAPIKeyValue}
 										disabled={!embeddingModel || !embeddingModel.value}
 									/>
 								</div>
@@ -442,10 +454,10 @@ export default function LLMConfigurationForm() {
 				</div>
 			)}
 
-			<hr className='mt-14 mb-5' />
+			<hr className='mt-14 mb-5 dark:border-gray-200 border-t ' />
 			<div className='flex'>
 				<button
-					className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm'
+					className='w-[137px] h-[41px] border border-gray-200 rounded-lg text-sm dark:text-white'
 					type='button'
 					onClick={() => {
 						router.push(`/${resourceSlug}/app/add`);
