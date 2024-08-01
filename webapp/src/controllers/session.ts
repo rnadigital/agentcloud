@@ -76,7 +76,7 @@ export async function sessionData(req, res, _next) {
 }
 
 export async function publicSessionData(req, res, _next) {
-	const session = await unsafeGetSessionById(req.params.sessionId);
+	const session = await unsafeGetSessionById(req.params.sessionId || req.query.sessionId);
 	const app = await unsafeGetAppById(session?.appId || req.params.appId);
 	let avatarMap = {};
 	switch (app?.type) {
@@ -129,8 +129,7 @@ export async function publicSessionPage(app, req, res, next) {
 		...data,
 		account: null
 	};
-	console.log(res.locals.data);
-	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
+	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
 /**

@@ -28,6 +28,7 @@ export default function Session(props) {
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
+	const hasAppSegment = path.includes('/app');
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
@@ -287,6 +288,12 @@ export default function Session(props) {
 		reset && reset();
 		return true;
 	}
+
+	useEffect(() => {
+		if (hasAppSegment && isShared) {
+			sendMessage('!', null);
+		}
+	}, [hasAppSegment, isShared]);
 
 	return (
 		<>

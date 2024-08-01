@@ -1,11 +1,18 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { getAgentById, getAgentsById } from 'db/agent';
+import { getAppById } from 'db/app';
+import { getCrewById } from 'db/crew';
+import { addSession } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationUtils';
 import toObjectId from 'misc/toobjectid';
+import { App, AppType } from 'struct/app';
+import { SessionStatus } from 'struct/session';
 import { ShareLinkTypes } from 'struct/sharelink';
+import { SharingMode } from 'struct/sharing';
 const log = debug('webapp:controllers:sharelink');
 
 export async function addShareLinkApi(req, res, next) {
@@ -47,18 +54,57 @@ export async function addShareLinkApi(req, res, next) {
 export async function handleRedirect(req, res, next) {
 	const { resourceSlug, shareLinkShareId } = req.params;
 	const foundShareLink = await getShareLinkByShareId(resourceSlug, shareLinkShareId);
-	// log('resourceSlug: %s, shareLinkShareId: %s', resourceSlug, shareLinkShareId);
-	// log('foundShareLink: %s', foundShareLink);
+
 	if (!foundShareLink || !foundShareLink?.payload?.id) {
 		//Not found or still no payload set
 		return dynamicResponse(req, res, 302, { redirect: '/' });
 	}
+
+	const appId = foundShareLink?.payload?.id;
+	const app: App = await getAppById(req.params.resourceSlug, appId);
+
+	let crewId;
+	let agentId;
+	if (app?.type === AppType.CREW) {
+		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
+		if (crew) {
+			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
+			if (!agents) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			}
+			crewId = crew._id;
+		} else {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	} else {
+		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		if (!agent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+	}
+
+	const addedSession = await addSession({
+		orgId: toObjectId(app.orgId),
+		teamId: toObjectId(resourceSlug),
+		name: app.name,
+		startDate: new Date(),
+		lastUpdatedDate: new Date(),
+		tokensUsed: 0,
+		status: SessionStatus.STARTED,
+		appId: toObjectId(app?._id),
+		sharingConfig: {
+			permissions: {},
+			mode: SharingMode.PUBLIC
+		}
+	});
+	const sessionId = addedSession.insertedId;
+
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
 			//There are no other sharinglinktypes yet
 			return dynamicResponse(req, res, 302, {
-				redirect: `/s/${resourceSlug}/app/${foundShareLink.payload.id}`
+				redirect: `/s/${resourceSlug}/app/${foundShareLink.payload.id}?sessionId=${sessionId}`
 			});
 	}
 }
