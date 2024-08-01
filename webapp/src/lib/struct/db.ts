@@ -24,5 +24,6 @@ export enum CollectionName {
 	Teams = 'teams',
 	Tools = 'tools',
 	Toolrevisions = 'toolrevisions',
-	Verifications = 'verifications'
+	Verifications = 'verifications',
+	ShareLinks = 'sharelinks'
 }

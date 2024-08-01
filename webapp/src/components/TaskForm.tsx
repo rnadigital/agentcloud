@@ -10,6 +10,7 @@ import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
@@ -43,6 +44,7 @@ export default function TaskForm({
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState(task);
 	const [, notificationTrigger]: any = useSocketContext();
+	const posthog = usePostHog();
 
 	const { _id, name, description, expectedOutput, toolIds } = taskState;
 
@@ -73,14 +75,28 @@ export default function TaskForm({
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked
 		};
+		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
 			await API.editTask(
 				taskState._id,
 				body,
 				() => {
+					posthog.capture(posthogEvent, {
+						name: e.target.name.value,
+						id: taskState?._id,
+						toolIds: taskState?.toolIds || [],
+						preferredAgentId: taskState?.agentId
+					});
 					toast.success('Task Updated');
 				},
 				res => {
+					posthog.capture(posthogEvent, {
+						name: e.target.name.value,
+						id: taskState?._id,
+						toolIds: taskState?.toolIds || [],
+						preferredAgentId: taskState?.agentId,
+						error: res
+					});
 					toast.error(res);
 				},
 				null
@@ -89,9 +105,22 @@ export default function TaskForm({
 			const addedTask: any = await API.addTask(
 				body,
 				() => {
+					posthog.capture(posthogEvent, {
+						name: e.target.name.value,
+						id: taskState?._id,
+						toolIds: taskState?.toolIds || [],
+						preferredAgentId: taskState?.agentId
+					});
 					toast.success('Added new task');
 				},
 				res => {
+					posthog.capture(posthogEvent, {
+						name: e.target.name.value,
+						id: taskState?._id,
+						toolIds: taskState?.toolIds || [],
+						preferredAgentId: taskState?.agentId,
+						error: res
+					});
 					toast.error(res);
 				},
 				compact ? null : router

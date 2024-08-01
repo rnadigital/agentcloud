@@ -13,6 +13,7 @@ import ErrorAlert from '../components/ErrorAlert';
 
 export interface VerifyFormValues {
 	password: string;
+	checkoutsession: any;
 }
 
 export default function Verify() {
@@ -20,7 +21,7 @@ export default function Verify() {
 	const [verified] = useState(null);
 	const [newPassword, setNewPassword] = useState('');
 	const [error, setError] = useState();
-	const { token, newpassword, stripe } = router.query;
+	const { token, newpassword, stripe, checkoutsession } = router.query;
 	const [submitting, setSubmitting] = useState(false);
 	const { control, handleSubmit } = useForm<VerifyFormValues>();
 
@@ -42,12 +43,13 @@ export default function Verify() {
 	}
 
 	useEffect(() => {
-		if (verified === null && token && !newpassword) {
+		if (verified === null && (token || checkoutsession) && !newpassword) {
 			verifyToken({
-				token
+				token,
+				checkoutsession
 			});
 		}
-	}, [token]);
+	}, [token, checkoutsession]);
 
 	return (
 		<>

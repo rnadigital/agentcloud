@@ -3,7 +3,8 @@
 import {
 	checkResourceSlug,
 	checkResourceSlugQuery,
-	setDefaultOrgAndTeam
+	setDefaultOrgAndTeam,
+	setParamOrgAndTeam
 } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
 import {
@@ -46,6 +47,7 @@ import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
 import * as sessionController from 'controllers/session';
+import * as sharelinkController from 'controllers/sharelink';
 import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
@@ -233,6 +235,42 @@ export default function router(server, app) {
 
 	server.use('/forms/account', accountRouter);
 
+	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
+	publicAppRouter.get(
+		'/app/:appId([a-f0-9]{24})',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		sessionController.publicSessionPage.bind(null, app)
+	);
+	publicAppRouter.get(
+		'/session/:sessionId([a-f0-9]{24})',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		sessionController.publicSessionPage.bind(null, app)
+	);
+	publicAppRouter.get(
+		'/session/:sessionId([a-f0-9]{24})/messages.json',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		sessionController.sessionMessagesJson
+	);
+	publicAppRouter.post(
+		'/forms/app/:appId([a-f0-9]{24})/start',
+		setParamOrgAndTeam,
+		sessionController.addSessionApi
+	);
+	publicAppRouter.get(
+		'/:shareLinkShareId(app_[a-f0-9]{64,})', //Note: app_prefix to be removed once we handle other sharinglinktypes
+		sharelinkController.handleRedirect
+	);
+	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
+
+	// Airbyte webhooks
+	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
+	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
+	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
+	server.use('/webhook', webhookRouter);
+
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 
 	//airbyte proxy routes
@@ -317,6 +355,9 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.DELETE_TASK),
 		taskController.deleteTaskApi
 	);
+
+	//sharelink
+	teamRouter.post('/forms/sharelink/add', sharelinkController.addShareLinkApi);
 
 	//apps
 	teamRouter.get('/apps', appController.appsPage.bind(null, app));
@@ -546,12 +587,6 @@ export default function router(server, app) {
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
-
-	// Airbyte webhooks
-	const webhookRouter = Router({ mergeParams: true, caseSensitive: true });
-	webhookRouter.use('/sync-successful', airbyteProxyController.handleSuccessfulSyncWebhook);
-	webhookRouter.use('/embed-successful', airbyteProxyController.handleSuccessfulEmbeddingWebhook); //TODO: move these to webhooks controller?
-	server.use('/webhook', webhookRouter);
 
 	server.use(
 		'/:resourceSlug([a-f0-9]{24})',

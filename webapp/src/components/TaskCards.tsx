@@ -2,6 +2,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { CheckIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { Fragment } from 'react';
 import { toast } from 'react-toastify';
 
@@ -17,6 +18,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 
 	async function deleteTask(taskId) {
 		API.deleteTask(
@@ -87,7 +89,15 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 										<Menu.Item>
 											{({ active }) => (
 												<button
-													onClick={() => deleteTask(task._id)}
+													onClick={() => {
+														posthog.capture('deleteTask', {
+															name: task.name,
+															id: task._id,
+															toolIds: task?.toolIds || [],
+															preferredAgentId: task?.agentId
+														});
+														deleteTask(task._id);
+													}}
 													className={classNames(
 														active ? 'bg-gray-50 dark:bg-slate-700' : '',
 														'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'

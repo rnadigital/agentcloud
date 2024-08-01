@@ -1,12 +1,11 @@
 import { PaperAirplaneIcon, StopIcon } from '@heroicons/react/20/solid';
-import { useParams } from 'next/navigation';
+import cn from 'lib/cn';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 
 import { useAccountContext } from '../context/account';
 import handleShiftNewlines from '../lib/misc/handleshiftnewlines';
 import classNames from './ClassNames';
-import cn from 'lib/cn';
 
 export default function SessionChatbox({
 	lastMessageFeedback,
@@ -14,6 +13,7 @@ export default function SessionChatbox({
 	onSubmit,
 	scrollToBottom,
 	stopGenerating,
+	showConversationStarters,
 	app
 }) {
 	//TODO: just get scrolltobottom from chatcontext
@@ -21,7 +21,6 @@ export default function SessionChatbox({
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const posthog = usePostHog();
-
 	const [promptValue, setPromptValue] = useState('');
 
 	return (
@@ -42,7 +41,8 @@ export default function SessionChatbox({
 								onSubmit,
 								setPromptValue,
 								scrollToBottom,
-								chatBusyState
+								chatBusyState,
+								showConversationStarters
 							)
 						}
 						rows={Math.min(10, promptValue.split(/\r?\n/).length)}
@@ -70,7 +70,7 @@ export default function SessionChatbox({
 				</div>
 			</div>*/}
 				<div className='flex-shrink-0'>
-					{chatBusyState ? (
+					{chatBusyState && !showConversationStarters ? (
 						<div className='flex items-end basis-1/2'>
 							<button
 								onClick={e => {
@@ -95,13 +95,15 @@ export default function SessionChatbox({
 						</div>
 					) : (
 						<button
-							disabled={chatBusyState || promptValue.trim().length === 0}
+							disabled={
+								(chatBusyState && !showConversationStarters) || promptValue.trim().length === 0
+							}
 							type='submit'
 							className={cn(
 								'bg-indigo-600 rounded-full p-2 grid place-items-center pointer-events-auto cursor-wait',
 								{
 									'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600':
-										!chatBusyState
+										!chatBusyState || showConversationStarters
 								}
 							)}
 						>

@@ -40,6 +40,7 @@ const authorizationMethods = [
 	{ label: 'Bearer', value: 'bearer' },
 	{ label: 'Custom', value: 'custom' }
 ];
+import { usePostHog } from 'posthog-js/react';
 import { runtimeOptions } from 'struct/function';
 
 const tabs = [
@@ -78,6 +79,7 @@ export default function ToolForm({
 	const { account, csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const posthog = usePostHog();
 	const [currentTab, setCurrentTab] = useState(tabs[0]);
 	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = tool?.data?.builtin === true;
@@ -207,6 +209,7 @@ export default function ToolForm({
 	async function toolPost(e) {
 		e.preventDefault();
 		setSubmitting(true); // Set submitting to true
+		const posthogEvent = editing ? 'updateTool' : 'createTool';
 		try {
 			const body = {
 				_csrf: e.target._csrf.value,
@@ -268,6 +271,12 @@ export default function ToolForm({
 						toolId: tool._id
 					},
 					res => {
+						posthog.capture(posthogEvent, {
+							name: body.name,
+							type: body.type,
+							toolId: tool._id,
+							revisionId: tool?.revisionId
+						});
 						if (toolType === ToolType.FUNCTION_TOOL && res?.functionNeedsUpdate === true) {
 							toast.info('Tool updating...');
 							router.push(`/${resourceSlug}/tools`);
@@ -276,6 +285,13 @@ export default function ToolForm({
 						}
 					},
 					err => {
+						posthog.capture(posthogEvent, {
+							name: body.name,
+							type: body.type,
+							toolId: tool._id,
+							revisionId: tool?.revisionId,
+							error: err
+						});
 						toast.error(err);
 						setSubmitting(false);
 					},
@@ -285,6 +301,12 @@ export default function ToolForm({
 				const addedTool = await API.addTool(
 					body,
 					() => {
+						posthog.capture(posthogEvent, {
+							name: body.name,
+							type: body.type,
+							toolId: tool._id,
+							revisionId: tool?.revisionId
+						});
 						if (!compact) {
 							if (toolType === ToolType.FUNCTION_TOOL) {
 								toast.info('Tool deploying...');
@@ -295,6 +317,13 @@ export default function ToolForm({
 						}
 					},
 					err => {
+						posthog.capture(posthogEvent, {
+							name: body.name,
+							type: body.type,
+							toolId: tool._id,
+							revisionId: tool?.revisionId,
+							error: err
+						});
 						toast.error(err);
 					},
 					compact ? null : router

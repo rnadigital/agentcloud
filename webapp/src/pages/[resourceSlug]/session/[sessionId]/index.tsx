@@ -16,8 +16,6 @@ const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
 import ContentLoader from 'react-content-loader';
 
-export const chatBoxEndID = 'chatBoxEnd';
-
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
 
@@ -275,9 +273,6 @@ export default function Session(props) {
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
-				<button onClick={() => bottomRef.current.scrollIntoView({ behavior: 'smooth' })}>
-					hello
-				</button>
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
@@ -331,6 +326,8 @@ export default function Session(props) {
 									<div className='w-full flex items-center gap-2 py-1'>
 										<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
 										<ConversationStarters
+											session={session}
+											app={app}
 											sendMessage={message => sendMessage(message, null)}
 											conversationStarters={app?.chatAppConfig?.conversationStarters}
 										/>
@@ -352,6 +349,7 @@ export default function Session(props) {
 												chatBusyState={chatBusyState}
 												stopGenerating={stopGenerating}
 												onSubmit={sendMessage}
+												showConversationStarters={showConversationStarters}
 											/>
 										)
 									) : (
@@ -371,8 +369,6 @@ export default function Session(props) {
 						</div>
 					</div>
 				</div>
-
-				<div id={chatBoxEndID} />
 			</div>
 		</>
 	);

@@ -46,6 +46,7 @@ const noNavPages = [
 	'/requestchangepassword',
 	'/verify',
 	'/redirect',
+	'/s/',
 	'/onboarding',
 	'/onboarding/configuremodels'
 ];
@@ -132,10 +133,9 @@ export default withRouter(function Layout(props) {
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
-	// const showNavs = !noNavPages.includes(router.pathname.em);
-	const showNavs = !noNavPages.some(page => router.pathname.endsWith(page));
-
 	const path = usePathname();
+	const showNavs = account && !noNavPages.some(p => path.includes(p));
+	const { theme, toggleTheme } = useContext(ThemeContext);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 
@@ -568,11 +568,11 @@ export default withRouter(function Layout(props) {
 												router
 											);
 										}}
-										className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded'
+										className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded dark:text-white'
 									>
 										<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
 									</button>
-									<span>{chatContext.app.name}</span>
+									<span className='dark:text-white'>{chatContext.app.name}</span>
 								</h5>
 							)}
 

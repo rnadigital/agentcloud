@@ -9,6 +9,7 @@ import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
@@ -47,6 +48,7 @@ export default function AgentForm({
 	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
+	const posthog = usePostHog();
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -82,6 +84,13 @@ export default function AgentForm({
 
 	async function agentPost(e) {
 		e.preventDefault();
+		posthog.capture(editing ? 'updateAgent' : 'createAgent', {
+			name: e.target.name.value,
+			tools: (toolState || []).length,
+			datasources: (datasourceState || []).length,
+			modelId,
+			functionModelId
+		});
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -164,7 +173,8 @@ export default function AgentForm({
 						ModelType.OPENAI,
 						ModelType.OLLAMA,
 						ModelType.COHERE,
-						ModelType.ANTHROPIC
+						ModelType.ANTHROPIC,
+						ModelType.GOOGLE_VERTEX
 					]}
 				/>
 			);
@@ -231,7 +241,7 @@ export default function AgentForm({
 						>
 							System Message
 						</label>
-						<div className='relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<label
 								htmlFor='role'
 								className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -248,7 +258,7 @@ export default function AgentForm({
 								rows={3}
 							/>
 						</div>
-						<div className='relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<div className='bg-white dark:bg-slate-800 relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<label
 								htmlFor='goal'
 								className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -265,7 +275,7 @@ export default function AgentForm({
 								rows={2}
 							/>
 						</div>
-						<div className='relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<div className='bg-white dark:bg-slate-800 relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<label
 								htmlFor='backstory'
 								className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -364,26 +374,6 @@ export default function AgentForm({
 								<p className='mt-3 text-sm leading-6 text-gray-600'>
 									Enables detailed logging of the agent&apos;s execution for debugging or monitoring
 									purposes when enabled.
-								</p>
-							</div>
-
-							<div className='sm:col-span-12'>
-								<label
-									htmlFor='allowDelegation'
-									className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
-									<input
-										type='checkbox'
-										id='allowDelegation'
-										name='allowDelegation'
-										checked={allowDelegation}
-										onChange={e => setAllowDelegation(e.target.checked)}
-										className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-									/>
-									Allow Delegation
-								</label>
-								<p className='mt-3 text-sm leading-6 text-gray-600'>
-									Allow this agent to be assigned appropriate tasks automatically.
 								</p>
 							</div>
 						</div>

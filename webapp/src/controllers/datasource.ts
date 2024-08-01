@@ -916,7 +916,7 @@ export async function uploadFileApi(req, res, next) {
 		file: `/tmp/${filename}`
 	});
 	const metadata = {
-		stream: newDatasourceId.toString(),
+		_stream: newDatasourceId.toString(),
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
 	};
 
