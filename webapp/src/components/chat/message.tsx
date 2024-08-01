@@ -5,7 +5,6 @@ import { relativeString } from 'misc/time';
 import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { FeedbackOption } from 'struct/session';
 
 import { useChatContext } from '../../context/chat';
 
@@ -14,9 +13,8 @@ const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false
 });
-import Blockies from 'react-blockies';
-import { toast } from 'react-toastify';
 import cn from 'lib/cn';
+import { toast } from 'react-toastify';
 
 const COLLAPSE_AFTER_LINES = 10;
 
