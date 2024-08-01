@@ -51,7 +51,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 							&quot;<em>{task.description}</em>&quot;
 						</p>
 						{task.agentId && (
-							<p className='text-xs text-gray-500 mt-1 dark:text-gray-50'>
+							<p className='text-xs text-gray-500 mt-1 dark:text-gray-50 break-all'>
 								Agent ID: {task.agentId.toString()}
 							</p>
 						)}
