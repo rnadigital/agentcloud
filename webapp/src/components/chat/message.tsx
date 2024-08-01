@@ -16,6 +16,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 });
 import Blockies from 'react-blockies';
 import { toast } from 'react-toastify';
+import cn from 'lib/cn';
 
 const COLLAPSE_AFTER_LINES = 10;
 
@@ -219,13 +220,13 @@ export function Message({
 		//TODO: enum and handle "other" types not just like bubble
 		return (
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-700 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-800 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
 			>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
 					className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}
 				>
-					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
+					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-800 rounded-lg'>
 						{completed ? (
 							<CheckCircleIcon className='fill-green-600 h-5 me-2' />
 						) : (
@@ -247,7 +248,12 @@ export function Message({
 
 	const authorNameSection = (
 		/*!sameAuthorAsPrevious && */ <div
-			className={`grid grid-cols-1 xl:grid-cols-5 ${prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-600' : ''} ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''}`}
+			className={cn(
+				`grid grid-cols-1 xl:grid-cols-5 dark:text-white`,
+				prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-800' : '',
+				incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800',
+				isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''
+			)}
 		>
 			<div className='invisible xl:visible col-span-1'></div>
 			<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
@@ -259,7 +265,16 @@ export function Message({
 
 	const messageBodySection = (
 		<div
-			className={`shadow-sm flex transition-colors ${incoming ? 'bg-indigo-500' : isThought ? 'bg-slate-700 text-white' : 'bg-white dark:bg-slate-900'} rounded-lg ${incoming ? 'rounded-br-none' : 'rounded-tl-none'} ${messageType !== 'code' ? 'px-3 py-2' : 'p-2'} overflow-x-auto  ${isFeedback && isLastMessage ? 'dark:bg-yellow-700 dark:border-yellow-600' : ''}`}
+			className={cn(
+				'shadow-sm flex transition-colors rounded-lg overflow-x-auto dark:text-white',
+				incoming
+					? 'bg-indigo-500'
+					: isThought
+						? 'bg-slate-800 text-white'
+						: 'bg-white dark:bg-slate-900',
+				incoming ? 'rounded-br-none' : 'rounded-tl-none',
+				messageType !== 'code' ? 'px-3 py-2' : 'p-2'
+			)}
 		>
 			<div className={`${incoming ? 'text-white' : ''} w-full`}>
 				{isThought ? (
@@ -308,7 +323,7 @@ export function Message({
 		<>
 			{authorNameSection}
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-yellow-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-800'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}
 			>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
