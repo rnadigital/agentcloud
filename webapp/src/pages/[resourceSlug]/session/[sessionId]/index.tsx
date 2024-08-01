@@ -16,6 +16,8 @@ const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
 import ContentLoader from 'react-content-loader';
 
+export const chatBoxEndID = 'chatBoxEnd';
+
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
 
@@ -39,28 +41,21 @@ export default function Session(props) {
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+
+	const bottomRef = useRef<HTMLDivElement>(null);
+
 	useEffect(() => {
-		if (!scrollContainerRef || !scrollContainerRef.current) {
-			return;
-		}
-		const handleScroll = e => {
-			const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-			// Check if scrolled to the bottom
-			const isCurrentlyAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-			if (isCurrentlyAtBottom !== isAtBottom) {
-				setIsAtBottom(isCurrentlyAtBottom);
-				if (isCurrentlyAtBottom && messages?.length > 0) {
-					setLastSeenMessageId(messages[messages.length - 1]._id);
-				}
+		const scrollToBottom = () => {
+			if (bottomRef.current) {
+				bottomRef.current.scrollIntoView({ behavior: 'smooth' });
 			}
 		};
-		const container = scrollContainerRef.current;
-		container.addEventListener('scroll', handleScroll);
-		// Cleanup
-		return () => {
-			container.removeEventListener('scroll', handleScroll);
-		};
-	}, [isAtBottom, scrollContainerRef?.current]);
+
+		const timeoutId = setTimeout(scrollToBottom, 100);
+
+		return () => clearTimeout(timeoutId);
+	}, [messages]);
+
 	const sentLastMessage =
 		!messages || (messages.length > 0 && messages[messages.length - 1].incoming);
 	const lastMessageFeedback =
@@ -142,6 +137,7 @@ export default function Session(props) {
 			setShowConversationStarters(false);
 		}
 	}, [messages]);
+
 	useEffect(() => {
 		setShowConversationStarters(false);
 	}, [sessionId]);
@@ -274,11 +270,15 @@ export default function Session(props) {
 			<Head>
 				<title>{`Session - ${sessionId}`}</title>
 			</Head>
+
 			<div
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
-				<div className='overflow-y-auto py-2' ref={scrollContainerRef}>
+				<button onClick={() => bottomRef.current.scrollIntoView({ behavior: 'smooth' })}>
+					hello
+				</button>
+				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
 							const authorName = m?.authorName || m?.message?.authorName;
@@ -319,6 +319,8 @@ export default function Session(props) {
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						</div>
 					)}
+
+					<div ref={bottomRef} />
 				</div>
 				<div className='flex flex-col mt-auto pt-4 border-t mb-2'>
 					<div className='flex flex-row justify-center'>
@@ -369,6 +371,8 @@ export default function Session(props) {
 						</div>
 					</div>
 				</div>
+
+				<div id={chatBoxEndID} />
 			</div>
 		</>
 	);
