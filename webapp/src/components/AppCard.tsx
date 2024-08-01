@@ -88,7 +88,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 						leaveTo='transform opacity-0 scale-95'
 					>
 						<Menu.Items className='absolute z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-							{/*<Menu.Item>
+							<Menu.Item>
 								{({ active }) => (
 									<a
 										href={`/${resourceSlug}/app/${app._id}/edit`}
@@ -100,7 +100,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 										Edit
 									</a>
 								)}
-							</Menu.Item>*/}
+							</Menu.Item>
 							<Menu.Item>
 								{({ active }) => (
 									<button
