@@ -259,25 +259,29 @@ export async function changePassword(req, res) {
 export async function verifyToken(req, res) {
 	let validationError = chainValidations(
 		req.body,
-		[{ field: 'token', validation: { notEmpty: true, lengthMin: 1, ofType: 'string' } }],
-		{ token: 'Token' }
+		[
+			{ field: 'token', validation: { ofType: 'string' } },
+			{ field: 'checkoutsession', validation: { ofType: 'string' } }
+		],
+		{ token: 'Token', checkoutsession: 'Checkout Session ID' }
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	const deletedVerification = await getAndDeleteVerification(
-		req.body.token,
-		VerificationTypes.VERIFY_EMAIL
-	);
-
-	const { password, token } = req.body;
+	const { password, token, checkoutsession } = req.body;
+	let deletedVerification;
+	if (token) {
+		deletedVerification = await getAndDeleteVerification(
+			req.body.token,
+			VerificationTypes.VERIFY_EMAIL
+		);
+	}
 	let accountId = deletedVerification?.accountId;
 	let stripeCustomerId;
 	let foundCheckoutSession;
-	if ((!deletedVerification || !deletedVerification.token || !accountId) && token?.length <= 66) {
+	if ((!deletedVerification || !deletedVerification?.token || !accountId) && checkoutsession) {
 		// StripeInvalidRequestError: Invalid string: 34cc47ea5d...bbe94fe52b; must be at most 66 characters
-		//Assuming the token isn't a verification but a stripe checkoutsession ID
-		const checkoutSessionId = token;
+		const checkoutSessionId = checkoutsession;
 		try {
 			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
 		} catch (e) {
@@ -307,25 +311,8 @@ export async function verifyToken(req, res) {
 		if (!addedAccount.insertedId) {
 			return dynamicResponse(req, res, 400, { error: 'Account creation error' });
 		}
-		accountId = addedAccount.insertedId;
+		return dynamicResponse(req, res, 200, {});
 	}
-
-	/*
-	if (foundCheckoutSession && stripeCustomerId && accountId) {
-		const { planItem, addonUsersItem, addonStorageItem } =
-			await getSubscriptionsDetails(stripeCustomerId);
-		await setStripeCustomerId(accountId, stripeCustomerId);
-		await updateStripeCustomer(stripeCustomerId, {
-			stripePlan: productToPlanMap[planItem.price.product],
-			stripeAddons: {
-				users: addonUsersItem ? addonUsersItem.quantity : 0,
-				storage: addonStorageItem ? addonStorageItem.quantity : 0
-			},
-			stripeEndsAt: foundCheckoutSession?.current_period_end * 1000
-		});
-	}
-	*/
-
 	const foundAccount = await getAccountById(accountId);
 	if (!foundAccount) {
 		return dynamicResponse(req, res, 400, { error: 'Account already verified or not found' });
