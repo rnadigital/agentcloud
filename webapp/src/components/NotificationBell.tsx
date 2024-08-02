@@ -6,15 +6,15 @@ import { BellIcon } from '@heroicons/react/24/outline';
 import { Notification } from 'components/Notification';
 import { useNotificationContext } from 'context/notifications';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
 import { useAccountContext } from '../context/account';
 
 export default function NotificationBell() {
-	const router = useRouter();
-	const { resourceSlug } = router.query;
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const { csrf, account } = accountContext as any;
+	const router = useRouter();
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
 	const [more, setMore] = useState(false);
 	async function markSeen(notificationId) {
@@ -33,6 +33,10 @@ export default function NotificationBell() {
 			null
 		);
 	}
+
+	useEffect(() => {
+		refreshNotificationContext();
+	}, [resourceSlug]);
 
 	return (
 		<Menu as='div' className='relative dark:text-white'>

@@ -21,7 +21,7 @@ export function SocketWrapper({ children }) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
-	const { resourceSlug } = router.query || account?.currentTeam;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
 	const [_room, setRoom] = useState(resourceSlug);
 

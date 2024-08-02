@@ -17,7 +17,7 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query || account?.currentTeam;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const maxSize = 10 * 1024 * 1024; // 10MB
 
 	const onDrop = useCallback(acceptedFiles => {
