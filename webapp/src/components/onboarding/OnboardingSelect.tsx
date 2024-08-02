@@ -112,12 +112,12 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 											{options
 												.filter(o => o.value)
 												.map(option => {
-													const modelAllowed = pricingMatrix[stripePlan]?.llmModels?.includes(
-														option.value
-													);
+													// const modelAllowed = pricingMatrix[stripePlan]?.llmModels?.includes(
+													// 	option.value
+													// );
 													return (
 														<ListboxOption
-															disabled={!modelAllowed}
+															// disabled={!modelAllowed}
 															key={option.value}
 															className={({ focus }) =>
 																clsx(
@@ -150,12 +150,12 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 																				Recommended
 																			</span>
 																		)}
-																		{!modelAllowed && (
+																		{/* {!modelAllowed && (
 																			<span className='bg-green-700 text-white text-xs font-semibold px-2 py-1 rounded ml-11 flex ms-4'>
 																				<LockClosedIcon className='h-4 w-4 me-1' />
 																				Upgrade to Teams Plan
 																			</span>
-																		)}
+																		)} */}
 																	</span>
 																</>
 															)}
