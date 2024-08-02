@@ -205,7 +205,7 @@ class Task(BaseModel):
     toolIds: Optional[List[PyObjectId]] = None
     tools: Optional[Tool] = None
     asyncExecution: Optional[bool] = False
-    context: Optional[str] = None
+    context: Optional[List[PyObjectId]] = None
     outputJSON: Optional[BaseModel] = None
     outputPydantic: Optional[BaseModel] = None
     outputFile: Optional[str] = None
