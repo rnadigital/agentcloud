@@ -158,7 +158,7 @@ export async function addAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
 			},
 			{
 				field: 'type',
@@ -401,7 +401,7 @@ export async function editAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode !== SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
 			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
