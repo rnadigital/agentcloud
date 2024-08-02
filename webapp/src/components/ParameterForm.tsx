@@ -48,7 +48,7 @@ export default function ParameterForm({
 						required
 						onChange={e => updateParameter(index, 'name', e.target.value)}
 						className={cn(
-							'bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm focus:ring-indigo-600',
+							'bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm focus:ring-indigo-600',
 							{ 'col-span-3': disableDescription }
 						)}
 					/>
