@@ -221,7 +221,7 @@ export default function CrewAppForm({
 						ModelType.GROQ,
 						ModelType.OPENAI,
 						ModelType.OLLAMA,
-						ModelType.COHERE,
+						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
 						ModelType.GOOGLE_VERTEX
 					]}

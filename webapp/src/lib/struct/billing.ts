@@ -238,8 +238,8 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
 		maxFunctionTools: 1,
 		storageLocations: ['US'],
-		llmModels: ModelTypes,
-		embeddingModels: ModelTypes,
+		llmModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
+		embeddingModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
 		cronProps: {
 			allowedPeriods: ['year', 'month', 'week', 'day'],
 			//allowedDropdowns: ['period', 'months', 'month-days']

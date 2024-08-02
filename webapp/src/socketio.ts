@@ -115,7 +115,7 @@ export function initSocket(rawHttpServer) {
 					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
 						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
 					);
-					if (!sessionTeamMatch) {
+					if (!sessionTeamMatch && !socketRequest.locals.isAgentBackend) {
 						return;
 					}
 					socket.join(room);

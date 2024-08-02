@@ -113,19 +113,8 @@ export default function Register() {
 							</div>
 
 							<div className='flex items-center justify-start'>
-								<InputField<RegisterFormValues>
-									name='tos'
-									control={control}
-									type='checkbox'
-									rules={{
-										required: 'You must agree to the terms of service and privacy policy'
-									}}
-								/>
-								<label
-									htmlFor='tos'
-									className='ml-3 block text-sm text-gray-900 dark:text-slate-400'
-								>
-									I agree to the{' '}
+								<label htmlFor='tos' className='block text-sm text-gray-900 dark:text-slate-100'>
+									By using Agent Cloud, you agree to the{' '}
 									<a
 										href='https://www.agentcloud.dev/legal/terms'
 										target='_blank'
