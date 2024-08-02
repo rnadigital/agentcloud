@@ -4,7 +4,7 @@ export enum ModelType {
 	OPENAI = 'open_ai',
 	FASTEMBED = 'fastembed',
 	OLLAMA = 'ollama',
-	COHERE = 'cohere',
+	// COHERE = 'cohere',
 	ANTHROPIC = 'anthropic',
 	GROQ = 'groq',
 	GOOGLE_VERTEX = 'google_vertex'
@@ -17,10 +17,10 @@ export const modelOptions = [
 		iconURL: '/images/onboarding/openai.png',
 		recommended: true
 	},
+	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.png' },
 	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.png' },
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.png' },
-	{ value: ModelType.COHERE, label: 'Cohere', iconURL: '/images/onboarding/cohere.png' },
-	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.png' },
+	// { value: ModelType.COHERE, label: 'Cohere', iconURL: '/images/onboarding/cohere.png' },
 	{ value: ModelType.GROQ, label: 'Groq', iconURL: '/images/onboarding/groq.png' },
 	{
 		value: ModelType.GOOGLE_VERTEX,
@@ -53,9 +53,9 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 		base_url: { type: 'text', tooltip: 'Ollama URL (not localhost)' },
 		api_key: { type: 'text' }
 	},
-	[ModelType.COHERE]: {
-		cohere_api_key: { type: 'text' }
-	},
+	// [ModelType.COHERE]: {
+	// 	cohere_api_key: { type: 'text' }
+	// },
 	[ModelType.ANTHROPIC]: {
 		api_key: { type: 'text' }
 	},
@@ -112,7 +112,7 @@ export const ModelList = {
 		'mixtral:instruct',
 		'nomic-embed-text'
 	],
-	[ModelType.COHERE]: ['command-r-plus'],
+	// [ModelType.COHERE]: ['command-r-plus'],
 	[ModelType.ANTHROPIC]: [
 		'claude-3-5-sonnet-20240620',
 		'claude-3-sonnet-20240229',

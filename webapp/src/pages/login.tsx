@@ -18,7 +18,6 @@ export interface LoginFormValues {
 	name: string;
 	email: string;
 	password: string;
-	tos: boolean;
 }
 
 export default function Login() {
