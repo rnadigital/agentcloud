@@ -4,10 +4,8 @@ import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
-import CopyToClipboardInput from 'components/CopyToClipboardInput';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
-import InfoAlert from 'components/InfoAlert';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
@@ -15,7 +13,6 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
@@ -216,7 +213,10 @@ export default function ChatAppForm({
 	async function createDatasourceCallback(createdDatasource) {
 		console.log('createDatasourceCallback', createdDatasource);
 		(await fetchFormData) && fetchFormData();
-		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setDatasourceState(oldDatasources => {
+			const newOption = { label: createdDatasource.name, value: createdDatasource.datasourceId };
+			return Array.isArray(oldDatasources) ? oldDatasources.concat(newOption) : [newOption];
+		});
 		setModalOpen(false);
 	}
 
@@ -272,16 +272,6 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={toolCallback}
 					initialType={ToolType.FUNCTION_TOOL}
-				/>
-			);
-			break;
-		case 'datasource_tool':
-			modal = (
-				<CreateToolModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					callback={toolCallback}
-					initialType={ToolType.RAG_TOOL}
 				/>
 			);
 			break;
@@ -522,7 +512,7 @@ export default function ChatAppForm({
 										tools={toolChoices.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
 										toolState={datasourceState}
 										onChange={setDatasourceState}
-										setModalOpen={x => setModalOpen('datasource_tool')}
+										setModalOpen={x => setModalOpen('datasource')}
 										enableAddNew={true}
 									/>
 								</>
