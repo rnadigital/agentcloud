@@ -37,7 +37,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 		fetchFormData && fetchFormData();
 	}
 	return (
-		<div className='w-full max-w-sm rounded-xl bg-white border dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
+		<div className='w-full max-w-sm rounded-xl bg-white border dark:border-slate-700 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<span className='flex justify-between'>
 				<span className='space-x-2'>
 					<span
@@ -74,7 +74,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 					)}
 				</span>
 				<Menu as='div' className=''>
-					<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 dark:hover:text-white hover:bg-gray-700 rounded'>
+					<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 dark:hover:text-white dark:hover:bg-gray-700 rounded'>
 						<span className='sr-only'>Open options</span>
 						<EllipsisHorizontalIcon className='h-5 w-5' aria-hidden='true' />
 					</Menu.Button>
