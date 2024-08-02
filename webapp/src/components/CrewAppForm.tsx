@@ -91,7 +91,6 @@ export default function CrewAppForm({
 
 	async function appPost(e) {
 		e.preventDefault();
-		console.log(e.target.verbose.value);
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
