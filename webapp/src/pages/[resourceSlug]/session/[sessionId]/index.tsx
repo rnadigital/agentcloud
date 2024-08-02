@@ -349,7 +349,7 @@ export default function Session(props) {
 
 					<div ref={bottomRef} />
 				</div>
-				<div className='flex flex-col mt-auto pt-4 border-t mb-2'>
+				<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
 					<div className='flex flex-row justify-center'>
 						<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
 							{showConversationStarters &&

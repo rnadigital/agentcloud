@@ -74,9 +74,9 @@ export default function AddApp(props: AddAppProps) {
 							Easily Build Intelligent Chat and Process Apps to Streamline Your Workflow
 						</h2>
 						<div className='md:flex gap-8 w-full mt-10'>
-							<div className='flex-1 border border-gray-200 p-4 rounded-md group dark:bg-gray-700'>
+							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
 								<img src='/images/get-started/create-chat-app.png' alt='Create Chat App' />
-								<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
+								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
 									<div className='flex'>
 										<img
 											src='/images/get-started/chat-app-square.png'
@@ -107,9 +107,9 @@ export default function AddApp(props: AddAppProps) {
 								</div>
 							</div>
 
-							<div className='flex-1 border border-gray-200 p-4 rounded-md group dark:bg-gray-700'>
+							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
 								<img src='/images/get-started/create-process-app.png' alt='Create Process App' />
-								<div className='flex flex-col md:flex-row border-t border-gray-200 pt-4'>
+								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
 									<div className='flex'>
 										<img
 											src='/images/get-started/process-app-square.png'
