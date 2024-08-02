@@ -252,7 +252,6 @@ class CrewAIBuilder:
                 exclude={"id", "tasks", "agents"}
             ),
             manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
-            verbose=True,
         )
 
     def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
