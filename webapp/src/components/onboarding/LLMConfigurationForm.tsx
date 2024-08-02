@@ -291,7 +291,7 @@ export default function LLMConfigurationForm() {
 					<div className='flex'>
 						<div className='w-1/2 sm:w-2/5'>
 							<OnboardingSelect<LLMConfigurationFormValues>
-								options={modelOptions}
+								options={modelOptions.filter(mo => mo?.value !== ModelType.FASTEMBED)}
 								classNames={{
 									listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
 									listboxOptions: 'left-0'
