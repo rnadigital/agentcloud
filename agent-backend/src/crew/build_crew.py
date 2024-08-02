@@ -1,4 +1,5 @@
 import logging
+import uuid
 from textwrap import dedent
 from typing import Any, List, Set, Type
 from datetime import datetime
@@ -153,7 +154,7 @@ class CrewAIBuilder:
                     if not context_task:
                         raise CrewAIBuilderException(
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
-                            f"(Is it ordered after?)")
+                            f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
 
             self.crew_tasks[key] = Task(
@@ -253,7 +254,12 @@ class CrewAIBuilder:
         try:
             self.build_tasks()
         except CrewAIBuilderException as ce:
-            self.send_to_sockets(text=str(ce))
+            self.send_to_sockets(text=f"""Error:
+            ``` 
+            {str(ce)}
+            ```
+            """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                                 timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
         # 5. Build chat Agent + Task
         # self.build_chat()
@@ -270,8 +276,8 @@ class CrewAIBuilder:
         )
 
     def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
-        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
-        
+                        timestamp=None, display_type='bubble', author_name='System', overwrite=False):
+
         if type(text) != str:
             text = "NON STRING MESSAGE"
 
