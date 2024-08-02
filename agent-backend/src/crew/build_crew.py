@@ -145,9 +145,20 @@ class CrewAIBuilder:
                 human = CustomHumanInput(self.socket, self.session_id)
                 task_tools_objs["human_input"] = human
 
+            context_task_objs = []
+            if task.context:
+                for context_task_id in task.context:
+                    context_task = self.crew_tasks.get(keyset(context_task_id))
+                    if not context_task:
+                        raise Exception(
+                            f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
+                            f"(Is it ordered after?)")
+                    context_task_objs.append(context_task)
+
             self.crew_tasks[key] = Task(
-                **task.model_dump(exclude_none=True, exclude_unset=True, exclude={"id"}),
-                agent=agent_obj, tools=task_tools_objs.values()
+                **task.model_dump(exclude_none=True, exclude_unset=True, exclude={"id", "context"}),
+                agent=agent_obj, tools=task_tools_objs.values(),
+                context=context_task_objs
             )
 
     def make_user_question(self):
