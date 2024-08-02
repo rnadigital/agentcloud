@@ -221,7 +221,7 @@ export const pricingMatrix: PricingMatrix = {
 		cronProps: {
 			disabled: true
 		},
-		allowFunctionTools: false,
+		allowFunctionTools: false
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -248,7 +248,7 @@ export const pricingMatrix: PricingMatrix = {
 			//allowedDropdowns: ['period', 'months', 'month-days']
 			allowedDropdowns: ['period']
 		},
-		allowFunctionTools: false,
+		allowFunctionTools: false
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
