@@ -5,18 +5,17 @@ import { useAccountContext } from 'context/account';
 import FormContext from 'context/connectorform';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function CreateDatasourceModal({ open, setOpen, callback, initialStep }) {
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
-	const [error, setError] = useState();
 	const { models } = state as any;
 
 	async function fetchDatasourceFormData() {
-		await API.getModels({ resourceSlug }, dispatch, setError, router);
+		await API.getModels({ resourceSlug }, dispatch, toast.error, router);
 	}
 
 	useEffect(() => {

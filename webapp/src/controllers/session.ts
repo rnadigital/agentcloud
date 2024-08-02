@@ -28,16 +28,11 @@ import { SharingMode } from 'struct/sharing';
 import { chainValidations } from 'utils/validationUtils';
 
 export async function sessionsData(req, res, _next) {
-	const [crews, sessions, agents] = await Promise.all([
-		getCrewsByTeam(req.params.resourceSlug),
-		getSessionsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug)
-	]);
+	const before = req?.query?.before === 'null' ? null : req?.query?.before;
+	const sessions = await getSessionsByTeam(req.params.resourceSlug, before, 10);
 	return {
 		csrf: req.csrfToken(),
-		crews,
-		sessions,
-		agents
+		sessions
 	};
 }
 
@@ -46,6 +41,14 @@ export async function sessionsData(req, res, _next) {
  * team sessions json data
  */
 export async function sessionsJson(req, res, next) {
+	let validationError = chainValidations(
+		req.query,
+		[{ field: 'before', validation: { ofType: 'string' } }],
+		{ id: 'before' }
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 	const data = await sessionsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }

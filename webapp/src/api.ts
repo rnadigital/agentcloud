@@ -178,8 +178,9 @@ export function addSession(body, dispatch, errorCallback, router) {
 	);
 }
 export function getSessions(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({ before: body?.before });
 	return ApiCall(
-		`/${body.resourceSlug}/sessions.json`,
+		`/${body.resourceSlug}/sessions.json?${queryString.toString()}`,
 		'GET',
 		null,
 		dispatch,

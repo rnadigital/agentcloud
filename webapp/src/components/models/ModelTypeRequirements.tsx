@@ -47,7 +47,7 @@ const ModelTypeRequirementsComponent = ({
 						type={req.type}
 						name={key}
 						id={key}
-						className='bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
+						className='bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
 						onChange={e => setConfig(e.target)}
 						required={req?.optional !== true}
 						defaultValue={config[key]}

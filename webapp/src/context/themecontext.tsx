@@ -25,7 +25,7 @@ export const ThemeProvider = ({ children }) => {
 	}, [theme]);
 
 	useEffect(() => {
-		if (localStorage.getItem('theme') === null) {
+		if (localStorage.getItem('theme') !== 'dark' || localStorage.getItem('theme') !== 'light') {
 			const checkDarkMode = () => {
 				const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 				setTheme(darkModeMediaQuery.matches ? 'dark' : 'light');

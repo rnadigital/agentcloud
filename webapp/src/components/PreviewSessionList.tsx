@@ -6,9 +6,9 @@ import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-// import ContentLoader from 'react-content-loader';
+
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
@@ -19,16 +19,48 @@ export default function PreviewSessionList(props) {
 	const { account, teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
-	const [state, dispatch] = useState(props);
+	const [state, setState] = useState(props);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState();
-	const { sessions } = state;
+	const sessionsRef = useRef(state?.sessions); // Use ref to keep track of sessions
+	const [lastFetchTime, setLastFetchTime] = useState(0);
+	const { scrollRef } = props;
 
-	async function fetchSessions(noLoading: boolean = false) {
+	useEffect(() => {
+		sessionsRef.current = state?.sessions; // Update ref whenever sessions state changes
+	}, [state?.sessions]);
+
+	async function fetchSessions(noLoading = false) {
+		const now = Date.now();
+		if (now - lastFetchTime < 1000) {
+			// throttle api calls
+			return;
+		}
+		setLastFetchTime(now);
 		!noLoading && setLoading(true);
 		const start = Date.now();
 		try {
-			await API.getSessions({ resourceSlug }, dispatch, setError, router);
+			await API.getSessions(
+				{
+					resourceSlug,
+					before: sessionsRef?.current?.length
+						? sessionsRef.current[sessionsRef.current.length - 1]._id
+						: null
+				},
+				res => {
+					setState(prevState => {
+						const newSessions = res?.sessions?.filter(s => {
+							return !prevState?.sessions || !prevState?.sessions?.find(ps => ps._id === s._id);
+						});
+						return {
+							...prevState,
+							sessions: (prevState?.sessions || []).concat(newSessions)
+						};
+					});
+				},
+				setError,
+				router
+			);
 		} finally {
 			!noLoading &&
 				setTimeout(
@@ -40,7 +72,7 @@ export default function PreviewSessionList(props) {
 		}
 	}
 
-	async function deleteSession(sessionId) {
+	const deleteSession = async sessionId => {
 		API.deleteSession(
 			{
 				_csrf: csrf,
@@ -48,6 +80,10 @@ export default function PreviewSessionList(props) {
 				sessionId
 			},
 			() => {
+				setState(prevState => ({
+					...prevState,
+					sessions: prevState?.sessions?.filter(s => s._id !== sessionId)
+				}));
 				fetchSessions(true);
 				toast('Deleted session');
 				if (router.asPath.includes(`/session/${sessionId}`)) {
@@ -59,6 +95,15 @@ export default function PreviewSessionList(props) {
 			},
 			router
 		);
+	};
+
+	function handleScroll() {
+		if (scrollRef?.current) {
+			const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+			if (scrollTop + clientHeight >= scrollHeight) {
+				fetchSessions(true);
+			}
+		}
 	}
 
 	useEffect(() => {
@@ -78,40 +123,33 @@ export default function PreviewSessionList(props) {
 		};
 	}, []);
 
+	useEffect(() => {
+		const scrollContainer = scrollRef?.current;
+		if (scrollContainer) {
+			scrollContainer.addEventListener('scroll', handleScroll);
+			return () => {
+				scrollContainer.removeEventListener('scroll', handleScroll);
+			};
+		}
+	}, [state?.sessions]);
+
 	if (!resourceSlug) {
 		return null;
 	}
 
-	// if (!sessions || loading) {
-	// 	// return new Array(5).fill(0).map((x, xi) => (<div key={`contentLoader_${xi}`} className='ps-4 py-2 flex items-center justify-center'>
-	// 	// 	<ContentLoader
-	// 	// 		speed={2}
-	// 	// 		width={'100%'}
-	// 	// 		height={10}
-	// 	// 		viewBox='0 0 100% 10'
-	// 	// 		backgroundColor='rgb(136, 143, 155)'
-	// 	// 		foregroundColor='#5a5a5a'
-	// 	// 	>
-	// 	// 		<rect x='0' y='0' rx='5' width='100%' height='7' />
-	// 	// 	</ContentLoader>
-	// 	// </div>));
-	// }
-
-	//TODO: sesion infinite scrolling/loading
-
 	return (
 		<li className='overflow-y-scroll pb-[220px]'>
-			{sessions?.length > 0 && (
+			{sessionsRef.current?.length > 0 && (
 				<div className='text-xs font-semibold leading-6 text-indigo-200'>Session History</div>
 			)}
-			{!sessions || loading ? (
+			{!sessionsRef.current || loading ? (
 				<div className='py-2 flex items-center justify-center'>
 					<ButtonSpinner />
 				</div>
 			) : (
 				<ul>
-					{sessions.map(s => (
-						<li key={s._id} className='flex justify-between'>
+					{state.sessions.map((s, si) => (
+						<li key={s._id} className='flex justify-between text-white'>
 							<Link
 								suppressHydrationWarning
 								className={`text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full ${router.asPath.includes(`/session/${s._id}`) ? 'bg-gray-800 text-white' : ''}`}
