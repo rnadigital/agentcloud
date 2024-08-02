@@ -73,6 +73,7 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('leave_room', async (room: string) => {
+			log('socket.id "%s" leave_room %s', socket.id, room);
 			socket.leave(room);
 		});
 

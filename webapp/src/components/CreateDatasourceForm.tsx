@@ -155,12 +155,14 @@ export default function CreateDatasourceForm({
 	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
 	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
 	// }
-	connectorOptions = connectorOptions.map(key => ({
-		value: connectors[key]?.definitionId,
-		label: connectors[key]?.name_oss || 'test',
-		icon: connectors[key]?.iconUrl_oss,
-		supportLevel: connectors[key]?.supportLevel_oss
-	}));
+	connectorOptions = connectorOptions
+		.filter(key => connectors[key]?.name_oss)
+		.map(key => ({
+			value: connectors[key]?.definitionId,
+			label: connectors[key]?.name_oss || 'test',
+			icon: connectors[key]?.iconUrl_oss,
+			supportLevel: connectors[key]?.supportLevel_oss
+		}));
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();

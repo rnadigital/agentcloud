@@ -82,7 +82,7 @@ export function StreamRow({
 				</div>
 			</div>
 			{stream?.stream?.jsonSchema && (
-				<div className={`p-4 bg-gray-100 rounded ${isExpanded ? '' : 'hidden'}`}>
+				<div className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'}`}>
 					<table className='w-full'>
 						<thead>
 							<tr>
