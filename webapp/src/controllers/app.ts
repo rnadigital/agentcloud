@@ -145,7 +145,8 @@ export async function addAppApi(req, res, next) {
 		type,
 		run,
 		sharingMode,
-		shareLinkShareId
+		shareLinkShareId,
+		verbose
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -238,7 +239,8 @@ export async function addAppApi(req, res, next) {
 			name,
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
-			process
+			process,
+			verbose
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
@@ -383,7 +385,8 @@ export async function editAppApi(req, res, next) {
 		modelId,
 		run,
 		sharingMode,
-		shareLinkShareId
+		shareLinkShareId,
+		verbose
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -476,7 +479,8 @@ export async function editAppApi(req, res, next) {
 			name,
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
-			process
+			process,
+			verbose
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {

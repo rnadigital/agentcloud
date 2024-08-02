@@ -243,7 +243,7 @@ class Crew(BaseModel):
     process: Optional[Process] = Process.Sequential
     managerLLM: Optional[Model] = None
     functionCallingLLM: Optional[Callable] = None
-    verbose: Optional[bool] = False
+    verbose: Optional[Union[int, bool]] = False
     memory: Optional[bool] = False
     cache: Optional[bool] = False
     config: Optional[Dict] = {}
