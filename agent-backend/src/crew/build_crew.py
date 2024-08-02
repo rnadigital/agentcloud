@@ -7,6 +7,7 @@ from crewai import Agent, Task, Crew
 from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
+from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
@@ -150,7 +151,7 @@ class CrewAIBuilder:
                 for context_task_id in task.context:
                     context_task = self.crew_tasks.get(keyset(context_task_id))
                     if not context_task:
-                        raise Exception(
+                        raise CrewAIBuilderException(
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered after?)")
                     context_task_objs.append(context_task)
@@ -249,7 +250,10 @@ class CrewAIBuilder:
         self.build_agents()
 
         # 4. Build Crew-Task from Task + Crew-Agent (#3) + Crew-Tool (#2)
-        self.build_tasks()
+        try:
+            self.build_tasks()
+        except CrewAIBuilderException as ce:
+            self.send_to_sockets(text=str(ce))
 
         # 5. Build chat Agent + Task
         # self.build_chat()
