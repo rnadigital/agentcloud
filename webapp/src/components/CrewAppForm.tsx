@@ -109,7 +109,7 @@ export default function CrewAppForm({
 			run,
 			sharingMode,
 			shareLinkShareId,
-			verbose: Number(e.target.verbose.value)
+			verbose: Number(e.target.verbose.value) || 0
 		};
 		if (editing === true) {
 			await API.editApp(
