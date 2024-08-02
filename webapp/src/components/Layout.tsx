@@ -33,7 +33,7 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
-import { Fragment, useContext, useState } from 'react';
+import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
@@ -138,6 +138,7 @@ export default withRouter(function Layout(props) {
 	const { theme, toggleTheme } = useContext(ThemeContext);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
+	const scrollRef = useRef(null);
 
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
@@ -245,7 +246,7 @@ export default withRouter(function Layout(props) {
 																		</li>
 																	);
 																})}
-																<PreviewSessionList />
+																<PreviewSessionList scrollRef={scrollRef} />
 															</ul>
 														</li>
 														<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4 ps-6'>
@@ -369,7 +370,10 @@ export default withRouter(function Layout(props) {
 				{showNavs && (
 					<div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
 						{/* Sidebar component, swap this element with another sidebar if you like */}
-						<div className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'>
+						<div
+							className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'
+							ref={scrollRef}
+						>
 							<div className='bg-gray-900 h-24 fixed z-50 w-[280px] left-0'>
 								<img
 									className='mx-auto'
@@ -415,7 +419,7 @@ export default withRouter(function Layout(props) {
 														</li>
 													);
 												})}
-												<PreviewSessionList />
+												<PreviewSessionList scrollRef={scrollRef} />
 											</ul>
 										</li>
 									</ul>
