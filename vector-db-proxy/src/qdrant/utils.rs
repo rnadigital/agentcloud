@@ -1,17 +1,18 @@
-use anyhow::{anyhow, Result};
-
-use crate::qdrant::models::{CreateDisposition, PointSearchResults, CollectionData};
-use crate::routes::models::FilterConditions;
-use crate::utils::conversions::convert_hashmap_to_filters;
-use qdrant_client::client::QdrantClient;
-use qdrant_client::prelude::*;
-use qdrant_client::qdrant::vectors_config::Config;
-use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
-use backoff::{ExponentialBackoff};
+
+use anyhow::{anyhow, Result};
 use backoff::backoff::Backoff;
+use backoff::ExponentialBackoff;
+use qdrant_client::client::QdrantClient;
+use qdrant_client::prelude::*;
+use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
+use qdrant_client::qdrant::vectors_config::Config;
+use tokio::sync::RwLock;
+
+use crate::qdrant::models::{CollectionData, CreateDisposition, PointSearchResults};
+use crate::routes::models::FilterConditions;
+use crate::utils::conversions::convert_hashmap_to_filters;
 
 pub struct Qdrant {
     client: Arc<RwLock<QdrantClient>>,
@@ -126,6 +127,7 @@ impl Qdrant {
                                         VectorParams {
                                             size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                             distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                                            on_disk: Some(true), // Serving vectors from Disk 
                                             ..Default::default()
                                         },
                                     )]
@@ -138,6 +140,7 @@ impl Qdrant {
                                 config: Some(Config::Params(VectorParams {
                                     size: vector_size, // This is the number of dimensions in the collection (basically the number of columns)
                                     distance: Distance::Cosine.into(), // The distance metric we will use in this collection
+                                    on_disk: Some(true),
                                     ..Default::default()
                                 })),
                             });
