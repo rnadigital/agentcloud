@@ -30,7 +30,7 @@ export default function PreviewSessionList(props) {
 		sessionsRef.current = state?.sessions; // Update ref whenever sessions state changes
 	}, [state?.sessions]);
 
-	async function fetchSessions(noLoading = false) {
+	async function fetchSessions(noLoading = false, fromStart = false) {
 		const now = Date.now();
 		if (now - lastFetchTime < 1000) {
 			// throttle api calls
@@ -39,22 +39,30 @@ export default function PreviewSessionList(props) {
 		setLastFetchTime(now);
 		!noLoading && setLoading(true);
 		const start = Date.now();
+		console.log('fetchSessions fromStart', fromStart);
 		try {
 			await API.getSessions(
 				{
 					resourceSlug,
-					before: sessionsRef?.current?.length
-						? sessionsRef.current[sessionsRef.current.length - 1]._id
-						: null
+					before:
+						sessionsRef?.current?.length && !fromStart
+							? sessionsRef.current[sessionsRef.current.length - 1]._id
+							: null
 				},
 				res => {
 					setState(prevState => {
-						const newSessions = res?.sessions?.filter(s => {
-							return !prevState?.sessions || !prevState?.sessions?.find(ps => ps._id === s._id);
-						});
+						const newSessions = (prevState?.sessions || [])
+							.concat(
+								res?.sessions?.filter(s => {
+									return !prevState?.sessions || !prevState?.sessions?.find(ps => ps._id === s._id);
+								})
+							)
+							.sort((a, b) => {
+								return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+							});
 						return {
 							...prevState,
-							sessions: (prevState?.sessions || []).concat(newSessions)
+							sessions: newSessions
 						};
 					});
 				},
@@ -84,7 +92,6 @@ export default function PreviewSessionList(props) {
 					...prevState,
 					sessions: prevState?.sessions?.filter(s => s._id !== sessionId)
 				}));
-				fetchSessions(true);
 				toast('Deleted session');
 				if (router.asPath.includes(`/session/${sessionId}`)) {
 					return router.push(`/${resourceSlug}/apps`);
@@ -111,12 +118,12 @@ export default function PreviewSessionList(props) {
 	}, []);
 
 	useEffect(() => {
-		fetchSessions(true);
+		fetchSessions(true, true);
 	}, [sessionTrigger]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			fetchSessions(true);
+			fetchSessions(true, true);
 		}, 30000);
 		return () => {
 			clearInterval(interval);
