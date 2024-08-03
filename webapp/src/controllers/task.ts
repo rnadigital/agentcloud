@@ -42,15 +42,17 @@ export async function tasksJson(req, res, next) {
 }
 
 export async function taskData(req, res, _next) {
-	const [task, tools, agents] = await Promise.all([
+	const [task, tools, agents, tasks] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
 		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug)
+		getAgentsByTeam(req.params.resourceSlug),
+		getTasksByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		task,
+		tasks,
 		agents
 	};
 }
@@ -103,7 +105,16 @@ export async function addTaskApi(req, res, next) {
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
 			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'iconId', validation: { ofType: 'string' } }
+			{ field: 'iconId', validation: { ofType: 'string' } },
+			{
+				field: 'context',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid conteext'
+				}
+			}
 		],
 		{
 			name: 'Name',
@@ -129,7 +140,8 @@ export async function addTaskApi(req, res, next) {
 		toolIds,
 		asyncExecution,
 		agentId,
-		iconId
+		iconId,
+		context
 	} = req.body;
 
 	if (toolIds) {
@@ -158,6 +170,7 @@ export async function addTaskApi(req, res, next) {
 		expectedOutput,
 		toolIds: toolIds.map(toObjectId),
 		agentId: toObjectId(agentId),
+		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		icon: foundIcon
@@ -192,7 +205,16 @@ export async function editTaskApi(req, res, next) {
 				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } }
+			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
+			{
+				field: 'context',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid conteext'
+				}
+			}
 		],
 		{
 			name: 'Name',
@@ -216,7 +238,8 @@ export async function editTaskApi(req, res, next) {
 		expectedOutput,
 		toolIds,
 		asyncExecution,
-		agentId
+		agentId,
+		context
 	} = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
@@ -240,6 +263,7 @@ export async function editTaskApi(req, res, next) {
 		description,
 		expectedOutput,
 		toolIds: toolIds ? toolIds.map(toObjectId) : [],
+		context: context ? context.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		agentId: toObjectId(agentId)
