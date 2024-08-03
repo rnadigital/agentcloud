@@ -24,7 +24,7 @@ const chatAppTaglines = [
 	'Integrate RAG datasources',
 	'Add custom agent',
 	'Integrate custom tools',
-	'Embed your chat app via IFrame (coming soon)'
+	'Embed your chat app via IFrame'
 ];
 
 const processAppTaglines = [
@@ -32,7 +32,7 @@ const processAppTaglines = [
 	'Integrate RAG datasources',
 	'Add custom code tools',
 	'Add tasks',
-	'Embed your process app via IFrame (coming soon)'
+	'Embed your process app via IFrame'
 ];
 
 export default function AddApp(props: AddAppProps) {
