@@ -15,50 +15,40 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
+import { Task } from 'struct/task';
 import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
+import CreateTaskModal from './CreateTaskModal';
+
 export default function TaskForm({
-	task = {},
+	task,
 	tools = [],
 	agents = [],
-	datasources = [],
 	editing,
 	compact = false,
 	callback,
-	fetchTaskFormData
+	fetchTaskFormData,
+	taskChoices = []
 }: {
-	task?: any;
+	task?: Task;
 	tools?: any[];
 	agents?: any[];
-	datasources?: any[];
 	editing?: boolean;
 	compact?: boolean;
 	callback?: Function;
 	fetchTaskFormData?: Function;
+	taskChoices?: Task[];
 }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
-	const [taskState, setTask] = useState(task);
+	const [taskState, setTask] = useState<Task | undefined>(task);
+	const [tasksState, setTasksState] = useState([]);
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
-
-	const { _id, name, description, expectedOutput, toolIds } = taskState;
-
-	const initialTools =
-		toolIds &&
-		toolIds
-			.map(tid => {
-				const foundTool = tools.find(t => t._id === tid);
-				if (!foundTool) {
-					return null;
-				}
-				return { label: foundTool.name, value: foundTool._id, disabled: false };
-			})
-			.filter(t => t);
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 
@@ -73,7 +63,8 @@ export default function TaskForm({
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
-			requiresHumanInput: e.target.requiresHumanInput.checked
+			requiresHumanInput: e.target.requiresHumanInput.checked,
+			context: taskState?.context || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
@@ -85,7 +76,8 @@ export default function TaskForm({
 						name: e.target.name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
-						preferredAgentId: taskState?.agentId
+						preferredAgentId: taskState?.agentId,
+						context: taskState?.context || []
 					});
 					toast.success('Task Updated');
 				},
@@ -95,6 +87,7 @@ export default function TaskForm({
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
+						context: taskState?.context || [],
 						error: res
 					});
 					toast.error(res);
@@ -109,7 +102,8 @@ export default function TaskForm({
 						name: e.target.name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
-						preferredAgentId: taskState?.agentId
+						preferredAgentId: taskState?.agentId,
+						context: taskState?.context || []
 					});
 					toast.success('Added new task');
 				},
@@ -119,6 +113,7 @@ export default function TaskForm({
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
+						context: taskState?.context || [],
 						error: res
 					});
 					toast.error(res);
@@ -151,6 +146,14 @@ export default function TaskForm({
 		});
 	};
 
+	async function createTaskCallback(addedTaskId, body) {
+		(await fetchTaskFormData) && fetchTaskFormData();
+		setTasksState(oldTasksState => {
+			return oldTasksState.concat({ label: body.name, value: addedTaskId });
+		});
+		setModalOpen(false);
+	}
+
 	useEffect(() => {
 		if (notificationTrigger && notificationTrigger?.type === NotificationType.Tool) {
 			fetchTaskFormData();
@@ -164,6 +167,12 @@ export default function TaskForm({
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
 					callback={agentCallback}
+				/>
+			) : modalOpen === 'task' ? (
+				<CreateTaskModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={createTaskCallback}
 				/>
 			) : (
 				<CreateToolModal
@@ -189,7 +198,7 @@ export default function TaskForm({
 								id='name'
 								name='name'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={name}
+								defaultValue={taskState?.name}
 							/>
 						</div>
 
@@ -207,7 +216,7 @@ export default function TaskForm({
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={description}
+								defaultValue={taskState?.description}
 							/>
 						</div>
 
@@ -224,8 +233,71 @@ export default function TaskForm({
 								placeholder='Clear and detailed definition of expected output for the task.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={expectedOutput}
+								defaultValue={taskState?.expectedOutput}
 							/>
+						</div>
+
+						<div className='sm:col-span-full'>
+							<label
+								htmlFor='members'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
+								Context
+							</label>
+							<div className='mt-2'>
+								<Select
+									isMultiple
+									isSearchable
+									isClearable
+									primaryColor={'indigo'}
+									classNames={{
+										menuButton: () =>
+											'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+										list: 'dark:bg-slate-700',
+										listGroupLabel: 'dark:bg-slate-700',
+										listItem: (value?: { isSelected?: boolean }) =>
+											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
+									}}
+									value={taskState?.context?.map(x => {
+										console.log(taskChoices);
+										return {
+											value: x.toString(),
+											label: taskChoices.find(tx => tx._id === x)?.name
+										};
+									})}
+									onChange={(v: any) => {
+										if (v?.some(val => val?.disabled)) {
+											return;
+										}
+										if (v?.some(vals => vals.value === null)) {
+											return setModalOpen('task');
+										}
+										setTask(oldTask => {
+											return {
+												...oldTask,
+												context: v?.map(x => x.value)
+											};
+										});
+									}}
+									options={[{ label: '+ New task', value: null }].concat(
+										taskChoices.map(a => ({ label: a.name, value: a._id }))
+									)}
+									formatOptionLabel={(data: any) => {
+										const optionTask = taskChoices.find(tc => tc._id === data.value);
+										return (
+											<li
+												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
+												}`}
+											>
+												{data.label}
+												{optionTask ? ` (${optionTask.description})` : null}
+											</li>
+										);
+									}}
+								/>
+							</div>
 						</div>
 
 						{/* Tool selection */}
@@ -242,10 +314,12 @@ export default function TaskForm({
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
-								value={taskState?.toolIds?.map(x => ({
-									value: x,
-									label: tools.find(tx => tx._id === x)?.name
-								}))}
+								value={taskState?.toolIds?.map(x => {
+									return {
+										value: x.toString(),
+										label: tools.find(tx => tx._id === x)?.name
+									};
+								})}
 								onChange={(v: any) => {
 									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
 									if (v?.some(val => val?.disabled)) {
@@ -274,7 +348,7 @@ export default function TaskForm({
 									return (
 										<li
 											//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''}
-											className={`flex align-items-center !overflow-visible transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
+											className={`flex align-items-center transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
 												data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 											}`}
 										>

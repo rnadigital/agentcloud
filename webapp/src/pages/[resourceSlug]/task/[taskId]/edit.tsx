@@ -5,6 +5,7 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { Task } from 'struct/task';
 
 export default function EditTask(props) {
 	const [accountContext]: any = useAccountContext();
@@ -13,7 +14,9 @@ export default function EditTask(props) {
 	const { resourceSlug, taskId } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { task, tools, agents, datasources } = state; // Assuming tasks need tools
+	const { task, tools, agents, tasks } = state; // Assuming tasks need tools
+
+	const taskChoices = tasks.filter(x => x._id.toString() !== task._id.toString());
 
 	async function fetchTaskFormData() {
 		await API.getTask(
@@ -50,9 +53,9 @@ export default function EditTask(props) {
 					task={task}
 					tools={tools}
 					agents={agents}
-					datasources={datasources}
 					fetchTaskFormData={fetchTaskFormData}
 					editing={true}
+					taskChoices={taskChoices}
 				/>
 			</span>
 		</>
