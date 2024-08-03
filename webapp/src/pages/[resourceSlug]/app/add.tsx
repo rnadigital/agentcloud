@@ -5,9 +5,11 @@ import CrewAppForm from 'components/CrewAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+import { useThemeContext } from 'context/themecontext';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { ReactSVG } from 'react-svg';
 
 interface AddAppProps {
 	apps: any[];
@@ -43,6 +45,8 @@ export default function AddApp(props: AddAppProps) {
 	const { step, setStep }: any = useStepContext();
 	const { apps, tools, agents, tasks, models, datasources } = state;
 
+	const { theme } = useThemeContext();
+
 	async function fetchAppFormData() {
 		await API.getApps({ resourceSlug }, dispatch, setError, router);
 	}
@@ -75,7 +79,13 @@ export default function AddApp(props: AddAppProps) {
 						</h2>
 						<div className='md:flex gap-8 w-full mt-10'>
 							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
-								<img src='/images/get-started/create-chat-app.png' alt='Create Chat App' />
+								<ReactSVG
+									src={
+										theme === 'dark'
+											? '/images/get-started/create-chat-app-dark.svg'
+											: '/images/get-started/create-chat-app.svg'
+									}
+								/>
 								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
 									<div className='flex'>
 										<img
@@ -108,7 +118,13 @@ export default function AddApp(props: AddAppProps) {
 							</div>
 
 							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
-								<img src='/images/get-started/create-process-app.png' alt='Create Process App' />
+								<ReactSVG
+									src={
+										theme === 'dark'
+											? '/images/get-started/create-process-app-dark.svg'
+											: '/images/get-started/create-process-app.svg'
+									}
+								/>
 								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
 									<div className='flex'>
 										<img

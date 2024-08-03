@@ -14,18 +14,18 @@ export const modelOptions = [
 	{
 		value: ModelType.OPENAI,
 		label: 'OpenAI',
-		iconURL: '/images/onboarding/openai.png',
+		iconURL: '/images/onboarding/openai.svg',
 		recommended: true
 	},
-	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.png' },
-	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.png' },
-	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.png' },
+	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.svg' },
+	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.svg' },
+	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.svg' },
 	// { value: ModelType.COHERE, label: 'Cohere', iconURL: '/images/onboarding/cohere.png' },
-	{ value: ModelType.GROQ, label: 'Groq', iconURL: '/images/onboarding/groq.png' },
+	{ value: ModelType.GROQ, label: 'Groq', iconURL: '/images/onboarding/groq.svg' },
 	{
 		value: ModelType.GOOGLE_VERTEX,
 		label: 'Google Vertex',
-		iconURL: '/images/onboarding/google-vertex.webp'
+		iconURL: '/images/onboarding/google-vertex.svg'
 	}
 ];
 
