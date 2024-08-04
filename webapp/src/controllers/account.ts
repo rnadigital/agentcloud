@@ -359,13 +359,7 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
-		return dynamicResponse(req, res, 302, {
-			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
-		});
-	}
-
-	return res.json({});
+	return res.json({ canCreateModel, teamData });
 }
 
 export async function updateRole(req, res) {

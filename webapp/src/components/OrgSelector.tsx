@@ -1,12 +1,10 @@
 import * as API from '@api';
 import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon, HomeIcon } from '@heroicons/react/20/solid';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import CreateTeamModal from 'components/CreateTeamModal';
-import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
-import { SubscriptionPlan } from 'struct/billing';
 
 const TEAM_PARENT_LOCATIONS = ['agent', 'task', 'tool', 'datasource', 'model'];
 
@@ -17,12 +15,13 @@ function classNames(...classes) {
 export default function OrgSelector({ orgs }) {
 	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const { stripePlan } = account?.stripe || {};
+	// const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
+
 	async function switchTeam(orgId, teamId) {
 		const splitLocation = location.pathname.split('/').filter(n => n);
 		const foundResourceSlug = account.orgs.find(o =>
@@ -40,6 +39,7 @@ export default function OrgSelector({ orgs }) {
 			}
 		}
 		const start = Date.now();
+
 		try {
 			setSwitchingContext(true);
 			await API.switchTeam(
@@ -53,6 +53,9 @@ export default function OrgSelector({ orgs }) {
 					setTimeout(
 						async () => {
 							await refreshAccountContext();
+							if (res.canCreateModel && (!res.teamData.llmModel || !res.teamData.embeddingModel)) {
+								redirect = `/${teamId}/onboarding/configuremodels`;
+							}
 							dispatch(res);
 							router.push(redirect);
 						},
