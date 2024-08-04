@@ -2,7 +2,6 @@ import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
-import clsx from 'clsx';
 import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
@@ -76,6 +75,7 @@ export default function LLMConfigurationForm() {
 	});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
+	console.log(LLMType.iconURL);
 
 	const modelList =
 		[
@@ -225,19 +225,36 @@ export default function LLMConfigurationForm() {
 			const teamLLMModel = teamModels?.data?.llmModel;
 			const teamEmbeddingModel = teamModels?.data?.embeddingModel;
 
+			const teamLLMModelIcon = modelOptions.find(
+				model => model.value === teamLLMModel?.type
+			)?.iconURL;
+			const teamEmbeddingModelIcon = modelOptions.find(
+				model => model.value === teamEmbeddingModel?.type
+			)?.iconURL;
+
 			reset({
 				LLMType: teamLLMModel
-					? { label: teamLLMModel.name, value: teamLLMModel.type }
+					? { label: teamLLMModel.name, value: teamLLMModel.type, iconURL: teamLLMModelIcon }
 					: modelOptions[0],
 				embeddingType: teamEmbeddingModel
-					? { label: teamEmbeddingModel.name, value: teamEmbeddingModel.type }
+					? {
+							label: teamEmbeddingModel.name,
+							value: teamEmbeddingModel.type,
+							iconURL: teamEmbeddingModelIcon
+						}
 					: modelOptions[0],
 				LLMModel: teamLLMModel
 					? { label: teamLLMModel.model, value: teamLLMModel.model }
-					: { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+					: {
+							label: 'gpt-4o-mini',
+							value: 'gpt-4o-mini'
+						},
 				embeddingModel: teamEmbeddingModel
 					? { label: teamEmbeddingModel.model, value: teamEmbeddingModel.model }
-					: { label: 'text-embedding-3-small', value: 'text-embedding-3-small' },
+					: {
+							label: 'text-embedding-3-small',
+							value: 'text-embedding-3-small'
+						},
 				llmModelConfig: {
 					...(teamLLMModel?.config && { ...teamLLMModel.config })
 				},

@@ -96,6 +96,7 @@
     "react-markdown": "^6.0.3",
     "react-responsive": "^10.0.0",
     "react-select": "^5.7.5",
+    "react-svg": "^16.1.34",
     "react-syntax-highlighter": "^15.5.0",
     "react-tailwindcss-select": "^1.8.5",
     "react-toastify": "^9.1.3",
