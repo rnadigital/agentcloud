@@ -16,7 +16,7 @@ export default function EditTask(props) {
 	const [error, setError] = useState();
 	const { task, tools, agents, tasks } = state; // Assuming tasks need tools
 
-	const taskChoices = tasks.filter(x => x._id.toString() !== task._id.toString());
+	const taskChoices = tasks?.filter(x => x._id.toString() !== task._id.toString()) || [];
 
 	async function fetchTaskFormData() {
 		await API.getTask(
