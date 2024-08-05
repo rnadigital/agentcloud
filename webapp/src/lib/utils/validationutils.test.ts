@@ -132,6 +132,34 @@ describe('Test chainValidations() util', () => {
 		expect(validationError).toBe('Age is not a valid whole number');
 	});
 
+	test('Passes when enum not met', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'foo',
+					validation: { enum: ['foo', 'bar'] ) }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Fails when enum not met', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'baz',
+					validation: { enum: ['foo', 'bar'] ) }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('Field is an invalid value');
+	});
+
 	test('Fails when role is not in the set', () => {
 		const validationError = chainValidations(
 			sampleObject,
@@ -247,4 +275,48 @@ describe('Test chainValidations() util', () => {
 		);
 		expect(validationError).toBe('[nonExistentField] does not exist');
 	});
+
+	test('Fails when field does not exist', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'nonExistentField',
+					validation: { exists: true, customError: 'foobar' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('foobar');
+	});
+	
+	test('Passes when object has any key in list', () => {
+		const validationError = chainValidations(
+			{ a: { x: 1, y: '2' } },
+			[
+				{
+					field: 'a',
+					validation: { exists: true, objectHasEitherKeys: ['x', 'y'], customError: 'key not found' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('key not found');
+	});
+
+	test('Fails when object doesnt have any keys in list', () => {
+		const validationError = chainValidations(
+			{ a: { x: 1, y: '2' } },
+			[
+				{
+					field: 'a',
+					validation: { exists: true, objectHasEitherKeys: ['n', 'o'], customError: 'key not found' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('key not found');
+	});
+
+
 });
