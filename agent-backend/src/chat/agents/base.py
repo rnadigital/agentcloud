@@ -171,9 +171,10 @@ class BaseChatAgent:
                                 display_type="inline")
             # TODO: if debug:
             self.send_to_socket(text=f"""Stack trace:
-                ```
-                {chunk_error}
-                ```
+
+```
+{chunk_error}
+```
                 """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                 timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
             pass
