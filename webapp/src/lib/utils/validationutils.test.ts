@@ -132,13 +132,13 @@ describe('Test chainValidations() util', () => {
 		expect(validationError).toBe('Age is not a valid whole number');
 	});
 
-	test('Passes when enum not met', () => {
+	test('Passes when enum met', () => {
 		const validationError = chainValidations(
-			sampleObject,
+			{ foo: 'foo' },
 			[
 				{
 					field: 'foo',
-					validation: { enum: ['foo', 'bar'] ) }
+					validation: { enum: ['foo', 'bar'] }
 				}
 			],
 			fieldDescriptions
@@ -152,12 +152,12 @@ describe('Test chainValidations() util', () => {
 			[
 				{
 					field: 'baz',
-					validation: { enum: ['foo', 'bar'] ) }
+					validation: { enum: ['foo', 'bar'] }
 				}
 			],
 			fieldDescriptions
 		);
-		expect(validationError).toBe('Field is an invalid value');
+		expect(validationError).toBe('[baz] is an invalid value');
 	});
 
 	test('Fails when role is not in the set', () => {
@@ -289,7 +289,7 @@ describe('Test chainValidations() util', () => {
 		);
 		expect(validationError).toBe('foobar');
 	});
-	
+
 	test('Passes when object has any key in list', () => {
 		const validationError = chainValidations(
 			{ a: { x: 1, y: '2' } },
@@ -301,7 +301,7 @@ describe('Test chainValidations() util', () => {
 			],
 			fieldDescriptions
 		);
-		expect(validationError).toBe('key not found');
+		expect(validationError).toBeUndefined();
 	});
 
 	test('Fails when object doesnt have any keys in list', () => {
@@ -317,6 +317,5 @@ describe('Test chainValidations() util', () => {
 		);
 		expect(validationError).toBe('key not found');
 	});
-
 
 });
