@@ -3,7 +3,7 @@ import Tippy from '@tippyjs/react';
 import ToolTip from 'components/shared/ToolTip';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { toSentenceCase } from 'utils/toSentenceCase';
+import { toSentenceCase } from 'utils/tosentencecase';
 
 import FormSection from './FormSection';
 

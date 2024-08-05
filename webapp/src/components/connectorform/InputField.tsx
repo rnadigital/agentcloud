@@ -7,7 +7,7 @@ import { FormFieldProps } from 'lib/types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { capitalize } from 'utils/capitalize';
-import { toSentenceCase } from 'utils/toSentenceCase';
+import { toSentenceCase } from 'utils/tosentencecase';
 
 const InputField = ({ name, testId, type, disabled, property, isRequired }: FormFieldProps) => {
 	const { control } = useFormContext();

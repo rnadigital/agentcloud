@@ -12,7 +12,10 @@
     "start": "NODE_ENV=production ts-node --project tsconfig.server.json -r tsconfig-paths/register dist/server.js",
     "lint:nextjs": "next lint",
     "lint:all": "eslint src/ --fix && prettier --write src/",
-    "dev:email": "email dev --dir ./src/emails"
+    "dev:email": "email dev --dir ./src/emails",
+    "test:unit": "jest --verbose --testPathIgnorePatterns=./test/ --coverage",
+    "test:coverage": "jest --verbose --testPathIgnorePatterns=./test/ --collectCoverage --coverageReporters cobertura",
+    "test:integration": "jest --testPathPattern=./test/"
   },
   "keywords": [],
   "author": "RNA DIGITAL PTY LTD",
@@ -108,11 +111,14 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@types/express": "^4.17.18",
     "@types/node": "^20.7.0",
     "@types/react": "^18.2.22",
+    "jest": "^29.7.0",
     "postcss": "^8.4.30",
     "tailwindcss": "^3.3.3",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "typescript-eslint": "^0.0.1-alpha.0"

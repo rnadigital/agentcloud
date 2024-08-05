@@ -25,7 +25,7 @@ import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { SharingMode } from 'struct/sharing';
-import { chainValidations } from 'utils/validationUtils';
+import { chainValidations } from 'utils/validationutils';
 
 export async function sessionsData(req, res, _next) {
 	const before = req?.query?.before === 'null' ? null : req?.query?.before;

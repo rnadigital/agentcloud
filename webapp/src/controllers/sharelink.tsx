@@ -7,7 +7,7 @@ import { getCrewById } from 'db/crew';
 import { addSession } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import debug from 'debug';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';

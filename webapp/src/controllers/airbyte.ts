@@ -14,7 +14,7 @@ import {
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
