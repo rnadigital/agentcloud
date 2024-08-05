@@ -31,11 +31,11 @@ jobs:
       working-directory: ./webapp
       run: npm run test:coverage
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: webapp/coverage
+    # - name: Upload test results
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: test-results
+    #     path: webapp/coverage
 
     - name: Upload coverage results
       uses: actions/upload-artifact@v4
@@ -44,8 +44,7 @@ jobs:
         path: webapp/coverage/cobertura-coverage.xml
 
     - name: Publish Cobertura Coverage
-      uses: gonuit/cobertura-action@v1
+      uses: 5monkeys/cobertura-action@master
       with:
-        cobertura-file: webapp/coverage/cobertura-coverage.xml
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        check-name: 'Coverage Report'
+        path: webapp/coverage/cobertura-coverage.xml
+        minimum_coverage: 0
