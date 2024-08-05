@@ -84,6 +84,12 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
+            
+            model_id = None
+            for _, agent in self.agents_models.items():
+                if tool.id in agent.toolIds:
+                    model_id = agent.modelId
+                    break
 
             # testing
             # if tool.data.builtin == True:
@@ -109,7 +115,7 @@ class CrewAIBuilder:
                 tool_models_models.append((model_object, model_data))
 
             # Use same llm as Crew's for retriever
-            retriever_llm = match_key(self.crew_models, keyset(self.crew_model.id))
+            retriever_llm = match_key(self.crew_models, keyset(model_id))
 
             tool_instance = tool_class.factory(tool=tool, datasources=list(datasources.values()),
                                                models=tool_models_models, llm=retriever_llm)
