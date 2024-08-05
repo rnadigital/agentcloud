@@ -15,7 +15,7 @@ use env_logger::Env;
 use tokio::signal;
 use tokio::sync::RwLock;
 
-use qdrant::client::instantiate_qdrant_client;
+use adaptors::qdrant::client::instantiate_qdrant_client;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, get_collection_info,
     health_check, list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
@@ -26,20 +26,16 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::init::env_variables::set_all_env_vars;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
-use crate::mongo::client::start_mongo_connection;
+use adaptors::mongo::client::start_mongo_connection;
 
 mod data;
 mod errors;
-mod gcp;
 mod init;
 mod embeddings;
-mod mongo;
-mod qdrant;
-mod rabbitmq;
 mod routes;
 mod utils;
-mod redis_rs;
 mod messages;
+mod adaptors;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =

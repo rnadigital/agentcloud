@@ -6,9 +6,9 @@ use actix_web_lab::extract::Path;
 use std::sync::Arc;
 
 use crate::errors::types::Result;
-use crate::qdrant::helpers::{get_next_page, get_scroll_results};
-use crate::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
-use crate::qdrant::utils::Qdrant;
+use crate::adaptors::qdrant::helpers::{get_next_page, get_scroll_results};
+use crate::adaptors::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
+use crate::adaptors::qdrant::utils::Qdrant;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
 
@@ -16,9 +16,9 @@ use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
 use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVectorsSelector};
 
-use crate::mongo::client::start_mongo_connection;
-use crate::mongo::models::Model;
-use crate::mongo::queries::{get_model, get_model_and_embedding_key};
+use crate::adaptors::mongo::client::start_mongo_connection;
+use crate::adaptors::mongo::models::Model;
+use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
