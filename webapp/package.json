@@ -13,7 +13,7 @@
     "lint:nextjs": "next lint",
     "lint:all": "eslint src/ --fix && prettier --write src/",
     "dev:email": "email dev --dir ./src/emails",
-    "test:unit": "jest --verbose --testPathIgnorePatterns=./test/",
+    "test:unit": "jest --verbose --testPathIgnorePatterns=./test/ --coverage",
     "test:coverage": "jest --verbose --testPathIgnorePatterns=./test/ --collectCoverage --coverageReporters cobertura",
     "test:integration": "jest --testPathPattern=./test/"
   },

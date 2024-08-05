@@ -290,6 +290,34 @@ describe('Test chainValidations() util', () => {
 		expect(validationError).toBe('foobar');
 	});
 
+	test('Passes when object has keys', () => {
+		const validationError = chainValidations(
+			{ a: { x: 1, y: '2' } },
+			[
+				{
+					field: 'a',
+					validation: { objectHasKeys: true, customError: 'object doesnt have keys' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Passes when object has keys', () => {
+		const validationError = chainValidations(
+			{ a: 'z' },
+			[
+				{
+					field: 'a',
+					validation: { objectHasKeys: true, customError: 'object doesnt have keys' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('object doesnt have keys');
+	});
+
 	test('Passes when object has any key in list', () => {
 		const validationError = chainValidations(
 			{ a: { x: 1, y: '2' } },
@@ -317,5 +345,204 @@ describe('Test chainValidations() util', () => {
 		);
 		expect(validationError).toBe('key not found');
 	});
+
+	test('Passes when field contains value', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { contains: '@' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Fails when field doesnt contain value', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { contains: 'THIS STRING IS NOT IN THE EMAIL FIELD', customError: 'email does not contain value' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('email does not contain value');
+	});
+
+	test('Passes when field starts with x', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { startsWith: 'test' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Fails when field does not start with x', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { startsWith: 'abc123' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('Email does not start with abc123');
+	});
+
+	test('Passes when field ends with x', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { endsWith: '.com' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Fails when field doesnt end with x', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { endsWith: 'abc123' }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('Email does not end with abc123');
+	});
+
+	test('Test validateIf that is true', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { endsWith: '.com' },
+					validateIf: { field: 'email', condition: () => { return true } }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test validateIf that is false', () => {
+		const validationError = chainValidations(
+			sampleObject,
+			[
+				{
+					field: 'email',
+					validation: { endsWith: '.com' },
+					validateIf: { field: 'email', condition: () => { return false } }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test regexMatchAll passing', () => {
+		const validationError = chainValidations(
+			{ x: ['a', 'b', 'c'] },
+			[
+				{
+					field: 'x',
+					validation: { regexMatchAll: /[a-z]/ },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test regexMatchAll failing', () => {
+		const validationError = chainValidations(
+			{ x: ['a', '12345', 'c'] },
+			[
+				{
+					field: 'x',
+					validation: { regexMatchAll: /[a-z]/ },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('[x] does not match regular expression /[a-z]/');
+	});
+
+	test('Test numberFromInclusive passing', () => {
+		const validationError = chainValidations(
+			{ x: 5 },
+			[
+				{
+					field: 'x',
+					validation: { numberFromInclusive: 3 },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test numberFromInclusive failing', () => {
+		const validationError = chainValidations(
+			{ x: 2 },
+			[
+				{
+					field: 'x',
+					validation: { numberFromInclusive: 3 },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('[x] is not a valid number less than or equal to 3');
+	});
+
+	test('Test numberToInclusive passing', () => {
+		const validationError = chainValidations(
+			{ x: 5 },
+			[
+				{
+					field: 'x',
+					validation: { numberToInclusive: 6 },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test numberToInclusive failing', () => {
+		const validationError = chainValidations(
+			{ x: 5 },
+			[
+				{
+					field: 'x',
+					validation: { numberToInclusive: 4 },
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('[x] is not a valid number greater than or equal to 4');
+	});
+
 
 });
