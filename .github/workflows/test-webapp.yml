@@ -47,4 +47,5 @@ jobs:
       uses: 5monkeys/cobertura-action@master
       with:
         path: webapp/coverage/cobertura-coverage.xml
-        minimum_coverage: 0
+        minimum_coverage: 80
+        skip_covered: false
