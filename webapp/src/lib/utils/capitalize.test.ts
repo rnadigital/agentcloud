@@ -7,7 +7,7 @@ const testCases = [
 	{ in: 'world', out: 'World' },
 	{ in: '', out: '' },
 	{ in: undefined, out: '' },
-	{ in: 'capitalize', out: 'Capitalize' },
+	{ in: 'capitalize', out: 'Capitalize' }
 ];
 
 describe('Test capitalize() util', () => {

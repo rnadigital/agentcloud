@@ -7,7 +7,7 @@ const testCases = [
 	{ in: 'this_is_a_test', out: 'This Is A Test' },
 	{ in: 'convert_to_sentence_case', out: 'Convert To Sentence Case' },
 	{ in: 'singleword', out: 'Singleword' },
-	{ in: '', out: '' },
+	{ in: '', out: '' }
 ];
 
 describe('Test toSentenceCase() util', () => {

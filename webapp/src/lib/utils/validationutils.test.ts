@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME } from './validationUtils';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME } from './validationutils';
 
 type ValidationUtilOptions = {
 	ofType?: string;

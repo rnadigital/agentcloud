@@ -10,7 +10,7 @@ const testCases = [
 	{ in: 1073741824, out: '1GB' },
 	{ in: 1099511627776, out: '1TB' },
 	{ in: 123456789, out: '117.7MB' },
-	{ in: 9876543210, out: '9.2GB' },
+	{ in: 9876543210, out: '9.2GB' }
 ];
 
 describe('Test formatSize() util', () => {
