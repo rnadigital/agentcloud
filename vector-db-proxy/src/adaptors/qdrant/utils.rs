@@ -10,7 +10,7 @@ use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, Reco
 use qdrant_client::qdrant::vectors_config::Config;
 use tokio::sync::RwLock;
 
-use crate::qdrant::models::{CollectionData, CreateDisposition, PointSearchResults};
+use crate::adaptors::qdrant::models::{CollectionData, CreateDisposition, PointSearchResults};
 use crate::routes::models::FilterConditions;
 use crate::utils::conversions::convert_hashmap_to_filters;
 

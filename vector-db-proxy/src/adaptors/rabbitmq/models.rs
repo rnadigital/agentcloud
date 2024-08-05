@@ -8,7 +8,7 @@ use tokio::sync::{RwLock};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::tasks::process_message;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
-use crate::rabbitmq::client::{bind_queue_to_exchange};
+use crate::adaptors::rabbitmq::client::{bind_queue_to_exchange};
 use log::{warn, error};
 
 pub struct RabbitConnect {

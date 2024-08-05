@@ -7,9 +7,9 @@ use qdrant_client::client::QdrantClient;
 use serde_json::Value;
 
 use crate::embeddings::models::EmbeddingModels;
-use crate::mongo::queries::{get_model_and_embedding_key, increment_by_one};
-use crate::qdrant::helpers::embed_payload;
-use crate::qdrant::utils::Qdrant;
+use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
+use crate::adaptors::qdrant::helpers::embed_payload;
+use crate::adaptors::qdrant::utils::Qdrant;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 
 async fn handle_embedding(
