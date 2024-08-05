@@ -174,6 +174,34 @@ describe('Test chainValidations() util', () => {
 		expect(validationError).toBe('Role is an invalid value');
 	});
 
+	test('Testing array inSet() passing', () => {
+		const validationError = chainValidations(
+			{ test: ['a', 'b'] },
+			[
+				{
+					field: 'test',
+					validation: { inSet: new Set(['a', 'b']) }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Testing array inSet() failing', () => {
+		const validationError = chainValidations(
+			{ test: ['a', 'b', 'c'] },
+			[
+				{
+					field: 'test',
+					validation: { inSet: new Set(['a', 'b']) }
+				}
+			],
+			fieldDescriptions
+		);
+		expect(validationError).toBe('[test] is an invalid value');
+	});
+
 	test('Validates nested object fields correctly', () => {
 		const validationError = chainValidations(
 			sampleObject,
@@ -544,5 +572,46 @@ describe('Test chainValidations() util', () => {
 		expect(validationError).toBe('[x] is not a valid number greater than or equal to 4');
 	});
 
+	test('Test numberToInclusive failing (no fieldDescriptions)', () => {
+		const validationError = chainValidations(
+			{ x: 5 },
+			[
+				{
+					field: 'x',
+					validation: { numberToInclusive: 4 },
+				}
+			],
+			null
+		);
+		expect(validationError).toBe('[x] is not a valid number greater than or equal to 4');
+	});
+
+	test('Test hasLength passing', () => {
+		const validationError = chainValidations(
+			{ x: 'test' },
+			[
+				{
+					field: 'x',
+					validation: { hasLength: 4 },
+				}
+			],
+			null
+		);
+		expect(validationError).toBeUndefined();
+	});
+
+	test('Test hasLength failing', () => {
+		const validationError = chainValidations(
+			{ x: 't e s t' },
+			[
+				{
+					field: 'x',
+					validation: { hasLength: 4 },
+				}
+			],
+			null
+		);
+		expect(validationError).toBe('[x] is not of the right length');
+	});
 
 });
