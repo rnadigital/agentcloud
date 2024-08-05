@@ -37,15 +37,15 @@ jobs:
         name: test-results
         path: webapp/coverage
 
-    - name: Publish coverage report
+    - name: Upload coverage results
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: webapp/coverage/cobertura-coverage.xml
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+    - name: Publish Cobertura Coverage
+      uses: gonuit/cobertura-action@v1
       with:
-        files: coverage/cobertura-coverage.xml
-        flags: unittests
-        fail_ci_if_error: true
+        cobertura-file: webapp/coverage/cobertura-coverage.xml
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        check-name: 'Coverage Report'
