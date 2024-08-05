@@ -5,7 +5,7 @@ import { getAgentById, getAgentsByTeam } from 'db/agent';
 import { getAssetById } from 'db/asset';
 import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 
 export async function tasksData(req, res, _next) {
