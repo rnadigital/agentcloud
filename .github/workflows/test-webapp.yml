@@ -32,21 +32,18 @@ jobs:
       run: npm run test:coverage
 
     - name: Upload test results
-      working-directory: ./webapp
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: coverage
 
     - name: Publish coverage report
-      working-directory: ./webapp
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
         path: coverage/cobertura-coverage.xml
 
     - name: Upload coverage to Codecov
-      working-directory: ./webapp
       uses: codecov/codecov-action@v2
       with:
         files: coverage/cobertura-coverage.xml
