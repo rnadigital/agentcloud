@@ -120,6 +120,7 @@ const teamNavigation = [
 const userNavigation = [
 	//{ name: 'My Account', href: '/account' },
 	{ name: 'Billing', href: '/billing' },
+	{ name: 'Theme', href: '#', theme: true },
 	{ name: 'Sign out', href: '#', logout: true }
 ];
 
@@ -135,7 +136,7 @@ export default withRouter(function Layout(props) {
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const path = usePathname();
 	const showNavs = account && !noNavPages.some(p => path.includes(p));
-	const { theme, toggleTheme } = useContext(ThemeContext);
+	const { toggleTheme, toggleUseSystemTheme } = useContext(ThemeContext);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 	const scrollRef = useRef(null);
@@ -622,7 +623,6 @@ export default withRouter(function Layout(props) {
 										</span>
 									)}
 								</div>
-								<ThemeSelector />
 								<div className='flex items-center gap-x-4 lg:gap-x-6'>
 									{/* Notification Bell */}
 									<NotificationBell />
@@ -704,6 +704,38 @@ export default withRouter(function Layout(props) {
 																		>
 																			Log out
 																		</button>
+																	);
+																}
+
+																if (item.theme) {
+																	return (
+																		<div className='flex flex-col space-y-2 py-2'>
+																			<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+
+																			<p className='text-xs font-semibold text-gray-900 dark:text-white mt-2 px-3'>
+																				Theme
+																			</p>
+																			<button
+																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				onClick={() => toggleTheme('light')}
+																			>
+																				Light
+																			</button>
+																			<button
+																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				onClick={() => toggleTheme('dark')}
+																			>
+																				Dark
+																			</button>
+																			<button
+																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				onClick={() => toggleUseSystemTheme()}
+																			>
+																				System
+																			</button>
+
+																			<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+																		</div>
 																	);
 																}
 																return (
