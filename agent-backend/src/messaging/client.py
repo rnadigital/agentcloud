@@ -40,15 +40,9 @@ def execute_task(data: dict):
     with log_exception():
         session_id = data.get("sessionId")
         socket = None
-        loop_max = 20
-        while True:
-            crew_builder, app = construct_crew(session_id, socket)
-            crew_builder.build_crew()
-            crew_builder.run_crew()
-            socket = crew_builder.socket
-            loop_max = loop_max - 1
-            if looping_app(app) == False or loop_max < 1 or session_terminated(session_id):
-                break
+        crew_builder, app = construct_crew(session_id, socket)
+        crew_builder.build_crew()
+        crew_builder.run_crew()
 
 
 def execute_chat_task(data: dict):

@@ -62,6 +62,7 @@ export default function CrewAppForm({
 	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
+	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
 	const { name, agents, tasks, verbose } = crewState;
@@ -108,7 +109,8 @@ export default function CrewAppForm({
 			run,
 			sharingMode,
 			shareLinkShareId,
-			verbose: Number(e.target.verbose.value) || 0
+			verbose: Number(e.target.verbose.value) || 0,
+			fullOutput
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -374,7 +376,7 @@ export default function CrewAppForm({
 
 							<div className='sm:col-span-2'>
 								<div className='flex gap-2 text-gray-900 dark:text-slate-400 items-center'>
-									<label htmlFor='name' className='block text-sm font-medium leading-6'>
+									<label htmlFor='verbose' className='block text-sm font-medium leading-6'>
 										Verbose
 									</label>
 									<ToolTip content='Verbosity level controls whether agent thoughts and actions appear for agents during the session of a process app. Setting it to zero will ensure a clean run, only showing agents final answers in the app.'>
@@ -432,6 +434,27 @@ export default function CrewAppForm({
 								setCallbackKey={() => {}}
 								modelFilter='llm'
 							/>*/}
+
+							<div className='sm:col-span-12'>
+								<div className='mt-2'>
+									<label
+										htmlFor='fullOutput'
+										className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+									>
+										<input
+											id='fullOutput'
+											type='checkbox'
+											name='fullOutput'
+											checked={fullOutput}
+											onChange={e => setFullOutput(e.target.checked)}
+											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										/>
+										<span className='ml-2 flex'>Full final output</span>
+										<p className='text-sm'></p>
+									</label>
+								</div>
+							</div>
+
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>
 									<label
