@@ -70,7 +70,7 @@ export default function SessionChatbox({
 				</div>
 			</div>*/}
 				<div className='flex-shrink-0'>
-					{chatBusyState && !showConversationStarters ? (
+					{chatBusyState ? (
 						<div className='flex items-end basis-1/2'>
 							<button
 								onClick={e => {
