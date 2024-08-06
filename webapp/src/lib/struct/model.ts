@@ -136,10 +136,11 @@ export const ModelList = {
 	[ModelType.AZURE_OPENAI]: [
 		'gpt-4o-mini',
 		'gpt-4o',
-		'gpt-4',
+		'gpt-4'
+		/* Note: Don't uncomment these until: https://github.com/rnadigital/agentcloud/issues/396
 		'text-embedding-3-small',
 		'text-embedding-3-large',
-		'text-embedding-ada-002'
+		'text-embedding-ada-002'*/
 	]
 };
 
