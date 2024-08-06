@@ -18,7 +18,11 @@ export const modelOptions = [
 		iconURL: '/images/onboarding/openai.svg',
 		recommended: true
 	},
-	{ value: ModelType.AZURE_OPEAI, label: 'Azure OpenAI', iconURL: '/images/onboarding/azure-openai.svg' },
+	{
+		value: ModelType.AZURE_OPEAI,
+		label: 'Azure OpenAI',
+		iconURL: '/images/onboarding/azure-openai.svg'
+	},
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.svg' },
 	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.svg' },
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.svg' },
