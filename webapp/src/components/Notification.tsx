@@ -15,13 +15,13 @@ export function Notification({ index, title, description, date, seen, _id, markS
 	const [gone, setGone] = useState(false);
 	return (
 		<div
-			className={`p-4 ${index === 0 || gone ? '' : 'border-t'} ${seen ? 'bg-gray-100' : 'bg-white'} transition-all duration-500 max-h-[500px] overflow-hidden ${gone ? 'max-h-0 opacity-0' : ''} dark:text-white`}
+			className={`p-4 ${index === 0 || gone ? '' : 'border-t'} ${seen ? 'bg-gray-100' : 'bg-white dark:bg-slate-800'} transition-all duration-500 max-h-[500px] overflow-hidden ${gone ? 'max-h-0 opacity-0' : ''} dark:text-white`}
 		>
 			{!seen && (
 				<div className='ml-3 flex h-7 items-center cursor-pointer rounded-full right-5 absolute w-4 h-4'>
 					<button
 						type='button'
-						className='relative rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
+						className='relative rounded-md bg-white dark:bg-slate-800 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
 						onClick={() => {
 							setGone(true);
 							markSeen(_id);

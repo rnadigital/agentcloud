@@ -3,7 +3,7 @@ module.exports = {
     script: "npm run dev",
     watch: true,
     // watch_delay: 1000,
-    ignore_watch: ["node_modules", "src/components", "src/pages", "src/context", "\\.next", "\\.dist", "tsconfig.tsbuildinfo",".DS_Store" 
+    ignore_watch: ["node_modules", "src/components", "src/pages", "src/context", "\\.next", "\\.dist", "tsconfig.tsbuildinfo",".DS_Store","src/test"
     ],
     "env": {
       "DEBUG": "webapp*,-webapp:storage*,-webapp:middleware:auth:*",
