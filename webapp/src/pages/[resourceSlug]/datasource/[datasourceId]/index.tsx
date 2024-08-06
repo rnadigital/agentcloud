@@ -341,67 +341,61 @@ export default function Datasource(props) {
 				<>
 					<div className='rounded-lg overflow-hidden shadow mt-4'>
 						<table className='min-w-full divide-y divide-gray-200'>
-							<thead className='bg-gray-50'>
+							<thead className='bg-gray-50 dark:bg-slate-800 dark:text-white text-gray-500'>
 								<tr>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Job ID
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Status
 									</th>
 									{/*<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Job Type</th>*/}
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Connection ID
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Start Time
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Last Updated
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
 									>
 										Duration
 									</th>
 								</tr>
 							</thead>
-							<tbody className='bg-white divide-y divide-gray-200'>
+							<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:text-gray-50 text-gray-500 text-sm'>
 								{jobsList?.jobs?.map(job => (
 									<tr key={job.jobId}>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-											{job.jobId}
-										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-											{job.status}
-										</td>
+										<td className='px-6 py-4 whitespace-nowrap'>{job.jobId}</td>
+										<td className='px-6 py-4 whitespace-nowrap'>{job.status}</td>
 										{/*<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{job.jobType}</td>*/}
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-											{job.connectionId}
-										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										<td className='px-6 py-4 whitespace-nowrap'>{job.connectionId}</td>
+										<td className='px-6 py-4 whitespace-nowrap'>
 											{new Date(job.startTime).toLocaleString()}
 										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										<td className='px-6 py-4 whitespace-nowrap'>
 											{new Date(job.lastUpdatedAt).toLocaleString()}
 										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 lowercase'>
+										<td className='px-6 py-4 whitespace-nowrap lowercase'>
 											{job.duration.substr(2)}
 										</td>
 									</tr>
@@ -433,7 +427,7 @@ export default function Datasource(props) {
 							disabled={submitting['updateStreams']}
 							type='submit'
 							className={
-								'flex rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-200'
+								'flex rounded-md bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-200'
 							}
 						>
 							Save
