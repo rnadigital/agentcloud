@@ -72,6 +72,9 @@
       "styles/*": [
         "lib/styles/*"
       ],
+      "db/*": [
+        "db/*"
+      ],
       "lib/*": [
         "lib/*"
       ],
@@ -90,7 +93,7 @@
       "secret/*": [
         "lib/secret/*"
       ]
-    },
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -98,6 +101,8 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
-  ]
+    "node_modules",
+    "src/test"
+  ],
+  "types": ["@types/jest"]
 }

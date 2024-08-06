@@ -1,11 +1,15 @@
 import {describe, expect, test} from '@jest/globals';
-import { URLSearchParams } from 'url';
+import { deleteAccountByEmail } from 'db/account';
 import dotenv from 'dotenv';
+import { URLSearchParams } from 'url';
+
 dotenv.config({ path: '.env' });
 let sessionCookie: string;
 let csrfToken: string;
 
 describe('Register and login', () => {
+
+	deleteAccountByEmail('testuser@example.com');
 
 	test('register new account', async () => {
 		const params = new URLSearchParams();
@@ -31,7 +35,6 @@ describe('Register and login', () => {
 			body: params,
 			redirect: 'manual',
 		});
-		console.log((await response.text()));
 		sessionCookie = response.headers.get('set-cookie')[0];
 		expect(response.headers.get('set-cookie')).toBeDefined();
 		expect(response.headers.get('set-cookie')).toMatch(/^connect\.sid/);

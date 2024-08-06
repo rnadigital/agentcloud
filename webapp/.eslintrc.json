@@ -3,8 +3,8 @@
 		"*.config.js",
 		"*.config.ts",
 		"node_modules/",
-		"test/*",
-		"*.test.*"
+		"src/test/*",
+		"src/**/*.test.ts"
 	],
 	"extends": [
 		"next/core-web-vitals",

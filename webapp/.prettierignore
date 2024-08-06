@@ -1,4 +1,4 @@
 src/router.ts
 src/api.ts
-test/
-**/*.test.ts
+src/test/
+src/**/*.test.ts

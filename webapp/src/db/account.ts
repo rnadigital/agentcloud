@@ -285,6 +285,12 @@ export function addAccount(account: Account): Promise<InsertResult> {
 	return AccountCollection().insertOne(account);
 }
 
+export function deleteAccountByEmail(email: string): Promise<any> {
+	return AccountCollection().deleteOne({
+		email
+	});
+}
+
 export function updateTeamOwnerInAccounts(
 	orgId: db.IdOrStr,
 	teamId: db.IdOrStr,
