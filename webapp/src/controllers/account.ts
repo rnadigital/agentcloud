@@ -98,7 +98,7 @@ export async function login(req, res) {
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
 
-	if (!account || !account?.emailVerified) {
+	if (!account || (!account?.emailVerified && process.env.SKIP_EMAIL !== '1')) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
 	}
 
