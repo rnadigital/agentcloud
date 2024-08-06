@@ -1,7 +1,6 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
-import ThemeSelector from 'components/ThemeSelector';
 import { useAccountContext } from 'context/account';
 import { useThemeContext } from 'context/themecontext';
 import { useRouter } from 'next/router';
@@ -50,11 +49,7 @@ export default function Onboarding() {
 
 	return (
 		<main className='flex items-center flex-col justify-center flex-1 dark:bg-gray-900'>
-			<div className='absolute top-2 right-2'>
-				<ThemeSelector />
-			</div>
 			<img
-				// src='/images/agentcloud-full-black-bg-trans.png'
 				src={
 					theme === 'dark'
 						? '/images/agentcloud-full-white-bg-trans.png'

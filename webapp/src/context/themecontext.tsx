@@ -1,22 +1,28 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import local from 'secret/local';
 
 interface ThemeContextProps {
 	theme?: 'dark' | 'light';
-	toggleTheme: () => void;
+	toggleTheme: (theme: 'dark' | 'light') => void;
+	toggleUseSystemTheme: () => void;
 }
 
 export const ThemeContext = createContext<ThemeContextProps>({
-	toggleTheme: () => {}
+	toggleTheme: (theme: 'dark' | 'light') => {},
+	toggleUseSystemTheme: () => {}
 });
 
 export const ThemeProvider = ({ children }) => {
-	const [theme, setTheme] = useState<'dark' | 'light'>();
+	const [theme, setTheme] = useState<'dark' | 'light'>('light');
+	const [useSystemTheme, setUseSystemTheme] = useState(false);
 
 	useEffect(() => {
 		const storedTheme = localStorage.getItem('theme') as 'dark' | 'light';
+		const useSystemTheme = localStorage.getItem('useSystemTheme') === 'true';
 		if (storedTheme) {
 			setTheme(storedTheme);
 		}
+		setUseSystemTheme(useSystemTheme);
 	}, []);
 
 	useEffect(() => {
@@ -25,26 +31,36 @@ export const ThemeProvider = ({ children }) => {
 	}, [theme]);
 
 	useEffect(() => {
-		if (localStorage.getItem('theme') !== 'dark' || localStorage.getItem('theme') !== 'light') {
-			const checkDarkMode = () => {
-				const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-				setTheme(darkModeMediaQuery.matches ? 'dark' : 'light');
-			};
-
-			checkDarkMode();
-
+		const checkDarkMode = () => {
 			const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-			darkModeMediaQuery.addEventListener('change', checkDarkMode);
+			if (useSystemTheme) {
+				setTheme(darkModeMediaQuery.matches ? 'dark' : 'light');
+			}
+		};
 
-			return () => darkModeMediaQuery.removeEventListener('change', checkDarkMode);
-		}
-	}, []);
+		checkDarkMode();
 
-	const toggleTheme = () => {
-		setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+		const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		darkModeMediaQuery.addEventListener('change', checkDarkMode);
+
+		return () => darkModeMediaQuery.removeEventListener('change', checkDarkMode);
+	}, [useSystemTheme]);
+
+	const toggleTheme = (theme: 'dark' | 'light') => {
+		setTheme(theme);
+		setUseSystemTheme(false);
 	};
 
-	return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+	const toggleUseSystemTheme = () => {
+		setUseSystemTheme(prev => !prev);
+		localStorage.setItem('useSystemTheme', (!useSystemTheme).toString());
+	};
+
+	return (
+		<ThemeContext.Provider value={{ theme, toggleTheme, toggleUseSystemTheme }}>
+			{theme && children}
+		</ThemeContext.Provider>
+	);
 };
 
 export const useThemeContext = () => useContext(ThemeContext);
