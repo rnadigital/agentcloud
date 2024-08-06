@@ -222,6 +222,7 @@ export default function CrewAppForm({
 					modelTypeFilters={[
 						ModelType.GROQ,
 						ModelType.OPENAI,
+						ModelType.AZURE_OPENAI,
 						ModelType.OLLAMA,
 						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
