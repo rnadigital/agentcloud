@@ -17,7 +17,6 @@ export default function Document() {
       }
     })();
   `;
-
 	return (
 		<Html>
 			<Head />
@@ -34,7 +33,6 @@ export default function Document() {
 						}
 					`}
 				</style>
-
 				<script dangerouslySetInnerHTML={{ __html: setInitialTheme }} />
 			</body>
 		</Html>
