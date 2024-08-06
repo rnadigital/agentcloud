@@ -37,7 +37,6 @@ import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import packageJson from '../../package.json';
-import ThemeSelector from './ThemeSelector';
 
 const noNavPages = [
 	'/login',
