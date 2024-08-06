@@ -3,7 +3,7 @@ use std::io::Write;
 use serde_json::Value;
 use tokio::fs;
 use crate::data::models::FileType;
-use crate::gcp::gcs::get_object_from_gcs;
+use crate::adaptors::gcp::gcs::get_object_from_gcs;
 use crate::utils::models::FileSources;
 
 pub async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> anyhow::Result<()> {

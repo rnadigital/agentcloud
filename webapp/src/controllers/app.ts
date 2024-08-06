@@ -10,7 +10,7 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ModelType } from 'struct/model';

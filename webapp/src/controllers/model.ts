@@ -8,7 +8,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
-import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationUtils';
+import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationutils';
 
 dotenv.config({ path: '.env' });
 

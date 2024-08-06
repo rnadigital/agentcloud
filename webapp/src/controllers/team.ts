@@ -29,7 +29,7 @@ import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import Roles from 'permissions/roles';
-import { chainValidations } from 'utils/validationUtils';
+import { chainValidations } from 'utils/validationutils';
 
 export async function teamData(req, res, _next) {
 	const [team] = await Promise.all([getTeamWithMembers(req.params.resourceSlug)]);

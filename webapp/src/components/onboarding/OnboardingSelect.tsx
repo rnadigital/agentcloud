@@ -5,14 +5,13 @@ import {
 	ListboxOptions,
 	Transition
 } from '@headlessui/react';
-import { ChevronDownIcon, LockClosedIcon } from '@heroicons/react/20/solid';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import { useAccountContext } from 'context/account';
 import { useThemeContext } from 'context/themecontext';
-import cn from 'lib/cn';
 import React, { Fragment } from 'react';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
-import { pricingMatrix } from 'struct/billing';
+import { ReactSVG } from 'react-svg';
 
 interface Option {
 	label?: string;
@@ -70,14 +69,7 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 										)}
 									>
 										<span className='flex items-center dark:text-gray-300'>
-											{value?.iconURL && (
-												<img
-													src={value.iconURL}
-													className={clsx('h-6 w-6 mr-2', {
-														'dark:filter invert grayscale': theme === 'dark'
-													})}
-												/>
-											)}
+											{value?.iconURL && <ReactSVG src={value.iconURL} className='h-6 w-6 mr-2' />}
 											<span
 												className={clsx('block truncate', {
 													'text-gray-400': !value?.label
@@ -132,7 +124,7 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 																	<span className='flex justify-between'>
 																		<span className='flex'>
 																			{option.iconURL && (
-																				<img src={option.iconURL} className='h-6 w-6 mr-2' />
+																				<ReactSVG src={option.iconURL} className='h-6 w-6 mr-2' />
 																			)}
 																			<span
 																				className={clsx(

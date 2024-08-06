@@ -4,7 +4,7 @@ use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{Mutex, RwLock};
-use crate::gcp::pubsub::subscribe_to_topic;
+use crate::adaptors::gcp::pubsub::subscribe_to_topic;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use futures::StreamExt;

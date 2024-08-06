@@ -19,7 +19,7 @@ import jwt from 'jsonwebtoken';
 import createAccount from 'lib/account/create';
 import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import Permissions from 'permissions/permissions';
 
 export async function accountData(req, res, _next) {
@@ -359,13 +359,7 @@ export async function switchTeam(req, res, _next) {
 
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	if (canCreateModel && (!teamData.llmModel || !teamData.embeddingModel)) {
-		return dynamicResponse(req, res, 302, {
-			redirect: `/${res.locals.account.currentTeam.toString()}/onboarding/configuremodels`
-		});
-	}
-
-	return res.json({});
+	return res.json({ canCreateModel, teamData });
 }
 
 export async function updateRole(req, res) {

@@ -17,7 +17,7 @@ const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
-import { chainValidations } from 'utils/validationUtils';
+import { chainValidations } from 'utils/validationutils';
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;

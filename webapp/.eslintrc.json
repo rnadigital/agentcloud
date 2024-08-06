@@ -2,7 +2,9 @@
 	"ignorePatterns": [
 		"*.config.js",
 		"*.config.ts",
-		"node_modules/"
+		"node_modules/",
+		"src/test/*",
+		"src/**/*.test.ts"
 	],
 	"extends": [
 		"next/core-web-vitals",

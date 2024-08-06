@@ -4,7 +4,7 @@ import { FormFieldProps } from 'lib/types/connectorform/form';
 import { Controller, useFormContext } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
-import { toSentenceCase } from 'utils/toSentenceCase';
+import { toSentenceCase } from 'utils/tosentencecase';
 
 interface MultiSelectFieldProps extends FormFieldProps {
 	options: { value: string; label: string }[];

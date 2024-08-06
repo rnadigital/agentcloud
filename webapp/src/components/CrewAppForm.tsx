@@ -246,7 +246,7 @@ export default function CrewAppForm({
 	return (
 		<>
 			{modal}
-			{!editing && <h2 className='text-xl font-bold mb-6'>Process App</h2>}
+			{!editing && <h2 className='text-xl font-bold mb-6 dark:text-white'>Process App</h2>}
 			<form onSubmit={appPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 

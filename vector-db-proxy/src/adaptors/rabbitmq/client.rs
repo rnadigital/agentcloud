@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::rabbitmq::models::RabbitConnect;
+use crate::adaptors::rabbitmq::models::RabbitConnect;
 use amqp_serde::types::{FieldTable, FieldValue, ShortStr};
 use amqprs::channel::{Channel, ExchangeDeclareArguments};
 use amqprs::{
