@@ -1,17 +1,12 @@
 import { BrainIcon } from 'components/assets/BrainIcon';
 import LLMConfigurationForm from 'components/onboarding/LLMConfigurationForm';
-import ThemeSelector from 'components/ThemeSelector';
 import { ThemeContext } from 'context/themecontext';
 import React, { useContext } from 'react';
-import { ReactSVG } from 'react-svg';
 
 export default function ConfigureModels() {
 	const { theme } = useContext(ThemeContext);
 	return (
 		<main className='flex items-center flex-col relative'>
-			<div className='absolute top-0 right-2'>
-				<ThemeSelector />
-			</div>
 			<img
 				src={
 					theme === 'dark'
