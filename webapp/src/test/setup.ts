@@ -14,6 +14,11 @@ beforeAll(async () => {
 	await db.db().collection('accounts').deleteOne({ email: 'testuser@example.com' });
 });
 
+afterAll(async () => {
+	await db.db().collection('accounts').deleteOne({ email: 'testuser@example.com' });
+	await db.client().close();
+});
+
 describe('Register and login', () => {
 
 	test('register new account', async () => {
@@ -45,4 +50,3 @@ describe('Register and login', () => {
 	});
 
 });
-

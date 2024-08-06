@@ -15,7 +15,7 @@
     "dev:email": "email dev --dir ./src/emails",
     "test:unit": "jest --verbose --testPathIgnorePatterns=./test/ --coverage",
     "test:coverage": "jest --verbose --testPathIgnorePatterns=./test/ --collectCoverage --coverageReporters cobertura",
-    "test:integration": "jest --testPathPattern=./test/"
+    "test:integration": "jest --detectOpenHandles --testPathPattern=./test/"
   },
   "keywords": [],
   "author": "RNA DIGITAL PTY LTD",
