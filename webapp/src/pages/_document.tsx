@@ -13,6 +13,7 @@ export default function Document() {
         document.documentElement.dataset.theme = theme;
         document.documentElement.classList.remove('dark');
         document.documentElement.style.backgroundColor = '#f7fafc';
+        localStorage.setItem('theme', theme);
       }
     })();
   `;
