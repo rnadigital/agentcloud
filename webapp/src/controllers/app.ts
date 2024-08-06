@@ -13,7 +13,7 @@ import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
-import { ModelType } from 'struct/model';
+import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
 export async function appsData(req, res, _next) {
@@ -146,7 +146,8 @@ export async function addAppApi(req, res, next) {
 		run,
 		sharingMode,
 		shareLinkShareId,
-		verbose
+		verbose,
+		fullOutput
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -240,7 +241,8 @@ export async function addAppApi(req, res, next) {
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
-			verbose
+			verbose,
+			fullOutput: fullOutput === true
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
@@ -261,13 +263,10 @@ export async function addAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (
-				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(
-					chatAgentModel?.type
-				)
-			) {
+			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
+					error:
+						'Only OpenAI, Anthropic, Google Vertex and Azure OpenAI models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {
@@ -276,11 +275,10 @@ export async function addAppApi(req, res, next) {
 			if (!foundModel) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
 			}
-			if (
-				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(foundModel?.type)
-			) {
+			if (!ChatAppAllowedModels.has(foundModel?.type)) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
+					error:
+						'Only OpenAI, Anthropic, Google Vertex and Azure OpenAI models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({
@@ -386,7 +384,8 @@ export async function editAppApi(req, res, next) {
 		run,
 		sharingMode,
 		shareLinkShareId,
-		verbose
+		verbose,
+		fullOutput
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -480,7 +479,8 @@ export async function editAppApi(req, res, next) {
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
-			verbose
+			verbose,
+			fullOutput: fullOutput === true
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
@@ -501,13 +501,10 @@ export async function editAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (
-				![ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX].includes(
-					chatAgentModel?.type
-				)
-			) {
+			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI, Anthropic and Google Vertex models are supported for chat apps.'
+					error:
+						'Only OpenAI, Anthropic, Google Vertex and Azure OpenAI models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {
@@ -515,9 +512,10 @@ export async function editAppApi(req, res, next) {
 			if (!foundModel) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid model ID' });
 			}
-			if (![ModelType.OPENAI, ModelType.ANTHROPIC].includes(foundModel?.type)) {
+			if (!ChatAppAllowedModels.has(foundModel?.type)) {
 				return dynamicResponse(req, res, 400, {
-					error: 'Only OpenAI and Anthropic models are supported for chat app agents.'
+					error:
+						'Only OpenAI, Anthropic, Google Vertex and Azure OpenAI models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({

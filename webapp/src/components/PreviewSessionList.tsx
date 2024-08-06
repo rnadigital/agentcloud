@@ -32,7 +32,7 @@ export default function PreviewSessionList(props) {
 
 	async function fetchSessions(noLoading = false, fromStart = false) {
 		const now = Date.now();
-		if (now - lastFetchTime < 1000) {
+		if (now - lastFetchTime < 250) {
 			// throttle api calls
 			return;
 		}
@@ -161,7 +161,7 @@ export default function PreviewSessionList(props) {
 								className={`text-gray-400 hover:text-white hover:bg-gray-700 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full ${router.asPath.includes(`/session/${s._id}`) ? 'bg-gray-800 text-white' : ''}`}
 								href={`/${resourceSlug}/session/${s._id}`}
 							>
-								<p className='overflow-hidden truncate text-ellipsis'>
+								<p className='overflow-hidden truncate text-ellipsis w-[200px]'>
 									{s.previewLabel || s.name || <span className='text-xs italic'>New Session</span>}
 								</p>
 							</Link>
