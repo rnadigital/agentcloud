@@ -183,6 +183,7 @@ export default function Session(props) {
 				setSession(res?.session || {});
 				setApp(res?.app || {});
 				setChatContext(res);
+				setTerminated(res?.session?.status === SessionStatus.TERMINATED);
 			},
 			setError,
 			router
