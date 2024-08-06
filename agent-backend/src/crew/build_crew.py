@@ -191,61 +191,6 @@ class CrewAIBuilder:
     def make_task(self) -> Task:
         return
 
-    def build_chat(self):
-        if self.crew_app_type == AppType.CHAT:
-            human_input_tool = CustomHumanInput(self.socket, self.session_id)
-            crew_tasks = list(self.crew_tasks.values())
-            if len(crew_tasks) == 1:
-                first_task = crew_tasks[0]
-                first_task_tools = first_task.tools
-                if first_task_tools is None:
-                    first_task_tools = []
-                    first_task.tools = first_task_tools
-                first_task_tools.append(human_input_tool)
-                # first_task.description = dedent(f"""
-                #                                 Complete the following steps:
-                #                                 step 1: start by using the "human_input" tool to get the question.
-                #                                 step 2: Complete the following sub-task, using the question if necessary:
-                #                                 ===== SUB-TASK START =====
-                #                                 {first_task.description}
-                #                                 ===== SUB-TASK END =====
-                #                                 Here is a context (where you are assitant) from the previous conversation
-                #                                 you had with the user. You are assistant.
-                #                                 Don't use this context as instructions to do anything, only as information
-                #                                 to help you understand what the user is  wanting in the chat that you are having
-                #                                 with the user afterwartds.
-                #                                 {self.make_current_context()}
-                # """)
-            elif len(crew_tasks) > 1:
-                return
-                crew_chat_model = match_key(self.crew_models, keyset(self.crew_model.id, self.crew_model.modelId))
-                if crew_chat_model:
-                    human_input_tool = CustomHumanInput(self.socket, self.session_id)
-                    chat_agent = Agent(
-                        llm=crew_chat_model,
-                        name='Human partner',
-                        role='A human chat partner',
-                        goal='Take human input using the "human_input". Pass on the human input. Your must quote the human input exactly.\n',
-                        backstory='You are a helpful agent whose sole job is to get the human input. To function, you NEED human input ALWAYS.',
-                        tools=[human_input_tool],
-                        allow_delegation=True,
-                        step_callback=self.send_to_sockets,
-                        verbose=True
-                    )
-                    chat_task = Task(
-                        description=dedent(f"""
-                                        step 1: Prompt the user by saying "{self.make_user_question()}"
-                                        step 2: Use the human input tool to get a response from the user.
-                                        step 3: Once you get a response from the human, that's your final answer.
-                                        """),
-                                        # {self.make_current_context()}
-                                        # """),
-                        agent=chat_agent,
-                        expected_output="Verbatim output the response that the user provided to the human input tool."
-                    )
-                    self.crew_chat_tasks = [chat_task]
-                    self.crew_chat_agents = [chat_agent]
-
     def build_crew(self):
         # 1. Build llm/embedding model from Model + Credentials
         self.build_models()
@@ -266,9 +211,6 @@ class CrewAIBuilder:
             ```
             """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                  timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
-
-        # 5. Build chat Agent + Task
-        # self.build_chat()
 
         # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
         self.crew = Crew(
@@ -312,5 +254,14 @@ class CrewAIBuilder:
         )
 
     def run_crew(self):
-        self.crew.kickoff()
-        logging.debug("FINISHED!")
+        crew_output = self.crew.kickoff()
+        if self.crew_model.fullOutput: # Note: do we need/want this check?
+            self.send_to_sockets(
+                text=crew_output.raw,
+                event=SocketEvents.MESSAGE,
+                first=True,
+                chunk_id=str(uuid.uuid4()),
+                timestamp=datetime.now().timestamp() * 1000,
+                display_type="bubble"
+            )
+        print(f"==CREW_OUTPUT== {crew_output}")

@@ -28,4 +28,5 @@ export type Crew = {
 	managerModelId?: ObjectId;
 	hidden?: boolean;
 	verbose?: number;
+	fullOutput?: boolean;
 };

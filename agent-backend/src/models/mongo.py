@@ -250,6 +250,7 @@ class Crew(BaseModel):
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
     fullOutput: Optional[bool] = False
+    full_output: Optional[bool] = Field(alias="fullOutput", defalut=False)
     stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
     modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)
