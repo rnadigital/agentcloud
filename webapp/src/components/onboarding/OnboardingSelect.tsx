@@ -64,7 +64,7 @@ const OnboardingSelect = <TFieldValues extends FieldValues>({
 								<div className='mt-1 relative w-full text-sm'>
 									<ListboxButton
 										className={clsx(
-											'h-11 relative w-full border border-gray-300 dark:border-gray-600 shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500',
+											'rounded h-11 relative w-full border border-gray-300 dark:border-gray-600 shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500',
 											classNames?.listboxButton
 										)}
 									>

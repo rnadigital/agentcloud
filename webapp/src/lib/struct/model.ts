@@ -2,6 +2,7 @@
 
 export enum ModelType {
 	OPENAI = 'open_ai',
+	AZURE_OPENAI = 'azure',
 	FASTEMBED = 'fastembed',
 	OLLAMA = 'ollama',
 	// COHERE = 'cohere',
@@ -16,6 +17,11 @@ export const modelOptions = [
 		label: 'OpenAI',
 		iconURL: '/images/onboarding/openai.svg',
 		recommended: true
+	},
+	{
+		value: ModelType.AZURE_OPENAI,
+		label: 'Azure OpenAI',
+		iconURL: '/images/onboarding/azure-openai.svg'
 	},
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.svg' },
 	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.svg' },
@@ -47,6 +53,12 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 	[ModelType.OPENAI]: {
 		api_key: { type: 'text' },
 		org_id: { type: 'text', optional: true }
+	},
+	[ModelType.AZURE_OPENAI]: {
+		api_key: { type: 'text' },
+		azure_endpoint: { type: 'text', placeholder: 'eg. https://xyz.openai.azure.com' },
+		azure_deployment: { type: 'text' },
+		api_version: { type: 'text', placeholder: 'eg. 2024-02-15-preview' }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
@@ -120,7 +132,16 @@ export const ModelList = {
 		'claude-3-haiku-20240307'
 	],
 	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
-	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
+	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
+	[ModelType.AZURE_OPENAI]: [
+		'gpt-4o-mini',
+		'gpt-4o',
+		'gpt-4'
+		/* Note: Don't uncomment these until: https://github.com/rnadigital/agentcloud/issues/396
+		'text-embedding-3-small',
+		'text-embedding-3-large',
+		'text-embedding-ada-002'*/
+	]
 };
 
 export const ModelEmbeddingLength = {
@@ -136,3 +157,10 @@ export const ModelEmbeddingLength = {
 	'fast-multilingual-e5-large': 1024,
 	'nomic-embed-text': 8192
 };
+
+export const ChatAppAllowedModels = new Set([
+	ModelType.OPENAI,
+	ModelType.ANTHROPIC,
+	ModelType.GOOGLE_VERTEX,
+	ModelType.AZURE_OPENAI
+]);

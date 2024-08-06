@@ -18,7 +18,7 @@ import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
-import { ModelType } from 'struct/model';
+import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 
@@ -261,7 +261,7 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={modelCallback}
 					modelFilter='llm'
-					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX]}
+					modelTypeFilters={[...ChatAppAllowedModels]}
 				/>
 			);
 			break;
@@ -491,11 +491,7 @@ export default function ChatAppForm({
 										callbackKey='modelId'
 										setCallbackKey={null}
 										modelFilter='llm'
-										modelTypeFilters={[
-											ModelType.OPENAI,
-											ModelType.ANTHROPIC,
-											ModelType.GOOGLE_VERTEX
-										]}
+										modelTypeFilters={[...ChatAppAllowedModels]}
 									/>
 
 									<ToolsSelect
