@@ -764,18 +764,25 @@ export default withRouter(function Layout(props) {
 					</main>
 				</div>
 			</div>
-			<div
-				className={`transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none ${switching === false ? 'opacity-0' : ''} text-center ps-[280px] content-center`}
-			>
-				<img
-					className='pulsate m-auto'
-					src='/images/agentcloud-full-black-bg-trans.png'
-					alt='Agentcloud'
-					width={200}
-					height={150}
-				/>
-				<em>Switching team...</em>
-			</div>
+
+			{switching && (
+				<div
+					className={cn(
+						'transition-all duration-300 bg-white z-40 fixed w-screen h-screen overflow-hidden opacity-1 pointer-events-none text-center ps-[280px] content-center',
+						{ 'opacity-0': switching === false }
+					)}
+				>
+					<img
+						className='pulsate m-auto'
+						src='/images/agentcloud-full-black-bg-trans.png'
+						alt='Agentcloud'
+						width={200}
+						height={150}
+					/>
+					<em>Switching team...</em>
+				</div>
+			)}
+
 			<div
 				className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching === false ? 'opacity-0' : ''} text-center`}
 			/>
