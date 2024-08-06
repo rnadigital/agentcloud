@@ -144,7 +144,7 @@ export default function PreviewSessionList(props) {
 	}
 
 	return (
-		<li className='overflow-y-scroll pb-[220px]'>
+		<li className='overfow-none pb-[220px]'>
 			{sessionsRef.current?.length > 0 && (
 				<div className='text-xs font-semibold leading-6 text-indigo-200'>Session History</div>
 			)}
