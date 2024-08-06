@@ -84,7 +84,6 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-            
             model_id = None
             for _, agent in self.agents_models.items():
                 if tool.id in agent.toolIds:
@@ -148,7 +147,13 @@ class CrewAIBuilder:
     def build_tasks(self):
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
-            task_tools_objs = search_subordinate_keys(self.crew_tools, key)
+            task_tools_objs = dict()
+            for task_toolid in task.toolIds:
+                task_tool_thingy = search_subordinate_keys(self.crew_tools, set([task_toolid]))
+                if len(list(task_tool_thingy.values())) > 0:
+                    actual_task_tool = list(task_tool_thingy.values())[0]
+                    task_tools_objs[actual_task_tool.name] = actual_task_tool
+
             if task.requiresHumanInput:
                 human = CustomHumanInput(self.socket, self.session_id)
                 task_tools_objs["human_input"] = human
