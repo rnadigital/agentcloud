@@ -34,8 +34,8 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 	let { isDragActive, getRootProps, getInputProps, acceptedFiles, rejectedFiles } = useDropzone({
 		onDrop,
 		minSize: 0,
-		maxSize
-		// accept: 'image/*',
+		maxSize,
+		accept: { 'image/*': [] }
 	});
 
 	useEffect(() => {
