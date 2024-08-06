@@ -296,14 +296,22 @@ export async function verifyToken(req, res) {
 		if (!stripeCustomer) {
 			return dynamicResponse(req, res, 400, { error: 'Customer not found' });
 		}
-		const { name, email } = stripeCustomer;
-		const emailAccount: Account = await getAccountByEmail(email);
+		const { email } = stripeCustomer;
+		// Get the custom name field from metadata
+		const customName = foundCheckoutSession?.custom_fields?.length
+			? foundCheckoutSession.custom_fields[0]?.text?.value
+			: null;
+		if (customName) {
+			// Update the customer's name in Stripe with the custom name
+			await StripeClient.get().customers.update(stripeCustomerId, { name: customName });
+		}
+		const emailAccount = await getAccountByEmail(email);
 		if (emailAccount) {
 			return dynamicResponse(req, res, 400, { error: 'Account already exists' });
 		}
 		const { addedAccount } = await createAccount({
 			email,
-			name,
+			name: customName || email, // fallback to emali if name not found on checkoutsession
 			password,
 			roleTemplate: 'TEAM_MEMBER',
 			checkoutSessionId
