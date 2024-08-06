@@ -371,7 +371,10 @@ export default function Session(props) {
 								<div className='min-w-0 flex-1 h-full'>
 									{messages ? (
 										terminated ? (
-											<p id='session-terminated' className='text-center h-full me-14 pt-3'>
+											<p
+												id='session-terminated'
+												className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
+											>
 												This session was terminated.
 											</p>
 										) : (
