@@ -293,7 +293,6 @@ export async function verifyToken(req, res) {
 		const stripeCustomerId = foundCheckoutSession?.customer;
 		// Retrieve customer details from Stripe
 		const stripeCustomer = await StripeClient.get().customers.retrieve(stripeCustomerId);
-		console.log('stripeCustomer', stripeCustomer);
 		if (!stripeCustomer) {
 			return dynamicResponse(req, res, 400, { error: 'Customer not found' });
 		}
