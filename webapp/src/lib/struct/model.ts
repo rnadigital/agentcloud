@@ -18,7 +18,7 @@ export const modelOptions = [
 		iconURL: '/images/onboarding/openai.svg',
 		recommended: true
 	},
-	{ value: ModelType.AZURE_OPEAI, label: 'Azure OpenAI', iconURL: '/images/onboarding/azure.svg' },
+	{ value: ModelType.AZURE_OPEAI, label: 'Azure OpenAI', iconURL: '/images/onboarding/azure-openai.svg' },
 	{ value: ModelType.ANTHROPIC, label: 'Anthropic', iconURL: '/images/onboarding/anthropic.svg' },
 	{ value: ModelType.OLLAMA, label: 'Ollama', iconURL: '/images/onboarding/ollama.svg' },
 	{ value: ModelType.FASTEMBED, label: 'FastEmbed', iconURL: '/images/onboarding/fastembed.svg' },
@@ -128,11 +128,11 @@ export const ModelList = {
 	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
 	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
 	[ModelType.AZURE_OPEAI]: [
-		'gpt-4o',
 		'gpt-4o-mini',
+		'gpt-4o',
 		'gpt-4',
-		'text-embedding-3-large',
 		'text-embedding-3-small',
+		'text-embedding-3-large',
 		'text-embedding-ada-002'
 	]
 };
