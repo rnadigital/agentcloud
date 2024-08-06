@@ -39,7 +39,6 @@ export default function PreviewSessionList(props) {
 		setLastFetchTime(now);
 		!noLoading && setLoading(true);
 		const start = Date.now();
-		console.log('fetchSessions fromStart', fromStart);
 		try {
 			await API.getSessions(
 				{
