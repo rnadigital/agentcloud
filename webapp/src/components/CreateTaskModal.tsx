@@ -25,9 +25,9 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 	}, []);
 
 	return (
-		<Transition.Root show={open} as={Fragment}>
+		<Transition show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
-				<Transition.Child
+				<TransitionChild
 					as={Fragment}
 					enter='ease-out duration-300'
 					enterFrom='opacity-0'
@@ -37,7 +37,7 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 					leaveTo='opacity-0'
 				>
 					<div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
-				</Transition.Child>
+				</TransitionChild>
 
 				<div className='fixed inset-0 z-10 overflow-y-auto'>
 					<div className='flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0'>
@@ -73,6 +73,6 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 					</div>
 				</div>
 			</Dialog>
-		</Transition.Root>
+		</Transition>
 	);
 }

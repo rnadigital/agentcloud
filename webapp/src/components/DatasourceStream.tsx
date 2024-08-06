@@ -43,7 +43,7 @@ export function StreamRow({
 	const [datasourceDescriptions, setDatasourceDescriptions] = useState(descriptionsMap || {});
 
 	return (
-		<div className='border-b'>
+		<div className='border-b dark:text-gray-50'>
 			<div className='flex items-center p-4'>
 				{!readonly && (
 					<div className='me-4'>
@@ -82,7 +82,9 @@ export function StreamRow({
 				</div>
 			</div>
 			{stream?.stream?.jsonSchema && (
-				<div className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'}`}>
+				<div
+					className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'} dark:text-white`}
+				>
 					<table className='w-full'>
 						<thead>
 							<tr>
@@ -105,7 +107,7 @@ export function StreamRow({
 													})
 												}
 												type='checkbox'
-												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2 dark:text-white'
 												name={key}
 												data-parent={stream?.stream?.name || stream?.name}
 												disabled={readonly}
