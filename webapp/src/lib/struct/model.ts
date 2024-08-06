@@ -55,8 +55,10 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 		org_id: { type: 'text', optional: true }
 	},
 	[ModelType.AZURE_OPENAI]: {
-		openai_api_key: { type: 'text' },
-		azure_endpoint: { type: 'text' }
+		api_key: { type: 'text' },
+		azure_endpoint: { type: 'text', placeholder: 'eg. https://xyz.openai.azure.com' },
+		azure_deployment: { type: 'text' },
+		api_version: { type: 'text', placeholder: 'eg. 2024-02-15-preview' }
 	},
 	[ModelType.FASTEMBED]: {},
 	[ModelType.OLLAMA]: {
