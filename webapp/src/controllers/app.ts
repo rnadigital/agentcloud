@@ -146,7 +146,8 @@ export async function addAppApi(req, res, next) {
 		run,
 		sharingMode,
 		shareLinkShareId,
-		verbose
+		verbose,
+		fullOutput,
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -240,7 +241,8 @@ export async function addAppApi(req, res, next) {
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
-			verbose
+			verbose,
+			fullOutput: fullOutput === true
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {
@@ -321,7 +323,7 @@ export async function addAppApi(req, res, next) {
 			? {
 					crewId: addedCrew ? addedCrew.insertedId : null,
 					memory: memory === true,
-					cache: cache === true
+					cache: cache === true,
 				}
 			: {
 					chatAppConfig: {
@@ -386,7 +388,8 @@ export async function editAppApi(req, res, next) {
 		run,
 		sharingMode,
 		shareLinkShareId,
-		verbose
+		verbose,
+		fullOutput
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -480,7 +483,8 @@ export async function editAppApi(req, res, next) {
 			tasks: tasks.map(toObjectId),
 			agents: agents.map(toObjectId),
 			process,
-			verbose
+			verbose,
+			fullOutput: fullOutput === true
 			// managerModelId: toObjectId(managerModelId)
 		});
 	} else {

@@ -374,7 +374,7 @@ export default withRouter(function Layout(props) {
 							className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'
 							ref={scrollRef}
 						>
-							<div className='bg-gray-900 h-24 fixed z-50 w-[280px] left-0'>
+							<div className='bg-gray-900 h-24 fixed z-50 w-[288px] left-0'>
 								<img
 									className='mx-auto'
 									src='/images/agentcloud-full-white-bg-trans.png'
