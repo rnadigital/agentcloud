@@ -147,7 +147,7 @@ export async function addAppApi(req, res, next) {
 		sharingMode,
 		shareLinkShareId,
 		verbose,
-		fullOutput,
+		fullOutput
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -323,7 +323,7 @@ export async function addAppApi(req, res, next) {
 			? {
 					crewId: addedCrew ? addedCrew.insertedId : null,
 					memory: memory === true,
-					cache: cache === true,
+					cache: cache === true
 				}
 			: {
 					chatAppConfig: {

@@ -110,7 +110,7 @@ export default function CrewAppForm({
 			sharingMode,
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
-			fullOutput,
+			fullOutput
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -353,8 +353,9 @@ export default function CrewAppForm({
 											const optionTask = taskChoices.find(tc => tc._id === data.value);
 											return (
 												<li
-													className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-														}`}
+													className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+														data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
+													}`}
 												>
 													{data.label}
 													{optionTask ? ` (${optionTask.description})` : null}
@@ -434,7 +435,6 @@ export default function CrewAppForm({
 								modelFilter='llm'
 							/>*/}
 
-
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>
 									<label
@@ -449,9 +449,7 @@ export default function CrewAppForm({
 											onChange={e => setFullOutput(e.target.checked)}
 											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 										/>
-										<span className='ml-2 flex'>
-											Full final output
-										</span>
+										<span className='ml-2 flex'>Full final output</span>
 										<p className='text-sm'></p>
 									</label>
 								</div>
@@ -495,7 +493,6 @@ export default function CrewAppForm({
 									</label>
 								</div>
 							</div>
-
 						</div>
 					</div>
 				</div>
