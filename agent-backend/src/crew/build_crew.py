@@ -150,8 +150,8 @@ class CrewAIBuilder:
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
             task_tools_objs = dict()
 
-            for task_toolid in task.toolIds:
-                task_tool_set = search_subordinate_keys(self.crew_tools, set([task_toolid]))
+            for task_tool_id in task.toolIds:
+                task_tool_set = search_subordinate_keys(self.crew_tools, keyset(task_tool_id))
                 if len(list(task_tool_set.values())) > 0:
                     task_tool = list(task_tool_set.values())[0] # Note: this dict/list always holds 1 item
                     task_tools_objs[task_tool.name] = task_tool
