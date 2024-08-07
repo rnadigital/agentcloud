@@ -175,7 +175,7 @@ export default function Session(props) {
 		socketContext.off('connect', joinSessionRoom);
 		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('message', handleSocketMessage);
-		socketContext.on('terminate', handleSocketTerminate);
+		socketContext.off('terminate', handleSocketTerminate);
 		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
