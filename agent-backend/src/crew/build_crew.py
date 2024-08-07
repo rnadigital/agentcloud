@@ -151,10 +151,10 @@ class CrewAIBuilder:
             task_tools_objs = dict()
 
             for task_toolid in task.toolIds:
-                task_tool_thingy = search_subordinate_keys(self.crew_tools, set([task_toolid]))
-                if len(list(task_tool_thingy.values())) > 0:
-                    actual_task_tool = list(task_tool_thingy.values())[0]
-                    task_tools_objs[actual_task_tool.name] = actual_task_tool
+                task_tool_set = search_subordinate_keys(self.crew_tools, set([task_toolid]))
+                if len(list(task_tool_set.values())) > 0:
+                    task_tool = list(task_tool_set.values())[0] # Note: this dict/list always holds 1 item
+                    task_tools_objs[task_tool.name] = task_tool
 
             if task.requiresHumanInput:
                 human = CustomHumanInput(self.socket, self.session_id)
