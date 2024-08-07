@@ -158,10 +158,16 @@ export default function Session(props) {
 		updateChat();
 		scrollToBottom('smooth');
 	}
+
+	function handleSocketTerminate() {
+		setTerminated(true);
+	}
+
 	function handleSocketStart() {
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
+		socketContext.on('terminate', handleSocketTerminate);
 		socketContext.on('joined', handleSocketJoined);
 		joinSessionRoom();
 	}
@@ -169,6 +175,7 @@ export default function Session(props) {
 		socketContext.off('connect', joinSessionRoom);
 		socketContext.off('reconnect', joinSessionRoom);
 		socketContext.off('message', handleSocketMessage);
+		socketContext.on('terminate', handleSocketTerminate);
 		socketContext.off('joined', handleSocketJoined);
 		leaveSessionRoom();
 	}
