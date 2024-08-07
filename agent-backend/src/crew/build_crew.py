@@ -274,9 +274,10 @@ class CrewAIBuilder:
             self.send_to_sockets(
                 text=crew_output.raw,
                 event=SocketEvents.MESSAGE,
-                first=True,
                 chunk_id=str(uuid.uuid4()),
-                timestamp=datetime.now().timestamp() * 1000,
-                display_type="bubble"
             )
-        print(f"==CREW_OUTPUT== {crew_output}")
+        self.send_to_sockets(
+            text='',
+            event=SocketEvents.STOP_GENERATING,
+            chunk_id=str(uuid.uuid4()),
+        )
