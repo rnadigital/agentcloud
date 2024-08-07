@@ -31,14 +31,9 @@ def construct_model_credentials(models: List[Tuple[Set[str], Model]]):
 def construct_tools(parents: List[Tuple[Set[str], Agent | Tool]]):
     tools: Dict[Set[PyObjectId], Tool] = dict()
     for parent_id_set, parent in parents:
-        if isinstance(parent, Agent):
-            parent_tools = mongo_client.get_tools(parent.toolIds)
-            for tool in parent_tools:
-                tools[keyset(parent_id_set, tool.id)] = tool
-        elif isinstance(parent, Task):
-            parent_tools = mongo_client.get_tools(parent.toolIds)
-            for tool in parent_tools:
-                tools[keyset(parent_id_set, tool.id)] = tool
+        parent_tools = mongo_client.get_tools(parent.toolIds)
+        for tool in parent_tools:
+            tools[keyset(parent_id_set, tool.id)] = tool
     return tools
 
 
