@@ -5,6 +5,7 @@ from typing import Any, List, Set, Type
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
+from pydantic import ValidationError
 from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
@@ -218,16 +219,24 @@ class CrewAIBuilder:
             """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                  timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
-        # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
-        self.crew = Crew(
-            agents=self.crew_chat_agents + list(self.crew_agents.values()),
-            tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
-            **self.crew_model.model_dump(
-                exclude_none=True, exclude_unset=True,
-                exclude={"id", "tasks", "agents"}
-            ),
-            manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
-        )
+        try:
+            # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+            self.crew = Crew(
+                agents=self.crew_chat_agents + list(self.crew_agents.values()),
+                tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
+                **self.crew_model.model_dump(
+                    exclude_none=True, exclude_unset=True,
+                    exclude={"id", "tasks", "agents"}
+                ),
+                manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
+            )
+        except ValidationError as ve:
+            self.send_to_sockets(text=f"""Validation Error:
+            ``` 
+            {str(ve)}
+            ```
+            """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                             timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
     def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
                         timestamp=None, display_type='bubble', author_name='System', overwrite=False):
