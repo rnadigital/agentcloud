@@ -26,6 +26,7 @@ import {
 import { SessionStatus } from 'struct/session';
 
 import { SharingMode } from './lib/struct/sharing';
+import { updateModel } from './db/model';
 
 export const io = new Server();
 
@@ -217,8 +218,8 @@ export function initSocket(rawHttpServer) {
 				chunkId: finalMessage.message.chunkId || null,
 				message: finalMessage
 			};
+			io.to(data.room).emit(data.event, finalMessage);
 			await upsertOrUpdateChatMessage(finalMessage.room, updatedMessage, chunk);
-
 			const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 			if (newStatus !== session.status) {
 				//Note: chat messages can be received out of order
@@ -233,7 +234,6 @@ export function initSocket(rawHttpServer) {
 					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, newStatus));
 				io.to(data.room).emit('status', newStatus);
 			}
-			io.to(data.room).emit(data.event, finalMessage);
 			if (finalMessage.message && finalMessage.incoming === true) {
 				log(
 					'socket.id "%s" relaying message %O to private room %s',

@@ -210,7 +210,7 @@ export default function Session(props) {
 							.join('');
 						if (m?.chunks?.length > 1 && combinedChunks?.length > 0) {
 							_m.message.text =
-								(_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') +
+								(_m.message.chunkId && _m.message.text.length > 0 && _m.message.first === true ? _m.message.text : '') +
 								combinedChunks;
 						}
 						_m.tokens = m.tokens || _m.tokens;
