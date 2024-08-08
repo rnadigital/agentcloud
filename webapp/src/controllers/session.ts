@@ -233,7 +233,7 @@ export async function addSessionApi(req, res, next) {
 		appId: toObjectId(app?._id),
 		sharingConfig: {
 			permissions: {},
-			mode: SharingMode.PUBLIC
+			mode: app?.sharingConfig?.mode
 		}
 	});
 
