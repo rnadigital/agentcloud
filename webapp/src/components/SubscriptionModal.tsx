@@ -35,7 +35,6 @@ export default function SubscriptionModal({
 	}
 
 	useEffect(() => {
-		console.log(open, typeof open);
 		if (open !== false) {
 			posthog.capture('upgradeModal', {
 				name,
