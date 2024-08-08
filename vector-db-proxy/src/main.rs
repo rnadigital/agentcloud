@@ -15,6 +15,7 @@ use env_logger::Env;
 use tokio::signal;
 use tokio::sync::RwLock;
 
+use adaptors::mongo::client::start_mongo_connection;
 use adaptors::qdrant::client::instantiate_qdrant_client;
 use routes::api_routes::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, get_collection_info,
@@ -26,7 +27,6 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::init::env_variables::set_all_env_vars;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
-use adaptors::mongo::client::start_mongo_connection;
 
 mod data;
 mod errors;
@@ -36,6 +36,7 @@ mod routes;
 mod utils;
 mod messages;
 mod adaptors;
+mod vector_dbs;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =
@@ -121,7 +122,7 @@ async fn main() -> std::io::Result<()> {
         });
         handles.push(handle);
     }
-
+    
 
     // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
