@@ -453,7 +453,7 @@ export default function CreateDatasourceForm({
 										(pricingMatrix[stripePlan].allowedConnectors.length > 0 &&
 											!pricingMatrix[stripePlan].allowedConnectors.includes(v.value))
 									) {
-										return setSubscriptionModalOpen(true);
+										return setSubscriptionModalOpen(v.label);
 									}
 									setLoading(v != null);
 									setConnector(v);
@@ -748,7 +748,7 @@ export default function CreateDatasourceForm({
 	return (
 		<div>
 			<SubscriptionModal
-				open={subscriptionModalOpen !== false}
+				open={subscriptionModalOpen}
 				setOpen={setSubscriptionModalOpen}
 				title='Upgrade Required'
 				text='You need to upgrade to access 260+ data connections.'
