@@ -2,6 +2,7 @@ import logging
 import random
 import time
 
+from crew.exceptions import CrewAIBuilderException
 from crew.get_crew_components import construct_crew, looping_app, session_terminated
 from chat import ChatAssistant
 from models.mongo import AppType
@@ -40,7 +41,12 @@ def execute_task(data: dict):
     with log_exception():
         session_id = data.get("sessionId")
         socket = None
-        crew_builder, app = construct_crew(session_id, socket)
+        try:
+            crew_builder, app = construct_crew(session_id, socket)
+        except CrewAIBuilderException as ce:
+            logging.error(ce)
+            return
+
         crew_builder.build_crew()
         crew_builder.run_crew()
 

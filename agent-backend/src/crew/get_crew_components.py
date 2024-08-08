@@ -1,4 +1,6 @@
 from typing import Any, Optional, List, Dict, Set, Tuple, Union
+
+from crew.exceptions import CrewAIBuilderException
 from init.mongo_session import start_mongo_session
 from models.mongo import Agent, AppType, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool, App
@@ -54,6 +56,9 @@ def construct_crew(session_id: str, socket: Any):
     # try:
     session: Session = mongo_client.get_session(session_id)
     print(f"Session: {session}")
+
+    if not session:
+        raise CrewAIBuilderException(f"Session with id '{session_id}' not found. Perhaps terminated by user?")
 
     app, the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
     print("Crew:", app, the_crew, crew_tasks, crew_agents)
