@@ -19,11 +19,19 @@ export function ChatWrapper({ children }) {
 	}
 
 	function updateSharedState(update: any) {
-		// log('updateSharedState', update);
-		posthog.group('session', update?.app?._id);
 		if (update == null) {
 			return setSharedState({});
 		}
+		const { name, orgId, teamId, startDate, appId } = update?.session || {};
+		posthog.group('session', update?.app?._id, {
+			name,
+			orgId,
+			teamId,
+			startDate,
+			appId,
+			appSharingMode: update?.app?.sharingConfig?.mode,
+			sessionSharingMode: update?.session?.sharingConfig?.mode
+		});
 		setSharedState(oldState => {
 			return {
 				...oldState,
@@ -35,7 +43,7 @@ export function ChatWrapper({ children }) {
 	useEffect(() => {
 		if (router?.asPath && !router.asPath.includes('/session/')) {
 			setSharedState(null);
-			posthog.group('session', null);
+			posthog.group('session', null, {});
 		}
 	}, [router.asPath]);
 

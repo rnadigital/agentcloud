@@ -35,18 +35,19 @@ export default function SubscriptionModal({
 	}
 
 	useEffect(() => {
-		if (open === true) {
+		if (open !== false) {
 			posthog.capture('upgradeModal', {
 				name,
 				email,
 				stripePlan,
-				text
+				text,
+				...(typeof open === 'string' ? { trigger: open } : {})
 			});
 		}
 	}, [open]);
 
 	return (
-		<Transition show={open} as={Fragment}>
+		<Transition show={open !== false} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={setOpen}>
 				<TransitionChild
 					as={Fragment}
