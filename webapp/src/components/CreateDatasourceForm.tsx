@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
@@ -27,6 +28,8 @@ const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnec
 import { StreamsList } from 'components/DatasourceStream';
 import FormContext from 'context/connectorform';
 import { usePostHog } from 'posthog-js/react';
+
+import classNames from './ClassNames';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -156,13 +159,17 @@ export default function CreateDatasourceForm({
 	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
 	// }
 	connectorOptions = connectorOptions
-		.filter(key => connectors[key]?.name_oss)
+		.filter(key => connectors[key]?.name_oss && connectors[key]?.name_oss?.toLowerCase() !== 'test')
 		.map(key => ({
 			value: connectors[key]?.definitionId,
-			label: connectors[key]?.name_oss || 'test',
+			label: connectors[key]?.name_oss,
 			icon: connectors[key]?.iconUrl_oss,
-			supportLevel: connectors[key]?.supportLevel_oss
-		}));
+			supportLevel: connectors[key]?.supportLevel_oss,
+			planAvailable: pricingMatrix[stripePlan].allowedConnectors.includes(
+				connectors[key]?.definitionId
+			)
+		}))
+		.sort((a, b) => (a?.planAvailable ? -1 : 1));
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();
@@ -470,9 +477,21 @@ export default function CreateDatasourceForm({
 													{data.label}
 												</span>
 												<span
-													className={`px-1 rounded-full bg-${data.supportLevel === 'certified' ? 'green' : 'gray'}-100 text-${data.supportLevel === 'certified' ? 'green' : 'gray'}-700`}
+													className={classNames(
+														'px-1 rounded-full',
+														data.planAvailable === true ? 'bg-green-300' : 'bg-orange-200',
+														data.planAvailable === true ? 'text-green-800' : 'text-orange-800'
+													)}
 												>
-													{data.supportLevel}
+													{data.planAvailable ? (
+														<span className='flex mx-0.5'>
+															<CheckCircleIcon className='mt-0.5 h-4 w-4 me-1' /> Available
+														</span>
+													) : (
+														<span className='flex mx-0.5'>
+															<LockClosedIcon className='mt-0.5 h-4 w-4 me-1' /> Upgrade
+														</span>
+													)}
 												</span>
 											</span>
 										</li>
