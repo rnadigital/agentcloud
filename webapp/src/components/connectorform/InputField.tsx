@@ -3,9 +3,9 @@ import clsx from 'clsx';
 import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
 import cn from 'lib/cn';
-import { FormFieldProps } from 'types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import { FormFieldProps } from 'struct/form';
 import { capitalize } from 'utils/capitalize';
 import { toSentenceCase } from 'utils/tosentencecase';
 

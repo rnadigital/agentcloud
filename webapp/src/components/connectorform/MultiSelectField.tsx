@@ -1,9 +1,9 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
-import { FormFieldProps } from 'types/connectorform/form';
 import { Controller, useFormContext } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
+import { FormFieldProps } from 'struct/form';
 import { toSentenceCase } from 'utils/tosentencecase';
 
 interface MultiSelectFieldProps extends FormFieldProps {

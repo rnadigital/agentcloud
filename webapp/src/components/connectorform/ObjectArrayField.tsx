@@ -1,8 +1,7 @@
 import { InformationCircleIcon, PlusIcon, XMarkIcon } from '@heroicons/react/20/solid';
-import Tippy from '@tippyjs/react';
 import ToolTip from 'components/shared/ToolTip';
-import { FormFieldProps } from 'types/connectorform/form';
 import { useFieldArray, useFormContext } from 'react-hook-form';
+import { FormFieldProps } from 'struct/form';
 import { toSentenceCase } from 'utils/tosentencecase';
 
 import FormSection from './FormSection';

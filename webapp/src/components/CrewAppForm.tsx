@@ -15,11 +15,12 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { Agent } from 'struct/agent';
 import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
 import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
-import { Agent, Task } from 'types/app';
+import { Task } from 'struct/task';
 
 import ToolTip from './shared/ToolTip';
 
@@ -393,14 +394,14 @@ export default function CrewAppForm({
 										</label>
 										{missingAgents.map(agent => (
 											<div
-												key={agent._id}
+												key={agent._id as string}
 												className='flex items-center px-3 py-1 bg-gray-200 dark:bg-slate-700 rounded-full cursor-pointer'
 												onClick={() =>
 													setAgentsState([
 														...agentsState,
 														{
 															label: agent.name,
-															value: agent._id,
+															value: agent._id as string,
 															allowDelegation: agent.allowDelegation
 														}
 													])

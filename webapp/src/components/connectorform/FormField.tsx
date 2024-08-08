@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { Option, SelectValue } from 'react-tailwindcss-select/dist/components/type';
-import { Property } from 'types/connectorform/form';
+import { Property } from 'struct/form';
 
 import ArrayField from './ArrayField';
 import FormSection from './FormSection';
