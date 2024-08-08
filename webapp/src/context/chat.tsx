@@ -19,19 +19,19 @@ export function ChatWrapper({ children }) {
 	}
 
 	function updateSharedState(update: any) {
-		// log('updateSharedState', update);
-		const { name, orgId, teamId, startDate, appId, sharingConfig } = update?.session || {};
+		if (update == null) {
+			return setSharedState({});
+		}
+		const { name, orgId, teamId, startDate, appId } = update?.session || {};
 		posthog.group('session', update?.app?._id, {
 			name,
 			orgId,
 			teamId,
 			startDate,
 			appId,
-			sharingMode: sharingConfig?.mode
+			appSharingMode: update?.app?.sharingConfig?.mode,
+			sessionSharingMode: update?.session?.sharingConfig?.mode
 		});
-		if (update == null) {
-			return setSharedState({});
-		}
 		setSharedState(oldState => {
 			return {
 				...oldState,
