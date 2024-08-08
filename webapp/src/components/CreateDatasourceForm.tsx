@@ -165,9 +165,11 @@ export default function CreateDatasourceForm({
 			label: connectors[key]?.name_oss,
 			icon: connectors[key]?.iconUrl_oss,
 			supportLevel: connectors[key]?.supportLevel_oss,
-			planAvailable: pricingMatrix[stripePlan].allowedConnectors.includes(
-				connectors[key]?.definitionId
-			)
+			planAvailable:
+				pricingMatrix[stripePlan].dataConnections &&
+				//Note: higher plans have empty list but dataConnections: true = ALL connectors are available
+				(pricingMatrix[stripePlan].allowedConnectors?.length === 0 ||
+					pricingMatrix[stripePlan].allowedConnectors.includes(connectors[key]?.definitionId))
 		}))
 		.sort((a, b) =>
 			a.planAvailable && !b.planAvailable
