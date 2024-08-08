@@ -65,7 +65,6 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 											tools={tools}
 											agents={agents}
 											fetchTaskFormData={fetchTaskFormData}
-											taskChoices={tasks}
 										/>
 									</div>
 								</div>
