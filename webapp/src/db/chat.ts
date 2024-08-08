@@ -126,7 +126,9 @@ export async function upsertOrUpdateChatMessage(
 									$inc: { tokens: chunk.tokens || 0 } // Increment token count
 								}
 							: {}),
-						$setOnInsert: chatMessage
+						...(chatMessage?.message?.message?.first === true
+							? { $setOnInsert: chatMessage }
+							: {})
 					})
 		},
 		{ upsert: chatMessage.message?.message?.overwrite !== true }
