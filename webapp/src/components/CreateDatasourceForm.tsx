@@ -169,7 +169,13 @@ export default function CreateDatasourceForm({
 				connectors[key]?.definitionId
 			)
 		}))
-		.sort((a, b) => (a?.planAvailable ? -1 : 1));
+		.sort((a, b) =>
+			a.planAvailable && !b.planAvailable
+				? -1
+				: !a.planAvailable && b.planAvailable
+					? 1
+					: a.label.localeCompare(b.label)
+		);
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();
