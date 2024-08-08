@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Schema } from 'lib/types/connectorform/form';
+import { Schema } from 'types/connectorform/form';
 
 import FormField from './FormField';
 

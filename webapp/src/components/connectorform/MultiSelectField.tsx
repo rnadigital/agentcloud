@@ -1,6 +1,6 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
-import { FormFieldProps } from 'lib/types/connectorform/form';
+import { FormFieldProps } from 'types/connectorform/form';
 import { Controller, useFormContext } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';

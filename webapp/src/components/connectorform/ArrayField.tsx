@@ -3,7 +3,7 @@ import Tippy from '@tippyjs/react';
 import clsx from 'clsx';
 import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
-import { FormFieldProps } from 'lib/types/connectorform/form';
+import { FormFieldProps } from 'types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { toSentenceCase } from 'utils/tosentencecase';

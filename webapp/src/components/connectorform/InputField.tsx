@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
 import cn from 'lib/cn';
-import { FormFieldProps } from 'lib/types/connectorform/form';
+import { FormFieldProps } from 'types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { capitalize } from 'utils/capitalize';
