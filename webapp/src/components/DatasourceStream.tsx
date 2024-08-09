@@ -107,7 +107,7 @@ export function StreamRow({
 													})
 												}
 												type='checkbox'
-												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2 dark:text-white'
+												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
 												name={key}
 												data-parent={stream?.stream?.name || stream?.name}
 												disabled={readonly}

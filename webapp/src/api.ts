@@ -1,5 +1,5 @@
 import NProgress from 'nprogress';
-import { GetTeamModelsDispatch } from 'types/dispatchtypes';
+import { GetTeamModelsDispatch } from 'struct/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {

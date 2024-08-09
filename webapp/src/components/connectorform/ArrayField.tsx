@@ -1,14 +1,11 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
-import Tippy from '@tippyjs/react';
 import clsx from 'clsx';
 import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
-import { FormFieldProps } from 'lib/types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { FormFieldProps } from 'struct/form';
 import { toSentenceCase } from 'utils/tosentencecase';
-
-import InputField from './InputField';
 
 const ArrayField = ({ name, testId, type, disabled, property, isRequired }: FormFieldProps) => {
 	const { control } = useFormContext();

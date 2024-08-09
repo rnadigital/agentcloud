@@ -14,7 +14,7 @@ export default function InfoAlert({
 	return (
 		message && (
 			<div className={className || 'rounded-md bg-blue-100 p-4 mb-2'}>
-				<div className='flex'>
+				<div className='flex mb-2'>
 					<div className='flex-shrink-0'>
 						<InformationCircleIcon className={`h-5 w-5 text-${textColor}-400`} aria-hidden='true' />
 					</div>

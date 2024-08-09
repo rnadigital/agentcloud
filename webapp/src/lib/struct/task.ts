@@ -3,22 +3,27 @@
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
-export type Task = {
-	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
+export interface Task {
+	_id?: ObjectId | string;
+	orgId?: ObjectId | string;
+	teamId?: ObjectId | string;
 	name: string;
 	description: string;
-	agentId?: ObjectId;
+	agentId?: ObjectId | string;
 	expectedOutput?: string;
-	toolIds?: ObjectId[];
+	toolIds?: (ObjectId | string)[];
 	asyncExecution?: boolean;
-	context?: ObjectId[];
+	context?: (ObjectId | string)[];
 	outputJson?: any;
 	outputPydantic?: any;
 	outputFile?: string;
-	// callback: any;
-	icon?: IconAttachment;
+	icon?:
+		| IconAttachment
+		| {
+				id: string;
+				filename: string;
+		  }
+		| null;
 	requiresHumanInput?: boolean;
 	hidden?: boolean;
-};
+}

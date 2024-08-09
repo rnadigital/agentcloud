@@ -56,7 +56,7 @@ export default function ChangePassword() {
 						height={128}
 						width={128}
 					/>
-					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight'>
+					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight dark:text-white'>
 						Forgot password?
 					</h2>
 				</div>

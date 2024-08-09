@@ -206,9 +206,8 @@ export function Message({
 			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2 mt-auto' : 'me-2'} select-none`}
 		>
 			<span
-				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}
+				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1`}
 			>
-				{/*(incoming || !sameAuthorAsPrevious) && <AgentAvatar agent={avatar} size={8} />*/}
 				<AgentAvatar agent={agent} size={8} />
 			</span>
 		</div>

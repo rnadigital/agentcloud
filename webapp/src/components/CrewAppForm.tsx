@@ -8,7 +8,6 @@ import CreateAgentModal from 'components/CreateAgentModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
-import ModelSelect from 'components/models/ModelSelect';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -16,10 +15,12 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { Agent } from 'struct/agent';
 import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
-import { modelOptions, ModelType } from 'struct/model';
+import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
+import { Task } from 'struct/task';
 
 import ToolTip from './shared/ToolTip';
 
@@ -34,8 +35,8 @@ export default function CrewAppForm({
 	callback,
 	fetchFormData
 }: {
-	agentChoices?: any[];
-	taskChoices?: any[];
+	agentChoices?: Agent[];
+	taskChoices?: Task[];
 	/*toolChoices?: any[],*/ crew?: any;
 	modelChoices: any;
 	app?: any;
@@ -69,7 +70,7 @@ export default function CrewAppForm({
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
-	const initialAgents =
+	const initialAgents: { label: string; value: string; allowDelegation?: boolean }[] =
 		agents &&
 		agents
 			.map(a => {
@@ -88,7 +89,18 @@ export default function CrewAppForm({
 				return ot ? { label: ot.name, value: t } : null;
 			})
 			.filter(n => n);
-	const [tasksState, setTasksState] = useState(initialTasks || []);
+	const [tasksState, setTasksState] = useState<{ label: string; value: string }[]>(
+		initialTasks || []
+	);
+
+	const missingAgents: Agent[] = tasksState?.reduce((acc, t) => {
+		const task = taskChoices.find(tc => tc._id === t.value);
+		if (task && !agentsState.some(a => a.value === task.agentId)) {
+			const missingAgent = agentChoices.find(ac => ac._id === task.agentId);
+			if (missingAgent && !acc.some(a => a._id === missingAgent._id)) acc.push(missingAgent);
+		}
+		return acc;
+	}, []);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -374,6 +386,33 @@ export default function CrewAppForm({
 								setModalOpen={setModalOpen}
 								multiple={true}
 							/>
+							{missingAgents?.length > 0 && (
+								<div className='sm:col-span-12 text-xs -mt-4'>
+									<div className='flex flex-wrap gap-2 items-center'>
+										<label className='block leading-6 text-gray-900 dark:text-slate-400'>
+											Required Agents
+										</label>
+										{missingAgents.map(agent => (
+											<div
+												key={agent._id as string}
+												className='flex items-center px-3 py-1 bg-gray-200 dark:bg-slate-700 rounded-full cursor-pointer'
+												onClick={() =>
+													setAgentsState([
+														...agentsState,
+														{
+															label: agent.name,
+															value: agent._id as string,
+															allowDelegation: agent.allowDelegation
+														}
+													])
+												}
+											>
+												<span className='text-gray-900 dark:text-slate-200'>{agent.name}</span>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
 
 							<div className='sm:col-span-2'>
 								<div className='flex gap-2 text-gray-900 dark:text-slate-400 items-center'>
@@ -534,8 +573,9 @@ export default function CrewAppForm({
 						</button>
 						<button
 							type='submit'
+							disabled={missingAgents?.length > 0}
 							onClick={() => setRun(true)}
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center disabled:bg-indigo-200 disabled:text-gray-500'
 						>
 							<PlayIcon className='h-4 w-4 mr-2' />
 							Save and Run

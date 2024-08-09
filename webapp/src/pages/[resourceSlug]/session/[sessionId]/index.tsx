@@ -209,9 +209,7 @@ export default function Session(props) {
 							.map(x => x.chunk)
 							.join('');
 						if (m?.chunks?.length > 1 && combinedChunks?.length > 0) {
-							_m.message.text =
-								(_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') +
-								combinedChunks;
+							_m.message.text = combinedChunks;
 						}
 						_m.tokens = m.tokens || _m.tokens;
 						_m._id = m._id; //id for last seen
@@ -341,7 +339,10 @@ export default function Session(props) {
 									}
 									chunking={m?.chunks?.length > 0}
 									completed={m?.completed}
-									agent={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
+									agent={{
+										name: authorName,
+										icon: { filename: authorAvatarMap[authorName.toLowerCase()] }
+									}}
 								/>
 							);
 						})}
