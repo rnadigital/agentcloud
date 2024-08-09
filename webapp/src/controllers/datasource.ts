@@ -11,7 +11,7 @@ import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/to
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
-import { chainValidations } from 'lib/utils/validationUtils';
+import { chainValidations } from 'lib/utils/validationutils';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';

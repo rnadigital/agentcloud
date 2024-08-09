@@ -1,10 +1,12 @@
 import * as API from '@api';
 import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
+import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
+import { pricingMatrix } from 'struct/billing';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -30,7 +32,9 @@ const SharingModeSelect = ({
 }) => {
 	const [loading, setLoading] = useState(false);
 	const [accountContext]: any = useAccountContext();
-	const { csrf } = accountContext as any;
+	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+	const { csrf, account } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	async function createShareLink() {
@@ -56,6 +60,13 @@ const SharingModeSelect = ({
 	}
 	return (
 		<>
+			<SubscriptionModal
+				open={subscriptionModalOpen !== false}
+				setOpen={setSubscriptionModalOpen}
+				title='Upgrade Required'
+				text='Public app sharing is only available on the Teams plan or higher.'
+				buttonText='Upgrade'
+			/>
 			<div className='sm:col-span-12'>
 				<label
 					htmlFor='sharingMode'
@@ -70,12 +81,15 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							setSharingMode(v ? v.value : null);
 							if (v?.value === SharingMode.PUBLIC) {
+								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
+									return setSubscriptionModalOpen(true);
+								}
 								createShareLink();
 							} else {
 								setShareLinkShareId(null);
 							}
+							setSharingMode(v ? v.value : null);
 						}}
 						options={sharingModeOptions}
 						formatOptionLabel={option => {

@@ -205,7 +205,7 @@ class Task(BaseModel):
     toolIds: Optional[List[PyObjectId]] = None
     tools: Optional[Tool] = None
     asyncExecution: Optional[bool] = False
-    context: Optional[str] = None
+    context: Optional[List[PyObjectId]] = None
     outputJSON: Optional[BaseModel] = None
     outputPydantic: Optional[BaseModel] = None
     outputFile: Optional[str] = None
@@ -243,13 +243,14 @@ class Crew(BaseModel):
     process: Optional[Process] = Process.Sequential
     managerLLM: Optional[Model] = None
     functionCallingLLM: Optional[Callable] = None
-    verbose: Optional[bool] = False
+    verbose: Optional[Union[int, bool]] = False
     memory: Optional[bool] = False
     cache: Optional[bool] = False
     config: Optional[Dict] = {}
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
     fullOutput: Optional[bool] = False
+    full_output: Optional[bool] = Field(alias="fullOutput", defalut=False)
     stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
     modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)

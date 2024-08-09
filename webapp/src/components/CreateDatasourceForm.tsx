@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
@@ -27,6 +28,8 @@ const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnec
 import { StreamsList } from 'components/DatasourceStream';
 import FormContext from 'context/connectorform';
 import { usePostHog } from 'posthog-js/react';
+
+import classNames from './ClassNames';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -155,12 +158,26 @@ export default function CreateDatasourceForm({
 	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
 	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
 	// }
-	connectorOptions = connectorOptions.map(key => ({
-		value: connectors[key]?.definitionId,
-		label: connectors[key]?.name_oss || 'test',
-		icon: connectors[key]?.iconUrl_oss,
-		supportLevel: connectors[key]?.supportLevel_oss
-	}));
+	connectorOptions = connectorOptions
+		.filter(key => connectors[key]?.name_oss && connectors[key]?.name_oss?.toLowerCase() !== 'test')
+		.map(key => ({
+			value: connectors[key]?.definitionId,
+			label: connectors[key]?.name_oss,
+			icon: connectors[key]?.iconUrl_oss,
+			supportLevel: connectors[key]?.supportLevel_oss,
+			planAvailable:
+				pricingMatrix[stripePlan].dataConnections &&
+				//Note: higher plans have empty list but dataConnections: true = ALL connectors are available
+				(pricingMatrix[stripePlan].allowedConnectors?.length === 0 ||
+					pricingMatrix[stripePlan].allowedConnectors.includes(connectors[key]?.definitionId))
+		}))
+		.sort((a, b) =>
+			a.planAvailable && !b.planAvailable
+				? -1
+				: !a.planAvailable && b.planAvailable
+					? 1
+					: a.label.localeCompare(b.label)
+		);
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();
@@ -438,7 +455,7 @@ export default function CreateDatasourceForm({
 										(pricingMatrix[stripePlan].allowedConnectors.length > 0 &&
 											!pricingMatrix[stripePlan].allowedConnectors.includes(v.value))
 									) {
-										return setSubscriptionModalOpen(true);
+										return setSubscriptionModalOpen(v.label);
 									}
 									setLoading(v != null);
 									setConnector(v);
@@ -468,9 +485,21 @@ export default function CreateDatasourceForm({
 													{data.label}
 												</span>
 												<span
-													className={`px-1 rounded-full bg-${data.supportLevel === 'certified' ? 'green' : 'gray'}-100 text-${data.supportLevel === 'certified' ? 'green' : 'gray'}-700`}
+													className={classNames(
+														'px-1 rounded-full',
+														data.planAvailable === true ? 'bg-green-300' : 'bg-orange-200',
+														data.planAvailable === true ? 'text-green-800' : 'text-orange-800'
+													)}
 												>
-													{data.supportLevel}
+													{data.planAvailable ? (
+														<span className='flex mx-0.5'>
+															<CheckCircleIcon className='mt-0.5 h-4 w-4 me-1' /> Available
+														</span>
+													) : (
+														<span className='flex mx-0.5'>
+															<LockClosedIcon className='mt-0.5 h-4 w-4 me-1' /> Upgrade
+														</span>
+													)}
 												</span>
 											</span>
 										</li>
@@ -721,7 +750,7 @@ export default function CreateDatasourceForm({
 	return (
 		<div>
 			<SubscriptionModal
-				open={subscriptionModalOpen !== false}
+				open={subscriptionModalOpen}
 				setOpen={setSubscriptionModalOpen}
 				title='Upgrade Required'
 				text='You need to upgrade to access 260+ data connections.'
@@ -741,7 +770,7 @@ export default function CreateDatasourceForm({
 								{step > stepData.steps[stepData.steps.length - 1] ? (
 									<a
 										href={stepData.href}
-										className='group flex flex-col border-l-4 border-indigo-600 py-2 pl-4 hover:border-indigo-800 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4'
+										className='group flex flex-col border-l-4 border-indigo-600 py-2 pl-4 hover:border-indigo-800 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-gray-50'
 									>
 										<span className='text-sm font-medium text-indigo-600 group-hover:text-indigo-800'>
 											{stepData.id}
@@ -760,9 +789,9 @@ export default function CreateDatasourceForm({
 								) : (
 									<a
 										href={stepData.href}
-										className='group flex flex-col border-l-4 border-gray-200 py-2 pl-4 hover:border-gray-300 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4'
+										className='group flex flex-col border-l-4 border-gray-200 py-2 pl-4 hover:border-gray-300 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-white'
 									>
-										<span className='text-sm font-medium text-gray-500 group-hover:text-gray-700'>
+										<span className='text-sm font-medium text-gray-500 group-hover:text-gray-700 dark:text-gray-50'>
 											{stepData.id}
 										</span>
 										<span className='text-sm font-medium'>{stepData.name}</span>

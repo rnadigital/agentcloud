@@ -1,24 +1,21 @@
+import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
+import Spinner from 'components/Spinner';
 import TaskCards from 'components/TaskCards';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import Blockies from 'react-blockies';
-
-import * as API from '../../api';
-import { useAccountContext } from '../../context/account';
 
 export default function Tasks(props) {
 	const [accountContext]: any = useAccountContext();
-	const { account, teamName } = accountContext as any;
+	const { teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const [open, setOpen] = useState(false);
 	const { tasks } = state;
 	const filteredTasks = tasks?.filter(x => !x.hidden);
 
@@ -31,7 +28,7 @@ export default function Tasks(props) {
 	}, [resourceSlug]);
 
 	if (!tasks) {
-		return 'Loading...'; //TODO: Implement a better loading state
+		return <Spinner />;
 	}
 
 	return (

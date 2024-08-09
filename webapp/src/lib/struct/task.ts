@@ -13,7 +13,7 @@ export type Task = {
 	expectedOutput?: string;
 	toolIds?: ObjectId[];
 	asyncExecution?: boolean;
-	context?: string;
+	context?: ObjectId[];
 	outputJson?: any;
 	outputPydantic?: any;
 	outputFile?: string;

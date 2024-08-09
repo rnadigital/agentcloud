@@ -1,9 +1,11 @@
 import { useAccountContext } from 'context/account';
+import debug from 'debug';
 import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 import { NotificationType, WebhookType } from 'struct/notification';
+const log = debug('webapp:context:socket');
 
 let socketio;
 if (typeof window !== 'undefined') {
@@ -19,7 +21,7 @@ export function SocketWrapper({ children }) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
-	const { resourceSlug } = router.query || account?.currentTeam;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [sharedSocket, _setSharedSocket] = useState(socketio);
 	const [_room, setRoom] = useState(resourceSlug);
 
@@ -39,12 +41,11 @@ export function SocketWrapper({ children }) {
 			return;
 		}
 		setRoom(oldRoom => {
-			if (oldRoom !== resourceSlug) {
-				sharedSocket.emit('leave_room', oldRoom);
-				sharedSocket.emit('join_room', resourceSlug);
-				sharedSocket.off('notification', handleNotification);
-				sharedSocket.on('notification', handleNotification);
-			}
+			log('Switching socket rooms, old room: %s, new room: %s', oldRoom, resourceSlug);
+			sharedSocket.emit('leave_room', oldRoom);
+			sharedSocket.emit('join_room', resourceSlug);
+			sharedSocket.off('notification', handleNotification);
+			sharedSocket.on('notification', handleNotification);
 			return resourceSlug;
 		});
 	}

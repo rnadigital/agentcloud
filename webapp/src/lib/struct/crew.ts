@@ -27,4 +27,6 @@ export type Crew = {
 	process: ProcessImpl;
 	managerModelId?: ObjectId;
 	hidden?: boolean;
+	verbose?: number;
+	fullOutput?: boolean;
 };

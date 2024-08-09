@@ -42,7 +42,7 @@ export default function EditModel(props) {
 			</Head>
 
 			<div className='border-b pb-2 my-2 mb-6'>
-				<h3 className='font-semibold text-gray-900'>Edit Model</h3>
+				<h3 className='font-semibold text-gray-900 dark:text-white'>Edit Model</h3>
 			</div>
 
 			<span className='sm: w-full md:w-1/2 xl:w-1/3'>

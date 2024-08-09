@@ -38,14 +38,20 @@ export function unsafeGetSessionById(sessionId: db.IdOrStr): Promise<Session> {
 	});
 }
 
-export function getSessionsByTeam(teamId: db.IdOrStr): Promise<Session[]> {
+export function getSessionsByTeam(
+	teamId: db.IdOrStr,
+	before: db.IdOrStr,
+	limit: number
+): Promise<Session[]> {
 	return SessionCollection()
 		.find({
-			teamId: toObjectId(teamId)
+			teamId: toObjectId(teamId),
+			...(before ? { _id: { $lt: toObjectId(before) } } : {})
 		})
 		.sort({
 			_id: -1
 		})
+		.limit(limit)
 		.toArray();
 }
 

@@ -164,7 +164,7 @@ export default function DropZone({
 		<label
 			{...getRootProps({ className: 'dropzone' })}
 			htmlFor='file'
-			className='block text-center border-2 border-dashed p-4 rounded mb-4 bg-white'
+			className='block text-center border-2 border-dashed p-4 rounded mb-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700'
 		>
 			<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
 			{!isDragActive && 'Click here or drop a file to upload'}
@@ -232,10 +232,13 @@ export default function DropZone({
 									leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 									leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 								>
-									<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6'>
+									<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 dark:bg-slate-800'>
 										<div>
 											<div className='text-center'>
-												<Dialog.Title as='h3' className='font-semibold text-gray-900'>
+												<Dialog.Title
+													as='h3'
+													className='font-semibold text-gray-900 dark:text-white'
+												>
 													Upload File
 												</Dialog.Title>
 											</div>

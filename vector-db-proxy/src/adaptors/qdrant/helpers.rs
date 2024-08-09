@@ -14,7 +14,7 @@ use uuid::Uuid;
 use crate::hash_map_values_as_serde_values;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
-use crate::qdrant::models::ScrollResults;
+use crate::adaptors::qdrant::models::ScrollResults;
 
 ///
 ///

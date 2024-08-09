@@ -3,7 +3,7 @@ import Tippy from '@tippyjs/react';
 import ToolTip from 'components/shared/ToolTip';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { toSentenceCase } from 'utils/toSentenceCase';
+import { toSentenceCase } from 'utils/tosentencecase';
 
 import FormSection from './FormSection';
 
@@ -18,7 +18,7 @@ const ObjectArrayField = ({ name, property, level = 0, isRequired }: FormFieldPr
 	return (
 		<div className='flex flex-col'>
 			<div className='flex items-center'>
-				<label htmlFor={name} className='mr-1'>
+				<label htmlFor={name} className='mr-1 text-sm dark:text-slate-400'>
 					{property.title ? property.title : toSentenceCase(name)}
 
 					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}

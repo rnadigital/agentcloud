@@ -11,6 +11,7 @@ import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import classNames from 'components//ClassNames';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
+import cn from 'lib/cn';
 
 export default function SubscriptionCard({
 	title,
@@ -124,11 +125,12 @@ export default function SubscriptionCard({
 
 	return (
 		<div
-			className={`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 border ${
+			className={cn(
+				`transition-all cursor-pointer w-max min-w-[300px] rounded-lg p-4 border`,
 				selectedPlan === plan
 					? 'shadow-lg bg-blue-100 border-blue-400 dark:bg-blue-900 border-1'
-					: 'border hover:shadow-md bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800'
-			}`}
+					: 'border hover:shadow-md bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800 dark:bg-slate-700'
+			)}
 			onClick={() => setSelectedPlan(plan)}
 		>
 			{!currentPlan && isPopular && (
@@ -164,18 +166,18 @@ export default function SubscriptionCard({
 				/>
 			</div>
 			<div className='flex items-center mt-4'>
-				<h2 className='text-lg font-semibold'>{title}</h2>
+				<h2 className='text-lg font-semibold dark:text-white'>{title}</h2>
 			</div>
-			<div className='mt-1 min-h-[80px]'>
+			<div className='mt-1 min-h-[80px] dark:text-white'>
 				{description}
 				{price > 0 && //and not free plan
 					plan !== SubscriptionPlan.ENTERPRISE && //and not customisable on enterprise
 					renderAddons(addons)}
 			</div>
-			<div className='mt-4 flex flex-row'>
+			<div className='mt-4 flex flex-row dark:text-white'>
 				<span className='text-4xl font-bold'>${isEnterprise ? 'Custom' : price}</span>
 				{!isEnterprise && (
-					<span className='text-sm text-gray-500 flex flex-col ps-1'>
+					<span className='text-sm text-gray-500 flex flex-col ps-1 dark:text-gray-50'>
 						<span>per</span>
 						<span>month</span>
 					</span>

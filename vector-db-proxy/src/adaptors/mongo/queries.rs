@@ -6,7 +6,7 @@ use std::str::FromStr;
 use mongodb::options::{FindOneOptions};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::mongo::models::{DataSources, Model};
+use crate::adaptors::mongo::models::{DataSources, Model};
 
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");

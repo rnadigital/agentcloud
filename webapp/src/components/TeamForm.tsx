@@ -72,7 +72,10 @@ export default function TeamForm({
 				<div className={`space-y-${compact ? '6' : '12'}`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 						<div className='sm:col-span-6'>
-							<label htmlFor='name' className='block text-sm font-medium leading-6 text-gray-900'>
+							<label
+								htmlFor='name'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-white'
+							>
 								Team Name
 							</label>
 							<div className='mt-2'>

@@ -14,7 +14,7 @@ export default function AddTask(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { tasks, tools, agents, datasources } = state;
+	const { tasks, tools, agents } = state;
 
 	async function fetchTaskFormData() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
@@ -27,6 +27,8 @@ export default function AddTask(props) {
 	if (tasks == null) {
 		return <Spinner />;
 	}
+	console.log(tasks);
+	console.log(props);
 
 	return (
 		<>
@@ -38,8 +40,8 @@ export default function AddTask(props) {
 				<TaskForm
 					tools={tools}
 					agents={agents}
-					datasources={datasources}
 					fetchTaskFormData={fetchTaskFormData}
+					taskChoices={tasks}
 				/>
 			</span>
 		</>

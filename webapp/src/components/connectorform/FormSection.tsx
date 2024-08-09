@@ -29,7 +29,7 @@ const FormSection = ({ properties, name, requiredFields, level = 0 }: FormSectio
 				'ml-12 border p-2': level >= 3
 			})}
 		>
-			<div className='font-semibold capitalize mb-2'>{name}</div>
+			<div className='font-semibold capitalize my-2 text-sm dark:text-slate-400'>{name}</div>
 
 			{sortedEntries.map(([fieldName, fieldSchema]) => {
 				return (

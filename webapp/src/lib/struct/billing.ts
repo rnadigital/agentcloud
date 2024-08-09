@@ -160,6 +160,7 @@ export type PlanLimits = {
 		allowedPeriods?: string[];
 		allowedDropdowns?: string[];
 	};
+	allowFunctionTools: boolean;
 	//TODO: keep updated to agentcloud priing sheet
 };
 
@@ -183,7 +184,8 @@ export const PlanLimitsKeys: PlanLimitsKeysType = {
 	storageLocations: 'storageLocations',
 	llmModels: 'llmModels',
 	embeddingModels: 'embeddingModels',
-	cronProps: 'cronProps'
+	cronProps: 'cronProps',
+	allowFunctionTools: 'allowFunctionTools'
 };
 
 // Object to hold the limits for each plan, using computed property names
@@ -218,7 +220,8 @@ export const pricingMatrix: PricingMatrix = {
 		embeddingModels: [ModelType.OPENAI],
 		cronProps: {
 			disabled: true
-		}
+		},
+		allowFunctionTools: false
 	},
 	[SubscriptionPlan.PRO]: {
 		users: 1,
@@ -238,13 +241,14 @@ export const pricingMatrix: PricingMatrix = {
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
 		maxFunctionTools: 1,
 		storageLocations: ['US'],
-		llmModels: ModelTypes,
-		embeddingModels: ModelTypes,
+		llmModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
+		embeddingModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
 		cronProps: {
 			allowedPeriods: ['year', 'month', 'week', 'day'],
 			//allowedDropdowns: ['period', 'months', 'month-days']
 			allowedDropdowns: ['period']
-		}
+		},
+		allowFunctionTools: false
 	},
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
@@ -263,7 +267,8 @@ export const pricingMatrix: PricingMatrix = {
 			allowedPeriods: ['year', 'month', 'week', 'day', 'hour'],
 			//allowedDropdowns: ['period', 'months', 'month-days', 'hours'],
 			allowedDropdowns: ['period']
-		}
+		},
+		allowFunctionTools: true
 	},
 	[SubscriptionPlan.ENTERPRISE]: {
 		//TODO
@@ -282,6 +287,7 @@ export const pricingMatrix: PricingMatrix = {
 		cronProps: {
 			allowedPeriods: ['year', 'month', 'week', 'day', 'hour', 'minute'],
 			allowedDropdowns: ['period']
-		}
+		},
+		allowFunctionTools: true
 	}
 };

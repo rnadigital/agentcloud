@@ -52,18 +52,18 @@ const Invoice = ({ continued, session, show, cancelFunction, confirmFunction, la
 							leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 							leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 						>
-							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 md:min-w-[400px]'>
+							<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-700 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 md:min-w-[400px]'>
 								<div className='mb-6'>
 									<div className='mt-3 text-center w-full'>
 										<Dialog.Title
 											as='h3'
-											className='text-base font-semibold leading-6 text-gray-900'
+											className='text-base font-semibold leading-6 text-gray-900 dark:text-white'
 										>
 											Subscription summary:
 										</Dialog.Title>
 										<div className='mt-2'>
-											<div className='dark:bg-gray-900'>
-												<ul className='bg-white shadow-md rounded-lg divide-y dark:bg-gray-800 dark:divide-gray-700'>
+											<div className='dark:bg-slate-700'>
+												<ul className='bg-white shadow-md rounded-lg divide-y dark:bg-gray-800 odark:divide-gray-700'>
 													{lineItems?.map(item => (
 														<li
 															key={item.id}

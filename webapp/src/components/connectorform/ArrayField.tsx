@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { FormFieldProps } from 'lib/types/connectorform/form';
 import { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
-import { toSentenceCase } from 'utils/toSentenceCase';
+import { toSentenceCase } from 'utils/tosentencecase';
 
 import InputField from './InputField';
 
@@ -60,9 +60,8 @@ const ArrayField = ({ name, testId, type, disabled, property, isRequired }: Form
 	return (
 		<div>
 			<div className='flex items-center'>
-				<label htmlFor={name} className='mr-1'>
+				<label htmlFor={name} className='mr-1 text-sm dark:text-slate-400'>
 					{property.title ? property.title : toSentenceCase(name)}
-
 					{isRequired && <span className='text-red-500 ml-1 align-super'>*</span>}
 				</label>
 				{property.description && (

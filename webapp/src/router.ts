@@ -357,7 +357,11 @@ export default function router(server, app) {
 	);
 
 	//sharelink
-	teamRouter.post('/forms/sharelink/add', sharelinkController.addShareLinkApi);
+	teamRouter.post(
+		'/forms/sharelink/add',
+		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
+		sharelinkController.addShareLinkApi
+	);
 
 	//apps
 	teamRouter.get('/apps', appController.appsPage.bind(null, app));

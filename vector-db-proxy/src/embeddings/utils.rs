@@ -13,7 +13,7 @@ use tokio::task;
 
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
-use crate::mongo::queries::get_model;
+use crate::adaptors::mongo::queries::get_model;
 
 async fn fastembed_models(
     model: &FastEmbedModels,

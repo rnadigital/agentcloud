@@ -7,8 +7,8 @@ use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::{Mutex, RwLock};
 
-use crate::gcp::models::pubsub_consume;
-use crate::rabbitmq::models::rabbit_consume;
+use crate::adaptors::gcp::models::pubsub_consume;
+use crate::adaptors::rabbitmq::models::rabbit_consume;
 
 #[derive(Clone, Copy, Debug)]
 pub enum MessageQueueProvider {

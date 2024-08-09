@@ -137,7 +137,7 @@ export default async function createAccount({
 	if (STRIPE_ACCOUNT_SECRET) {
 		let foundCheckoutSession;
 		if (checkoutSessionId) {
-			emailVerified = true; //checkoutsession is only sent currently in the verify flow
+			emailVerified = false;
 			log('Account creation attempted with checkoutSession %s', checkoutSessionId);
 			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
 			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
@@ -195,7 +195,7 @@ export default async function createAccount({
 				)
 			: render(
 					VerificationEmail({
-						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}`
+						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}${checkoutSessionId ? '&newpassword=true&stripe=1' : ''}`
 					})
 				);
 

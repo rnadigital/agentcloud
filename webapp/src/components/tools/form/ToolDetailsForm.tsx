@@ -14,14 +14,14 @@ export default function ToolDetailsForm({
 	return (
 		<>
 			<div>
-				<label className='text-base font-semibold text-gray-900'>Name</label>
+				<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>Name</label>
 				<div>
 					<input
 						required
 						readOnly={isBuiltin}
 						type='text'
 						name='toolName'
-						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-gray-50 mt-2'
 						onChange={e => setToolName(e.target.value)}
 						value={toolName}
 					/>
@@ -30,12 +30,14 @@ export default function ToolDetailsForm({
 
 			{!isBuiltin && initialType === null && (
 				<div>
-					<label className='text-base font-semibold text-gray-900'>Tool Type</label>
+					<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>
+						Tool Type
+					</label>
 					<div>
 						<select
 							required
 							name='toolType'
-							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+							className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-gray-50 mt-2'
 							value={toolType}
 							onChange={e => setToolType(e.target.value as ToolType)}
 						>
@@ -48,8 +50,10 @@ export default function ToolDetailsForm({
 			)}
 
 			<div>
-				<label className='text-base font-semibold text-gray-900'>Description</label>
-				<p className='text-sm'>
+				<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>
+					Description
+				</label>
+				<p className='text-sm dark:text-gray-50'>
 					<strong>Tip:</strong> A verbose and detailed description helps agents to better understand
 					when to use this tool.
 				</p>
@@ -58,7 +62,7 @@ export default function ToolDetailsForm({
 						required
 						readOnly={isBuiltin}
 						name='toolDescription'
-						className='w-full mt-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-gray-50 mt-2'
 						onChange={e => setToolDescription(e.target.value)}
 						rows={3}
 						value={toolDescription}

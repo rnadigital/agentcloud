@@ -11,7 +11,7 @@ use crate::data::text_extraction::TextExtraction;
 use crate::data::models::{Document as DocumentModel, Document, FileType, Sentence};
 use crate::data::text_splitting::TextSplitting;
 use crate::embeddings::models::EmbeddingModels;
-use crate::mongo::models::ChunkingStrategy;
+use crate::adaptors::mongo::models::ChunkingStrategy;
 
 pub fn calculate_cosine_distances(sentences: &mut Vec<Sentence>) -> Vec<f32> {
     let mut distances = Vec::new();

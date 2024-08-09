@@ -1,4 +1,5 @@
 import * as API from '@api';
+import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import debug from 'debug';
 import { useRouter } from 'next/router';
@@ -9,8 +10,10 @@ const log = debug('webapp:context:notifications');
 const NotificationContext = createContext({});
 
 export function NotificationWrapper({ children }) {
+	const [accountContext]: any = useAccountContext();
+	const { csrf, account } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const [sharedState, setSharedState] = useState([]);
 	const [, notificationTrigger]: any = useSocketContext();
 	const [socketContext]: any = useSocketContext();

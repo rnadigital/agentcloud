@@ -63,6 +63,9 @@
       "utils/*": [
         "lib/utils/*"
       ],
+      "db/*": [
+        "db/*"
+      ],
       "lib/*": [
         "lib/*"
       ],
@@ -90,5 +93,6 @@
   "ts-node": {
     "esm": false,
     "experimentalSpecifierResolution": "node",
-  }
+  },
+  "types": ["@types/jest"]
 }

@@ -463,7 +463,6 @@ export default function ToolForm({
 										datasources={datasources}
 										addNewCallback={setModalOpen}
 									/>
-
 									<RetrievalStrategyComponent
 										toolRetriever={toolRetriever}
 										setToolRetriever={setToolRetriever}

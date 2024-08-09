@@ -1,7 +1,7 @@
 'use strict';
 
 import * as API from '@api';
-import { PlayIcon } from '@heroicons/react/20/solid';
+import { InformationCircleIcon, PlayIcon } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
@@ -20,6 +20,8 @@ import { AppType } from 'struct/app';
 import { ProcessImpl } from 'struct/crew';
 import { modelOptions, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
+
+import ToolTip from './shared/ToolTip';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -60,9 +62,10 @@ export default function CrewAppForm({
 	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
+	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
-	const { name, agents, tasks } = crewState;
+	const { name, agents, tasks, verbose } = crewState;
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
@@ -105,7 +108,9 @@ export default function CrewAppForm({
 			type: AppType.CREW,
 			run,
 			sharingMode,
-			shareLinkShareId
+			shareLinkShareId,
+			verbose: Number(e.target.verbose.value) || 0,
+			fullOutput
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -217,8 +222,9 @@ export default function CrewAppForm({
 					modelTypeFilters={[
 						ModelType.GROQ,
 						ModelType.OPENAI,
+						ModelType.AZURE_OPENAI,
 						ModelType.OLLAMA,
-						ModelType.COHERE,
+						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
 						ModelType.GOOGLE_VERTEX
 					]}
@@ -243,7 +249,7 @@ export default function CrewAppForm({
 	return (
 		<>
 			{modal}
-			{!editing && <h2 className='text-xl font-bold mb-6'>Process App</h2>}
+			{!editing && <h2 className='text-xl font-bold mb-6 dark:text-white'>Process App</h2>}
 			<form onSubmit={appPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 
@@ -369,6 +375,26 @@ export default function CrewAppForm({
 								multiple={true}
 							/>
 
+							<div className='sm:col-span-2'>
+								<div className='flex gap-2 text-gray-900 dark:text-slate-400 items-center'>
+									<label htmlFor='verbose' className='block text-sm font-medium leading-6'>
+										Verbose
+									</label>
+									<ToolTip content='Verbosity level controls whether agent thoughts and actions appear for agents during the session of a process app. Setting it to zero will ensure a clean run, only showing agents final answers in the app.'>
+										<div className='cursor-pointer'>
+											<InformationCircleIcon className='h-4 w-4' />
+										</div>
+									</ToolTip>
+								</div>
+								<input
+									type='number'
+									name='verbose'
+									id='verbose'
+									defaultValue={verbose || 0}
+									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								/>
+							</div>
+
 							{/*<div className='sm:col-span-12'>
 							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Process
@@ -409,6 +435,26 @@ export default function CrewAppForm({
 								setCallbackKey={() => {}}
 								modelFilter='llm'
 							/>*/}
+
+							<div className='sm:col-span-12'>
+								<div className='mt-2'>
+									<label
+										htmlFor='fullOutput'
+										className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+									>
+										<input
+											id='fullOutput'
+											type='checkbox'
+											name='fullOutput'
+											checked={fullOutput}
+											onChange={e => setFullOutput(e.target.checked)}
+											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+										/>
+										<span className='ml-2 flex'>Full final output</span>
+										<p className='text-sm'></p>
+									</label>
+								</div>
+							</div>
 
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>

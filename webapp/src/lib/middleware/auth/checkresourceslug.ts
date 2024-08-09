@@ -141,7 +141,10 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 export async function setParamOrgAndTeam(req, res, next) {
 	//TODO: project any sensitive org props away here
 
-	const { sessionId, appId, resourceSlug } = req.params || {};
+	const { appId, resourceSlug } = req.params || {};
+
+	const sessionId = req.params.sessionId || req.query.sessionId;
+
 	if (!sessionId && !appId) {
 		log('no sessionId or appId in setParamOrgAndTeam %O', req.params);
 		req.session.destroy();

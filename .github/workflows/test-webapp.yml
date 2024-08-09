@@ -1,0 +1,51 @@
+name: Test webapp
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      working-directory: ./webapp
+      run: npm install
+
+    - name: Run tests and generate coverage report
+      working-directory: ./webapp
+      run: npm run test:coverage
+
+    # - name: Upload test results
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: test-results
+    #     path: webapp/coverage
+
+    - name: Upload coverage results
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: webapp/coverage/cobertura-coverage.xml
+
+    - name: Publish Cobertura Coverage
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: webapp/coverage/cobertura-coverage.xml
+        minimum_coverage: 80
+        skip_covered: true

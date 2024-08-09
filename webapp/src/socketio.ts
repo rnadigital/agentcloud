@@ -73,6 +73,7 @@ export function initSocket(rawHttpServer) {
 		});
 
 		socket.on('leave_room', async (room: string) => {
+			log('socket.id "%s" leave_room %s', socket.id, room);
 			socket.leave(room);
 		});
 
@@ -114,7 +115,7 @@ export function initSocket(rawHttpServer) {
 					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
 						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
 					);
-					if (!sessionTeamMatch) {
+					if (!sessionTeamMatch && !socketRequest.locals.isAgentBackend) {
 						return;
 					}
 					socket.join(room);

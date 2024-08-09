@@ -819,8 +819,8 @@ tools = ["crewai-tools (>=0.4.8,<0.5.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "bc68603d101793d0b779a67cd28419157d1bccd1"
-resolved_reference = "bc68603d101793d0b779a67cd28419157d1bccd1"
+reference = "e4444d2e9cb6f90e15894260e8dec4516e11f160"
+resolved_reference = "e4444d2e9cb6f90e15894260e8dec4516e11f160"
 
 [[package]]
 name = "curl-cffi"
@@ -5917,4 +5917,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "39146ea7640dfe8ce82e46d98f9e184a08e5615a8e9595f58024741097fa965d"
+content-hash = "115be4c1cd7f6950e2517bcb422cb380c512400b0558d10ae6f4f7f78a993936"

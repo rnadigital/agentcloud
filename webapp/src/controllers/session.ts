@@ -25,19 +25,14 @@ import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { SharingMode } from 'struct/sharing';
-import { chainValidations } from 'utils/validationUtils';
+import { chainValidations } from 'utils/validationutils';
 
 export async function sessionsData(req, res, _next) {
-	const [crews, sessions, agents] = await Promise.all([
-		getCrewsByTeam(req.params.resourceSlug),
-		getSessionsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug)
-	]);
+	const before = req?.query?.before === 'null' ? null : req?.query?.before;
+	const sessions = await getSessionsByTeam(req.params.resourceSlug, before, 10);
 	return {
 		csrf: req.csrfToken(),
-		crews,
-		sessions,
-		agents
+		sessions
 	};
 }
 
@@ -46,6 +41,14 @@ export async function sessionsData(req, res, _next) {
  * team sessions json data
  */
 export async function sessionsJson(req, res, next) {
+	let validationError = chainValidations(
+		req.query,
+		[{ field: 'before', validation: { ofType: 'string' } }],
+		{ id: 'before' }
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
 	const data = await sessionsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
@@ -76,7 +79,7 @@ export async function sessionData(req, res, _next) {
 }
 
 export async function publicSessionData(req, res, _next) {
-	const session = await unsafeGetSessionById(req.params.sessionId);
+	const session = await unsafeGetSessionById(req.params.sessionId || req.query.sessionId);
 	const app = await unsafeGetAppById(session?.appId || req.params.appId);
 	let avatarMap = {};
 	switch (app?.type) {
@@ -129,8 +132,7 @@ export async function publicSessionPage(app, req, res, next) {
 		...data,
 		account: null
 	};
-	console.log(res.locals.data);
-	return app.render(req, res, `/${req.params.resourceSlug}/session/${req.params.sessionId}`);
+	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
 /**
@@ -231,7 +233,7 @@ export async function addSessionApi(req, res, next) {
 		appId: toObjectId(app?._id),
 		sharingConfig: {
 			permissions: {},
-			mode: SharingMode.PUBLIC
+			mode: app?.sharingConfig?.mode
 		}
 	});
 

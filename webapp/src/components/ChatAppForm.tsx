@@ -4,10 +4,8 @@ import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
-import CopyToClipboardInput from 'components/CopyToClipboardInput';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
-import InfoAlert from 'components/InfoAlert';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
@@ -15,13 +13,12 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
-import { ModelType } from 'struct/model';
+import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 
@@ -216,7 +213,10 @@ export default function ChatAppForm({
 	async function createDatasourceCallback(createdDatasource) {
 		console.log('createDatasourceCallback', createdDatasource);
 		(await fetchFormData) && fetchFormData();
-		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setDatasourceState(oldDatasources => {
+			const newOption = { label: createdDatasource.name, value: createdDatasource.datasourceId };
+			return Array.isArray(oldDatasources) ? oldDatasources.concat(newOption) : [newOption];
+		});
 		setModalOpen(false);
 	}
 
@@ -261,7 +261,7 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={modelCallback}
 					modelFilter='llm'
-					modelTypeFilters={[ModelType.OPENAI, ModelType.ANTHROPIC, ModelType.GOOGLE_VERTEX]}
+					modelTypeFilters={[...ChatAppAllowedModels]}
 				/>
 			);
 			break;
@@ -275,16 +275,6 @@ export default function ChatAppForm({
 				/>
 			);
 			break;
-		case 'datasource_tool':
-			modal = (
-				<CreateToolModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					callback={toolCallback}
-					initialType={ToolType.RAG_TOOL}
-				/>
-			);
-			break;
 		default:
 			modal = null;
 			break;
@@ -293,7 +283,7 @@ export default function ChatAppForm({
 	return (
 		<>
 			{modal}
-			<h2 className='text-xl font-bold mb-6'>Chat App</h2>
+			<h2 className='text-xl font-bold mb-6 dark:text-white'>Chat App</h2>
 			<form onSubmit={appPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 
@@ -501,11 +491,7 @@ export default function ChatAppForm({
 										callbackKey='modelId'
 										setCallbackKey={null}
 										modelFilter='llm'
-										modelTypeFilters={[
-											ModelType.OPENAI,
-											ModelType.ANTHROPIC,
-											ModelType.GOOGLE_VERTEX
-										]}
+										modelTypeFilters={[...ChatAppAllowedModels]}
 									/>
 
 									<ToolsSelect
@@ -522,7 +508,7 @@ export default function ChatAppForm({
 										tools={toolChoices.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
 										toolState={datasourceState}
 										onChange={setDatasourceState}
-										setModalOpen={x => setModalOpen('datasource_tool')}
+										setModalOpen={x => setModalOpen('datasource')}
 										enableAddNew={true}
 									/>
 								</>

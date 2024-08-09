@@ -37,12 +37,18 @@ export function AccountWrapper({ children, pageProps }) {
 				...(memberId ? { memberId } : {})
 			},
 			data => {
-				posthog.group('org', data?.account?.currentOrg);
-				posthog.group('team', data?.account?.currentTeam);
+				const { orgName, teamName } = getTeamAndOrgName(data);
+				posthog.group('org', data?.account?.currentOrg, {
+					orgName
+				});
+				posthog.group('team', data?.account?.currentTeam, {
+					teamName
+				});
 				const updatedState = {
 					...pageProps,
 					...data,
-					...getTeamAndOrgName(data),
+					teamName,
+					orgName,
 					switching: false
 				};
 				if (data?.account?.permissions) {

@@ -43,7 +43,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 			{tasks.map(task => (
 				<div
 					key={task._id}
-					className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm'
+					className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm dark:text-white'
 				>
 					<div className='flex flex-col'>
 						<h3 className='text-sm font-semibold truncate'>
@@ -52,9 +52,6 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 						<p className='text-sm font-medium truncate'>
 							&quot;<em>{task.description}</em>&quot;
 						</p>
-						{task.agentId && (
-							<p className='text-xs text-gray-500 mt-1'>Agent ID: {task.agentId.toString()}</p>
-						)}
 						<div className='mt-2 flex items-center justify-between'>
 							<Menu as='div' className='absolute right-2 top-2'>
 								<Menu.Button className='-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500'>

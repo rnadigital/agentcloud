@@ -3,7 +3,7 @@ use google_cloud_pubsub::client::{Client, ClientConfig};
 use google_cloud_pubsub::subscription::{MessageStream, SubscriptionConfig};
 use google_cloud_pubsub::topic::TopicConfig;
 
-use crate::gcp::models::PubSubConnect;
+use crate::adaptors::gcp::models::PubSubConnect;
 
 pub async fn subscribe_to_topic(
     connection_details: PubSubConnect,

@@ -23,7 +23,7 @@ diskcache = "^5.6.3"
 sse-starlette = "^1.8.2"
 chromadb = "^0.4.22"
 replicate = "^0.23.1"
-crewai = { git = "https://github.com/rnadigital/crewAI.git", rev = "bc68603d101793d0b779a67cd28419157d1bccd1" }
+crewai = { git = "https://github.com/rnadigital/crewAI.git", rev = "e4444d2e9cb6f90e15894260e8dec4516e11f160" }
 onnxruntime = "1.17.0"
 fastembed = "^0.2.2"
 qdrant-client = "^1.8.0"

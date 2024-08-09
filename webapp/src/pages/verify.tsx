@@ -1,6 +1,7 @@
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
+import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import ErrorAlert from '../components/ErrorAlert';
 
 export interface VerifyFormValues {
 	password: string;
+	checkoutsession: any;
 }
 
 export default function Verify() {
@@ -20,9 +22,10 @@ export default function Verify() {
 	const [verified] = useState(null);
 	const [newPassword, setNewPassword] = useState('');
 	const [error, setError] = useState();
-	const { token, newpassword, stripe } = router.query;
+	const { token, newpassword, stripe, checkoutsession } = router.query;
 	const [submitting, setSubmitting] = useState(false);
 	const { control, handleSubmit } = useForm<VerifyFormValues>();
+	const { theme } = useThemeContext();
 
 	async function verifyToken(data: VerifyFormValues | { token: string | string[] }) {
 		setSubmitting(true);
@@ -42,12 +45,13 @@ export default function Verify() {
 	}
 
 	useEffect(() => {
-		if (verified === null && token && !newpassword) {
+		if (verified === null && (token || checkoutsession) && !newpassword) {
 			verifyToken({
-				token
+				token,
+				checkoutsession
 			});
 		}
-	}, [token]);
+	}, [token, checkoutsession]);
 
 	return (
 		<>
@@ -59,12 +63,16 @@ export default function Verify() {
 				<div className='sm:mx-auto sm:w-full sm:max-w-md'>
 					<img
 						className='mx-auto h-16 w-auto'
-						src='/images/agentcloud-mark-black-bg-trans.png'
-						alt='Your Company'
+						src={
+							theme === 'dark'
+								? '/images/agentcloud-mark-white-bg-trans.png'
+								: '/images/agentcloud-mark-black-bg-trans.png'
+						}
+						alt='AgentCloud'
 						height={128}
 						width={128}
 					/>
-					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900'>
+					<h2 className='mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white'>
 						{stripe
 							? 'Create Password'
 							: newpassword
@@ -76,7 +84,7 @@ export default function Verify() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 space-y-4'>
+					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 space-y-4 dark:bg-slate-800'>
 						{token ? (
 							<>
 								{error && (

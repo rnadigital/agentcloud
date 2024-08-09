@@ -37,7 +37,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 		fetchFormData && fetchFormData();
 	}
 	return (
-		<div className='w-full max-w-sm rounded-xl bg-white border dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
+		<div className='w-full max-w-sm rounded-xl bg-white border dark:border-slate-700 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<span className='flex justify-between'>
 				<span className='space-x-2'>
 					<span
@@ -74,7 +74,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 					)}
 				</span>
 				<Menu as='div' className=''>
-					<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 hover:text-white hover:bg-gray-700 rounded'>
+					<Menu.Button className='block p-2.5 text-gray-400 hover:text-gray-500 dark:hover:text-white dark:hover:bg-gray-700 rounded'>
 						<span className='sr-only'>Open options</span>
 						<EllipsisHorizontalIcon className='h-5 w-5' aria-hidden='true' />
 					</Menu.Button>
@@ -88,7 +88,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 						leaveTo='transform opacity-0 scale-95'
 					>
 						<Menu.Items className='absolute z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
-							{/*<Menu.Item>
+							<Menu.Item>
 								{({ active }) => (
 									<a
 										href={`/${resourceSlug}/app/${app._id}/edit`}
@@ -100,7 +100,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 										Edit
 									</a>
 								)}
-							</Menu.Item>*/}
+							</Menu.Item>
 							<Menu.Item>
 								{({ active }) => (
 									<button
@@ -116,7 +116,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 										}}
 										className={classNames(
 											active ? 'bg-gray-50 dark:bg-slate-700' : '',
-											'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left'
+											'block px-3 py-1 text-sm leading-6 text-red-600 w-full text-left dark:text-red-300'
 										)}
 									>
 										Delete
@@ -132,14 +132,14 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 			</div>
 			<a className='h-full' href={`/${resourceSlug}/app/${app._id}/edit`}>
 				<div>
-					<div className='font-bold text-xl mb-2'>{name}</div>
+					<div className='font-bold text-xl mb-2 dark:text-gray-50'>{name}</div>
 					<p className={'text-gray-700 text-base max-h-20 overflow-hidden dark:text-white'}>
 						{description}
 					</p>
 				</div>
 			</a>
 			<div className='flex flex-col flex-wrap justify-between pt-5 gap-4 grid-cols-1 xl:grid-cols-2'>
-				<div className='w-full text-sm text-gray-600 dark:text-gray-400'>
+				<div className='w-full text-sm text-gray-600 dark:text-gray-50'>
 					{app.author ? `By ${app.author}` : 'AgentCloud App'}
 				</div>
 				<button

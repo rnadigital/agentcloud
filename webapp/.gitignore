@@ -9,3 +9,4 @@ doc/
 !src/lib/airbyte
 static/*
 tsconfig.tsbuildinfo
+coverage/

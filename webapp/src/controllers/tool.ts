@@ -34,7 +34,7 @@ import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
-import { chainValidations } from 'utils/validationUtils';
+import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
 
 const log = debug('webapp:controllers:tool');

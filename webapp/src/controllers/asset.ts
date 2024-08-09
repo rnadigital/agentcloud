@@ -3,7 +3,6 @@
 import { dynamicResponse } from '@dr';
 import { addAsset } from 'db/asset';
 import toObjectId from 'lib/misc/toobjectid';
-import withLogging from 'lib/misc/withlogging';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import StorageProviderFactory from 'storage/index';
@@ -32,8 +31,7 @@ export async function uploadAssetApi(req, res) {
 		uploadedAt: new Date()
 	};
 
-	const wrappedAddAsset = withLogging(addAsset, res.locals?.account?._id);
-	await wrappedAddAsset(assetBody);
+	await addAsset(assetBody);
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype, true);
 
