@@ -20,6 +20,8 @@ import { ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 import CreateTaskModal from './CreateTaskModal';
+import InfoAlert from './InfoAlert';
+import ToolTip from './shared/ToolTip';
 
 export default function TaskForm({
 	task,
@@ -46,11 +48,11 @@ export default function TaskForm({
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState<Task | undefined>(task);
-	const [tasksState, setTasksState] = useState([]);
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
+	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -146,11 +148,8 @@ export default function TaskForm({
 		});
 	};
 
-	async function createTaskCallback(addedTaskId, body) {
+	async function createTaskCallback() {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setTasksState(oldTasksState => {
-			return oldTasksState.concat({ label: body.name, value: addedTaskId });
-		});
 		setModalOpen(false);
 	}
 
@@ -159,6 +158,14 @@ export default function TaskForm({
 			fetchTaskFormData();
 		}
 	}, [resourceSlug, notificationTrigger]);
+
+	useEffect(() => {
+		if (preferredAgent?.toolIds?.length > 0) {
+			setShowToolConflictWarning(true);
+		} else {
+			setShowToolConflictWarning(false);
+		}
+	}, [preferredAgent?.toolIds]);
 
 	return (
 		<>
@@ -259,13 +266,14 @@ export default function TaskForm({
 										listItem: (value?: { isSelected?: boolean }) =>
 											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
 									}}
-									value={taskState?.context?.map(x => {
-										console.log(taskChoices);
-										return {
-											value: x.toString(),
-											label: taskChoices.find(tx => tx._id === x)?.name
-										};
-									})}
+									value={
+										taskState?.context?.length > 0
+											? taskState?.context?.map(x => ({
+													value: x.toString(),
+													label: taskChoices.find(tx => tx._id === x)?.name
+												}))
+											: null
+									}
 									onChange={(v: any) => {
 										if (v?.some(val => val?.disabled)) {
 											return;
@@ -314,12 +322,14 @@ export default function TaskForm({
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
-								value={taskState?.toolIds?.map(x => {
-									return {
-										value: x.toString(),
-										label: tools.find(tx => tx._id === x)?.name
-									};
-								})}
+								value={
+									taskState?.toolIds?.length > 0
+										? taskState?.toolIds?.map(x => ({
+												value: x.toString(),
+												label: tools.find(tx => tx._id === x)?.name
+											}))
+										: null
+								}
 								onChange={(v: any) => {
 									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
 									if (v?.some(val => val?.disabled)) {
@@ -375,6 +385,19 @@ export default function TaskForm({
 							/>
 						</div>
 
+						{showToolConflictWarning && (
+							<InfoAlert
+								textColor='black'
+								className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md'
+								message='Agent Tool Conflict Warning'
+							>
+								We noticed you have added an agent with a tool associated to them. Please note,
+								since the tools are associated to the agents, they can be used on any task where the
+								agent is working. If you would like a more deterministic approach, please only
+								associate the tool to the task.
+							</InfoAlert>
+						)}
+
 						{/* Preferred agent */}
 						<div className='col-span-full'>
 							<label
@@ -403,7 +426,10 @@ export default function TaskForm({
 											: null
 									}
 									onChange={(v: any) => {
-										if (v?.value == null) {
+										/* Note: using a unique non objectid valud e.g. "new" instead of null because
+										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
+										   and triggers the new modal every time the input is cleared */
+										if (v?.value == 'new') {
 											return setModalOpen('agent');
 										}
 										setTask(oldTask => {
@@ -413,9 +439,15 @@ export default function TaskForm({
 											};
 										});
 									}}
-									options={agents
-										.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-										.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+									options={[
+										{ label: '+ Create new agent', value: 'new', allowDelegation: false }
+									].concat(
+										agents.map(a => ({
+											label: a.name,
+											value: a._id,
+											allowDelegation: a.allowDelegation
+										}))
+									)}
 									formatOptionLabel={(data: any) => {
 										const optionAgent = agents.find(ac => ac._id === data.value);
 										return (
@@ -471,31 +503,37 @@ export default function TaskForm({
 
 						{/* human_input tool checkbox */}
 						<div className='col-span-full'>
-							<div className='mt-2'>
-								<div className='sm:col-span-12'>
-									<label
-										htmlFor='requiresHumanInput'
-										className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
-										<input
-											type='checkbox'
-											id='requiresHumanInput'
-											name='requiresHumanInput'
-											checked={taskState?.requiresHumanInput === true}
-											onChange={e => {
-												setTask(oldTask => {
-													return {
-														...oldTask,
-														requiresHumanInput: e.target.checked
-													};
-												});
-											}}
-											className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-										/>
-										Allow Human Input
-									</label>
+							<ToolTip
+								content='Use human input when the task description and expected output require a human response instead of an AI response. This input will be used for the next task in a process app.'
+								placement='top-start'
+								arrow={false}
+							>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='requiresHumanInput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+										>
+											<input
+												type='checkbox'
+												id='requiresHumanInput'
+												name='requiresHumanInput'
+												checked={taskState?.requiresHumanInput === true}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															requiresHumanInput: e.target.checked
+														};
+													});
+												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+											/>
+											Allow Human Input
+										</label>
+									</div>
 								</div>
-							</div>
+							</ToolTip>
 						</div>
 					</div>
 				</div>
