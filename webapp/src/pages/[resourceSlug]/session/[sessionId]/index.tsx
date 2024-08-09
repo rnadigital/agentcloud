@@ -339,7 +339,10 @@ export default function Session(props) {
 									}
 									chunking={m?.chunks?.length > 0}
 									completed={m?.completed}
-									agent={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
+									agent={{
+										name: authorName,
+										icon: { filename: authorAvatarMap[authorName.toLowerCase()] }
+									}}
 								/>
 							);
 						})}
