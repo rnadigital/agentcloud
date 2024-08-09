@@ -266,13 +266,14 @@ export default function TaskForm({
 										listItem: (value?: { isSelected?: boolean }) =>
 											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
 									}}
-									value={taskState?.context?.map(x => {
-										console.log(taskChoices);
-										return {
-											value: x.toString(),
-											label: taskChoices.find(tx => tx._id === x)?.name
-										};
-									})}
+									value={
+										taskState?.context?.length > 0
+											? taskState?.context?.map(x => ({
+													value: x.toString(),
+													label: taskChoices.find(tx => tx._id === x)?.name
+												}))
+											: null
+									}
 									onChange={(v: any) => {
 										if (v?.some(val => val?.disabled)) {
 											return;
@@ -321,12 +322,14 @@ export default function TaskForm({
 								isMultiple
 								primaryColor={'indigo'}
 								classNames={SelectClassNames}
-								value={taskState?.toolIds?.map(x => {
-									return {
-										value: x.toString(),
-										label: tools.find(tx => tx._id === x)?.name
-									};
-								})}
+								value={
+									taskState?.toolIds?.length > 0
+										? taskState?.toolIds?.map(x => ({
+												value: x.toString(),
+												label: tools.find(tx => tx._id === x)?.name
+											}))
+										: null
+								}
 								onChange={(v: any) => {
 									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
 									if (v?.some(val => val?.disabled)) {
@@ -423,7 +426,10 @@ export default function TaskForm({
 											: null
 									}
 									onChange={(v: any) => {
-										if (v?.value == null) {
+										/* Note: using a unique non objectid valud e.g. "new" instead of null because
+										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
+										   and triggers the new modal every time the input is cleared */
+										if (v?.value == 'new') {
 											return setModalOpen('agent');
 										}
 										setTask(oldTask => {
@@ -433,9 +439,15 @@ export default function TaskForm({
 											};
 										});
 									}}
-									options={agents
-										.map(a => ({ label: a.name, value: a._id, allowDelegation: a.allowDelegation })) // map to options
-										.concat([{ label: '+ Create new agent', value: null, allowDelegation: false }])} // append "add new"
+									options={[
+										{ label: '+ Create new agent', value: 'new', allowDelegation: false }
+									].concat(
+										agents.map(a => ({
+											label: a.name,
+											value: a._id,
+											allowDelegation: a.allowDelegation
+										}))
+									)}
 									formatOptionLabel={(data: any) => {
 										const optionAgent = agents.find(ac => ac._id === data.value);
 										return (
