@@ -25,8 +25,8 @@ import {
 } from 'db/session';
 import { SessionStatus } from 'struct/session';
 
-import { SharingMode } from './lib/struct/sharing';
 import { updateModel } from './db/model';
+import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
 
