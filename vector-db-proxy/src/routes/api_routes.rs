@@ -8,7 +8,7 @@ use std::sync::Arc;
 use crate::errors::types::Result;
 use crate::adaptors::qdrant::helpers::{get_next_page, get_scroll_results};
 use crate::adaptors::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
-use crate::adaptors::qdrant::utils::Qdrant;
+use crate::adaptors::qdrant::apis::Qdrant;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
 

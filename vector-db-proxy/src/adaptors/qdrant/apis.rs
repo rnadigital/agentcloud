@@ -421,13 +421,13 @@ impl Qdrant {
                         segments_count: info.segments_count,
                         points_count: info.points_count,
                     };
-                    return Ok(Some(collection_info));
+                    Ok(Some(collection_info))
                 } else {
                     Ok(None)
                 }
             }
             Err(e) => {
-                return Err(anyhow!("An error occurred while getting info for collection : {}. Error: {}", id_clone, e));
+                Err(anyhow!("An error occurred while getting info for collection : {}. Error: {}", id_clone, e))
             }
         }
     }

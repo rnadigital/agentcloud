@@ -12,7 +12,7 @@ use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, Queu
 use crate::adaptors::mongo::models::ChunkingStrategy;
 use crate::adaptors::mongo::queries::{get_datasource, get_model};
 use crate::adaptors::qdrant::helpers::construct_point_struct;
-use crate::adaptors::qdrant::utils::Qdrant;
+use crate::adaptors::qdrant::apis::Qdrant;
 use crate::messages::task_handoff::send_task;
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use crate::utils::file_operations;

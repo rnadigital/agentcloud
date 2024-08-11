@@ -28,9 +28,9 @@ pub trait VectorDatabase {
     async fn create_collection(&self, collection_id: String) -> Result<VectorDatabaseStatus>;
     async fn delete_collection(&self, collection_id: String) -> Result<VectorDatabaseStatus>;
     async fn insert_points(&self, point: Vec<Point>) -> Result<VectorDatabaseStatus>;
-    async fn update_point(&self, search_requests: SearchRequest, point: Vec<Point>) ->
+    async fn update_points(&self, search_requests: SearchRequest, point: Vec<Point>) ->
     Result<VectorDatabaseStatus>;
     async fn delete_points(&self, search_request: SearchRequest) -> Result<CollectionsResult>;
     async fn get_points(&self, search_request: SearchRequest) -> Result<Vec<Point>>;
-    async fn scroll(&self, search_request: SearchRequest) -> Result<ScrollResults>;
+    async fn scroll_points(&self, search_request: SearchRequest) -> Result<ScrollResults>;
 }
