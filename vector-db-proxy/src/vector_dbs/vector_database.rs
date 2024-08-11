@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use pinecone_sdk::pinecone::PineconeClient;
 use qdrant_client::client::QdrantClient;
 use tokio::sync::RwLock;
 use tonic::async_trait;
@@ -9,12 +10,14 @@ use crate::vector_dbs::models::*;
 
 pub enum VectorDatabases {
     Qdrant(Arc<RwLock<QdrantClient>>),
+    Pinecone(Arc<RwLock<PineconeClient>>)
 }
 
 impl Clone for VectorDatabases {
     fn clone(&self) -> Self {
         match self {
             VectorDatabases::Qdrant(client) => VectorDatabases::Qdrant(Arc::clone(client)),
+            VectorDatabases::Pinecone(client) => VectorDatabases::Pinecone(Arc::clone(client))
         }
     }
 }
