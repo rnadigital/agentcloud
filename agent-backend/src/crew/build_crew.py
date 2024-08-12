@@ -1,6 +1,5 @@
 import logging
 import uuid
-from textwrap import dedent
 from typing import Any, List, Set, Type
 from datetime import datetime
 
@@ -131,7 +130,6 @@ class CrewAIBuilder:
                     exclude_none=True, exclude_unset=True,
                     exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
-                step_callback=self.send_to_sockets,
                 stop_generating_check=self.stop_generating_check,
                 llm=model_obj,
                 tools=agent_tools_objs.values(),
@@ -156,10 +154,6 @@ class CrewAIBuilder:
                     task_tool = list(task_tool_set.values())[0] # Note: this dict/list always holds 1 item
                     task_tools_objs[task_tool.name] = task_tool
 
-            if task.requiresHumanInput:
-                human = CustomHumanInput(self.socket, self.session_id)
-                task_tools_objs["human_input"] = human
-
             context_task_objs = []
             if task.context:
                 for context_task_id in task.context:
@@ -171,9 +165,12 @@ class CrewAIBuilder:
                     context_task_objs.append(context_task)
 
             self.crew_tasks[key] = Task(
-                **task.model_dump(exclude_none=True, exclude_unset=True, exclude={"id", "context"}),
-                agent=agent_obj, tools=task_tools_objs.values(),
-                context=context_task_objs
+                **task.model_dump(exclude_none=True, exclude_unset=True,
+                                  exclude={"id", "context", "requiresHumanInput"}),
+                agent=agent_obj,
+                tools=task_tools_objs.values(),
+                context=context_task_objs,
+                human_input=task.requiresHumanInput
             )
 
     def make_user_question(self):
@@ -229,6 +226,8 @@ class CrewAIBuilder:
                     exclude={"id", "tasks", "agents"}
                 ),
                 manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
+                agentcloud_socket=self.socket,
+                agentcloud_session_id=self.session_id
             )
         except ValidationError as ve:
             self.send_to_sockets(text=f"""Validation Error:
