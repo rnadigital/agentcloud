@@ -121,7 +121,7 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     let datasources_collection = db.collection::<DataSources>("datasources");
     let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
     let update = doc! {
-        "$set": { "recordCount.total": total }
+        "$set": { "recordCount.total": total, "status": "embedding" },
     };
     let update_options = mongodb::options::UpdateOptions::default();
     match datasources_collection.update_one(filter, update, update_options).await {
