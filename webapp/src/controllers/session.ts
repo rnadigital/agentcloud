@@ -66,7 +66,7 @@ export async function sessionData(req, res, _next) {
 		default:
 			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
 			if (foundAgent) {
-				avatarMap = { [foundAgent.name]: foundAgent?.icon?.filename };
+				avatarMap = { [foundAgent.name.toLowerCase()]: foundAgent?.icon?.filename };
 			}
 			break;
 	}
@@ -233,7 +233,7 @@ export async function addSessionApi(req, res, next) {
 		appId: toObjectId(app?._id),
 		sharingConfig: {
 			permissions: {},
-			mode: SharingMode.PUBLIC
+			mode: app?.sharingConfig?.mode
 		}
 	});
 

@@ -8,25 +8,26 @@ use std::sync::Arc;
 use std::thread;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, middleware::Logger, web, web::Data};
+use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use crossbeam::channel;
 use env_logger::Env;
 use tokio::signal;
 use tokio::sync::RwLock;
 
-use adaptors::mongo::client::start_mongo_connection;
 use adaptors::qdrant::client::instantiate_qdrant_client;
-use routes::api_routes::{
+use routes::apis::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, get_collection_info,
     health_check, list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
 
 use crate::data::processing_incoming_messages::process_incoming_messages;
-use crate::init::env_variables::GLOBAL_DATA;
 use crate::init::env_variables::set_all_env_vars;
+use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
+use crate::routes::apis::get_storage_size;
+use adaptors::mongo::client::start_mongo_connection;
 
 mod data;
 mod errors;
@@ -36,7 +37,6 @@ mod routes;
 mod utils;
 mod messages;
 mod adaptors;
-mod vector_dbs;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =
@@ -59,7 +59,8 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
             .service(scroll_data)
-            .service(get_collection_info),
+            .service(get_collection_info)
+            .service(get_storage_size),
     );
 }
 
@@ -122,7 +123,7 @@ async fn main() -> std::io::Result<()> {
         });
         handles.push(handle);
     }
-    
+
 
     // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();

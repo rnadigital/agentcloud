@@ -1,9 +1,9 @@
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import dayjs from 'dayjs';
-import { Schema } from 'lib/types/connectorform/form';
 import { useEffect, useState } from 'react';
 import { FieldValues, useFormContext } from 'react-hook-form';
+import { Schema } from 'struct/form';
 
 import AdditionalFields from './AdditionalFields';
 import FormSection from './FormSection';

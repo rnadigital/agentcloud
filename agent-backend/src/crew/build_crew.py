@@ -5,6 +5,7 @@ from typing import Any, List, Set, Type
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
+from pydantic import ValidationError
 from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
@@ -84,7 +85,6 @@ class CrewAIBuilder:
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
-            
             model_id = None
             for _, agent in self.agents_models.items():
                 if tool.id in agent.toolIds:
@@ -148,7 +148,14 @@ class CrewAIBuilder:
     def build_tasks(self):
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
-            task_tools_objs = search_subordinate_keys(self.crew_tools, key)
+            task_tools_objs = dict()
+
+            for task_toolid in task.toolIds:
+                task_tool_set = search_subordinate_keys(self.crew_tools, set([task_toolid]))
+                if len(list(task_tool_set.values())) > 0:
+                    task_tool = list(task_tool_set.values())[0] # Note: this dict/list always holds 1 item
+                    task_tools_objs[task_tool.name] = task_tool
+
             if task.requiresHumanInput:
                 human = CustomHumanInput(self.socket, self.session_id)
                 task_tools_objs["human_input"] = human
@@ -212,16 +219,24 @@ class CrewAIBuilder:
             """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                  timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
-        # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
-        self.crew = Crew(
-            agents=self.crew_chat_agents + list(self.crew_agents.values()),
-            tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
-            **self.crew_model.model_dump(
-                exclude_none=True, exclude_unset=True,
-                exclude={"id", "tasks", "agents"}
-            ),
-            manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
-        )
+        try:
+            # 6. Build Crew-Crew from Crew + Crew-Task (#4) + Crew-Agent (#3)
+            self.crew = Crew(
+                agents=self.crew_chat_agents + list(self.crew_agents.values()),
+                tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
+                **self.crew_model.model_dump(
+                    exclude_none=True, exclude_unset=True,
+                    exclude={"id", "tasks", "agents"}
+                ),
+                manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
+            )
+        except ValidationError as ve:
+            self.send_to_sockets(text=f"""Validation Error:
+            ``` 
+            {str(ve)}
+            ```
+            """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                             timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
     def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
                         timestamp=None, display_type='bubble', author_name='System', overwrite=False):
@@ -259,9 +274,10 @@ class CrewAIBuilder:
             self.send_to_sockets(
                 text=crew_output.raw,
                 event=SocketEvents.MESSAGE,
-                first=True,
                 chunk_id=str(uuid.uuid4()),
-                timestamp=datetime.now().timestamp() * 1000,
-                display_type="bubble"
             )
-        print(f"==CREW_OUTPUT== {crew_output}")
+        self.send_to_sockets(
+            text='',
+            event=SocketEvents.STOP_GENERATING,
+            chunk_id=str(uuid.uuid4()),
+        )

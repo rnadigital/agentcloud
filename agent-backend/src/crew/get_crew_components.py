@@ -61,17 +61,17 @@ def construct_crew(session_id: str, socket: Any):
     # Put Agents in a dictionary with their Ids as key
     crew_agents_dict: Dict[Set[PyObjectId], Agent] = dict([(keyset(agent.id), agent) for agent in crew_agents])
 
-    # Put Tasks in a dictionary with their Ids as key
-    crew_tasks_dict: Dict[Set[PyObjectId], Task] = dict([(keyset(task.id), task) for task in crew_tasks])
-
     # Agent > Model
     agent_models: Dict[Set[PyObjectId], Model] = construct_models(crew_agents_dict.items())
 
     # Agent > Model > Credential
     agent_model_credentials = construct_model_credentials(agent_models.items())
 
-    # Agent > Tools
-    agents_tools = construct_tools(crew_agents_dict.items())
+    # Put Tasks in a dictionary with their Ids as key
+    crew_tasks_dict: Dict[Set[PyObjectId], Task] = dict([(keyset(task.id), task) for task in crew_tasks])
+
+    # Combine agent and task tools
+    agents_tools = construct_tools(crew_agents_dict.items()) | construct_tools(crew_tasks_dict.items())
 
     # Agent > Tools > Datasource
     agents_tools_datasources = construct_tools_datasources(agents_tools.items())
@@ -82,11 +82,11 @@ def construct_crew(session_id: str, socket: Any):
     # Agent > Datasource > Model > Credentials
     agents_tools_datasources_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(
         agents_tools_datasources_models.items())
-    
+
     # Crew > chat Model
     crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])
-    
-    # Crew > chat Model
+
+    # Crew > chat Model > Credentials
     crew_chat_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(crew_chat_models.items())
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)

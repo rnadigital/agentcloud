@@ -52,11 +52,6 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 						<p className='text-sm font-medium truncate'>
 							&quot;<em>{task.description}</em>&quot;
 						</p>
-						{task.agentId && (
-							<p className='text-xs text-gray-500 mt-1 dark:text-gray-50 break-all'>
-								Agent ID: {task.agentId.toString()}
-							</p>
-						)}
 						<div className='mt-2 flex items-center justify-between'>
 							<Menu as='div' className='absolute right-2 top-2'>
 								<Menu.Button className='-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500'>
