@@ -1,12 +1,12 @@
+use crate::adaptors::mongo::models::{DataSources, Model};
 use anyhow::{anyhow, Result};
+use futures_util::StreamExt;
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 use mongodb::options::FindOneOptions;
 use mongodb::{Collection, Database};
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-use crate::adaptors::mongo::models::{DataSources, Model};
 
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
@@ -131,4 +131,27 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
             Err(anyhow!("Failed to increment variable. Error: {}", e))
         }
     }
+}
+
+pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
+    let mut list_of_datasources: Vec<DataSources> = vec![];
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let filter = doc! {"teamId": ObjectId::from_str(team_id)?};
+    match datasources_collection
+        .find(
+            filter,
+            None,
+        )
+        .await {
+        Ok(mut datasources) => {
+            while let Some(datasource) = datasources.next().await {
+                list_of_datasources.push(datasource?)
+            }
+        },
+        Err(e) => {
+            log::error!("Encountered an error when retrieving list of datasources for team: {}. \
+            Error: {}", team_id, e);
+        }
+    };
+    Ok(list_of_datasources)
 }

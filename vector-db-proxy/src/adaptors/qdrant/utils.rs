@@ -440,7 +440,7 @@ impl Qdrant {
                     let collection_storage_size = CollectionStorageSize {
                         status: Status::Success,
                         points_count: Some(number_of_vectors),
-                        size: Some(size),
+                        size: Some(size.ceil()),
                         collection_name: self.collection_name.to_owned(),
                     };
                     Some(collection_storage_size)

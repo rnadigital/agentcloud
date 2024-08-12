@@ -18,7 +18,8 @@ use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVect
 
 use crate::adaptors::mongo::client::start_mongo_connection;
 use crate::adaptors::mongo::models::Model;
-use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key};
+use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key, get_team_datasources};
+use crate::routes::models::CollectionStorageSizeResponse;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
@@ -516,39 +517,37 @@ pub async fn get_collection_info(
 #[get("/storage-size/{dataset_id}")]
 pub async fn get_storage_size(
     app_data: Data<Arc<RwLock<QdrantClient>>>,
-    Path(dataset_id): Path<String>,
+    Path(team_id): Path<String>,
 ) -> Result<impl Responder> {
-    let dataset_id_clone = dataset_id.clone();
+    let mut collection_size_response = CollectionStorageSizeResponse {
+        list_of_datasources: vec![],
+        total_size: 0.0,
+        total_points: 0,
+    };
     let qdrant_conn = app_data.get_ref();
-    let qdrant = Qdrant::new(Arc::clone(qdrant_conn), dataset_id_clone);
+    let team_id = team_id.clone();
     let mongodb_connection = start_mongo_connection().await?;
-    let collection_name_clone_2 = dataset_id.clone();
-    let model_parameters: Model =
-        get_model(&mongodb_connection, collection_name_clone_2.as_str())
-            .await?
-            .unwrap();
-    match qdrant.estimate_storage_size(model_parameters.embeddingLength as usize).await {
-        Some(info) => {
-            Ok(
-                HttpResponse::Ok()
+    let list_of_team_datasources = get_team_datasources(&mongodb_connection, team_id.as_str())
+        .await?;
+    println!("List of team datasources: {:?}", list_of_team_datasources);
+    for datasource in list_of_team_datasources {
+        let embedding_model = get_model(&mongodb_connection, datasource._id.to_string().as_str())
+            .await?.unwrap();
+        let qdrant = Qdrant::new(Arc::clone(qdrant_conn), datasource._id.to_string());
+        if let Some(collection_storage_info) = qdrant.estimate_storage_size(
+            embedding_model.embeddingLength as usize
+        ).await {
+            collection_size_response.total_points += collection_storage_info
+                .points_count.unwrap();
+            collection_size_response.total_size += collection_storage_info.size.unwrap();
+            collection_size_response.list_of_datasources.push(collection_storage_info);
+        }
+    }
+    Ok(HttpResponse::Ok()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
             status: Status::Success,
-            data: Some(json!(info)),
+            data: Some(json!(collection_size_response)),
             error_message: None
         })))
-        }
-        None => {
-            Ok(HttpResponse::NotFound()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                status: Status::Failure,
-                data: None,
-                error_message: Some(json!({
-                        "errorMessage": format!("Could not retrieve storage size for collection: \
-                        {}", dataset_id)
-                    }))
-            })))
-        }
-    }
 }
