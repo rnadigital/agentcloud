@@ -7,8 +7,9 @@ import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
+import * as API from '@api';
+import { useAccountContext } from 'context/account';
+import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';
 
 export default function ModelTable({ models, fetchModels }: { models: any[]; fetchModels?: any }) {
 	const [accountContext]: any = useAccountContext();
@@ -100,13 +101,28 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 							>
 								Model
 							</th>
-							{/* Add more columns as necessary */}
+
 							<th
 								scope='col'
 								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Embedding Length
 							</th>
+							<th
+								scope='col'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Knowledge Cutoff
+							</th>
+							<th
+								scope='col'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Context Window
+							</th>
+
+							{/* Add more columns as necessary */}
+
 							<th
 								scope='col'
 								className='w-min px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
@@ -145,8 +161,28 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>
-											{model.embeddingLength ? model.embeddingLength : '-'}
+											{model.embeddingLength ? model.embeddingLength : ''}
 										</div>
+									</td>
+
+									<td
+										className='px-6 py-4 whitespace-nowrap'
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
+											
+
+											<div className='text-sm text-gray-900 dark:text-white'>
+												{ModelKnowledgeCutoff[model.model]}
+											</div>
+									</td>
+
+									<td
+										className='px-6 py-4 whitespace-nowrap'
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
+											
+
+											<div className='text-sm text-gray-900 dark:text-white'>
+												{ModelContextWindow[model.model]?.toLocaleString()}
+											</div>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 										<button
