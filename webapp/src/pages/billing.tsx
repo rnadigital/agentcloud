@@ -39,14 +39,14 @@ export default function Billing(props) {
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
 
-	const getPayload = () => {
+	function getPayload() {
 		return {
 			_csrf: csrf,
 			plan: selectedPlan,
 			...(stagedChange?.users ? { users: stagedChange.users } : {}),
 			...(stagedChange?.storage ? { storage: stagedChange.storage } : {})
 		};
-	};
+	}
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -130,6 +130,8 @@ ${missingEnvs.join('\n')}`}
 		);
 	}
 
+	const payload = getPayload();
+
 	return (
 		<>
 			<Head>
@@ -185,7 +187,7 @@ ${missingEnvs.join('\n')}`}
 				open={showConfirmModal}
 				setOpen={setShowConfirmModal}
 				confirmFunction={async () => {
-					const { plan, users, storage } = getPayload();
+					const { plan, users, storage } = payload;
 					const posthogBody = {
 						email: account?.email,
 						oldPlan: stripePlan,
@@ -203,7 +205,7 @@ ${missingEnvs.join('\n')}`}
 					}
 
 					await API.confirmChangePlan(
-						getPayload(),
+						payload,
 						res => {
 							setTimeout(() => {
 								toast.success('Subscription updated successfully');
@@ -229,7 +231,7 @@ ${missingEnvs.join('\n')}`}
 
 			<StripeCheckoutModal
 				showPaymentModal={showPaymentModal}
-				getPayload={getPayload}
+				payload={payload}
 				setShow={setShowPaymentModal}
 				setStagedChange={setStagedChange}
 				onComplete={() => {
@@ -262,7 +264,7 @@ ${missingEnvs.join('\n')}`}
 										setLast4(res?.last4);
 										setContinued(true);
 										setShowConfirmModal(true);
-									} else if (getPayload().plan === SubscriptionPlan.FREE) {
+									} else if (payload.plan === SubscriptionPlan.FREE) {
 										setContinued(true);
 										setShowConfirmModal(true);
 									} else {
