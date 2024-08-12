@@ -84,7 +84,7 @@ export default function Verify() {
 				</div>
 
 				<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]'>
-					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 space-y-4 dark:bg-slate-800'>
+					<div className='bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12 space-y-4 dark:bg-slate-800 dark:text-white'>
 						{token ? (
 							<>
 								{error && (

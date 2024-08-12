@@ -21,7 +21,7 @@ import {
 	ModelType,
 	ModelTypeRequirements
 } from 'struct/model';
-import { TeamModelResponse } from 'types/teammodels';
+import { TeamModelResponse } from 'struct/teammodels';
 
 interface LLMOption {
 	label: string;
