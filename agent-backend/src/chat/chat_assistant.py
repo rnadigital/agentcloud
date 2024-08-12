@@ -24,6 +24,7 @@ class ChatAssistant:
     chat_agent: BaseChatAgent
     system_message: str
     agent_name: str
+    recursion_limit: int
 
     def __init__(self, session_id: str):
         self.session_id = session_id
@@ -66,6 +67,8 @@ class ChatAssistant:
 
         self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
 
+        self.recursion_limit = app_config.recursionLimit
+
     @staticmethod
     def _transform_tool_name(tool_name: str) -> str:
         """
@@ -97,6 +100,6 @@ class ChatAssistant:
         return tool_class.factory(agentcloud_tool)
 
     def run(self):
-        config = {"configurable": {"thread_id": self.session_id}}
+        config = {"configurable": {"thread_id": self.session_id}, "recursion_limit": self.recursion_limit}
         system_message = SystemMessage(content=self.system_message)
         asyncio.run(self.chat_agent.stream_execute([system_message], config))
