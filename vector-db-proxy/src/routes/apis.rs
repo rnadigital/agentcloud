@@ -529,7 +529,8 @@ pub async fn get_storage_size(
             .unwrap();
     match qdrant.estimate_storage_size(model_parameters.embeddingLength as usize).await {
         Some(info) => {
-            Ok(HttpResponse::Ok()
+            Ok(
+                HttpResponse::Ok()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
             status: Status::Success,
