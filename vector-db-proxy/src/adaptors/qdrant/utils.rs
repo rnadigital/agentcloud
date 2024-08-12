@@ -6,8 +6,8 @@ use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
-use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
 use qdrant_client::qdrant::vectors_config::Config;
+use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
 use tokio::sync::RwLock;
 
 use crate::adaptors::qdrant::models::{CollectionData, CreateDisposition, PointSearchResults};
@@ -421,14 +421,30 @@ impl Qdrant {
                         segments_count: info.segments_count,
                         points_count: info.points_count,
                     };
-                    return Ok(Some(collection_info));
+                    Ok(Some(collection_info))
                 } else {
                     Ok(None)
                 }
             }
             Err(e) => {
-                return Err(anyhow!("An error occurred while getting info for collection : {}. Error: {}", id_clone, e));
+                Err(anyhow!("An error occurred while getting info for collection : {}. Error: {}", id_clone, e))
             }
+        }
+    }
+
+    pub async fn estimate_storage_size(&self, vector_length: usize) -> Option<f64> {
+        if let Ok(collection_info) = &self.get_collection_info().await {
+            if let Some(info) = collection_info {
+                if let Some(number_of_vectors) = info.points_count {
+                    Some((number_of_vectors as usize * vector_length * 4) as f64 * 1.15)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }

@@ -1,15 +1,17 @@
+use crate::adaptors::mongo::client::start_mongo_connection;
+use crate::adaptors::mongo::models::ChunkingStrategy;
+use crate::adaptors::mongo::queries::{increment_by_one, set_record_count_total};
 use crate::data::models::{Document, Sentence};
+use crate::data::utils;
 use crate::data::utils::percentile;
 use crate::embeddings::utils::embed_text;
 use crate::embeddings::{models::EmbeddingModels, utils::embed_text_chunks_async};
-use crate::adaptors::mongo::models::ChunkingStrategy;
 use anyhow::{anyhow, Result};
+use mongodb::Database;
 use ndarray::Array1;
 use std::collections::HashMap;
 use std::sync::Arc;
-use mongodb::Database;
 use tokio::sync::RwLock;
-use crate::data::utils;
 
 pub struct TextSplitting {
     embedding_model: EmbeddingModels,
@@ -82,13 +84,16 @@ impl TextSplitting {
         // here we instantiate all the vectors that we will use later on
         let mut chunks = Vec::new();
         let mut vector_of_sentences: Vec<Sentence> = vec![];
+        let mongodb_connection = start_mongo_connection().await.unwrap();
         if !text.is_empty() {
             // we slice our text into sentences based on the chunking strategy that we are using
             let sentences = &self.form_sentences(text).await;
+            // Add mongo query here to input total number of sentences as the total record count 
+            set_record_count_total(&mongodb_connection, &self.datasource_id.clone(), sentences
+                .len() as i32).await.unwrap();
             // from those sentence hashmaps we extract the text and form a vector of strings which contain each sentence.
             let list_of_text: Vec<String> =
                 sentences.iter().map(|s| s["sentence"].clone()).collect();
-
             // we embed each of those sentences
             let mongo_conn_clone = Arc::clone(&self.mongo_conn);
             let datasource_id_clone = self.datasource_id.clone();
@@ -99,16 +104,28 @@ impl TextSplitting {
                     for (i, sentence) in sentences.iter().enumerate() {
                         if !embeddings.is_empty() && embeddings.len() > 0 {
                             if i < embeddings.len() && !embeddings[i].is_empty() {
+                                // Add mongo db query here to increment success
+                                increment_by_one(
+                                    &mongodb_connection,
+                                    &self.datasource_id,
+                                    "recordCount.success",
+                                ).await.unwrap();
                                 vector_of_sentences.push(Sentence {
                                     sentence_embedding: Array1::from_vec(embeddings[i].clone()),
                                     distance_to_next: None,
                                     sentence: Some(sentence["sentence"].clone()),
                                 });
+                            } else {
+                                increment_by_one(
+                                    &mongodb_connection,
+                                    &self.datasource_id,
+                                    "recordCount.failure",
+                                ).await.unwrap();
                             }
                         }
                     }
                     // here is where the divergence occurs depending on the chunking strategy chosen by the use
-                    match &self.chunking_strategy.as_ref().unwrap() {
+                    match &self.chunking_strategy.as_ref()? {
                         ChunkingStrategy::SEMANTIC_CHUNKING => {
                             // in the semantic chunking we iterate through each of the sentences and calculate their relative cosine similarity scores
                             let distances = utils::calculate_cosine_distances(&mut vector_of_sentences);
@@ -177,7 +194,7 @@ impl TextSplitting {
                         ChunkingStrategy::CHARACTER_CHUNKING => {
                             for sentence in vector_of_sentences {
                                 chunks.push(Document::new(
-                                    sentence.sentence.unwrap(),
+                                    sentence.sentence?,
                                     None,
                                     Some(sentence.sentence_embedding.to_vec()),
                                 ))
