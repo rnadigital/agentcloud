@@ -158,21 +158,21 @@ export const ModelEmbeddingLength = {
 	'nomic-embed-text': 8192
 };
 
-export const ModelContextWindow = { /**add/modify these as required */
-	'gpt-4o-mini': 128000,
+export const ModelContextWindow = {
+	/**add/modify these as required */ 'gpt-4o-mini': 128000,
 	'gpt-4o': 128000,
 	'gpt-4-turbo': 128000,
 	'gpt-4': 8192,
 	'gpt-3.5-turbo': 16385,
-	'llama2': 4096,
-	'llama3': 128000,
+	llama2: 4096,
+	llama3: 128000,
 	'llama3:8b': 8192,
 	'llama3:70b': 128000,
 	'llama3:70b-instruct': 8000,
 	'dolphin-llama3:256k': 256000,
 	'dolphin-llama3:70b': 256000,
 	'dolphin-llama3:8b-256k': 256000,
-	'phi3': 0,
+	phi3: 0,
 	'phi3:instruct': 0,
 	'llama3:8b-instruct-fp16': 8192,
 	'mixtral:instruct': 32768,
@@ -184,24 +184,24 @@ export const ModelContextWindow = { /**add/modify these as required */
 	'mixtral-8x7b-32768': 32000,
 	'gemini-1.5-pro': 2000000,
 	'gemini-1.5-flash': 1000000,
-	'gemini-1.0-pro': 33000,
-}
+	'gemini-1.0-pro': 33000
+};
 
-export const ModelKnowledgeCutoff = { /**no knowledge on cutoff for dolphin variants of llama */
-	'gpt-4o-mini': 'Oct 2023',
+export const ModelKnowledgeCutoff = {
+	/**no knowledge on cutoff for dolphin variants of llama */ 'gpt-4o-mini': 'Oct 2023',
 	'gpt-4o': 'Oct 2023',
 	'gpt-4-turbo': 'Dec 2023',
 	'gpt-4': 'Sep 2021',
 	'gpt-3.5-turbo': 'Sep 2021',
-	'llama2': 'July 2023',
-	'llama3': 'Dec 2023',
+	llama2: 'July 2023',
+	llama3: 'Dec 2023',
 	'llama3:8b': 'Mar 2023',
 	'llama3:70b': 'Dec 2023',
 	'llama3:70b-instruct': 'Dec 2023',
-	'dolphin-llama3:256k': '-', 
+	'dolphin-llama3:256k': '-',
 	'dolphin-llama3:70b': '-',
 	'dolphin-llama3:8b-256k': '-',
-	'phi3': 'Oct 2023',
+	phi3: 'Oct 2023',
 	'phi3:instruct': 'Oct 2023',
 	'llama3:8b-instruct-fp16': 'Mar 2023',
 	'mixtral:instruct': 'Dec 2023*',
@@ -213,8 +213,8 @@ export const ModelKnowledgeCutoff = { /**no knowledge on cutoff for dolphin vari
 	'mixtral-8x7b-32768': 'Sep 2021',
 	'gemini-1.5-pro': 'November 2023',
 	'gemini-1.5-flash': 'November 2023',
-	'gemini-1.0-pro': 'November 2023',
-}
+	'gemini-1.0-pro': 'November 2023'
+};
 
 export const ChatAppAllowedModels = new Set([
 	ModelType.OPENAI,

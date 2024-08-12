@@ -1,14 +1,13 @@
 'use strict';
 
+import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
+import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
-import * as API from '@api';
-import { useAccountContext } from 'context/account';
 import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';
 
 export default function ModelTable({ models, fetchModels }: { models: any[]; fetchModels?: any }) {
@@ -167,22 +166,20 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 
 									<td
 										className='px-6 py-4 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
-											
-
-											<div className='text-sm text-gray-900 dark:text-white'>
-												{ModelKnowledgeCutoff[model.model]}
-											</div>
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
+									>
+										<div className='text-sm text-gray-900 dark:text-white'>
+											{ModelKnowledgeCutoff[model.model]}
+										</div>
 									</td>
 
 									<td
 										className='px-6 py-4 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}>
-											
-
-											<div className='text-sm text-gray-900 dark:text-white'>
-												{ModelContextWindow[model.model]?.toLocaleString()}
-											</div>
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
+									>
+										<div className='text-sm text-gray-900 dark:text-white'>
+											{ModelContextWindow[model.model]?.toLocaleString()}
+										</div>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 										<button
