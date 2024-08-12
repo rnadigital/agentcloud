@@ -50,7 +50,9 @@ export default function CreateDatasourceForm({
 	fetchDatasourceFormData,
 	hideTabs,
 	initialStep = 0,
-	fetchDatasources
+	fetchDatasources,
+	spec,
+	setSpec
 }: {
 	models?: any[];
 	compact?: boolean;
@@ -59,6 +61,8 @@ export default function CreateDatasourceForm({
 	hideTabs?: boolean;
 	initialStep?: number;
 	fetchDatasources?: Function;
+	spec?: any;
+	setSpec?: Function;
 }) {
 	//TODO: fix any types
 
@@ -105,7 +109,6 @@ export default function CreateDatasourceForm({
 	});
 	const [formData, setFormData] = useState(null);
 
-	const [spec, setSpec] = useState(null);
 	async function getSpecification(sourceDefinitionId: string) {
 		API.getSpecification(
 			{

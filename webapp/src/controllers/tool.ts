@@ -275,7 +275,7 @@ export async function addToolApi(req, res, next) {
 								date: new Date()
 							});
 							log('addToolApi functionId %s isActive %O', functionId, isActive);
-							await new Promise(res => setTimeout(res, 10000));
+							await new Promise(res => setTimeout(res, 30000));
 							const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
 								log(e);
 							});
@@ -457,7 +457,7 @@ export async function editToolApi(req, res, next) {
 							/* Note: don't remove this static sleep. The purpose is to wait for google
 							 * cloud logging to have the deployment failure message which comes after
 							 * a DELAY even when the function is already in "failed" state */
-							await new Promise(res => setTimeout(res, 10000));
+							await new Promise(res => setTimeout(res, 30000));
 							const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
 								log(e);
 							});
@@ -601,7 +601,7 @@ export async function applyToolRevisionApi(req, res, next) {
 					.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
 						log('editToolApi functionId %s isActive %O', functionId, isActive);
-						await new Promise(res => setTimeout(res, 10000));
+						await new Promise(res => setTimeout(res, 30000));
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
 							log(e);
 						});
