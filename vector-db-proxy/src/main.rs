@@ -15,7 +15,7 @@ use tokio::signal;
 use tokio::sync::RwLock;
 
 use adaptors::qdrant::client::instantiate_qdrant_client;
-use routes::api_routes::{
+use routes::apis::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection, get_collection_info,
     health_check, list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
 };
@@ -25,6 +25,7 @@ use crate::init::env_variables::set_all_env_vars;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
+use crate::routes::apis::get_storage_size;
 use adaptors::mongo::client::start_mongo_connection;
 
 mod data;
@@ -57,7 +58,8 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
             .service(scroll_data)
-            .service(get_collection_info),
+            .service(get_collection_info)
+            .service(get_storage_size),
     );
 }
 

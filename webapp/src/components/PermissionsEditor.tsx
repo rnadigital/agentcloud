@@ -81,8 +81,11 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 	return (
 		<form onSubmit={permissionsPost} className='max-w-full'>
 			<div className='mt-4'>
-				<label htmlFor='role-select' className='block text-sm font-medium text-gray-700'>
-					Select Role
+				<label
+					htmlFor='role-select'
+					className='block text-sm font-medium text-gray-700 dark:text-white'
+				>
+					Apply a Role
 				</label>
 				<select
 					id='role-select'
@@ -103,13 +106,13 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 					onClick={updateRole}
 					className='mt-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
-					Update Role
+					Submit
 				</button>
 			</div>
 
-			<hr className='my-4' />
+			<hr className='my-4 dark:border-slate-700' />
 
-			<div className='grid gap-4 grid-cols-3'>
+			<div className='grid gap-4 grid-cols-3 dark:text-white'>
 				{Object.entries(Metadata)
 					.filter(e => !filterBits || filterBits.includes(parseInt(e[0])))
 					.map(([key, { title, label, desc, heading }], index) => {
