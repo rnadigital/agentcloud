@@ -50,8 +50,6 @@ export default function AgentForm({
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 	const posthog = usePostHog();
 
-
-	
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
 		if (!foundTool) {
@@ -68,7 +66,7 @@ export default function AgentForm({
 
 	useEffect(() => {
 		setAgent(agent);
-		if(agent.icon){
+		if (agent.icon) {
 			setIcon(agent.icon);
 		}
 
@@ -85,12 +83,7 @@ export default function AgentForm({
 			});
 		}
 
-		setDatasourceState(
-			initialDatasources.length > 0 ? initialDatasources : null
-			
-		);
-
-		
+		setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
 	}, [agent]);
 
 	const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
@@ -100,7 +93,6 @@ export default function AgentForm({
 	const [toolState, setToolState] = useState(initialTools.length > 0 ? initialTools : null);
 	const [datasourceState, setDatasourceState] = useState(
 		initialDatasources.length > 0 ? initialDatasources : null
-		
 	); //Note: still technically tools, just only RAG tools
 
 	useEffect(() => {

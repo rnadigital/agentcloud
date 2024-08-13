@@ -31,17 +31,15 @@ export default function AddAgent(props) {
 	}, []);
 
 	useEffect(() => {
-		if(typeof location != undefined){
-			const agentId = new URLSearchParams(location.search).get("agentId")
+		if (typeof location != undefined) {
+			const agentId = new URLSearchParams(location.search).get('agentId');
 			fetchEditData(agentId);
 		}
-
-	}, [])
+	}, []);
 
 	if (agents == null) {
 		return <Spinner />;
 	}
-
 
 	return (
 		<>
@@ -50,12 +48,13 @@ export default function AddAgent(props) {
 			</Head>
 
 			<span className='sm:w-full md:w-1/2 xl:w-1/3'>
-				<AgentForm 
-					models={models} 
-					tools={tools} 
+				<AgentForm
+					models={models}
+					tools={tools}
 					fetchAgentFormData={fetchAgentFormData}
 					agent={cloneState?.agent}
-					editing={false} />
+					editing={false}
+				/>
 			</span>
 		</>
 	);
