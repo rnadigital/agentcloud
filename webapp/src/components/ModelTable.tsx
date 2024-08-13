@@ -1,14 +1,14 @@
 'use strict';
 
+import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
+import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
+import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';
 
 export default function ModelTable({ models, fetchModels }: { models: any[]; fetchModels?: any }) {
 	const [accountContext]: any = useAccountContext();
@@ -100,13 +100,28 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 							>
 								Model
 							</th>
-							{/* Add more columns as necessary */}
+
 							<th
 								scope='col'
 								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Embedding Length
 							</th>
+							<th
+								scope='col'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Knowledge Cutoff
+							</th>
+							<th
+								scope='col'
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Context Window
+							</th>
+
+							{/* Add more columns as necessary */}
+
 							<th
 								scope='col'
 								className='w-min px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
@@ -117,6 +132,8 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200 dark:bg-gray-700'>
 						{models.map(model => {
+							const knowledgeCutoffDate =
+								ModelKnowledgeCutoff[model.model] && new Date(ModelKnowledgeCutoff[model.model]);
 							return (
 								<tr
 									key={model._id}
@@ -146,6 +163,29 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>
 											{model.embeddingLength ? model.embeddingLength : '-'}
+										</div>
+									</td>
+
+									<td
+										className='px-6 py-4 whitespace-nowrap'
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
+									>
+										<div
+											suppressHydrationWarning={true}
+											className='text-sm text-gray-900 dark:text-white'
+										>
+											{knowledgeCutoffDate
+												? `${knowledgeCutoffDate.toLocaleString('en-US', { month: 'short' })} ${knowledgeCutoffDate.getFullYear()}`
+												: '-'}
+										</div>
+									</td>
+
+									<td
+										className='px-6 py-4 whitespace-nowrap'
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
+									>
+										<div className='text-sm text-gray-900 dark:text-white'>
+											{ModelContextWindow[model.model]?.toLocaleString() || '-'}
 										</div>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>

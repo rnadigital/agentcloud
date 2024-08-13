@@ -158,6 +158,64 @@ export const ModelEmbeddingLength = {
 	'nomic-embed-text': 8192
 };
 
+export const ModelContextWindow = {
+	/**add/modify these as required */ 'gpt-4o-mini': 128000,
+	'gpt-4o': 128000,
+	'gpt-4-turbo': 128000,
+	'gpt-4': 8192,
+	'gpt-3.5-turbo': 16385,
+	llama2: 4096,
+	llama3: 128000,
+	'llama3:8b': 8192,
+	'llama3:70b': 128000,
+	'llama3:70b-instruct': 8000,
+	'dolphin-llama3:256k': 256000,
+	'dolphin-llama3:70b': 256000,
+	'dolphin-llama3:8b-256k': 256000,
+	phi3: 0,
+	'phi3:instruct': 0,
+	'llama3:8b-instruct-fp16': 8192,
+	'mixtral:instruct': 32768,
+	'claude-3-5-sonnet-20240620': 200000,
+	'claude-3-sonnet-20240229': 200000,
+	'claude-3-opus-20240229': 200000,
+	'claude-3-haiku-20240307': 200000,
+	'llama3-70b-8192': 8000,
+	'mixtral-8x7b-32768': 32000,
+	'gemini-1.5-pro': 2000000,
+	'gemini-1.5-flash': 1000000,
+	'gemini-1.0-pro': 33000
+};
+
+export const ModelKnowledgeCutoff = {
+	'gpt-4o-mini': new Date('2023-10-01'),
+	'gpt-4o': new Date('2023-10-01'),
+	'gpt-4-turbo': new Date('2023-12-01'),
+	'gpt-4': new Date('2021-09-01'),
+	'gpt-3.5-turbo': new Date('2021-09-01'),
+	llama2: new Date('2023-07-01'),
+	llama3: new Date('2023-12-01'),
+	'llama3:8b': new Date('2023-03-01'),
+	'llama3:70b': new Date('2023-12-01'),
+	'llama3:70b-instruct': new Date('2023-12-01'),
+	'dolphin-llama3:256k': null,
+	'dolphin-llama3:70b': null,
+	'dolphin-llama3:8b-256k': null,
+	phi3: new Date('2023-10-01'),
+	'phi3:instruct': new Date('2023-10-01'),
+	'llama3:8b-instruct-fp16': new Date('2023-03-01'),
+	'mixtral:instruct': new Date('2023-12-01'),
+	'claude-3-5-sonnet-20240620': new Date('2024-04-01'),
+	'claude-3-sonnet-20240229': new Date('2023-08-01'),
+	'claude-3-opus-20240229': new Date('2023-08-01'),
+	'claude-3-haiku-20240307': new Date('2023-08-01'),
+	'llama3-70b-8192': new Date('2023-12-01'),
+	'mixtral-8x7b-32768': new Date('2021-09-01'),
+	'gemini-1.5-pro': new Date('2023-11-01'),
+	'gemini-1.5-flash': new Date('2023-11-01'),
+	'gemini-1.0-pro': new Date('2023-11-01')
+};
+
 export const ChatAppAllowedModels = new Set([
 	ModelType.OPENAI,
 	ModelType.ANTHROPIC,
