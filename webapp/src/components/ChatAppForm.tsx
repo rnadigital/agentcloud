@@ -111,13 +111,18 @@ export default function ChatAppForm({
 	}, [agentsState?.value]);
 
 	useEffect(() => {
+		if (!app) {
+			return;
+		}
 		const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 		setAgentsState(initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null);
 
 		setShowAgentForm(true);
 
 		setIcon(app?.icon);
-	}, [app]);
+	}, [app?._id]);
+
+	console.log('icon', icon);
 
 	async function appPost(e) {
 		e.preventDefault();

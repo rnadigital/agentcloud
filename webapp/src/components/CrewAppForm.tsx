@@ -310,7 +310,7 @@ export default function CrewAppForm({
 								Avatar
 							</label>
 							<div className='mt-2'>
-								<AvatarUploader existingAvatar={app?.icon} callback={iconCallback} />
+								<AvatarUploader existingAvatar={icon} callback={iconCallback} />
 							</div>
 						</div>
 					</div>
