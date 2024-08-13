@@ -19,6 +19,7 @@ export default function AddDatasource(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [models, setModels] = useState();
+	const [spec, setSpec] = useState(null);
 
 	async function fetchDatasourceFormData() {
 		await API.getModels({ resourceSlug }, res => setModels(res?.models), setError, router);
@@ -44,6 +45,8 @@ export default function AddDatasource(props) {
 
 			<CreateDatasourceForm
 				models={models}
+				spec={spec}
+				setSpec={setSpec}
 				fetchDatasourceFormData={fetchDatasourceFormData}
 				initialStep={2}
 			/>

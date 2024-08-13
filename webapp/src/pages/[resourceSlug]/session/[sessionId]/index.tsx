@@ -209,9 +209,7 @@ export default function Session(props) {
 							.map(x => x.chunk)
 							.join('');
 						if (m?.chunks?.length > 1 && combinedChunks?.length > 0) {
-							_m.message.text =
-								(_m.message.chunkId && _m.message.text.length > 0 ? _m.message.text : '') +
-								combinedChunks;
+							_m.message.text = combinedChunks;
 						}
 						_m.tokens = m.tokens || _m.tokens;
 						_m._id = m._id; //id for last seen
@@ -341,14 +339,15 @@ export default function Session(props) {
 									}
 									chunking={m?.chunks?.length > 0}
 									completed={m?.completed}
-									agent={{ name: authorName, icon: { filename: authorAvatarMap[authorName] } }}
+									agent={{
+										name: authorName,
+										icon: { filename: authorAvatarMap[authorName.toLowerCase()] }
+									}}
 								/>
 							);
 						})}
-					{((chatBusyState && messages?.length === 0 && !terminated) ||
-						loading ||
-						(messages && messages.length === 0)) && (
-						<div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+					{(chatBusyState || loading) && (
+						<div className='text-center pb-6 pt-8 '>
 							<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>

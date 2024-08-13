@@ -137,7 +137,7 @@ export async function getAgentNameMap(
 		})
 		.toArray();
 	return (agents || []).reduce((acc, x) => {
-		acc[x.name] = x?.icon?.filename;
+		acc[x.name.toLowerCase()] = x?.icon?.filename;
 		return acc;
 	}, {});
 }

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use crate::adaptors::qdrant::models::CollectionStorageSize;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
 pub enum Status{
@@ -39,4 +39,12 @@ pub struct Prompt{
     pub prompt: Vec<String>,
     pub filters: Option<FilterConditions>,
     pub limit: Option<u64>
+}
+
+
+#[derive(Serialize, Clone, Debug)]
+pub struct CollectionStorageSizeResponse {
+    pub list_of_datasources: Vec<CollectionStorageSize>,
+    pub total_size: f64,
+    pub total_points: u64,
 }

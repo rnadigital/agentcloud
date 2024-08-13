@@ -17,6 +17,7 @@ import cn from 'lib/cn';
 import { toast } from 'react-toastify';
 
 const COLLAPSE_AFTER_LINES = 10;
+const ERROR_TEXTS = new Set(['⛔ An unexpected error occurred', '⛔ MAX_RECURSION_LIMIT REACHED']);
 
 export function CopyToClipboardButton({ dataToCopy }) {
 	const handleCopyClick = async () => {
@@ -206,9 +207,8 @@ export function Message({
 			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2 mt-auto' : 'me-2'} select-none`}
 		>
 			<span
-				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ${!sameAuthorAsPrevious && 'ring-1'}`}
+				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1`}
 			>
-				{/*(incoming || !sameAuthorAsPrevious) && <AgentAvatar agent={avatar} size={8} />*/}
 				<AgentAvatar agent={agent} size={8} />
 			</span>
 		</div>
@@ -225,7 +225,8 @@ export function Message({
 					className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}
 				>
 					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
-						{message !== '⛔ An unexpected error occurred' ? (
+						{/* TODO: (tom) change how this works so bubles have a flag that says whether to show a spinner */}
+						{!ERROR_TEXTS.has(message) ? (
 							completed ? (
 								<CheckCircleIcon className='fill-green-600 h-5 me-2' />
 							) : (
