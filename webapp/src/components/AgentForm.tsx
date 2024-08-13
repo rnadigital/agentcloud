@@ -77,12 +77,6 @@ export default function AgentForm({
 			initialDatasources: []
 		});
 		setToolState(initialTools.length > 0 ? initialTools : null);
-
-		setDatasourceState(
-			initialDatasources.length > 0 ? initialDatasources : null
-			
-		);
-
 		if (models && models.length > 0 && !modelId) {
 			setAgent({
 				...agentState,
@@ -90,6 +84,12 @@ export default function AgentForm({
 				functionModelId: models.find(m => !ModelEmbeddingLength[m.model])?._id
 			});
 		}
+
+		setDatasourceState(
+			initialDatasources.length > 0 ? initialDatasources : null
+			
+		);
+
 		
 	}, [agent]);
 
