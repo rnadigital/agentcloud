@@ -11,7 +11,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 
 const StripeCheckoutModal = ({
 	showPaymentModal,
-	getPayload,
+	payload,
 	setShow,
 	setStagedChange,
 	onComplete
@@ -23,7 +23,7 @@ const StripeCheckoutModal = ({
 	const fetchClientSecret = useCallback(() => {
 		return new Promise((resolve, reject) => {
 			API.confirmChangePlan(
-				getPayload(),
+				payload,
 				res => {
 					if (res?.clientSecret) {
 						resolve(res.clientSecret);
@@ -34,7 +34,7 @@ const StripeCheckoutModal = ({
 				router
 			);
 		});
-	}, []);
+	}, [payload]);
 
 	return (
 		<Transition.Root show={showPaymentModal === true} as={Fragment}>

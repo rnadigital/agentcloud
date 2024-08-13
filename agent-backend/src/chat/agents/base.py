@@ -7,6 +7,7 @@ from datetime import datetime
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import BaseMessage
 from langchain_core.tools import BaseTool
+from langgraph.errors import GraphRecursionError
 from socketio import SimpleClient
 
 from messaging.send_message_to_socket import send
@@ -163,6 +164,13 @@ class BaseChatAgent:
                     # see https://python.langchain.com/docs/expression_language/streaming#event-reference
                     case _:
                         logging.debug(f"unhandled {kind} event")
+        except GraphRecursionError as ge:
+            logging.info(f"Maximum recursion limit reached for session '{self.session_id}'. Ending chat.")
+            self.send_to_socket(text=f"⛔ MAX_RECURSION_LIMIT REACHED", event=SocketEvents.MESSAGE,
+                                first=True, chunk_id=str(uuid.uuid4()),
+                                timestamp=datetime.now().timestamp() * 1000,
+                                display_type="inline")
+
         except Exception as chunk_error:
             logging.error(traceback.format_exc())
             self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
