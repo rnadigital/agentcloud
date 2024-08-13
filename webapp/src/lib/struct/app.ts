@@ -12,6 +12,7 @@ export enum AppType {
 export type ChatAppConfig = {
 	agentId: ObjectId;
 	conversationStarters: string[];
+	recursionLimit?: number;
 };
 
 export type App = {
