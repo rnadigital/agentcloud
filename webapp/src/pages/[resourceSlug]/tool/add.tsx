@@ -13,6 +13,7 @@ export default function AddTool(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
+	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const { tools, datasources } = state;
 
@@ -20,9 +21,20 @@ export default function AddTool(props) {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
 
+	function fetchEditData(toolId) {
+		API.getTool({ resourceSlug, toolId }, setCloneState, setError, router);
+	}
+
 	useEffect(() => {
 		fetchTools();
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const toolId = new URLSearchParams(location.search).get('toolId');
+			fetchEditData(toolId);
+		}
+	}, []);
 
 	if (!tools) {
 		return <Spinner />;
@@ -40,7 +52,12 @@ export default function AddTool(props) {
 				</div>
 			)}
 
-			<ToolForm datasources={datasources} fetchFormData={fetchTools} initialType={null} />
+			<ToolForm
+				datasources={datasources}
+				fetchFormData={fetchTools}
+				initialType={null}
+				tool={cloneState?.tool}
+			/>
 		</>
 	);
 }
