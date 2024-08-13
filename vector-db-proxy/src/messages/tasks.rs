@@ -1,6 +1,6 @@
 use crate::adaptors::gcp::models::PubSubConnect;
 use crate::adaptors::mongo::models::ChunkingStrategy;
-use crate::adaptors::mongo::queries::{get_datasource, get_model};
+use crate::adaptors::mongo::queries::{get_datasource, get_model, increment_by_one, set_record_count_total};
 use crate::adaptors::qdrant::helpers::construct_point_struct;
 use crate::adaptors::qdrant::utils::Qdrant;
 use crate::adaptors::rabbitmq::models::RabbitConnect;
@@ -83,12 +83,18 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                                     let mongo_connection_clone = Arc::clone(&mongo_client);
                                     match handle.await.unwrap() {
                                         Ok(documents) => {
+                                            let mongo_connection = mongodb_connection.clone();
                                             // Construct a collection of the texts from the 
                                             // Unstructured IO response to embed
                                             let list_of_text: Vec<String> = documents
                                                 .iter()
                                                 .map(|doc| doc.text.clone())
                                                 .collect();
+                                            set_record_count_total(
+                                                &mongo_connection,
+                                                datasource_id, list_of_text
+                                                    .len() as i32,
+                                            ).await.unwrap();
                                             match embed_text_chunks_async(
                                                 mongo_connection_clone,
                                                 datasource_id.to_string(),
@@ -104,12 +110,25 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                                                             HashMap::from(file_metadata);
                                                         let embedding_vector = embeddings.get(i);
                                                         if let Some(vector) = embedding_vector {
+                                                            increment_by_one(
+                                                                &mongo_connection,
+                                                                datasource_id,
+                                                                "recordCount.success",
+                                                            ).await
+                                                                .unwrap();
                                                             if let Some(point_struct) =
                                                                 construct_point_struct(
                                                                     &vector,
                                                                     metadata_map,
                                                                     Some(model_name.clone()),
                                                                 ).await { points_to_upload.push(point_struct) };
+                                                        } else {
+                                                            increment_by_one(
+                                                                &mongo_connection,
+                                                                datasource_id,
+                                                                "recordCount.failure",
+                                                            ).await
+                                                                .unwrap();
                                                         }
                                                         let vector_length = model_parameters.embeddingLength as u64;
                                                         let qdrant_conn_clone = Arc::clone(&qdrant_client);
