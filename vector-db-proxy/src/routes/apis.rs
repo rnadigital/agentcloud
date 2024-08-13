@@ -5,10 +5,10 @@ use actix_web::*;
 use actix_web_lab::extract::Path;
 use std::sync::Arc;
 
-use crate::errors::types::Result;
 use crate::adaptors::qdrant::helpers::{get_next_page, get_scroll_results};
 use crate::adaptors::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
 use crate::adaptors::qdrant::utils::Qdrant;
+use crate::errors::types::Result;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_filters;
 
@@ -18,7 +18,8 @@ use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVect
 
 use crate::adaptors::mongo::client::start_mongo_connection;
 use crate::adaptors::mongo::models::Model;
-use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key};
+use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key, get_team_datasources};
+use crate::routes::models::CollectionStorageSizeResponse;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use routes::models::{ResponseBody, SearchRequest, Status};
@@ -97,8 +98,8 @@ pub async fn check_collection_exists(
     let qdrant_conn = app_data.get_ref();
     let collection_name_clone = collection_name.clone();
     let qdrant = Qdrant::new(qdrant_conn.to_owned(), collection_name);
-    let mongo = start_mongo_connection().await.unwrap();
-    return match get_model_and_embedding_key(&mongo, &collection_name_clone)
+    let mongo = start_mongo_connection().await?;
+    match get_model_and_embedding_key(&mongo, &collection_name_clone)
         .await
     {
         Ok((model_parameter_result, _)) => match model_parameter_result {
@@ -171,7 +172,7 @@ pub async fn check_collection_exists(
                                  "errorMessage": format!("Model query returned an error: {}", e)}))
                         })))
         }
-    };
+    }
 }
 
 ///
@@ -258,12 +259,11 @@ pub async fn bulk_upsert_data_to_collection(
     }
     let collection_name_clone = collection_name.clone();
     let qdrant = Qdrant::new(qdrant_conn, collection_name_clone);
-    let mongodb_connection = start_mongo_connection().await.unwrap();
+    let mongodb_connection = start_mongo_connection().await?;
     let collection_name_clone_2 = collection_name.clone();
     let model_parameters: Model =
         get_model(&mongodb_connection, collection_name_clone_2.as_str())
-            .await
-            .unwrap()
+            .await?
             .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
     let bulk_upsert_results = qdrant
@@ -510,4 +510,44 @@ pub async fn get_collection_info(
         })))
         }
     }
+}
+
+
+#[wherr]
+#[get("/storage-size/{dataset_id}")]
+pub async fn get_storage_size(
+    app_data: Data<Arc<RwLock<QdrantClient>>>,
+    Path(team_id): Path<String>,
+) -> Result<impl Responder> {
+    let mut collection_size_response = CollectionStorageSizeResponse {
+        list_of_datasources: vec![],
+        total_size: 0.0,
+        total_points: 0,
+    };
+    let qdrant_conn = app_data.get_ref();
+    let team_id = team_id.clone();
+    let mongodb_connection = start_mongo_connection().await?;
+    let list_of_team_datasources = get_team_datasources(&mongodb_connection, team_id.as_str())
+        .await?;
+    println!("List of team datasources: {:?}", list_of_team_datasources);
+    for datasource in list_of_team_datasources {
+        let embedding_model = get_model(&mongodb_connection, datasource._id.to_string().as_str())
+            .await?.unwrap();
+        let qdrant = Qdrant::new(Arc::clone(qdrant_conn), datasource._id.to_string());
+        if let Some(collection_storage_info) = qdrant.estimate_storage_size(
+            embedding_model.embeddingLength as usize
+        ).await {
+            collection_size_response.total_points += collection_storage_info
+                .points_count.unwrap();
+            collection_size_response.total_size += collection_storage_info.size.unwrap();
+            collection_size_response.list_of_datasources.push(collection_storage_info);
+        }
+    }
+    Ok(HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+            status: Status::Success,
+            data: Some(json!(collection_size_response)),
+            error_message: None
+        })))
 }
