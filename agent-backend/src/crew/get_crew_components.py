@@ -1,4 +1,6 @@
 from typing import Any, Optional, List, Dict, Set, Tuple, Union
+
+from crew.exceptions import CrewAIBuilderException
 from init.mongo_session import start_mongo_session
 from models.mongo import Agent, AppType, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool, App
@@ -55,6 +57,9 @@ def construct_crew(session_id: str, socket: Any):
     session: Session = mongo_client.get_session(session_id)
     print(f"Session: {session}")
 
+    if not session:
+        raise CrewAIBuilderException(f"Session with id '{session_id}' not found. Perhaps terminated by user?")
+
     app, the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
     print("Crew:", app, the_crew, crew_tasks, crew_agents)
 
@@ -71,10 +76,10 @@ def construct_crew(session_id: str, socket: Any):
     crew_tasks_dict: Dict[Set[PyObjectId], Task] = dict([(keyset(task.id), task) for task in crew_tasks])
 
     # Combine agent and task tools
-    agents_tools = construct_tools(crew_agents_dict.items()) | construct_tools(crew_tasks_dict.items())
+    agents_tasks_tools = construct_tools(crew_agents_dict.items()) | construct_tools(crew_tasks_dict.items())
 
     # Agent > Tools > Datasource
-    agents_tools_datasources = construct_tools_datasources(agents_tools.items())
+    agents_tools_datasources = construct_tools_datasources(agents_tasks_tools.items())
 
     # Agent > Datasource > Model
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
@@ -98,7 +103,7 @@ def construct_crew(session_id: str, socket: Any):
         crew=the_crew,
         agents=crew_agents_dict,
         tasks=crew_tasks_dict,  # | crew_agents_tasks_dict,
-        tools=agents_tools,
+        tools=agents_tasks_tools,
         datasources=agents_tools_datasources,  # | tasks_tools_datasources,
         models=agent_models | agents_tools_datasources_models | crew_chat_models,
         credentials=agent_model_credentials | agents_tools_datasources_models_credentials | crew_chat_models_credentials,

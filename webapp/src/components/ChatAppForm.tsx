@@ -68,6 +68,7 @@ export default function ChatAppForm({
 	const [goal, setGoal] = useState(initialAgent?.goal || '');
 	const [backstory, setBackstory] = useState(initialAgent?.backstory || '');
 	const [modelId, setModelId] = useState(initialAgent?.modelId || null);
+	const [recursionLimit, setRecursionLimit] = useState(app?.chatAppConfig.recursionLimit || 30);
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = toolChoices.find(t => t._id === tid);
@@ -136,6 +137,7 @@ export default function ChatAppForm({
 			sharingMode,
 			shareLinkShareId,
 			run,
+			recursionLimit,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
 			//new agent
@@ -337,6 +339,7 @@ export default function ChatAppForm({
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
 							</div>
+
 							<div className='sm:col-span-12 flex flex-row gap-4'>
 								<div className='w-full'>
 									<label
@@ -358,7 +361,6 @@ export default function ChatAppForm({
 									/>
 								</div>
 							</div>
-
 							<SharingModeSelect
 								sharingMode={sharingMode}
 								setSharingMode={setSharingMode}
@@ -366,7 +368,6 @@ export default function ChatAppForm({
 								setShareLinkShareId={setShareLinkShareId}
 								shareLinkShareId={shareLinkShareId}
 							/>
-
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Conversation Starters
@@ -385,6 +386,26 @@ export default function ChatAppForm({
 								/>
 							</div>
 
+							<div className='sm:col-span-'>
+								<label
+									htmlFor='recursionLimit'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								>
+									Max Messages
+								</label>
+								<input
+									required
+									type='number'
+									name='recursionLimit'
+									id='recursionLimit'
+									value={recursionLimit}
+									onChange={e => {
+										setRecursionLimit(parseInt(e.target.value, 10));
+									}}
+									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+								/>
+							</div>
+
 							{agentChoices?.length > 0 && (
 								<AgentsSelect
 									agentChoices={agentChoices}
@@ -400,7 +421,6 @@ export default function ChatAppForm({
 									multiple={false}
 								/>
 							)}
-
 							{showAgentForm && (
 								<>
 									<hr className='col-span-12' />
