@@ -160,6 +160,10 @@ export default function TaskForm({
 	}, [resourceSlug, notificationTrigger]);
 
 	useEffect(() => {
+		setTask(task);
+	}, [task]);
+
+	useEffect(() => {
 		if (preferredAgent?.toolIds?.length > 0) {
 			setShowToolConflictWarning(true);
 		} else {

@@ -1,4 +1,4 @@
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, MenuItem, Transition } from '@headlessui/react';
 import { CheckIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -81,6 +81,17 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 												</a>
 											)}
 										</Menu.Item>
+										<MenuItem>
+											<a
+												href={`/${resourceSlug}/task/add?taskId=${encodeURIComponent(task._id)}`}
+												className={classNames(
+													'bg-gray-50 dark:bg-slate-700',
+													'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+												)}
+											>
+												Clone
+											</a>
+										</MenuItem>
 										<Menu.Item>
 											{({ active }) => (
 												<button
