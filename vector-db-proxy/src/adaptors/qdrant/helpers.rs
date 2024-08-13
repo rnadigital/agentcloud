@@ -151,10 +151,10 @@ pub async fn embed_payload(
 pub async fn construct_point_struct(
     vector: &Vec<f32>,
     payload: HashMap<String, String>,
-    embedding_models: Option<EmbeddingModels>,
+    vector_name: Option<EmbeddingModels>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
-        return if let Some(model_name) = embedding_models {
+        return if let Some(model_name) = vector_name {
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(
                     Uuid::new_v4().to_string(),

@@ -1,3 +1,3 @@
-mod vector_database;
+pub mod vector_database;
 pub mod models;
 

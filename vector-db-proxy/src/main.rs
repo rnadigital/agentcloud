@@ -37,6 +37,7 @@ mod routes;
 mod utils;
 mod messages;
 mod adaptors;
+mod vector_dbs;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =

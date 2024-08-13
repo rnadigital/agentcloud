@@ -62,6 +62,7 @@ google-cloud-pubsub = { version = "0.28.0", features = ["auth"] }
 lazy_static = "1.4.0"
 time = "0.3.36"
 pinecone-sdk = "0.1.1"
+
 [features]
 default = ["cuda_rocm"]
 cuda_rocm = [] # This is the default feature set for CUDA and ROCm.

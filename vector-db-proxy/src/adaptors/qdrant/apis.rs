@@ -1,6 +1,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::adaptors::qdrant::models::{CollectionData, CollectionStorageSize, CreateDisposition, PointSearchResults, Status};
+use crate::routes::models::FilterConditions;
+use crate::utils::conversions::convert_hashmap_to_filters;
 use anyhow::{anyhow, Result};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
@@ -9,10 +12,6 @@ use qdrant_client::prelude::*;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::{CreateCollection, Filter, PointId, PointStruct, RecommendPoints, ScoredPoint, VectorParams, VectorParamsMap, VectorsConfig};
 use tokio::sync::RwLock;
-
-use crate::adaptors::qdrant::models::{CollectionData, CollectionStorageSize, CreateDisposition, PointSearchResults, Status};
-use crate::routes::models::FilterConditions;
-use crate::utils::conversions::convert_hashmap_to_filters;
 
 pub struct Qdrant {
     client: Arc<RwLock<QdrantClient>>,

@@ -1,18 +1,25 @@
-use std::collections::HashMap;
-
+use anyhow::Error as AnyhowError;
 use serde::Serialize;
 use serde_json::Value;
+use std::collections::HashMap;
 use thiserror;
 
-#[derive(thiserror::Error, Debug, Serialize, Clone)]
+#[derive(thiserror::Error, Debug)]
 pub enum VectorDatabaseError {
+    // Anyhow error
+    #[error("An error occurred: {0}")]
+    AnyhowError(#[from] AnyhowError),
+    // #[error("A pinecone error occurred: {0}")]
+    // PineconeErrorType(#[from] PineconeError),
     /// Any other error.
-    #[error("{0}")]
-    Other(&'static str),
+    #[error("An error occurred. {0}")]
+    Other(String),
 }
-#[derive(Debug, Serialize, Clone)]
+
+#[derive(Debug)]
 pub enum VectorDatabaseStatus {
     Ok,
+    Failure,
     NotFound,
     Error(VectorDatabaseError),
 }
@@ -21,7 +28,6 @@ pub enum CreateDisposition {
     CreateNever,
 }
 
-#[derive(Serialize)]
 pub struct Point {
     pub status: VectorDatabaseStatus,
     pub index: String,
@@ -29,14 +35,14 @@ pub struct Point {
     pub payload: Option<HashMap<String, Value>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct CollectionsResult {
     pub status: VectorDatabaseStatus,
     pub collection_name: String,
-    pub collection_metadata: CollectionMetadata,
+    pub collection_metadata: Option<CollectionMetadata>
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct CollectionMetadata {
     pub status: VectorDatabaseStatus,
     pub indexed_vectors_count: Option<u64>,
@@ -45,7 +51,7 @@ pub struct CollectionMetadata {
 }
 
 
-#[derive(Serialize, Debug)]
+#[derive(Debug)]
 pub struct ScrollResults {
     pub status: VectorDatabaseStatus,
     pub id: String,
@@ -67,7 +73,6 @@ pub struct FilterConditions {
 }
 
 
-#[derive(Serialize, Clone)]
 pub struct SearchRequest {
     pub status: VectorDatabaseStatus,
     pub collection: String,
@@ -76,4 +81,29 @@ pub struct SearchRequest {
     pub filters: Option<FilterConditions>,
     pub limit: Option<u32>,
     pub get_all_pages: Option<bool>,
+}
+
+#[derive(Debug)]
+pub struct StorageSize {
+    pub status: VectorDatabaseStatus,
+    pub collection_name: String,
+    pub size: Option<f64>,
+    pub points_count: Option<u64>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub enum Distance {
+    UnknownDistance = 0,
+    Cosine = 1,
+    Euclid = 2,
+    Dot = 3,
+    Manhattan = 4,
+}
+#[derive(Serialize, Debug, Clone)]
+pub struct CollectionCreate {
+    pub collection_name: String,
+    pub size: u64,
+    pub namespace: Option<String>,
+    pub distance: Distance,
+    pub vector_name: Option<String>,
 }
