@@ -68,19 +68,17 @@ class RagTool(GlobalBaseTool):
 
         collection = str(datasource.id)
 
-        vector_store = Qdrant(
-            client=QdrantClient(QDRANT_HOST),
+        vector_store = Qdrant.from_existing_collection(
+            embedding=embedding_model,
+            path=None,
             collection_name=collection,
-            embeddings=embedding_model,
-            vector_name=model_data.model_name,
-            content_payload_key="page_content"
+            vector_name=embedding_model.model,
+            url=QDRANT_HOST
         )
-
-        embedding = embedding_model
 
         return RagTool(name=tool.name,
                        description=tool.description,
-                       retriever=retriever_factory(tool, vector_store, embedding, llm))
+                       retriever=retriever_factory(tool, vector_store, embedding_model, llm))
 
     def __init__(self, **kwargs):
         # Monkey-patching `similarity_search` because that's what's called by

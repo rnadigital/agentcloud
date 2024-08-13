@@ -195,6 +195,7 @@ export default function SubscriptionCard({
 			) : (
 				<button
 					onClick={async () => {
+						setSelectedPlan(plan);
 						if (currentPlan && !editedAddons && !stripeCancelled) {
 							API.getPortalLink(
 								{
