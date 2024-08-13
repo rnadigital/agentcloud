@@ -306,7 +306,6 @@ export default function Session(props) {
 			<Head>
 				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
-			{console.log(messages)}
 
 			<div
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
@@ -347,10 +346,8 @@ export default function Session(props) {
 								/>
 							);
 						})}
-					{((chatBusyState && messages?.length === 0 && !terminated) ||
-						loading ||
-						(messages && messages.length === 0)) && (
-						<div className='text-center border-t pb-6 pt-8 dark:border-slate-600'>
+					{(chatBusyState || loading) && (
+						<div className='text-center pb-6 pt-8 '>
 							<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
