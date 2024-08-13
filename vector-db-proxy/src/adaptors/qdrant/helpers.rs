@@ -112,7 +112,7 @@ pub async fn embed_payload(
                 hash_map_values_as_serde_values!(data);
             // todo: this is too opinionated. this should happen outside of this function so that
             // Convert embedding_field_name to lowercase
-            if let Some(value) = payload.remove(&embedding_field_name.to_lowercase()) {
+            if let Some(value) = payload.remove(embedding_field_name) {
                 //Renaming the embedding field to page_content
                 payload.insert("page_content".to_string(), value.clone());
                 if let Ok(metadata) = json!(payload).try_into() {

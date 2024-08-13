@@ -31,6 +31,7 @@ export default function Datasources(props) {
 	const { datasources, models } = state;
 	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
+	const [spec, setSpec] = useState(null);
 
 	async function fetchDatasources(silent = false) {
 		await API.getDatasources({ resourceSlug }, dispatch, setError, router);
@@ -85,6 +86,8 @@ export default function Datasources(props) {
 					models={models}
 					fetchDatasourceFormData={fetchDatasources}
 					hideTabs={true}
+					spec={spec}
+					setSpec={setSpec}
 					initialStep={1}
 					fetchDatasources={fetchDatasources}
 				/>
