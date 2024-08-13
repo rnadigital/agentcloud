@@ -306,6 +306,7 @@ export default function Session(props) {
 			<Head>
 				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
+			{console.log(messages)}
 
 			<div
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
