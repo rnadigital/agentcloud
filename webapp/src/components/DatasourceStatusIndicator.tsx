@@ -6,8 +6,6 @@ function DatasourceStatusIndicator({ datasource }) {
 	const { total, success, failure, lastUpdated } = datasource?.recordCount || {};
 	const lastUpdatedAgo = lastUpdated ? Date.now() - lastUpdated : null;
 	const successPercentage = (total != null ? (success / total) * 100 : 0) || 0;
-	const finished =
-		((success || 0) + (failure || 0) >= total || lastUpdatedAgo > 30000) && total > 0;
 	return (
 		<span className='tooltip z-100'>
 			{total > 0 && (
@@ -16,7 +14,7 @@ function DatasourceStatusIndicator({ datasource }) {
 						`${(success || 0) + (failure || 0)}/${total} (${successPercentage.toFixed(1)}%)\nsuccess: ${success || 0}\nfailure: ${failure || 0}`}
 				</span>
 			)}
-			{DatasourceStatus.EMBEDDING === datasource.status && !finished ? (
+			{DatasourceStatus.EMBEDDING === datasource.status && lastUpdatedAgo < 30000 ? (
 				<ProgressBar total={total} success={success} failure={failure} />
 			) : (
 				<div

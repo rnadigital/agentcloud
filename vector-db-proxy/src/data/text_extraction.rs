@@ -100,7 +100,7 @@ impl TextExtraction {
         let metadata = HashMap::new();
         let mut docx = String::new();
         let mut file = Docx::open(path.as_str()).expect("Cannot open file");
-        file.read_to_string(&mut docx).unwrap();
+        file.read_to_string(&mut docx)?;
 
         let results = (docx, metadata);
         Ok(results)

@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -54,5 +54,19 @@ pub struct CollectionData {
     pub status: i32,
     pub indexed_vectors_count: Option<u64>,
     pub segments_count: u64,
+    pub points_count: Option<u64>,
+}
+#[derive(Serialize, Debug, Clone)]
+pub enum Status {
+    Success,
+    Failure,
+    NotFound,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct CollectionStorageSize {
+    pub status: Status,
+    pub collection_name: String,
+    pub size: Option<f64>,
     pub points_count: Option<u64>,
 }
