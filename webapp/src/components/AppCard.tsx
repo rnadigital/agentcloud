@@ -1,6 +1,6 @@
 // import { useAccountContext } from '../../context/account';
 import * as API from '@api';
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, MenuItem, Transition } from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/20/solid';
 import { EllipsisHorizontalIcon, LinkIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
@@ -101,6 +101,17 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 									</a>
 								)}
 							</Menu.Item>
+							<MenuItem>
+								<a
+									href={`/${resourceSlug}/app/add?appId=${encodeURIComponent(app._id)}`}
+									className={classNames(
+										'bg-gray-50 dark:bg-slate-700',
+										'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+									)}
+								>
+									Clone
+								</a>
+							</MenuItem>
 							<Menu.Item>
 								{({ active }) => (
 									<button

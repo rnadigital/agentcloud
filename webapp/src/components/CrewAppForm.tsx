@@ -12,7 +12,7 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { Agent } from 'struct/agent';
@@ -37,7 +37,8 @@ export default function CrewAppForm({
 }: {
 	agentChoices?: Agent[];
 	taskChoices?: Task[];
-	/*toolChoices?: any[],*/ crew?: any;
+	/*toolChoices?: any[],*/
+	crew?: any;
 	modelChoices: any;
 	app?: any;
 	editing?: boolean;
@@ -66,7 +67,8 @@ export default function CrewAppForm({
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
 	const [error, setError] = useState();
-	const { name, agents, tasks, verbose } = crewState;
+	const { name, agents, tasks, verbose } = crewState || {};
+	const [verboseInt, setVerboseInt] = useState(verbose);
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
@@ -78,8 +80,8 @@ export default function CrewAppForm({
 				return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
 			})
 			.filter(n => n);
-	const [icon, setIcon] = useState(app?.icon);
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
+	const [icon, setIcon] = useState(app?.icon);
 
 	const initialTasks =
 		tasks &&
@@ -101,6 +103,39 @@ export default function CrewAppForm({
 		}
 		return acc;
 	}, []);
+
+	useEffect(() => {
+		if (!app?.crew || !app) {
+			return;
+		}
+		setApp(app);
+		setCrew(app.crew);
+		setIcon(app?.icon);
+		setFullOutput(app.crew?.fullOutput);
+		const { agents, tasks, name, verbose } = app.crew;
+		setVerboseInt(verbose);
+		setDescription(app?.description);
+		setAppCache(app?.cache);
+		const initialAgents: { label: string; value: string; allowDelegation?: boolean }[] =
+			agents &&
+			agents
+				.map(a => {
+					const oa = agentChoices.find(ai => ai._id === a);
+					return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
+				})
+				.filter(n => n);
+		setAgentsState(initialAgents || []);
+
+		const initialTasks =
+			tasks &&
+			tasks
+				.map(t => {
+					const ot = taskChoices.find(at => at._id === t);
+					return ot ? { label: ot.name, value: t } : null;
+				})
+				.filter(n => n);
+		setTasksState(initialTasks);
+	}, [app?._id]);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -275,7 +310,7 @@ export default function CrewAppForm({
 								Avatar
 							</label>
 							<div className='mt-2'>
-								<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+								<AvatarUploader existingAvatar={app?.icon} callback={iconCallback} />
 							</div>
 						</div>
 					</div>
@@ -429,7 +464,7 @@ export default function CrewAppForm({
 									type='number'
 									name='verbose'
 									id='verbose'
-									defaultValue={verbose || 0}
+									defaultValue={verboseInt}
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
 							</div>

@@ -110,6 +110,15 @@ export default function ChatAppForm({
 		setDatasourceState(agentDatasources.length > 0 ? agentDatasources : null);
 	}, [agentsState?.value]);
 
+	useEffect(() => {
+		const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
+		setAgentsState(initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null);
+
+		setShowAgentForm(true);
+
+		setIcon(app?.icon);
+	}, [app]);
+
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {

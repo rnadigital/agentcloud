@@ -41,6 +41,7 @@ export default function AddApp(props: AddAppProps) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
+	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
 	const { apps, tools, agents, tasks, models, datasources } = state;
@@ -51,9 +52,31 @@ export default function AddApp(props: AddAppProps) {
 		await API.getApps({ resourceSlug }, dispatch, setError, router);
 	}
 
+	async function fetchEditData(appId) {
+		await API.getApp({ resourceSlug, appId }, setCloneState, setError, router);
+	}
+
 	useEffect(() => {
 		fetchAppFormData();
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const appId = new URLSearchParams(location.search).get('appId');
+			fetchEditData(appId);
+		}
+	}, []);
+
+	useEffect(() => {
+		if (cloneState) {
+			if (cloneState?.app?.type === 'chat') {
+				setStep(1);
+			}
+			if (cloneState?.app?.type === 'crew') {
+				setStep(2);
+			}
+		}
+	}, [cloneState]);
 
 	if (apps == null) {
 		return <Spinner />;
@@ -164,6 +187,7 @@ export default function AddApp(props: AddAppProps) {
 						agentChoices={agents}
 						modelChoices={models}
 						toolChoices={tools}
+						app={cloneState?.app}
 					/>
 				);
 			case 2:
@@ -173,6 +197,8 @@ export default function AddApp(props: AddAppProps) {
 						taskChoices={tasks}
 						modelChoices={models}
 						fetchFormData={fetchAppFormData}
+						app={cloneState?.app}
+						crew={cloneState?.crew}
 					/>
 				);
 			default:
