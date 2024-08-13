@@ -43,28 +43,6 @@ class CustomHumanInput(BaseTool):
 
     @staticmethod
     def extract_message(text):
-        try:
-            #NOTE: testing
-            return text
-
-            if isinstance(text, str) and text.startswith('{'):
-                text_json = json.loads(text)
-                if len(text_json) > 1:
-                    return json.dumps(text_json)  # return the stringified JSON object
-                return next((value for value in text_json.values() if value is not None), None)
-        except Exception as e:
-            if text.startswith('{'):
-                if not text.endswith('"}'):
-                    text += '"}'
-                elif not text.endswith('}'):
-                    text += '}'
-            try:
-                text_json = json.loads(text)
-                if len(text_json) > 1:
-                    return json.dumps(text_json)  # return the stringified JSON object
-                return next((value for value in text_json.values() if value is not None), None)
-            except Exception as ex:
-                logging.exception(ex)
         return text
 
     def _run(
