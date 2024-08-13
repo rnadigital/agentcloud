@@ -132,6 +132,8 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200 dark:bg-gray-700'>
 						{models.map(model => {
+							const knowledgeCutoffDate =
+								ModelKnowledgeCutoff[model.model] && new Date(ModelKnowledgeCutoff[model.model]);
 							return (
 								<tr
 									key={model._id}
@@ -160,7 +162,21 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>
-											{model.embeddingLength ? model.embeddingLength : ''}
+											{model.embeddingLength ? model.embeddingLength : '-'}
+										</div>
+									</td>
+
+									<td
+										className='px-6 py-4 whitespace-nowrap'
+										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
+									>
+										<div
+											suppressHydrationWarning={true}
+											className='text-sm text-gray-900 dark:text-white'
+										>
+											{knowledgeCutoffDate
+												? `${knowledgeCutoffDate.toLocaleString('en-US', { month: 'short' })} ${knowledgeCutoffDate.getFullYear()}`
+												: '-'}
 										</div>
 									</td>
 
@@ -169,16 +185,7 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>
-											{ModelKnowledgeCutoff[model.model]}
-										</div>
-									</td>
-
-									<td
-										className='px-6 py-4 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
-									>
-										<div className='text-sm text-gray-900 dark:text-white'>
-											{ModelContextWindow[model.model]?.toLocaleString()}
+											{ModelContextWindow[model.model]?.toLocaleString() || '-'}
 										</div>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
