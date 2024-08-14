@@ -160,9 +160,12 @@ export default function TaskForm({
 	const toolCallback = async (addedToolId, body) => {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setModalOpen(false);
-		setToolState([
-			{ label: `${body.name} (${body.type}) - ${body.description}`, value: addedToolId }
-		]);
+		setTask(oldTask => {
+			return {
+				...oldTask,
+				toolIds: [...(taskState?.toolIds || []), addedToolId]
+			};
+		});
 	};
 	const agentCallback = async addedAgentId => {
 		(await fetchTaskFormData) && fetchTaskFormData();

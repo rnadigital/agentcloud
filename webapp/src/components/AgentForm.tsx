@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
@@ -14,8 +15,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
-
-import CreateDatasourceModal from './CreateDatasourceModal';
 
 export default function AgentForm({
 	agent = {},
@@ -343,7 +342,7 @@ export default function AgentForm({
 							tools={tools.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
 							toolState={datasourceState}
 							onChange={setDatasourceState}
-							setModalOpen={x => setModalOpen('datasource')}
+							setModalOpen={() => setModalOpen('datasource')}
 							enableAddNew={true}
 						/>
 
