@@ -1,5 +1,5 @@
-use std::thread::available_parallelism;
 use serde::Serialize;
+use std::thread::available_parallelism;
 
 #[derive(Clone, Serialize, Debug, Default)]
 pub struct GlobalData {
@@ -25,6 +25,8 @@ pub struct GlobalData {
     pub use_gpu: String,
     pub logging_level: String,
     pub message_queue_provider: String,
+    pub unstructuredio_url: String,
+    pub unstructuredio_api_key: String
 }
 
 impl GlobalData {
@@ -58,6 +60,9 @@ impl GlobalData {
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
             message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER").unwrap_or("rabbitmq".to_string()),
+            unstructuredio_url: dotenv::var("UNSTRUCTURED_API_URL").unwrap_or
+            ("http://localhost:8000/general/v0/general/".to_string()),
+            unstructuredio_api_key: dotenv::var("UNSTRUCTURED_API_KEY").unwrap_or(String::new())
         }
     }
 }

@@ -1,15 +1,15 @@
-use std::collections::HashMap;
-use mongodb::Database;
-use std::sync::Arc;
 use crossbeam::channel::Receiver;
-use tokio::sync::{RwLock};
+use mongodb::Database;
 use qdrant_client::client::QdrantClient;
 use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-use crate::embeddings::models::EmbeddingModels;
 use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
 use crate::adaptors::qdrant::helpers::embed_payload;
-use crate::adaptors::qdrant::apis::Qdrant;
+use crate::adaptors::qdrant::utils::Qdrant;
+use crate::embeddings::models::EmbeddingModels;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 
 async fn handle_embedding(
@@ -20,7 +20,6 @@ async fn handle_embedding(
     datasource_id: String,
     embedding_model_name: String,
 ) {
-    // tokio::spawn(async move {
     let mongo_connection_clone = Arc::clone(&mongo_connection);
     let qdrant_connection_clone = Arc::clone(&qdrant);
     let metadata = metadata.clone();
@@ -104,8 +103,8 @@ pub async fn process_incoming_messages(
                                         ).await;
                                     });
                                     tokio::select! {
-                                            _ = embed_text_worker => log::info!("Finished embedding task")
-                                        }
+                                        _ = embed_text_worker => log::info!("Finished embedding task")
+                                    }
                                 }
                             }
                         }

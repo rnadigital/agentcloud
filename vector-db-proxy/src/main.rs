@@ -3,7 +3,6 @@
 #![allow(non_snake_case)]
 #![allow(unused_assignments)]
 
-
 use std::sync::Arc;
 use std::thread;
 
