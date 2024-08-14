@@ -6,10 +6,12 @@ interface SortableItemProps {
 	config?: FormFieldConfig;
 	style?: CSSProperties;
 	editItem: (id: string, newConfig: FormFieldConfig) => void;
+
+	deleteItem: (id: string) => void;
 }
 
 const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
-	({ id, config, style, editItem, ...props }, ref) => {
+	({ id, config, style, editItem, deleteItem, ...props }, ref) => {
 		const [formConfig, setFormConfig] = useState<FormFieldConfig>(config);
 
 		const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -97,7 +99,7 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 					checked={formConfig?.required}
 					onChange={handleChange}
 				/>{' '}
-				Required
+				<div className='inline text-gray-900 dark:text-gray-50'>Required</div>
 				{formConfig?.description && (
 					<input
 						type='text'
@@ -167,6 +169,14 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 						className='mt-2 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
 					>
 						Add Option
+					</button>
+
+					<button
+						className='mt-2 inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+						type='button'
+						onClick={() => deleteItem(id)}
+					>
+						Delete
 					</button>
 				</div>
 			</div>
