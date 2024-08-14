@@ -5,8 +5,8 @@ import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
-import ToolsSelect from 'components/tools/ToolsSelect';
 import Spinner from 'components/Spinner';
+import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -15,7 +15,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
-
 
 export default function AgentForm({
 	agent = {},
@@ -182,8 +181,8 @@ export default function AgentForm({
 		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
 
-	if(agent === null){
-		return <Spinner/>
+	if (agent === null) {
+		return <Spinner />;
 	}
 
 	let modal;

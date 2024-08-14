@@ -5,12 +5,12 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
 import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
-import Spinner from 'components/Spinner';
 import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
 import FunctionCard from 'components/FunctionCard';
 import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
+import Spinner from 'components/Spinner';
 import FunctionRevisionForm from 'components/tools/form/FunctionRevisionForm';
 import FunctionToolForm from 'components/tools/form/FunctionToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
@@ -43,7 +43,6 @@ const authorizationMethods = [
 ];
 import { usePostHog } from 'posthog-js/react';
 import { runtimeOptions } from 'struct/function';
-
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
@@ -376,8 +375,8 @@ export default function ToolForm({
 			break;
 	}
 
-	if(tool === null){
-		return <Spinner/>
+	if (tool === null) {
+		return <Spinner />;
 	}
 
 	if (!style) {
