@@ -1,6 +1,21 @@
 'use strict';
 
 import * as API from '@api';
+import {
+	closestCenter,
+	DndContext,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors
+} from '@dnd-kit/core';
+import {
+	arrayMove,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	useSortable,
+	verticalListSortingStrategy
+} from '@dnd-kit/sortable';
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
@@ -22,6 +37,7 @@ import SelectClassNames from 'styles/SelectClassNames';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
+import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 
@@ -54,6 +70,25 @@ export default function TaskForm({
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates
+		})
+	);
+
+	function handleDragEnd(event: any) {
+		const { active, over } = event;
+
+		// if (active.id !== over.id) {
+		// 	setItems(items => {
+		// 		const oldIndex = items.findIndex(item => item.id === active.id);
+		// 		const newIndex = items.findIndex(item => item.id === over.id);
+
+		// 		return arrayMove(items, oldIndex, newIndex);
+		// 	});
+		// }
+	}
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -535,6 +570,9 @@ export default function TaskForm({
 								</div>
 							</ToolTip>
 						</div>
+					</div>
+					<div className='col-span-full'>
+						<FormConfig />
 					</div>
 				</div>
 
