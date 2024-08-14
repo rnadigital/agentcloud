@@ -1,10 +1,10 @@
+use crate::adaptors::gcp::gcs::get_object_from_gcs;
+use crate::data::models::FileType;
+use crate::utils::models::FileSources;
+use serde_json::Value;
 use std::fs::File;
 use std::io::Write;
-use serde_json::Value;
 use tokio::fs;
-use crate::data::models::FileType;
-use crate::adaptors::gcp::gcs::get_object_from_gcs;
-use crate::utils::models::FileSources;
 
 pub async fn save_file_to_disk(content: Vec<u8>, file_name: &str) -> anyhow::Result<()> {
     let file_path = file_name.trim_matches('"');
@@ -33,16 +33,16 @@ pub async fn read_file_from_source(stream_type: Option<String>, message_data: Va
     // If the type field is present in the headers then we assume it is a file of sorts
     match stream_type {
         Some(t) => {
-            return match FileSources::from(t) {
+            match FileSources::from(t) {
                 FileSources::GCS => {
                     if let Some(bucket_name) =
                         message_data.get("bucket")
                     {
                         if let Some(file_name) =
                             message_data.get("filename") {
-                            match get_object_from_gcs(bucket_name.as_str().unwrap(), file_name.as_str().unwrap()).await {
+                            match get_object_from_gcs(bucket_name.as_str()?, file_name.as_str()?).await {
                                 Ok(file) => {
-                                    let file_type = determine_file_type(file_name.as_str().unwrap()).await;
+                                    let file_type = determine_file_type(file_name.as_str()?).await;
                                     let result = (file_type, file, file_name.to_string());
                                     Some(result)
                                 }
@@ -62,9 +62,9 @@ pub async fn read_file_from_source(stream_type: Option<String>, message_data: Va
                 }
                 FileSources::LOCAL => {
                     if let Some(file_path) = message_data.get("file") {
-                        match fs::read(file_path.as_str().unwrap()).await {
+                        match fs::read(file_path.as_str()?).await {
                             Ok(file) => {
-                                let file_type = determine_file_type(file_path.as_str().unwrap()).await;
+                                let file_type = determine_file_type(file_path.as_str()?).await;
                                 let results = (file_type, file, file_path.to_string());
                                 Some(results)
                             }
@@ -82,7 +82,7 @@ pub async fn read_file_from_source(stream_type: Option<String>, message_data: Va
                     log::warn!("File source unknown");
                     None
                 }
-            };
+            }
         }
         None => {
             None
