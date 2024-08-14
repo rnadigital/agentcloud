@@ -4,6 +4,7 @@ import * as API from '@api';
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
+import ToolsSelect from 'components/tools/ToolsSelect';
 import ToolSelectIcons from 'components/ToolSelectIcons';
 import ToolStateBadge from 'components/ToolStateBadge';
 import { useAccountContext } from 'context/account';
@@ -16,9 +17,10 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
 import { Task } from 'struct/task';
-import { ToolState } from 'struct/tool';
+import { ToolState, ToolType } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
+import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
@@ -45,7 +47,6 @@ export default function TaskForm({
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
-	const [modalOpen, setModalOpen]: any = useState(false);
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState<Task | undefined>(task);
 	const [, notificationTrigger]: any = useSocketContext();
@@ -53,6 +54,36 @@ export default function TaskForm({
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
+
+	const getInitialTools = (acc, tid) => {
+		const foundTool = tools.find(t => t._id === tid);
+		if (!foundTool) {
+			return acc;
+		}
+		const toolVal = { label: foundTool.name, value: foundTool._id };
+		if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
+			acc.initialTools.push(toolVal);
+		} else {
+			acc.initialDatasources.push(toolVal);
+		}
+		return acc;
+	};
+
+	const { initialTools, initialDatasources } = (task?.toolIds || []).reduce(getInitialTools, {
+		initialTools: [],
+		initialDatasources: []
+	});
+	const [toolState, setToolState] = useState(initialTools.length > 0 ? initialTools : null);
+	const [datasourceState, setDatasourceState] = useState(
+		initialDatasources.length > 0 ? initialDatasources : null
+	); //Note: still technically tools, just only RAG tools
+
+	async function createDatasourceCallback(createdDatasource) {
+		(await fetchTaskFormData) && fetchTaskFormData();
+		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setModalOpen(false);
+	}
+	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -126,17 +157,13 @@ export default function TaskForm({
 		}
 	}
 
-	const toolCallback = async addedToolId => {
+	const toolCallback = async (addedToolId, body) => {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setModalOpen(false);
-		setTask(oldTask => {
-			return {
-				...oldTask,
-				toolIds: [...(taskState?.toolIds || []), addedToolId]
-			};
-		});
+		setToolState([
+			{ label: `${body.name} (${body.type}) - ${body.description}`, value: addedToolId }
+		]);
 	};
-
 	const agentCallback = async addedAgentId => {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setModalOpen(false);
@@ -167,27 +194,50 @@ export default function TaskForm({
 		}
 	}, [preferredAgent?.toolIds]);
 
-	return (
-		<>
-			{modalOpen === 'agent' ? (
-				<CreateAgentModal
+	let modal;
+	switch (modalOpen) {
+		case 'datasource':
+			modal = (
+				<CreateDatasourceModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
-					callback={agentCallback}
+					callback={createDatasourceCallback}
+					initialStep={0}
 				/>
-			) : modalOpen === 'task' ? (
+			);
+			break;
+		case 'task':
+			modal = (
 				<CreateTaskModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
 					callback={createTaskCallback}
 				/>
-			) : (
+			);
+			break;
+
+		case 'agent':
+			modal = (
+				<CreateAgentModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={agentCallback}
+				/>
+			);
+		default:
+			modal = (
 				<CreateToolModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
 					callback={toolCallback}
 				/>
-			)}
+			);
+			break;
+	}
+
+	return (
+		<>
+			{modal}
 			<form onSubmit={taskPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className={`space-y-${compact ? '6' : '12'}`}>
@@ -310,78 +360,21 @@ export default function TaskForm({
 
 						{/* Tool selection */}
 						<div className='col-span-full'>
-							<label
-								htmlFor='toolIds'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Tools
-							</label>
-							<Select
-								isSearchable
-								isClearable
-								isMultiple
-								primaryColor={'indigo'}
-								classNames={SelectClassNames}
-								value={
-									taskState?.toolIds?.length > 0
-										? taskState?.toolIds?.map(x => ({
-												value: x.toString(),
-												label: tools.find(tx => tx._id === x)?.name
-											}))
-										: null
-								}
-								onChange={(v: any) => {
-									//Note: `disabled` prop on options doesnt work with a custom formatOptionsLabel and the event listener is on parent element we don't control...
-									if (v?.some(val => val?.disabled)) {
-										return;
-									}
-									if (v?.some(vals => vals.value === null)) {
-										//Create new pressed
-										return setModalOpen('tool');
-									}
-									setTask(oldTask => {
-										return {
-											...oldTask,
-											toolIds: v?.map(x => x.value)
-										};
-									});
-								}}
-								options={[{ label: '+ New Tool', value: null /*, disabled: false*/ }].concat(
-									tools.map(t => ({
-										label: t.name,
-										value: t._id /*, disabled: (t?.state && t?.state !== ToolState.READY)*/
-									}))
-								)}
-								formatOptionLabel={data => {
-									const optionTool = tools.find(oc => oc._id === data.value);
-									const isReady = !optionTool?.state || optionTool?.state === ToolState.READY;
-									return (
-										<li
-											//${optionTool?.state && !isReady ? 'cusror-not-allowed pointer-events-none opacity-50' : ''}
-											className={`flex align-items-center transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 overflow-visible ${
-												data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-											}`}
-										>
-											<span className='tooltip z-100'>
-												{ToolSelectIcons[optionTool?.type]}
-												<span className='tooltiptext capitalize !w-[120px] !-ml-[60px]'>
-													{optionTool?.type} tool
-												</span>
-											</span>
-											{optionTool?.state && (
-												<span className='ms-2'>
-													<ToolStateBadge state={optionTool.state} />
-												</span>
-											)}
-											<span className='ms-2 w-full overflow-hidden text-ellipsis'>
-												{data.label}
-												{optionTool
-													? ` - ${optionTool?.data?.description || optionTool?.description}`
-													: ''}
-											</span>
-										</li>
-									);
-								}}
+							<ToolsSelect
+								tools={tools.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)}
+								toolState={toolState}
+								onChange={toolState => setToolState(toolState)}
+								setModalOpen={setModalOpen}
+							/>
+
+							<ToolsSelect
+								title='Datasources'
+								addNewTitle='+ New Datasource'
+								tools={tools.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
+								toolState={datasourceState}
+								onChange={setDatasourceState}
+								setModalOpen={x => setModalOpen('datasource')}
+								enableAddNew={true}
 							/>
 						</div>
 
