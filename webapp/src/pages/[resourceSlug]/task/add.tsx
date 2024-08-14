@@ -15,6 +15,7 @@ export default function AddTask(props) {
 	const [state, dispatch] = useState(props);
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
+	const [loading, setLoading] = useState(true);
 	const { tasks, tools, agents } = state;
 
 	async function fetchTaskFormData() {
@@ -36,7 +37,11 @@ export default function AddTask(props) {
 		}
 	}, []);
 
-	if (tasks == null) {
+	useEffect(() => {
+		setLoading(false);
+	}, [cloneState?.tasks, state?.tasks]);
+
+	if (loading) {
 		return <Spinner />;
 	}
 	console.log(tasks);

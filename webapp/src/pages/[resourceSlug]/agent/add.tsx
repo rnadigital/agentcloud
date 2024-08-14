@@ -16,6 +16,7 @@ export default function AddAgent(props) {
 	const [state, dispatch] = useState(props);
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
+	const [loading, setLoading] = useState(true);
 	const { agents, models, tools } = state;
 
 	async function fetchAgentFormData() {
@@ -37,7 +38,11 @@ export default function AddAgent(props) {
 		}
 	}, []);
 
-	if (agents == null) {
+	useEffect(() => {
+		setLoading(false);
+	}, [state?.agents, cloneState?.agents]);
+
+	if (loading) {
 		return <Spinner />;
 	}
 

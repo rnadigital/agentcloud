@@ -15,6 +15,7 @@ export default function AddTool(props) {
 	const [state, dispatch] = useState(props);
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
+	const [loading, setLoading] = useState(true);
 	const { tools, datasources } = state;
 
 	function fetchTools() {
@@ -36,7 +37,10 @@ export default function AddTool(props) {
 		}
 	}, []);
 
-	if (!tools) {
+	useEffect(() => {
+		setLoading(false);
+	}, [cloneState?.tools, state?.tools]);
+	if (loading) {
 		return <Spinner />;
 	}
 

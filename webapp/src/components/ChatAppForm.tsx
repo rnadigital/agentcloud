@@ -123,8 +123,6 @@ export default function ChatAppForm({
 		setIcon(app?.icon);
 	}, [app?._id]);
 
-	console.log('icon', icon);
-
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
