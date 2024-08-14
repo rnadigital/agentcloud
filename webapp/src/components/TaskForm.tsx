@@ -191,7 +191,7 @@ export default function TaskForm({
 
 	useEffect(() => {
 		setTask(task);
-	}, [task]);
+	}, [task?._id]);
 
 	useEffect(() => {
 		if (preferredAgent?.toolIds?.length > 0) {
