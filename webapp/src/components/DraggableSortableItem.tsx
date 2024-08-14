@@ -9,9 +9,15 @@ interface DraggableSortableItemProps {
 	id: string;
 	config?: FormFieldConfig;
 	style?: CSSProperties;
+	editItem: (id: string, newConfig: FormFieldConfig) => void;
 }
 
-const DraggableSortableItem: React.FC<DraggableSortableItemProps> = ({ id, config, style }) => {
+const DraggableSortableItem: React.FC<DraggableSortableItemProps> = ({
+	id,
+	config,
+	style,
+	editItem
+}) => {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 	const combinedStyle = {
 		...style,
@@ -27,6 +33,7 @@ const DraggableSortableItem: React.FC<DraggableSortableItemProps> = ({ id, confi
 			style={combinedStyle}
 			{...attributes}
 			{...listeners}
+			editItem={editItem}
 		/>
 	);
 };
