@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
@@ -145,6 +146,11 @@ export default function AgentForm({
 		});
 		setCallbackKey(null);
 	};
+	async function createDatasourceCallback(createdDatasource) {
+		(await fetchAgentFormData) && fetchAgentFormData();
+		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setModalOpen(false);
+	}
 	const toolCallback = async (addedToolId, body) => {
 		(await fetchAgentFormData) && fetchAgentFormData();
 		setModalOpen(false);
@@ -179,6 +185,16 @@ export default function AgentForm({
 				/>
 			);
 			break;
+		case 'datasource':
+			modal = (
+				<CreateDatasourceModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={createDatasourceCallback}
+					initialStep={0}
+				/>
+			);
+			break;
 		case 'tool':
 			modal = (
 				<CreateToolModal
@@ -188,6 +204,7 @@ export default function AgentForm({
 				/>
 			);
 			break;
+
 		default:
 			modal = null;
 			break;
@@ -321,11 +338,12 @@ export default function AgentForm({
 
 						<ToolsSelect
 							title='Datasources'
+							addNewTitle='+ New Datasource'
 							tools={tools.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
 							toolState={datasourceState}
 							onChange={setDatasourceState}
-							setModalOpen={setModalOpen}
-							enableAddNew={false}
+							setModalOpen={() => setModalOpen('datasource')}
+							enableAddNew={true}
 						/>
 
 						<ModelSelect
