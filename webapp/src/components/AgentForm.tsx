@@ -2,10 +2,10 @@
 
 import * as API from '@api';
 import AvatarUploader from 'components/AvatarUploader';
+import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
-import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import Spinner from 'components/Spinner';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';

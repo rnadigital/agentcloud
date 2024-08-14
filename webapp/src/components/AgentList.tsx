@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { PencilIcon, TrashIcon, DocumentDuplicateIcon } from '@heroicons/react/20/solid';
+import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';

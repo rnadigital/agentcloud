@@ -93,7 +93,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 													Clone
 												</a>
 											)}
-											</MenuItem>
+										</MenuItem>
 										<Menu.Item>
 											{({ active }) => (
 												<button

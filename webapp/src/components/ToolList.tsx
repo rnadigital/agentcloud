@@ -1,4 +1,4 @@
-import { PencilIcon, TrashIcon, DocumentDuplicateIcon } from '@heroicons/react/20/solid';
+import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
