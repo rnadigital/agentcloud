@@ -20,6 +20,8 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'react-toastify';
 
+import ChatRestartMessage from './ChatRestartMessage';
+
 const COLLAPSE_AFTER_LINES = 10;
 const ERROR_TEXTS = new Set(['⛔ An unexpected error occurred', '⛔ MAX_RECURSION_LIMIT REACHED']);
 
@@ -92,10 +94,18 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	return cachedResult;
 }
 
+const customMessages = {
+	'⛔ MAX_RECURSION_LIMIT REACHED': ChatRestartMessage
+};
+
 function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
 	let messageContent =
 		messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message.toString();
 	return useMemo(() => {
+		const CustomMessageBody = customMessages[message];
+		if (CustomMessageBody) {
+			return <CustomMessageBody />;
+		}
 		switch (messageType) {
 			case 'code':
 				return (
@@ -242,31 +252,6 @@ export function Message({
 		</div>
 	);
 
-	const renderMessageContent = () => {
-		if (message === '⛔ MAX_RECURSION_LIMIT REACHED') {
-			return (
-				<div>
-					<span>
-						⛔ Conversation max limit reached, click{' '}
-						<button onClick={restartSession} className='text-blue-500 dark:text-blue-300'>
-							here
-						</button>{' '}
-						to restart the chat{' '}
-					</span>
-				</div>
-			);
-		}
-		return (
-			<MessageBody
-				message={message}
-				messageType={messageType}
-				messageLanguage={messageLanguage}
-				style={style}
-				chunking={chunking}
-			/>
-		);
-	};
-
 	if (displayType === 'inline') {
 		//TODO: enum and handle "other" types not just like bubble
 		return (
@@ -286,7 +271,13 @@ export function Message({
 								<ButtonSpinner size={18} className='ms-1 me-2' />
 							)
 						) : null}
-						{renderMessageContent()}
+						<MessageBody
+							message={message}
+							messageType={messageType}
+							messageLanguage={messageLanguage}
+							style={style}
+							chunking={chunking}
+						/>
 					</div>
 				</div>
 				<div className='invisible xl:visible col-span-1'></div>
