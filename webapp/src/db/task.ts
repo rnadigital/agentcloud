@@ -17,6 +17,13 @@ export function getTaskById(teamId: db.IdOrStr, taskId: db.IdOrStr): Promise<Tas
 	});
 }
 
+export function getTaskByName(teamId: db.IdOrStr, taskName: string): Promise<Task> {
+	return TaskCollection().findOne({
+		name: taskName,
+		teamId: toObjectId(teamId)
+	});
+}
+
 export function getTasksByTeam(teamId: db.IdOrStr): Promise<Task[]> {
 	return TaskCollection()
 		.find({

@@ -3,7 +3,14 @@
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
+import {
+	addTask,
+	deleteTaskById,
+	getTaskById,
+	getTaskByName,
+	getTasksByTeam,
+	updateTask
+} from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
@@ -64,6 +71,17 @@ export async function taskData(req, res, _next) {
 export async function taskJson(req, res, next) {
 	const data = await taskData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
+}
+export async function taskByName(req, res, next) {
+	try {
+		const task = await getTaskByName(req.params.resourceSlug, req.body.taskName);
+		if (!task) {
+			return res.status(404).json({ error: 'Task not found' });
+		}
+		return res.json({ ...task });
+	} catch (error) {
+		return next(error);
+	}
 }
 
 /**

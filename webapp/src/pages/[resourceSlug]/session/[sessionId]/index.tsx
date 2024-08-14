@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import AgentAvatar from 'components/AgentAvatar';
+import useActiveTask from 'hooks/session/useActiveTask';
 import { usePathname } from 'next/navigation';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
@@ -44,6 +45,7 @@ export default function Session(props) {
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	const activeTask = useActiveTask(messages);
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
