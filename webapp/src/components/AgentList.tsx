@@ -72,6 +72,20 @@ export default function AgentList({ agents, fetchAgents }) {
 									</a>
 								</div>
 							)}
+							{permissions.get(Permissions.CREATE_AGENT) && (
+								<div className='flex w-0 flex-1'>
+									<a
+										href={`/${resourceSlug}/agent/add?agentId=${encodeURIComponent(agent._id)}`}
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
+									>
+										<PencilIcon
+											className='h-5 w-5 text-gray-400 dark:text-white'
+											aria-hidden='true'
+										/>
+										Clone
+									</a>
+								</div>
+							)}
 							{permissions.get(Permissions.DELETE_AGENT) && (
 								<div className='-ml-px flex w-0 flex-1'>
 									<button

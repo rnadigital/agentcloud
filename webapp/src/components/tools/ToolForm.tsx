@@ -10,6 +10,7 @@ import FunctionCard from 'components/FunctionCard';
 import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
+import Spinner from 'components/Spinner';
 import FunctionRevisionForm from 'components/tools/form/FunctionRevisionForm';
 import FunctionToolForm from 'components/tools/form/FunctionToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
@@ -108,7 +109,7 @@ export default function ToolForm({
 	const codeBlockRef = useRef(null);
 	useEffect(() => {
 		setWrappedCode(WrapToolCode(toolCode));
-	}, [toolCode]);
+	}, [toolCode._id]);
 	const PreWithRef = preProps => {
 		return <pre {...preProps} ref={codeBlockRef} />;
 	};
@@ -372,6 +373,10 @@ export default function ToolForm({
 		default:
 			modal = null;
 			break;
+	}
+
+	if (tool === null) {
+		return <Spinner />;
 	}
 
 	if (!style) {
