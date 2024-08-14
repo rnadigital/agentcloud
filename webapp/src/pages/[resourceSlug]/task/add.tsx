@@ -44,8 +44,6 @@ export default function AddTask(props) {
 	if (loading) {
 		return <Spinner />;
 	}
-	console.log(tasks);
-	console.log(props);
 
 	return (
 		<>

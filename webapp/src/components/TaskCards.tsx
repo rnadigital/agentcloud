@@ -82,16 +82,18 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 											)}
 										</Menu.Item>
 										<MenuItem>
-											<a
-												href={`/${resourceSlug}/task/add?taskId=${encodeURIComponent(task._id)}`}
-												className={classNames(
-													'bg-gray-50 dark:bg-slate-700',
-													'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-												)}
-											>
-												Clone
-											</a>
-										</MenuItem>
+											{({ active }) => (
+												<a
+													href={`/${resourceSlug}/task/add?taskId=${encodeURIComponent(task._id)}`}
+													className={classNames(
+														active ? 'bg-gray-50 dark:bg-slate-700' : '',
+														'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+													)}
+												>
+													Clone
+												</a>
+											)}
+											</MenuItem>
 										<Menu.Item>
 											{({ active }) => (
 												<button
