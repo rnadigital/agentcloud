@@ -817,7 +817,7 @@ cron = ["capturer (>=2.4)"]
 
 [[package]]
 name = "crewai"
-version = "0.41.1-post1"
+version = "0.41.1-post2"
 description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
 optional = false
 python-versions = ">=3.10,<=3.13"
@@ -848,8 +848,8 @@ tools = ["crewai-tools (>=0.4.26,<0.5.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "ffce511e8b66a64caf64cba21190ddc61bb7443f"
-resolved_reference = "ffce511e8b66a64caf64cba21190ddc61bb7443f"
+reference = "stream-final-output"
+resolved_reference = "84693fef70565e85e177f8a2e461a25dc6c305c2"
 
 [[package]]
 name = "curl-cffi"
@@ -5773,4 +5773,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "651b5d6694b202ff6b8de291f1038e39e9614bd0b402068e64178a148e777ae6"
+content-hash = "06f4739715b5be919119d0c1a9f035526248b4266222c2dbf80ce43e57d7da87"
