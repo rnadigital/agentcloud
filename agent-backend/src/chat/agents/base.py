@@ -52,7 +52,7 @@ class BaseChatAgent:
         if timestamp is None:
             timestamp = int(datetime.now().timestamp() * 1000)
 
-        if (len(text.rstrip()) == 0 and first == True) or len(text) == 0:
+        if len(text.rstrip()) == 0 and event == SocketEvents.MESSAGE:
             return  # Don't send empty first messages
 
         # send the message
@@ -171,6 +171,10 @@ class BaseChatAgent:
                                 first=True, chunk_id=str(uuid.uuid4()),
                                 timestamp=datetime.now().timestamp() * 1000,
                                 display_type="inline")
+            self.send_to_socket(
+                event=SocketEvents.STOP_GENERATING,
+                chunk_id=str(uuid.uuid4()),
+            )
 
         except Exception as chunk_error:
             logging.error(traceback.format_exc())
