@@ -44,6 +44,7 @@ export default function AddApp(props: AddAppProps) {
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
+	const [loading, setLoading] = useState(true);
 	const { apps, tools, agents, tasks, models, datasources } = state;
 
 	const { theme } = useThemeContext();
@@ -78,9 +79,6 @@ export default function AddApp(props: AddAppProps) {
 		}
 	}, [cloneState]);
 
-	if (apps == null) {
-		return <Spinner />;
-	}
 	const handleCreateChatApp = () => {
 		setStep(1);
 	};
@@ -88,6 +86,14 @@ export default function AddApp(props: AddAppProps) {
 	const handleCreateProcessApp = () => {
 		setStep(2);
 	};
+
+	useEffect(() => {
+		setLoading(false);
+	}, [state?.apps, cloneState?.apps]);
+
+	if (loading) {
+		return <Spinner />;
+	}
 
 	const renderStepContent = () => {
 		switch (step) {

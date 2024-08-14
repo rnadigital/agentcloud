@@ -72,25 +72,30 @@ export default function CrewAppForm({
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
-	const initialAgents: { label: string; value: string; allowDelegation?: boolean }[] =
-		agents &&
-		agents
-			.map(a => {
-				const oa = agentChoices.find(ai => ai._id === a);
-				return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
-			})
-			.filter(n => n);
+	function getInitialData(initData) {
+		const { agents, tasks } = initData;
+		const initialAgents: { label: string; value: string; allowDelegation?: boolean }[] =
+			agents &&
+			agents
+				.map(a => {
+					const oa = agentChoices.find(ai => ai._id === a);
+					return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
+				})
+				.filter(n => n);
+		const initialTasks =
+			tasks &&
+			tasks
+				.map(t => {
+					const ot = taskChoices.find(at => at._id === t);
+					return ot ? { label: ot.name, value: t } : null;
+				})
+				.filter(n => n);
+		return { initialAgents, initialTasks };
+	}
+
+	const { initialAgents, initialTasks } = getInitialData({ agents, tasks });
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
 	const [icon, setIcon] = useState(app?.icon);
-
-	const initialTasks =
-		tasks &&
-		tasks
-			.map(t => {
-				const ot = taskChoices.find(at => at._id === t);
-				return ot ? { label: ot.name, value: t } : null;
-			})
-			.filter(n => n);
 	const [tasksState, setTasksState] = useState<{ label: string; value: string }[]>(
 		initialTasks || []
 	);
@@ -116,24 +121,8 @@ export default function CrewAppForm({
 		setVerboseInt(verbose);
 		setDescription(app?.description);
 		setAppCache(app?.cache);
-		const initialAgents: { label: string; value: string; allowDelegation?: boolean }[] =
-			agents &&
-			agents
-				.map(a => {
-					const oa = agentChoices.find(ai => ai._id === a);
-					return oa ? { label: oa.name, value: a, allowDelegation: oa.allowDelegation } : null;
-				})
-				.filter(n => n);
+		const { initialAgents, initialTasks } = getInitialData({ tasks, agents });
 		setAgentsState(initialAgents || []);
-
-		const initialTasks =
-			tasks &&
-			tasks
-				.map(t => {
-					const ot = taskChoices.find(at => at._id === t);
-					return ot ? { label: ot.name, value: t } : null;
-				})
-				.filter(n => n);
 		setTasksState(initialTasks);
 	}, [app?._id]);
 

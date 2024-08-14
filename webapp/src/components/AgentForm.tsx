@@ -85,7 +85,7 @@ export default function AgentForm({
 		}
 
 		setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
-	}, [agent]);
+	}, [agent?._id]);
 
 	const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
 		initialTools: [],
