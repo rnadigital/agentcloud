@@ -41,8 +41,15 @@ RUN mkdir /onnxruntime \
 # Final Stage (using rust image to be safe so we have important libs like libssl, etc)
 FROM rust:1.77.2
 WORKDIR /app
+# Set arguments
 ARG RELEASE
+ARG UNSTRUCTURED_API_KEY
+ARG UNSTRUCTURED_API_URL
+# Set ENV variables
 ENV IS_RELEASE=$RELEASE
+ENV UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL
+ENV UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY
+# Copy from builder step
 COPY --from=builder /usr/local/src/vector-db-proxy/target/release/vector-db-proxy /app/vector-db-proxy-release
 COPY --from=builder /usr/local/src/vector-db-proxy/target/debug/vector-db-proxy /app/vector-db-proxy-debug
 # Only copy runtime dependencies if necessary
