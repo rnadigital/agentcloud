@@ -29,8 +29,6 @@ export type DatasourceConnectionSettings = {
 	nonBreakingSchemaUpdatesBehavior: string;
 };
 
-export type DatasourceChunkStrategy = 'semantic' | 'character';
-
 export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
@@ -51,6 +49,17 @@ export type DatasourceRecordCount = {
 	failure?: number;
 };
 
+export type UnstructuredChunkingStrategy = 'basic' | 'by_title' | 'by_page' | 'by_similarity'
+
+export type UnstructuredChunkingConfig = {
+	strategy: UnstructuredChunkingStrategy;
+	max_characters: number;
+	new_after_n_chars: number;
+	overlap: number;
+	similarity_threshold: number; // between 0.0 and 1.0
+	overlap_app: boolean;
+}
+
 export type Datasource = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -70,8 +79,7 @@ export type Datasource = {
 	lastSyncedDate?: Date | null; //Note: null = never synced
 	status?: DatasourceStatus;
 	discoveredSchema?: any;
-	chunkStrategy?: DatasourceChunkStrategy;
-	chunkCharacter?: string | null;
+	chunkingConfig: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
