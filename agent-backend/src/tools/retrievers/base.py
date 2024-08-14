@@ -32,7 +32,10 @@ class BaseToolRetriever(ABC):
     def perform_query(self, query):
         self.logger.debug(
             f"{self.__class__.__name__} in tool: '{self.tool.name}', retriever_config: {self.tool.retriever_config}")
-        return self.retriever.invoke(query, config={'callbacks': [RetrieverCallbackHandler()]})
+        return self.retriever.invoke(query, config={
+            'callbacks': [RetrieverCallbackHandler()],
+            'tags': ['rag_retrieval']
+        })
 
     def format_results(self, results):
         self.logger.debug(f"{self.__class__.__name__} results: {results}")
