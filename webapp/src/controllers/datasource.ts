@@ -794,7 +794,21 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing file' });
 	}
 
-	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
+	const {
+		modelId,
+		name,
+		datasourceDescription,
+		retriever,
+		retriever_config,
+		partitioning,
+		strategy,
+		max_characters,
+		new_after_n_chars,
+		overlap,
+		similarity_threshold,
+		overlap_all
+	} = req.body;
+
 	let validationError = chainValidations(
 		req.body,
 		[
@@ -810,11 +824,10 @@ export async function uploadFileApi(req, res, next) {
 				validation: { notEmpty: true, inSet: UnstructuredPartitioningStrategySet }
 			},
 			{ field: 'strategy', validation: { notEmpty: true, inSet: UnstructuredChunkingStrategySet } },
-			{ field: 'max_characters', validation: { notEmpty: true, ofType: 'number' } },
-			{ field: 'new_after_n_chars', validation: { ofType: 'number' } }, // Can be null, so only check type if provided
-			{ field: 'overlap', validation: { notEmpty: true, ofType: 'number' } },
-			{ field: 'similarity_threshold', validation: { notEmpty: true, ofType: 'number' } },
-			{ field: 'overlap_all', validation: { notEmpty: true, ofType: 'boolean' } }
+			{ field: 'max_characters', validation: { notEmpty: true } },
+			{ field: 'overlap', validation: { notEmpty: true } },
+			{ field: 'similarity_threshold', validation: { notEmpty: true } },
+			{ field: 'overlap_all', validation: { notEmpty: true } }
 		],
 		{
 			datasourceName: 'Name',
@@ -909,8 +922,16 @@ export async function uploadFileApi(req, res, next) {
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
 			total: null
+		},
+		chunkingConfig: {
+			partitioning,
+			strategy,
+			max_characters: parseInt(max_characters),
+			new_after_n_chars: parseInt(new_after_n_chars) || parseInt(max_characters),
+			overlap: parseInt(overlap),
+			similarity_threshold: parseFloat(similarity_threshold),
+			overlap_all: overlap_all === 'true'
 		}
-		// chunkingConfig: { ... }
 	});
 
 	// Send the gcs file path to rabbitmq
