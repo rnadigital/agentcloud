@@ -10,7 +10,7 @@ interface ErrorProps {
 function Page({ statusCode, error }: ErrorProps) {
 	const posthog = usePostHog();
 	posthog.capture('errorPage', {
-		error: error.toString()
+		error: error?.toString()
 	});
 	console.error('errorPage', {
 		error
