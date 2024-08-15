@@ -14,6 +14,7 @@ import {
 	sortableKeyboardCoordinates,
 	verticalListSortingStrategy
 } from '@dnd-kit/sortable';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 import { FormFieldConfig } from 'struct/task';
 
@@ -21,7 +22,15 @@ import DraggableSortableItem from './DraggableSortableItem';
 import SortableItem from './SortableItem';
 
 const FormConfig: React.FC = () => {
-	const [items, setItems] = useState<{ id: string; config: FormFieldConfig }[]>([]);
+	const [items, setItems] = useState<{ id: string; config: Partial<FormFieldConfig> }[]>([
+		{
+			id: '1',
+			config: {
+				position: 1,
+				type: 'string' as 'string'
+			}
+		}
+	]);
 	const [activeId, setActiveId] = useState<string | null>(null);
 
 	const sensors = useSensors(
@@ -55,9 +64,7 @@ const FormConfig: React.FC = () => {
 		const newItem = {
 			id: (items.length + 1).toString(),
 			config: {
-				type: 'string' as 'string',
-				name: `Field ${items.length + 1}`,
-				label: `Label ${items.length + 1}`
+				type: 'string' as 'string'
 			}
 		};
 		setItems([...items, newItem]);
@@ -76,16 +83,18 @@ const FormConfig: React.FC = () => {
 			onDragStart={handleDragStart}
 		>
 			<SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
-				{items.map(({ id, config }) => (
-					<DraggableSortableItem
-						key={id}
-						id={id}
-						config={config}
-						style={{ visibility: id === activeId ? 'hidden' : 'visible' }}
-						editItem={editItem}
-						deleteItem={deleteItem}
-					/>
-				))}
+				<div className='flex flex-col gap-2'>
+					{items.map(({ id, config }) => (
+						<DraggableSortableItem
+							key={id}
+							id={id}
+							config={config}
+							style={{ visibility: id === activeId ? 'hidden' : 'visible' }}
+							editItem={editItem}
+							deleteItem={deleteItem}
+						/>
+					))}
+				</div>
 			</SortableContext>
 			<DragOverlay>
 				{activeId ? (
@@ -101,9 +110,10 @@ const FormConfig: React.FC = () => {
 			<button
 				type='button'
 				onClick={addItem}
-				className='mt-2 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+				className='mt-2 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowe '
 			>
-				Add Field
+				<PlusIcon className='h-4 w-4 text-gray-400 dark:text-white mr-2' />
+				<span>Add Field</span>
 			</button>
 		</DndContext>
 	);

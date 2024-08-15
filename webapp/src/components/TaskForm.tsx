@@ -67,6 +67,7 @@ export default function TaskForm({
 	const [taskState, setTask] = useState<Task | undefined>(task);
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
+	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
@@ -571,9 +572,11 @@ export default function TaskForm({
 							</ToolTip>
 						</div>
 					</div>
-					<div className='col-span-full'>
-						<FormConfig />
-					</div>
+					{requiredHumanInput && (
+						<div className='col-span-full'>
+							<FormConfig />
+						</div>
+					)}
 				</div>
 
 				<div className='mt-6 flex items-center justify-between gap-x-6 dark:text-indigo-200'>

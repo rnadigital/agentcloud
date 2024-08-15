@@ -7,7 +7,7 @@ import SortableItem from './SortableItem';
 
 interface DraggableSortableItemProps {
 	id: string;
-	config?: FormFieldConfig;
+	config?: Partial<FormFieldConfig>;
 	style?: CSSProperties;
 	editItem: (id: string, newConfig: FormFieldConfig) => void;
 	deleteItem: (id: string) => void;
