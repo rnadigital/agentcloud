@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
 export interface FormFieldConfig {
-	position: number;
+	position: string;
 	type: 'string' | 'number' | 'radio' | 'checkbox' | 'select' | 'multiselect' | 'date';
 	name: string;
 	label: string;

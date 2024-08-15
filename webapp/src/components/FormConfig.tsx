@@ -22,15 +22,14 @@ import DraggableSortableItem from './DraggableSortableItem';
 import SortableItem from './SortableItem';
 
 const FormConfig: React.FC = () => {
-	const [items, setItems] = useState<{ id: string; config: Partial<FormFieldConfig> }[]>([
+	const [items, setItems] = useState<Partial<FormFieldConfig>[]>([
 		{
-			id: '1',
-			config: {
-				position: 1,
-				type: 'string' as 'string'
-			}
+			position: '1',
+			type: 'string'
 		}
 	]);
+	console.log(items);
+
 	const [activeId, setActiveId] = useState<string | null>(null);
 
 	const sensors = useSensors(
@@ -48,8 +47,8 @@ const FormConfig: React.FC = () => {
 		const { active, over } = event;
 		if (active.id !== over.id) {
 			setItems(items => {
-				const oldIndex = items.findIndex(item => item.id === active.id);
-				const newIndex = items.findIndex(item => item.id === over.id);
+				const oldIndex = items.findIndex(item => item.position === active.id);
+				const newIndex = items.findIndex(item => item.position === over.id);
 				return arrayMove(items, oldIndex, newIndex);
 			});
 		}
@@ -57,21 +56,19 @@ const FormConfig: React.FC = () => {
 	};
 
 	const editItem = (id: string, newConfig: FormFieldConfig) => {
-		setItems(items => items.map(item => (item.id === id ? { ...item, config: newConfig } : item)));
+		setItems(items => items.map(item => (item.position === id ? { ...item, ...newConfig } : item)));
 	};
 
 	const addItem = () => {
-		const newItem = {
-			id: (items.length + 1).toString(),
-			config: {
-				type: 'string' as 'string'
-			}
+		const newItem: Partial<FormFieldConfig> = {
+			position: (items.length + 1).toString(),
+			type: 'string'
 		};
 		setItems([...items, newItem]);
 	};
 
 	const deleteItem = (id: string) => {
-		setItems(items => items.filter(item => item.id !== id));
+		setItems(items => items.filter(item => item.position !== id));
 	};
 
 	return (
@@ -82,14 +79,17 @@ const FormConfig: React.FC = () => {
 			modifiers={[restrictToVerticalAxis]}
 			onDragStart={handleDragStart}
 		>
-			<SortableContext items={items.map(item => item.id)} strategy={verticalListSortingStrategy}>
+			<SortableContext
+				items={items.map(item => item.position)}
+				strategy={verticalListSortingStrategy}
+			>
 				<div className='flex flex-col gap-2'>
-					{items.map(({ id, config }) => (
+					{items.map(({ position, type }) => (
 						<DraggableSortableItem
-							key={id}
-							id={id}
-							config={config}
-							style={{ visibility: id === activeId ? 'hidden' : 'visible' }}
+							key={position}
+							id={position}
+							config={{ position, type }}
+							style={{ visibility: position === activeId ? 'hidden' : 'visible' }}
 							editItem={editItem}
 							deleteItem={deleteItem}
 						/>
@@ -100,7 +100,7 @@ const FormConfig: React.FC = () => {
 				{activeId ? (
 					<SortableItem
 						id={activeId}
-						config={items.find(item => item.id === activeId)?.config}
+						config={items.find(item => item.position === activeId)}
 						editItem={editItem}
 						deleteItem={deleteItem}
 					/>
