@@ -16,8 +16,9 @@ use tokio::sync::RwLock;
 
 use adaptors::qdrant::client::instantiate_qdrant_client;
 use routes::apis::{
-    bulk_upsert_data_to_collection, check_collection_exists, delete_collection, get_collection_info,
-    health_check, list_collections, lookup_data_point, scroll_data, upsert_data_point_to_collection,
+    bulk_upsert_data_to_collection, check_collection_exists, delete_collection,
+    get_collection_info, health_check, list_collections, lookup_data_point,
+    upsert_data_point_to_collection,
 };
 
 use crate::data::processing_incoming_messages::process_incoming_messages;
@@ -28,14 +29,14 @@ use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::get_storage_size;
 use adaptors::mongo::client::start_mongo_connection;
 
+mod adaptors;
 mod data;
+mod embeddings;
 mod errors;
 mod init;
-mod embeddings;
+mod messages;
 mod routes;
 mod utils;
-mod messages;
-mod adaptors;
 mod vector_dbs;
 
 pub fn init(config: &mut web::ServiceConfig) {
@@ -58,7 +59,7 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
             .service(lookup_data_point)
-            .service(scroll_data)
+            //.service(scroll_data)
             .service(get_collection_info)
             .service(get_storage_size),
     );
@@ -73,7 +74,8 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
 
-    let message_queue_provider = MessageQueueProvider::from(global_data.message_queue_provider.clone());
+    let message_queue_provider =
+        MessageQueueProvider::from(global_data.message_queue_provider.clone());
 
     // Instantiate client connections
     let qdrant_client = match instantiate_qdrant_client().await {
@@ -84,7 +86,7 @@ async fn main() -> std::io::Result<()> {
         }
     };
     let mongo_connection = start_mongo_connection().await.unwrap();
-    // Create Arcs to allow sending across threads 
+    // Create Arcs to allow sending across threads
     let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
 
@@ -100,12 +102,18 @@ async fn main() -> std::io::Result<()> {
 
     // Thread to read messages from message queue and pass them to channel for processing
     let subscribe_to_message_stream = tokio::spawn(async move {
-        let _ = connection.consume(connection.clone(), qdrant_connection_for_streaming, mongo_client_for_streaming, sender_clone).await;
+        let _ = connection
+            .consume(
+                connection.clone(),
+                qdrant_connection_for_streaming,
+                mongo_client_for_streaming,
+                sender_clone,
+            )
+            .await;
     });
     // Figure out how many threads are available on the machine and the percentage of those that the user would like to use when syncing data
-    let number_of_workers = (
-        global_data.number_of_threads * global_data.thread_percentage_utilisation)
-        as i32;
+    let number_of_workers =
+        (global_data.number_of_threads * global_data.thread_percentage_utilisation) as i32;
     println!("{} threads available for work", number_of_workers);
     // Thread for receiving messages in channel and processing them across workers
     // Spawn multiple threads to process messages
@@ -124,7 +132,6 @@ async fn main() -> std::io::Result<()> {
         handles.push(handle);
     }
 
-
     // Set the default logging level
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
@@ -132,13 +139,11 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new(
-                    Arc::clone(&app_qdrant_client),
-                ))
+                .app_data(Data::new(Arc::clone(&app_qdrant_client)))
                 .configure(init)
         })
-            .bind(format!("{}:{}", host, port))?
-            .run();
+        .bind(format!("{}:{}", host, port))?
+        .run();
 
         server.await.context("server error!")
     });

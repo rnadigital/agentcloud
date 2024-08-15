@@ -1,8 +1,8 @@
+use crate::vector_dbs::models::SearchResult;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt;
-
 
 #[derive(Serialize, Deserialize)]
 pub struct MyPoint {
@@ -32,6 +32,22 @@ pub struct ScrollResults {
     pub id: String,
     pub payload: HashMap<String, qdrant_client::qdrant::Value>,
     pub vector: Vec<f32>,
+}
+impl From<&ScrollResults> for SearchResult {
+    fn from(value: &ScrollResults) -> Self {
+        // Convert hashmap value to hashmap string
+        let payload = value
+            .payload
+            .iter()
+            .map(|(k, v)| (k.clone(), v.to_string()))
+            .collect();
+        let vector = value.clone().vector.to_owned();
+        SearchResult {
+            score: None,
+            payload: Some(payload),
+            vector: Some(vector),
+        }
+    }
 }
 
 #[derive(Serialize, Debug, Clone)]

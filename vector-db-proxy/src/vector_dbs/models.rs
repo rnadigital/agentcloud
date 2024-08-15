@@ -1,5 +1,5 @@
 use anyhow::Error as AnyhowError;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use thiserror;
@@ -35,11 +35,18 @@ pub struct Point {
     pub payload: Option<HashMap<String, String>>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SearchResult {
+    pub score: Option<f32>,
+    pub payload: Option<HashMap<String, String>>,
+    pub vector: Option<Vec<f32>>,
+}
+
 #[derive(Debug)]
 pub struct CollectionsResult {
     pub status: VectorDatabaseStatus,
     pub collection_name: String,
-    pub collection_metadata: Option<CollectionMetadata>
+    pub collection_metadata: Option<CollectionMetadata>,
 }
 
 #[derive(Debug)]
@@ -50,12 +57,11 @@ pub struct CollectionMetadata {
     pub points_count: Option<u64>,
 }
 
-
 #[derive(Debug)]
 pub struct ScrollResults {
     pub status: VectorDatabaseStatus,
     pub id: String,
-    pub payload: HashMap<String, Value>,
+    pub payload: HashMap<String, String>,
     pub vector: Vec<f32>,
 }
 
@@ -67,19 +73,46 @@ pub enum HashMapValues {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct FilterConditions {
-    pub must: Vec<HashMap<String, String>>,
-    pub must_not: Vec<HashMap<String, String>>,
-    pub should: Vec<HashMap<String, String>>,
+    pub must: Option<Vec<HashMap<String, String>>>,
+    pub must_not: Option<Vec<HashMap<String, String>>>,
+    pub should: Option<Vec<HashMap<String, String>>>,
+}
+
+impl Default for FilterConditions {
+    fn default() -> Self {
+        FilterConditions {
+            must: None,
+            must_not: None,
+            should: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct SearchResponseParams {
+    pub include_vectors: Option<bool>,
+    pub include_payload: Option<bool>,
+    pub get_all_pages: Option<bool>,
+    pub limit: Option<u32>,
+}
+
+// This will dictate the type of search that is conducted
+#[derive(Clone, Debug, Serialize)]
+pub enum SearchType {
+    Collection,
+    Point,
+    Similarity,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct SearchRequest {
+    pub search_type: SearchType,
     pub collection: String,
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
     pub filters: Option<FilterConditions>,
-    pub limit: Option<u32>,
-    pub get_all_pages: Option<bool>,
+    // This will dictate what is included in the response
+    pub search_response_params: Option<SearchResponseParams>,
 }
 
 #[derive(Debug)]
@@ -120,18 +153,16 @@ impl From<qdrant_client::qdrant::CollectionInfo> for VectorDatabaseStatus {
         match value.status {
             1 => VectorDatabaseStatus::Ok,
             2 => VectorDatabaseStatus::Failure,
-            _ => VectorDatabaseStatus::Error(VectorDatabaseError::Other(String::from("An error \
-            occurred")))
+            _ => VectorDatabaseStatus::Error(VectorDatabaseError::Other(String::from(
+                "An error \
+            occurred",
+            ))),
         }
     }
 }
 
 impl From<Point> for BTreeMap<String, String> {
     fn from(value: Point) -> Self {
-        let mut map = BTreeMap::new();
-        if let Some(payload) = value.payload {
-            map = BTreeMap::from_iter(payload)
-        }
-        map
+        BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
     }
 }

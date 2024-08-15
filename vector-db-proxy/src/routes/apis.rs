@@ -7,7 +7,9 @@ use std::sync::Arc;
 
 use crate::adaptors::qdrant::apis::Qdrant;
 use crate::adaptors::qdrant::helpers::{get_next_page, get_scroll_results};
-use crate::adaptors::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
+use crate::adaptors::qdrant::models::{
+    CreateDisposition, MyPoint, PointSearchResults, ScrollResults,
+};
 use crate::errors::types::Result;
 use crate::routes;
 use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
@@ -18,7 +20,9 @@ use qdrant_client::qdrant::{Filter, PointId, PointStruct, ScrollPoints, WithVect
 
 use crate::adaptors::mongo::client::start_mongo_connection;
 use crate::adaptors::mongo::models::Model;
-use crate::adaptors::mongo::queries::{get_model, get_model_and_embedding_key, get_team_datasources};
+use crate::adaptors::mongo::queries::{
+    get_model, get_model_and_embedding_key, get_team_datasources,
+};
 use crate::routes::models::CollectionStorageSizeResponse;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
@@ -261,10 +265,9 @@ pub async fn bulk_upsert_data_to_collection(
     let qdrant = Qdrant::new(qdrant_conn, collection_name_clone);
     let mongodb_connection = start_mongo_connection().await?;
     let collection_name_clone_2 = collection_name.clone();
-    let model_parameters: Model =
-        get_model(&mongodb_connection, collection_name_clone_2.as_str())
-            .await?
-            .unwrap();
+    let model_parameters: Model = get_model(&mongodb_connection, collection_name_clone_2.as_str())
+        .await?
+        .unwrap();
     let vector_length = model_parameters.embeddingLength as u64;
     let bulk_upsert_results = qdrant
         .bulk_upsert_data(list_of_points, Some(vector_length), None)
@@ -347,98 +350,98 @@ pub async fn lookup_data_point(
         })))
 }
 
-///
-///
-/// # Arguments
-///
-/// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
-/// * `Path(dataset_id)`:
-/// * `data`: Query string parameters based on the `SearchRequest` struct
-///
-/// returns: Result<impl Responder<Body=<unknown>>+Sized, CustomErrorType>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
-#[wherr]
-#[get("/scroll/{dataset_id}")]
-pub async fn scroll_data(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
-    Path(dataset_id): Path<String>,
-    data: web::Query<SearchRequest>,
-) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref();
-    // Initialise lists
-    let mut response: Vec<ScrollResults> = vec![];
-    // Create a hash map of all filters provided by the client
-    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
-    if qdrant_conn
-        .read()
-        .await
-        .collection_exists(dataset_id.clone())
-        .await?
-        == false
-    {
-        log::warn!("Collection: '{}' does not exist", dataset_id);
-        return Ok(HttpResponse::BadRequest()
-            .content_type(ContentType::json())
-            .json(json!(ResponseBody {
-                status: Status::DoesNotExist,
-                data: None,
-                error_message: Some(json!(format!(
-                    "Collection: '{}' does not exist",
-                    dataset_id
-                )))
-            })));
-    };
-    // Initial scroll point query to be sent to qdrant
-    let mut scroll_points = ScrollPoints {
-        collection_name: dataset_id,
-        filter: Some(Filter {
-            must,
-            must_not,
-            should,
-            ..Default::default()
-        }),
-        limit: data.limit,
-        with_vectors: Some(WithVectorsSelector {
-            selector_options: Some(SelectorOptions::Enable(true)),
-        }),
-        ..Default::default()
-    };
-
-    // Depending on whether the client has requested to return all point or not
-    if let Some(get_all_pages) = data.get_all_pages {
-        // Depending on whether the client provides a limit we update the scroll point limit
-        if get_all_pages {
-            loop {
-                let qdrant_conn_clone = Arc::clone(&qdrant_conn);
-                let (result, offset) = get_next_page(qdrant_conn_clone, &scroll_points).await?;
-                let res = get_scroll_results(result)?;
-                response.extend(res);
-                if offset == "Done" {
-                    break;
-                }
-                scroll_points.offset = Some(PointId {
-                    point_id_options: Some(PointIdOptions::Uuid(offset)),
-                });
-            }
-        } else {
-            let result = qdrant_conn.read().await.scroll(&scroll_points).await?;
-            response.extend(get_scroll_results(result)?);
-        }
-    }
-
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::json())
-        .json(json!(ResponseBody {
-            status: Status::Success,
-            data: Some(json!({"points": response})),
-            error_message: None
-        })))
-}
+/////
+/////
+///// # Arguments
+/////
+///// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
+///// * `Path(dataset_id)`:
+///// * `data`: Query string parameters based on the `SearchRequest` struct
+/////
+///// returns: Result<impl Responder<Body=<unknown>>+Sized, CustomErrorType>
+/////
+///// # Examples
+/////
+///// ```
+/////
+///// ```
+//#[wherr]
+//#[get("/scroll/{dataset_id}")]
+//pub async fn scroll_data(
+//    app_data: Data<Arc<RwLock<QdrantClient>>>,
+//    Path(dataset_id): Path<String>,
+//    data: web::Query<SearchRequest>,
+//) -> Result<impl Responder> {
+//    let qdrant_conn = app_data.get_ref();
+//    // Initialise lists
+//    let mut response: Vec<ScrollResults> = vec![];
+//    // Create a hash map of all filters provided by the client
+//    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
+//    if qdrant_conn
+//        .read()
+//        .await
+//        .collection_exists(dataset_id.clone())
+//        .await?
+//        == false
+//    {
+//        log::warn!("Collection: '{}' does not exist", dataset_id);
+//        return Ok(HttpResponse::BadRequest()
+//            .content_type(ContentType::json())
+//            .json(json!(ResponseBody {
+//                status: Status::DoesNotExist,
+//                data: None,
+//                error_message: Some(json!(format!(
+//                    "Collection: '{}' does not exist",
+//                    dataset_id
+//                )))
+//            })));
+//    };
+//    // Initial scroll point query to be sent to qdrant
+//    let mut scroll_points = ScrollPoints {
+//        collection_name: dataset_id,
+//        filter: Some(Filter {
+//            must,
+//            must_not,
+//            should,
+//            ..Default::default()
+//        }),
+//        limit: data.limit,
+//        with_vectors: Some(WithVectorsSelector {
+//            selector_options: Some(SelectorOptions::Enable(true)),
+//        }),
+//        ..Default::default()
+//    };
+//
+//    // Depending on whether the client has requested to return all point or not
+//    if let Some(get_all_pages) = data.get_all_pages {
+//        // Depending on whether the client provides a limit we update the scroll point limit
+//        if get_all_pages {
+//            loop {
+//                let qdrant_conn_clone = Arc::clone(&qdrant_conn);
+//                let (result, offset) = get_next_page(qdrant_conn_clone, &scroll_points).await?;
+//                let res = get_scroll_results(result)?;
+//                response.extend(res);
+//                if offset == "Done" {
+//                    break;
+//                }
+//                scroll_points.offset = Some(PointId {
+//                    point_id_options: Some(PointIdOptions::Uuid(offset)),
+//                });
+//            }
+//        } else {
+//            let result = qdrant_conn.read().await.scroll(&scroll_points).await?;
+//            response.extend(get_scroll_results(result)?);
+//        }
+//    }
+//
+//    Ok(HttpResponse::Ok()
+//        .content_type(ContentType::json())
+//        .json(json!(ResponseBody {
+//            status: Status::Success,
+//            data: Some(json!({"points": response})),
+//            error_message: None
+//        })))
+//}
 
 #[wherr]
 #[delete("/collection/{dataset_id}")]
@@ -512,7 +515,6 @@ pub async fn get_collection_info(
     }
 }
 
-
 #[wherr]
 #[get("/storage-size/{dataset_id}")]
 pub async fn get_storage_size(
@@ -527,25 +529,28 @@ pub async fn get_storage_size(
     let qdrant_conn = app_data.get_ref();
     let team_id = team_id.clone();
     let mongodb_connection = start_mongo_connection().await?;
-    let list_of_team_datasources = get_team_datasources(&mongodb_connection, team_id.as_str())
-        .await?;
+    let list_of_team_datasources =
+        get_team_datasources(&mongodb_connection, team_id.as_str()).await?;
     println!("List of team datasources: {:?}", list_of_team_datasources);
     for datasource in list_of_team_datasources {
         let embedding_model = get_model(&mongodb_connection, datasource._id.to_string().as_str())
-            .await?.unwrap();
+            .await?
+            .unwrap();
         let qdrant = Qdrant::new(Arc::clone(qdrant_conn), datasource._id.to_string());
-        if let Some(collection_storage_info) = qdrant.estimate_storage_size(
-            embedding_model.embeddingLength as usize
-        ).await {
-            collection_size_response.total_points += collection_storage_info
-                .points_count.unwrap();
+        if let Some(collection_storage_info) = qdrant
+            .estimate_storage_size(embedding_model.embeddingLength as usize)
+            .await
+        {
+            collection_size_response.total_points += collection_storage_info.points_count.unwrap();
             collection_size_response.total_size += collection_storage_info.size.unwrap();
-            collection_size_response.list_of_datasources.push(collection_storage_info);
+            collection_size_response
+                .list_of_datasources
+                .push(collection_storage_info);
         }
     }
     Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
+        .content_type(ContentType::json())
+        .json(json!(ResponseBody {
             status: Status::Success,
             data: Some(json!(collection_size_response)),
             error_message: None

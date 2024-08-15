@@ -11,10 +11,10 @@ use serde_json::json;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::adaptors::qdrant::models::ScrollResults;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
 use crate::hash_map_values_as_serde_values;
+use crate::vector_dbs::models::{ScrollResults, VectorDatabaseStatus};
 
 ///
 ///
@@ -30,10 +30,10 @@ use crate::hash_map_values_as_serde_values;
 ///
 /// ```
 pub async fn get_next_page(
-    qdrant_conn: Arc<RwLock<QdrantClient>>,
+    qdrant_conn: &QdrantClient,
     scroll_point: &ScrollPoints,
 ) -> Result<(ScrollResponse, String)> {
-    let result = qdrant_conn.read().await.scroll(scroll_point).await?;
+    let result = qdrant_conn.scroll(scroll_point).await?;
 
     let mut offset = String::from("Done");
     if let Some(point_id) = result.clone().next_page_offset {
@@ -76,9 +76,14 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
                 }
             }
         }
+        let payload: HashMap<String, String> = new_payload
+            .iter()
+            .map(|(k, v)| (k.clone(), v.to_string()))
+            .collect();
         let res = ScrollResults {
+            status: VectorDatabaseStatus::Ok,
             id,
-            payload: new_payload, // Use the modified payload
+            payload, // Use the modified payload
             vector,
         };
         response.push(res);
@@ -117,7 +122,9 @@ pub async fn embed_payload(
                 payload.insert("page_content".to_string(), value.clone());
                 if let Ok(metadata) = json!(payload).try_into() {
                     // Embedding data
-                    let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
+                    let embedding_vec =
+                        embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model)
+                            .await?;
                     // Construct PointStruct to insert into DB
                     // todo: need to break this out so that this happens in a different method so we can re-use this for files
                     if !embedding_vec.is_empty() {
@@ -152,7 +159,7 @@ pub async fn construct_point_struct(
     vector: &Vec<f32>,
     payload: HashMap<String, String>,
     vector_name: Option<EmbeddingModels>,
-    index: Option<String>
+    index: Option<String>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
         return if let Some(model_name) = vector_name {

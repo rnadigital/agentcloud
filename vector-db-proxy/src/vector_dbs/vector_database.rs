@@ -9,14 +9,14 @@ use crate::vector_dbs::models::*;
 
 pub enum VectorDatabases {
     Qdrant(Arc<RwLock<QdrantClient>>),
-    Pinecone(Arc<RwLock<PineconeClient>>)
+    Pinecone(Arc<RwLock<PineconeClient>>),
 }
 
 impl Clone for VectorDatabases {
     fn clone(&self) -> Self {
         match self {
             VectorDatabases::Qdrant(client) => VectorDatabases::Qdrant(Arc::clone(client)),
-            VectorDatabases::Pinecone(client) => VectorDatabases::Pinecone(Arc::clone(client))
+            VectorDatabases::Pinecone(client) => VectorDatabases::Pinecone(Arc::clone(client)),
         }
     }
 }
@@ -65,11 +65,17 @@ pub trait VectorDatabase {
         &self,
         client: &Self,
         search_request: SearchRequest,
-        vector_length: usize
+        vector_length: usize,
     ) -> Result<Option<StorageSize>, VectorDatabaseError>;
     async fn scroll_points(
         &self,
         client: &Self,
         search_request: SearchRequest,
-    ) -> Result<ScrollResults, VectorDatabaseError>;
+    ) -> Result<Vec<ScrollResults>, VectorDatabaseError>;
+
+    async fn similarity_search(
+        &self,
+        client: Self,
+        search_request: SearchRequest,
+    ) -> Result<Vec<SearchResult>, VectorDatabaseError>;
 }
