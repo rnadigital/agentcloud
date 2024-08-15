@@ -233,6 +233,10 @@ export async function init() {
 		const airbyteAdminWorkspaceId = workspacesList.workspaces[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
+		if (!airbyteAdminWorkspaceId) {
+			log('Failed to fetch airbyte admin workspace ID, exiting');
+			process.exit(1);
+		}
 		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
 
 		// Get destination list

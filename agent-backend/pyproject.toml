@@ -43,8 +43,7 @@ langchain-groq = "^0.1.4"
 apify-client = "^1.7.0"
 langgraph = "^0.0.51"
 
-# Temporary freeze to fix issue with FastEmbed models. TODO: Remove this line when langchain-community > 0.2.7 is released
-langchain-community = "0.2.6"
+langchain-ollama = "^0.1.1"
 
 
 [build-system]
