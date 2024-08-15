@@ -1,8 +1,8 @@
+import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import InfoAlert from 'components/InfoAlert';
+import ToolTip from 'components/shared/ToolTip';
 import React, { useEffect } from 'react';
 import { MetadataFieldInfo, Retriever, ToolType } from 'struct/tool';
-import ToolTip from 'components/shared/ToolTip';
-import { InformationCircleIcon } from '@heroicons/react/20/solid';
 
 interface RetrievalStrategyProps {
 	toolRetriever: Retriever;

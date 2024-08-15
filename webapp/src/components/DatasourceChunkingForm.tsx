@@ -4,7 +4,7 @@ import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
 
 export default function DatasourceChunkingForm({ chunkingConfig, setChunkingConfig }) {
-	const handleInputChange = (key) => (e) => {
+	const handleInputChange = key => e => {
 		setChunkingConfig({ [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 	};
 
@@ -132,7 +132,10 @@ export default function DatasourceChunkingForm({ chunkingConfig, setChunkingConf
 			/>
 
 			<div className='mt-4'>
-				<label htmlFor='overlap_all' className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+				<label
+					htmlFor='overlap_all'
+					className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+				>
 					Overlap All
 					<span className='ml-2'>
 						<ToolTip

@@ -887,7 +887,7 @@ export async function uploadFileApi(req, res, next) {
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
 			total: null
-		},
+		}
 		// chunkingConfig: { ... }
 	});
 

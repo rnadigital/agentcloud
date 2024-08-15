@@ -49,7 +49,7 @@ export type DatasourceRecordCount = {
 	failure?: number;
 };
 
-export type UnstructuredChunkingStrategy = 'basic' | 'by_title' | 'by_page' | 'by_similarity'
+export type UnstructuredChunkingStrategy = 'basic' | 'by_title' | 'by_page' | 'by_similarity';
 
 export type UnstructuredChunkingConfig = {
 	strategy: UnstructuredChunkingStrategy;
@@ -58,7 +58,7 @@ export type UnstructuredChunkingConfig = {
 	overlap: number;
 	similarity_threshold: number; // between 0.0 and 1.0
 	overlap_all: boolean;
-}
+};
 
 export type Datasource = {
 	_id?: ObjectId;

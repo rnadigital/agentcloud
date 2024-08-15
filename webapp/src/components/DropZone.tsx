@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
@@ -13,7 +14,6 @@ import { toast } from 'react-toastify';
 import { pricingMatrix, SubscriptionPlan } from 'struct/billing';
 import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
-import * as API from '@api';
 import submittingReducer from 'utils/submittingreducer';
 
 export default function DropZone({
@@ -146,9 +146,7 @@ export default function DropZone({
 				/>
 				<button
 					disabled={
-						loading ||
-						!files ||
-						!modelId
+						loading || !files || !modelId
 						//TODO: more checks
 					}
 					type='submit'
