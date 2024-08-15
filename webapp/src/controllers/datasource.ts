@@ -20,7 +20,12 @@ import path from 'path';
 import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
+import {
+	DatasourceScheduleType,
+	DatasourceStatus,
+	UnstructuredChunkingStrategySet,
+	UnstructuredPartitioningStrategySet
+} from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
@@ -790,7 +795,6 @@ export async function uploadFileApi(req, res, next) {
 	}
 
 	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
-
 	let validationError = chainValidations(
 		req.body,
 		[
@@ -800,15 +804,33 @@ export async function uploadFileApi(req, res, next) {
 			{
 				field: 'retriever',
 				validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }
-			}
+			},
+			{
+				field: 'partitioning',
+				validation: { notEmpty: true, inSet: UnstructuredPartitioningStrategySet }
+			},
+			{ field: 'strategy', validation: { notEmpty: true, inSet: UnstructuredChunkingStrategySet } },
+			{ field: 'max_characters', validation: { notEmpty: true, ofType: 'number' } },
+			{ field: 'new_after_n_chars', validation: { ofType: 'number' } }, // Can be null, so only check type if provided
+			{ field: 'overlap', validation: { notEmpty: true, ofType: 'number' } },
+			{ field: 'similarity_threshold', validation: { notEmpty: true, ofType: 'number' } },
+			{ field: 'overlap_all', validation: { notEmpty: true, ofType: 'boolean' } }
 		],
 		{
 			datasourceName: 'Name',
 			datasourceDescription: 'Description',
 			connectorId: 'Connector ID',
-			modelId: 'Embedding Model'
+			modelId: 'Embedding Model',
+			partitioning: 'Partitioning Strategy',
+			strategy: 'Chunk Strategy',
+			max_characters: 'Max Characters',
+			new_after_n_chars: 'New After N Characters',
+			overlap: 'Overlap',
+			similarity_threshold: 'Similarity Threshold',
+			overlap_all: 'Overlap All'
 		}
 	);
+
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}

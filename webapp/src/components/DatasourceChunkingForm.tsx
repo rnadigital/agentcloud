@@ -11,6 +11,28 @@ export default function DatasourceChunkingForm({ chunkingConfig, setChunkingConf
 	return (
 		<div className='mb-4 mt-3'>
 			<label
+				htmlFor='partitioning'
+				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
+			>
+				Partitioning Strategy<span className='text-red-700'> *</span>
+			</label>
+			<div>
+				<select
+					required
+					name='partitioning'
+					id='partitioning'
+					onChange={handleInputChange('partitioning')}
+					value={chunkingConfig.partitioning}
+					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+				>
+					<option value='auto'>Auto</option>
+					<option value='fast'>Fast</option>
+					<option value='hi_res'>High Res</option>
+					<option value='ocr_only'>OCR Only</option>
+				</select>
+			</div>
+
+			<label
 				htmlFor='chunkStrategy'
 				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
 			>

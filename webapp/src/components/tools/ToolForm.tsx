@@ -131,7 +131,7 @@ export default function ToolForm({
 	};
 	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
-	const [topK, setTopK] = useState(tool?.retriever_config?.k || 4);
+	const [topK, setTopK] = useState(tool?.retriever_config?.k || 3);
 	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(
 		tool?.retriever_config?.decay_rate || 0.5
 	);

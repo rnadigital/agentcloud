@@ -83,7 +83,7 @@ export default function CreateDatasourceForm({
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
-	const [topK, setTopK] = useState(4);
+	const [topK, setTopK] = useState(3);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const posthog = usePostHog();

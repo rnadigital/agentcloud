@@ -49,9 +49,26 @@ export type DatasourceRecordCount = {
 	failure?: number;
 };
 
-export type UnstructuredChunkingStrategy = 'basic' | 'by_title' | 'by_page' | 'by_similarity';
+export const UnstructuredChunkingStrategyValues = [
+	'basic',
+	'by_title',
+	'by_page',
+	'by_similarity'
+] as const;
+export const UnstructuredPartitioningStrategyValues = [
+	'auto',
+	'fast',
+	'hi_res',
+	'ocr_only'
+] as const;
+export type UnstructuredChunkingStrategy = (typeof UnstructuredChunkingStrategyValues)[number];
+export type UnstructuredPartitioningStrategy =
+	(typeof UnstructuredPartitioningStrategyValues)[number];
+export const UnstructuredChunkingStrategySet = new Set(UnstructuredChunkingStrategyValues);
+export const UnstructuredPartitioningStrategySet = new Set(UnstructuredPartitioningStrategyValues);
 
 export type UnstructuredChunkingConfig = {
+	partitioning: UnstructuredPartitioningStrategy;
 	strategy: UnstructuredChunkingStrategy;
 	max_characters: number;
 	new_after_n_chars: number;
