@@ -881,15 +881,14 @@ export async function uploadFileApi(req, res, next) {
 		sourceType: 'file',
 		workspaceId: null,
 		lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
-		chunkCharacter: req.body.chunkCharacter, //TODO: validate
-		chunkStrategy: req.body.chunkStrategy, //TODO: validate
 		modelId: toObjectId(modelId),
 		createdDate: new Date(),
 		embeddingField: 'document', //Note: always document for sourceType: file
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
 			total: null
-		}
+		},
+		// chunkingConfig: { ... }
 	});
 
 	// Send the gcs file path to rabbitmq

@@ -377,7 +377,7 @@ export default function CreateDatasourceForm({
 							</div>
 							<label
 								htmlFor='description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
 							>
 								Description<span className='text-red-700'> *</span>
 							</label>
@@ -398,7 +398,7 @@ export default function CreateDatasourceForm({
 							>
 								Embedding Model<span className='text-red-700'> *</span>
 							</label>
-							<div className='mt-2'>
+							<div>
 								<Select
 									isClearable
 									primaryColor={'indigo'}

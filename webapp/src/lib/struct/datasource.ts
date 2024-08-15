@@ -57,7 +57,7 @@ export type UnstructuredChunkingConfig = {
 	new_after_n_chars: number;
 	overlap: number;
 	similarity_threshold: number; // between 0.0 and 1.0
-	overlap_app: boolean;
+	overlap_all: boolean;
 }
 
 export type Datasource = {
@@ -79,7 +79,7 @@ export type Datasource = {
 	lastSyncedDate?: Date | null; //Note: null = never synced
 	status?: DatasourceStatus;
 	discoveredSchema?: any;
-	chunkingConfig: UnstructuredChunkingConfig;
+	chunkingConfig?: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
