@@ -4,17 +4,17 @@ use std::sync::Arc;
 use anyhow::{anyhow, Result};
 use mongodb::Database;
 use qdrant_client::client::QdrantClient;
-use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
+use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::hash_map_values_as_serde_values;
+use crate::adaptors::qdrant::models::ScrollResults;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
-use crate::adaptors::qdrant::models::ScrollResults;
+use crate::hash_map_values_as_serde_values;
 
 ///
 ///
@@ -152,12 +152,13 @@ pub async fn construct_point_struct(
     vector: &Vec<f32>,
     payload: HashMap<String, String>,
     vector_name: Option<EmbeddingModels>,
+    index: Option<String>
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
         return if let Some(model_name) = vector_name {
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(
-                    Uuid::new_v4().to_string(),
+                    index.unwrap_or(Uuid::new_v4().to_string()),
                     HashMap::from([(String::from(model), vector.to_owned())]),
                     json!(payload).try_into().unwrap(),
                 );

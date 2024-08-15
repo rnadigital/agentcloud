@@ -1,7 +1,7 @@
 use anyhow::Error as AnyhowError;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use thiserror;
 
 #[derive(thiserror::Error, Debug)]
@@ -32,7 +32,7 @@ pub struct Point {
     pub status: VectorDatabaseStatus,
     pub index: String,
     pub vector: Vec<f32>,
-    pub payload: Option<HashMap<String, Value>>,
+    pub payload: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug)]
@@ -65,16 +65,15 @@ pub enum HashMapValues {
     Str(String),
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct FilterConditions {
     pub must: Vec<HashMap<String, String>>,
     pub must_not: Vec<HashMap<String, String>>,
     pub should: Vec<HashMap<String, String>>,
 }
 
-
+#[derive(Clone, Debug, Serialize)]
 pub struct SearchRequest {
-    pub status: VectorDatabaseStatus,
     pub collection: String,
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
@@ -106,4 +105,33 @@ pub struct CollectionCreate {
     pub namespace: Option<String>,
     pub distance: Distance,
     pub vector_name: Option<String>,
+}
+
+impl From<bool> for VectorDatabaseStatus {
+    fn from(value: bool) -> Self {
+        match value {
+            true => VectorDatabaseStatus::Ok,
+            false => VectorDatabaseStatus::Failure,
+        }
+    }
+}
+impl From<qdrant_client::qdrant::CollectionInfo> for VectorDatabaseStatus {
+    fn from(value: qdrant_client::qdrant::CollectionInfo) -> Self {
+        match value.status {
+            1 => VectorDatabaseStatus::Ok,
+            2 => VectorDatabaseStatus::Failure,
+            _ => VectorDatabaseStatus::Error(VectorDatabaseError::Other(String::from("An error \
+            occurred")))
+        }
+    }
+}
+
+impl From<Point> for BTreeMap<String, String> {
+    fn from(value: Point) -> Self {
+        let mut map = BTreeMap::new();
+        if let Some(payload) = value.payload {
+            map = BTreeMap::from_iter(payload)
+        }
+        map
+    }
 }

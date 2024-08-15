@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::adaptors::qdrant::models::{CollectionData, CollectionStorageSize, CreateDisposition, PointSearchResults, Status};
 use crate::routes::models::FilterConditions;
-use crate::utils::conversions::convert_hashmap_to_filters;
+use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 use anyhow::{anyhow, Result};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
@@ -305,103 +305,6 @@ impl Qdrant {
                     "An error occurred while trying to create collection: {}",
                     e
                 ))
-            }
-        }
-    }
-
-    ///
-    ///
-    /// # Arguments
-    ///
-    /// * `vector`: A list of float 32
-    /// * `filters`: Hashmap comprised of the key value pairs to filter on
-    /// * `limit`: The number of results to return from search
-    ///
-    /// returns: Result<Vec<PointSearchResults, Global>, Error>
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub async fn return_similar_results(
-        &self,
-        vector: Vec<f32>,
-        filters: Option<FilterConditions>,
-        limit: Option<u64>,
-    ) -> Result<Vec<PointSearchResults>> {
-        let qdrant_conn = &self.client.read().await;
-        let (must, must_not, should) = convert_hashmap_to_filters(&filters);
-        let mut response_data: Vec<PointSearchResults> = vec![];
-        let search_result = qdrant_conn
-            .search_points(&SearchPoints {
-                collection_name: self.collection_name.clone(),
-                vector: vector.to_owned(),
-                filter: Some(Filter {
-                    must,
-                    must_not,
-                    should,
-                    ..Default::default()
-                }),
-                limit: limit.unwrap_or(5),
-                with_payload: Some(true.into()),
-                ..Default::default()
-            })
-            .await?;
-        for result in &search_result.result {
-            response_data.push(PointSearchResults {
-                score: result.score,
-                payload: result.payload.to_owned(),
-            });
-        }
-        Ok(response_data)
-    }
-
-    ///
-    ///
-    /// # Arguments
-    ///
-    /// * `id`: Vector ID
-    /// * `filters`: list of filters
-    /// * `limit`: limit the number of returned results
-    ///
-    /// returns: Result<Vec<ScoredPoint, Global>, Error>
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub async fn return_recommendations(
-        &self,
-        id: String,
-        filters: Option<FilterConditions>,
-        limit: u64,
-    ) -> Result<Vec<ScoredPoint>> {
-        let (must, must_not, should) = convert_hashmap_to_filters(&filters);
-        let point_id = PointId {
-            point_id_options: Some(point_id::PointIdOptions::Uuid(id)),
-        };
-        let qdrant = &self.client.read().await;
-        let recommend = RecommendPoints {
-            collection_name: self.collection_name.to_owned(),
-            positive: vec![point_id],
-            negative: vec![],
-            limit,
-            filter: Some(Filter {
-                must,
-                must_not,
-                should,
-                ..Default::default()
-            }),
-            score_threshold: Some(0.9),
-            ..Default::default()
-        };
-        match qdrant.recommend(&recommend).await {
-            Ok(result) => Ok(result.result),
-            Err(e) => {
-                tracing::error!("Error occurred: {e}");
-                Err(anyhow!("Error occurred: {e}"))
             }
         }
     }

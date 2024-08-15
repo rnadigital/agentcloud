@@ -13,7 +13,7 @@ pub fn convert_serde_value_to_hashmap_string(
     hashmap_serde
 }
 
-pub fn convert_hashmap_to_filters(
+pub fn convert_hashmap_to_qdrant_filters(
     filters: &Option<FilterConditions>,
 ) -> (Vec<Condition>, Vec<Condition>, Vec<Condition>) {
     let mut must_vec: Vec<Condition> = vec![];

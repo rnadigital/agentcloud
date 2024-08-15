@@ -1,8 +1,8 @@
 use crate::adaptors::gcp::models::PubSubConnect;
 use crate::adaptors::mongo::models::ChunkingStrategy;
 use crate::adaptors::mongo::queries::{get_datasource, get_model, increment_by_one, set_record_count_total};
+use crate::adaptors::qdrant::apis::Qdrant;
 use crate::adaptors::qdrant::helpers::construct_point_struct;
-use crate::adaptors::qdrant::utils::Qdrant;
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::models::EmbeddingModels;
@@ -121,6 +121,7 @@ pub async fn process_message(message_string: String, stream_type: Option<String>
                                                                     &vector,
                                                                     metadata_map,
                                                                     Some(model_name.clone()),
+                                                                    None,
                                                                 ).await { points_to_upload.push(point_struct) };
                                                         } else {
                                                             increment_by_one(

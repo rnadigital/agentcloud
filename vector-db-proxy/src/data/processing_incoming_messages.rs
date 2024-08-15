@@ -7,8 +7,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
+use crate::adaptors::qdrant::apis::Qdrant;
 use crate::adaptors::qdrant::helpers::embed_payload;
-use crate::adaptors::qdrant::utils::Qdrant;
 use crate::embeddings::models::EmbeddingModels;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 

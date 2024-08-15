@@ -10,7 +10,7 @@ use crate::adaptors::qdrant::helpers::{get_next_page, get_scroll_results};
 use crate::adaptors::qdrant::models::{CreateDisposition, MyPoint, PointSearchResults, ScrollResults};
 use crate::errors::types::Result;
 use crate::routes;
-use crate::utils::conversions::convert_hashmap_to_filters;
+use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 
 use qdrant_client::client::QdrantClient;
 use qdrant_client::prelude::*;
@@ -314,7 +314,7 @@ pub async fn lookup_data_point(
     let qdrant_conn = app_data.get_ref().clone();
     let qdrant_conn_lock = qdrant_conn.read().await;
     let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
-    let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
+    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
     let limit = data.limit.unwrap_or(3) as u64;
     let search_result = qdrant_conn_lock
         .search_points(&SearchPoints {
@@ -373,7 +373,7 @@ pub async fn scroll_data(
     // Initialise lists
     let mut response: Vec<ScrollResults> = vec![];
     // Create a hash map of all filters provided by the client
-    let (must, must_not, should) = convert_hashmap_to_filters(&data.filters);
+    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
     if qdrant_conn
         .read()
         .await

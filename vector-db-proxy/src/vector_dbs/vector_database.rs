@@ -32,7 +32,7 @@ pub trait VectorDatabase {
     async fn check_collection_exists(
         &self,
         client: &Self,
-        collection_id: String,
+        search_request: SearchRequest,
     ) -> Result<CollectionsResult, VectorDatabaseError>;
     async fn create_collection(
         &self,
@@ -42,35 +42,31 @@ pub trait VectorDatabase {
     async fn delete_collection(
         &self,
         client: &Self,
-        collection_id: String,
+        search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
-    async fn insert_points(
+    async fn insert_point(
         &self,
         client: &Self,
-        collection_id: String,
+        search_request: SearchRequest,
+        point: Point,
+    ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
+    async fn bulk_insert_points(
+        &self,
+        client: &Self,
+        search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
-    async fn update_points(
-        &self,
-        client: &Self,
-        search_requests: SearchRequest,
-        point: Vec<Point>,
-    ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
-    async fn delete_points(
+    async fn get_collection_info(
         &self,
         client: &Self,
         search_request: SearchRequest,
-    ) -> Result<CollectionsResult, VectorDatabaseError>;
-    async fn get_points(
-        &self,
-        client: &Self,
-        search_request: SearchRequest,
-    ) -> Result<Vec<Point>, VectorDatabaseError>;
+    ) -> Result<Option<CollectionMetadata>, VectorDatabaseError>;
     async fn get_storage_size(
         &self,
         client: &Self,
         search_request: SearchRequest,
-    ) -> Result<StorageSize, VectorDatabaseError>;
+        vector_length: usize
+    ) -> Result<Option<StorageSize>, VectorDatabaseError>;
     async fn scroll_points(
         &self,
         client: &Self,
