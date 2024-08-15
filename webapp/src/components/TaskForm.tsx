@@ -97,6 +97,7 @@ export default function TaskForm({
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
+			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			context: taskState?.context || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
@@ -558,13 +559,13 @@ export default function TaskForm({
 													setTask(oldTask => {
 														return {
 															...oldTask,
-															requiredisplayOnlyFinalOutputsHumanInput: e.target.checked
+															displayOnlyFinalOutput: e.target.checked
 														};
 													});
 												}}
 												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 											/>
-											Allow Human Input
+											Display Only Final Output
 										</label>
 									</div>
 								</div>

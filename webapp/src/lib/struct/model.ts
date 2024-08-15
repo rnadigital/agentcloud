@@ -116,7 +116,7 @@ export const ModelList = {
 		'llama3:70b',
 		'llama3:70b-instruct',
 		'llama3.1',
-		'llama3-groq-tool-use:70b',
+		'llama3-groq-tool-use',
 		'dolphin-llama3:256k',
 		'dolphin-llama3:70b',
 		'dolphin-llama3:8b-256k',
