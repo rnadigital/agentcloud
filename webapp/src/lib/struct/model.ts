@@ -223,5 +223,5 @@ export const ChatAppAllowedModels = new Set([
 	ModelType.ANTHROPIC,
 	ModelType.GOOGLE_VERTEX,
 	ModelType.AZURE_OPENAI,
-	ModelType.OLLAMA,
+	ModelType.OLLAMA
 ]);
