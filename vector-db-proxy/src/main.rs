@@ -16,7 +16,6 @@ use qdrant_client::client::QdrantClient;
 use tokio::signal;
 use tokio::sync::RwLock;
 
-use adaptors::qdrant::client::instantiate_qdrant_client;
 use routes::apis::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection,
     get_collection_info, health_check, list_collections, upsert_data_point_to_collection,
@@ -28,8 +27,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::get_storage_size;
-use crate::vector_dbs::vector_database;
-use crate::vector_dbs::vector_database::{VectorDatabase, VectorDatabaseClients, VectorDatabases};
+use crate::vector_dbs::vector_database::VectorDatabase;
 use adaptors::mongo::client::start_mongo_connection;
 
 mod adaptors;
@@ -80,7 +78,7 @@ async fn main() -> std::io::Result<()> {
     let message_queue_provider =
         MessageQueueProvider::from(global_data.message_queue_provider.clone());
 
-    let _vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
+    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
         match global_data.vector_database.as_str() {
             "qdrant" => {
                 let qdrant_host = dotenv::var("QDRANT_HOST").unwrap_or("".to_string());
@@ -104,21 +102,13 @@ async fn main() -> std::io::Result<()> {
             ),
         };
 
-    // Instantiate client connections
-    let qdrant_client = match instantiate_qdrant_client().await {
-        Ok(client) => client,
-        Err(e) => {
-            tracing::error!("An error occurred while trying to connect to Qdrant DB {e}");
-            panic!("An error occurred while trying to connect to Qdrant DB {e}")
-        }
-    };
     let mongo_connection = start_mongo_connection().await.unwrap();
     // Create Arcs to allow sending across threads
-    let app_qdrant_client = Arc::new(RwLock::new(qdrant_client));
+    let app_vector_database_client = Arc::new(RwLock::new(vector_database_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
 
     // Clones for senders
-    let qdrant_connection_for_streaming = Arc::clone(&app_qdrant_client);
+    let qdrant_connection_for_streaming = Arc::clone(&app_vector_database_client);
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
@@ -147,7 +137,7 @@ async fn main() -> std::io::Result<()> {
     let mut handles = vec![];
     for _ in 0..(number_of_workers * 10) {
         // let receiver_clone = receiver.clone();
-        let qdrant_client_clone = Arc::clone(&app_qdrant_client);
+        let qdrant_client_clone = Arc::clone(&vector_database_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);
         let receiver = r.clone();
         let handle = thread::spawn(move || {
@@ -166,7 +156,7 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new(Arc::clone(&app_qdrant_client)))
+                .app_data(Data::new(Arc::clone(&vector_database_client)))
                 .configure(init)
         })
         .bind(format!("{}:{}", host, port))?

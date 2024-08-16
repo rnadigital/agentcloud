@@ -21,24 +21,6 @@ impl Clone for VectorDatabases {
     }
 }
 
-impl VectorDatabases {
-    pub async fn get_client(&self) -> Option<VectorDatabaseClients> {
-        match self {
-            VectorDatabases::Qdrant(client) => {
-                Some(VectorDatabaseClients::Qdrant(client.to_owned()))
-            }
-            VectorDatabases::Pinecone(client) => {
-                Some(VectorDatabaseClients::Pinecone(client.to_owned()))
-            }
-            VectorDatabases::Unknown => None,
-        }
-    }
-}
-pub enum VectorDatabaseClients {
-    Qdrant(Arc<RwLock<QdrantClient>>),
-    Pinecone(Arc<RwLock<PineconeClient>>),
-}
-
 impl From<String> for VectorDatabases {
     fn from(value: String) -> Self {
         match value.as_str() {
