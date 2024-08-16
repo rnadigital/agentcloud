@@ -102,16 +102,35 @@ pub async fn check_collection_exists(
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
                     status: Status::Success,
-                    data: Some(json!(collection_result.collection_metadata.unwrap())),
+                    data: None,
                     error_message: None
                 }))),
-            _ => Ok(HttpResponse::InternalServerError()
+            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
                     status: Status::Failure,
                     data: None,
                     error_message: Some(json!({
-                        "errorMessage": "An error occurred attempting to create collection"
+                        "errorMessage": format!("An error occurred during check operation: {}", e)
+                    }))
+                }))),
+            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                    }))
+                }))),
+            _ => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("Could not delete collection: '{}' due to an \
+                        unknown error", collection_name)
                     }))
                 }))),
         },
@@ -131,7 +150,7 @@ pub async fn check_collection_exists(
 
 ///
 ///
-/// # Argum,ents
+/// # Arguments
 ///
 /// * `app_data`: Data<Arc<RwLock<QdrantClient>>>
 /// * `Path(collection_name)`:
@@ -153,7 +172,7 @@ pub async fn upsert_data_point_to_collection(
 ) -> Result<impl Responder> {
     let vector_database = app_data.get_ref().clone();
     let vector_database_client = vector_database.read().await;
-    let search_request = SearchRequest::new(SearchType::Collection, collection_name);
+    let search_request = SearchRequest::new(SearchType::Collection, collection_name.clone());
     let upsert_results = vector_database_client
         .insert_point(search_request, data.0)
         .await?;
@@ -167,13 +186,32 @@ pub async fn upsert_data_point_to_collection(
                     error_message: None
                 })))
         }
-        _ => Ok(HttpResponse::BadRequest()
+        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
-                status: Status::Success,
+                status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": "Point Upsert failed"
+                    "errorMessage": format!("An error occurred during bulk insert: {}", e)
+                }))
+            }))),
+        VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                }))
+            }))),
+        _ => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    unknown error", collection_name)
                 }))
             }))),
     }
@@ -208,7 +246,7 @@ pub async fn bulk_upsert_data_to_collection(
     let _model_parameters: Model = get_model(&mongodb_connection, collection_name_clone_2.as_str())
         .await?
         .unwrap();
-    let search_request = SearchRequest::new(SearchType::Collection, collection_name);
+    let search_request = SearchRequest::new(SearchType::Collection, collection_name.clone());
     let bulk_upsert_results = vector_database_client
         .bulk_insert_points(search_request, data.0)
         .await?;
@@ -222,13 +260,32 @@ pub async fn bulk_upsert_data_to_collection(
                     error_message: None
                 })))
         }
-        _ => Ok(HttpResponse::BadRequest()
+        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
-                status: Status::Success,
+                status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": "Bulk Upsert failed"
+                    "errorMessage": format!("An error occurred during bulk insert: {}", e)
+                }))
+            }))),
+        VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                }))
+            }))),
+        _ => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    unknown error", collection_name)
                 }))
             }))),
     }
@@ -282,26 +339,42 @@ pub async fn delete_collection(
         .delete_collection(search_request)
         .await
     {
-        Ok(VectorDatabaseStatus::Ok) => {
-            Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
+        Ok(VectorDatabaseStatus::Ok) => Ok(HttpResponse::Ok()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
                 status: Status::Success,
                 data: None,
                 error_message: None
-            })))
-        }
-        _ => {
-            Ok(HttpResponse::NotFound()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
+            }))),
+        Err(e) => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                        "errorMessage": format!("Collection: '{}' could not be delete due to error", dataset_id)
-                    }))
-            })))
-        }
+                    "errorMessage": format!("An error occurred: {}", e)
+                }))
+            }))),
+        Ok(VectorDatabaseStatus::NotFound) => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Collection: '{}' does not exists", dataset_id)
+                }))
+            }))),
+        _ => Ok(HttpResponse::NotFound()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    unknown error",
+                    dataset_id)
+                }))
+            }))),
     }
 }
 #[wherr]
