@@ -11,14 +11,15 @@ use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use crossbeam::channel;
 use env_logger::Env;
+use pinecone_sdk::pinecone::{PineconeClient, PineconeClientConfig};
+use qdrant_client::client::QdrantClient;
 use tokio::signal;
 use tokio::sync::RwLock;
 
 use adaptors::qdrant::client::instantiate_qdrant_client;
 use routes::apis::{
     bulk_upsert_data_to_collection, check_collection_exists, delete_collection,
-    get_collection_info, health_check, list_collections, lookup_data_point,
-    upsert_data_point_to_collection,
+    get_collection_info, health_check, list_collections, upsert_data_point_to_collection,
 };
 
 use crate::data::processing_incoming_messages::process_incoming_messages;
@@ -27,6 +28,8 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::get_storage_size;
+use crate::vector_dbs::vector_database;
+use crate::vector_dbs::vector_database::{VectorDatabase, VectorDatabaseClients, VectorDatabases};
 use adaptors::mongo::client::start_mongo_connection;
 
 mod adaptors;
@@ -58,7 +61,7 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(check_collection_exists)
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
-            .service(lookup_data_point)
+            //.service(lookup_data_point)
             //.service(scroll_data)
             .service(get_collection_info)
             .service(get_storage_size),
@@ -76,6 +79,30 @@ async fn main() -> std::io::Result<()> {
 
     let message_queue_provider =
         MessageQueueProvider::from(global_data.message_queue_provider.clone());
+
+    let _vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
+        match global_data.vector_database.as_str() {
+            "qdrant" => {
+                let qdrant_host = dotenv::var("QDRANT_HOST").unwrap_or("".to_string());
+                let qdrant_uri = format!("{}:6334", qdrant_host);
+                let client = QdrantClient::from_url(qdrant_uri.as_str());
+                Arc::new(RwLock::new(client.build().unwrap()))
+            }
+            "pinecone" => {
+                let config = PineconeClientConfig {
+                    api_key: Some("INSERT_API_KEY".to_string()),
+                    control_plane_host: Some("INSERT_CONTROLLER_HOST".to_string()),
+                    ..Default::default()
+                };
+                let pinecone: PineconeClient = config.client().expect("Failed to create Pinecone");
+                Arc::new(RwLock::new(pinecone))
+            }
+            _ => panic!(
+                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
+         Got `{}`",
+                global_data.vector_database
+            ),
+        };
 
     // Instantiate client connections
     let qdrant_client = match instantiate_qdrant_client().await {

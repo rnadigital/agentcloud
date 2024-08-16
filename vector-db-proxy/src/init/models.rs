@@ -26,7 +26,8 @@ pub struct GlobalData {
     pub logging_level: String,
     pub message_queue_provider: String,
     pub unstructuredio_url: String,
-    pub unstructuredio_api_key: String
+    pub unstructuredio_api_key: String,
+    pub vector_database: String,
 }
 
 impl GlobalData {
@@ -43,7 +44,8 @@ impl GlobalData {
             rabbitmq_exchange: dotenv::var("RABBITMQ_EXCHANGE").unwrap_or("agentcloud".to_string()),
             rabbitmq_routing_key: dotenv::var("RABBITMQ_ROUTING_KEY").unwrap_or("key".to_string()),
             rabbitmq_username: dotenv::var("RABBITMQ_USERNAME").unwrap_or("agentcloud".to_string()),
-            rabbitmq_password: dotenv::var("RABBITMQ_PASSWORD").unwrap_or("alphanumeric123".to_string()),
+            rabbitmq_password: dotenv::var("RABBITMQ_PASSWORD")
+                .unwrap_or("alphanumeric123".to_string()),
             mongo_uri: dotenv::var("MONGO_URI").unwrap_or("mongodb://localhost:27017".to_string()),
             mongo_db_name: dotenv::var("MONGO_DB_NAME").unwrap_or("agentcloud".to_string()),
             qdrant_host: dotenv::var("QDRANT_HOST").unwrap_or("http://localhost".to_string()),
@@ -53,16 +55,20 @@ impl GlobalData {
             redis_host: dotenv::var("REDIS_HOST").unwrap_or("localhost".to_string()),
             redis_port: dotenv::var("REDIS_PORT").unwrap_or("6379".to_string()),
             thread_percentage_utilisation: dotenv::var("THREAD_PERCENTAGE_UTILISATION")
-                .unwrap_or("1".to_string()).parse().unwrap_or(0.8),
+                .unwrap_or("1".to_string())
+                .parse()
+                .unwrap_or(0.8),
             number_of_threads: available_parallelism()
                 .map(|t| t.get() as f64)
                 .unwrap_or(12.0),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
             logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
-            message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER").unwrap_or("rabbitmq".to_string()),
-            unstructuredio_url: dotenv::var("UNSTRUCTURED_API_URL").unwrap_or
-            ("http://localhost:8000/general/v0/general/".to_string()),
-            unstructuredio_api_key: dotenv::var("UNSTRUCTURED_API_KEY").unwrap_or(String::new())
+            message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER")
+                .unwrap_or("rabbitmq".to_string()),
+            unstructuredio_url: dotenv::var("UNSTRUCTURED_API_URL")
+                .unwrap_or("http://localhost:8000/general/v0/general/".to_string()),
+            unstructuredio_api_key: dotenv::var("UNSTRUCTURED_API_KEY").unwrap_or(String::new()),
+            vector_database: dotenv::var("VECTOR_DATABASE").unwrap_or("qdrant".to_string()),
         }
     }
 }

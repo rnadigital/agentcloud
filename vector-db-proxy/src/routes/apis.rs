@@ -306,49 +306,49 @@ pub async fn bulk_upsert_data_to_collection(
 ///
 /// ```
 ///
-/// ```
-#[wherr]
-#[get("/lookup-data-point/{collection_name}")]
-pub async fn lookup_data_point(
-    app_data: Data<Arc<RwLock<QdrantClient>>>,
-    Path(collection_name): Path<String>,
-    data: web::Json<SearchRequest>,
-) -> Result<impl Responder> {
-    let qdrant_conn = app_data.get_ref().clone();
-    let qdrant_conn_lock = qdrant_conn.read().await;
-    let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
-    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
-    let limit = data.limit.unwrap_or(3) as u64;
-    let search_result = qdrant_conn_lock
-        .search_points(&SearchPoints {
-            collection_name,
-            vector: vector.to_owned(),
-            filter: Some(Filter {
-                must,
-                must_not,
-                should,
-                ..Default::default()
-            }),
-            limit,
-            with_payload: Some(true.into()),
-            ..Default::default()
-        })
-        .await?;
-    let mut response_data: Vec<PointSearchResults> = vec![];
-    for result in &search_result.result {
-        let _ = response_data.push(PointSearchResults {
-            score: result.score,
-            payload: result.payload.to_owned(),
-        });
-    }
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::json())
-        .json(json!(ResponseBody {
-            status: Status::Success,
-            data: Some(json!(response_data)),
-            error_message: None
-        })))
-}
+///// ```
+//#[wherr]
+//#[get("/lookup-data-point/{collection_name}")]
+//pub async fn lookup_data_point(
+//    app_data: Data<Arc<RwLock<QdrantClient>>>,
+//    Path(collection_name): Path<String>,
+//    data: web::Json<SearchRequest>,
+//) -> Result<impl Responder> {
+//    let qdrant_conn = app_data.get_ref().clone();
+//    let qdrant_conn_lock = qdrant_conn.read().await;
+//    let vector = data.clone().vector.unwrap_or(vec![]).to_vec();
+//    let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&data.filters);
+//    let limit = data.limit.unwrap_or(3) as u64;
+//    let search_result = qdrant_conn_lock
+//        .search_points(&SearchPoints {
+//            collection_name,
+//            vector: vector.to_owned(),
+//            filter: Some(Filter {
+//                must,
+//                must_not,
+//                should,
+//                ..Default::default()
+//            }),
+//            limit,
+//            with_payload: Some(true.into()),
+//            ..Default::default()
+//        })
+//        .await?;
+//    let mut response_data: Vec<PointSearchResults> = vec![];
+//    for result in &search_result.result {
+//        let _ = response_data.push(PointSearchResults {
+//            score: result.score,
+//            payload: result.payload.to_owned(),
+//        });
+//    }
+//    Ok(HttpResponse::Ok()
+//        .content_type(ContentType::json())
+//        .json(json!(ResponseBody {
+//            status: Status::Success,
+//            data: Some(json!(response_data)),
+//            error_message: None
+//        })))
+//}
 
 /////
 /////

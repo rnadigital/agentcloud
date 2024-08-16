@@ -6,9 +6,9 @@ use crate::vector_dbs::models::{
 };
 use crate::vector_dbs::vector_database::VectorDatabase;
 use anyhow::anyhow;
+use async_trait::async_trait;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
-use google_cloud_gax::grpc::async_trait;
 use qdrant_client::prelude::point_id::PointIdOptions;
 use qdrant_client::prelude::{CreateCollection, PointStruct, QdrantClient, SearchPoints};
 use qdrant_client::qdrant::vectors_config::Config;
@@ -21,17 +21,10 @@ use std::time::Duration;
 
 #[async_trait]
 impl VectorDatabase for QdrantClient {
-    type Database = QdrantClient;
-    async fn connect(&self, uri: &str) -> Self {
-        let client = QdrantClient::from_url(uri);
-        client.build().unwrap()
-    }
+    //type Database = QdrantClient;
 
-    async fn get_list_of_collections(
-        &self,
-        client: &Self,
-    ) -> Result<Vec<String>, VectorDatabaseError> {
-        let results = client.list_collections().await?;
+    async fn get_list_of_collections(&self) -> Result<Vec<String>, VectorDatabaseError> {
+        let results = &self.list_collections().await?;
         let list_of_collection: Vec<String> = results
             .collections
             .iter()
@@ -42,11 +35,10 @@ impl VectorDatabase for QdrantClient {
 
     async fn check_collection_exists(
         &self,
-        client: &Self,
         search_request: SearchRequest,
     ) -> Result<CollectionsResult, VectorDatabaseError> {
         let collection_id = search_request.collection;
-        match client.collection_exists(collection_id.clone()).await {
+        match self.collection_exists(collection_id.clone()).await {
             Ok(collection_exists) => match collection_exists {
                 true => Ok(CollectionsResult {
                     status: VectorDatabaseStatus::Ok,
@@ -65,7 +57,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn create_collection(
         &self,
-        client: &Self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
@@ -100,7 +91,7 @@ impl VectorDatabase for QdrantClient {
                 });
             }
         }
-        match client
+        match self
             .create_collection(&CreateCollection {
                 collection_name: collection_create.collection_name,
                 vectors_config: config,
@@ -118,14 +109,14 @@ impl VectorDatabase for QdrantClient {
 
     async fn delete_collection(
         &self,
-        client: &Self,
+
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let collection_id = search_request.collection.clone();
-        match self.check_collection_exists(&client, search_request).await {
+        match self.check_collection_exists(search_request).await {
             Ok(collection_result) => match collection_result.status {
                 VectorDatabaseStatus::Ok => {
-                    if let Ok(response) = client.delete_collection(collection_id).await {
+                    if let Ok(response) = &self.delete_collection(collection_id).await {
                         match response.result {
                             true => Ok(VectorDatabaseStatus::Ok),
                             _ => Ok(VectorDatabaseStatus::Failure),
@@ -146,7 +137,7 @@ impl VectorDatabase for QdrantClient {
 
     async fn insert_point(
         &self,
-        client: &Self,
+
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
@@ -165,7 +156,7 @@ impl VectorDatabase for QdrantClient {
         {
             let _ = async {
                 loop {
-                    match client
+                    match self
                         .upsert_points_batch_blocking(
                             collection_id.clone(),
                             None,
@@ -204,7 +195,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn bulk_insert_points(
         &self,
-        client: &Self,
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
@@ -228,7 +218,7 @@ impl VectorDatabase for QdrantClient {
         }
         let retry_result = async {
             loop {
-                match client
+                match self
                     .upsert_points_batch_blocking(
                         collection_id.clone(),
                         None,
@@ -269,12 +259,11 @@ impl VectorDatabase for QdrantClient {
 
     async fn get_collection_info(
         &self,
-        client: &Self,
         search_request: SearchRequest,
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
         let collection_id = search_request.collection;
         let collection_id_clone = collection_id.clone();
-        match client.collection_info(collection_id).await {
+        match self.collection_info(collection_id).await {
             Ok(info_results) => {
                 if let Some(info) = info_results.result {
                     let collection_info = CollectionMetadata {
@@ -298,12 +287,11 @@ impl VectorDatabase for QdrantClient {
     }
     async fn get_storage_size(
         &self,
-        client: &Self,
         search_request: SearchRequest,
         vector_length: usize,
     ) -> Result<Option<StorageSize>, VectorDatabaseError> {
         let collection_id = search_request.clone().collection;
-        if let Ok(collection_info) = &self.get_collection_info(&client, search_request).await {
+        if let Ok(collection_info) = &self.get_collection_info(search_request).await {
             if let Some(info) = collection_info {
                 if let Some(number_of_vectors) = info.points_count {
                     let size = (number_of_vectors as usize * vector_length * 4) as f64 * 1.15;
@@ -327,7 +315,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn scroll_points(
         &self,
-        client: &Self,
         search_request: SearchRequest,
     ) -> Result<Vec<ScrollResults>, VectorDatabaseError> {
         let collection_id = search_request.collection;
@@ -355,7 +342,7 @@ impl VectorDatabase for QdrantClient {
                 // Depending on whether the client provides a limit we update the scroll point limit
                 if get_all_pages {
                     loop {
-                        let (result, offset) = get_next_page(client, &scroll_points).await?;
+                        let (result, offset) = get_next_page(&self, &scroll_points).await?;
                         let res = get_scroll_results(result)?;
                         response.extend(res);
                         if offset == "Done" {
@@ -366,7 +353,7 @@ impl VectorDatabase for QdrantClient {
                         });
                     }
                 } else {
-                    let result = client.scroll(&scroll_points).await?;
+                    let result = self.scroll(&scroll_points).await?;
                     response.extend(get_scroll_results(result)?);
                 }
             }
@@ -375,7 +362,6 @@ impl VectorDatabase for QdrantClient {
     }
     async fn similarity_search(
         &self,
-        client: Self,
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
         let collection_id = search_request.collection;
@@ -388,7 +374,7 @@ impl VectorDatabase for QdrantClient {
             ) = convert_hashmap_to_qdrant_filters(&Some(filters));
         }
         let mut response_data: Vec<SearchResult> = vec![];
-        let search_result = client
+        let search_result = &self
             .search_points(&SearchPoints {
                 collection_name: collection_id.clone(),
                 vector: search_request.vector.unwrap_or_default().to_owned(),
