@@ -104,11 +104,13 @@ async fn main() -> std::io::Result<()> {
 
     let mongo_connection = start_mongo_connection().await.unwrap();
     // Create Arcs to allow sending across threads
-    let app_vector_database_client = Arc::new(RwLock::new(vector_database_client));
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
 
     // Clones for senders
-    let qdrant_connection_for_streaming = Arc::clone(&app_vector_database_client);
+    let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =
+        vector_database_client.clone();
+    // Assuming
+    // qdrant_client implements VectorDatabase
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
@@ -122,7 +124,7 @@ async fn main() -> std::io::Result<()> {
         let _ = connection
             .consume(
                 connection.clone(),
-                qdrant_connection_for_streaming,
+                vector_database_for_streaming,
                 mongo_client_for_streaming,
                 sender_clone,
             )

@@ -14,7 +14,7 @@ use uuid::Uuid;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
 use crate::hash_map_values_as_serde_values;
-use crate::vector_dbs::models::{ScrollResults, VectorDatabaseStatus};
+use crate::vector_dbs::models::{Point, ScrollResults, VectorDatabaseStatus};
 
 ///
 ///
@@ -89,70 +89,6 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
         response.push(res);
     }
     Ok(response)
-}
-
-///
-///
-/// # Arguments
-///
-/// * `row`:
-///
-/// returns: Result<PointStruct, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
-pub async fn embed_payload(
-    mongo_conn: Arc<RwLock<Database>>,
-    data: &HashMap<String, String>,
-    embedding_field_name: &String,
-    datasource_id: Option<String>,
-    embedding_model: EmbeddingModels,
-) -> Result<PointStruct, anyhow::Error> {
-    if !data.is_empty() {
-        if let Some(_id) = datasource_id {
-            let mut payload: HashMap<String, serde_json::Value> =
-                hash_map_values_as_serde_values!(data);
-            // todo: this is too opinionated. this should happen outside of this function so that
-            // Convert embedding_field_name to lowercase
-            if let Some(value) = payload.remove(embedding_field_name) {
-                //Renaming the embedding field to page_content
-                payload.insert("page_content".to_string(), value.clone());
-                if let Ok(metadata) = json!(payload).try_into() {
-                    // Embedding data
-                    let embedding_vec =
-                        embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model)
-                            .await?;
-                    // Construct PointStruct to insert into DB
-                    // todo: need to break this out so that this happens in a different method so we can re-use this for files
-                    if !embedding_vec.is_empty() {
-                        if let Some(embedding) = embedding_vec.into_iter().next() {
-                            let point = PointStruct::new(
-                                Uuid::new_v4().to_string(),
-                                HashMap::from([(
-                                    String::from(embedding_model.to_str().unwrap()),
-                                    embedding.to_owned(),
-                                )]),
-                                metadata,
-                            );
-                            return Ok(point);
-                        }
-                    }
-                } else {
-                    return Err(anyhow!(
-                        "Could not convert payload to JSON type. Aborting embedding!"
-                    ));
-                }
-            }
-        } else {
-            return Err(anyhow!(
-                "Could not find an stream ID for this payload. Aborting embedding!"
-            ));
-        }
-    }
-    Err(anyhow!("Row is empty"))
 }
 
 pub async fn construct_point_struct(

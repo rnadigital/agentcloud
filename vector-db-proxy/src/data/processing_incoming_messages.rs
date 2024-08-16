@@ -1,15 +1,52 @@
+use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
+use crate::embeddings::models::EmbeddingModels;
+use crate::embeddings::utils::embed_text;
+use crate::utils::conversions::convert_serde_value_to_hashmap_string;
+use crate::vector_dbs::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
+use crate::vector_dbs::vector_database::VectorDatabase;
+use anyhow::anyhow;
 use crossbeam::channel::Receiver;
 use mongodb::Database;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use uuid::Uuid;
 
-use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
-use crate::adaptors::qdrant::helpers::embed_payload;
-use crate::embeddings::models::EmbeddingModels;
-use crate::utils::conversions::convert_serde_value_to_hashmap_string;
-use crate::vector_dbs::vector_database::VectorDatabase;
+pub async fn embed_text_construct_point(
+    mongo_conn: Arc<RwLock<Database>>,
+    data: &HashMap<String, String>,
+    embedding_field_name: &String,
+    datasource_id: Option<String>,
+    embedding_model: EmbeddingModels,
+) -> anyhow::Result<Point, anyhow::Error> {
+    if !data.is_empty() {
+        if let Some(_id) = datasource_id {
+            // Convert embedding_field_name to lowercase
+            let mut payload = data.clone();
+            if let Some(value) = payload.remove(embedding_field_name) {
+                //Renaming the embedding field to page_content
+                payload.insert("page_content".to_string(), value.clone());
+                // Embedding data
+                let embedding_vec =
+                    embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
+                // Construct a Point to insert into the vector DB
+                if !embedding_vec.is_empty() {
+                    if let Some(vector) = embedding_vec.into_iter().next() {
+                        let point =
+                            Point::new(Some(Uuid::new_v4().to_string()), vector, Some(payload));
+                        return Ok(point);
+                    }
+                }
+            }
+        } else {
+            return Err(anyhow!(
+                "Could not find an stream ID for this payload. Aborting embedding!"
+            ));
+        }
+    }
+    Err(anyhow!("Row is empty"))
+}
 
 async fn handle_embedding(
     mongo_connection: Arc<RwLock<Database>>,
@@ -27,7 +64,8 @@ async fn handle_embedding(
     let mut field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
     let vector_database_client_connection = vector_database_clone.read().await;
-    match embed_payload(
+    let search_request = SearchRequest::new(SearchType::Collection, datasource_id_clone_2.clone());
+    match embed_text_construct_point(
         mongo_connection.clone(),
         &metadata,
         &embedding_field_name,
@@ -36,18 +74,18 @@ async fn handle_embedding(
     )
     .await
     {
-        Ok(point_struct) => match vector_database_client_connection
-            .insert_point(point_struct)
+        Ok(point) => match vector_database_client_connection
+            .insert_point(search_request, point)
             .await
         {
             Ok(result) => match result {
-                true => {
+                VectorDatabaseStatus::Ok => {
                     field_path = "recordCount.success";
                     increment_by_one(&mongo, &datasource_id_clone_2, field_path)
                         .await
                         .unwrap();
                 }
-                false => {
+                _ => {
                     log::warn!("An error occurred while inserting into vector database");
                     increment_by_one(&mongo, &datasource_id_clone_2, field_path)
                         .await

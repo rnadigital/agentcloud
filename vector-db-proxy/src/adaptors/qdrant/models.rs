@@ -41,7 +41,7 @@ impl From<&ScrollResults> for SearchResult {
             .iter()
             .map(|(k, v)| (k.clone(), v.to_string()))
             .collect();
-        let vector = value.clone().vector.to_owned();
+        let vector = value.vector.to_owned();
         SearchResult {
             score: None,
             payload: Some(payload),

@@ -16,7 +16,34 @@ pub enum VectorDatabaseError {
     Other(String),
 }
 
-#[derive(Debug)]
+impl Clone for VectorDatabaseError {
+    fn clone(&self) -> Self {
+        match self {
+            VectorDatabaseError::AnyhowError(e) => {
+                VectorDatabaseError::Other(e.to_string()) // Convert anyhow::Error to String
+            }
+            VectorDatabaseError::Other(msg) => VectorDatabaseError::Other(msg.clone()),
+        }
+    }
+}
+
+impl Serialize for VectorDatabaseError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            VectorDatabaseError::AnyhowError(err) => {
+                serializer.serialize_str(&format!("An error occurred: {}", err))
+            }
+            VectorDatabaseError::Other(msg) => {
+                serializer.serialize_str(&format!("An error occurred. {}", msg))
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub enum VectorDatabaseStatus {
     Ok,
     Failure,
@@ -27,12 +54,25 @@ pub enum CreateDisposition {
     CreateIfNeeded,
     CreateNever,
 }
-
+#[derive(Clone, Deserialize)]
 pub struct Point {
-    pub status: VectorDatabaseStatus,
-    pub index: String,
+    pub index: Option<String>,
     pub vector: Vec<f32>,
     pub payload: Option<HashMap<String, String>>,
+}
+
+impl Point {
+    pub fn new(
+        index: Option<String>,
+        vector: Vec<f32>,
+        payload: Option<HashMap<String, String>>,
+    ) -> Self {
+        Point {
+            index,
+            vector,
+            payload,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -49,7 +89,7 @@ pub struct CollectionsResult {
     pub collection_metadata: Option<CollectionMetadata>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct CollectionMetadata {
     pub status: VectorDatabaseStatus,
     pub indexed_vectors_count: Option<u64>,
@@ -57,7 +97,7 @@ pub struct CollectionMetadata {
     pub points_count: Option<u64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ScrollResults {
     pub status: VectorDatabaseStatus,
     pub id: String,
@@ -71,7 +111,7 @@ pub enum HashMapValues {
     Str(String),
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, Deserialize)]
 pub struct FilterConditions {
     pub must: Option<Vec<HashMap<String, String>>>,
     pub must_not: Option<Vec<HashMap<String, String>>>,
@@ -88,7 +128,7 @@ impl Default for FilterConditions {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchResponseParams {
     pub include_vectors: Option<bool>,
     pub include_payload: Option<bool>,
@@ -97,14 +137,14 @@ pub struct SearchResponseParams {
 }
 
 // This will dictate the type of search that is conducted
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SearchType {
     Collection,
     Point,
     Similarity,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchRequest {
     pub search_type: SearchType,
     pub collection: String,
@@ -115,7 +155,20 @@ pub struct SearchRequest {
     pub search_response_params: Option<SearchResponseParams>,
 }
 
-#[derive(Debug)]
+impl SearchRequest {
+    pub fn new(search_type: SearchType, collection: String) -> Self {
+        Self {
+            search_type,
+            collection,
+            id: None,
+            vector: None,
+            filters: None,
+            search_response_params: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct StorageSize {
     pub status: VectorDatabaseStatus,
     pub collection_name: String,

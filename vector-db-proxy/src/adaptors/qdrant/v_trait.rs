@@ -21,8 +21,6 @@ use std::time::Duration;
 
 #[async_trait]
 impl VectorDatabase for QdrantClient {
-    //type Database = QdrantClient;
-
     async fn get_list_of_collections(&self) -> Result<Vec<String>, VectorDatabaseError> {
         let results = &self.list_collections().await?;
         let list_of_collection: Vec<String> = results
