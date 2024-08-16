@@ -1,23 +1,21 @@
 import * as API from '@api';
-import { StopIcon } from '@heroicons/react/24/outline';
 import { Message } from 'components/chat/message';
-import classNames from 'components/ClassNames';
 import ConversationStarters from 'components/ConversationStarters';
+import StructuredInputForm from 'components/session/HumanInputForm';
 import SessionChatbox from 'components/SessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
 import debug from 'debug';
+import useActiveTask from 'hooks/session/useActiveTask';
 import Head from 'next/head';
+import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
-import { SessionStatus } from 'struct/session';
-const log = debug('webapp:socket');
-import AgentAvatar from 'components/AgentAvatar';
-import useActiveTask from 'hooks/session/useActiveTask';
-import { usePathname } from 'next/navigation';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
+import { SessionStatus } from 'struct/session';
+const log = debug('webapp:socket');
 
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
@@ -46,6 +44,7 @@ export default function Session(props) {
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	const activeTask = useActiveTask(messages);
+	const requiredHumanInput = activeTask?.requiresHumanInput;
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -355,6 +354,12 @@ export default function Session(props) {
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						</div>
 					)}
+					{requiredHumanInput &&
+						!chatBusyState &&
+						!loading &&
+						activeTask?.formFields?.length > 0 && (
+							<StructuredInputForm formFields={activeTask?.formFields} sendMessage={sendMessage} />
+						)}
 
 					<div ref={bottomRef} />
 				</div>
@@ -375,7 +380,7 @@ export default function Session(props) {
 									</div>
 								)}
 
-							<div className='flex items-start space-x-4'>
+							{!requiredHumanInput && (
 								<div className='min-w-0 flex-1 h-full'>
 									{messages ? (
 										terminated ? (
@@ -409,7 +414,7 @@ export default function Session(props) {
 										</ContentLoader>
 									)}
 								</div>
-							</div>
+							)}
 						</div>
 					</div>
 				</div>
