@@ -28,11 +28,8 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 	};
 
 	return (
-		<form
-			onSubmit={handleSubmit(onSubmit)}
-			className='bg-orange-300 grid grid-cols-1 xl:grid-cols-5 pb-2 gap-2'
-		>
-			{formFields.map(field => {
+		<form onSubmit={handleSubmit(onSubmit)} className='grid grid-cols-1 xl:grid-cols-5 pb-2 px-2'>
+			{formFields.map((field, index) => {
 				switch (field.type) {
 					case 'string':
 					case 'number':
@@ -43,7 +40,10 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 
 								<div
 									key={field.name}
-									className='flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
+									className={cn(
+										index === 0 && 'rounded-t-lg',
+										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 bg-orange-300'
+									)}
 								>
 									<label>{field.label}</label>
 									<input
@@ -62,7 +62,10 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 								<div className='invisible xl:visible col-span-1'></div>
 								<div
 									key={field.name}
-									className='flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
+									className={cn(
+										index === 0 && 'rounded-t-lg',
+										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 bg-orange-300'
+									)}
 								>
 									<label>{field.label}</label>
 									<Controller
@@ -98,7 +101,10 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 								<div className='invisible xl:visible col-span-1'></div>
 								<div
 									key={field.name}
-									className='flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
+									className={cn(
+										index === 0 && 'rounded-t-lg',
+										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 bg-orange-300'
+									)}
 								>
 									<label>{field.label}</label>
 									<Controller
@@ -112,14 +118,15 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 														key={option}
 														className={cn(
 															'px-2 py-1 rounded-full cursor-pointer',
-															value.includes(option)
+															value?.includes(option)
 																? 'chip-selected bg-blue-500 text-white'
 																: 'bg-gray-200 text-black'
 														)}
 														onClick={() => {
-															const newValue = value.includes(option)
-																? value.filter(v => v !== option)
-																: [...value, option];
+															const newValue =
+																Array.isArray(value) && value.includes(option)
+																	? value.filter(v => v !== option)
+																	: [...(Array.isArray(value) ? value : []), option];
 															onChange(newValue);
 														}}
 													>
@@ -141,7 +148,10 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 
 								<div
 									key={field.name}
-									className='flex ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 flex-col'
+									className={cn(
+										index === 0 && 'rounded-t-lg',
+										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 bg-orange-300'
+									)}
 								>
 									<label>{field.label}</label>
 									<select
@@ -165,9 +175,11 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 			})}
 
 			<div className='invisible xl:visible col-span-1'></div>
-			<button type='submit' className='bg-blue-700 text-white px-4 py-2 rounded-lg'>
-				Submit
-			</button>
+			<div className='flex flex-col ps-2 px-4 pt-1 col-span-1 xl:col-span-3 bg-orange-300 rounded-b-lg justify-center items-center'>
+				<button type='submit' className='bg-blue-700 text-white px-4 py-2 rounded-lg my-2 min-w-60'>
+					Submit
+				</button>
+			</div>
 			<div className='invisible xl:visible col-span-1'></div>
 		</form>
 	);
