@@ -1,6 +1,6 @@
 import cn from 'lib/cn';
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Task } from 'struct/task';
 
 interface HumanInputFormProps {
@@ -11,7 +11,8 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 	const {
 		register,
 		handleSubmit,
-		formState: { errors }
+		formState: { errors },
+		control
 	} = useForm();
 	const onSubmit = data => {
 		const statement = formFields
@@ -56,6 +57,41 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 							</>
 						);
 					case 'radio':
+						return (
+							<>
+								<div className='invisible xl:visible col-span-1'></div>
+								<div
+									key={field.name}
+									className='flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
+								>
+									<label>{field.label}</label>
+									<Controller
+										name={field.name}
+										control={control}
+										rules={{ required: field.required }}
+										render={({ field: { onChange, value } }) => (
+											<div className='flex flex-wrap gap-2'>
+												{field.options?.map(option => (
+													<div
+														key={option}
+														className={cn(
+															'px-2 py-1 rounded-full cursor-pointer',
+															value === option
+																? 'chip-selected bg-blue-500 text-white'
+																: 'bg-gray-200 text-black'
+														)}
+														onClick={() => onChange(option)}
+													>
+														{option}
+													</div>
+												))}
+											</div>
+										)}
+									/>
+								</div>
+								<div className='invisible xl:visible col-span-1'></div>
+							</>
+						);
 					case 'checkbox':
 						return (
 							<>
@@ -65,17 +101,34 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									className='flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
 								>
 									<label>{field.label}</label>
-									{field.options?.map(option => (
-										<div key={option}>
-											<input
-												type={field.type}
-												value={option}
-												{...register(field.name, { required: field.required })}
-												className={cn(errors[field.name] && 'border-red-500 border-2')}
-											/>
-											<label className='ml-2'>{option}</label>
-										</div>
-									))}
+									<Controller
+										name={field.name}
+										control={control}
+										rules={{ required: field.required }}
+										render={({ field: { onChange, value } }) => (
+											<div className='flex flex-wrap gap-2'>
+												{field.options?.map(option => (
+													<div
+														key={option}
+														className={cn(
+															'px-2 py-1 rounded-full cursor-pointer',
+															value.includes(option)
+																? 'chip-selected bg-blue-500 text-white'
+																: 'bg-gray-200 text-black'
+														)}
+														onClick={() => {
+															const newValue = value.includes(option)
+																? value.filter(v => v !== option)
+																: [...value, option];
+															onChange(newValue);
+														}}
+													>
+														{option}
+													</div>
+												))}
+											</div>
+										)}
+									/>
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
 							</>
