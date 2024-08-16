@@ -81,7 +81,7 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 			<div
 				ref={ref}
 				key={id}
-				className='bg-white dark:bg-slate-800 flex flex-col gap-2 p-2 rounded-md'
+				className='bg-white dark:bg-slate-800 flex flex-col gap-2 p-2 rounded-md text-sm'
 				style={style}
 			>
 				<div className='cursor-grab flex justify-center p-1 dark:bg-gray-800' {...props}>
@@ -123,17 +123,8 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 					name='label'
 					value={formConfig?.label}
 					onChange={handleChange}
-					placeholder='Untitled Question'
+					placeholder='Your question here'
 					required={formConfig?.required}
-					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-				/>
-
-				<input
-					type='text'
-					name='description'
-					value={formConfig?.description}
-					onChange={handleChange}
-					placeholder='Description'
 					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 				/>
 
@@ -228,12 +219,14 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 						</>
 					)}
 					<hr className='border-gray-200 dark:border-slate-400 w-full' />
-					<div className='flex w-full gap-2 justify-end items-center my-2'>
+					<div className='flex w-full gap-3 justify-end items-center my-2'>
 						<TrashIcon
-							className='h-5 w-5 text-gray-400 dark:text-white cursor-pointer'
+							className='h-4 w-4 text-gray-400 dark:text-white cursor-pointer'
 							onClick={() => deleteItem(id)}
 						/>
-						<div className='inline text-gray-900 dark:text-gray-50'>Required</div>
+						<div className='border-l border-gray-500  inline text-gray-900 dark:text-gray-50 pl-2'>
+							Required
+						</div>
 						<Switch
 							checked={formConfig?.required}
 							onChange={handleChange}
