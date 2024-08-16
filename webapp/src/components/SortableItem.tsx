@@ -16,6 +16,8 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 	({ id, config, style, editItem, deleteItem, ...props }, ref) => {
 		const [formConfig, setFormConfig] = useState<Partial<FormFieldConfig>>(config);
 
+		const [newOptionIndex, setNewOptionIndex] = useState<number>();
+
 		const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | boolean) => {
 			const isChecked = typeof e === 'boolean';
 			const { name, value, type } = isChecked
@@ -68,6 +70,12 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 				}));
 			}
 		}, [formConfig?.type]);
+
+		useEffect(() => {
+			if (newOptionIndex !== null) {
+				document.getElementById(`${formConfig.name}-option-${newOptionIndex}`)?.focus();
+			}
+		}, [newOptionIndex]);
 
 		return (
 			<div
@@ -162,6 +170,7 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 										type='text'
 										name={`option-${index}-value`}
 										value={option}
+										id={`${formConfig.name}-option-${index}`}
 										onChange={e => {
 											const newOptions = [...formConfig?.options!];
 											newOptions[index] = e.target.value;
@@ -184,6 +193,7 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 														options: newOptions
 													};
 													editItem(id, newConfig as FormFieldConfig);
+													setNewOptionIndex(newOptions.length - 1);
 													return newConfig;
 												});
 											}
