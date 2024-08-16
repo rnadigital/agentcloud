@@ -202,9 +202,25 @@ async function updateWebhookUrls(workspaceId: string) {
 				sendOnSuccess: {
 					notificationType: ['slack'],
 					slackConfiguration: {
-						//Note: WEBAPP_WEBHOOK_URL for development
-						webhook:
-							process.env.WEBAPP_WEBHOOK_URL || `${process.env.URL_APP}/webhook/sync-successful`
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-successful`
+					}
+				},
+				sendOnBreakingChangeSyncsDisabled: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeSyncsDisabled`
+					}
+				},
+				sendOnBreakingChangeWarning: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeWarning`
+					}
+				},
+				sendOnFailure: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnFailure`
 					}
 				}
 			}
