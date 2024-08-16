@@ -159,7 +159,8 @@ export async function addTaskApi(req, res, next) {
 		asyncExecution,
 		agentId,
 		iconId,
-		context
+		context,
+		formFields
 	} = req.body;
 
 	if (toolIds) {
@@ -196,7 +197,8 @@ export async function addTaskApi(req, res, next) {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
-			: null
+			: null,
+		formFields: formFields
 	});
 
 	return dynamicResponse(req, res, 302, {
@@ -257,7 +259,8 @@ export async function editTaskApi(req, res, next) {
 		toolIds,
 		asyncExecution,
 		agentId,
-		context
+		context,
+		formFields
 	} = req.body;
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
@@ -284,7 +287,8 @@ export async function editTaskApi(req, res, next) {
 		context: context ? context.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
-		agentId: toObjectId(agentId)
+		agentId: toObjectId(agentId),
+		formFields: formFields
 	});
 
 	return dynamicResponse(req, res, 302, {
