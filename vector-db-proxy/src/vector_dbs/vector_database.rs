@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use pinecone_sdk::pinecone::{PineconeClient, PineconeClientConfig};
+use pinecone_sdk::pinecone::PineconeClient;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -17,29 +17,6 @@ impl Clone for VectorDatabases {
             VectorDatabases::Qdrant(client) => VectorDatabases::Qdrant(Arc::clone(client)),
             VectorDatabases::Pinecone(client) => VectorDatabases::Pinecone(Arc::clone(client)),
             VectorDatabases::Unknown => VectorDatabases::Unknown,
-        }
-    }
-}
-
-impl From<String> for VectorDatabases {
-    fn from(value: String) -> Self {
-        match value.as_str() {
-            "qdrant" => {
-                let qdrant_host = dotenv::var("QDRANT_HOST").unwrap_or("".to_string());
-                let qdrant_uri = format!("{}:6334", qdrant_host);
-                let client = QdrantClient::from_url(qdrant_uri.as_str());
-                VectorDatabases::Qdrant(Arc::new(RwLock::new(client.build().unwrap())))
-            }
-            "pinecone" => {
-                let config = PineconeClientConfig {
-                    api_key: Some("INSERT_API_KEY".to_string()),
-                    control_plane_host: Some("INSERT_CONTROLLER_HOST".to_string()),
-                    ..Default::default()
-                };
-                let pinecone: PineconeClient = config.client().expect("Failed to create Pinecone");
-                VectorDatabases::Pinecone(Arc::new(RwLock::new(pinecone)))
-            }
-            _ => VectorDatabases::Unknown,
         }
     }
 }

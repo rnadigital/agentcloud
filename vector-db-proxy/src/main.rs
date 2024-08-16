@@ -81,8 +81,7 @@ async fn main() -> std::io::Result<()> {
     let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
         match global_data.vector_database.as_str() {
             "qdrant" => {
-                let qdrant_host = dotenv::var("QDRANT_HOST").unwrap_or("".to_string());
-                let qdrant_uri = format!("{}:6334", qdrant_host);
+                let qdrant_uri = format!("{}:{}", global_data.qdrant_host, global_data.qdrant_port);
                 let client = QdrantClient::from_url(qdrant_uri.as_str());
                 Arc::new(RwLock::new(client.build().unwrap()))
             }
