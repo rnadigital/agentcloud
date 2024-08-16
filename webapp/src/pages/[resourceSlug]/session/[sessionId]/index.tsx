@@ -1,7 +1,7 @@
 import * as API from '@api';
 import { Message } from 'components/chat/message';
 import ConversationStarters from 'components/ConversationStarters';
-import StructuredInputForm from 'components/session/HumanInputForm';
+import StructuredInputForm from 'components/session/StructuredInputForm';
 import SessionChatbox from 'components/SessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';

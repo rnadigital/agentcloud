@@ -1,3 +1,4 @@
+import cn from 'lib/cn';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Task } from 'struct/task';
@@ -7,7 +8,11 @@ interface HumanInputFormProps {
 	sendMessage: (e: any, reset: any) => void;
 }
 const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) => {
-	const { register, handleSubmit } = useForm();
+	const {
+		register,
+		handleSubmit,
+		formState: { errors }
+	} = useForm();
 	const onSubmit = data => {
 		const statement = formFields
 			.map(field => {
@@ -44,6 +49,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 										placeholder={field.description}
 										type={field.type === 'string' ? 'text' : field.type}
 										{...register(field.name, { required: field.required })}
+										className={cn(errors[field.name] && 'border-red-500 border-2')}
 									/>
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
@@ -65,6 +71,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 												type={field.type}
 												value={option}
 												{...register(field.name, { required: field.required })}
+												className={cn(errors[field.name] && 'border-red-500 border-2')}
 											/>
 											<label className='ml-2'>{option}</label>
 										</div>
@@ -87,6 +94,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									<select
 										{...register(field.name, { required: field.required })}
 										multiple={field.type === 'multiselect'}
+										className={cn(errors[field.name] && 'border-red-500 border-2')}
 									>
 										{field.options?.map(option => (
 											<option key={option} value={option}>
