@@ -9,6 +9,7 @@ import * as dns from 'node:dns';
 import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
+import { getAirbyteAuthToken } from 'airbyte/api';
 import { parse } from 'ip6addr';
 import SecretProviderFactory from 'lib/secret';
 
@@ -64,7 +65,7 @@ async function skipSetupScreen() {
 async function fetchWorkspaces() {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/workspaces`, {
 		method: 'GET',
-		headers: { Authorization: authorizationHeader }
+		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
 	});
 	return response.json();
 }
@@ -77,7 +78,7 @@ async function fetchDestinationList(workspaceId: string) {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: authorizationHeader
+				Authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
 	);
@@ -87,11 +88,11 @@ async function fetchDestinationList(workspaceId: string) {
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: string) {
 	const destinationConfiguration = await getDestinationConfiguration(provider);
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/create`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			Authorization: authorizationHeader
+			Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		},
 		body: JSON.stringify({
 			name: provider === 'rabbitmq' ? 'RabbitMQ' : 'Google Pub/Sub',
@@ -119,20 +120,20 @@ async function deleteDestination(destinationId: string) {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
-		let host: any = process.env.RABBITMQ_HOST || '0.0.0.0';
+		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || '0.0.0.0';
 		try {
 			//Note: just parsing to see if it throws, we don't need to actually know the ip kind
 			const ipParsed = parse(host);
 			const ipKind = ipParsed.kind();
 		} catch (e) {
-			host = (await lookup(host, { family: 4 }))?.address;
-			if (!host) {
-				log(
-					'Error getting host in getDestinationConfiguration host: %s, process.env.RABBITMQ_HOST: %s',
-					host,
-					process.env.RABBITMQ_HOST
-				);
-			}
+			// host = (await lookup(host, { family: 4 }))?.address;
+			// if (!host) {
+			// 	log(
+			// 		'Error getting host in getDestinationConfiguration host: %s, process.env.AIRBYTE_RABBITMQ_HOST: %s',
+			// 		host,
+			// 		process.env.AIRBYTE_RABBITMQ_HOST
+			// 	);
+			// }
 		}
 		log('getDestinationConfiguration host %s', host);
 		return {
@@ -234,8 +235,16 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
+		log(
+			'airbyte creds, %s, %s',
+			process.env.AIRBYTE_USERNAME.trim(),
+			process.env.AIRBYTE_PASSWORD.trim()
+		);
+
 		// Get instance configuration
 		const instanceConfiguration = await fetchInstanceConfiguration();
+		log('instanceConfiguration', instanceConfiguration);
+
 		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
 
 		log('INITIAL_SETUP_COMPLETE', initialSetupComplete);
@@ -247,6 +256,7 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
+		log('workspacesList: %s', workspacesList);
 		log('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 

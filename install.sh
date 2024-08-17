@@ -142,13 +142,13 @@ fi
 #AIRBYTE_TARGET_VERSION="v0.63.17"
 
 # Define the chart version to use
-ABCTL_CHART_VERSION="0.442.3"
+ABCTL_CHART_VERSION="0.445.3"
 
 # Process the output: remove color codes, remove first 10 characters, and parse with jq to get password
-ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null)
-export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | tail -n 5 | sed -r 's/\x1B\[[0-9;]*[mK]//g' | sed 's/^.\{10\}//' | jq -r '.password')
-export AIRBYTE_USERNAME=`kubectl exec --kubeconfig ~/.airbyte/abctl/abctl.kubeconfig --namespace airbyte-abctl -it airbyte-db-0 -- psql -U airbyte -d db-airbyte -t -A -c 'SELECT "email" FROM "user"'`
-echo $AIRBYTE_USERNAME
+ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null | tail -n 5 | sed -r 's/\x1B\[[0-9;]*[mK]//g' | sed 's/^.\{10\}//')
+export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | jq -r '.password')
+export AIRBYTE_CLIENT_ID=$(echo "$ABCTL_CREDENTIALS" | jq -r '.["client-id"]')
+export AIRBYTE_CLIENT_SECRET=$(echo "$ABCTL_CREDENTIALS" | jq -r '.["client-secret"]')
 echo $AIRBYTE_PASSWORD
 
 # Check if the 'password' field is present
@@ -159,6 +159,12 @@ else
 	echo "'password' field found. Running 'abctl local status'..."
 	abctl local status
 fi
+
+curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST -H 'content-type: application/json' \
+--data-raw '{"email":"example@example.org","anonymousDataCollection":true,"securityCheck":"skipped","organizationName":"example-org","initialSetupComplete":true,"displaySetupWizard":false}'
+
+export AIRBYTE_USERNAME=`kubectl exec --kubeconfig ~/.airbyte/abctl/abctl.kubeconfig --namespace airbyte-abctl -it airbyte-db-0 -- psql -U airbyte -d db-airbyte -t -A -c 'SELECT "email" FROM "user"'`
+echo $AIRBYTE_USERNAME
 
 # sleep 0.1
 # print_logo
