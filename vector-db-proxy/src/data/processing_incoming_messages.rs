@@ -2,8 +2,8 @@ use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
-use crate::vector_dbs::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
+use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
 use crossbeam::channel::Receiver;
 use mongodb::Database;

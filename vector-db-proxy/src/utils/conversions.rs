@@ -1,4 +1,4 @@
-use crate::vector_dbs::models::FilterConditions;
+use crate::vector_databases::models::FilterConditions;
 use qdrant_client::qdrant::Condition;
 use serde_json::{Map, Value};
 use std::collections::HashMap;

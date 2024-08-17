@@ -27,7 +27,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::{get_storage_size, scroll_data};
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::VectorDatabase;
 use adaptors::mongo::client::start_mongo_connection;
 
 mod adaptors;
@@ -38,7 +38,7 @@ mod init;
 mod messages;
 mod routes;
 mod utils;
-mod vector_dbs;
+mod vector_databases;
 
 pub fn init(config: &mut web::ServiceConfig) {
     // let webapp_url =

@@ -1,4 +1,3 @@
-mod client;
-mod models;
 mod apis;
+mod client;
 mod helpers;

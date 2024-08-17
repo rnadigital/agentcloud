@@ -2,7 +2,7 @@ use crate::adaptors::rabbitmq::client::bind_queue_to_exchange;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::VectorDatabase;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
 use crossbeam::channel::Sender;

@@ -1,10 +1,11 @@
 use crate::adaptors::qdrant::helpers::{construct_point_struct, get_next_page, get_scroll_results};
 use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
-use crate::vector_dbs::models::{
+use crate::vector_databases::error::VectorDatabaseError;
+use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Point, ScrollResults, SearchRequest,
-    SearchResult, StorageSize, VectorDatabaseError, VectorDatabaseStatus,
+    SearchResult, StorageSize, VectorDatabaseStatus,
 };
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use backoff::backoff::Backoff;
@@ -107,7 +108,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn delete_collection(
         &self,
-
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let collection_id = search_request.collection.clone();

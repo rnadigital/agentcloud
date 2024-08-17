@@ -1,47 +1,8 @@
-use anyhow::Error as AnyhowError;
+use crate::vector_databases::error::VectorDatabaseError;
+use crate::vector_databases::models::Cloud::GCP;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use thiserror;
-
-#[derive(thiserror::Error, Debug)]
-pub enum VectorDatabaseError {
-    // Anyhow error
-    #[error("An error occurred: {0}")]
-    AnyhowError(#[from] AnyhowError),
-    // #[error("A pinecone error occurred: {0}")]
-    // PineconeErrorType(#[from] PineconeError),
-    /// Any other error.
-    #[error("An error occurred. {0}")]
-    Other(String),
-}
-
-impl Clone for VectorDatabaseError {
-    fn clone(&self) -> Self {
-        match self {
-            VectorDatabaseError::AnyhowError(e) => {
-                VectorDatabaseError::Other(e.to_string()) // Convert anyhow::Error to String
-            }
-            VectorDatabaseError::Other(msg) => VectorDatabaseError::Other(msg.clone()),
-        }
-    }
-}
-
-impl Serialize for VectorDatabaseError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            VectorDatabaseError::AnyhowError(err) => {
-                serializer.serialize_str(&format!("An error occurred: {}", err))
-            }
-            VectorDatabaseError::Other(msg) => {
-                serializer.serialize_str(&format!("An error occurred. {}", msg))
-            }
-        }
-    }
-}
 
 #[derive(Debug, Clone, Serialize)]
 pub enum VectorDatabaseStatus {
@@ -127,7 +88,7 @@ impl Default for FilterConditions {
         }
     }
 }
-
+// This will dictate what is included in the response
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchResponseParams {
     pub include_vectors: Option<bool>,
@@ -151,8 +112,9 @@ pub struct SearchRequest {
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
     pub filters: Option<FilterConditions>,
-    // This will dictate what is included in the response
     pub search_response_params: Option<SearchResponseParams>,
+    pub region: Option<Region>,
+    pub cloud: Option<Cloud>,
 }
 
 impl SearchRequest {
@@ -164,8 +126,23 @@ impl SearchRequest {
             vector: None,
             filters: None,
             search_response_params: None,
+            region: Some(Region::US),
+            cloud: Some(GCP),
         }
     }
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum Region {
+    US,
+    EU,
+    AU,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum Cloud {
+    GCP,
+    AWS,
+    AZURE,
 }
 
 #[derive(Debug, Clone, Serialize)]

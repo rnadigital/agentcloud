@@ -2,7 +2,7 @@ use crate::adaptors::gcp::pubsub::subscribe_to_topic;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use futures::StreamExt;
 use google_cloud_pubsub::subscription::MessageStream;

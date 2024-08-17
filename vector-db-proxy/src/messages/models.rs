@@ -8,7 +8,7 @@ use tokio::sync::{Mutex, RwLock};
 
 use crate::adaptors::gcp::models::pubsub_consume;
 use crate::adaptors::rabbitmq::models::rabbit_consume;
-use crate::vector_dbs::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::VectorDatabase;
 
 #[derive(Clone, Copy, Debug)]
 pub enum MessageQueueProvider {

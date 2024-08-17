@@ -1,10 +1,11 @@
+use crate::vector_databases::error::VectorDatabaseError;
 use async_trait::async_trait;
 use pinecone_sdk::pinecone::PineconeClient;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::vector_dbs::models::*;
+use crate::vector_databases::models::*;
 pub enum VectorDatabases {
     Qdrant(Arc<RwLock<QdrantClient>>),
     Pinecone(Arc<RwLock<PineconeClient>>),

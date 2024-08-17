@@ -1,20 +1,15 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
-use mongodb::Database;
+use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
-use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::embeddings::models::EmbeddingModels;
-use crate::embeddings::utils::embed_text;
-use crate::hash_map_values_as_serde_values;
-use crate::vector_dbs::models::{Point, ScrollResults, VectorDatabaseStatus};
+use crate::vector_databases::models::{ScrollResults, VectorDatabaseStatus};
 
 ///
 ///
