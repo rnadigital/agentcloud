@@ -62,8 +62,8 @@ async function skipSetupScreen() {
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/list`, {
-		method: 'POST',
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/workspaces`, {
+		method: 'GET',
 		headers: { Authorization: authorizationHeader }
 	});
 	return response.json();
@@ -71,14 +71,16 @@ async function fetchWorkspaces() {
 
 // Function to fetch the destination list
 async function fetchDestinationList(workspaceId: string) {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/list`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: authorizationHeader
-		},
-		body: JSON.stringify({ workspaceId })
-	});
+	const response = await fetch(
+		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations?workspaceId=${encodeURIComponent(workspaceId)}`,
+		{
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: authorizationHeader
+			}
+		}
+	);
 	return response.json();
 }
 
@@ -232,6 +234,8 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
+		log(`airbyte creds: ${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`);
+
 		// Get instance configuration
 		const instanceConfiguration = await fetchInstanceConfiguration();
 		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
@@ -245,8 +249,8 @@ export async function init() {
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
-		log('workspacesList: %s', workspacesList?.workspaces?.map(x => x.name)?.join());
-		const airbyteAdminWorkspaceId = workspacesList.workspaces[0].workspaceId;
+		log('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
+		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
 		if (!airbyteAdminWorkspaceId) {
@@ -257,10 +261,10 @@ export async function init() {
 
 		// Get destination list
 		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
-		log('destinationsList: %s', destinationsList?.destinations?.map(x => x.name)?.join());
+		log('destinationsList: %s', destinationsList?.data?.map(x => x.name)?.join());
 
-		let airbyteAdminDestination = destinationsList.destinations?.find(
-			d => d?.destinationDefinitionId === destinationDefinitionId
+		let airbyteAdminDestination = destinationsList.data?.find(d =>
+			['RabbitMQ', 'Google Pub/Sub'].includes(d?.name)
 		);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
@@ -268,11 +272,11 @@ export async function init() {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
 			const newConfig = await getDestinationConfiguration(provider);
 			const configMismatch = Object.keys(newConfig).some(key => {
-				if (currentConfig[key] === '**********') {
+				if (currentConfig && currentConfig[key] === '**********') {
 					//hidden fields
 					return false; // Skip password/credentials json comparison
 				}
-				return currentConfig[key] !== newConfig[key];
+				return currentConfig && currentConfig[key] !== newConfig[key];
 			});
 			if (configMismatch) {
 				log('Destination configuration mismatch detected, attempting to delete and re-create...');

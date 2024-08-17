@@ -51,7 +51,7 @@ services:
       - docker_redis
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
-      - RABBITMQ_HOST=docker_rabbitmq
+      - RABBITMQ_HOST=host.docker.internal
       - RABBITMQ_PORT=5672
       - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -80,12 +80,12 @@ services:
       - OAUTH_GOOGLE_CLIENT_ID=
       - OAUTH_GOOGLE_CLIENT_SECRET=
       - VECTOR_APP_URL=http://vector_db_proxy:9001
-      - AIRBYTE_WEB_URL=http://airbyte-proxy:8000
-      - AIRBYTE_API_URL=http://airbyte-proxy:8006
+      - AIRBYTE_WEB_URL=http://host.docker.internal:8000
+      - AIRBYTE_API_URL=http://host.docker.internal:8000
       - AIRBYTE_ADMIN_WORKSPACE_ID=${AIRBYTE_ADMIN_WORKSPACE_ID}
       - AIRBYTE_ADMIN_DESTINATION_ID=${AIRBYTE_ADMIN_DESTINATION_ID}
-      - AIRBYTE_USERNAME=airbyte
-      - AIRBYTE_PASSWORD=password
+      - AIRBYTE_USERNAME=${AIRBYTE_USERNAME:-airbyte}
+      - AIRBYTE_PASSWORD=${AIRBYTE_PASSWORD:-password}
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - GCS_BUCKET_LOCATION=${GCS_BUCKET_LOCATION}
       - STRIPE_FREE_PLAN_PRICE_ID=price_1P0zlRDxQ9GZKzvoYUAzWMSv
@@ -191,8 +191,3 @@ volumes:
   redis_data:
   datasource_files:
   qdrant_data:
-
-networks:
-  default:
-    external: true
-    name: airbyte_airbyte_internal

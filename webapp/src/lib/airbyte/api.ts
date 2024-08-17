@@ -11,9 +11,9 @@ export enum AirbyteApiType {
 }
 
 const definitions: Record<AirbyteApiType, string> = {
-	[AirbyteApiType.WORKSPACES]: 'https://dash.readme.com/api/v1/api-registry/16o35loywijq5',
-	[AirbyteApiType.SOURCES]: 'https://dash.readme.com/api/v1/api-registry/18dnz3hlp380w3x',
-	[AirbyteApiType.DESTINATIONS]: 'https://dash.readme.com/api/v1/api-registry/im2uloyyk7wt',
+	[AirbyteApiType.WORKSPACES]: 'https://dash.readme.com/api/v1/api-registry/7zfp2qlw5h9pzc',
+	[AirbyteApiType.SOURCES]: 'https://dash.readme.com/api/v1/api-registry/1phak1ulrl7djj4',
+	[AirbyteApiType.DESTINATIONS]: 'https://dash.readme.com/api/v1/api-registry/byhtdl1jlt91i5p4',
 	[AirbyteApiType.CONNECTIONS]: 'https://dash.readme.com/api/v1/api-registry/ggq35loywl8vx',
 	[AirbyteApiType.JOBS]: 'https://dash.readme.com/api/v1/api-registry/dld83bfloywkuu9'
 };
@@ -38,7 +38,7 @@ async function getAirbyteApi(type: AirbyteApiType) {
 		axiosConfigDefaults
 	});
 	const client = await api.init();
-	client.defaults.baseURL = `${process.env.AIRBYTE_API_URL}/v1`;
+	client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api/public/v1/`;
 	return (apiCache[type] = client);
 }
 

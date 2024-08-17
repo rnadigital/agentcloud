@@ -13,6 +13,8 @@ fi
 command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not installed. Aborting."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
+command -v sed >/dev/null 2>&1 || { echo >&2 "sed is required but it's not installed. Aborting."; exit 1; }
+command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is required but it's not installed. Aborting."; exit 1; }
 
 if ! docker info &> /dev/null; then
     echo "Docker daemon is not running. Aborting."
@@ -53,9 +55,6 @@ $1"""
 usage() {
     echo """Usage: $0 [options]
 
-Note: By default, vector-db-proxy \`cargo build\`'s without the \`--release\` flag, for faster builds during development.
-      To change this, set \RELEASE=true\` in your env before running install i.e \`RELEASE=true ./install.sh ...\`.
-
 Options:
 
     -h, --help                       Display this help message.
@@ -63,12 +62,6 @@ Options:
     --kill-webapp-next               Kill webapp after startup (for developers)
     --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
     --kill-agent-backend             Kill agent-backend after startup (for developers)
-
-    --project-id ID                  (OPTIONAL) Specify a GCP project ID (for Secret Manager, GCS, etc)
-    --service-account-json PATH      (OPTIONAL) Specify the file path of your GCP service account json.
-    --gcs-bucket-name NAME           (OPTIONAL) Specify the GCS bucket name to use.
-    --gcs-bucket-location LOCATION   (OPTIONAL) Specify the GCS bucket location.
-
 """
 }
 
@@ -130,85 +123,46 @@ while [[ "$#" -gt 0 ]]; do
         --kill-webapp-next) KILL_WEBAPP_NEXT=1 ;;
         --kill-vector-db-proxy) KILL_VECTOR_DB_PROXY=1 ;;
         --kill-agent-backend) KILL_AGENT_BACKEND=1 ;;
-        --project-id) PROJECT_ID="$2"; shift ;;
-        --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
-        --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
-        --gcs-bucket-location) GCS_BUCKET_LOCATION="$2"; shift ;;
-        --stripe-pricing-table-id) STRIPE_PRICING_TABLE_ID="$2"; shift ;;
-        --stripe-publishable-key) STRIPE_PUBLISHABLE_KEY="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown parameter passed: $1"; usage; exit 1 ;;
     esac
     shift
 done
 
-# 
-# initialize_environment() {
-# 	# Initialize variables with defaults or arguments
-# 	PROJECT_ID="${PROJECT_ID:-}"
-# 	SERVICE_ACCOUNT_JSON_PATH="${SERVICE_ACCOUNT_JSON_PATH:-}"
-# 	GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-}"
-# 	GCS_BUCKET_LOCATION="${GCS_BUCKET_LOCATION:-}"
-# 	# Check and ask for missing variables
-# 	[ -z "$PROJECT_ID" ] && read -p "Enter your GCP project ID: " PROJECT_ID
-# 	[ -z "$SERVICE_ACCOUNT_JSON_PATH" ] && read -p "Enter the file path of your GCP service account json: " SERVICE_ACCOUNT_JSON_PATH
-# 	[ -z "$GCS_BUCKET_NAME" ] && read -p "Enter the GCS bucket name to use: " GCS_BUCKET_NAME
-# 	[ -z "$GCS_BUCKET_LOCATION" ] && read -p "Enter the GCS bucket location: " GCS_BUCKET_LOCATION
-# 	export PROJECT_ID
-# 	export SERVICE_ACCOUNT_JSON_PATH
-# 	export GCS_BUCKET_LOCATION
-# 	export GCS_BUCKET_NAME
-# }
-# 
-# initialize_environment
-
-if [ -z "$SERVICE_ACCOUNT_JSON_PATH" ]; then
-	echo "The \$SERVICE_ACCOUNT_JSON_PATH variable is not set, continuing with local disk storage and .env secret providers."
-elif [ ! -f "$SERVICE_ACCOUNT_JSON_PATH" ]; then
-	echo "The file at \$SERVICE_ACCOUNT_JSON_PATH does not exist."
-else
-    cp "$SERVICE_ACCOUNT_JSON_PATH" webapp/keyfile.json
-    cp "$SERVICE_ACCOUNT_JSON_PATH" agent-backend/keyfile.json
-    cp "$SERVICE_ACCOUNT_JSON_PATH" vector-db-proxy/keyfile.json
-fi
-
 echo "=> Starting airbyte"
 
-# Define the target version
-AIRBYTE_TARGET_VERSION="v0.57.2"
-
-# Clone and install airbyte
-if [ ! -d "airbyte" ]; then
-    git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
+if ! command -v abctl &> /dev/null; then
+	echo "'abctl' command not found. Installing Airbyte..."
+	curl -LsfS https://get.airbyte.com | bash -
 else
-    # Change to the airbyte directory to check the version
-    cd airbyte
-
-    # Check if the current tag matches the target version
-    CURRENT_VERSION=$(git tag --points-at HEAD)
-    if [ "$CURRENT_VERSION" == "$AIRBYTE_TARGET_VERSION" ]; then
-        echo "Airbyte is up-to-date on $AIRBYTE_TARGET_VERSION."
-        cd ..
-    else
-        echo "Warning: You have an outdated version of Airbyte ($CURRENT_VERSION). The target version is $AIRBYTE_TARGET_VERSION."
-        # Ask user if they want to delete the outdated version and re-clone
-        read -p "Would you like to delete the existing version and re-clone? (y/n): " user_response
-        if [[ "$user_response" == "y" ]]; then
-            # Move up a directory, delete the outdated version, and re-clone
-            cd ..
-            rm -rf airbyte
-            git clone --depth=1 --branch "$AIRBYTE_TARGET_VERSION" https://github.com/airbytehq/airbyte.git
-        fi
-    fi
-
+	echo "'abctl' command is already installed."
 fi
 
-cd airbyte
-./run-ab-platform.sh -b &
-sleep 0.1
-print_logo
-wait
-cd ..
+#Note: unused
+#AIRBYTE_TARGET_VERSION="v0.63.17"
+
+# Define the chart version to use
+ABCTL_CHART_VERSION="0.442.3"
+
+# Process the output: remove color codes, remove first 10 characters, and parse with jq to get password
+ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null)
+export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | tail -n 5 | sed -r 's/\x1B\[[0-9;]*[mK]//g' | sed 's/^.\{10\}//' | jq -r '.password')
+export AIRBYTE_USERNAME=`kubectl exec --kubeconfig ~/.airbyte/abctl/abctl.kubeconfig --namespace airbyte-abctl -it airbyte-db-0 -- psql -U airbyte -d db-airbyte -t -A -c 'SELECT "email" FROM "user"'`
+echo $AIRBYTE_USERNAME
+echo $AIRBYTE_PASSWORD
+
+# Check if the 'password' field is present
+if [[ -z "$AIRBYTE_PASSWORD" || "$AIRBYTE_PASSWORD" == "null" ]]; then
+	echo "'password' field is missing. Running 'abctl local install'..."
+	abctl local install --chart-version $ABCTL_CHART_VERSION
+else
+	echo "'password' field found. Running 'abctl local status'..."
+	abctl local status
+fi
+
+# sleep 0.1
+# print_logo
+# wait
 
 echo "=> Starting agentcloud backend..."
 

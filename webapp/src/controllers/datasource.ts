@@ -207,6 +207,7 @@ export async function testDatasourceApi(req, res, next) {
 		createdSource = await sourcesApi.createSource(null, sourceBody).then(res => res.data);
 		log('createdSource', createdSource);
 	} catch (e) {
+		log(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to create datasource: ${e?.response?.data?.detail || e}`
 		});
