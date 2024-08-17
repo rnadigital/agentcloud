@@ -5,7 +5,7 @@ const log = debug('webapp:airbyte:getSpecification');
 
 export default async function getSpecification(req, res, _next) {
 	const base64Credentials = Buffer.from(
-		`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`
+		`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
 	).toString('base64');
 	let schema;
 	try {

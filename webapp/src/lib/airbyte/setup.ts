@@ -22,7 +22,7 @@ logdebug.log = console.debug.bind(console);
 const logerror = debug('webapp:airbyte:setup:error');
 logerror.log = console.error.bind(console);
 
-const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`).toString('base64')}`;
+const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`).toString('base64')}`;
 const provider = process.env.MESSAGE_QUEUE_PROVIDER;
 const destinationDefinitionId =
 	provider === 'rabbitmq'
@@ -234,8 +234,6 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
-		log(`airbyte creds: ${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`);
-
 		// Get instance configuration
 		const instanceConfiguration = await fetchInstanceConfiguration();
 		const initialSetupComplete = instanceConfiguration.initialSetupComplete;

@@ -21,7 +21,7 @@ const definitions: Record<AirbyteApiType, string> = {
 const apiCache: Partial<Record<AirbyteApiType, any>> = {};
 
 const base64Credentials = Buffer.from(
-	`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`
+	`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
 ).toString('base64');
 const axiosConfigDefaults = {
 	headers: {

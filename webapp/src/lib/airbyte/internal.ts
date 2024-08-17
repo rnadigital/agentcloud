@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
 
 const base64Credentials = Buffer.from(
-	`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`
+	`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
 ).toString('base64');
 
 let client;

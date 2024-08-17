@@ -9,7 +9,7 @@ export default async function getConnectors() {
 
 export async function getConnectorSpecification(sourceDefinitionId: string) {
 	const base64Credentials = Buffer.from(
-		`${process.env.AIRBYTE_USERNAME}:${process.env.AIRBYTE_PASSWORD}`
+		`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
 	).toString('base64');
 	let schema;
 	try {
