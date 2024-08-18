@@ -1,7 +1,13 @@
 'use strict';
 
+import fs from 'fs';
 import yaml from 'js-yaml';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
+
+// Read the YAML file synchronously and load it into configYaml
+const configYaml = fs.readFileSync(__dirname + '/definition-internal.yaml', 'utf8');
+// Load the YAML content into a definition object
+const definition = yaml.load(configYaml) as Document;
 
 const base64Credentials = Buffer.from(
 	`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
@@ -12,11 +18,6 @@ async function getAirbyteInternalApi() {
 	if (client) {
 		return client;
 	}
-	// Is there a JSON of this schema?
-	const configYaml = await fetch(
-		'https://raw.githubusercontent.com/airbytehq/airbyte-platform/main/airbyte-api/server-api/src/main/openapi/config.yaml'
-	).then(res => res.text());
-	const definition = yaml.load(configYaml) as Document;
 	const api = new OpenAPIClientAxios({
 		definition,
 		axiosConfigDefaults: {
@@ -26,7 +27,6 @@ async function getAirbyteInternalApi() {
 		}
 	});
 	client = await api.init();
-	//NOTE: needs to use port 8000 url and append /api to work even though this is for the config api
 	client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api`;
 	return client;
 }
