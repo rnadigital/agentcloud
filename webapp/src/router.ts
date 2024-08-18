@@ -52,6 +52,7 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -118,8 +119,8 @@ export default function router(server, app) {
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
-	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
-	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
+	server.get('/login', unauthedMiddlewareChain,checkSessionWelcome , renderStaticPage(app, '/login'));
+	server.get('/register', unauthedMiddlewareChain, checkSessionWelcome, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get(
 		'/account',
