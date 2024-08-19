@@ -53,12 +53,20 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									<input
 										placeholder={field.description}
 										type={field.type === 'string' ? 'text' : field.type}
-										{...register(field.name, { required: field.required })}
+										{...register(field.name, {
+											required: field.required && 'field is required'
+										})}
 										className={cn(
-											errors[field.name] && 'border-red-500 border-2',
-											'block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+											'block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white',
+
+											errors[field.name] && 'border-red-500 border-2'
 										)}
 									/>
+									{errors && errors[field.name]?.message && (
+										<div className='text-red-500 text-xs mt-1'>
+											{errors[field.name].message as string}
+										</div>
+									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
 							</>
@@ -78,7 +86,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									<Controller
 										name={field.name}
 										control={control}
-										rules={{ required: field.required }}
+										rules={{ required: field.required && 'field is required' }}
 										render={({ field: { onChange, value } }) => (
 											<div className='flex flex-wrap gap-2'>
 												{field.options?.map(option => (
@@ -99,6 +107,11 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 											</div>
 										)}
 									/>
+									{errors && errors[field.name]?.message && (
+										<div className='text-red-500 text-xs mt-1'>
+											{errors[field.name].message as string}
+										</div>
+									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
 							</>
@@ -118,7 +131,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									<Controller
 										name={field.name}
 										control={control}
-										rules={{ required: field.required }}
+										rules={{ required: field.required && 'field is required' }}
 										render={({ field: { onChange, value } }) => (
 											<div className='flex flex-wrap gap-2'>
 												{field.options?.map(option => (
@@ -148,6 +161,11 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 											</div>
 										)}
 									/>
+									{errors && errors[field.name]?.message && (
+										<div className='text-red-500 text-xs mt-1'>
+											{errors[field.name].message as string}
+										</div>
+									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
 							</>
@@ -167,7 +185,9 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 								>
 									<label>{field.label}</label>
 									<select
-										{...register(field.name, { required: field.required })}
+										{...register(field.name, {
+											required: field.required && 'field is required'
+										})}
 										multiple={field.type === 'multiselect'}
 										className={cn(
 											errors[field.name] && 'border-red-500 border-2',
@@ -180,6 +200,11 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 											</option>
 										))}
 									</select>
+									{errors && errors[field.name]?.message && (
+										<div className='text-red-500 text-xs mt-1'>
+											{errors[field.name].message as string}
+										</div>
+									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
 							</>
