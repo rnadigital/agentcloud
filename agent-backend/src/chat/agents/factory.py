@@ -20,5 +20,5 @@ def chat_agent_factory(chat_model: BaseLanguageModel, tools: list[BaseTool],
     elif isinstance(chat_model, ChatOllama):
         return OllamaChatAgent(chat_model, tools, agent_name, session_id, socket)
 
-    # default to OpenAI
+    # default; works for OpenAI, Azure OpenAI and Groq
     return OpenAIChatAgent(chat_model, tools, agent_name, session_id, socket)
