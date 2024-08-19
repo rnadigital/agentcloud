@@ -363,24 +363,24 @@ export default function Session(props) {
 
 					<div ref={bottomRef} />
 				</div>
-				<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
-					<div className='flex flex-row justify-center'>
-						<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
-							{showConversationStarters &&
-								(!chatBusyState || !session) &&
-								app?.chatAppConfig?.conversationStarters && (
-									<div className='w-full flex items-center gap-2 py-1'>
-										<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
-										<ConversationStarters
-											session={session}
-											app={app}
-											sendMessage={message => sendMessage(message, null)}
-											conversationStarters={app?.chatAppConfig?.conversationStarters}
-										/>
-									</div>
-								)}
+				{!(requiredHumanInput && activeTask?.formFields?.length > 0) && (
+					<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
+						<div className='flex flex-row justify-center'>
+							<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
+								{showConversationStarters &&
+									(!chatBusyState || !session) &&
+									app?.chatAppConfig?.conversationStarters && (
+										<div className='w-full flex items-center gap-2 py-1'>
+											<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
+											<ConversationStarters
+												session={session}
+												app={app}
+												sendMessage={message => sendMessage(message, null)}
+												conversationStarters={app?.chatAppConfig?.conversationStarters}
+											/>
+										</div>
+									)}
 
-							{!requiredHumanInput && (
 								<div className='min-w-0 flex-1 h-full'>
 									{messages ? (
 										terminated ? (
@@ -414,10 +414,10 @@ export default function Session(props) {
 										</ContentLoader>
 									)}
 								</div>
-							)}
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</>
 	);
