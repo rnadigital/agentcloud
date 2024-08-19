@@ -41,6 +41,7 @@ import StorageProviderFactory from 'lib/storage';
 import StripeClient from 'lib/stripe';
 import { v4 as uuidv4 } from 'uuid';
 
+import getAirbyteInternalApi from './lib/airbyte/internal';
 import { initSocket } from './socketio';
 const log = debug('webapp:server');
 

@@ -5,6 +5,7 @@ import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
+import { listLatestSourceDefinitions } from 'airbyte/setup';
 import {
 	getDatasourceById,
 	getDatasourceByIdUnsafe,
@@ -27,6 +28,13 @@ const warn = debug('webapp:controllers:airbyte:warning');
 warn.log = console.warn.bind(console); //set namespace to log
 const log = debug('webapp:controllers:airbyte');
 log.log = console.log.bind(console); //set namespace to log
+
+export async function connectorsJson(req, res, next) {
+	return res.json({
+		...(await listLatestSourceDefinitions()),
+		account: res.locals.account
+	});
+}
 
 /**
  * GET /airbyte/schema

@@ -79,21 +79,20 @@ async function fetchApplications() {
 	return response.json();
 }
 
-// // Function to fetch applications
-// async function fetchAccessToken(clientId, clientSecret) {
-// 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications/token`, {
-// 		method: 'POST',
-// 		headers: {
-// 			'Content-Type': 'application/json',
-// 			Authorization: authorizationHeader
-// 		},
-// 		body: {
-// 			client_id: clientId,
-// 			client_secret: clientSecret
-// 		}
-// 	});
-// 	return response.json();
-// }
+// Function to fetch applications
+export async function listLatestSourceDefinitions() {
+	const response = await fetch(
+		`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definitions/list_latest`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${await getAirbyteAuthToken()}`
+			}
+		}
+	);
+	return response.json();
+}
 
 // Function to fetch the destination list
 async function fetchDestinationList(workspaceId: string) {

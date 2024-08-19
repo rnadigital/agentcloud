@@ -2,7 +2,6 @@
 
 import * as API from '@api';
 import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/20/solid';
-import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
 import DropZone from 'components/DropZone';
@@ -119,6 +118,7 @@ export default function CreateDatasourceForm({
 				posthog.capture('getSpecification', {
 					sourceDefinitionId
 				});
+				console.log('spec', spec);
 				setSpec(spec);
 			},
 			specError => {
@@ -137,11 +137,22 @@ export default function CreateDatasourceForm({
 	const [connector, setConnector] = useState(null);
 	async function initConnectors() {
 		try {
-			const connectorsJson = await getConnectors();
-			if (!connectorsJson || !connectorsJson?.length) {
-				throw new Error('Falied to fetch connector list, please ensure Airbyte is running.');
-			}
-			setConnectors(connectorsJson);
+			const connectorsJson = await API.getConnectors(
+				{
+					resourceSlug
+				},
+				async res => {
+					const connectorsJson = res?.sourceDefinitions;
+					if (!connectorsJson || !connectorsJson?.length) {
+						throw new Error('Falied to fetch connector list, please ensure Airbyte is running.');
+					}
+					setConnectors(connectorsJson);
+				},
+				err => {
+					setError('Falied to fetch connector list, please ensure Airbyte is running.');
+				},
+				null
+			);
 		} catch (e) {
 			console.error(e);
 			setError(e?.message || e);
@@ -154,25 +165,18 @@ export default function CreateDatasourceForm({
 			setConnector(null);
 		};
 	}, []);
-	let connectorOptions: any = connectors
-		? Object.keys(connectors).filter(key => connectors[key]?.connector_type === 'source')
-		: [];
-	//Note: uncomment if you want to hide unavailable due to plan connectors
-	// if (pricingMatrix && pricingMatrix[stripePlan]?.allowedConnectors?.length > 0) {
-	// 	connectorOptions = connectorOptions.filter(co => pricingMatrix[stripePlan].allowedConnectors.includes(connectors[co]?.definitionId));
-	// }
-	connectorOptions = connectorOptions
-		.filter(key => connectors[key]?.name_oss && connectors[key]?.name_oss?.toLowerCase() !== 'test')
-		.map(key => ({
-			value: connectors[key]?.definitionId,
-			label: connectors[key]?.name_oss,
-			icon: connectors[key]?.iconUrl_oss,
-			supportLevel: connectors[key]?.supportLevel_oss,
+	let connectorOptions: any = (connectors || [])
+		.filter(c => c?.metrics?.oss?.connector_name !== 'test')
+		.map(c => ({
+			value: c?.sourceDefinitionId,
+			label: c?.name,
+			icon: c?.icon,
+			...c?.metrics?.oss,
 			planAvailable:
 				pricingMatrix[stripePlan].dataConnections &&
 				//Note: higher plans have empty list but dataConnections: true = ALL connectors are available
 				(pricingMatrix[stripePlan].allowedConnectors?.length === 0 ||
-					pricingMatrix[stripePlan].allowedConnectors.includes(connectors[key]?.definitionId))
+					pricingMatrix[stripePlan].allowedConnectors.includes(c.sourceDefinitionId))
 		}))
 		.sort((a, b) =>
 			a.planAvailable && !b.planAvailable
@@ -499,7 +503,7 @@ export default function CreateDatasourceForm({
 														data.planAvailable === true ? 'text-green-800' : 'text-orange-800'
 													)}
 												>
-													{data.planAvailable ? (
+													{!data.planAvailable ? (
 														<span className='flex mx-0.5'>
 															<CheckCircleIcon className='mt-0.5 h-4 w-4 me-1' /> Available
 														</span>
