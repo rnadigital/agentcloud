@@ -151,6 +151,28 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
+	}
+
 	const {
 		name,
 		description,
@@ -253,6 +275,29 @@ export async function editTaskApi(req, res, next) {
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+	console.log(req.body.formFields);
+
+	if (req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
 	}
 
 	const {
