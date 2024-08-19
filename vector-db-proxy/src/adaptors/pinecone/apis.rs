@@ -1,8 +1,8 @@
 use crate::adaptors::pinecone::helpers::get_indexes;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
-    CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, ScrollResults,
-    SearchRequest, SearchResult, StorageSize, VectorDatabaseStatus,
+    CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, Region,
+    ScrollResults, SearchRequest, SearchResult, StorageSize, VectorDatabaseStatus,
 };
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -39,8 +39,9 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
+        let region = search_request.clone().region.unwrap_or(Region::US);
         // Need to figure out the the default index name here
-        let mut index = self.index("default").await.unwrap();
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let index_stats = index.describe_index_stats(None).await.unwrap();
         if index_stats
             .namespaces
@@ -66,8 +67,8 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let _collection_create = collection_create;
-        if let Ok(_) = self.index("default").await {
+        let region = collection_create.clone().region.unwrap_or(Region::US);
+        if let Ok(_) = self.index(Region::to_str(region)).await {
             return Ok(VectorDatabaseStatus::Ok);
         }
         Ok(VectorDatabaseStatus::NotFound)
@@ -77,7 +78,9 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let mut index = self.index("default").await.unwrap();
+        let region = search_request.clone().region.unwrap_or(Region::US);
+        // Need to figure out the the default index name here
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let pinecone_namespace = Namespace::from(search_request.collection.as_str());
         match index.delete_all(&pinecone_namespace).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
@@ -92,7 +95,9 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let mut index = self.index("default").await.unwrap();
+        let region = search_request.clone().region.unwrap_or(Region::US);
+        // Need to figure out the the default index name here
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let vector = Vector::from(point);
         let namespace = search_request.collection;
 
@@ -113,7 +118,9 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let mut index = self.index("default").await.unwrap();
+        let region = search_request.clone().region.unwrap_or(Region::US);
+        // Need to figure out the the default index name here
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
         let namespace = search_request.collection;
         match index.upsert(&vectors, &namespace.into()).await {
@@ -132,8 +139,10 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
-        let mut index = self.index("default").await.unwrap();
-        let index_model = self.describe_index("default").await.unwrap();
+        let region = search_request.clone().region.unwrap_or(Region::US);
+        // Need to figure out the the default index name here
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
+        let index_model = self.describe_index(Region::to_str(region)).await.unwrap();
         let index_stats = index.describe_index_stats(None).await.unwrap();
         let vector_count: Option<u64> = index_stats
             .namespaces
@@ -175,8 +184,49 @@ impl VectorDatabase for PineconeClient {
 
     async fn similarity_search(
         &self,
-        _search_request: SearchRequest,
+        search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
-        todo!()
+        let region = search_request.clone().region.unwrap_or(Region::US);
+        // Need to figure out the the default index name here
+        let mut index = self.index(Region::to_str(region)).await.unwrap();
+        let namespace = Namespace::from(search_request.collection.as_str());
+        let _return_params = search_request.search_response_params.unwrap();
+        if let Some(vector) = search_request.vector {
+            if let Ok(results) = index
+                .query_by_value(
+                    vector,
+                    None,
+                    search_request.top_k.unwrap(),
+                    &namespace,
+                    None,
+                    Some(false),
+                    Some(true),
+                )
+                .await
+            {
+                let matched_vectors: Vec<SearchResult> = results
+                    .matches
+                    .iter()
+                    .map(|res| {
+                        let point = Point::from(res.clone().metadata.unwrap());
+                        SearchResult {
+                            id: res.clone().id,
+                            score: Some(res.score),
+                            payload: point.payload,
+                            vector: Some(res.clone().values),
+                        }
+                    })
+                    .collect();
+                Ok(matched_vectors)
+            } else {
+                Err(VectorDatabaseError::Other(
+                    "Something bad happened!".to_string(),
+                ))
+            }
+        } else {
+            Err(VectorDatabaseError::Other(
+                "Something bad happened!".to_string(),
+            ))
+        }
     }
 }

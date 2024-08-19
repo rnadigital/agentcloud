@@ -404,7 +404,13 @@ impl VectorDatabase for QdrantClient {
             })
             .await?;
         for result in &search_result.result {
+            let point_id = result.clone().id.unwrap().point_id_options.unwrap();
+            let id = match point_id {
+                PointIdOptions::Num(n) => n.to_string(),
+                PointIdOptions::Uuid(s) => s,
+            };
             response_data.push(SearchResult {
+                id,
                 vector: None,
                 score: Some(result.score),
                 payload: Some(

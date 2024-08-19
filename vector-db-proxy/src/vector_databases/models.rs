@@ -1,7 +1,8 @@
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::{Metric, Vector};
-use prost_types::Struct as Metadata;
+use prost_types::value::Kind;
+use prost_types::{ListValue, Struct as Metadata, Struct};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -39,6 +40,7 @@ impl Point {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SearchResult {
+    pub id: String,
     pub score: Option<f32>,
     pub payload: Option<HashMap<String, String>>,
     pub vector: Option<Vec<f32>>,
@@ -110,6 +112,7 @@ pub struct SearchRequest {
     pub search_response_params: Option<SearchResponseParams>,
     pub region: Option<Region>,
     pub cloud: Option<Cloud>,
+    pub top_k: Option<u32>,
 }
 
 impl SearchRequest {
@@ -120,17 +123,28 @@ impl SearchRequest {
             id: None,
             vector: None,
             filters: None,
+            top_k: None,
             search_response_params: None,
             region: Some(Region::US),
             cloud: Some(GCP),
         }
     }
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub enum Region {
     US,
     EU,
     AU,
+}
+
+impl Region {
+    pub fn to_str<'a>(region: Self) -> &'a str {
+        match region {
+            Self::US => "us-west-2",
+            Self::EU => "eu-west-1",
+            _ => panic!("Unknown Pinecone serverless region"),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -138,6 +152,16 @@ pub enum Cloud {
     GCP,
     AWS,
     AZURE,
+}
+
+impl Cloud {
+    pub fn to_str<'a>(cloud: Self) -> &'a str {
+        match cloud {
+            Self::GCP => "gcp",
+            Self::AWS => "aws",
+            Self::AZURE => "azure",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -185,6 +209,8 @@ pub struct CollectionCreate {
     pub namespace: Option<String>,
     pub distance: Distance,
     pub vector_name: Option<String>,
+    pub region: Option<Region>,
+    pub cloud: Option<Cloud>,
 }
 
 impl From<bool> for VectorDatabaseStatus {
@@ -227,6 +253,54 @@ impl From<Point> for Metadata {
         }
 
         Self { fields: btree_map }
+    }
+}
+fn list_value_to_string(list_value: &ListValue) -> Option<String> {
+    let values: Vec<String> = list_value
+        .values
+        .iter()
+        .filter_map(|v| value_to_string(&v.kind)) // Recursively handle each value in the list
+        .collect();
+
+    Some(format!("[{}]", values.join(", ")))
+}
+fn struct_value_to_string(struct_value: &Struct) -> Option<String> {
+    let mut map = HashMap::new();
+
+    for (key, value) in &struct_value.fields {
+        if let Some(value_str) = value_to_string(&value.kind) {
+            // Recursively handle each value in the struct
+            map.insert(key.clone(), value_str);
+        }
+    }
+    // Return the map as a JSON string
+    Some(serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string()))
+}
+fn value_to_string(value: &Option<Kind>) -> Option<String> {
+    match value {
+        Some(kind) => match kind {
+            Kind::StringValue(s) => Some(s.to_owned()),
+            Kind::NumberValue(n) => Some(n.to_string()),
+            Kind::BoolValue(b) => Some(b.to_string()),
+            Kind::NullValue(i) => Some(i.to_string()),
+            Kind::ListValue(l) => list_value_to_string(l),
+            Kind::StructValue(s) => struct_value_to_string(s),
+        },
+        None => None,
+    }
+}
+impl From<Metadata> for Point {
+    fn from(value: Metadata) -> Self {
+        let mut hash_map = HashMap::new();
+
+        for (k, v) in value.fields {
+            hash_map.insert(k, value_to_string(&v.kind).unwrap());
+        }
+        Point {
+            index: None,
+            payload: Some(hash_map),
+            vector: vec![],
+        }
     }
 }
 
