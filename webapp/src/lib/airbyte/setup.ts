@@ -144,7 +144,7 @@ async function deleteDestination(destinationId: string) {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
-		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || '0.0.0.0';
+		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || process.env.RABBITMQ_HOST || '0.0.0.0';
 		try {
 			//Note: just parsing to see if it throws, we don't need to actually know the ip kind
 			const ipParsed = parse(host);
