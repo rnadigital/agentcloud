@@ -5447,6 +5447,7 @@ dependencies = [
  "pdf-extract",
  "percent-encoding",
  "pinecone-sdk",
+ "prost-types 0.12.3",
  "qdrant-client",
  "r2d2_redis",
  "redis 0.26.1",

@@ -5,11 +5,12 @@ use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Point, ScrollResults, SearchRequest,
     SearchResult, StorageSize, VectorDatabaseStatus,
 };
+use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use backoff::backoff::Backoff;
-use backoff::ExponentialBackoff;
+use backoff::{exponential, ExponentialBackoff, SystemClock};
 use qdrant_client::prelude::point_id::PointIdOptions;
 use qdrant_client::prelude::{CreateCollection, PointStruct, QdrantClient, SearchPoints};
 use qdrant_client::qdrant::vectors_config::Config;
@@ -140,15 +141,16 @@ impl VectorDatabase for QdrantClient {
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let collection_id = search_request.clone().collection;
-        let mut backoff = ExponentialBackoff {
-            current_interval: Duration::from_millis(50),
-            initial_interval: Duration::from_millis(50),
-            max_interval: Duration::from_secs(3),
-            max_elapsed_time: Some(Duration::from_secs(60)),
-            multiplier: 1.5,
-            randomization_factor: 0.5,
-            ..ExponentialBackoff::default()
-        };
+        let mut backoff: exponential::ExponentialBackoff<SystemClock> =
+            exponential::ExponentialBackoff::<SystemClock> {
+                current_interval: Duration::from_millis(50),
+                initial_interval: Duration::from_millis(50),
+                max_interval: Duration::from_secs(3),
+                max_elapsed_time: Some(Duration::from_secs(60)),
+                multiplier: 1.5,
+                randomization_factor: 0.5,
+                ..ExponentialBackoff::default()
+            };
         if let Some(point_struct) =
             construct_point_struct(&point.vector, point.payload.unwrap(), None, None).await
         {
@@ -266,9 +268,9 @@ impl VectorDatabase for QdrantClient {
                 if let Some(info) = info_results.result {
                     let collection_info = CollectionMetadata {
                         status: VectorDatabaseStatus::from(info.clone()),
-                        indexed_vectors_count: info.indexed_vectors_count.clone(),
-                        segments_count: Some(info.segments_count.clone()),
-                        points_count: info.points_count,
+                        collection_vector_count: info.indexed_vectors_count.clone(),
+                        metric: Some(info.segments_count.clone()),
+                        dimensions: info.points_count,
                     };
                     Ok(Some(collection_info))
                 } else {
@@ -291,8 +293,9 @@ impl VectorDatabase for QdrantClient {
         let collection_id = search_request.clone().collection;
         if let Ok(collection_info) = &self.get_collection_info(search_request).await {
             if let Some(info) = collection_info {
-                if let Some(number_of_vectors) = info.points_count {
-                    let size = (number_of_vectors as usize * vector_length * 4) as f64 * 1.15;
+                if let Some(number_of_vectors) = info.dimensions {
+                    let size =
+                        calculate_vector_storage_size(number_of_vectors as usize, vector_length);
                     let collection_storage_size = StorageSize {
                         status: VectorDatabaseStatus::Ok,
                         points_count: Some(number_of_vectors),

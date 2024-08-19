@@ -63,6 +63,7 @@ lazy_static = "1.4.0"
 time = "0.3.36"
 pinecone-sdk = "0.1.1"
 async-trait = "0.1.80"
+prost-types = "0.12"
 
 [features]
 default = ["cuda_rocm"]

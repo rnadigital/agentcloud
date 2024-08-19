@@ -1,7 +1,8 @@
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
+use pinecone_sdk::models::{Metric, Vector};
+use prost_types::Struct as Metadata;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone, Serialize)]
@@ -53,9 +54,9 @@ pub struct CollectionsResult {
 #[derive(Debug, Serialize)]
 pub struct CollectionMetadata {
     pub status: VectorDatabaseStatus,
-    pub indexed_vectors_count: Option<u64>,
-    pub segments_count: Option<u64>,
-    pub points_count: Option<u64>,
+    pub collection_vector_count: Option<u64>,
+    pub metric: Option<Distance>,
+    pub dimensions: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -64,12 +65,6 @@ pub struct ScrollResults {
     pub id: String,
     pub payload: HashMap<String, String>,
     pub vector: Vec<f32>,
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub enum HashMapValues {
-    Serde(Value),
-    Str(String),
 }
 
 #[derive(Serialize, Clone, Debug, Deserialize)]
@@ -153,13 +148,23 @@ pub struct StorageSize {
     pub points_count: Option<u64>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Distance {
     UnknownDistance = 0,
     Cosine = 1,
     Euclid = 2,
     Dot = 3,
     Manhattan = 4,
+}
+
+impl From<Metric> for Distance {
+    fn from(value: Metric) -> Self {
+        match value {
+            Metric::Cosine => Distance::Cosine,
+            Metric::Dotproduct => Distance::Dot,
+            Metric::Euclidean => Distance::Euclid,
+        }
+    }
 }
 #[derive(Serialize, Debug, Clone)]
 pub struct CollectionCreate {
@@ -194,5 +199,33 @@ impl From<qdrant_client::qdrant::CollectionInfo> for VectorDatabaseStatus {
 impl From<Point> for BTreeMap<String, String> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
+    }
+}
+
+impl From<Point> for Metadata {
+    fn from(value: Point) -> Self {
+        let mut btree_map = BTreeMap::new();
+        for (k, v) in value.payload.unwrap() {
+            btree_map.insert(
+                k,
+                prost_types::Value {
+                    kind: Some(prost_types::value::Kind::StringValue(v)),
+                },
+            );
+        }
+
+        Self { fields: btree_map }
+    }
+}
+
+impl From<Point> for Vector {
+    fn from(value: Point) -> Self {
+        let metadata = Some(Metadata::from(value.clone()));
+        Self {
+            id: value.index.unwrap(),
+            values: value.vector,
+            sparse_values: None,
+            metadata,
+        }
     }
 }
