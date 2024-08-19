@@ -12,7 +12,7 @@ import {
 	updateRoleAndMarkOnboarded,
 	verifyAccount
 } from 'db/account';
-import { getTeamWithModels } from 'db/team';
+import { getTeamsById, getTeamWithModels } from 'db/team';
 import { addVerification, getAndDeleteVerification, VerificationTypes } from 'db/verification';
 import PasswordResetEmail from 'emails/PasswordReset';
 import jwt from 'jsonwebtoken';
@@ -29,6 +29,30 @@ export async function accountData(req, res, _next) {
 	};
 }
 
+//returns a map which maps teamId to the number of members in the team to use for welcome.tsx
+export async function welcomeData(req, res, _next) {
+	const teamIDS = res.locals.account.orgs.reduce((acc, curr) => {
+		curr.teams.forEach(team => {
+			acc.push(team.id);
+		});
+		return acc;
+	}, []);
+
+	let teams = await getTeamsById(teamIDS); //array of all the teams associated with every org, array of team objects
+
+	const teamMembers = teams.reduce((acc, curr) => {
+		//note: deduplicating teammembers
+		acc[curr._id.toString()] = new Set(curr.members.map(x => x.toString())).size;
+		return acc;
+	}, {});
+
+	return {
+		team: res.locals.matchingTeam,
+		csrf: req.csrfToken(),
+		teamMembers
+	};
+}
+
 /**
  * GET /account
  * account page html
@@ -40,7 +64,7 @@ export async function accountPage(app, req, res, next) {
 }
 
 export async function welcomePage(app, req, res, next) {
-	const data = await accountData(req, res, next);
+	const data = await welcomeData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, '/welcome');
 }
@@ -74,6 +98,10 @@ export async function configureModelsPage(app, req, res, next) {
 export async function accountJson(req, res, next) {
 	const data = await accountData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
+}
+export async function welcomeJson(req, res, next) {
+	const data = await welcomeData(req, res, next);
+	return res.json({ ...data, teams: res.locals.teams });
 }
 
 /**

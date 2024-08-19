@@ -133,6 +133,9 @@ export default function router(server, app) {
 	);	server.get(
 		'/welcome',
 		unauthedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.welcomePage.bind(null, app)
 	);
@@ -152,6 +155,15 @@ export default function router(server, app) {
 		setPermissions,
 		accountController.accountJson
 	);
+	server.get(
+		'/welcome.json',
+		authedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		accountController.welcomeJson,
+	)
 
 	//TODO: move and rename all these
 	server.post(

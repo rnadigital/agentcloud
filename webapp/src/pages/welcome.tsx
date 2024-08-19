@@ -26,21 +26,27 @@ export default function Welcome(props) {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
+	const { teamMembers } = props;
 	const [_state, dispatch] = useState();
+	const [state, propState] = useState(props);
 	const { account, csrf } = accountContext as any;
 	const posthog = usePostHog();
 	const { theme } = useThemeContext();
 
+	async function fetchWelcomeData() {
+		await API.getWelcomeData(dispatch, setError, router);
+	}
 	useEffect(() => {
+		fetchWelcomeData();
 		setLoading(false);
-	}, [accountContext.account]);
+	}, []);
 
 	async function switchTeam(orgId, teamId) {
 		const splitLocation = location.pathname.split('/').filter(n => n);
 		const foundResourceSlug = account.orgs.find(o =>
 			o.teams.find(t => t.id.toString() === splitLocation[0])
 		);
-		let redirect = location.pathname;
+		let redirect = `/${teamId}/apps`;
 		if (foundResourceSlug) {
 			splitLocation.shift();
 			if (splitLocation.length <= 1) {
@@ -107,8 +113,8 @@ export default function Welcome(props) {
 					/>
 				</div>
 
-				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[650px]'>
-					<div className='flex flex-col items-start justify-start bg-white dark:bg-slate-800 text-gray-900 dark:text-white px-6 py-8 shadow sm:rounded-lg sm:px-8'>
+				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[750px]'>
+					<div className='flex flex-col items-start justify-start bg-white dark:bg-slate-800 text-gray-900 dark:text-white px-6 py-8 shadow rounded-2xl md:rounded-lg sm:px-8'>
 						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 mt-2 dark:text-white'>
 							Welcome back
 						</h2>
@@ -129,43 +135,45 @@ export default function Welcome(props) {
 														<>
 															<div className='flex min-w-0 gap-x-4'>
 																<div className='min-w-0 flex-auto'>
-																	<p className='text-sm text-gray-500'>{org.name}</p>
-																	<p className='text-sm font-semibold leading-6 text-gray-900'>
-																		<span className='absolute inset-x-0 -top-px bottom-0' />
-																		{}
-																	</p>
+																	<p className='text-xs text-gray-500 md:text-sm'>{org.name}</p>
 																</div>
 															</div>
 															{org.teams.map((team: any) => {
-																// console.log('team',team	);
-																// console.log('org', org);
 																return (
 																	<li
 																		key={team.id}
-																		className='relative flex text-md w-full justify-between items-end px-4 py-5 hover:bg-gray-50 sm:px-6'
+																		className='relative flex text-md w-full justify-between items-center px-4 py-5 sm:text-sm hover:bg-gray-50 sm:px-6'
 																	>
 																		<div
-																			className='flex flex-row w-full shrink-0 items-center justify-between gap-x-2 hover:cursor-pointer'
+																			className='grid grid-cols-2 gap-3 w-full shrink-0 items-center justify-start hover:cursor-pointer'
 																			onClick={() => {
 																				switchTeam(org.id, team.id);
 																			}}
 																		>
-																			<div className='hidden font-bold sm:flex sm:flex-col sm:items-end'>
-																				<p className='text-sm leading-6 text-gray-900'>
-																					{team.name}
-																				</p>
+																			<div className='flex flex-col md:flex-row md:justify-between'>
+																				<div className='font-bold flex flex-col md:flex-row'>
+																					<p className='text-sm max-w-48 md:text-sm text-gray-900 truncate'>
+																						{team.name}
+																					</p>
+																				</div>
+																				<div className='flex flex-col md:flex-row justify-end'>
+																					<p className='text-sm text-gray-900'>
+																						{teamMembers[team.id] > 1 ? (
+																							<p>{teamMembers[team.id]} Members</p>
+																						) : (
+																							<p>{teamMembers[team.id]} Member</p>
+																						)}
+																					</p>
+																				</div>
 																			</div>
-																			{/* <div className='hidden sm:flex sm:flex-col sm:items-end'>
-																		<p className='text-sm font-medium leading-6 text-gray-900'>
-																			{Object.keys(team.permissions || {})?.length} Members
-																		</p>
-																	</div> */}
 
-																			<div className='flex flex-row'>
-																				{accountContext.account.currentTeam === team.id && (
+																			<div className='flex flex-row justify-end gap-2'>
+																				{accountContext.account.currentTeam === team.id ? (
 																					<p className='text-sm text-gray-500'>
 																						Currently Logged In
 																					</p>
+																				) : (
+																					<p className='text-sm text-indigo-600'>Select</p>
 																				)}
 																				<ArrowRightCircleIcon
 																					aria-hidden='true'
