@@ -1,6 +1,10 @@
 'use strict';
 
+import debug from 'debug';
 import { OpenAPIClientAxios } from 'openapi-client-axios';
+import { expire, get, set } from 'redis/redis';
+const log = debug('webapp:airbyte:api');
+const CACHE_KEY = 'airbyte_access_token';
 
 export enum AirbyteApiType {
 	WORKSPACES,
@@ -25,7 +29,13 @@ const base64Credentials = Buffer.from(
 ).toString('base64');
 
 export async function getAirbyteAuthToken() {
-	console.log('base64Credentials', base64Credentials);
+	// Check if the token is already cached
+	let token = await get(CACHE_KEY);
+	if (token) {
+		log('Returning cached Airbyte auth token:', token);
+		return token;
+	}
+	log('Token not found in cache, fetching new token...');
 	return fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications/token`, {
 		method: 'POST',
 		headers: {
@@ -38,9 +48,14 @@ export async function getAirbyteAuthToken() {
 		})
 	})
 		.then(res => res.json())
-		.then(json => {
-			console.log('getAirbyteAuthToken json:', json);
-			return json?.access_token || '';
+		.then(async json => {
+			log('getAirbyteAuthToken json:', json);
+			const token = json?.access_token || '';
+			if (token) {
+				await set(CACHE_KEY, token, 60);
+				log('Token cached for 60 seconds.');
+			}
+			return token;
 		});
 }
 

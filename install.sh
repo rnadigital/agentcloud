@@ -131,6 +131,9 @@ done
 
 echo "=> Starting airbyte"
 
+# env to disable airbyte telemetry
+DO_NOT_TRACK=1
+
 if ! command -v abctl &> /dev/null; then
 	echo "'abctl' command not found. Installing Airbyte..."
 	curl -LsfS https://get.airbyte.com | bash -
@@ -160,8 +163,17 @@ else
 	abctl local status
 fi
 
-curl 'http://localhost:8000/api/v1/instance_configuration/setup' -X POST -H 'content-type: application/json' \
---data-raw '{"email":"example@example.org","anonymousDataCollection":true,"securityCheck":"skipped","organizationName":"example-org","initialSetupComplete":true,"displaySetupWizard":false}'
+retry_curl() {
+	local url=$1
+	local data=$2
+	while true; do
+		curl "$url" -X POST -H 'content-type: application/json' --data-raw "$data" && break
+		echo "Curl request failed. Retrying in 3 seconds..."
+		sleep 3
+	done
+}
+
+retry_curl 'http://localhost:8000/api/v1/instance_configuration/setup' '{"email":"example@example.org","anonymousDataCollection":true,"securityCheck":"skipped","organizationName":"example-org","initialSetupComplete":true,"displaySetupWizard":false}'
 
 export AIRBYTE_USERNAME=`kubectl exec --kubeconfig ~/.airbyte/abctl/abctl.kubeconfig --namespace airbyte-abctl -it airbyte-db-0 -- psql -U airbyte -d db-airbyte -t -A -c 'SELECT "email" FROM "user"'`
 echo $AIRBYTE_USERNAME

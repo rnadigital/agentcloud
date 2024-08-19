@@ -70,6 +70,31 @@ async function fetchWorkspaces() {
 	return response.json();
 }
 
+// Function to fetch applications
+async function fetchApplications() {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications`, {
+		method: 'GET',
+		headers: { Authorization: authorizationHeader }
+	});
+	return response.json();
+}
+
+// // Function to fetch applications
+// async function fetchAccessToken(clientId, clientSecret) {
+// 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications/token`, {
+// 		method: 'POST',
+// 		headers: {
+// 			'Content-Type': 'application/json',
+// 			Authorization: authorizationHeader
+// 		},
+// 		body: {
+// 			client_id: clientId,
+// 			client_secret: clientSecret
+// 		}
+// 	});
+// 	return response.json();
+// }
+
 // Function to fetch the destination list
 async function fetchDestinationList(workspaceId: string) {
 	const response = await fetch(
@@ -234,6 +259,22 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
+		if (!process.env.AIRBYTE_CLIENT_ID || !process.env.AIRBYTE_CLIENT_SERET) {
+			const existingApplications = await fetchApplications();
+			log('existingApplications', existingApplications);
+			const defaultApplication = existingApplications.applications.find(
+				app => app?.name === 'Default User Application'
+			);
+			if (!defaultApplication) {
+				log(
+					'AIRBYTE_CLIENT_ID or AIRBYTE_CLIENT_SECRET not set and default application not found in airbyte api'
+				);
+				process.exit(1);
+			}
+			process.env.AIRBYTE_CLIENT_ID = defaultApplication.clientId;
+			process.env.AIRBYTE_CLIENT_SECRET = defaultApplication.clientSecret;
+		}
+
 		log(
 			'airbyte creds, %s, %s',
 			process.env.AIRBYTE_USERNAME.trim(),
