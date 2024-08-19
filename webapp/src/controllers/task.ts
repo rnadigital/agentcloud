@@ -111,6 +111,7 @@ export async function addTaskApi(req, res, next) {
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
+			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'expectedOutput', validation: { ofType: 'string' } },
 			{
 				field: 'toolIds',
@@ -154,6 +155,7 @@ export async function addTaskApi(req, res, next) {
 		name,
 		description,
 		requiresHumanInput,
+		displayOnlyFinalOutput,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
@@ -192,6 +194,7 @@ export async function addTaskApi(req, res, next) {
 		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
+		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		icon: foundIcon
 			? {
 					id: foundIcon._id,
@@ -213,6 +216,7 @@ export async function editTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
+			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
@@ -254,6 +258,7 @@ export async function editTaskApi(req, res, next) {
 	const {
 		name,
 		requiresHumanInput,
+		displayOnlyFinalOutput,
 		description,
 		expectedOutput,
 		toolIds,
@@ -288,7 +293,8 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		agentId: toObjectId(agentId),
-		formFields: formFields
+		formFields: formFields,
+		displayOnlyFinalOutput: displayOnlyFinalOutput === true
 	});
 
 	return dynamicResponse(req, res, 302, {

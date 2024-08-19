@@ -817,7 +817,7 @@ cron = ["capturer (>=2.4)"]
 
 [[package]]
 name = "crewai"
-version = "0.41.1-post1"
+version = "0.41.1-post2"
 description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
 optional = false
 python-versions = ">=3.10,<=3.13"
@@ -848,8 +848,8 @@ tools = ["crewai-tools (>=0.4.26,<0.5.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "ffce511e8b66a64caf64cba21190ddc61bb7443f"
-resolved_reference = "ffce511e8b66a64caf64cba21190ddc61bb7443f"
+reference = "ba31f0c50cb390598eef10d5947253ef9b30435a"
+resolved_reference = "ba31f0c50cb390598eef10d5947253ef9b30435a"
 
 [[package]]
 name = "curl-cffi"
@@ -2545,6 +2545,21 @@ groq = ">=0.4.1,<1"
 langchain-core = ">=0.2.26,<0.3.0"
 
 [[package]]
+name = "langchain-ollama"
+version = "0.1.1"
+description = "An integration package connecting Ollama and LangChain"
+optional = false
+python-versions = "<4.0,>=3.8.1"
+files = [
+    {file = "langchain_ollama-0.1.1-py3-none-any.whl", hash = "sha256:179b6f21e01fc72ebc034ec725f8c5dcef4a81709919278e6fa4f43605df5d82"},
+    {file = "langchain_ollama-0.1.1.tar.gz", hash = "sha256:91b3b6cfcc90890c683995520d84210ebd2cee8c0f2cd0a5ffde9f1ffbee2f94"},
+]
+
+[package.dependencies]
+langchain-core = ">=0.2.20,<0.3.0"
+ollama = ">=0.3.0,<1"
+
+[[package]]
 name = "langchain-openai"
 version = "0.1.21"
 description = "An integration package connecting OpenAI and LangChain"
@@ -3183,6 +3198,20 @@ files = [
 rsa = ["cryptography (>=3.0.0)"]
 signals = ["blinker (>=1.4.0)"]
 signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
+
+[[package]]
+name = "ollama"
+version = "0.3.1"
+description = "The official Python client for Ollama."
+optional = false
+python-versions = "<4.0,>=3.8"
+files = [
+    {file = "ollama-0.3.1-py3-none-any.whl", hash = "sha256:db50034c73d6350349bdfba19c3f0d54a3cea73eb97b35f9d7419b2fc7206454"},
+    {file = "ollama-0.3.1.tar.gz", hash = "sha256:032572fb494a4fba200c65013fe937a65382c846b5f358d9e8918ecbc9ac44b5"},
+]
+
+[package.dependencies]
+httpx = ">=0.27.0,<0.28.0"
 
 [[package]]
 name = "onnx"
@@ -5773,4 +5802,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "651b5d6694b202ff6b8de291f1038e39e9614bd0b402068e64178a148e777ae6"
+content-hash = "99247935be367a65376386bd248d2a4266eb4af47c9572a46e3e0c594d7a11fb"
