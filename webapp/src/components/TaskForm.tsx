@@ -97,6 +97,7 @@ export default function TaskForm({
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
+			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			context: taskState?.context || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
@@ -530,6 +531,41 @@ export default function TaskForm({
 												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
 											/>
 											Allow Human Input
+										</label>
+									</div>
+								</div>
+							</ToolTip>
+						</div>
+
+						{/* displayOnlyFinalOutput tool checkbox */}
+						<div className='col-span-full'>
+							<ToolTip
+								content='Hides intermediate thought messages from agents and only display the final task output.'
+								placement='top-start'
+								arrow={false}
+							>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='displayOnlyFinalOutput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+										>
+											<input
+												type='checkbox'
+												id='displayOnlyFinalOutput'
+												name='displayOnlyFinalOutput'
+												checked={taskState?.displayOnlyFinalOutput === true}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															displayOnlyFinalOutput: e.target.checked
+														};
+													});
+												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+											/>
+											Display Only Final Output
 										</label>
 									</div>
 								</div>

@@ -103,7 +103,7 @@ class BaseChatAgent:
                         chunk = repr(content)
                         content = self._parse_model_chunk(content)
                         tags = event['tags'] or []
-                        if type(content) is str and 'rag_retrieval' not in tags:
+                        if type(content) is str and not any(x in tags for x in {'rag_retrieval', 'no_stream'}):
                             self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
                                                 first=first, chunk_id=chunk_id,
                                                 timestamp=datetime.now().timestamp() * 1000,
