@@ -26,10 +26,10 @@ export default function Welcome(props) {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const { verifysuccess, noverify, changepassword } = router.query;
-	const { teamMembers } = props;
-	const [_state, dispatch] = useState();
-	const [state, propState] = useState(props);
-	const { account, csrf } = accountContext as any;
+	const [state, dispatch] = useState(props);
+	const { teamMembers } = state;
+	const { account, csrf } = accountContext || {};
+	const [currentTeam, _] = useState(account?.currentTeam);
 	const posthog = usePostHog();
 	const { theme } = useThemeContext();
 
@@ -75,7 +75,7 @@ export default function Welcome(props) {
 							if (res.canCreateModel && (!res.teamData.llmModel || !res.teamData.embeddingModel)) {
 								redirect = `/${teamId}/onboarding/configuremodels`;
 							}
-							dispatch(res);
+							// dispatch(res);
 							router.push(redirect);
 						},
 						600 + (Date.now() - start)
@@ -89,10 +89,9 @@ export default function Welcome(props) {
 		}
 	}
 
-	if (loading) {
+	if (loading || !teamMembers) {
 		return <Spinner />;
 	}
-	console.log('accountContext', accountContext);
 
 	return (
 		<>
@@ -168,7 +167,7 @@ export default function Welcome(props) {
 																			</div>
 
 																			<div className='flex flex-row justify-end gap-2'>
-																				{accountContext.account.currentTeam === team.id ? (
+																				{currentTeam === team.id ? (
 																					<p className='text-sm text-gray-500'>
 																						Currently Logged In
 																					</p>
