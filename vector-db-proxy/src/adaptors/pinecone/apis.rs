@@ -168,14 +168,14 @@ impl VectorDatabase for PineconeClient {
 
     async fn scroll_points(
         &self,
-        search_request: SearchRequest,
+        _search_request: SearchRequest,
     ) -> Result<Vec<ScrollResults>, VectorDatabaseError> {
         todo!()
     }
 
     async fn similarity_search(
         &self,
-        search_request: SearchRequest,
+        _search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
         todo!()
     }

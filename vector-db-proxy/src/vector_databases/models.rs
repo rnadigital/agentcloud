@@ -166,6 +166,18 @@ impl From<Metric> for Distance {
         }
     }
 }
+
+impl From<i32> for Distance {
+    fn from(value: i32) -> Self {
+        match value {
+            1 => Distance::Cosine,
+            2 => Distance::Euclid,
+            3 => Distance::Dot,
+            4 => Distance::Manhattan,
+            _ => Distance::UnknownDistance,
+        }
+    }
+}
 #[derive(Serialize, Debug, Clone)]
 pub struct CollectionCreate {
     pub collection_name: String,

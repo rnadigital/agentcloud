@@ -2,8 +2,8 @@ use crate::adaptors::qdrant::helpers::{construct_point_struct, get_next_page, ge
 use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
-    CollectionCreate, CollectionMetadata, CollectionsResult, Point, ScrollResults, SearchRequest,
-    SearchResult, StorageSize, VectorDatabaseStatus,
+    CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, ScrollResults,
+    SearchRequest, SearchResult, StorageSize, VectorDatabaseStatus,
 };
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -266,10 +266,24 @@ impl VectorDatabase for QdrantClient {
         match self.collection_info(collection_id).await {
             Ok(info_results) => {
                 if let Some(info) = info_results.result {
+                    let vector_config = info
+                        .clone()
+                        .config
+                        .unwrap()
+                        .params
+                        .unwrap()
+                        .vectors_config
+                        .unwrap()
+                        .config
+                        .unwrap();
+                    let metric = match vector_config {
+                        Config::Params(v) => Some(v.distance),
+                        Config::ParamsMap(_) => None,
+                    };
                     let collection_info = CollectionMetadata {
                         status: VectorDatabaseStatus::from(info.clone()),
                         collection_vector_count: info.indexed_vectors_count.clone(),
-                        metric: Some(info.segments_count.clone()),
+                        metric: Some(Distance::from(metric.unwrap_or(1))),
                         dimensions: info.points_count,
                     };
                     Ok(Some(collection_info))
