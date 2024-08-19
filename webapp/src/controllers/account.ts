@@ -39,10 +39,10 @@ export async function accountPage(app, req, res, next) {
 	return app.render(req, res, '/account');
 }
 
-export async function configureWelcomePage(app, req, res, next){
+export async function welcomePage(app, req, res, next) {
 	const data = await accountData(req, res, next);
-	res.locals.data = {...data, account: res.locals.account };
-	return app.render(req, res, '/welcome');	
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, '/welcome');
 }
 
 /**
@@ -66,8 +66,6 @@ export async function configureModelsPage(app, req, res, next) {
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/onboarding/configuremodels`);
 }
-
-
 
 /**
  * GET /account.json

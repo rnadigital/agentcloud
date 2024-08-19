@@ -38,6 +38,7 @@ const authedMiddlewareChain = [
 	csrfMiddleware
 ];
 
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
@@ -52,7 +53,6 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
-import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -130,6 +130,11 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.accountPage.bind(null, app)
+	);	server.get(
+		'/welcome',
+		unauthedMiddlewareChain,
+		csrfMiddleware,
+		accountController.welcomePage.bind(null, app)
 	);
 	server.get(
 		'/billing',
