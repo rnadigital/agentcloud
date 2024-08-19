@@ -202,9 +202,25 @@ async function updateWebhookUrls(workspaceId: string) {
 				sendOnSuccess: {
 					notificationType: ['slack'],
 					slackConfiguration: {
-						//Note: WEBAPP_WEBHOOK_URL for development
-						webhook:
-							process.env.WEBAPP_WEBHOOK_URL || `${process.env.URL_APP}/webhook/sync-successful`
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-successful`
+					}
+				},
+				sendOnBreakingChangeSyncsDisabled: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeSyncsDisabled`
+					}
+				},
+				sendOnBreakingChangeWarning: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeWarning`
+					}
+				},
+				sendOnFailure: {
+					notificationType: ['slack'],
+					slackConfiguration: {
+						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnFailure`
 					}
 				}
 			}
@@ -233,6 +249,10 @@ export async function init() {
 		const airbyteAdminWorkspaceId = workspacesList.workspaces[0].workspaceId;
 
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
+		if (!airbyteAdminWorkspaceId) {
+			log('Failed to fetch airbyte admin workspace ID, exiting');
+			process.exit(1);
+		}
 		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
 
 		// Get destination list
