@@ -132,7 +132,7 @@ async function createDestination(workspaceId: string, provider: string) {
 // Function to deletea destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/v1/destinations/${destinationId}`,
+		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations/${destinationId}`,
 		{
 			method: 'DELETE',
 			headers: {
