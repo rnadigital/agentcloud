@@ -13,18 +13,35 @@ export default function AddTask(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
+	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
+	const [loading, setLoading] = useState(true);
 	const { tasks, tools, agents } = state;
 
 	async function fetchTaskFormData() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
 	}
 
+	async function fetchEditData(taskId) {
+		await API.getTask({ resourceSlug, taskId }, setCloneState, setError, router);
+	}
+
 	useEffect(() => {
 		fetchTaskFormData();
 	}, [resourceSlug]);
 
-	if (tasks == null) {
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const taskId = new URLSearchParams(location.search).get('taskId');
+			fetchEditData(taskId);
+		}
+	}, []);
+
+	useEffect(() => {
+		setLoading(false);
+	}, [cloneState?.tasks, state?.tasks]);
+
+	if (loading) {
 		return <Spinner />;
 	}
 	console.log(tasks);
@@ -41,7 +58,9 @@ export default function AddTask(props) {
 					tools={tools}
 					agents={agents}
 					fetchTaskFormData={fetchTaskFormData}
+					task={cloneState?.task}
 					taskChoices={tasks}
+					editing={false}
 				/>
 			</span>
 		</>

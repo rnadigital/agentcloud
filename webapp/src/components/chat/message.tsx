@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { CheckCircleIcon, ClipboardDocumentIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
 import ButtonSpinner from 'components/ButtonSpinner';
@@ -13,8 +14,13 @@ const Markdown = dynamic(() => import('react-markdown'), {
 	loading: () => <p className='markdown-content'>Loading...</p>,
 	ssr: false
 });
+import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
+import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import { toast } from 'react-toastify';
+
+import ChatRestartMessage from './ChatRestartMessage';
 
 const COLLAPSE_AFTER_LINES = 10;
 const ERROR_TEXTS = new Set(['⛔ An unexpected error occurred', '⛔ MAX_RECURSION_LIMIT REACHED']);
@@ -88,10 +94,18 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	return cachedResult;
 }
 
+const customMessages = {
+	'⛔ MAX_RECURSION_LIMIT REACHED': ChatRestartMessage
+};
+
 function MessageBody({ message, messageType, messageLanguage, style, chunking }) {
 	let messageContent =
 		messageLanguage === 'json' ? JSON.stringify(message, null, '\t') : message.toString();
 	return useMemo(() => {
+		const CustomMessageBody = customMessages[message];
+		if (CustomMessageBody) {
+			return <CustomMessageBody />;
+		}
 		switch (messageType) {
 			case 'code':
 				return (
@@ -169,6 +183,30 @@ export function Message({
 	completed?: boolean;
 }) {
 	const [chatContext]: any = useChatContext();
+
+	const [accountContext]: any = useAccountContext();
+	const { account, csrf, switching } = accountContext as any;
+	const router = useRouter();
+	const posthog = usePostHog();
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+
+	const restartSession = () => {
+		posthog.capture('restartSession', {
+			appId: chatContext?.app._id,
+			appType: chatContext?.app.type,
+			appName: chatContext?.app.name
+		});
+		API.addSession(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				id: chatContext?.app?._id
+			},
+			null,
+			toast.error,
+			router
+		);
+	};
 
 	const [style, setStyle] = useState(null);
 	try {

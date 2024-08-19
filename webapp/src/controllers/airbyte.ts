@@ -14,11 +14,15 @@ import {
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
+import posthog from 'lib/posthog';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { DatasourceStatus } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
+import { v4 as uuidv4 } from 'uuid';
+
+import { getTeamById } from '../db/team';
 const warn = debug('webapp:controllers:airbyte:warning');
 warn.log = console.warn.bind(console); //set namespace to log
 const log = debug('webapp:controllers:airbyte');
@@ -161,6 +165,46 @@ function extractWebhookSuccesfulDetails(data) {
 	return { jobId, datasourceId, recordsLoaded };
 }
 
+function extractWebhookFailureDetails(data) {
+	// Initialize variables
+	let jobId = '';
+	let datasourceId = '';
+	let errorMessage = '';
+	let logUrl = '';
+
+	const text = data.text;
+
+	// Extract the connection ID (datasourceId)
+	const datasourceRegex = /connection ([\w]+) from/;
+	const datasourceMatch = text.match(datasourceRegex);
+	if (datasourceMatch) {
+		datasourceId = datasourceMatch[1];
+	}
+
+	// Extract the error message
+	const errorRegex = /This happened with (.+) - please review/;
+	const errorMatch = text.match(errorRegex);
+	if (errorMatch) {
+		errorMessage = errorMatch[1];
+	}
+
+	// Extract the job ID
+	const jobIdRegex = /Job ID: (\d+)/;
+	const jobIdMatch = text.match(jobIdRegex);
+	if (jobIdMatch) {
+		jobId = jobIdMatch[1];
+	}
+
+	// Extract the log URL
+	const urlRegex = /You can access its logs here: (http[^\s]+)/;
+	const urlMatch = text.match(urlRegex);
+	if (urlMatch) {
+		logUrl = urlMatch[1];
+	}
+
+	return { jobId, datasourceId, errorMessage, logUrl };
+}
+
 export async function handleSuccessfulSyncWebhook(req, res, next) {
 	log('handleSuccessfulSyncWebhook body %O', req.body);
 
@@ -209,6 +253,71 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		}
 	} else {
 		warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
+	}
+
+	return dynamicResponse(req, res, 200, {});
+}
+
+export async function handleProblemWebhook(req, res, next) {
+	log('handleProblemWebhook body %s', JSON.stringify(req.body));
+
+	//TODO: validate some kind of webhook key?
+
+	let validationError = chainValidations(
+		req.query,
+		[
+			{
+				field: 'event',
+				validation: {
+					notEmpty: true,
+					inSet: new Set([
+						'sendOnBreakingChangeSyncsDisabled',
+						'sendOnBreakingChangeWarning',
+						'sendOnFailure'
+					])
+				}
+			}
+		],
+		{}
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { jobId, datasourceId, errorMessage, logUrl } = extractWebhookFailureDetails(
+		req.body || {}
+	);
+
+	log('extractWebhookFailureDetails', { jobId, datasourceId, errorMessage, logUrl });
+
+	if (datasourceId) {
+		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		const team = await getTeamById(datasource?.teamId);
+		let logUrlPath = '';
+		try {
+			logUrlPath = new URL(logUrl).pathname;
+		} catch {
+			/* ignore this error */
+		}
+		const posthogBody = {
+			distinctId: uuidv4(),
+			event: req.query.event,
+			properties: {
+				text: req?.body?.text, //raw text from airbytes garbage unformatted webhooks
+				errorMessage, //extracted error
+				jobId, //airbyte job id
+				datasourceId, //datasource mongo id
+				datasourceName: datasource?.name, //datasource name
+				teamId: datasource?.teamId, //datasource team id
+				orgId: datasource?.orgId, //datasource org id
+				teamName: team?.name, //name of team that matches teamid
+				logUrl: `${process.env.AIRBYTE_WEB_URL}${logUrlPath}`
+			}
+		};
+		if (posthog) {
+			log('posthog.capture %O', posthogBody);
+			posthog.capture(posthogBody);
+		}
 	}
 
 	return dynamicResponse(req, res, 200, {});

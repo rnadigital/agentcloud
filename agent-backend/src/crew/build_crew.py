@@ -166,11 +166,12 @@ class CrewAIBuilder:
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
-                                  exclude={"id", "context", "requiresHumanInput"}),
+                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput"}),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
-                human_input=task.requiresHumanInput
+                human_input=task.requiresHumanInput,
+                stream_only_final_output=task.displayOnlyFinalOutput
             )
 
     def make_user_question(self):
