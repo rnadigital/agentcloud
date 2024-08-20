@@ -237,7 +237,7 @@ impl From<i32> for Distance {
 pub struct CollectionCreate {
     pub collection_name: String,
     pub dimensions: usize,
-    pub namespace: String,
+    pub namespace: Option<String>,
     pub distance: Distance,
     pub vector_name: Option<String>,
     pub region: Option<Region>,

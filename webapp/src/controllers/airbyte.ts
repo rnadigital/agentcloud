@@ -7,7 +7,7 @@ import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 import {
 	getDatasourceById,
-	getDatasourceByIdUnsafe,
+	unsafeGetDatasourceById,
 	setDatasourceLastSynced,
 	setDatasourceStatus,
 	setDatasourceTotalRecordCount
@@ -214,7 +214,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		req.body?.blocks || []
 	);
 	if (jobId && datasourceId) {
-		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		const datasource = await unsafeGetDatasourceById(datasourceId);
 		if (datasource) {
 			//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
 			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -291,7 +291,7 @@ export async function handleProblemWebhook(req, res, next) {
 	log('extractWebhookFailureDetails', { jobId, datasourceId, errorMessage, logUrl });
 
 	if (datasourceId) {
-		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		const datasource = await unsafeGetDatasourceById(datasourceId);
 		const team = await getTeamById(datasource?.teamId);
 		let logUrlPath = '';
 		try {
@@ -331,7 +331,7 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	// TODO: body validation
 	const { datasourceId } = req.body;
 
-	const datasource = await getDatasourceByIdUnsafe(datasourceId);
+	const datasource = await unsafeGetDatasourceById(datasourceId);
 	if (datasource) {
 		const notification = {
 			orgId: toObjectId(datasource.orgId.toString()),

@@ -1,0 +1,83 @@
+'use strict';
+
+import dotenv from 'dotenv';
+import debug from 'debug';
+const log = debug('webapp:vectordb:proxy');
+dotenv.config({ path: '.env' });
+
+// Import structs from the alias
+import {
+	VectorResponseBody,
+	CollectionCreateBody,
+	Distance,
+} from 'struct/vectorproxy';
+
+import { IdOrStr } from 'db/index';
+import { unsafeGetDatasourceById } from 'db/datasource';
+import { getModelById } from '../../db/model';
+
+class VectorDBProxyClient {
+	// Method to create a collection
+	static async createCollection(
+		collectionId: IdOrStr,
+		createOptions?: CollectionCreateBody
+	): Promise<any> {
+		log('createCollection %s %O', collectionId, createOptions);
+		try {
+			// Note: Checks if the collection exists beforehand
+			const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
+			if (collectionExists?.error_message) {
+				if (!createOptions) {
+					//createOptions are optional as an optimisation where the data is already in scope
+					const existingDatasource = await unsafeGetDatasourceById(collectionId);
+					if (!existingDatasource) {
+						throw new Error(`Datasource for datasourceId ${collectionId} for createCollection request`);
+					}
+					const existingModel = await getModelById(existingDatasource.teamId, existingDatasource.modelId);
+					if (!existingDatasource) {
+						throw new Error(`Datasource for datasourceId ${collectionId} for createCollection request`);
+					}
+					// Construct createOptions from existingDatasource and existingModel
+					createOptions = {
+						collection_name: collectionId.toString(),
+						dimensions: existingModel.embeddingLength,
+						distance: Distance.Cosine, // As per the note: always cosine (for now)
+						vector_name: existingModel.model, // This assumes vector_name is the model name
+						// region: Region.US,
+						// cloud: Cloud.GCP
+					};
+				}
+			} else {
+				log('Collection %s already exists', collectionId);
+			}
+		} catch (e) {
+			console.error(e);
+		}
+		log('createOptions', createOptions)
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/create-collection/`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify(createOptions)
+		}).then(res => res.json());
+	}
+
+	// Method to check collection exists
+	static async checkCollectionExists(collectionId: IdOrStr): Promise<VectorResponseBody> {
+		log('checkCollectionExists %s', collectionId);
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/check-collection-exists/${collectionId}`, {
+			method: 'POST'
+		}).then(res => res.json());
+	}
+
+	// Method to delete a collection
+	static async deleteCollection(collectionId: IdOrStr): Promise<VectorResponseBody> {
+		log('deleteCollection %s', collectionId);
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/collection/${collectionId}`, {
+			method: 'DELETE'
+		}).then(res => res.json());
+	}
+}
+
+export default VectorDBProxyClient;

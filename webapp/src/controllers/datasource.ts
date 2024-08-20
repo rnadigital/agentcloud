@@ -23,7 +23,7 @@ import { pricingMatrix } from 'struct/billing';
 import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
-import VectorDBProxy from 'vectordb/proxy';
+import VectorDBProxyClient from 'lib/vectorproxy/client';
 
 import {
 	addDatasource,
@@ -260,7 +260,7 @@ export async function testDatasourceApi(req, res, next) {
 
 	// Create the collection in qdrant
 	// try {
-	// 	await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+	// 	await VectorDBProxy.createCollection(newDatasourceId);
 	// } catch (e) {
 	// 	return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
 	// }
@@ -295,6 +295,7 @@ export async function testDatasourceApi(req, res, next) {
 }
 
 export async function addDatasourceApi(req, res, next) {
+	
 	const {
 		datasourceId,
 		datasourceName,
@@ -405,7 +406,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -612,7 +613,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -653,7 +654,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -763,7 +764,7 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Delete the points in qdrant
 	try {
-		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
+		await VectorDBProxyClient.deleteCollection(req.params.datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -898,7 +899,7 @@ export async function uploadFileApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+		console.log('createcollection', await VectorDBProxyClient.createCollection(newDatasourceId));
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
