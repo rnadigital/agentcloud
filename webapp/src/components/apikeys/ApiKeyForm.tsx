@@ -19,10 +19,10 @@ export default function ToolForm({
 	expirationDate,
 	ownerId
 }: {
-	name: string;
-	description: string;
-	expirationDate: Date;
-	ownerId: ObjectId | string;
+	name?: string;
+	description?: string;
+	expirationDate?: Date;
+	ownerId?: ObjectId | string;
 }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
