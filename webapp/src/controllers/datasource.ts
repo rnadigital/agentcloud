@@ -898,7 +898,7 @@ export async function uploadFileApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		console.log('createcollection', await VectorDBProxyClient.createCollection(newDatasourceId));
+		await VectorDBProxyClient.createCollection(newDatasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
