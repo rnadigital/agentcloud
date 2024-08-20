@@ -146,6 +146,14 @@ impl Region {
             _ => panic!("Unknown Pinecone serverless region"),
         }
     }
+
+    pub fn from_str(region: &str) -> Self {
+        match region {
+            "us-west-2" => Region::US,
+            "eu-west-1" => Region::EU,
+            _ => panic!("Unknown Pinecone serverless region"),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -243,7 +251,24 @@ pub struct CollectionCreate {
     pub region: Option<Region>,
     pub cloud: Option<Cloud>,
 }
-
+impl CollectionCreate {
+    pub fn new(
+        collection_name: String,
+        dimensions: usize,
+        distance: Distance,
+        region: Region,
+    ) -> Self {
+        Self {
+            collection_name: collection_name.clone(),
+            dimensions,
+            distance,
+            namespace: None,
+            vector_name: None,
+            cloud: Some(Cloud::AWS),
+            region: Some(region),
+        }
+    }
+}
 impl From<bool> for VectorDatabaseStatus {
     fn from(value: bool) -> Self {
         match value {
