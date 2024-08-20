@@ -1,8 +1,10 @@
 use crate::adaptors::gcp::models::PubSubConnect;
-use crate::adaptors::mongo::models::ChunkingStrategy;
+use crate::adaptors::mongo::models::UnstructuredChunkingConfig;
 use crate::adaptors::mongo::queries::{
     get_datasource, get_model, increment_by_one, set_record_count_total,
 };
+use crate::adaptors::qdrant::helpers::construct_point_struct;
+use crate::adaptors::qdrant::utils::Qdrant;
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::models::EmbeddingModels;
@@ -13,15 +15,14 @@ use crate::messages::task_handoff::send_task;
 use crate::utils::file_operations;
 use crate::utils::file_operations::save_file_to_disk;
 use crate::utils::webhook::send_webapp_embed_ready;
-use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use mongodb::Database;
+use qdrant_client::client::QdrantClient;
+use qdrant_client::prelude::PointStruct;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use uuid::Uuid;
 
 pub async fn get_message_queue(
     message_queue_provider: MessageQueueProvider,
@@ -56,7 +57,7 @@ pub async fn process_message(
     message_string: String,
     stream_type: Option<String>,
     datasource_id: &str,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    qdrant_client: Arc<RwLock<QdrantClient>>,
     mongo_client: Arc<RwLock<Database>>,
     sender: Sender<(String, String)>,
 ) {
@@ -83,21 +84,20 @@ pub async fn process_message(
                                     let unstructuredio_api_key =
                                         Some(global_data.unstructuredio_api_key)
                                             .filter(|s| !s.is_empty());
+                                    let chunking_strategy: Option<UnstructuredChunkingConfig> =
+                                        ds.clone().chunkStrategy;
                                     let handle = tokio::task::spawn_blocking(move || {
                                         let response = chunk_text(
                                             unstructuredio_url,
                                             unstructuredio_api_key,
                                             file_path.as_str(),
+                                            chunking_strategy,
                                         );
                                         response
                                     });
-                                    let datasource_clone = ds.clone();
                                     // dynamically get user's chunking strategy of choice from the database
                                     let model_obj_clone = model_parameters.clone();
                                     let model_name = EmbeddingModels::from(model_obj_clone.model);
-                                    let chunking_method = datasource_clone.chunkStrategy.unwrap();
-                                    let _chunking_strategy =
-                                        ChunkingStrategy::from(chunking_method);
                                     let mongo_connection_clone = Arc::clone(&mongo_client);
                                     match handle.await.unwrap() {
                                         Ok(documents) => {
@@ -124,92 +124,79 @@ pub async fn process_message(
                                             .await
                                             {
                                                 Ok(embeddings) => {
-                                                    // Initialise vector database client
-                                                    let vector_database =
-                                                        Arc::clone(&vector_database_client);
-                                                    let vector_database_client =
-                                                        vector_database.read().await;
-                                                    let mut points_to_upload: Vec<Point> = vec![];
-                                                    // Construct point to upload
+                                                    let mut points_to_upload: Vec<PointStruct> =
+                                                        vec![];
                                                     for i in 0..list_of_text.len() {
-                                                        // Construct metadata hashmap
                                                         let file_metadata =
                                                             documents.get(i).unwrap();
                                                         let metadata_map =
                                                             HashMap::from(file_metadata);
-                                                        // Embed text and return vector
                                                         let embedding_vector = embeddings.get(i);
                                                         if let Some(vector) = embedding_vector {
-                                                            let point = Point::new(
-                                                                Some(Uuid::new_v4().to_string()),
-                                                                vector.to_vec(),
-                                                                Some(metadata_map),
-                                                            );
-                                                            points_to_upload.push(point)
-                                                        }
-                                                        let search_request = SearchRequest::new(
-                                                            SearchType::Point,
-                                                            datasource_id.to_string(),
-                                                        );
-                                                        //Attempt vector database insert
-                                                        if let Ok(bulk_insert_status) =
-                                                            vector_database_client
-                                                                .bulk_insert_points(
-                                                                    search_request,
-                                                                    points_to_upload.clone(),
+                                                            increment_by_one(
+                                                                &mongo_connection,
+                                                                datasource_id,
+                                                                "recordCount.success",
+                                                            )
+                                                            .await
+                                                            .unwrap();
+                                                            if let Some(point_struct) =
+                                                                construct_point_struct(
+                                                                    &vector,
+                                                                    metadata_map,
+                                                                    Some(model_name.clone()),
                                                                 )
                                                                 .await
+                                                            {
+                                                                points_to_upload.push(point_struct)
+                                                            };
+                                                        } else {
+                                                            increment_by_one(
+                                                                &mongo_connection,
+                                                                datasource_id,
+                                                                "recordCount.failure",
+                                                            )
+                                                            .await
+                                                            .unwrap();
+                                                        }
+                                                        let vector_length =
+                                                            model_parameters.embeddingLength as u64;
+                                                        let qdrant_conn_clone =
+                                                            Arc::clone(&qdrant_client);
+                                                        let qdrant = Qdrant::new(
+                                                            qdrant_conn_clone,
+                                                            datasource_id.to_string(),
+                                                        );
+                                                        match qdrant
+                                                            .bulk_upsert_data(
+                                                                points_to_upload.clone(),
+                                                                Some(vector_length),
+                                                                Some(
+                                                                    model_name
+                                                                        .to_str()
+                                                                        .unwrap()
+                                                                        .to_string(),
+                                                                ),
+                                                            )
+                                                            .await
                                                         {
-                                                            match bulk_insert_status {
-                                                                VectorDatabaseStatus::Ok => {
-                                                                    log::debug!("points uploaded successfully!");
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
+                                                            Ok(_) => {
+                                                                log::debug!(
+                                                                    "points uploaded successfully!"
+                                                                );
+                                                                if let Err(e) =
+                                                                    send_webapp_embed_ready(
                                                                         datasource_id,
-                                                                        "recordCount.success",
                                                                     )
                                                                     .await
-                                                                    .unwrap();
-                                                                    let _ =
-                                                                        send_webapp_embed_ready(
-                                                                            datasource_id,
-                                                                        )
-                                                                        .await
-                                                                        .map_err(|e| {
-                                                                            log::error!("{}", e)
-                                                                        });
+                                                                {
+                                                                    log::error!("Error notifying webapp: {}", e);
+                                                                } else {
+                                                                    log::info!("Webapp notified successfully!");
                                                                 }
-                                                                VectorDatabaseStatus::Failure
-                                                                | VectorDatabaseStatus::NotFound => {
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
-                                                                        datasource_id,
-                                                                        "recordCount.failure",
-                                                                    )
-                                                                    .await
-                                                                    .unwrap();
-                                                                    log::warn!(
-                                                                        "Could not find \
-                                                                    collection :{}",
-                                                                        datasource_id
-                                                                    );
-                                                                }
-                                                                VectorDatabaseStatus::Error(e) => {
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
-                                                                        datasource_id,
-                                                                        "recordCount.failure",
-                                                                    )
-                                                                    .await
-                                                                    .unwrap();
-                                                                    log::error!(
-                                                                        "An error \
-                                                                    occurred while attempting \
-                                                                    point insert operation. \
-                                                                    Error: {:?}",
-                                                                        e
-                                                                    )
-                                                                }
+                                                            }
+                                                            Err(e) => {
+                                                                log::error!("An error occurred while attempting upload to qdrant. Error: {:?}", e);
                                                             }
                                                         }
                                                     }
