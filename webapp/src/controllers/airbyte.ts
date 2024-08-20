@@ -314,8 +314,10 @@ export async function handleProblemWebhook(req, res, next) {
 				logUrl: `${process.env.AIRBYTE_WEB_URL}${logUrlPath}`
 			}
 		};
-		log('posthog.capture %O', posthogBody);
-		posthog.capture(posthogBody);
+		if (posthog) {
+			log('posthog.capture %O', posthogBody);
+			posthog.capture(posthogBody);
+		}
 	}
 
 	return dynamicResponse(req, res, 200, {});

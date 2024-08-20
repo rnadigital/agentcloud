@@ -8,9 +8,7 @@ import json
 
 class SocketEvents(str, Enum):
     MESSAGE = "message"
-    MESSAGES_COMPLETE = "message_complete"
     STOP_GENERATING = "stop_generating"
-    HUMAN_INPUT = "isFeedback"
 
 
 class MessageType(str, Enum):

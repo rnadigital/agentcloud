@@ -41,8 +41,10 @@ export default function AddApp(props: AddAppProps) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
+	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
+	const [loading, setLoading] = useState(true);
 	const { apps, tools, agents, tasks, models, datasources } = state;
 
 	const { theme } = useThemeContext();
@@ -51,13 +53,32 @@ export default function AddApp(props: AddAppProps) {
 		await API.getApps({ resourceSlug }, dispatch, setError, router);
 	}
 
+	async function fetchEditData(appId) {
+		await API.getApp({ resourceSlug, appId }, setCloneState, setError, router);
+	}
+
 	useEffect(() => {
 		fetchAppFormData();
 	}, [resourceSlug]);
 
-	if (apps == null) {
-		return <Spinner />;
-	}
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const appId = new URLSearchParams(location.search).get('appId');
+			fetchEditData(appId);
+		}
+	}, []);
+
+	useEffect(() => {
+		if (cloneState) {
+			if (cloneState?.app?.type === 'chat') {
+				setStep(1);
+			}
+			if (cloneState?.app?.type === 'crew') {
+				setStep(2);
+			}
+		}
+	}, [cloneState]);
+
 	const handleCreateChatApp = () => {
 		setStep(1);
 	};
@@ -65,6 +86,14 @@ export default function AddApp(props: AddAppProps) {
 	const handleCreateProcessApp = () => {
 		setStep(2);
 	};
+
+	useEffect(() => {
+		setLoading(false);
+	}, [state?.apps, cloneState?.apps]);
+
+	if (loading) {
+		return <Spinner />;
+	}
 
 	const renderStepContent = () => {
 		switch (step) {
@@ -164,6 +193,7 @@ export default function AddApp(props: AddAppProps) {
 						agentChoices={agents}
 						modelChoices={models}
 						toolChoices={tools}
+						app={cloneState?.app}
 					/>
 				);
 			case 2:
@@ -173,6 +203,8 @@ export default function AddApp(props: AddAppProps) {
 						taskChoices={tasks}
 						modelChoices={models}
 						fetchFormData={fetchAppFormData}
+						app={cloneState?.app}
+						crew={cloneState?.crew}
 					/>
 				);
 			default:

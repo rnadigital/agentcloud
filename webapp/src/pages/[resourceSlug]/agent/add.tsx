@@ -12,20 +12,37 @@ export default function AddAgent(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
+	const { resourceSlug, agentId } = router.query;
 	const [state, dispatch] = useState(props);
+	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
+	const [loading, setLoading] = useState(true);
 	const { agents, models, tools } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
 	}
 
+	async function fetchEditData(agentId) {
+		await API.getAgent({ resourceSlug, agentId }, setCloneState, setError, router);
+	}
+
 	useEffect(() => {
 		fetchAgentFormData();
-	}, [resourceSlug]);
+	}, []);
 
-	if (agents == null) {
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const agentId = new URLSearchParams(location.search).get('agentId');
+			fetchEditData(agentId);
+		}
+	}, []);
+
+	useEffect(() => {
+		setLoading(false);
+	}, [state?.agents, cloneState?.agents]);
+
+	if (loading) {
 		return <Spinner />;
 	}
 
@@ -36,7 +53,13 @@ export default function AddAgent(props) {
 			</Head>
 
 			<span className='sm:w-full md:w-1/2 xl:w-1/3'>
-				<AgentForm models={models} tools={tools} fetchAgentFormData={fetchAgentFormData} />
+				<AgentForm
+					models={models}
+					tools={tools}
+					fetchAgentFormData={fetchAgentFormData}
+					agent={cloneState?.agent}
+					editing={false}
+				/>
 			</span>
 		</>
 	);

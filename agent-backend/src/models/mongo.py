@@ -46,6 +46,9 @@ class ModelVariant(str, Enum):
     Haiku = "claude-3-haiku-20240307"
     LLaMA3_70b = "llama3-70b-8192"
     Mixtral_8x7b = "mixtral-8x7b-32768"
+    Llama3_Groq_8b_Tool_Use = "llama3-groq-tool-use"
+    Llama3_Groq_70b_Tool_Use = "llama3-groq-tool-use:70b"
+    Llama_3_1 = "llama3.1"
 
 
 class FastEmbedModelsStandardFormat(str, Enum):
@@ -211,6 +214,7 @@ class Task(BaseModel):
     outputFile: Optional[str] = None
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
+    displayOnlyFinalOutput: bool = False
 
 
 class Agent(BaseModel):

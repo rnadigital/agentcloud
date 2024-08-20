@@ -5,6 +5,7 @@ import AvatarUploader from 'components/AvatarUploader';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ModelSelect from 'components/models/ModelSelect';
+import Spinner from 'components/Spinner';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
@@ -63,6 +64,27 @@ export default function AgentForm({
 		}
 		return acc;
 	};
+
+	useEffect(() => {
+		setAgent(agent);
+		setIcon(agent?.icon);
+
+		const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
+			initialTools: [],
+			initialDatasources: []
+		});
+		setToolState(initialTools.length > 0 ? initialTools : null);
+		if (models && models.length > 0 && !modelId) {
+			setAgent({
+				...agentState,
+				modelId: models.find(m => !ModelEmbeddingLength[m.model])?._id,
+				functionModelId: models.find(m => !ModelEmbeddingLength[m.model])?._id
+			});
+		}
+
+		setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
+	}, [agent?._id]);
+
 	const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
 		initialTools: [],
 		initialDatasources: []
@@ -158,6 +180,10 @@ export default function AgentForm({
 		setModalOpen(false);
 		setIcon({ id: addedIcon?._id, ...addedIcon });
 	};
+
+	if (agent === null) {
+		return <Spinner />;
+	}
 
 	let modal;
 	switch (modalOpen) {

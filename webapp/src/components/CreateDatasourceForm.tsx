@@ -83,7 +83,7 @@ export default function CreateDatasourceForm({
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
-	const [topK, setTopK] = useState(4);
+	const [topK, setTopK] = useState(3);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const posthog = usePostHog();
@@ -382,7 +382,7 @@ export default function CreateDatasourceForm({
 							</div>
 							<label
 								htmlFor='description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
 							>
 								Description<span className='text-red-700'> *</span>
 							</label>
@@ -403,7 +403,7 @@ export default function CreateDatasourceForm({
 							>
 								Embedding Model<span className='text-red-700'> *</span>
 							</label>
-							<div className='mt-2'>
+							<div>
 								<Select
 									isClearable
 									primaryColor={'indigo'}
