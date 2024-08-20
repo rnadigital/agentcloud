@@ -12,6 +12,7 @@ import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationutils';
+import VectorDBProxyClient from 'lib/vectorproxy/client';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -23,7 +24,6 @@ import { pricingMatrix } from 'struct/billing';
 import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
-import VectorDBProxyClient from 'lib/vectorproxy/client';
 
 import {
 	addDatasource,
@@ -295,7 +295,6 @@ export async function testDatasourceApi(req, res, next) {
 }
 
 export async function addDatasourceApi(req, res, next) {
-	
 	const {
 		datasourceId,
 		datasourceName,

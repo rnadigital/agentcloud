@@ -1,19 +1,15 @@
 'use strict';
 
-import dotenv from 'dotenv';
 import debug from 'debug';
+import dotenv from 'dotenv';
 const log = debug('webapp:vectordb:proxy');
 dotenv.config({ path: '.env' });
 
 // Import structs from the alias
-import {
-	VectorResponseBody,
-	CollectionCreateBody,
-	Distance,
-} from 'struct/vectorproxy';
-
-import { IdOrStr } from 'db/index';
 import { unsafeGetDatasourceById } from 'db/datasource';
+import { IdOrStr } from 'db/index';
+import { CollectionCreateBody, Distance, VectorResponseBody } from 'struct/vectorproxy';
+
 import { getModelById } from '../../db/model';
 
 class VectorDBProxyClient {
@@ -31,18 +27,25 @@ class VectorDBProxyClient {
 					//createOptions are optional as an optimisation where the data is already in scope
 					const existingDatasource = await unsafeGetDatasourceById(collectionId);
 					if (!existingDatasource) {
-						throw new Error(`Datasource for datasourceId ${collectionId} for createCollection request`);
+						throw new Error(
+							`Datasource for datasourceId ${collectionId} for createCollection request`
+						);
 					}
-					const existingModel = await getModelById(existingDatasource.teamId, existingDatasource.modelId);
+					const existingModel = await getModelById(
+						existingDatasource.teamId,
+						existingDatasource.modelId
+					);
 					if (!existingDatasource) {
-						throw new Error(`Datasource for datasourceId ${collectionId} for createCollection request`);
+						throw new Error(
+							`Datasource for datasourceId ${collectionId} for createCollection request`
+						);
 					}
 					// Construct createOptions from existingDatasource and existingModel
 					createOptions = {
 						collection_name: collectionId.toString(),
 						dimensions: existingModel.embeddingLength,
 						distance: Distance.Cosine, // As per the note: always cosine (for now)
-						vector_name: existingModel.model, // This assumes vector_name is the model name
+						vector_name: existingModel.model // This assumes vector_name is the model name
 						// region: Region.US,
 						// cloud: Cloud.GCP
 					};
@@ -53,7 +56,7 @@ class VectorDBProxyClient {
 		} catch (e) {
 			console.error(e);
 		}
-		log('createOptions', createOptions)
+		log('createOptions', createOptions);
 		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/create-collection/`, {
 			method: 'POST',
 			headers: {

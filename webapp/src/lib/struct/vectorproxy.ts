@@ -2,7 +2,7 @@ export enum CollectionStatus {
 	Success = 'Success',
 	Failure = 'Failure',
 	DoesNotExist = 'DoesNotExist',
-	NotFound = 'NotFound',
+	NotFound = 'NotFound'
 }
 
 export interface VectorResponseBody {
@@ -14,7 +14,7 @@ export interface VectorResponseBody {
 export enum Cloud {
 	GCP = 'gcp',
 	AWS = 'aws',
-	AZURE = 'azure',
+	AZURE = 'azure'
 }
 
 export enum Distance { // Note: always cosine (for now)
@@ -22,13 +22,13 @@ export enum Distance { // Note: always cosine (for now)
 	Cosine = 'Cosine',
 	Euclid = 'Euclid',
 	Dot = 'Dot',
-	Manhattan = 'Manhattan',
+	Manhattan = 'Manhattan'
 }
 
 export enum Region {
 	US = 'US',
 	EU = 'EU',
-	AU = 'AU',
+	AU = 'AU'
 }
 
 export interface CollectionCreateBody {

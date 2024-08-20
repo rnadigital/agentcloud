@@ -7,10 +7,10 @@ import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
 import {
 	getDatasourceById,
-	unsafeGetDatasourceById,
 	setDatasourceLastSynced,
 	setDatasourceStatus,
-	setDatasourceTotalRecordCount
+	setDatasourceTotalRecordCount,
+	unsafeGetDatasourceById
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
