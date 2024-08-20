@@ -58,7 +58,7 @@ pub fn chunk_text(
     chunking_strategy: Option<UnstructuredChunkingConfig>,
 ) -> Result<Vec<UnstructuredIOResponse>> {
     let client = Client::builder()
-        .timeout(Duration::from_secs(1000))
+        .timeout(Duration::from_secs(2000))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?;
     let file_path = file_path.trim_matches('"');
@@ -82,6 +82,6 @@ pub fn chunk_text(
                 e
             )),
         },
-        Err(e) => Err(anyhow!("Encountered and error: {}", e)),
+        Err(e) => Err(anyhow!("Encountered an error: {}", e)),
     }
 }
