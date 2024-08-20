@@ -75,11 +75,13 @@ async fn main() -> std::io::Result<()> {
     let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
         match global_data.vector_database.as_str() {
             "qdrant" => {
+                println!("Using Qdrant Vector Database");
                 let qdrant_uri = format!("{}:{}", global_data.qdrant_host, global_data.qdrant_port);
                 let client = QdrantClient::from_url(qdrant_uri.as_str());
                 Arc::new(RwLock::new(client.build().unwrap()))
             }
             "pinecone" => {
+                println!("Using Pinecone Vector Database");
                 let config = PineconeClientConfig {
                     api_key: Some("INSERT_API_KEY".to_string()),
                     control_plane_host: Some("INSERT_CONTROLLER_HOST".to_string()),
