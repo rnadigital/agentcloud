@@ -70,7 +70,7 @@ impl VectorDatabase for QdrantClient {
                         map: [(
                             String::from(model_name.as_str()),
                             VectorParams {
-                                size: collection_create.size,
+                                size: collection_create.dimensions as u64,
                                 distance: collection_create.distance as i32,
                                 on_disk: Some(true),
                                 ..Default::default()
@@ -83,7 +83,7 @@ impl VectorDatabase for QdrantClient {
             None => {
                 config = Some(VectorsConfig {
                     config: Some(Config::Params(VectorParams {
-                        size: collection_create.size,
+                        size: collection_create.dimensions as u64,
                         distance: collection_create.distance as i32,
                         on_disk: Some(true),
                         ..Default::default()

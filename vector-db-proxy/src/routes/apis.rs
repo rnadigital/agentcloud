@@ -12,7 +12,9 @@ use crate::adaptors::mongo::client::start_mongo_connection;
 use crate::adaptors::mongo::models::Model;
 use crate::adaptors::mongo::queries::{get_model, get_team_datasources};
 use crate::routes::models::CollectionStorageSizeResponse;
-use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
+use crate::vector_databases::models::{
+    CollectionCreate, Point, SearchRequest, SearchType, VectorDatabaseStatus,
+};
 use crate::vector_databases::vector_database::VectorDatabase;
 use routes::models::{ResponseBody, Status};
 use serde_json::json;
@@ -120,7 +122,8 @@ pub async fn check_collection_exists(
                     status: Status::Failure,
                     data: None,
                     error_message: Some(json!({
-                        "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                        "errorMessage": format!("The Collection: '{}' does not exists",
+                            collection_name)
                     }))
                 }))),
             _ => Ok(HttpResponse::NotFound()
@@ -142,6 +145,66 @@ pub async fn check_collection_exists(
                 error_message: Some(json!({
                     "errorMessage": format!("An error occurred while checking if collection \
                     exists. \
+                    Error: {}", e)
+                }))
+            }))),
+    }
+}
+
+#[wherr]
+#[post("/create-collection/")]
+pub async fn create_collection(
+    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
+    data: web::Json<CollectionCreate>,
+) -> Result<HttpResponse> {
+    let collection_id = data.clone().collection_name;
+    let vector_database = app_data.get_ref().clone();
+    let vector_database_client = vector_database.read().await;
+    match vector_database_client.create_collection(data.clone()).await {
+        Ok(collection_result) => match collection_result {
+            VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Success,
+                    data: None,
+                    error_message: None
+                }))),
+            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("An error occurred during create operation: {}", e)
+                    }))
+                }))),
+            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("Collection: '{}' does not exists", collection_id)
+                    }))
+                }))),
+            _ => Ok(HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("Could not create collection: '{}' due to an \
+                        unknown error", collection_id)
+                    }))
+                }))),
+        },
+        Err(e) => Ok(HttpResponse::InternalServerError()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("An error occurred while creating collection \
                     Error: {}", e)
                 }))
             }))),
@@ -186,13 +249,13 @@ pub async fn upsert_data_point_to_collection(
                     error_message: None
                 })))
         }
-        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("An error occurred during bulk insert: {}", e)
+                    "errorMessage": format!("An error occurred during data insert: {}", e)
                 }))
             }))),
         VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
@@ -201,16 +264,16 @@ pub async fn upsert_data_point_to_collection(
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                    "errorMessage": format!("The Collection: '{}' does not exists", collection_name)
                 }))
             }))),
-        _ => Ok(HttpResponse::NotFound()
+        _ => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    "errorMessage": format!("Could not insert data into collection {}, due to an \
                     unknown error", collection_name)
                 }))
             }))),
@@ -260,7 +323,7 @@ pub async fn bulk_upsert_data_to_collection(
                     error_message: None
                 })))
         }
-        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
@@ -275,16 +338,18 @@ pub async fn bulk_upsert_data_to_collection(
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("Collection: '{}' does not exists", collection_name)
+                    "errorMessage": format!("The Collection: '{}' does not exists", collection_name)
                 }))
             }))),
-        _ => Ok(HttpResponse::NotFound()
+        _ => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    "errorMessage": format!("Could not insert data points into collection: '{}' \
+                    due to \
+                    an \
                     unknown error", collection_name)
                 }))
             }))),
@@ -346,7 +411,7 @@ pub async fn delete_collection(
                 data: None,
                 error_message: None
             }))),
-        Err(e) => Ok(HttpResponse::NotFound()
+        Err(e) => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
@@ -364,7 +429,7 @@ pub async fn delete_collection(
                     "errorMessage": format!("Collection: '{}' does not exists", dataset_id)
                 }))
             }))),
-        _ => Ok(HttpResponse::NotFound()
+        _ => Ok(HttpResponse::InternalServerError()s
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,

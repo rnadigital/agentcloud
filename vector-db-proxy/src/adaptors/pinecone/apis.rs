@@ -1,4 +1,4 @@
-use crate::adaptors::pinecone::helpers::get_indexes;
+use crate::adaptors::pinecone::helpers::{check_index_exists, get_indexes};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, Region,
@@ -7,7 +7,8 @@ use crate::vector_databases::models::{
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
 use async_trait::async_trait;
-use pinecone_sdk::models::{Namespace, Vector};
+use pinecone_sdk::models::Cloud as PineconeCloud;
+use pinecone_sdk::models::{DeletionProtection, Metric, Namespace, Vector, WaitPolicy};
 use pinecone_sdk::pinecone::PineconeClient;
 use std::sync::Arc;
 
@@ -67,11 +68,29 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = collection_create.clone().region.unwrap_or(Region::US);
-        if let Ok(_) = self.index(Region::to_str(region)).await {
-            return Ok(VectorDatabaseStatus::Ok);
+        match check_index_exists(&self, collection_create.clone()).await {
+            Ok(_) => Ok(VectorDatabaseStatus::Ok),
+            Err(e) => match e {
+                VectorDatabaseError::NotFound(_) => {
+                    match self
+                        .create_serverless_index(
+                            Region::to_str(collection_create.region.unwrap()),
+                            collection_create.dimensions as i32,
+                            Metric::from(collection_create.distance),
+                            PineconeCloud::from(collection_create.cloud.unwrap()),
+                            Region::to_str(collection_create.region.unwrap()),
+                            DeletionProtection::Disabled,
+                            WaitPolicy::NoWait,
+                        )
+                        .await
+                    {
+                        Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                        Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
+                    }
+                }
+                _ => Err(e),
+            },
         }
-        Ok(VectorDatabaseStatus::NotFound)
     }
 
     async fn delete_collection(

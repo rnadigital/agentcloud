@@ -26,7 +26,7 @@ use crate::init::env_variables::set_all_env_vars;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
-use crate::routes::apis::{get_storage_size, scroll_data};
+use crate::routes::apis::{create_collection, get_storage_size, scroll_data};
 use crate::vector_databases::vector_database::VectorDatabase;
 use adaptors::mongo::client::start_mongo_connection;
 
@@ -53,6 +53,7 @@ pub fn init(config: &mut web::ServiceConfig) {
             .service(list_collections)
             .service(delete_collection)
             .service(check_collection_exists)
+            .service(create_collection)
             .service(upsert_data_point_to_collection)
             .service(bulk_upsert_data_to_collection)
             .service(scroll_data)

@@ -1,5 +1,6 @@
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
+use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
 use prost_types::{ListValue, Struct as Metadata, Struct};
@@ -164,6 +165,25 @@ impl Cloud {
     }
 }
 
+impl From<Cloud> for PineconeCloud {
+    fn from(value: Cloud) -> Self {
+        match value {
+            Cloud::AWS => PineconeCloud::Aws,
+            Cloud::GCP => PineconeCloud::Gcp,
+            Cloud::AZURE => PineconeCloud::Azure,
+        }
+    }
+}
+impl From<PineconeCloud> for Cloud {
+    fn from(value: PineconeCloud) -> Self {
+        match value {
+            PineconeCloud::Aws => Cloud::AWS,
+            PineconeCloud::Gcp => Cloud::GCP,
+            PineconeCloud::Azure => Cloud::AZURE,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct StorageSize {
     pub status: VectorDatabaseStatus,
@@ -172,7 +192,7 @@ pub struct StorageSize {
     pub points_count: Option<u64>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum Distance {
     UnknownDistance = 0,
     Cosine = 1,
@@ -191,6 +211,17 @@ impl From<Metric> for Distance {
     }
 }
 
+impl From<Distance> for Metric {
+    fn from(value: Distance) -> Self {
+        match value {
+            Distance::Cosine => Metric::Cosine,
+            Distance::Euclid => Metric::Euclidean,
+            Distance::Dot => Metric::Dotproduct,
+            _ => panic!("Unsupported metric type. {:?}", value),
+        }
+    }
+}
+
 impl From<i32> for Distance {
     fn from(value: i32) -> Self {
         match value {
@@ -202,11 +233,11 @@ impl From<i32> for Distance {
         }
     }
 }
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Deserialize)]
 pub struct CollectionCreate {
     pub collection_name: String,
-    pub size: u64,
-    pub namespace: Option<String>,
+    pub dimensions: usize,
+    pub namespace: String,
     pub distance: Distance,
     pub vector_name: Option<String>,
     pub region: Option<Region>,
