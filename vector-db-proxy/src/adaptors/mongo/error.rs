@@ -1,5 +1,5 @@
-use actix_web::error::ResponseError;
-use actix_web::{http::StatusCode, HttpResponse};
+use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, ResponseError};
 use anyhow::Error;
 use mongodb::error::Error as MongoError;
 use thiserror::Error as ThisError;

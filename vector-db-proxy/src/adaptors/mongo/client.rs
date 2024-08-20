@@ -1,7 +1,7 @@
-use crate::errors::types::CustomMongoError;
+use crate::adaptors::mongo::error::CustomMongoError;
+use crate::init::env_variables::GLOBAL_DATA;
 use anyhow::{anyhow, Result};
 use mongodb::{options::ClientOptions, Client, Database};
-use crate::init::env_variables::GLOBAL_DATA;
 
 pub async fn start_mongo_connection() -> Result<Database, CustomMongoError> {
     let global_data = GLOBAL_DATA.read().await;

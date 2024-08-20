@@ -5,7 +5,7 @@ use actix_web::*;
 use actix_web_lab::extract::Path;
 use std::sync::Arc;
 
-use crate::errors::types::Result;
+use crate::adaptors::mongo::error::Result;
 use crate::routes;
 
 use crate::adaptors::mongo::client::start_mongo_connection;

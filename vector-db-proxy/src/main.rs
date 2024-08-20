@@ -33,7 +33,6 @@ use adaptors::mongo::client::start_mongo_connection;
 mod adaptors;
 mod data;
 mod embeddings;
-mod errors;
 mod init;
 mod messages;
 mod routes;
@@ -41,10 +40,7 @@ mod utils;
 mod vector_databases;
 
 pub fn init(config: &mut web::ServiceConfig) {
-    // let webapp_url =
-    //     dotenv::var("webapp_url").unwrap_or("https://127.0.0.1:3000".to_string());
     let cors = Cors::default()
-        // .allowed_origin(webapp_url.as_str())
         .allow_any_origin()
         .allowed_methods(["GET", "POST", "PUT", "OPTIONS"])
         .supports_credentials()
@@ -74,9 +70,7 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
 
-    let message_queue_provider =
-        MessageQueueProvider::from(global_data.message_queue_provider.clone());
-
+    // This is to allow the use of multiple vector databases
     let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
         match global_data.vector_database.as_str() {
             "qdrant" => {
@@ -115,6 +109,9 @@ async fn main() -> std::io::Result<()> {
     let (s, r) = channel::unbounded::<(String, String)>();
     let sender_clone = s.clone();
 
+    // This is to allow the use of multiple message queues
+    let message_queue_provider =
+        MessageQueueProvider::from(global_data.message_queue_provider.clone());
     let connection = get_message_queue(message_queue_provider).await;
 
     // Thread to read messages from message queue and pass them to channel for processing
