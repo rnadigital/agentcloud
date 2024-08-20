@@ -42,6 +42,7 @@ fn chunking_strategy_to_headers(
             match file_type {
                 FileType::PDF => {
                     header_map.insert("pdf_infer_table_structure", HeaderValue::from_str("true")?);
+                    header_map.insert("split_pdf_page", HeaderValue::from_str("true")?);
                 }
                 _ => (),
             }
