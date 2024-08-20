@@ -8,6 +8,7 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
+	KeyIcon,
 	MoonIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
@@ -256,6 +257,20 @@ export default withRouter(function Layout(props) {
 																</div>
 															)}
 															<ul role='list' className='-mx-2 mt-2 space-y-1'>
+																<li key='apikeys'>
+																	<Link
+																		href='/apikeys'
+																		className={classNames(
+																			path.endsWith('/apikeys')
+																				? 'bg-gray-800 text-white'
+																				: 'text-gray-400 hover:text-white hover:bg-gray-800',
+																			'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																		)}
+																	>
+																		<KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+																		API Keys
+																	</Link>
+																</li>
 																{teamNavigation.map(item => (
 																	<li key={item.name}>
 																		<Link
@@ -328,6 +343,7 @@ export default withRouter(function Layout(props) {
 																Settings
 															</Link>
 														</li>*/}
+
 																<li key='logout'>
 																	<button
 																		className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -429,6 +445,20 @@ export default withRouter(function Layout(props) {
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>
 										)}
 										<ul role='list' className='-mx-2 mt-2 space-y-1'>
+											<li key='apikeys'>
+												<Link
+													href='/apikeys'
+													className={classNames(
+														path.endsWith('/apikeys')
+															? 'bg-gray-800 text-white'
+															: 'text-gray-400 hover:text-white hover:bg-gray-800',
+														'w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+													)}
+												>
+													<KeyIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+													API Keys
+												</Link>
+											</li>
 											{teamNavigation.map(item => (
 												<li key={item.name}>
 													<Link
