@@ -429,7 +429,7 @@ pub async fn delete_collection(
                     "errorMessage": format!("Collection: '{}' does not exists", dataset_id)
                 }))
             }))),
-        _ => Ok(HttpResponse::InternalServerError()s
+        _ => Ok(HttpResponse::InternalServerError()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
