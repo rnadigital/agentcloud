@@ -19,42 +19,39 @@ class VectorDBProxyClient {
 		createOptions?: CollectionCreateBody
 	): Promise<any> {
 		log('createCollection %s %O', collectionId, createOptions);
-		try {
-			// Note: Checks if the collection exists beforehand
-			const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
-			if (collectionExists?.error_message) {
-				if (!createOptions) {
-					//createOptions are optional as an optimisation where the data is already in scope
-					const existingDatasource = await unsafeGetDatasourceById(collectionId);
-					if (!existingDatasource) {
-						throw new Error(
-							`Datasource for datasourceId ${collectionId} for createCollection request`
-						);
-					}
-					const existingModel = await getModelById(
-						existingDatasource.teamId,
-						existingDatasource.modelId
+		// Note: Checks if the collection exists beforehand
+		const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
+		if (collectionExists?.error_message) {
+			if (!createOptions) {
+				//createOptions are optional as an optimisation where the data is already in scope
+				const existingDatasource = await unsafeGetDatasourceById(collectionId);
+				if (!existingDatasource) {
+					throw new Error(
+						`Datasource for datasourceId ${collectionId} for createCollection request`
 					);
-					if (!existingDatasource) {
-						throw new Error(
-							`Datasource for datasourceId ${collectionId} for createCollection request`
-						);
-					}
-					// Construct createOptions from existingDatasource and existingModel
-					createOptions = {
-						collection_name: collectionId.toString(),
-						dimensions: existingModel.embeddingLength,
-						distance: Distance.Cosine, // As per the note: always cosine (for now)
-						vector_name: existingModel.model // This assumes vector_name is the model name
-						// region: Region.US,
-						// cloud: Cloud.GCP
-					};
 				}
-			} else {
-				log('Collection %s already exists', collectionId);
+				const existingModel = await getModelById(
+					existingDatasource.teamId,
+					existingDatasource.modelId
+				);
+				if (!existingModel) {
+					throw new Error(
+						`Model not found for modelId ${existingDatasource.modelId} for createCollection request`
+					);
+				}
+				// Construct createOptions from existingDatasource and existingModel
+				createOptions = {
+					collection_name: collectionId.toString(),
+					dimensions: existingModel.embeddingLength,
+					distance: Distance.Cosine, // As per the note: always cosine (for now)
+					vector_name: existingModel.model // This assumes vector_name is the model name
+					// region: Region.US,
+					// cloud: Cloud.GCP
+				};
 			}
-		} catch (e) {
-			console.error(e);
+		} else {
+			log('Collection %s already exists', collectionId);
+			return;
 		}
 		log('createOptions', createOptions);
 		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/create-collection/`, {
