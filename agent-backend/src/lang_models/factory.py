@@ -5,6 +5,7 @@ from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
 from langchain_groq import ChatGroq
+from langchain_ollama import ChatOllama
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
 from langchain_google_vertexai import ChatVertexAI
 from langchain_anthropic import ChatAnthropic
@@ -27,7 +28,7 @@ def model_factory(agentcloud_model: models.mongo.Model) -> BaseLanguageModel | E
         case models.mongo.Platforms.FastEmbed:
             return _build_fastembed_model(agentcloud_model)
         case models.mongo.Platforms.Ollama:
-            return _build_openai_compatible_model(agentcloud_model)
+            return _build_ollama_model(agentcloud_model)
         case models.mongo.Platforms.GoogleVertex:
             return _build_google_vertex_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
@@ -38,16 +39,13 @@ def model_factory(agentcloud_model: models.mongo.Model) -> BaseLanguageModel | E
             return _build_groq_model(agentcloud_model)
 
 
-def _build_openai_compatible_model(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:
-    if model.modelType == models.mongo.ModelType.embedding:
-        raise  # figure this out later
-    else:
-        return ChatOpenAI(
-            **model.model_dump(
-                exclude_none=True,
-                exclude_unset=True,
-            ).get('config')  # config key will hold the raw openai format arguments
-        )
+def _build_ollama_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatOllama(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True
+        ).get('config')
+    )
 
 
 def _build_openai_model(model: models.mongo.Model) -> BaseLanguageModel | Embeddings:

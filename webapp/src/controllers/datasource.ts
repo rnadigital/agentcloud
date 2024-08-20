@@ -20,7 +20,12 @@ import path from 'path';
 import MessageQueueProviderFactory from 'queue/index';
 import StorageProviderFactory from 'storage/index';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
+import {
+	DatasourceScheduleType,
+	DatasourceStatus,
+	UnstructuredChunkingStrategySet,
+	UnstructuredPartitioningStrategySet
+} from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
@@ -789,7 +794,20 @@ export async function uploadFileApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing file' });
 	}
 
-	const { modelId, name, datasourceDescription, retriever, retriever_config } = req.body;
+	const {
+		modelId,
+		name,
+		datasourceDescription,
+		retriever,
+		retriever_config,
+		partitioning,
+		strategy,
+		max_characters,
+		new_after_n_chars,
+		overlap,
+		similarity_threshold,
+		overlap_all
+	} = req.body;
 
 	let validationError = chainValidations(
 		req.body,
@@ -800,15 +818,32 @@ export async function uploadFileApi(req, res, next) {
 			{
 				field: 'retriever',
 				validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }
-			}
+			},
+			{
+				field: 'partitioning',
+				validation: { notEmpty: true, inSet: UnstructuredPartitioningStrategySet }
+			},
+			{ field: 'strategy', validation: { notEmpty: true, inSet: UnstructuredChunkingStrategySet } },
+			{ field: 'max_characters', validation: { notEmpty: true } },
+			{ field: 'overlap', validation: { notEmpty: true } },
+			{ field: 'similarity_threshold', validation: { notEmpty: true } },
+			{ field: 'overlap_all', validation: { notEmpty: true } }
 		],
 		{
 			datasourceName: 'Name',
 			datasourceDescription: 'Description',
 			connectorId: 'Connector ID',
-			modelId: 'Embedding Model'
+			modelId: 'Embedding Model',
+			partitioning: 'Partitioning Strategy',
+			strategy: 'Chunk Strategy',
+			max_characters: 'Max Characters',
+			new_after_n_chars: 'New After N Characters',
+			overlap: 'Overlap',
+			similarity_threshold: 'Similarity Threshold',
+			overlap_all: 'Overlap All'
 		}
 	);
+
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
@@ -881,14 +916,21 @@ export async function uploadFileApi(req, res, next) {
 		sourceType: 'file',
 		workspaceId: null,
 		lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
-		chunkCharacter: req.body.chunkCharacter, //TODO: validate
-		chunkStrategy: req.body.chunkStrategy, //TODO: validate
 		modelId: toObjectId(modelId),
 		createdDate: new Date(),
 		embeddingField: 'document', //Note: always document for sourceType: file
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
 			total: null
+		},
+		chunkingConfig: {
+			partitioning,
+			strategy,
+			max_characters: parseInt(max_characters),
+			new_after_n_chars: parseInt(new_after_n_chars) || parseInt(max_characters),
+			overlap: parseInt(overlap),
+			similarity_threshold: parseFloat(similarity_threshold),
+			overlap_all: overlap_all === 'true'
 		}
 	});
 
