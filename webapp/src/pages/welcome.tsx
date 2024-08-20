@@ -45,7 +45,6 @@ export default function Welcome(props) {
 		let redirect = `/${teamId}/apps`;
 		const start = Date.now();
 		try {
-			setSwitchingContext(true);
 			await API.switchTeam(
 				{
 					orgId,
