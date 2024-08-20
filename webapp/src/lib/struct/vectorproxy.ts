@@ -18,11 +18,11 @@ export enum Cloud {
 }
 
 export enum Distance { // Note: always cosine (for now)
-	UnknownDistance = 0,
-	Cosine = 1,
-	Euclid = 2,
-	Dot = 3,
-	Manhattan = 4,
+	UnknownDistance = 'UnknownDistance',
+	Cosine = 'Cosine',
+	Euclid = 'Euclid',
+	Dot = 'Dot',
+	Manhattan = 'Manhattan',
 }
 
 export enum Region {
