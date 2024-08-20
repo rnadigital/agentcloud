@@ -112,27 +112,27 @@ export default function Welcome(props) {
 					/>
 				</div>
 
-				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[750px]'>
-					<div className='flex flex-col items-start justify-start bg-white dark:bg-slate-800 text-gray-900 dark:text-white px-6 py-8 shadow rounded-2xl md:rounded-lg sm:px-8'>
+				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[512px]'>
+					<div className='flex flex-col items-start justify-start bg-white dark:bg-slate-800 text-gray-900 dark:text-white px-6 py-5 shadow rounded-2xl md:rounded-[8px] sm:px-8'>
 						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 mt-2 dark:text-white'>
 							Welcome back
 						</h2>
 
 						{accountContext.account && (
 							<>
-								<div className='text-md'>Teams for {accountContext.account.name}</div>
+								<div className='text-sm'>Teams for {accountContext.account.name}</div>
 
-								<ul role='Orgs' className='flex w-full'>
-									<div className='flex flex-col items-start justify-between w-full mt-2 my-2 px-3 py-4'>
+								<ul role='Orgs' className='flex w-full list-inside'>
+									<div className='flex flex-col items-start justify-between w-full mt-2 py-2'>
 										<ul role='Teams' className='w-full'>
 											{accountContext.account.orgs.map((org: any) => (
 												<>
 													<li
 														key={org.id}
-														className='relative flex flex-col w-full justify-between px-4 py-5 my-3 sm:px-6 bg-slate-50 dark:bg-gray-800 border border-slate-300 dark:border-gray-900 rounded-md'
+														className='relative flex flex-col w-full justify-between px-4 py-3 my-3 bg-slate-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-900 rounded-md shadow'
 													>
 														<>
-															<div className='flex min-w-0 gap-x-4'>
+															<div className='flex min-w-0'>
 																<div className='min-w-0 flex-auto'>
 																	<p className='text-xs text-gray-500 md:text-sm'>{org.name}</p>
 																</div>
@@ -141,22 +141,22 @@ export default function Welcome(props) {
 																return (
 																	<li
 																		key={team.id}
-																		className='relative flex text-md w-full justify-between items-center px-4 py-5 sm:text-sm hover:bg-gray-50 sm:px-6'
+																		className='relative flex text-md w-full justify-between items-center py-2 sm:text-sm hover:cursor-pointer'
 																	>
 																		<div
-																			className='grid grid-cols-2 gap-3 w-full shrink-0 items-center justify-start hover:cursor-pointer'
+																			className='grid grid-cols-2 w-full items-center justify-start'
 																			onClick={() => {
 																				switchTeam(org.id, team.id);
 																			}}
 																		>
 																			<div className='flex flex-col md:flex-row md:justify-between'>
 																				<div className='font-bold flex flex-col md:flex-row'>
-																					<p className='text-sm max-w-48 md:text-sm text-gray-900 truncate'>
+																					<p className='text-xs max-w-28 md:text-sm text-gray-900 truncate'>
 																						{team.name}
 																					</p>
 																				</div>
 																				<div className='flex flex-col md:flex-row justify-end'>
-																					<p className='text-sm text-gray-900'>
+																					<p className='text-sm font-medium text-gray-900'>
 																						{teamMembers[team.id] > 1 ? (
 																							<p>{teamMembers[team.id]} Members</p>
 																						) : (
@@ -168,7 +168,7 @@ export default function Welcome(props) {
 
 																			<div className='flex flex-row justify-end gap-2'>
 																				{currentTeam === team.id ? (
-																					<p className='text-sm text-gray-500'>
+																					<p className='text-sm text-gray-500 text-end'>
 																						Currently Logged In
 																					</p>
 																				) : (
