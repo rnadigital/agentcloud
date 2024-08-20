@@ -57,7 +57,7 @@ pub fn chunk_text(
     chunking_strategy: Option<UnstructuredChunkingConfig>,
 ) -> Result<Vec<UnstructuredIOResponse>> {
     let client = Client::builder()
-        .timeout(Duration::from_secs(500))
+        .timeout(Duration::from_secs(1000))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?;
     let file_path = file_path.trim_matches('"');
