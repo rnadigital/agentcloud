@@ -42,23 +42,8 @@ export default function Welcome(props) {
 	}, []);
 
 	async function switchTeam(orgId, teamId) {
-		const splitLocation = location.pathname.split('/').filter(n => n);
-		const foundResourceSlug = account.orgs.find(o =>
-			o.teams.find(t => t.id.toString() === splitLocation[0])
-		);
 		let redirect = `/${teamId}/apps`;
-		if (foundResourceSlug) {
-			splitLocation.shift();
-			if (splitLocation.length <= 1) {
-				redirect = `/${teamId}/${splitLocation.join('/')}`;
-			} else if (TEAM_PARENT_LOCATIONS.includes(splitLocation[0])) {
-				redirect = `/${teamId}/${splitLocation[0]}s`;
-			} else {
-				redirect = `/${teamId}/apps`;
-			}
-		}
 		const start = Date.now();
-
 		try {
 			setSwitchingContext(true);
 			await API.switchTeam(
