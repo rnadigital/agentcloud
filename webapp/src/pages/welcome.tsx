@@ -179,6 +179,27 @@ export default function Welcome(props) {
 						)}
 					</div>
 				</div>
+
+				<div
+					className='sm:mx-auto sm:w-fit sm:max-w-md py-4 italic text-gray-500'
+					onClick={() => {
+						posthog.capture('logout', {
+							email: account?.email
+						});
+						API.logout(
+							{
+								_csrf: csrf
+							},
+							null,
+							null,
+							router
+						);
+					}}
+				>
+					<p className='sm:mx-auto sm:w-fit hover:cursor-pointer hover:underline'>
+						Not You? Logout
+					</p>
+				</div>
 			</div>
 		</>
 	);
