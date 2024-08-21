@@ -107,7 +107,6 @@ export default function CreateDatasourceForm({
 		streams: [],
 		selectedFieldsMap: {},
 		descriptionsMap: {},
-		setStreamProperties: {},
 	});
 	const [formData, setFormData] = useState(null);
 
@@ -605,9 +604,6 @@ export default function CreateDatasourceForm({
 							onSubmit={(e: any) => {
 								e.preventDefault();
 								//todo: make the streamlist fully controlled
-								const syncMode = e.target.elements.syncMode;
-								console.log('syncMode', syncMode);
-								console.log('e.target.elements', e.target.elements);
 								const streams = Array.from(e.target.elements)
 									.filter(x => x['checked'] === true)
 									.filter(x => !x['dataset']['parent'])
@@ -621,6 +617,15 @@ export default function CreateDatasourceForm({
 										]);
 										return acc;
 									}, {});
+								const syncModesMap = Array.from(e.target.elements)
+								.filter(x => x['type'] === 'select-one') //select dropdowns
+								.filter(x => x['dataset']['parent'])
+									.reduce((acc, x) => {
+										if (streams.includes(x['dataset']['parent'])) { //filter to only selected streams
+											acc[x['dataset']['parent']] = x['value']
+										}
+										return acc;
+									}, {});
 								const descriptionsMap = Array.from(e.target.elements)
 									.filter(x => x['type'] === 'text')
 									.filter(x => x['dataset']['checked'] === 'true')
@@ -630,6 +635,8 @@ export default function CreateDatasourceForm({
 										}
 										return acc;
 									}, {});
+								console.log('syncModesMap', syncModesMap);
+								return false;
 								setStreamState({ streams, selectedFieldsMap, descriptionsMap });
 								setStep(4);
 							}}

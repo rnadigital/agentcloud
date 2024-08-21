@@ -6,6 +6,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { StreamsList } from 'components/DatasourceStream';
 
 export default function Account(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -38,8 +39,6 @@ export default function Account(props) {
 			<div className='border-b dark:border-slate-400 pb-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Account Settings</h3>
 			</div>
-
-			<pre>{JSON.stringify(accountContext, null, 2)}</pre>
 		</>
 	);
 }

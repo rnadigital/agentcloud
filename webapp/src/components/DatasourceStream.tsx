@@ -1,6 +1,7 @@
 'use strict';
 
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import def from 'ajv/dist/vocabularies/applicator/additionalItems';
 import { useReducer, useState } from 'react';
 import { SyncModes } from 'struct/datasource';
 
@@ -9,7 +10,7 @@ export function StreamRow({
 	existingStream,
 	streamProperty,
 	readonly,
-	descriptionsMap,
+	descriptionsMap
 }: {
 	stream?: any;
 	existingStream?: any;
@@ -20,6 +21,9 @@ export function StreamRow({
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 
 	const streamName = stream?.stream?.name || stream?.name;
+
+	const { defaultCursorField, sourceDefinedPrimaryKey } = streamProperty;
+	const [cursorField, setCursorField] = useState(defaultCursorField ?.length > 0 ? defaultCursorField[0] : ''); //Note: Doesn't handle nesting yet
 
 	const initialCheckedChildren =
 		stream?.stream?.jsonSchema &&
@@ -68,7 +72,7 @@ export function StreamRow({
 								}}
 								type='checkbox'
 								className='rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:bg-slate-800 dark:ring-slate-600'
-								name={stream?.stream?.name || stream?.name}
+								name={streamName}
 								checked={checkedChildren?.length > 0}
 							/>
 							<span className='slider round'></span>
@@ -101,11 +105,15 @@ export function StreamRow({
 							Sync Mode
 						</label>
 						<select
-							id='syncMode'
-							name='syncMode'
+							name={`${streamName}_syncMode`}
 							className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							value={selectedSyncMode}
-							onChange={e => setSelectedSyncMode(e.target.value)}
+							data-parent={streamName}
+							onChange={e => {
+								const newMode = e.target.value;
+								newMode.includes('full_') && setCursorField(''); //Unset the cursor field when switching to a full_refresh mode
+								setSelectedSyncMode(newMode);
+							}}
 							disabled={readonly}
 						>
 							{SyncModes.map(mode => {
@@ -119,11 +127,18 @@ export function StreamRow({
 							})}
 						</select>
 					</div>
+					{sourceDefinedPrimaryKey?.length > 0 && (
+						<div className='flex flex-col my-2'>
+							<span>Source defined primary key</span>
+							<code>{sourceDefinedPrimaryKey}</code>
+						</div>
+					)}
 					<table className='w-full'>
 						<thead>
 							<tr>
 								<th className='px-2 py-1 text-left w-1'></th>
 								<th className='px-2 py-1 text-left'>Field Name</th>
+								{!selectedSyncMode.includes('full_') && <th className='px-2 py-1 text-left'>Cursor field</th>}
 								<th className='px-2 py-1 text-left'>Type</th>
 								<th className='px-2 py-1 text-left'>Description</th>
 							</tr>
@@ -137,14 +152,14 @@ export function StreamRow({
 												onChange={() =>
 													setCheckedChildren({
 														name: key,
-														parent: stream?.stream?.name || stream?.name
+														parent: streamName
 													})
 												}
 												type='checkbox'
 												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
 												name={key}
-												data-parent={stream?.stream?.name || stream?.name}
-												disabled={readonly}
+												data-parent={streamName}
+												disabled={readonly || key === cursorField} //Disable unchecking the field if it's the cursor field
 												defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
 													sf['fieldPath'].includes(key)
 												)}
@@ -154,6 +169,30 @@ export function StreamRow({
 										</label>
 									</td>
 									<td className='p-2 font-semibold'>{key}</td>
+									{!selectedSyncMode.includes('full_') && <td className='p-2 font-semibold'>
+										<input
+											onChange={() => {
+												setCursorField(key);
+												if (!checkedChildren.includes(key)) {
+													// Make sure to check the field they selected for cursor field if it isn't already
+													setCheckedChildren({
+														name: key,
+														parent: streamName
+													});
+												}
+											}}
+											type='radio'
+											className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+											name={`${streamName}_cursor`}
+											data-parent={streamName}
+											disabled={readonly || selectedSyncMode.includes('full_')}
+											defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
+												sf['fieldPath'].includes(key)
+											)}
+											checked={cursorField === key}
+											required={!cursorField}
+										/>
+									</td>}
 									<td className='p-2'>
 										{Array.isArray(value['type'])
 											? value['type'].filter(x => x !== 'null')
@@ -202,15 +241,17 @@ export function StreamsList({
 		<div className='my-4'>
 			{streams?.map((stream, index) => {
 				const streamProperty = streamProperties.find(sp => sp?.streamName === stream?.stream?.name);
-				return <StreamRow
-					readonly={readonly}
-					key={index}
-					stream={stream}
-					existingStream={existingStreams?.find(st => st.name === stream?.name)}
-					streamProperty={streamProperty}
-					descriptionsMap={descriptionsMap}
-				/>
-})}
+				return (
+					<StreamRow
+						readonly={readonly}
+						key={index}
+						stream={stream}
+						existingStream={existingStreams?.find(st => st.name === stream?.name)}
+						streamProperty={streamProperty}
+						descriptionsMap={descriptionsMap}
+					/>
+				);
+			})}
 		</div>
 	);
 }
