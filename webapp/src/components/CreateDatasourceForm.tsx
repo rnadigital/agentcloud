@@ -654,7 +654,7 @@ export default function CreateDatasourceForm({
 									}, {});
 								console.log('syncModesMap', syncModesMap);
 								return false;
-								setStreamState({ streams, selectedFieldsMap, descriptionsMap });
+								// setStreamState({ streams, selectedFieldsMap, descriptionsMap });
 								setStep(4);
 							}}
 						>

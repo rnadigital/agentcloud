@@ -236,9 +236,7 @@ export function StreamRow({
 												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
 												name={key}
 												data-parent={streamName}
-												disabled={
-													readonly || key === cursorField.includes(key) || cursorField.includes(key)
-												} //Disable unchecking the field if it's the cursor field
+												disabled={readonly || (cursorField.includes(key) && canSelectCursors)} //Disable unchecking the field if it's the cursor field
 												defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
 													sf['fieldPath'].includes(key)
 												)}
@@ -265,9 +263,7 @@ export function StreamRow({
 												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
 												name={`${streamName}_cursor`}
 												data-parent={streamName}
-												disabled={
-													sourceDefinedCursorField || readonly || syncMode.includes('full_')
-												}
+												disabled={sourceDefinedCursorField || readonly || !canSelectCursors}
 												defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
 													sf['fieldPath'].includes(key)
 												)}

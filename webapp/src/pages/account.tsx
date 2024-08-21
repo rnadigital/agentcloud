@@ -5,8 +5,9 @@ import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
+import submittingReducer from 'lib/utils/submittingreducer';
 
 export default function Account(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -243,9 +244,9 @@ export default function Account(props) {
 			{
 				streamName: 'elon_tweets_2022',
 				syncModes: ['full_refresh_append', 'incremental_append'],
-				defaultCursorField: ['Date'],
-				sourceDefinedCursorField: true,
-				sourceDefinedPrimaryKey: [['Retweets']],
+				defaultCursorField: [],
+				sourceDefinedCursorField: false,
+				sourceDefinedPrimaryKey: [],
 				propertyFields: [['Retweets', 'abc'], ['Likes'], ['Date'], ['Cleaned_Tweets']]
 			},
 			{
@@ -314,6 +315,8 @@ export default function Account(props) {
 		datasourceId: '66c53e3834b9b70946b032c3'
 	};
 
+	const [_streamState, setStreamReducer] = useReducer(submittingReducer, {});
+
 	return (
 		<>
 			<Head>
@@ -329,6 +332,7 @@ export default function Account(props) {
 			<StreamsList
 				streams={discoveredSchema.catalog?.streams}
 				streamProperties={streamProperties}
+				setStreamReducer={setStreamReducer}
 			/>
 
 			<pre>{JSON.stringify(accountContext, null, 2)}</pre>
