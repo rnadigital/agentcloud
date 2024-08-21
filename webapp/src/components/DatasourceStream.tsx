@@ -26,7 +26,7 @@ export function StreamRow({
 	streamProperty?: any;
 	readonly?: boolean;
 	descriptionsMap?: any;
-	setStreamReducer: Function;
+	setStreamReducer?: Function;
 }) {
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 
@@ -316,7 +316,7 @@ export function StreamsList({
 	streamProperties?: any;
 	readonly?: boolean;
 	descriptionsMap?: any;
-	setStreamReducer: Function;
+	setStreamReducer?: Function;
 }) {
 	return (
 		<div className='my-4'>

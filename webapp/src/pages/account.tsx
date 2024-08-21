@@ -3,11 +3,11 @@ import { StreamsList } from 'components/DatasourceStream';
 import ErrorAlert from 'components/ErrorAlert';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
+import submittingReducer from 'lib/utils/submittingreducer';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import submittingReducer from 'lib/utils/submittingreducer';
 
 export default function Account(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -21,6 +21,8 @@ export default function Account(props) {
 		API.getAccount({ resourceSlug }, dispatch, setError, router);
 	}
 
+	const [_streamState, setStreamReducer] = useReducer(submittingReducer, {});
+
 	useEffect(() => {
 		fetchAccount();
 	}, [resourceSlug]);
@@ -29,7 +31,7 @@ export default function Account(props) {
 		return <Spinner />;
 	}
 
-	const { discoveredSchema, streamProperties } = {
+	const { discoveredSchema, streamProperties }: any = {
 		sourceId: '38326b79-edca-4cb3-b2dd-00272cac23a9',
 		discoveredSchema: {
 			catalog: {
@@ -314,8 +316,6 @@ export default function Account(props) {
 		],
 		datasourceId: '66c53e3834b9b70946b032c3'
 	};
-
-	const [_streamState, setStreamReducer] = useReducer(submittingReducer, {});
 
 	return (
 		<>
