@@ -7,26 +7,19 @@ import { SyncModes } from 'struct/datasource';
 export function StreamRow({
 	stream,
 	existingStream,
+	streamProperty,
 	readonly,
-	descriptionsMap
+	descriptionsMap,
 }: {
 	stream?: any;
 	existingStream?: any;
+	streamProperty?: any;
 	readonly?: boolean;
 	descriptionsMap?: any;
 }) {
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 
-	/*
-	"sourceDefinedCursor": true,
-	"defaultCursorField": [
-		"updated_at"
-	],
-	"sourceDefinedPrimaryKey": [
-		[
-			"id"
-		]
-	]*/
+	const streamName = stream?.stream?.name || stream?.name;
 
 	const initialCheckedChildren =
 		stream?.stream?.jsonSchema &&
@@ -54,7 +47,7 @@ export function StreamRow({
 
 	const [datasourceDescriptions, setDatasourceDescriptions] = useState(descriptionsMap || {});
 	const [selectedSyncMode, setSelectedSyncMode] = useState(
-		existingStream?.config?.syncMode || stream?.stream?.supportedSyncModes[0]
+		existingStream?.config?.syncMode || streamProperty?.syncModes[0]
 	);
 
 	return (
@@ -93,7 +86,7 @@ export function StreamRow({
 							<ChevronRightIcon className='h-4 w-4' />
 						)}
 					</span>
-					<span className='ml-2'>{stream?.stream?.name || stream?.name}</span>
+					<span className='ml-2'>{streamName}</span>
 				</div>
 			</div>
 			{stream?.stream?.jsonSchema && (
@@ -116,11 +109,11 @@ export function StreamRow({
 							disabled={readonly}
 						>
 							{SyncModes.map(mode => {
-								const modeAvailable = stream.stream.supportedSyncModes.includes(mode);
+								const modeAvailable = streamProperty?.syncModes?.includes(mode);
 								return (
 									<option key={mode} value={mode} disabled={!modeAvailable}>
 										{mode.replace(/_/g, ' ')}{' '}
-										{!modeAvailable ? '(unavailable for this connector)' : ''}
+										{!modeAvailable ? '(not supported by this connector)' : ''}
 									</option>
 								);
 							})}
@@ -195,25 +188,29 @@ export function StreamRow({
 export function StreamsList({
 	streams,
 	existingStreams,
+	streamProperties,
 	readonly,
 	descriptionsMap
 }: {
 	streams?: any;
 	existingStreams?: any;
+	streamProperties?: any;
 	readonly?: boolean;
 	descriptionsMap?: any;
 }) {
 	return (
 		<div className='my-4'>
-			{streams?.map((stream, index) => (
-				<StreamRow
+			{streams?.map((stream, index) => {
+				const streamProperty = streamProperties.find(sp => sp?.streamName === stream?.stream?.name);
+				return <StreamRow
 					readonly={readonly}
 					key={index}
 					stream={stream}
 					existingStream={existingStreams?.find(st => st.name === stream?.name)}
+					streamProperty={streamProperty}
 					descriptionsMap={descriptionsMap}
 				/>
-			))}
+})}
 		</div>
 	);
 }

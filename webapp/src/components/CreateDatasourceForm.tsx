@@ -100,12 +100,14 @@ export default function CreateDatasourceForm({
 
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamState] = useState({
 		streams: [],
 		selectedFieldsMap: {},
-		descriptionsMap: {}
+		descriptionsMap: {},
+		setStreamProperties: {},
 	});
 	const [formData, setFormData] = useState(null);
 
@@ -221,6 +223,7 @@ export default function CreateDatasourceForm({
 						if (stagedDatasource) {
 							setDatasourceId(stagedDatasource.datasourceId);
 							setDiscoveredSchema(stagedDatasource.discoveredSchema);
+							setStreamProperties(stagedDatasource.streamProperties);
 							setStep(3);
 						} else {
 							setError('Datasource connection test failed.'); //TODO: any better way to get error?
@@ -602,6 +605,9 @@ export default function CreateDatasourceForm({
 							onSubmit={(e: any) => {
 								e.preventDefault();
 								//todo: make the streamlist fully controlled
+								const syncMode = e.target.elements.syncMode;
+								console.log('syncMode', syncMode);
+								console.log('e.target.elements', e.target.elements);
 								const streams = Array.from(e.target.elements)
 									.filter(x => x['checked'] === true)
 									.filter(x => !x['dataset']['parent'])
@@ -631,7 +637,7 @@ export default function CreateDatasourceForm({
 							{/* <pre>{JSON.stringify(discoveredSchema?.catalog?.streams, null, 2)}</pre> */}
 							<StreamsList
 								streams={discoveredSchema.catalog?.streams}
-								// streamProperties={}
+								streamProperties={streamProperties}
 							/>
 							<div className='flex justify-end'>
 								<button
