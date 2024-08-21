@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from typing import Any, List, Set, Type
@@ -12,6 +13,7 @@ from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
+from src.utils.json_schema_to_pydantic import json_schema_to_pydantic
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -163,15 +165,22 @@ class CrewAIBuilder:
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
+            
+            if task.isStructuredOutput:
+                task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
+                output_pydantic = task_model
+            else:
+                output_pydantic = None 
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
-                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput"}),
+                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "isStructuredOutput"}),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
-                stream_only_final_output=task.displayOnlyFinalOutput
+                stream_only_final_output=task.displayOnlyFinalOutput,
+                output_pydantic=output_pydantic
             )
 
     def make_user_question(self):
