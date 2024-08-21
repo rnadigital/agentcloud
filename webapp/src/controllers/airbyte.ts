@@ -130,7 +130,6 @@ export async function discoverSchemaApi(req, res, next) {
 		.then(res => res.data);
 	log('discoveredSchema %O', discoveredSchema);
 
-
 	// Get stream properties to get correct sync modes from airbyte
 	let streamProperties;
 	try {

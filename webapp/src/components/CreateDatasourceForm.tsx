@@ -14,7 +14,7 @@ import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
@@ -29,6 +29,7 @@ import { StreamsList } from 'components/DatasourceStream';
 import FormContext from 'context/connectorform';
 import { usePostHog } from 'posthog-js/react';
 
+import submittingReducer from '../lib/utils/submittingreducer';
 import classNames from './ClassNames';
 
 const stepList = [
@@ -103,11 +104,8 @@ export default function CreateDatasourceForm({
 	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
-	const [streamState, setStreamState] = useState({
-		streams: [],
-		selectedFieldsMap: {},
-		descriptionsMap: {},
-	});
+	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
+	console.log('streamState', streamState);
 	const [formData, setFormData] = useState(null);
 
 	async function getSpecification(sourceDefinitionId: string) {
@@ -603,7 +601,7 @@ export default function CreateDatasourceForm({
 						<form
 							onSubmit={(e: any) => {
 								e.preventDefault();
-								//todo: make the streamlist fully controlled
+								//TODO: make the streamlist controlled
 								const streams = Array.from(e.target.elements)
 									.filter(x => x['checked'] === true)
 									.filter(x => !x['dataset']['parent'])
@@ -617,16 +615,35 @@ export default function CreateDatasourceForm({
 										]);
 										return acc;
 									}, {});
-								const syncModesMap = Array.from(e.target.elements)
-								.filter(x => x['type'] === 'select-one') //select dropdowns
-								.filter(x => x['dataset']['parent'])
+								const descriptionsMap = Array.from(e.target.elements)
+									.filter(x => x['type'] === 'text')
+									.filter(x => x['dataset']['checked'] === 'true')
 									.reduce((acc, x) => {
-										if (streams.includes(x['dataset']['parent'])) { //filter to only selected streams
-											acc[x['dataset']['parent']] = x['value']
+										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
+											acc[x['name']] = x['value'];
 										}
 										return acc;
 									}, {});
-								const descriptionsMap = Array.from(e.target.elements)
+								const syncModesMap = Array.from(e.target.elements)
+									.filter(x => x['type'] === 'select-one') //select dropdowns
+									.filter(x => x['dataset']['parent'])
+									.reduce((acc, x) => {
+										if (streams.includes(x['dataset']['parent'])) {
+											//filter to only selected streams
+											acc[x['dataset']['parent']] = x['value'];
+										}
+										return acc;
+									}, {});
+								const cursorFields = Array.from(e.target.elements)
+									.filter(x => x['type'] === 'text')
+									.filter(x => x['dataset']['checked'] === 'true')
+									.reduce((acc, x) => {
+										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
+											acc[x['name']] = x['value'];
+										}
+										return acc;
+									}, {});
+								const primaryKeys = Array.from(e.target.elements)
 									.filter(x => x['type'] === 'text')
 									.filter(x => x['dataset']['checked'] === 'true')
 									.reduce((acc, x) => {
@@ -641,10 +658,10 @@ export default function CreateDatasourceForm({
 								setStep(4);
 							}}
 						>
-							{/* <pre>{JSON.stringify(discoveredSchema?.catalog?.streams, null, 2)}</pre> */}
 							<StreamsList
 								streams={discoveredSchema.catalog?.streams}
 								streamProperties={streamProperties}
+								setStreamReducer={setStreamReducer}
 							/>
 							<div className='flex justify-end'>
 								<button

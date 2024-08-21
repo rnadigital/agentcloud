@@ -6,6 +6,16 @@ import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors'
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import {
+	addDatasource,
+	deleteDatasourceById,
+	editDatasource,
+	getDatasourceById,
+	getDatasourcesByTeam,
+	setDatasourceConnectionSettings,
+	setDatasourceEmbedding,
+	setDatasourceStatus
+} from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
@@ -29,17 +39,6 @@ import {
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import VectorDBProxy from 'vectordb/proxy';
-
-import {
-	addDatasource,
-	deleteDatasourceById,
-	editDatasource,
-	getDatasourceById,
-	getDatasourcesByTeam,
-	setDatasourceConnectionSettings,
-	setDatasourceEmbedding,
-	setDatasourceStatus
-} from 'db/datasource';
 
 const log = debug('webapp:controllers:datasource');
 const ajv = new Ajv({ strict: 'log' });
