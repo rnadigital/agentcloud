@@ -1,5 +1,6 @@
 // Courtesy of AlbinoGeek: https://github.com/react-monaco-editor/react-monaco-editor/issues/271#issuecomment-986612363
 import Editor from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef } from 'react';
 
 //
@@ -42,7 +43,7 @@ export type ScriptEditorProps = {
 const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 	const { code, setCode, editorOptions, onInitializePane, height, language } = props;
 
-	const monacoEditorRef = useRef<any | null>(null);
+	const monacoEditorRef = useRef<typeof monaco.editor>(null);
 	const editorRef = useRef<any | null>(null);
 
 	// monaco takes years to mount, so this may fire repeatedly without refs set

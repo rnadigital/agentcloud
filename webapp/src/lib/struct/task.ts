@@ -27,4 +27,5 @@ export interface Task {
 	requiresHumanInput?: boolean;
 	displayOnlyFinalOutput?: boolean;
 	hidden?: boolean;
+	isStructuredOutput?: boolean;
 }
