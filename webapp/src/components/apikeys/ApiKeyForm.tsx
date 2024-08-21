@@ -1,138 +1,162 @@
 'use strict';
 
 import * as API from '@api';
-import ButtonSpinner from 'components/ButtonSpinner';
-import ParameterForm from 'components/ParameterForm';
+import InputField from 'components/form/InputField';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { ObjectId } from 'mongodb';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
-import React, { useEffect, useRef, useState } from 'react';
-import { Option } from 'react-tailwindcss-select/dist/components/type';
-import { Controller, ControllerFieldState, ControllerRenderProps, FieldValues, FormProvider, useForm, UseFormStateReturn } from 'react-hook-form';
-import { Property } from 'struct/form';
-import InputField from 'components/form/InputField';
-import { toast } from 'react-toastify';
-import { NotificationType } from 'struct/notification';
-import Head from 'next/head';
-import MultiSelectField from 'components/connectorform/MultiSelectField';
+import React, { useState } from 'react';
+import { Controller, FieldValues, FormProvider, useForm } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
-import { SelectValue } from 'react-tailwindcss-select/dist/components/type';
-import FormField from 'components/connectorform/FormField';
-
-export interface ApiKeyFormValues{
-	name?: '',
-	description: '',
-	expirationDate: "30",
-	ownerId?: ObjectId | string, 
+import { Option } from 'react-tailwindcss-select/dist/components/type';
+export interface ApiKeyFormValues {
+	name?: '';
+	description: '';
+	expirationDays: '0';
+	expirationDate: Date;
+	ownerId?: ObjectId | string;
 }
+const dropdownOptions = [
+	{
+		value: '30',
+		label: '30 days'
+	},
+	{
+		value: '60',
+		label: '60 days'
+	},
+	{
+		value: '90',
+		label: '90 days'
+	},
+	{
+		value: 'never',
+		label: 'never expire'
+	}
+];
 
-export default function ApiKeyForm(){
+export default function ApiKeyForm() {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	const posthog = usePostHog();
 	const [submitting, setSubmitting] = useState(false);
-	const {
-		watch,
-		handleSubmit,
-		control,
-		register,
-		setValue,
-		reset,
-		formState: { errors, isDirty, isSubmitting, touchedFields, submitCount },
-	 	} = useForm<ApiKeyFormValues>();
+	const [endDateStr, setEndDateStr] = useState(null);
+	const { handleSubmit, control, setValue } = useForm<ApiKeyFormValues>();
 
 	const methods = useForm<ApiKeyFormValues>();
 
-	setValue("ownerId", account?._id);
+	setValue('ownerId', account?._id);
 
-
+	const getFutureDate = expirationDays => {
+		if (expirationDays === 'never') {
+			return 'Will Never Expire';
+		}
+		const numOfDays = parseInt(expirationDays);
+		const today = new Date();
+		today.setDate(today.getDate() + numOfDays);
+		return today.toDateString();
+	};
 	const onSubmit = async (data: FieldValues) => {
-		
+		setSubmitting(true);
 		console.log(data);
+		setSubmitting(false);
 	};
 
-	if(!control){
-		return <Spinner/>
+	if (!control) {
+		return <Spinner />;
 	}
 
-
-	return(
-		<div className='flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8'>
+	return (
+		<div className='flex min-h-full flex-1 flex-col justify-start py-12 sm:px-6 lg:px-4'>
 			<FormProvider {...methods}>
-			<form onSubmit={handleSubmit(onSubmit)}>
-				<div className='w-[30%] py-5'>
-					<InputField<ApiKeyFormValues>
-						name='name'
-						control={control}
-						rules={{
-							required: 'Name is required',
-						}}
-						label='Name'
-						type='text'
-						disabled={false}
-					/>
-				</div>
-
-				<div className='w-[35%] py-5'>
-					<InputField<ApiKeyFormValues>
-						name='description'
-						control={control}
-						rules={{}}
-						label='Description'
-						type='text'
-						disabled={false}
-					/>
-				</div>
-
-				<div className='flex flex-col w-[15%] my-5'>
-					<p>
-						FormField
-					</p>
-					<Controller 
-						render={({ field: { onChange, onBlur, value, ref } }) => {
-							const options = [
-								{
-									value: "30",
-									label: "30 days"
-								},
-								{
-									value: "60",
-									label: "60 days"
-								},
-								{
-									value: "90",
-									label: "90 days"
-								},
-								{
-									value: "never",
-									label: "never expire"
-								},
-							]
-							const [valueLabel, setValueLabel] = useState("");
-							const handleChange = selected => {
-								setValueLabel((selected as Option).label)
-								onChange((selected as Option).value);
-							};
-							return (
-								<Select 
-									options= {options} 
-									value={{value, label: valueLabel}} 
-									onChange={handleChange} 
-									primaryColor={''}
-								/>
-							)}}
-						name="expirationDate"
-						control={control}
+				<form onSubmit={handleSubmit(onSubmit)}>
+					<div className='w-[20%] py-5'>
+						<InputField<ApiKeyFormValues>
+							name='name'
+							control={control}
+							rules={{
+								required: 'Name is required'
+							}}
+							label='Name*'
+							type='text'
+							disabled={submitting}
 						/>
-				</div>
+					</div>
 
-				<button type='submit'>
-					Submit
-				</button>
-			</form>
+					<div className='w-[25%] py-5'>
+						<InputField<ApiKeyFormValues>
+							name='description'
+							control={control}
+							rules={{}}
+							label='Description'
+							type='text'
+							disabled={submitting}
+							placeholder='A short description of where the key is used'
+						/>
+					</div>
+
+					<div className='flex flex-col w-[25%] min-w-32 my-5'>
+						<p className='text-sm text-gray-900 pb-2'>Expiration</p>
+						<div className='flex flex-row w-full gap-2'>
+							<div className='flex w-[50%]'>
+								<Controller
+									render={({ field: { onChange, onBlur, value, ref } }) => {
+										const label = dropdownOptions.find(x => x.value === value)?.label;
+										const handleChange = selected => {
+											onChange((selected as Option).value);
+											setEndDateStr((selected as Option).value);
+											getFutureDate;
+										};
+										return (
+											<Select
+												options={dropdownOptions}
+												value={{ value, label }}
+												onChange={handleChange}
+												primaryColor='inigo'
+												classNames={{
+													menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-transparent dark:border-slate-600',
+													menuButton: () =>
+														'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-transparent dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+													list: 'dark:bg-slate-700',
+													listGroupLabel: 'dark:bg-slate-700',
+													listItem: (value?: { isSelected?: boolean }) =>
+														`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 dark:hover:bg-slate-600 dark:text-gray-50 dark:hover:text-white`
+												}}
+												placeholder='Select'
+											/>
+										);
+									}}
+									name='expirationDays'
+									control={control}
+									disabled={submitting}
+								/>
+							</div>
+
+							{endDateStr !== null && (
+								<div className='flex flex-col text-sm text-gray-500'>
+									<p className=''>This token will expire on:</p>
+
+									<span>{getFutureDate(endDateStr)}</span>
+								</div>
+							)}
+						</div>
+					</div>
+
+					<div className='flex flex-row justify-between max-w-[25%]'>
+						<Link href='/apikeys' className='text-sm font-semibold leading-6 text-gray-900'>
+							{' '}
+							Back{' '}
+						</Link>
+						<button
+							type='submit'
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
+							Submit
+						</button>
+					</div>
+				</form>
 			</FormProvider>
 		</div>
 	);
