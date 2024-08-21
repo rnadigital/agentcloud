@@ -1,12 +1,11 @@
 'use strict';
 
 import * as API from '@api';
+import { Switch } from '@headlessui/react';
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
-import ToolSelectIcons from 'components/ToolSelectIcons';
-import ToolStateBadge from 'components/ToolStateBadge';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
@@ -22,6 +21,7 @@ import SelectClassNames from 'styles/SelectClassNames';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
+import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 
@@ -48,12 +48,19 @@ export default function TaskForm({
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
 	const [taskState, setTask] = useState<Task | undefined>(task);
+	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput || '');
+
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
+
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
+		/* noop */
+	};
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -286,12 +293,22 @@ export default function TaskForm({
 						</div>
 
 						<div className='col-span-full'>
-							<label
-								htmlFor='expectedOutput'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Expected Output
-							</label>
+							<div className='flex w-full mb-1'>
+								<label
+									htmlFor='expectedOutput'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								>
+									Expected Output
+								</label>
+								<Switch
+									checked
+									onChange={() => {}}
+									className='ml-auto group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
+								>
+									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
+								</Switch>
+							</div>
+
 							<textarea
 								id='expectedOutput'
 								name='expectedOutput'
@@ -299,6 +316,23 @@ export default function TaskForm({
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.expectedOutput}
+								value={expectedOutput}
+								onChange={e => setExpectedOutput(e.target.value)}
+							/>
+
+							<ScriptEditor
+								height='10em'
+								code={expectedOutput}
+								setCode={setExpectedOutput}
+								editorOptions={{
+									stopRenderingLineAfter: 1000,
+									fontSize: '12pt',
+									//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+									minimap: { enabled: false },
+									scrollBeyondLastLine: false
+								}}
+								onInitializePane={onInitializePane}
+								language='json'
 							/>
 						</div>
 
