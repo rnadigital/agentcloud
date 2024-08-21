@@ -631,7 +631,7 @@ export default function CreateDatasourceForm({
 							{/* <pre>{JSON.stringify(discoveredSchema?.catalog?.streams, null, 2)}</pre> */}
 							<StreamsList
 								streams={discoveredSchema.catalog?.streams}
-								streamProperties={}
+								// streamProperties={}
 							/>
 							<div className='flex justify-end'>
 								<button
