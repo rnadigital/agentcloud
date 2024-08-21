@@ -7,7 +7,8 @@ export enum AirbyteApiType {
 	SOURCES,
 	DESTINATIONS,
 	CONNECTIONS,
-	JOBS
+	JOBS,
+	STREAMS
 }
 
 const definitions: Record<AirbyteApiType, string> = {
@@ -15,7 +16,8 @@ const definitions: Record<AirbyteApiType, string> = {
 	[AirbyteApiType.SOURCES]: 'https://dash.readme.com/api/v1/api-registry/18dnz3hlp380w3x',
 	[AirbyteApiType.DESTINATIONS]: 'https://dash.readme.com/api/v1/api-registry/im2uloyyk7wt',
 	[AirbyteApiType.CONNECTIONS]: 'https://dash.readme.com/api/v1/api-registry/ggq35loywl8vx',
-	[AirbyteApiType.JOBS]: 'https://dash.readme.com/api/v1/api-registry/dld83bfloywkuu9'
+	[AirbyteApiType.JOBS]: 'https://dash.readme.com/api/v1/api-registry/dld83bfloywkuu9',
+	[AirbyteApiType.STREAMS]: 'https://dash.readme.com/api/v1/api-registry/2761llw9jxqam'
 };
 
 const apiCache: Partial<Record<AirbyteApiType, any>> = {};
@@ -38,7 +40,7 @@ async function getAirbyteApi(type: AirbyteApiType) {
 		axiosConfigDefaults
 	});
 	const client = await api.init();
-	client.defaults.baseURL = `${process.env.AIRBYTE_API_URL}/v1`;
+	client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api/public/v1`;
 	return (apiCache[type] = client);
 }
 

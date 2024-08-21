@@ -39,7 +39,7 @@ import {
 	setDatasourceConnectionSettings,
 	setDatasourceEmbedding,
 	setDatasourceStatus
-} from '../db/datasource';
+} from 'db/datasource';
 
 const log = debug('webapp:controllers:datasource');
 const ajv = new Ajv({ strict: 'log' });
@@ -212,6 +212,7 @@ export async function testDatasourceApi(req, res, next) {
 		createdSource = await sourcesApi.createSource(null, sourceBody).then(res => res.data);
 		log('createdSource', createdSource);
 	} catch (e) {
+		log(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to create datasource: ${e?.response?.data?.detail || e}`
 		});
@@ -263,12 +264,28 @@ export async function testDatasourceApi(req, res, next) {
 		});
 	}
 
-	// Create the collection in qdrant
-	// try {
-	// 	await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
-	// } catch (e) {
-	// 	return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
-	// }
+	// Get stream properties to get correct sync modes from airbyte
+	let streamProperties;
+	try {
+		const streamsApi = await getAirbyteApi(AirbyteApiType.STREAMS);
+		const streamPropertiesBody = {
+			sourceId: createdSource.sourceId,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
+		};
+		log('streamPropertiesBody', streamPropertiesBody);
+		streamProperties = await streamsApi
+			.getStreamProperties(streamPropertiesBody)
+			.then(res => res.data);
+		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		if (!streamProperties) {
+			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
+		}
+	} catch (e) {
+		log(e);
+		return dynamicResponse(req, res, 400, {
+			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
+		});
+	}
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
@@ -295,6 +312,7 @@ export async function testDatasourceApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		sourceId: createdSource.sourceId,
 		discoveredSchema,
+		streamProperties,
 		datasourceId: createdDatasource.insertedId
 	});
 }

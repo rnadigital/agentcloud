@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { Menu, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import {
 	ArrowPathIcon,
 	Cog6ToothIcon,
@@ -34,6 +34,7 @@ export default function DatasourceTable({
 	const [syncing, setSyncing] = useReducer(submittingReducer, {});
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
 	const [deletingMap, setDeletingMap] = useState({});
+	const [confirmClose, setConfirmClose] = useState(false);
 
 	async function deleteDatasource(datasourceId) {
 		setDeleting({ [datasourceId]: true });
@@ -86,6 +87,70 @@ export default function DatasourceTable({
 		} finally {
 			setSyncing({ [datasourceId]: false });
 		}
+	}
+
+	{
+		/* TODO: move to separate component
+			<Transition show={confirmClose !== false} as={Fragment}>
+				<Dialog as='div' className='relative z-[100]' onClose={() => setConfirmClose(false)}>
+					<TransitionChild
+						as={Fragment}
+						enter='ease-out duration-300'
+						enterFrom='opacity-0'
+						enterTo='opacity-100'
+						leave='ease-in duration-200'
+						leaveFrom='opacity-100'
+						leaveTo='opacity-0'
+					>
+						<div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
+					</TransitionChild>
+					<div className='fixed inset-0 overflow-y-auto w-full'>
+						<div className='flex min-h-full items-end justify-center p-3 text-center sm:items-center sm:p-0 w-full'>
+							<TransitionChild
+								as={Fragment}
+								enter='ease-out duration-300'
+								enterFrom='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
+								enterTo='opacity-100 translate-y-0 sm:scale-100'
+								leave='ease-in duration-200'
+								leaveFrom='opacity-100 translate-y-0 sm:scale-100'
+								leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
+							>
+								<DialogPanel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 m-10 dark:bg-slate-800 dark:text-gray-50'>
+									<DialogTitle
+										as='h3'
+										className='text-lg font-medium text-gray-900 dark:text-white'
+									>
+										Sync in progress
+									</DialogTitle>
+									<div className='flex flex-col'>
+										<p className='py-3'>
+											This datasource is currently processing, syncing again will cancel the current
+											job. Are you sure?
+										</p>
+										<div className='flex flex-row pt-2 gap-5 text-sm'>
+											<button
+												className='px-3 py-2 bg-rose-500 text-white font-bold rounded-lg shadow-sm hover:shadow-lg'
+												onClick={() => {
+													syncDatasource(confirmClose);
+													setConfirmClose(false);
+												}}
+											>
+												Sync anyway
+											</button>
+											<button
+												className='px-3 py-2 border rounded-lg shadow-sm hover:shadow-lg dark:bg-slate-800 dark:text-white'
+												onClick={() => setConfirmClose(false)}
+											>
+												I&apos;ll wait
+											</button>
+										</div>
+									</div>
+								</DialogPanel>
+							</TransitionChild>
+						</div>
+					</div>
+				</Dialog>
+			</Transition> */
 	}
 
 	return (
@@ -215,15 +280,17 @@ export default function DatasourceTable({
 									<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 										{datasource.sourceType !== 'file' && (
 											<button
-												onClick={() => syncDatasource(datasource._id)}
+												onClick={() => {
+													// if (datasource.status !== DatasourceStatus.READY) {
+													// 	setConfirmClose(datasource._id);
+													// } else {
+													syncDatasource(datasource._id);
+													// }
+												}}
 												disabled={
 													syncing[datasource._id] ||
 													deleting[datasource._id] ||
-													(datasource.status === DatasourceStatus.DRAFT &&
-														!datasource?.connectionSettings?.configurations?.streams?.length) ||
-													[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(
-														datasource.status
-													)
+													datasource.status !== DatasourceStatus.READY
 												}
 												className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 											>

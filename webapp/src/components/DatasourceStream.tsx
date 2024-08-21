@@ -2,6 +2,7 @@
 
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useReducer, useState } from 'react';
+import { SyncModes } from 'struct/datasource';
 
 export function StreamRow({
 	stream,
@@ -15,6 +16,17 @@ export function StreamRow({
 	descriptionsMap?: any;
 }) {
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
+
+	/*
+	"sourceDefinedCursor": true,
+	"defaultCursorField": [
+		"updated_at"
+	],
+	"sourceDefinedPrimaryKey": [
+		[
+			"id"
+		]
+	]*/
 
 	const initialCheckedChildren =
 		stream?.stream?.jsonSchema &&
@@ -41,6 +53,9 @@ export function StreamRow({
 	);
 
 	const [datasourceDescriptions, setDatasourceDescriptions] = useState(descriptionsMap || {});
+	const [selectedSyncMode, setSelectedSyncMode] = useState(
+		existingStream?.config?.syncMode || stream?.stream?.supportedSyncModes[0]
+	);
 
 	return (
 		<div className='border-b dark:text-gray-50'>
@@ -85,6 +100,32 @@ export function StreamRow({
 				<div
 					className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'} dark:text-white`}
 				>
+					<div className='mb-4'>
+						<label
+							htmlFor='syncMode'
+							className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+						>
+							Sync Mode
+						</label>
+						<select
+							id='syncMode'
+							name='syncMode'
+							className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							value={selectedSyncMode}
+							onChange={e => setSelectedSyncMode(e.target.value)}
+							disabled={readonly}
+						>
+							{SyncModes.map(mode => {
+								const modeAvailable = stream.stream.supportedSyncModes.includes(mode);
+								return (
+									<option key={mode} value={mode} disabled={!modeAvailable}>
+										{mode.replace(/_/g, ' ')}{' '}
+										{!modeAvailable ? '(unavailable for this connector)' : ''}
+									</option>
+								);
+							})}
+						</select>
+					</div>
 					<table className='w-full'>
 						<thead>
 							<tr>
