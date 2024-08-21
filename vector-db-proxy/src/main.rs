@@ -83,8 +83,7 @@ async fn main() -> std::io::Result<()> {
             "pinecone" => {
                 println!("Using Pinecone Vector Database");
                 let config = PineconeClientConfig {
-                    api_key: Some("INSERT_API_KEY".to_string()),
-                    control_plane_host: Some("INSERT_CONTROLLER_HOST".to_string()),
+                    api_key: Some(global_data.clone().pinecone_api_key),
                     ..Default::default()
                 };
                 let pinecone: PineconeClient = config.client().expect("Failed to create Pinecone");

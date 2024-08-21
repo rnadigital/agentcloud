@@ -1,6 +1,7 @@
 use crate::vector_databases::error::VectorDatabaseError;
-use crate::vector_databases::models::{CollectionCreate, Distance, Region};
-use pinecone_sdk::models::IndexModel;
+use crate::vector_databases::models::VectorDatabaseStatus;
+use pinecone_sdk::models::{IndexModel, Namespace, Vector};
+use pinecone_sdk::pinecone::data::Index;
 use pinecone_sdk::pinecone::PineconeClient;
 use std::sync::Arc;
 
@@ -31,22 +32,30 @@ pub async fn get_indexes(client: &PineconeClient) -> Vec<String> {
     list_of_indexes
 }
 
-pub async fn check_index_exists(
+pub async fn get_index_model(
     client: &PineconeClient,
-    collection_create: CollectionCreate,
+    collection_name: String,
 ) -> Result<IndexModel, VectorDatabaseError> {
-    let region = collection_create.clone().region.unwrap_or(Region::US);
-    match client.describe_index(Region::to_str(region)).await {
-        Ok(index_model) => {
-            if (index_model.dimension == collection_create.dimensions as i32)
-                && (Distance::from(index_model.clone().metric) == collection_create.distance)
-            {
-                Ok(index_model)
+    match client.describe_index(collection_name.as_str()).await {
+        Ok(index_model) => Ok(index_model),
+        Err(e) => {
+            println!("Pinecone Error: {}", e);
+            Err(VectorDatabaseError::NotFound(e.to_string()))
+        }
+    }
+}
+
+pub async fn upsert(
+    mut index: Index,
+    vectors: &[Vector],
+    namespace: &Namespace,
+) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+    match index.upsert(&vectors, &namespace).await {
+        Ok(status) => {
+            if status.upserted_count == 1 {
+                Ok(VectorDatabaseStatus::Ok)
             } else {
-                Err(VectorDatabaseError::NotFound(format!(
-                    "Index: {} was not found",
-                    collection_create.collection_name
-                )))
+                Ok(VectorDatabaseStatus::Failure)
             }
         }
         Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),

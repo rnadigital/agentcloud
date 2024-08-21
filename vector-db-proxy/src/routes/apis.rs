@@ -17,7 +17,7 @@ use crate::vector_databases::models::{
 };
 use crate::vector_databases::vector_database::VectorDatabase;
 use routes::models::{ResponseBody, Status};
-use serde_json::json;
+use serde_json::{json, Value};
 use std::vec;
 use tokio::sync::RwLock;
 use wherr::wherr;
@@ -86,7 +86,7 @@ pub async fn list_collections(
 ///
 /// ```
 #[wherr]
-#[post("/check-collection-exists/{collection_name}")]
+#[get("/check-collection-exists/{collection_name}")]
 pub async fn check_collection_exists(
     app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     Path(collection_name): Path<String>,
@@ -137,17 +137,29 @@ pub async fn check_collection_exists(
                     }))
                 }))),
         },
-        Err(e) => Ok(HttpResponse::InternalServerError()
-            .content_type(ContentType::json())
-            .json(json!(ResponseBody {
-                status: Status::Failure,
-                data: None,
-                error_message: Some(json!({
-                    "errorMessage": format!("An error occurred while checking if collection \
-                    exists. \
-                    Error: {}", e)
-                }))
-            }))),
+        Err(e) => {
+            let error_message_str = format!("{}", e);
+            let error_message_json: Option<Value> = error_message_str
+                .split("content: ")
+                .nth(1)
+                .and_then(|json_part| serde_json::from_str(json_part).ok());
+            Ok(HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(match error_message_json {
+                        Some(json_value) => json!({
+                            "errorMessage": "An error occurred while checking if collection exists.",
+                            "errorDetails": json_value
+                        }),
+                        None => json!({
+                            "errorMessage": format!("An error occurred while checking if collection exists. \
+                            Error: {}", e)
+                        })
+                    })
+                })))
+        }
     }
 }
 

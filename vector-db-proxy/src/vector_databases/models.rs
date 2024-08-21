@@ -137,6 +137,11 @@ pub enum Region {
     EU,
     AU,
 }
+impl Default for Region {
+    fn default() -> Self {
+        Self::US
+    }
+}
 
 impl Region {
     pub fn to_str<'a>(region: Self) -> &'a str {
@@ -161,6 +166,12 @@ pub enum Cloud {
     GCP,
     AWS,
     AZURE,
+}
+
+impl Default for Cloud {
+    fn default() -> Self {
+        Self::AWS
+    }
 }
 
 impl Cloud {
@@ -208,7 +219,11 @@ pub enum Distance {
     Dot = 3,
     Manhattan = 4,
 }
-
+impl Default for Distance {
+    fn default() -> Self {
+        Self::Cosine
+    }
+}
 impl From<Metric> for Distance {
     fn from(value: Metric) -> Self {
         match value {
@@ -237,6 +252,17 @@ impl From<i32> for Distance {
             2 => Distance::Euclid,
             3 => Distance::Dot,
             4 => Distance::Manhattan,
+            _ => Distance::UnknownDistance,
+        }
+    }
+}
+impl From<&str> for Distance {
+    fn from(value: &str) -> Self {
+        match value {
+            "cosine" => Distance::Cosine,
+            "euclidian" => Distance::Euclid,
+            "dotproduct" => Distance::Dot,
+            "manhattan" => Distance::Manhattan,
             _ => Distance::UnknownDistance,
         }
     }

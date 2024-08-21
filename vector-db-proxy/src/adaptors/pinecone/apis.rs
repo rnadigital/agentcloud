@@ -1,4 +1,4 @@
-use crate::adaptors::pinecone::helpers::{check_index_exists, get_indexes};
+use crate::adaptors::pinecone::helpers::{get_index_model, get_indexes, upsert};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, Region,
@@ -18,7 +18,8 @@ impl VectorDatabase for PineconeClient {
         let mut list_of_namespaces: Vec<String> = vec![];
         let list_of_indexes = get_indexes(self).await;
         for index in list_of_indexes {
-            let mut index = self.index(index.as_str()).await.unwrap();
+            let index_model = &self.describe_index(index.as_str()).await.unwrap();
+            let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let index_stats = index.describe_index_stats(None).await.unwrap();
             list_of_namespaces.extend(
                 index_stats
@@ -40,45 +41,49 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
-        let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
-        let index_stats = index.describe_index_stats(None).await.unwrap();
-        if index_stats
-            .namespaces
-            .contains_key(search_request.clone().collection.as_str())
-        {
-            let indexed_vectors_count = index_stats
-                .namespaces
-                .get(search_request.collection.as_str())
-                .unwrap()
-                .vector_count;
-            collection_results.status = VectorDatabaseStatus::Ok;
-            collection_results.collection_metadata = Some(CollectionMetadata {
-                status: VectorDatabaseStatus::Ok,
-                collection_vector_count: Some(indexed_vectors_count as u64),
-                metric: None,
-                dimensions: None,
-            })
+        let index_name = Region::to_str(search_request.region.unwrap());
+        match get_index_model(&self, index_name.to_string()).await {
+            Ok(index_model) => {
+                let mut index = self.index(index_model.host.as_str()).await.unwrap();
+                let index_stats = index.describe_index_stats(None).await.unwrap();
+                if index_stats
+                    .namespaces
+                    .contains_key(search_request.clone().collection.as_str())
+                {
+                    let indexed_vectors_count = index_stats
+                        .namespaces
+                        .get(search_request.clone().collection.as_str())
+                        .unwrap()
+                        .vector_count;
+                    collection_results.status = VectorDatabaseStatus::Ok;
+                    collection_results.collection_metadata = Some(CollectionMetadata {
+                        status: VectorDatabaseStatus::Ok,
+                        collection_vector_count: Some(indexed_vectors_count as u64),
+                        metric: Some(Distance::from(index_model.metric)),
+                        dimensions: Some(index_model.dimension as u64),
+                    })
+                }
+                Ok(collection_results)
+            }
+            Err(e) => Err(e),
         }
-        Ok(collection_results)
     }
 
     async fn create_collection(
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        match check_index_exists(&self, collection_create.clone()).await {
+        match get_index_model(&self, collection_create.collection_name).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
                 VectorDatabaseError::NotFound(_) => {
                     match self
                         .create_serverless_index(
-                            Region::to_str(collection_create.region.unwrap()),
+                            Region::to_str(collection_create.region.unwrap_or_default()),
                             collection_create.dimensions as i32,
                             Metric::from(collection_create.distance),
-                            PineconeCloud::from(collection_create.cloud.unwrap()),
-                            Region::to_str(collection_create.region.unwrap()),
+                            PineconeCloud::from(collection_create.cloud.unwrap_or_default()),
+                            Region::to_str(collection_create.region.unwrap_or_default()),
                             DeletionProtection::Disabled,
                             WaitPolicy::NoWait,
                         )
@@ -98,15 +103,16 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
-        let pinecone_namespace = Namespace::from(search_request.collection.as_str());
-        match index.delete_all(&pinecone_namespace).await {
-            Ok(_) => Ok(VectorDatabaseStatus::Ok),
-            Err(e) => Ok(VectorDatabaseStatus::Error(
-                VectorDatabaseError::PineconeError(Arc::new(e)),
-            )),
-        }
+        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+            // Need to figure out the the default index name here
+            let mut index = self.index(index_model.host.as_str()).await.unwrap();
+            let pinecone_namespace = Namespace::from(search_request.collection.as_str());
+            return match index.delete_all(&pinecone_namespace).await {
+                Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
+            };
+        };
+        Ok(VectorDatabaseStatus::NotFound)
     }
 
     async fn insert_point(
@@ -115,21 +121,19 @@ impl VectorDatabase for PineconeClient {
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let vector = Vector::from(point);
         let namespace = search_request.collection;
-
-        match index.upsert(&[vector], &namespace.into()).await {
-            Ok(status) => {
-                if status.upserted_count == 1 {
-                    Ok(VectorDatabaseStatus::Ok)
-                } else {
-                    Ok(VectorDatabaseStatus::Failure)
-                }
-            }
-            Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
+        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+            // Need to figure out the the default index name here
+            let index = self.index(index_model.host.as_str()).await.unwrap();
+            return match upsert(index, &[vector], &namespace.into()).await {
+                Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                Err(e) => Err(e),
+            };
         }
+        Err(VectorDatabaseError::NotFound(
+            format!("Index {namespace} was not found").to_string(),
+        ))
     }
 
     async fn bulk_insert_points(
@@ -138,20 +142,19 @@ impl VectorDatabase for PineconeClient {
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
         let namespace = search_request.collection;
-        match index.upsert(&vectors, &namespace.into()).await {
-            Ok(status) => {
-                if status.upserted_count == 1 {
-                    Ok(VectorDatabaseStatus::Ok)
-                } else {
-                    Ok(VectorDatabaseStatus::Failure)
-                }
-            }
-            Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
-        }
+        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+            // Need to figure out the the default index name here
+            let index = self.index(index_model.host.as_str()).await.unwrap();
+            return match upsert(index, &vectors, &namespace.into()).await {
+                Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                Err(e) => Err(e),
+            };
+        };
+        Err(VectorDatabaseError::NotFound(
+            format!("Index {namespace} was not found").to_string(),
+        ))
     }
 
     async fn get_collection_info(
@@ -159,20 +162,21 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
-        let index_model = self.describe_index(Region::to_str(region)).await.unwrap();
-        let index_stats = index.describe_index_stats(None).await.unwrap();
-        let vector_count: Option<u64> = index_stats
-            .namespaces
-            .iter()
-            .find_map(|(k, v)| (*k == search_request.collection).then(|| v.vector_count as u64));
-        Ok(Some(CollectionMetadata {
-            status: VectorDatabaseStatus::Ok,
-            collection_vector_count: vector_count,
-            metric: Some(Distance::from(index_model.metric)),
-            dimensions: Some(index_model.dimension as u64),
-        }))
+        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+            // Need to figure out the the default index name here
+            let mut index = self.index(index_model.host.as_str()).await.unwrap();
+            let index_stats = index.describe_index_stats(None).await.unwrap();
+            let vector_count: Option<u64> = index_stats.namespaces.iter().find_map(|(k, v)| {
+                (*k == search_request.collection).then(|| v.vector_count as u64)
+            });
+            return Ok(Some(CollectionMetadata {
+                status: VectorDatabaseStatus::Ok,
+                collection_vector_count: vector_count,
+                metric: Some(Distance::from(index_model.metric)),
+                dimensions: Some(index_model.dimension as u64),
+            }));
+        };
+        Ok(None)
     }
 
     async fn get_storage_size(
@@ -206,46 +210,48 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        // Need to figure out the the default index name here
-        let mut index = self.index(Region::to_str(region)).await.unwrap();
-        let namespace = Namespace::from(search_request.collection.as_str());
-        let _return_params = search_request.search_response_params.unwrap();
-        if let Some(vector) = search_request.vector {
-            if let Ok(results) = index
-                .query_by_value(
-                    vector,
-                    None,
-                    search_request.top_k.unwrap(),
-                    &namespace,
-                    None,
-                    Some(false),
-                    Some(true),
-                )
-                .await
-            {
-                let matched_vectors: Vec<SearchResult> = results
-                    .matches
-                    .iter()
-                    .map(|res| {
-                        let point = Point::from(res.clone().metadata.unwrap());
-                        SearchResult {
-                            id: res.clone().id,
-                            score: Some(res.score),
-                            payload: point.payload,
-                            vector: Some(res.clone().values),
-                        }
-                    })
-                    .collect();
-                Ok(matched_vectors)
+        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+            let mut index = self.index(index_model.host.as_str()).await.unwrap();
+            let namespace = Namespace::from(search_request.collection.as_str());
+            let _return_params = search_request.search_response_params.unwrap();
+            return if let Some(vector) = search_request.vector {
+                if let Ok(results) = index
+                    .query_by_value(
+                        vector,
+                        None,
+                        search_request.top_k.unwrap(),
+                        &namespace,
+                        None,
+                        Some(false),
+                        Some(true),
+                    )
+                    .await
+                {
+                    let matched_vectors: Vec<SearchResult> = results
+                        .matches
+                        .iter()
+                        .map(|res| {
+                            let point = Point::from(res.clone().metadata.unwrap());
+                            SearchResult {
+                                id: res.clone().id,
+                                score: Some(res.score),
+                                payload: point.payload,
+                                vector: Some(res.clone().values),
+                            }
+                        })
+                        .collect();
+                    Ok(matched_vectors)
+                } else {
+                    Err(VectorDatabaseError::Other(
+                        "Something bad happened!".to_string(),
+                    ))
+                }
             } else {
                 Err(VectorDatabaseError::Other(
                     "Something bad happened!".to_string(),
                 ))
-            }
-        } else {
-            Err(VectorDatabaseError::Other(
-                "Something bad happened!".to_string(),
-            ))
+            };
         }
+        Ok(vec![])
     }
 }

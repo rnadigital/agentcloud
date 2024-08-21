@@ -48,7 +48,7 @@ impl Serialize for VectorDatabaseError {
                 serializer.serialize_str(&format!("An error occurred. {}", n))
             }
             VectorDatabaseError::PineconeError(pe) => {
-                serializer.serialize_str(&format!("An error occurred. {}", pe))
+                serializer.serialize_str(&format!("An error occurred. {:?}", pe))
             }
         }
     }

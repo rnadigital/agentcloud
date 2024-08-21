@@ -28,6 +28,7 @@ pub struct GlobalData {
     pub unstructuredio_url: String,
     pub unstructuredio_api_key: String,
     pub vector_database: String,
+    pub pinecone_api_key: String,
 }
 
 impl GlobalData {
@@ -69,6 +70,7 @@ impl GlobalData {
                 .unwrap_or("http://localhost:8000/general/v0/general/".to_string()),
             unstructuredio_api_key: dotenv::var("UNSTRUCTURED_API_KEY").unwrap_or(String::new()),
             vector_database: dotenv::var("VECTOR_DATABASE").unwrap_or("qdrant".to_string()),
+            pinecone_api_key: dotenv::var("PINECONE_API_KEY").unwrap_or_default(),
         }
     }
 }
