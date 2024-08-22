@@ -28,7 +28,6 @@ export function StreamRow({
 	streamState: StreamConfig;
 }) {
 	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
-	console.log('initial streamState', streamState);
 	const streamName = stream?.stream?.name || stream?.name;
 
 	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } =
