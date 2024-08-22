@@ -242,7 +242,7 @@ export default function TaskForm({
 		if (!expectedOutput && isStructuredOutput) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (!isStructuredOutput && !task.expectedOutput) {
+		if (!isStructuredOutput && !task?.expectedOutput) {
 			setExpectedOutput('');
 		}
 	}, [expectedOutput, isStructuredOutput, task]);
@@ -352,20 +352,30 @@ export default function TaskForm({
 							</div>
 
 							{isStructuredOutput ? (
-								<ScriptEditor
-									height='30em'
-									code={expectedOutput}
-									setCode={setExpectedOutput}
-									editorOptions={{
-										stopRenderingLineAfter: 1000,
-										fontSize: '12pt',
-										//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
-										minimap: { enabled: false },
-										scrollBeyondLastLine: false
-									}}
-									onInitializePane={onInitializePane}
-									language='json'
-								/>
+								<>
+									<ScriptEditor
+										height='30em'
+										code={expectedOutput}
+										setCode={setExpectedOutput}
+										editorOptions={{
+											stopRenderingLineAfter: 1000,
+											fontSize: '12pt',
+											//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+											minimap: { enabled: false },
+											scrollBeyondLastLine: false
+										}}
+										onInitializePane={onInitializePane}
+										language='json'
+									/>
+									<a
+										className='text-sm text-blue-500 dark:text-blue-400 underline'
+										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
+										target='_blank'
+										rel='noreferrer'
+									>
+										Instructions on how to create a schema for structure output
+									</a>
+								</>
 							) : (
 								<textarea
 									id='expectedOutput'
