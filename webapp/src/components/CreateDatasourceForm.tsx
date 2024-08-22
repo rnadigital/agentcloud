@@ -241,6 +241,11 @@ export default function CreateDatasourceForm({
 				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
+				const filteredStreamState = Object.fromEntries(
+					Object.entries(streamState).filter(
+						(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+					)
+				);
 				const body = {
 					_csrf: csrf,
 					datasourceId: datasourceId,
@@ -250,7 +255,7 @@ export default function CreateDatasourceForm({
 					units,
 					modelId,
 					cronExpression,
-					streamConfig: streamState,
+					streamConfig: filteredStreamState,
 					datasourceName,
 					datasourceDescription,
 					embeddingField,

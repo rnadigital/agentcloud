@@ -15,7 +15,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { DatasourceScheduleType, DatasourceStatus, StreamConfigMap } from 'struct/datasource';
+import {
+	DatasourceScheduleType,
+	DatasourceStatus,
+	StreamConfig,
+	StreamConfigMap
+} from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -133,7 +138,9 @@ export default function Datasource(props) {
 		try {
 			//Note: filtering to streams for which we have at least 1 checked child
 			const filteredStreamState = Object.fromEntries(
-				Object.entries(streamState).filter(e => e[1].checkedChildren.length > 0)
+				Object.entries(streamState).filter(
+					(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+				)
 			);
 			const body = {
 				_csrf: csrf,
@@ -142,7 +149,6 @@ export default function Datasource(props) {
 				sync,
 				streamConfig: filteredStreamState
 			};
-			console.log('updateDatasourceStreams body:', body);
 			await API.updateDatasourceStreams(
 				body,
 				() => {

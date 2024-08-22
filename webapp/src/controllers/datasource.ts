@@ -422,7 +422,8 @@ export async function addDatasourceApi(req, res, next) {
 		connectionId: createdConnection.connectionId,
 		connectionSettings: connectionBody,
 		modelId: toObjectId(modelId),
-		embeddingField
+		embeddingField,
+		streamConfig
 	});
 
 	// Create the collection in qdrant
@@ -449,6 +450,17 @@ export async function addDatasourceApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
+	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
+	let metadata_field_info = [];
+	if (datasource) {
+		try {
+			metadata_field_info = getMetadataFieldInfo(datasource?.streamConfig);
+		} catch (e) {
+			log(e);
+			//supress
+		}
+	}
+
 	// Add a tool automatically for the datasource
 	let foundIcon; //TODO: icon/avatar id and upload
 	await addTool({
@@ -460,7 +472,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-		retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName)
