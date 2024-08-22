@@ -79,9 +79,6 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 							schema: {
 								type: 'object',
 								properties: {
-									p1: {
-										enum: ['v1', 'v2']
-									},
 									schema: {
 										type: 'object',
 										additionalProperties: {
