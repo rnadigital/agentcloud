@@ -167,10 +167,11 @@ class CrewAIBuilder:
                     context_task_objs.append(context_task)
             
             if task.isStructuredOutput:
-                task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
-                output_pydantic = task_model
-            else:
-                output_pydantic = None 
+                try:
+                    task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
+                    output_pydantic = task_model
+                except Exception:
+                    output_pydantic = None
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
