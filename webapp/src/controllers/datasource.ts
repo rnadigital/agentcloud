@@ -33,6 +33,8 @@ import { pricingMatrix } from 'struct/billing';
 import {
 	DatasourceScheduleType,
 	DatasourceStatus,
+	StreamConfig,
+	StreamConfigMap,
 	UnstructuredChunkingStrategySet,
 	UnstructuredPartitioningStrategySet
 } from 'struct/datasource';
@@ -321,12 +323,12 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId,
 		datasourceName,
 		datasourceDescription,
-		streams,
 		scheduleType,
 		cronExpression,
 		modelId,
 		embeddingField,
 		retriever,
+		streamConfig,
 		retriever_config,
 		timeUnit
 	} = req.body;
@@ -350,7 +352,6 @@ export async function addDatasourceApi(req, res, next) {
 				field: 'scheduleType',
 				validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }
 			},
-			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
 			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 			//TODO: validation for retriever_config and streams?
 		],
@@ -386,9 +387,11 @@ export async function addDatasourceApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append'
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
+				name: e[0],
+				syncMode: e[1].syncMode,
+				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
+				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
 			}))
 		},
 		dataResidency: 'auto',
@@ -414,17 +417,13 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 
 	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(
-			req.params.resourceSlug,
-			datasourceId,
-			createdConnection.connectionId,
-			connectionBody
-		),
-		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
-		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField)
-	]);
-
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: createdConnection.connectionId,
+		connectionSettings: connectionBody,
+		modelId: toObjectId(modelId),
+		embeddingField
+	});
+	
 	// Create the collection in qdrant
 	try {
 		await VectorDBProxy.createCollectionInQdrant(datasourceId);
@@ -547,12 +546,12 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 export async function updateDatasourceStreamsApi(req, res, next) {
 	const {
 		datasourceId,
-		streams,
 		sync,
-		descriptionsMap,
-		cronExpression,
-		timeUnit,
-		metadata_field_info
+		streamConfig
+	}: {
+		datasourceId: ObjectId;
+		sync: Boolean;
+		streamConfig: StreamConfigMap;
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -561,32 +560,13 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	let validationError = chainValidations(
 		req.body,
 		[
-			{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
-			{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true } },
-			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
-			//TODO: more validations?
+			{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }
+			//TODO: validation for StreamConfig type
 		],
-		{
-			datasourceName: 'Name',
-			datasourceDescription: 'Description',
-			connectorId: 'Connector ID',
-			modelId: 'Embedding Model'
-		}
+		{}
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
-	}
-
-	const validMetadata = (req.body.metadata_field_info || []).every(obj => {
-		return (
-			typeof obj?.name === 'string' &&
-			typeof obj?.description === 'string' &&
-			['string', 'integer', 'float'].includes(obj?.type)
-		);
-	});
-	if (!validMetadata) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -595,8 +575,24 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	//update the metadata map of tools if found
+	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
+	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
+	const metadataFieldInfo = Object.keys(streamConfig).reduce((acc, topKey) => {
+		const descriptionsMap = streamConfig[topKey].descriptionsMap;
+		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
+			const { description, type } = descriptionsMap[key];
+			innerAcc.push({
+				name: key,
+				description: description || '',
+				type: type || ''
+			});
+			return innerAcc;
+		}, []);
+		acc = acc.concat(items);
+		return acc;
+	}, []);
 	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
-		'retriever_config.metadata_field_info': metadata_field_info
+		'retriever_config.metadata_field_info': metadataFieldInfo
 	});
 
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -605,9 +601,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append'
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
+				name: e[0],
+				syncMode: e[1].syncMode,
+				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
+				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
 			}))
 		},
 		dataResidency: 'auto',
@@ -617,17 +615,19 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		status: 'active'
 	};
+
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
-		connectionBody['schedule'] = {
-			scheduleType: DatasourceScheduleType.CRON,
-			//cronExpression: convertCronToQuartz(cronExpression)
-			cronExpression: convertUnitToCron(timeUnit)
-		};
+		// connectionBody['schedule'] = {
+		// 	scheduleType: DatasourceScheduleType.CRON,
+		// 	//cronExpression: convertCronToQuartz(cronExpression)
+		// 	cronExpression: convertUnitToCron(timeUnit)
+		// };
 	} else {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.MANUAL
 		};
 	}
+
 	const createdConnection = await connectionsApi
 		.patchConnection(datasource.connectionId, connectionBody)
 		.then(res => res.data);
@@ -657,7 +657,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: datasource.connectionId,
 		connectionSettings: connectionBody,
-		descriptionsMap,
+		streamConfig,
 		...(sync ? { recordCount: { total: 0 } } : {})
 	});
 

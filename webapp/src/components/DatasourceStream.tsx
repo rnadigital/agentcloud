@@ -8,56 +8,62 @@ import {
 import InfoAlert from 'components/InfoAlert';
 import { useEffect, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
-import { SyncModes } from 'struct/datasource';
+import { FieldDescriptionMap, StreamConfig, StreamConfigMap, SyncModes } from 'struct/datasource';
 
 import SelectClassNames from '../lib/styles/SelectClassNames';
 import ToolTip from './shared/ToolTip';
+import submittingReducer from '../lib/utils/submittingreducer';
 
 export function StreamRow({
 	stream,
-	existingStream,
 	streamProperty,
 	readonly,
-	descriptionsMap,
-	setStreamReducer
+	setStreamReducer,
+	streamState
 }: {
-	stream?: any;
-	existingStream?: any;
-	streamProperty?: any;
+	stream: any;
+	streamProperty: any;
 	readonly?: boolean;
-	descriptionsMap?: any;
-	setStreamReducer?: Function;
+	setStreamReducer: Function;
+	streamState: StreamConfig;
 }) {
-	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
-
-	console.log('existingStream', existingStream);
-
+	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
+console.log('initial streamState', streamState);
 	const streamName = stream?.stream?.name || stream?.name;
 
 	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } =
 		streamProperty || {};
 	const containsNestedFields =
 		sourceDefinedPrimaryKey?.length > 1 || defaultCursorField?.length > 1;
-	const [cursorField, setCursorField] = useState(defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
-	const [primaryKey, setPrimaryKey] = useState(sourceDefinedPrimaryKey);
-	const [datasourceDescriptions, setDatasourceDescriptions] = useState(descriptionsMap || {});
-	const [syncMode, setSyncMode] = useState(
-		existingStream?.config?.syncMode || streamProperty?.syncModes[0]
-	);
+	const [cursorField, setCursorField] = useState(streamState?.cursorField || defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
+	const [primaryKey, setPrimaryKey] = useState(streamState?.primaryKey || sourceDefinedPrimaryKey);
+	const [syncMode, setSyncMode] = useState(streamState?.syncMode || streamProperty?.syncModes[0]);
 	const canSelectCursors = syncMode && !syncMode.includes('full_');
 	const canSelectPrimaryKey = sourceDefinedCursorField === false && canSelectCursors;
-	const initialCheckedChildren =
-		stream?.stream?.jsonSchema &&
-		Object.entries(stream.stream.jsonSchema.properties)
-			.map(([key, value]) => {
-				if (existingStream?.config?.selectedFields?.some(sf => sf['fieldPath'].includes(key))) {
-					return key;
-				}
-			})
-			.filter(x => x);
+
+	//descriptions map
+	const initialDescriptionsMap = streamState?.descriptionsMap || Object.entries(
+		stream?.stream?.jsonSchema?.properties || {}
+	).reduce((acc: FieldDescriptionMap, curr: [string, any]) => {
+		const [key, value] = curr;
+		const fieldType = Array.isArray(value['type'])
+			? value['type'].filter(x => x !== 'null')
+			: value['type'];
+		acc[key] = {
+			type: fieldType,
+			description: ''
+		};
+		return acc;
+	}, {} as FieldDescriptionMap);
+	const [descriptionsMap, setDescriptionsMap]: [FieldDescriptionMap, Function] = useReducer(
+		submittingReducer,
+		initialDescriptionsMap || {}
+	);
+
+	//checked fields
 	const [checkedChildren, setCheckedChildren] = useReducer(
 		handleCheckedChild,
-		initialCheckedChildren
+		streamState.checkedChildren || []
 	);
 
 	function handleCheckedChild(state, action) {
@@ -76,10 +82,11 @@ export function StreamRow({
 				checkedChildren,
 				primaryKey,
 				syncMode,
-				cursorField
+				cursorField,
+				descriptionsMap
 			}
 		});
-	}, [checkedChildren, primaryKey, syncMode, cursorField]);
+	}, [checkedChildren, primaryKey, syncMode, cursorField, descriptionsMap]);
 
 	return (
 		<div className='border-b dark:text-gray-50'>
@@ -224,80 +231,79 @@ export function StreamRow({
 							</tr>
 						</thead>
 						<tbody>
-							{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => (
-								<tr key={key}>
-									<td className='p-2'>
-										<label className='switch'>
-											<input
-												onChange={() =>
-													setCheckedChildren({
-														name: key,
-														parent: streamName
-													})
-												}
-												type='checkbox'
-												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
-												name={key}
-												data-parent={streamName}
-												disabled={readonly || (cursorField.includes(key) && canSelectCursors)} //Disable unchecking the field if it's the cursor field
-												defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
-													sf['fieldPath'].includes(key)
-												)}
-												checked={checkedChildren.includes(key)}
-											/>
-											<span className='slider round'></span>
-										</label>
-									</td>
-									<td className='p-2 font-semibold'>{key}</td>
-									{!syncMode.includes('full_') && (
-										<td className='p-2 font-semibold'>
-											<input
-												onChange={() => {
-													setCursorField([key]);
-													if (!checkedChildren.includes(key)) {
-														// Make sure to check the field they selected for cursor field if it isn't already
+							{Object.entries(stream.stream.jsonSchema.properties).map(([key, value]) => {
+								const fieldType = Array.isArray(value['type'])
+									? value['type'].filter(x => x !== 'null')
+									: value['type'];
+								return (
+									<tr key={key}>
+										<td className='p-2'>
+											<label className='switch'>
+												<input
+													onChange={() =>
 														setCheckedChildren({
 															name: key,
 															parent: streamName
-														});
+														})
 													}
+													type='checkbox'
+													className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+													name={key}
+													data-parent={streamName}
+													disabled={readonly || (cursorField.includes(key) && canSelectCursors)} //Disable unchecking the field if it's the cursor field
+													defaultChecked={streamState?.checkedChildren?.includes(key)}
+													checked={checkedChildren.includes(key)}
+												/>
+												<span className='slider round'></span>
+											</label>
+										</td>
+										<td className='p-2 font-semibold'>{key}</td>
+										{!syncMode.includes('full_') && (
+											<td className='p-2 font-semibold'>
+												<input
+													onChange={() => {
+														setCursorField([key]);
+														if (!checkedChildren.includes(key)) {
+															// Make sure to check the field they selected for cursor field if it isn't already
+															setCheckedChildren({
+																name: key,
+																parent: streamName
+															});
+														}
+													}}
+													type='radio'
+													className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
+													name={`${streamName}_cursor`}
+													data-parent={streamName}
+													disabled={sourceDefinedCursorField || readonly || !canSelectCursors}
+													defaultChecked={streamState?.checkedChildren?.includes(key)}
+													checked={cursorField.includes(key)}
+													required={cursorField?.length === 0}
+												/>
+											</td>
+										)}
+										<td className='p-2'>{fieldType}</td>
+										<td className='p-2'>
+											<input
+												onChange={e => {
+													setDescriptionsMap({
+														[e.target.name]: {
+															description: e.target.value,
+															type: fieldType
+														}
+													});
 												}}
-												type='radio'
-												className='rounded border-gray-300 text-indigo-600 disabled:text-gray-600 focus:ring-indigo-600 disabled:ring-gray-600 dark:bg-slate-800 dark:ring-slate-600 mx-2'
-												name={`${streamName}_cursor`}
-												data-parent={streamName}
-												disabled={sourceDefinedCursorField || readonly || !canSelectCursors}
-												defaultChecked={existingStream?.config?.selectedFields?.some(sf =>
-													sf['fieldPath'].includes(key)
-												)}
-												checked={cursorField.includes(key)}
-												required={cursorField?.length === 0}
+												type='text'
+												name={key}
+												disabled={readonly}
+												defaultValue={descriptionsMap[key].description}
+												className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+												placeholder='Enter description'
 											/>
 										</td>
-									)}
-									<td className='p-2'>
-										{Array.isArray(value['type'])
-											? value['type'].filter(x => x !== 'null')
-											: value['type']}
-									</td>
-									<td className='p-2'>
-										<input
-											type='text'
-											name={key}
-											id={`${key}_description`}
-											disabled={readonly}
-											data-checked={
-												existingStream?.config?.selectedFields?.some(sf =>
-													sf['fieldPath'].includes(key)
-												) || checkedChildren.includes(key)
-											}
-											defaultValue={datasourceDescriptions[key]}
-											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-											placeholder='Enter description'
-										/>
-									</td>
-								</tr>
-							))}
+									</tr>
+								);
+							})}
 						</tbody>
 					</table>
 				</div>
@@ -308,33 +314,30 @@ export function StreamRow({
 
 export function StreamsList({
 	streams,
-	existingStreams,
 	streamProperties,
 	readonly,
-	descriptionsMap,
+	streamState,
 	setStreamReducer
 }: {
 	streams?: any;
-	existingStreams?: any;
 	streamProperties?: any;
 	readonly?: boolean;
-	descriptionsMap?: any;
+	streamState?: StreamConfigMap;
 	setStreamReducer?: Function;
 }) {
 	return (
 		<div className='my-4'>
 			{streams?.map((stream, index) => {
-				const streamProperty = streamProperties?.find(
-					sp => sp?.streamName === stream?.stream?.name
-				);
+				const streamName = stream?.stream?.name;
+				const streamProperty = streamProperties?.find(sp => sp?.streamName === streamName);
+				const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
 				return (
 					<StreamRow
 						readonly={readonly}
 						key={index}
 						stream={stream}
-						existingStream={existingStreams?.find(st => st.name === stream?.name)}
 						streamProperty={streamProperty}
-						descriptionsMap={descriptionsMap}
+						streamState={initialStreamState}
 						setStreamReducer={setStreamReducer}
 					/>
 				);

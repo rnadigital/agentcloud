@@ -18,7 +18,7 @@ import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceScheduleType } from 'struct/datasource';
+import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -250,25 +250,14 @@ export default function CreateDatasourceForm({
 					units,
 					modelId,
 					cronExpression,
-					streams: streamState.streams,
-					selectedFieldsMap: streamState.selectedFieldsMap,
-					descriptionsMap: streamState.descriptionsMap,
+					streamConfig: streamState,
 					datasourceName,
 					datasourceDescription,
 					embeddingField,
 					retriever: toolRetriever,
 					retriever_config: {
 						timeWeightField: toolTimeWeightField,
-						decay_rate: toolDecayRate,
-						metadata_field_info: Object.entries(
-							discoveredSchema.catalog.streams[0].stream.jsonSchema.properties
-						).map(([ek, ev]) => {
-							return {
-								name: ek,
-								description: streamState.descriptionsMap[ek],
-								type: ev['airbyte_type'] || ev['type']
-							};
-						})
+						decay_rate: toolDecayRate
 					}
 				};
 				const addedDatasource: any = await API.addDatasource(
@@ -278,7 +267,7 @@ export default function CreateDatasourceForm({
 							datasourceName,
 							connectorId: connector?.value,
 							connectorName: connector?.label,
-							numStreams: streamState?.streams?.length,
+							numStreams: Object.keys(streamState)?.length,
 							syncSchedule: scheduleType
 						});
 						toast.success('Added datasource');
@@ -289,7 +278,7 @@ export default function CreateDatasourceForm({
 							connectorId: connector?.value,
 							connectorName: connector?.label,
 							syncSchedule: scheduleType,
-							numStreams: streamState?.streams?.length,
+							numStreams: Object.keys(streamState)?.length,
 							error: res
 						});
 						toast.error(res);
@@ -304,7 +293,7 @@ export default function CreateDatasourceForm({
 				connectorId: connector?.value,
 				connectorName: connector?.label,
 				syncSchedule: scheduleType,
-				numStreams: streamState?.streams?.length,
+				numStreams: Object.keys(streamState)?.length,
 				error: e?.message || e
 			});
 			console.error(e);
@@ -654,16 +643,12 @@ export default function CreateDatasourceForm({
 											value={embeddingField}
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 										>
-											{streamState?.streams?.map((stream, ei) => {
-												const foundStreamSchema = discoveredSchema?.catalog?.streams?.find(
-													st => st?.stream?.name === stream
-												);
-												const foundSchemaKeys =
-													streamState?.selectedFieldsMap[stream] ||
-													Object.keys(foundStreamSchema?.stream?.jsonSchema?.properties);
+											{Object.entries(streamState)
+												.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
+												.map((stream: [string, StreamConfig], ei: number) => {
 												return (
-													<optgroup label={stream} key={`embeddingField_optgroup_${ei}`}>
-														{foundSchemaKeys.map((sk, ski) => (
+													<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
+														{stream[1].checkedChildren.map((sk, ski) => (
 															<option key={`embeddingField_option_${ski}`} value={sk}>
 																{sk}
 															</option>

@@ -57,6 +57,27 @@ export const SyncModes = [
 ];
 export type SyncMode = (typeof SyncModes)[number];
 
+export type FieldDescription = {
+	description: string;
+	type: string;
+};
+
+export type StreamConfig = {
+	checkedChildren: string[];
+	primaryKey: string[];
+	syncMode: SyncMode;
+	cursorField: string[];
+	descriptionsMap: FieldDescriptionMap;
+};
+
+export type StreamConfigMap = {
+	[key: string]: StreamConfig;
+};
+
+export type FieldDescriptionMap = {
+	[key: string]: FieldDescription;
+};
+
 export const UnstructuredChunkingStrategyValues = [
 	'basic',
 	'by_title',
@@ -109,6 +130,6 @@ export type Datasource = {
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
-	descriptionsMap?: Record<string, string>;
+	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };

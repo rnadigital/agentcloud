@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
-import { DatasourceScheduleType, DatasourceStatus } from 'struct/datasource';
+import { DatasourceScheduleType, DatasourceStatus, StreamConfigMap } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -44,7 +44,14 @@ export default function Datasource(props) {
 	const [cronExpression, setCronExpression] = useState('0 0 * * *');
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
 	const numStreams = datasource?.connectionSettings?.configurations?.streams?.length || 0;
-	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
+	const [streamState, setStreamReducer]: [StreamConfigMap, Function] = useReducer(
+		submittingReducer,
+		{}
+	);
+
+	useEffect(() => {
+		fetchSchema()
+	}, []);
 
 	async function fetchDatasource() {
 		await API.getDatasource(
@@ -122,49 +129,18 @@ export default function Datasource(props) {
 	async function updateStreams(e, sync?: boolean) {
 		setSubmitting({ [`updateStreams${sync ? 'sync' : ''}`]: true });
 		try {
-			const streams =
-				e?.target?.form &&
-				Array.from(e.target.form.elements)
-					.filter(x => x['checked'] === true)
-					.filter(x => !x['dataset']['parent'])
-					.map(x => x['name']);
-			const selectedFieldsMap =
-				e?.target?.form &&
-				Array.from(e.target.form.elements)
-					.filter(x => x['checked'] === true)
-					.filter(x => x['dataset']['parent'])
-					.reduce((acc, x) => {
-						acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([x['name']]);
-						return acc;
-					}, {});
-			const descriptionsMap = Array.from(e.target.form.elements)
-				.filter(x => x['type'] === 'text')
-				.filter(x => x['dataset']['checked'] === 'true')
-				.reduce((acc, x) => {
-					if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
-						acc[x['name']] = x['value'];
-					}
-					return acc;
-				}, {});
+			//Note: filtering to streams for which we have at least 1 checked child
+			const filteredStreamState = Object.fromEntries(
+				Object.entries(streamState).filter(e => e[1].checkedChildren.length > 0)
+			);
 			const body = {
 				_csrf: csrf,
 				resourceSlug,
 				datasourceId,
-				streams,
 				sync,
-				selectedFieldsMap,
-				descriptionsMap,
-				metadata_field_info: Object.entries(
-					discoveredSchema?.catalog.streams[0].stream.jsonSchema.properties
-				).map(([ek, ev]) => {
-					return {
-						name: ek,
-						description: descriptionsMap[ek],
-						type: ev['airbyte_type'] || ev['type']
-					};
-				})
+				streamConfig: filteredStreamState
 			};
-			// console.log(body);
+			console.log('updateDatasourceStreams body:', body);
 			await API.updateDatasourceStreams(
 				body,
 				() => {
@@ -226,6 +202,8 @@ export default function Datasource(props) {
 		return <Spinner />;
 	}
 
+	console.log('datasource.streamConfig', datasource.streamConfig)
+
 	return (
 		<>
 			<Head>
@@ -264,9 +242,8 @@ export default function Datasource(props) {
 							<StreamsList
 								streams={discoveredSchema.catalog.streams}
 								streamProperties={streamProperties}
-								existingStreams={datasource?.connectionSettings?.configurations?.streams}
-								descriptionsMap={datasource?.descriptionsMap}
 								setStreamReducer={setStreamReducer}
+								streamState={datasource.streamConfig}
 							/>
 							<button
 								onClick={e => updateStreams(e)}
@@ -287,58 +264,6 @@ export default function Datasource(props) {
 								{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 							</button>
 						</form>
-					)}
-
-					{!discoveredSchema && datasource?.connectionSettings?.configurations && (
-						<StreamsList
-							streams={datasource.connectionSettings.configurations.streams}
-							// streamProperties={streamProperties}
-							existingStreams={datasource.connectionSettings.configurations.streams}
-							descriptionsMap={datasource?.descriptionsMap}
-							setStreamReducer={setStreamReducer}
-							readonly={true}
-						/>
-					)}
-					{!discoveredSchema && isDraft && numStreams === 0 && (
-						<>
-							<div className='rounded-md bg-yellow-50 p-4 mt-4 mb-2'>
-								<div className='flex'>
-									<div className='flex-shrink-0'>
-										<ExclamationTriangleIcon
-											className='h-5 w-5 text-yellow-400'
-											aria-hidden='true'
-										/>
-									</div>
-									<div className='ml-3'>
-										<h3 className='text-sm font-bold text-yellow-800'>Draft View</h3>
-										<div className='mt-2 text-sm text-yellow-700'>
-											<p>
-												This data connection is a draft and needs more configuration before it can
-												be used.
-											</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</>
-					)}
-					{!discoveredSchema && (
-						<span>
-							<button
-								disabled={submitting['fetchSchema']}
-								onClick={() => fetchSchema()}
-								className={
-									'rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 my-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								}
-							>
-								{submitting['fetchSchema'] && <ButtonSpinner />}
-								{submitting['fetchSchema']
-									? 'Fetching Streams...'
-									: isDraft && numStreams === 0
-										? 'Finish Draft'
-										: 'Edit Streams'}
-							</button>
-						</span>
 					)}
 				</>
 			)}
