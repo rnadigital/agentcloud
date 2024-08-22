@@ -9,7 +9,6 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
 
-import checkSession from '@mw/auth/checksession';
 import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
@@ -25,7 +24,6 @@ import {
 } from 'db/session';
 import { SessionStatus } from 'struct/session';
 
-import { updateModel } from './db/model';
 import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
@@ -154,44 +152,39 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
 
-			let message;
 			if (typeof data.message !== 'object') {
 				data.message = {
 					type: 'text',
 					text: data.message
 				};
 			}
-			switch (data.message.type) {
-				case 'code':
-					if (
-						data.message.language === 'json' ||
-						(typeof data.message.text === 'string' && data.message.text.startsWith('{'))
-					) {
-						//monkey patch
-						data.message.text = JSON.parse(data.message.text);
-						data.message.language = 'json';
-					}
-					message = data.message;
-					break;
-				default:
-					message = data.message; //any processing?
-					break;
+
+			const message = data.message;
+
+			if (message?.chunkId && message?.text?.length > 0) {
+				try {
+					message.text = JSON.parse(message.text);
+					message.language = 'json';
+					message.type = 'code';
+				} catch (error) {}
 			}
-			const messageTimestamp = data?.message?.timestamp || Date.now();
+
+			const messageTimestamp = message?.timestamp || Date.now();
 			const authorName =
 				socketRequest.locals?.account?.name ||
 				(socketRequest.locals.isAgentBackend ? data.authorName : 'Me') ||
 				'System';
 			const finalMessage = {
 				...data,
-				message,
+				message: {
+					...message,
+					chunkId: message?.chunkId || uuidv4()
+				},
 				incoming: socketRequest.locals.isAgentBackend === false,
 				authorName,
 				ts: messageTimestamp
 			};
-			if (!finalMessage?.message?.chunkId) {
-				finalMessage.message.chunkId = uuidv4();
-			}
+
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
 				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
 			}
