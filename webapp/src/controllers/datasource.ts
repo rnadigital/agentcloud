@@ -33,6 +33,7 @@ import { pricingMatrix } from 'struct/billing';
 import {
 	DatasourceScheduleType,
 	DatasourceStatus,
+	getMetadataFieldInfo,
 	StreamConfig,
 	StreamConfigMap,
 	UnstructuredChunkingStrategySet,
@@ -577,20 +578,14 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	//update the metadata map of tools if found
 	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
 	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
-	const metadataFieldInfo = Object.keys(streamConfig).reduce((acc, topKey) => {
-		const descriptionsMap = streamConfig[topKey].descriptionsMap;
-		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
-			const { description, type } = descriptionsMap[key];
-			innerAcc.push({
-				name: key,
-				description: description || '',
-				type: type || ''
-			});
-			return innerAcc;
-		}, []);
-		acc = acc.concat(items);
-		return acc;
-	}, []);
+	let metadataFieldInfo = [];
+	try {
+		metadataFieldInfo = getMetadataFieldInfo(streamConfig);
+	} catch (e) {
+		log(e);
+		//suppressed
+	}
+
 	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
 		'retriever_config.metadata_field_info': metadataFieldInfo
 	});

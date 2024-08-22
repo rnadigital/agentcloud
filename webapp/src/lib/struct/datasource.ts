@@ -78,6 +78,23 @@ export type FieldDescriptionMap = {
 	[key: string]: FieldDescription;
 };
 
+export function getMetadataFieldInfo(config: StreamConfigMap) {
+	return Object.keys(config).reduce((acc, topKey) => {
+		const descriptionsMap = config[topKey].descriptionsMap;
+		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
+			const { description, type } = descriptionsMap[key];
+			innerAcc.push({
+				name: key,
+				description: description || '',
+				type: type || ''
+			});
+			return innerAcc;
+		}, []);
+		acc = acc.concat(items);
+		return acc;
+	}, []);
+}
+
 export const UnstructuredChunkingStrategyValues = [
 	'basic',
 	'by_title',

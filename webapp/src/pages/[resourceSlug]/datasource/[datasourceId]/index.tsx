@@ -266,7 +266,9 @@ export default function Datasource(props) {
 								{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 							</button>
 						</form>
-					): <Spinner />}
+					) : (
+						<Spinner />
+					)}
 				</>
 			)}
 
