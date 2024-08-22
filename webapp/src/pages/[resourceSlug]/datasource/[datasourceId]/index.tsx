@@ -32,7 +32,8 @@ export default function Datasource(props) {
 	const [state, dispatch] = useState(props);
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
-	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+	const [schemaDiscoverState, setSchemaDiscoverState] = useState(null);
+	const { streamProperties, discoveredSchema } = schemaDiscoverState || {};
 	const [submitting, setSubmitting] = useReducer(submittingReducer, {});
 	const [editingSchedule, setEditingSchedule] = useState(false);
 	const [error, setError] = useState();
@@ -43,6 +44,8 @@ export default function Datasource(props) {
 	const [cronExpression, setCronExpression] = useState('0 0 * * *');
 	const isDraft = datasource?.status === DatasourceStatus.DRAFT;
 	const numStreams = datasource?.connectionSettings?.configurations?.streams?.length || 0;
+	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
+
 	async function fetchDatasource() {
 		await API.getDatasource(
 			{
@@ -84,7 +87,7 @@ export default function Datasource(props) {
 					resourceSlug,
 					datasourceId
 				},
-				setDiscoveredSchema,
+				setSchemaDiscoverState,
 				setError,
 				router
 			);
@@ -152,7 +155,7 @@ export default function Datasource(props) {
 				selectedFieldsMap,
 				descriptionsMap,
 				metadata_field_info: Object.entries(
-					discoveredSchema?.discoveredSchema.catalog.streams[0].stream.jsonSchema.properties
+					discoveredSchema?.catalog.streams[0].stream.jsonSchema.properties
 				).map(([ek, ev]) => {
 					return {
 						name: ek,
@@ -166,7 +169,7 @@ export default function Datasource(props) {
 				body,
 				() => {
 					toast.success(`Updated streams${sync ? ' and triggered sync job' : ''}`);
-					setDiscoveredSchema(null);
+					setSchemaDiscoverState(null);
 					fetchDatasource();
 				},
 				res => {
@@ -259,9 +262,11 @@ export default function Datasource(props) {
 							}}
 						>
 							<StreamsList
-								streams={discoveredSchema.discoveredSchema.catalog.streams}
+								streams={discoveredSchema.catalog.streams}
+								streamProperties={streamProperties}
 								existingStreams={datasource?.connectionSettings?.configurations?.streams}
 								descriptionsMap={datasource?.descriptionsMap}
+								setStreamReducer={setStreamReducer}
 							/>
 							<button
 								onClick={e => updateStreams(e)}
@@ -287,8 +292,10 @@ export default function Datasource(props) {
 					{!discoveredSchema && datasource?.connectionSettings?.configurations && (
 						<StreamsList
 							streams={datasource.connectionSettings.configurations.streams}
+							// streamProperties={streamProperties}
 							existingStreams={datasource.connectionSettings.configurations.streams}
 							descriptionsMap={datasource?.descriptionsMap}
+							setStreamReducer={setStreamReducer}
 							readonly={true}
 						/>
 					)}

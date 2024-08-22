@@ -249,7 +249,7 @@ export default function Account(props) {
 				defaultCursorField: [],
 				sourceDefinedCursorField: false,
 				sourceDefinedPrimaryKey: [],
-				propertyFields: [['Retweets', 'abc'], ['Likes'], ['Date'], ['Cleaned_Tweets']]
+				propertyFields: [['Retweets'], ['Likes'], ['Date'], ['Cleaned_Tweets']]
 			},
 			{
 				streamName: 'elon_tweets_2022_small',

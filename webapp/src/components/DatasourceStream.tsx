@@ -30,9 +30,12 @@ export function StreamRow({
 }) {
 	const [isExpanded, setIsExpanded] = useState(existingStream != null && !readonly);
 
+	console.log('existingStream', existingStream);
+
 	const streamName = stream?.stream?.name || stream?.name;
 
-	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } = streamProperty;
+	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } =
+		streamProperty || {};
 	const containsNestedFields =
 		sourceDefinedPrimaryKey?.length > 1 || defaultCursorField?.length > 1;
 	const [cursorField, setCursorField] = useState(defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
@@ -41,7 +44,7 @@ export function StreamRow({
 	const [syncMode, setSyncMode] = useState(
 		existingStream?.config?.syncMode || streamProperty?.syncModes[0]
 	);
-	const canSelectCursors = !syncMode.includes('full_');
+	const canSelectCursors = syncMode && !syncMode.includes('full_');
 	const canSelectPrimaryKey = sourceDefinedCursorField === false && canSelectCursors;
 	const initialCheckedChildren =
 		stream?.stream?.jsonSchema &&
@@ -180,7 +183,7 @@ export function StreamRow({
 								<span>Primary Key</span>
 								<span>
 									<ToolTip
-										content='Select multiple fields for a compound primary key.'
+										content='Select the primary key field, or choose multiple fields to form a compound primary key.'
 										placement='top'
 										arrow={true}
 									>
@@ -321,7 +324,9 @@ export function StreamsList({
 	return (
 		<div className='my-4'>
 			{streams?.map((stream, index) => {
-				const streamProperty = streamProperties.find(sp => sp?.streamName === stream?.stream?.name);
+				const streamProperty = streamProperties?.find(
+					sp => sp?.streamName === stream?.stream?.name
+				);
 				return (
 					<StreamRow
 						readonly={readonly}

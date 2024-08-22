@@ -105,7 +105,6 @@ export default function CreateDatasourceForm({
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
-	console.log('streamState', streamState);
 	const [formData, setFormData] = useState(null);
 
 	async function getSpecification(sourceDefinitionId: string) {
@@ -601,60 +600,13 @@ export default function CreateDatasourceForm({
 						<form
 							onSubmit={(e: any) => {
 								e.preventDefault();
-								//TODO: make the streamlist controlled
-								const streams = Array.from(e.target.elements)
-									.filter(x => x['checked'] === true)
-									.filter(x => !x['dataset']['parent'])
-									.map(x => x['name']);
-								const selectedFieldsMap = Array.from(e.target.elements)
-									.filter(x => x['checked'] === true)
-									.filter(x => x['dataset']['parent'])
-									.reduce((acc, x) => {
-										acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([
-											x['name']
-										]);
-										return acc;
-									}, {});
-								const descriptionsMap = Array.from(e.target.elements)
-									.filter(x => x['type'] === 'text')
-									.filter(x => x['dataset']['checked'] === 'true')
-									.reduce((acc, x) => {
-										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
-											acc[x['name']] = x['value'];
-										}
-										return acc;
-									}, {});
-								const syncModesMap = Array.from(e.target.elements)
-									.filter(x => x['type'] === 'select-one') //select dropdowns
-									.filter(x => x['dataset']['parent'])
-									.reduce((acc, x) => {
-										if (streams.includes(x['dataset']['parent'])) {
-											//filter to only selected streams
-											acc[x['dataset']['parent']] = x['value'];
-										}
-										return acc;
-									}, {});
-								const cursorFields = Array.from(e.target.elements)
-									.filter(x => x['type'] === 'text')
-									.filter(x => x['dataset']['checked'] === 'true')
-									.reduce((acc, x) => {
-										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
-											acc[x['name']] = x['value'];
-										}
-										return acc;
-									}, {});
-								const primaryKeys = Array.from(e.target.elements)
-									.filter(x => x['type'] === 'text')
-									.filter(x => x['dataset']['checked'] === 'true')
-									.reduce((acc, x) => {
-										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
-											acc[x['name']] = x['value'];
-										}
-										return acc;
-									}, {});
-								console.log('syncModesMap', syncModesMap);
-								return false;
-								// setStreamState({ streams, selectedFieldsMap, descriptionsMap });
+								//list of streams
+								//selected fields
+								//descriptions map
+								//sync mode
+								//cursor field
+								//primary key
+								console.log('Step 3 streamState:', streamState);
 								setStep(4);
 							}}
 						>
