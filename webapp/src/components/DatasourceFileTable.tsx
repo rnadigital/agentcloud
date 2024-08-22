@@ -100,11 +100,11 @@ export default function DatasourceFileTable({
 							return (
 								<tr
 									key={datasource._id}
-									className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'
+									className='hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'
 								>
 									<td
 										className='px-6 py-3 whitespace-nowrap flex items-center'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<div className='flex items-cente'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
@@ -114,7 +114,7 @@ export default function DatasourceFileTable({
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<div className='flex items-center'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
@@ -124,13 +124,13 @@ export default function DatasourceFileTable({
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<DatasourceStatusIndicator datasource={datasource} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<span
 											suppressHydrationWarning

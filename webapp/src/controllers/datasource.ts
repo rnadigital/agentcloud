@@ -617,11 +617,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	};
 
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
-		// connectionBody['schedule'] = {
-		// 	scheduleType: DatasourceScheduleType.CRON,
-		// 	//cronExpression: convertCronToQuartz(cronExpression)
-		// 	cronExpression: convertUnitToCron(timeUnit)
-		// };
+		connectionBody['schedule'] = {
+			scheduleType: DatasourceScheduleType.CRON,
+			//cronExpression: convertCronToQuartz(cronExpression)
+			cronExpression: convertUnitToCron(datasource.timeUnit)
+		};
 	} else {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.MANUAL
@@ -632,17 +632,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		.patchConnection(datasource.connectionId, connectionBody)
 		.then(res => res.data);
 
-	// Create the collection in qdrant
-	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
-	} catch (e) {
-		console.error(e);
-		return dynamicResponse(req, res, 400, {
-			error: 'Failed to create collection in vector database, please try again later.'
-		});
-	}
-
 	if (sync === true) {
+		// Create the collection in qdrant
+		try {
+			await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		} catch (e) {
+			console.error(e);
+			return dynamicResponse(req, res, 400, {
+				error: 'Failed to create collection in vector database, please try again later.'
+			});
+		}
 		// Create a job to trigger the connection to sync
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 		const jobBody = {

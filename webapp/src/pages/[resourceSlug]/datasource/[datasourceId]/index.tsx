@@ -50,7 +50,9 @@ export default function Datasource(props) {
 	);
 
 	useEffect(() => {
-		fetchSchema();
+		setTimeout(() => {
+			fetchSchema();
+		}, 1500);
 	}, []);
 
 	async function fetchDatasource() {
@@ -233,7 +235,7 @@ export default function Datasource(props) {
 			{/*TODO: component that takes discoveredSchema and datasource*/}
 			{tab === 0 && (
 				<>
-					{discoveredSchema && (
+					{discoveredSchema ? (
 						<form
 							onSubmit={e => {
 								e.preventDefault();
@@ -264,7 +266,7 @@ export default function Datasource(props) {
 								{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 							</button>
 						</form>
-					)}
+					): <Spinner />}
 				</>
 			)}
 
