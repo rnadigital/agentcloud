@@ -50,7 +50,7 @@ export default function Datasource(props) {
 	);
 
 	useEffect(() => {
-		fetchSchema()
+		fetchSchema();
 	}, []);
 
 	async function fetchDatasource() {
@@ -202,7 +202,7 @@ export default function Datasource(props) {
 		return <Spinner />;
 	}
 
-	console.log('datasource.streamConfig', datasource.streamConfig)
+	console.log('datasource.streamConfig', datasource.streamConfig);
 
 	return (
 		<>

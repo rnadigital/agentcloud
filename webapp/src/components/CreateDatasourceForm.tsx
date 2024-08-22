@@ -646,16 +646,16 @@ export default function CreateDatasourceForm({
 											{Object.entries(streamState)
 												.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
 												.map((stream: [string, StreamConfig], ei: number) => {
-												return (
-													<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
-														{stream[1].checkedChildren.map((sk, ski) => (
-															<option key={`embeddingField_option_${ski}`} value={sk}>
-																{sk}
-															</option>
-														))}
-													</optgroup>
-												);
-											})}
+													return (
+														<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
+															{stream[1].checkedChildren.map((sk, ski) => (
+																<option key={`embeddingField_option_${ski}`} value={sk}>
+																	{sk}
+																</option>
+															))}
+														</optgroup>
+													);
+												})}
 										</select>
 									</div>
 								</div>

@@ -11,8 +11,8 @@ import Select from 'react-tailwindcss-select';
 import { FieldDescriptionMap, StreamConfig, StreamConfigMap, SyncModes } from 'struct/datasource';
 
 import SelectClassNames from '../lib/styles/SelectClassNames';
-import ToolTip from './shared/ToolTip';
 import submittingReducer from '../lib/utils/submittingreducer';
+import ToolTip from './shared/ToolTip';
 
 export function StreamRow({
 	stream,
@@ -28,7 +28,7 @@ export function StreamRow({
 	streamState: StreamConfig;
 }) {
 	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
-console.log('initial streamState', streamState);
+	console.log('initial streamState', streamState);
 	const streamName = stream?.stream?.name || stream?.name;
 
 	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } =
@@ -42,19 +42,22 @@ console.log('initial streamState', streamState);
 	const canSelectPrimaryKey = sourceDefinedCursorField === false && canSelectCursors;
 
 	//descriptions map
-	const initialDescriptionsMap = streamState?.descriptionsMap || Object.entries(
-		stream?.stream?.jsonSchema?.properties || {}
-	).reduce((acc: FieldDescriptionMap, curr: [string, any]) => {
-		const [key, value] = curr;
-		const fieldType = Array.isArray(value['type'])
-			? value['type'].filter(x => x !== 'null')
-			: value['type'];
-		acc[key] = {
-			type: fieldType,
-			description: ''
-		};
-		return acc;
-	}, {} as FieldDescriptionMap);
+	const initialDescriptionsMap =
+		streamState?.descriptionsMap ||
+		Object.entries(stream?.stream?.jsonSchema?.properties || {}).reduce(
+			(acc: FieldDescriptionMap, curr: [string, any]) => {
+				const [key, value] = curr;
+				const fieldType = Array.isArray(value['type'])
+					? value['type'].filter(x => x !== 'null')
+					: value['type'];
+				acc[key] = {
+					type: fieldType,
+					description: ''
+				};
+				return acc;
+			},
+			{} as FieldDescriptionMap
+		);
 	const [descriptionsMap, setDescriptionsMap]: [FieldDescriptionMap, Function] = useReducer(
 		submittingReducer,
 		initialDescriptionsMap || {}

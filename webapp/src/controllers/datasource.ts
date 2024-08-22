@@ -423,7 +423,7 @@ export async function addDatasourceApi(req, res, next) {
 		modelId: toObjectId(modelId),
 		embeddingField
 	});
-	
+
 	// Create the collection in qdrant
 	try {
 		await VectorDBProxy.createCollectionInQdrant(datasourceId);

@@ -37,7 +37,6 @@ export default function Account(props) {
 			<div className='border-b dark:border-slate-400 pb-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Account Settings</h3>
 			</div>
-
 		</>
 	);
 }
