@@ -34,6 +34,16 @@ export function getTeamById(teamId: db.IdOrStr): Promise<Team> {
 	});
 }
 
+export function getTeamsById(teamIds: db.IdOrStr[]): Promise<Team[]> {
+	return TeamCollection()
+		.find({
+			_id: {
+				$in: teamIds.map(toObjectId)
+			}
+		})
+		.toArray();
+}
+
 export async function addTeam(team: Team): Promise<InsertResult> {
 	const insertedTeam = await TeamCollection().insertOne(team);
 	await addTeamToOrg(team.orgId, insertedTeam.insertedId);

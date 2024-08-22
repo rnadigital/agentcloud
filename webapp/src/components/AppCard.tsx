@@ -102,15 +102,17 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 								)}
 							</Menu.Item>
 							<MenuItem>
-								<a
-									href={`/${resourceSlug}/app/add?appId=${encodeURIComponent(app._id)}`}
-									className={classNames(
-										'bg-gray-50 dark:bg-slate-700',
-										'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-									)}
-								>
-									Clone
-								</a>
+								{({ active }) => (
+									<a
+										href={`/${resourceSlug}/app/add?appId=${encodeURIComponent(app._id)}`}
+										className={classNames(
+											active ? 'bg-gray-50 dark:bg-slate-700' : '',
+											'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+										)}
+									>
+										Clone
+									</a>
+								)}
 							</MenuItem>
 							<Menu.Item>
 								{({ active }) => (
