@@ -102,12 +102,9 @@ def vectorstore_factory(embedding_model, collection_name):
             # from init.env_variables import PINECONE_API_KEY
             from langchain_community.vectorstores.pinecone import Pinecone
 
-            #TODO: REMOVE
-            collection_name = "canopy--raginator-1715962071-index"
-
             return Pinecone.from_existing_index(
-                index_name="us-west-1", #TODO: make customisable
+                index_name="us-west-2", #TODO: make customisable
                 embedding=embedding_model,
-                text_key="text", #TODO: check
+                text_key="page_content", #TODO: check
                 namespace=collection_name,
             )

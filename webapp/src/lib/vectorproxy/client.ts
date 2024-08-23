@@ -21,7 +21,7 @@ class VectorDBProxyClient {
 		log('createCollection %s %O', collectionId, createOptions);
 		// Note: Checks if the collection exists beforehand
 		const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
-		if (collectionExists?.error_message) {
+		if (collectionExists?.error_message) { //TODO: have vector-db-poxy return a boolean or something logical for actually just knowing if the collection exists or not
 			if (!createOptions) {
 				//createOptions are optional as an optimisation where the data is already in scope
 				const existingDatasource = await unsafeGetDatasourceById(collectionId);
@@ -60,15 +60,20 @@ class VectorDBProxyClient {
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify(createOptions)
-		}).then(res => res.json());
+		}).then(res => {
+			log(res.status, res.statusText);
+			return res.text();
+		});
 	}
 
 	// Method to check collection exists
 	static async checkCollectionExists(collectionId: IdOrStr): Promise<VectorResponseBody> {
 		log('checkCollectionExists %s', collectionId);
-		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/check-collection-exists/${collectionId}`, {
-			method: 'POST'
-		}).then(res => res.json());
+		return fetch(
+			`${process.env.VECTOR_APP_URL}/api/v1/check-collection-exists/${collectionId}`
+		).then(res => {
+			return res.json();
+		});
 	}
 
 	// Method to delete a collection
