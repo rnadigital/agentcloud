@@ -99,4 +99,13 @@ def vectorstore_factory(embedding_model, collection_name):
                 url=QDRANT_HOST
             )
         case VectorDatabase.Pinecone:
-            return 2
+            # from init.env_variables import PINECONE_API_KEY
+            from langchain_community.vectorstores.pinecone import Pinecone
+
+            #TODO: REMOVE
+            collection_name = "canopy--raginator-1715962071-index"
+
+            return Pinecone.from_existing_index(
+                index_name=collection_name,
+                embedding=embedding_model,
+            )
