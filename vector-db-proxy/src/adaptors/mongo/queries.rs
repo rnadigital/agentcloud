@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, Model};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, StreamConfig};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -10,7 +10,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 pub async fn get_datasource(db: &Database, datasource_id: &str) -> Result<Option<DataSources>> {
     let datasources_collection: Collection<DataSources> = db.collection("datasources");
-    let filter_options = FindOneOptions::builder().projection(doc! {"discoveredSchema": 0, "connectionSettings": 0}).build();
+    let filter_options = FindOneOptions::builder()
+        .projection(doc! {"discoveredSchema": 0, "connectionSettings": 0})
+        .build();
     if let Ok(object_id) = ObjectId::from_str(datasource_id) {
         match datasources_collection
             .find_one(doc! {"_id": object_id}, filter_options)
@@ -30,10 +32,7 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
     let models_collection = db.collection::<Model>("models");
     // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
-        .find_one(
-            doc! {"_id": ObjectId::from_str(datasource_id)?},
-            None,
-        )
+        .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
         .await
     {
         Ok(Some(datasource)) => {
@@ -61,16 +60,13 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 pub async fn get_model_and_embedding_key(
     db: &Database,
     datasource_id: &str,
-) -> Result<(Option<Model>, Option<String>)> {
+) -> Result<EmbeddingConfig> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
-
+    let mut embedding_config = EmbeddingConfig::default();
     // Attempt to find the datasource. If not found or error, handle accordingly.
     match datasources_collection
-        .find_one(
-            doc! {"_id": ObjectId::from_str(datasource_id)?},
-            None,
-        )
+        .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
         .await
     {
         Ok(Some(datasource)) => {
@@ -80,7 +76,13 @@ pub async fn get_model_and_embedding_key(
                 .find_one(doc! {"_id": datasource.modelId}, None)
                 .await
             {
-                Ok(model) => Ok((model, datasource.embeddingField)), // Return the model if found (could be Some or None)
+                Ok(model) => {
+                    embedding_config.model = model;
+                    embedding_config.embedding_key = datasource.embeddingField;
+                    embedding_config.primary_key =
+                        Some(datasource.streamConfig.unwrap().primary_key);
+                    Ok(embedding_config)
+                } // Return the model if found (could be Some or None)
                 Err(e) => {
                     log::error!("Error: {}", e);
                     Err(anyhow!("Failed to find model: {}", e))
@@ -89,7 +91,7 @@ pub async fn get_model_and_embedding_key(
         }
         Ok(None) => {
             log::warn!("Query returned None");
-            Ok((None, None))
+            Ok(embedding_config)
         } // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
         Err(e) => {
             log::error!("Error: {}", e);
@@ -108,7 +110,10 @@ pub async fn increment_by_one(db: &Database, datasource_id: &str, field_path: &s
         "$set": { "recordCount.lastUpdated": current_unix_timestamp }
     };
     let update_options = mongodb::options::UpdateOptions::default();
-    match datasources_collection.update_one(filter, update, update_options).await {
+    match datasources_collection
+        .update_one(filter, update, update_options)
+        .await
+    {
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!("Error: {}", e);
@@ -121,15 +126,18 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     let datasources_collection = db.collection::<DataSources>("datasources");
     let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
     let update = doc! {
-        "$set": { 
-            "recordCount.total": total, 
-            "status": "embedding", 
-            "recordCount.success": 0, 
-            "recordCount.failure":0 
+        "$set": {
+            "recordCount.total": total,
+            "status": "embedding",
+            "recordCount.success": 0,
+            "recordCount.failure":0
         },
     };
     let update_options = mongodb::options::UpdateOptions::default();
-    match datasources_collection.update_one(filter, update, update_options).await {
+    match datasources_collection
+        .update_one(filter, update, update_options)
+        .await
+    {
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!("Error: {}", e);
@@ -138,24 +146,51 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
+pub async fn get_stream_config(
+    db: &Database,
+    datasource_id: String,
+) -> Result<Option<StreamConfig>> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let datasource_id = ObjectId::from_str(datasource_id.as_str());
+    match datasources_collection
+        .find_one(doc! {"_id": datasource_id?}, None)
+        .await
+    {
+        Ok(datasource) => {
+            if let Some(ds) = datasource {
+                if let Some(stream_config) = ds.streamConfig {
+                    Ok(Some(stream_config))
+                } else {
+                    Ok(None)
+                }
+            } else {
+                Ok(None)
+            }
+        }
+        Err(e) => Err(anyhow!(
+            "An error occurred while getting datasource from mongo. {}",
+            e
+        )),
+    }
+}
+
 pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
     let mut list_of_datasources: Vec<DataSources> = vec![];
     let datasources_collection = db.collection::<DataSources>("datasources");
     let filter = doc! {"teamId": ObjectId::from_str(team_id)?};
-    match datasources_collection
-        .find(
-            filter,
-            None,
-        )
-        .await {
+    match datasources_collection.find(filter, None).await {
         Ok(mut datasources) => {
             while let Some(datasource) = datasources.next().await {
                 list_of_datasources.push(datasource?)
             }
-        },
+        }
         Err(e) => {
-            log::error!("Encountered an error when retrieving list of datasources for team: {}. \
-            Error: {}", team_id, e);
+            log::error!(
+                "Encountered an error when retrieving list of datasources for team: {}. \
+            Error: {}",
+                team_id,
+                e
+            );
         }
     };
     Ok(list_of_datasources)
