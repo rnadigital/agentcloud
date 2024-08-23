@@ -124,12 +124,11 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
                     by_alias=True,
                     exclude_none=True,
-                    exclude_unset=True,
+                    # exclude_unset=True,
                     exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
                 stop_generating_check=self.stop_generating_check,
