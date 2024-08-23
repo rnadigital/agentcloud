@@ -61,7 +61,7 @@ def construct_crew(session_id: str, socket: Any):
         raise CrewAIBuilderException(f"Session with id '{session_id}' not found. Perhaps terminated by user?")
 
     app, the_crew, crew_tasks, crew_agents = mongo_client.get_crew(session)
-    print("Crew:", app, the_crew, crew_tasks, crew_agents)
+    print("Mongo Crew Data:", app, the_crew, crew_tasks, crew_agents)
 
     # Put Agents in a dictionary with their Ids as key
     crew_agents_dict: Dict[Set[PyObjectId], Agent] = dict([(keyset(agent.id), agent) for agent in crew_agents])

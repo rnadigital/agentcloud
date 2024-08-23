@@ -243,7 +243,7 @@ class Agent(BaseModel):
     maxIter: Optional[int] = 10
     maxRPM: Optional[int] = 100
     verbose: Optional[bool] = False
-    allowDelegation: Optional[bool] = True
+    allowDelegation: Optional[bool] = Field(default=False, alias="allow_delegation")
     step_callback: Optional[Callable] = None
 
 

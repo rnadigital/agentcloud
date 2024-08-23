@@ -47,7 +47,8 @@ const noNavPages = [
 	'/redirect',
 	'/s/',
 	'/onboarding',
-	'/onboarding/configuremodels'
+	'/onboarding/configuremodels',
+	'/welcome'
 ];
 
 const agentNavigation: any[] = [
