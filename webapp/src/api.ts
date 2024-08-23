@@ -68,6 +68,11 @@ export function updateRole(body, dispatch, errorCallback, router) {
 	);
 }
 
+
+//Welcome
+export function getWelcomeData(dispatch, errorCallback, router){
+	return ApiCall(`/welcome.json`, 'GET', null, dispatch, errorCallback, router);
+}
 // Sharelinks
 export function createShareLink(body, dispatch, errorCallback, router) {
 	return ApiCall(

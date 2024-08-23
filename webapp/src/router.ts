@@ -38,6 +38,7 @@ const authedMiddlewareChain = [
 	csrfMiddleware
 ];
 
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
@@ -118,8 +119,8 @@ export default function router(server, app) {
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
-	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
-	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
+	server.get('/login', unauthedMiddlewareChain,checkSessionWelcome , renderStaticPage(app, '/login'));
+	server.get('/register', unauthedMiddlewareChain, checkSessionWelcome, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get(
 		'/account',
@@ -129,6 +130,14 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.accountPage.bind(null, app)
+	);	server.get(
+		'/welcome',
+		unauthedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		accountController.welcomePage.bind(null, app)
 	);
 	server.get(
 		'/billing',
@@ -146,6 +155,15 @@ export default function router(server, app) {
 		setPermissions,
 		accountController.accountJson
 	);
+	server.get(
+		'/welcome.json',
+		authedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		accountController.welcomeJson,
+	)
 
 	//TODO: move and rename all these
 	server.post(

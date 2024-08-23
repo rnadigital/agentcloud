@@ -39,7 +39,7 @@ export default function Account(props) {
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Account Settings</h3>
 			</div>
 
-			<p>{/* TODO */}</p>
+			<pre>{JSON.stringify(accountContext, null, 2)}</pre>
 		</>
 	);
 }

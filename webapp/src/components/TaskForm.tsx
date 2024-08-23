@@ -202,6 +202,12 @@ export default function TaskForm({
 
 	useEffect(() => {
 		setTask(task);
+		const { initialTools, initialDatasources } = (task?.toolIds || []).reduce(getInitialTools, {
+			initialTools: [],
+			initialDatasources: []
+		});
+		setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
+		setToolState(initialTools.length > 0 ? initialTools : null);
 	}, [task?._id]);
 
 	useEffect(() => {
