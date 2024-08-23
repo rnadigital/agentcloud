@@ -40,6 +40,7 @@ export default function AddTool(props) {
 	useEffect(() => {
 		setLoading(false);
 	}, [cloneState?.tools, state?.tools]);
+
 	if (loading) {
 		return <Spinner />;
 	}

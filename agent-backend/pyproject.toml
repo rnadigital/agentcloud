@@ -44,6 +44,7 @@ apify-client = "^1.7.0"
 langgraph = "^0.0.51"
 
 langchain-ollama = "^0.1.1"
+pinecone-client = "^5.0.1"
 
 
 [build-system]

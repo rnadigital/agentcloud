@@ -30,6 +30,7 @@ import getDotProp from 'lib/misc/getdotprop';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { PlanLimitsKeys } from 'struct/billing';
+import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
@@ -364,8 +365,9 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	let foundDatasource;
 	if (datasourceId && (typeof datasourceId !== 'string' || datasourceId.length !== 24)) {
-		const foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+		foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 		if (!foundDatasource) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
@@ -414,6 +416,17 @@ export async function editToolApi(req, res, next) {
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
 
+	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
+	let metadata_field_info = [];
+	if (foundDatasource) {
+		try {
+			metadata_field_info = getMetadataFieldInfo(foundDatasource?.streamConfig);
+		} catch (e) {
+			log(e);
+			//supress
+		}
+	}
+
 	await editTool(req.params.resourceSlug, toolId, {
 		name,
 		type: type as ToolType,
@@ -421,7 +434,7 @@ export async function editToolApi(req, res, next) {
 		schema: schema,
 		datasourceId: toObjectId(datasourceId),
 		retriever_type: retriever || null,
-		retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});

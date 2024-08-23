@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from models.vectordatabase import VectorDatabase
 
 from dotenv import load_dotenv
 
@@ -22,6 +23,8 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 GOOGLE_FUNCTION_LOCATION = os.getenv("GOOGLE_FUNCTION_LOCATION", "us-central1")
+PINECOE_API_KEY = os.getenv("PINECONE_API_KEY")
+VECTOR_DATABASE = os.getenv("VECTOR_DATABASE", VectorDatabase.Qdrant)
 
 def _set_max_threads() -> int:
     try:
