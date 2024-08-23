@@ -106,6 +106,8 @@ def vectorstore_factory(embedding_model, collection_name):
             collection_name = "canopy--raginator-1715962071-index"
 
             return Pinecone.from_existing_index(
-                index_name=collection_name,
+                index_name="us-west-1", #TODO: make customisable
                 embedding=embedding_model,
+                text_key="text", #TODO: check
+                namespace=collection_name,
             )
