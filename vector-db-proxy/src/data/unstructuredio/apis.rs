@@ -42,6 +42,7 @@ fn chunking_strategy_to_headers(
             match file_type {
                 FileType::PDF => {
                     header_map.insert("pdf_infer_table_structure", HeaderValue::from_str("true")?);
+                    header_map.insert("split_pdf_page", HeaderValue::from_str("true")?);
                 }
                 _ => (),
             }
@@ -57,7 +58,7 @@ pub fn chunk_text(
     chunking_strategy: Option<UnstructuredChunkingConfig>,
 ) -> Result<Vec<UnstructuredIOResponse>> {
     let client = Client::builder()
-        .timeout(Duration::from_secs(500))
+        .timeout(Duration::from_secs(2000))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?;
     let file_path = file_path.trim_matches('"');
@@ -81,6 +82,6 @@ pub fn chunk_text(
                 e
             )),
         },
-        Err(e) => Err(anyhow!("Encountered and error: {}", e)),
+        Err(e) => Err(anyhow!("Encountered an error: {}", e)),
     }
 }

@@ -130,8 +130,32 @@ export async function discoverSchemaApi(req, res, next) {
 		.then(res => res.data);
 	log('discoveredSchema %O', discoveredSchema);
 
+	// Get stream properties to get correct sync modes from airbyte
+	let streamProperties;
+	try {
+		const streamsApi = await getAirbyteApi(AirbyteApiType.STREAMS);
+		const streamPropertiesBody = {
+			sourceId: datasource.sourceId,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
+		};
+		log('streamPropertiesBody', streamPropertiesBody);
+		streamProperties = await streamsApi
+			.getStreamProperties(streamPropertiesBody)
+			.then(res => res.data);
+		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		if (!streamProperties) {
+			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
+		}
+	} catch (e) {
+		log(e);
+		return dynamicResponse(req, res, 400, {
+			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
+		});
+	}
+
 	return dynamicResponse(req, res, 200, {
-		discoveredSchema
+		discoveredSchema,
+		streamProperties
 	});
 }
 

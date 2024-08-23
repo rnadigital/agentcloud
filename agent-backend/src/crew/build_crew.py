@@ -232,6 +232,7 @@ class CrewAIBuilder:
                 agentcloud_socket=self.socket,
                 agentcloud_session_id=self.session_id
             )
+            print(f"CrewAI Crew(): {self.crew}")
         except ValidationError as ve:
             self.send_to_sockets(text=f"""Validation Error:
             ``` 

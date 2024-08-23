@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
@@ -78,7 +78,7 @@ export default function AgentList({ agents, fetchAgents }) {
 										href={`/${resourceSlug}/agent/add?agentId=${encodeURIComponent(agent._id)}`}
 										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
 									>
-										<PencilIcon
+										<DocumentDuplicateIcon
 											className='h-5 w-5 text-gray-400 dark:text-white'
 											aria-hidden='true'
 										/>
