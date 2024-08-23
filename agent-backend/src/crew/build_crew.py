@@ -127,7 +127,9 @@ class CrewAIBuilder:
 
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
-                    exclude_none=True, exclude_unset=True,
+                    by_alias=True,
+                    exclude_none=True,
+                    exclude_unset=True,
                     exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
                 stop_generating_check=self.stop_generating_check,
