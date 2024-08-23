@@ -41,28 +41,16 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
-        let index_name = Region::to_str(search_request.region.unwrap());
+        let index_name = Region::to_str(search_request.region.unwrap_or_default());
         match get_index_model(&self, index_name.to_string()).await {
             Ok(index_model) => {
-                let mut index = self.index(index_model.host.as_str()).await.unwrap();
-                let index_stats = index.describe_index_stats(None).await.unwrap();
-                if index_stats
-                    .namespaces
-                    .contains_key(search_request.clone().collection.as_str())
-                {
-                    let indexed_vectors_count = index_stats
-                        .namespaces
-                        .get(search_request.clone().collection.as_str())
-                        .unwrap()
-                        .vector_count;
-                    collection_results.status = VectorDatabaseStatus::Ok;
-                    collection_results.collection_metadata = Some(CollectionMetadata {
-                        status: VectorDatabaseStatus::Ok,
-                        collection_vector_count: Some(indexed_vectors_count as u64),
-                        metric: Some(Distance::from(index_model.metric)),
-                        dimensions: Some(index_model.dimension as u64),
-                    })
-                }
+                collection_results.status = VectorDatabaseStatus::Ok;
+                collection_results.collection_metadata = Some(CollectionMetadata {
+                    status: VectorDatabaseStatus::Ok,
+                    collection_vector_count: None,
+                    metric: Some(Distance::from(index_model.metric)),
+                    dimensions: Some(index_model.dimension as u64),
+                });
                 Ok(collection_results)
             }
             Err(e) => Err(e),
@@ -73,7 +61,8 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        match get_index_model(&self, collection_create.collection_name).await {
+        let index_name = Region::to_str(collection_create.region.unwrap_or_default());
+        match get_index_model(&self, index_name.to_string()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
                 VectorDatabaseError::NotFound(_) => {

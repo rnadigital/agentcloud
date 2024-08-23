@@ -1,4 +1,4 @@
-FROM rust:1.77.2 as builder
+FROM rust:1.78.0 as builder
 ARG RELEASE
 WORKDIR /usr/local/src/vector-db-proxy
 RUN mkdir -p src

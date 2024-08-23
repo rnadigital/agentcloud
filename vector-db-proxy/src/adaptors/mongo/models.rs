@@ -189,11 +189,11 @@ pub type FieldDescriptionMap = HashMap<String, FieldDescription>;
 /// Struct representing the configuration of a stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StreamConfig {
-    pub checked_children: Vec<String>,
-    pub primary_key: Vec<String>,
-    pub sync_mode: SyncMode,
-    pub cursor_field: Vec<String>,
-    pub descriptions_map: FieldDescriptionMap,
+    pub checkedChildren: Vec<String>,
+    pub primaryKey: Vec<String>,
+    pub syncMode: SyncMode,
+    pub cursorField: Vec<String>,
+    pub descriptionsMap: FieldDescriptionMap,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

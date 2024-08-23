@@ -80,7 +80,7 @@ pub async fn get_model_and_embedding_key(
                     embedding_config.model = model;
                     embedding_config.embedding_key = datasource.embeddingField;
                     embedding_config.primary_key =
-                        Some(datasource.streamConfig.unwrap().primary_key);
+                        Some(datasource.streamConfig.unwrap().primaryKey);
                     Ok(embedding_config)
                 } // Return the model if found (could be Some or None)
                 Err(e) => {

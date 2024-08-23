@@ -72,7 +72,7 @@ pub fn chunk_text(
     let form = chunking_strategy_to_form_data(file_path, chunking_strategy, Some(file_type))?;
     api_key
         .map(|key| header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap()));
-    match client.post(url).multipart(form).send() {
+    match client.post(url).headers(header_map).multipart(form).send() {
         Ok(response_obj) => match response_obj.json::<Vec<UnstructuredIOResponse>>() {
             Ok(unstructuredio_response) => Ok(unstructuredio_response),
             Err(e) => Err(anyhow!(
