@@ -267,7 +267,7 @@ export async function addAppApi(req, res, next) {
 			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
-						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex and Ollama models are supported for chat apps.'
+						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex, Groq and Ollama models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {
@@ -279,7 +279,7 @@ export async function addAppApi(req, res, next) {
 			if (!ChatAppAllowedModels.has(foundModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
-						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex and Ollama models are supported for chat apps.'
+						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex, Groq and Ollama models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({
@@ -507,7 +507,7 @@ export async function editAppApi(req, res, next) {
 			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
-						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex and Ollama models are supported for chat apps.'
+						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex, Groq and Ollama models are supported for chat apps.'
 				});
 			}
 		} else if (modelId) {
@@ -518,7 +518,7 @@ export async function editAppApi(req, res, next) {
 			if (!ChatAppAllowedModels.has(foundModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
-						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex and Ollama models are supported for chat apps.'
+						'Only OpenAI, Azure OpenAI, Anthropic, Google Vertex, Groq and Ollama models are supported for chat apps.'
 				});
 			}
 			chatAgent = await addAgent({
