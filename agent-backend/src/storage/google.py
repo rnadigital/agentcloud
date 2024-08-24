@@ -1,6 +1,7 @@
 from google.cloud import storage
 import os
 import logging
+from pathlib import Path
 
 from storage.provider import StorageProvider
 
@@ -9,9 +10,7 @@ log = logging.getLogger('storage.google')
 
 class GoogleStorageProvider(StorageProvider):
     def __init__(self):
-        options = {'projectId': os.getenv('PROJECT_ID')}
-        if os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
-            options['keyFilename'] = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+        options = {'project': os.getenv('PROJECT_ID')}
         self.storage_client = storage.Client(**options)
 
     async def init(self):
@@ -30,32 +29,20 @@ class GoogleStorageProvider(StorageProvider):
             log.error(f'Failed to create GCS bucket: {e.message}')
             raise e
 
-    async def upload_local_file(self, filename, uploaded_file, content_type, is_public=False):
+    def upload_local_file(self, filename, is_public=False):
         log.debug('Uploading file %s', filename)
         bucket_name = os.getenv('NEXT_PUBLIC_GCS_BUCKET_NAME' if is_public else 'NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE')
         bucket = self.storage_client.bucket(bucket_name)
+        
+        original_file_path = os.path.join(Path(__file__).resolve().parent.parent, 'outputs', filename)  
         blob = bucket.blob(filename)
         try:
-            blob.upload_from_file(uploaded_file, content_type=content_type)
+            blob.upload_from_filename(original_file_path)
             log.debug('File uploaded successfully.')
             if is_public:
                 blob.make_public()
         except Exception as err:
             log.error('File upload error:', err)
-            raise err
-
-    async def upload_buffer(self, filename, content, content_type, is_public=False):
-        log.debug('Uploading buffer to file %s', filename)
-        bucket_name = os.getenv('NEXT_PUBLIC_GCS_BUCKET_NAME' if is_public else 'NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE')
-        bucket = self.storage_client.bucket(bucket_name)
-        blob = bucket.blob(filename)
-        try:
-            blob.upload_from_string(content, content_type=content_type)
-            log.debug('Buffer uploaded successfully.')
-            if is_public:
-                blob.make_public()
-        except Exception as err:
-            log.error('Buffer upload error:', err)
             raise err
 
     async def delete_file(self, filename, is_public=False):
@@ -64,8 +51,5 @@ class GoogleStorageProvider(StorageProvider):
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(filename)
         blob.delete()
-
-    def get_base_path(self, is_public=True):
-        return f'https://storage.googleapis.com/{os.getenv("NEXT_PUBLIC_GCS_BUCKET_NAME" if is_public else "NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE")}'
 
 google_storage_provider = GoogleStorageProvider()
