@@ -29,8 +29,6 @@ export type DatasourceConnectionSettings = {
 	nonBreakingSchemaUpdatesBehavior: string;
 };
 
-export type DatasourceChunkStrategy = 'semantic' | 'character';
-
 export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
@@ -49,6 +47,34 @@ export type DatasourceRecordCount = {
 	total?: number;
 	success?: number;
 	failure?: number;
+};
+
+export const UnstructuredChunkingStrategyValues = [
+	'basic',
+	'by_title',
+	'by_page',
+	'by_similarity'
+] as const;
+export const UnstructuredPartitioningStrategyValues = [
+	'auto',
+	'fast',
+	'hi_res',
+	'ocr_only'
+] as const;
+export type UnstructuredChunkingStrategy = (typeof UnstructuredChunkingStrategyValues)[number];
+export type UnstructuredPartitioningStrategy =
+	(typeof UnstructuredPartitioningStrategyValues)[number];
+export const UnstructuredChunkingStrategySet = new Set(UnstructuredChunkingStrategyValues);
+export const UnstructuredPartitioningStrategySet = new Set(UnstructuredPartitioningStrategyValues);
+
+export type UnstructuredChunkingConfig = {
+	partitioning: UnstructuredPartitioningStrategy;
+	strategy: UnstructuredChunkingStrategy;
+	max_characters: number;
+	new_after_n_chars: number;
+	overlap: number;
+	similarity_threshold: number; // between 0.0 and 1.0
+	overlap_all: boolean;
 };
 
 export type Datasource = {
@@ -70,8 +96,7 @@ export type Datasource = {
 	lastSyncedDate?: Date | null; //Note: null = never synced
 	status?: DatasourceStatus;
 	discoveredSchema?: any;
-	chunkStrategy?: DatasourceChunkStrategy;
-	chunkCharacter?: string | null;
+	chunkingConfig?: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection

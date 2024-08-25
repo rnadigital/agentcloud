@@ -14,10 +14,9 @@ pub struct UnstructuredIOResponse {
 pub struct Metadata {
     pub filetype: String,
     pub languages: Vec<String>,
-    pub page_number: i64,
+    pub page_number: Option<i64>,
     pub filename: String,
 }
-
 
 // Construct a HashMap from the Unstructured IO response struct
 impl From<&UnstructuredIOResponse> for HashMap<String, String> {
@@ -30,11 +29,17 @@ impl From<&UnstructuredIOResponse> for HashMap<String, String> {
         map.insert("page_content".to_string(), value.text.clone());
         // Convert fields of Metadata to strings and insert them into the map
         map.insert("ac_filetype".to_string(), value.metadata.filetype.clone());
-        map.insert("ac_languages".to_string(),
-                   value.metadata.languages.join(","));
-        map.insert("ac_page_number".to_string(),
-                   value.metadata.page_number.to_string());
-        map.insert("metadata.filename".to_string(), value.metadata.filename.clone());
+        map.insert(
+            "ac_languages".to_string(),
+            value.metadata.languages.join(","),
+        );
+        if let Some(page_number) = value.metadata.page_number {
+            map.insert("ac_page_number".to_string(), page_number.to_string());
+        }
+        map.insert(
+            "metadata.filename".to_string(),
+            value.metadata.filename.clone(),
+        );
 
         map
     }

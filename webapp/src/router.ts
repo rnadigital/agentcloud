@@ -38,9 +38,11 @@ const authedMiddlewareChain = [
 	csrfMiddleware
 ];
 
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
+import * as apiKeyController from 'controllers/apikey';
 import * as appController from 'controllers/app';
 import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
@@ -118,8 +120,8 @@ export default function router(server, app) {
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
-	server.get('/login', unauthedMiddlewareChain, renderStaticPage(app, '/login'));
-	server.get('/register', unauthedMiddlewareChain, renderStaticPage(app, '/register'));
+	server.get('/login', unauthedMiddlewareChain,checkSessionWelcome , renderStaticPage(app, '/login'));
+	server.get('/register', unauthedMiddlewareChain, checkSessionWelcome, renderStaticPage(app, '/register'));
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get(
 		'/account',
@@ -129,6 +131,14 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.accountPage.bind(null, app)
+	);	server.get(
+		'/welcome',
+		unauthedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		accountController.welcomePage.bind(null, app)
 	);
 	server.get(
 		'/billing',
@@ -146,6 +156,15 @@ export default function router(server, app) {
 		setPermissions,
 		accountController.accountJson
 	);
+	server.get(
+		'/welcome.json',
+		authedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		accountController.welcomeJson,
+	)
 
 	//TODO: move and rename all these
 	server.post(
@@ -233,7 +252,13 @@ export default function router(server, app) {
 		accountController.updateRole
 	);
 
+	accountRouter.post('/forms/account/apikey/add', apiKeyController.addKeyApi);
+	server.get('/apikey/add', apiKeyController.keyAddPage.bind(null, app));
+
 	server.use('/forms/account', accountRouter);
+	//ApiKey Endpoints
+	server.get('/apikeys', apiKeyController.apiKeysPage.bind(null, app));
+	server.get('/apikeys.json', apiKeyController.apikeysJson);
 
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
 	publicAppRouter.get(

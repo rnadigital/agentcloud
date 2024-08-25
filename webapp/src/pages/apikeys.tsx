@@ -47,6 +47,7 @@ export default function APIKeys(props) {
 				title='API Keys'
 				buttonText='New Key'
 				href='/apikey/add'
+				slug={false}
 			/>
 			{!keys && (
 				<NewButtonSection

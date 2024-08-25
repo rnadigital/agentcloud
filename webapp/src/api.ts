@@ -68,6 +68,11 @@ export function updateRole(body, dispatch, errorCallback, router) {
 	);
 }
 
+
+//Welcome
+export function getWelcomeData(dispatch, errorCallback, router){
+	return ApiCall(`/welcome.json`, 'GET', null, dispatch, errorCallback, router);
+}
 // Sharelinks
 export function createShareLink(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -245,6 +250,17 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 }
 
 //APIKeys
+
+export function addKey(body, dispatch, errorCallback, router){
+	return ApiCall(
+		'/account/forms/apikey/add',
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
 
 export function getKeys(body, dispatch, errorCallback, router) {
 	return ApiCall(

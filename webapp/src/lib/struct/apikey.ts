@@ -2,11 +2,12 @@
 import { Binary, ObjectId } from 'mongodb';
 
 export type APIKey = {
-	_id?: ObjectId | string;
+	_id?: ObjectId;
 	version?: number;
 	name: string;
 	description?: string;
 	expirationDate: Date;
-	ownerId: ObjectId | string;
+	ownerId: ObjectId;
+	token?: string;
 	permissions?: Binary; //TODO: set up permissions with API keys
 };

@@ -6,6 +6,7 @@ import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { ObjectId } from 'mongodb';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { Controller, FieldValues, FormProvider, useForm } from 'react-hook-form';
@@ -15,8 +16,7 @@ export interface ApiKeyFormValues {
 	name?: '';
 	description: '';
 	expirationDays: '0';
-	expirationDate: Date;
-	ownerId?: ObjectId | string;
+	ownerId?: ObjectId;
 }
 const dropdownOptions = [
 	{
@@ -44,6 +44,8 @@ export default function ApiKeyForm() {
 	const [submitting, setSubmitting] = useState(false);
 	const [endDateStr, setEndDateStr] = useState(null);
 	const { handleSubmit, control, setValue } = useForm<ApiKeyFormValues>();
+	const router = useRouter();
+	const [error, setError] = useState();
 
 	const methods = useForm<ApiKeyFormValues>();
 
@@ -58,10 +60,21 @@ export default function ApiKeyForm() {
 		today.setDate(today.getDate() + numOfDays);
 		return today.toDateString();
 	};
-	const onSubmit = async (data: FieldValues) => {
+	const onSubmit = async (data: ApiKeyFormValues) => {
 		setSubmitting(true);
-		console.log(data);
-		setSubmitting(false);
+		console.log('onSubmit-data', data);
+		try {
+			await API.addKey(
+				{
+					...data
+				},
+				null,
+				setError,
+				router
+			);
+		} finally {
+			setSubmitting(false);
+		}
 	};
 
 	if (!control) {
@@ -71,7 +84,7 @@ export default function ApiKeyForm() {
 	return (
 		<div className='flex min-h-full flex-1 flex-col justify-start py-12 sm:px-6 lg:px-4'>
 			<FormProvider {...methods}>
-				<form onSubmit={handleSubmit(onSubmit)}>
+				<form onSubmit={handleSubmit(onSubmit)} action='/forms/account/apikey/add' method='POST'>
 					<div className='w-[20%] py-5'>
 						<InputField<ApiKeyFormValues>
 							name='name'

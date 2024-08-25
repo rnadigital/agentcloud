@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
@@ -7,14 +8,13 @@ import { useAccountContext } from 'context/account';
 import getFileFormat from 'misc/getfileformat';
 import { useRouter } from 'next/router';
 import path from 'path';
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useReducer, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { pricingMatrix, SubscriptionPlan } from 'struct/billing';
 import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
-
-import * as API from '../api';
+import submittingReducer from 'utils/submittingreducer';
 
 export default function DropZone({
 	modalOpen,
@@ -47,8 +47,15 @@ export default function DropZone({
 	const { resourceSlug } = router.query;
 	const maxSize = pricingMatrix[stripePlan]?.maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
-	const [chunkStrategy, setChunkStrategy] = useState('semantic');
-	const [chunkCharacter, setChunkCharacter] = useState('');
+	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
+		partitioning: 'auto',
+		strategy: 'basic',
+		max_characters: 500,
+		new_after_n_chars: null, // Defaults to max_characters unless changed
+		overlap: 0,
+		similarity_threshold: 0.5,
+		overlap_all: false
+	});
 	const cancelButtonRef = useRef(null);
 
 	const uploadFiles = async e => {
@@ -56,14 +63,15 @@ export default function DropZone({
 		try {
 			setLoading(true);
 			const formData = new FormData();
-			formData.set('chunkStrategy', chunkStrategy as string);
-			formData.set('chunkCharacter', chunkCharacter as string);
 			formData.set('resourceSlug', resourceSlug as string);
 			formData.set('modelId', modelId as string);
 			formData.set('datasourceDescription', description as string);
 			formData.set('name', name as string);
 			formData.set('retriever', retriever as string);
 			formData.set('_csrf', csrf as string);
+			Object.entries(chunkingConfig).forEach(([key, value]) => {
+				formData.set(key, value as string);
+			});
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);
 			});
@@ -137,21 +145,16 @@ export default function DropZone({
 					))}
 				{children}
 				<DatasourceChunkingForm
-					chunkStrategy={chunkStrategy}
-					setChunkStrategy={setChunkStrategy}
-					chunkCharacter={chunkCharacter}
-					setChunkCharacter={setChunkCharacter}
+					chunkingConfig={chunkingConfig}
+					setChunkingConfig={setChunkingConfig}
 				/>
 				<button
 					disabled={
-						loading ||
-						!files ||
-						!modelId ||
-						!chunkStrategy ||
-						(chunkStrategy === 'character' && chunkCharacter.length === 0)
+						loading || !files || !modelId
+						//TODO: more checks
 					}
 					type='submit'
-					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-4'
+					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 				>
 					{loading && <ButtonSpinner />}
 					Upload

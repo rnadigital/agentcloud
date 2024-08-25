@@ -10,7 +10,7 @@ export function APIKeyCollection(): any {
 	return db.db().collection('apikeys');
 }
 
-export async function addKey(key: APIKey): Promise<InsertResult> {
+export async function addKey(key: APIKey): Promise<APIKey> {
 	return APIKeyCollection().insertOne(key);
 }
 
@@ -19,6 +19,19 @@ export function deleteKey(ownerId: db.IdOrStr, keyId: db.IdOrStr): Promise<any> 
 		_id: toObjectId(keyId),
 		ownerId: toObjectId(ownerId)
 	});
+}
+
+export function addTokenToKey(keyId: db.IdOrStr, token: string): Promise<APIKey> {
+	return APIKeyCollection().updateOne(
+		{
+			_id: toObjectId(keyId)
+		},
+		{
+			$set: {
+				token: token
+			}
+		}
+	);
 }
 
 export function getKeyById(ownerId: db.IdOrStr, keyId: db.IdOrStr): Promise<APIKey> {
