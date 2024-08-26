@@ -276,7 +276,6 @@ export async function editTaskApi(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-	console.log(req.body.formFields);
 
 	if (req.body.formFields && req.body.formFields.length > 0) {
 		for (const field of req.body.formFields) {
