@@ -152,6 +152,19 @@ class MongoClientConnection(MongoConnection):
                 return messages
 
         return []
+    
+    def insert_model(self, db_collection: str, model_instance: BaseModel) -> Optional[ObjectId]:
+        collection = self._get_collection(db_collection)
+        try:
+            if isinstance(model_instance, dict):
+                result = collection.insert_one(model_instance)
+            else:
+                result = collection.insert_one(model_instance.model_dump(by_alias=True))
+            return result.inserted_id
+        except Exception as e:
+            logging.exception(f"Failed to insert model into {db_collection}: {e}")
+            return None
+    
 
 
 def convert_id_to_ObjectId(id):
