@@ -215,6 +215,8 @@ class Task(BaseModel):
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
     displayOnlyFinalOutput: bool = False
+    storeTaskOutput: bool = False
+    taskOutputFileName: Optional[str] = None
 
 
 class Agent(BaseModel):

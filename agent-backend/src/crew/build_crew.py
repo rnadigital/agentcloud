@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 import uuid
 from typing import Any, List, Set, Type
 from datetime import datetime
@@ -12,6 +14,7 @@ from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
+from storage import storage_provider 
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -165,15 +168,25 @@ class CrewAIBuilder:
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
+            
+
+            if task.storeTaskOutput:
+                def callback(output):
+                    original_file_path = os.path.join(Path(__file__).resolve().parent.parent, 'outputs', task.taskOutputFileName)
+                    with open(original_file_path, 'w') as f:
+                        f.write(str(output)) 
+                    storage_provider.upload_local_file(task.taskOutputFileName, self.session_id)
+                    self.send_to_sockets(f"{task.taskOutputFileName}", event=SocketEvents.MESSAGE, chunk_id=str(uuid.uuid4()))
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
-                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput"}),
+                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "storeTaskOutput", "taskOutputFileName"}),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
-                stream_only_final_output=task.displayOnlyFinalOutput
+                stream_only_final_output=task.displayOnlyFinalOutput,
+                callback=callback if task.storeTaskOutput else None,
             )
 
     def make_user_question(self):
@@ -279,6 +292,7 @@ class CrewAIBuilder:
                 event=SocketEvents.MESSAGE,
                 chunk_id=str(uuid.uuid4()),
             )
+
         self.send_to_sockets(
             text='',
             event=SocketEvents.STOP_GENERATING,
