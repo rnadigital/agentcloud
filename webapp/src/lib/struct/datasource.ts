@@ -52,7 +52,7 @@ export type DatasourceRecordCount = {
 export const SyncModes = [
 	'full_refresh_overwrite',
 	'full_refresh_append',
-	'incremental_append',
+	'incremental_append'
 	// 'incremental_deduped_history'
 ];
 export type SyncMode = (typeof SyncModes)[number];

@@ -21,7 +21,8 @@ class VectorDBProxyClient {
 		log('createCollection %s %O', collectionId, createOptions);
 		// Note: Checks if the collection exists beforehand
 		const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
-		if (collectionExists?.error_message) { //TODO: have vector-db-poxy return a boolean or something logical for actually just knowing if the collection exists or not
+		if (collectionExists?.error_message) {
+			//TODO: have vector-db-poxy return a boolean or something logical for actually just knowing if the collection exists or not
 			if (!createOptions) {
 				//createOptions are optional as an optimisation where the data is already in scope
 				const existingDatasource = await unsafeGetDatasourceById(collectionId);
