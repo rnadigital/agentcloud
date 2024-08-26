@@ -69,6 +69,7 @@ services:
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
       - PROJECT_ID=${PROJECT_ID}
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
+      - WEBAPP_WEBHOOK_HOST=http://webapp_next:3000
       - URL_APP=http://127.0.0.1:3000
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
