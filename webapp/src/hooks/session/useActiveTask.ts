@@ -8,8 +8,11 @@ const useActiveTask = (messages: any[]) => {
 	const [activeTask, setActiveTask] = useState<Task>();
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
-	const lastRunningTaskName = messages.findLast(m =>
-		m.message?.text?.startsWith('**Running task**:')
+	const lastRunningTaskName = messages.findLast(
+		m =>
+			typeof m.message?.text === 'string' &&
+			m?.message?.displayType === 'inline' && //optimization: task running messages are always an inline
+			m.message?.text?.startsWith('**Running task**:')
 	);
 	const router = useRouter();
 
