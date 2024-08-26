@@ -51,7 +51,7 @@ export default function AddTool(props) {
 				<title>{`New Tool - ${teamName}`}</title>
 			</Head>
 
-			{tools.length > 0 && (
+			{tools?.length > 0 && (
 				<div className='border-b pb-2 my-2'>
 					<h3 className='pl-2 font-semibold text-gray-900'>New Tool</h3>
 				</div>

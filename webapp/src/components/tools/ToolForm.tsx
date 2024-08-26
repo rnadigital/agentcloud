@@ -109,7 +109,7 @@ export default function ToolForm({
 	const codeBlockRef = useRef(null);
 	useEffect(() => {
 		setWrappedCode(WrapToolCode(toolCode));
-	}, [toolCode._id]);
+	}, [toolCode]);
 	const PreWithRef = preProps => {
 		return <pre {...preProps} ref={codeBlockRef} />;
 	};

@@ -1,6 +1,7 @@
 'use strict';
 
 import * as API from '@api';
+import { Switch } from '@headlessui/react';
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
@@ -19,9 +20,35 @@ import { ToolType } from 'struct/tool';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
+import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+
+const jsonPlaceholder = `{
+	"schema": {
+		"name": {
+			"type": "string"
+		},
+		"age": {
+			"type": "number"
+		},
+		"address": {
+			"type": "object",
+			"schema": {
+				"street": {
+					"type": "string"
+				},
+				"city": {
+					"type": "string"
+				},
+				"state": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}`;
 
 export default function TaskForm({
 	task,
@@ -42,10 +69,12 @@ export default function TaskForm({
 	fetchTaskFormData?: Function;
 	taskChoices?: Task[];
 }) {
+	console.log(task);
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
 	const [taskState, setTask] = useState<Task | undefined>(task);
 
 	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
@@ -56,6 +85,9 @@ export default function TaskForm({
 			}
 		]
 	);
+	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
+
+	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
@@ -63,6 +95,10 @@ export default function TaskForm({
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
+
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
+		/* noop */
+	};
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -101,14 +137,15 @@ export default function TaskForm({
 			resourceSlug,
 			name: e.target.task_name.value,
 			description: e.target.task_description.value,
-			expectedOutput: e.target.expectedOutput.value,
+			expectedOutput,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
 			context: taskState?.context || [],
 			formFields: formFields || [],
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked
+			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
+			isStructuredOutput
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
@@ -218,6 +255,15 @@ export default function TaskForm({
 		}
 	}, [preferredAgent?.toolIds]);
 
+	useEffect(() => {
+		if (!expectedOutput && isStructuredOutput) {
+			setExpectedOutput(jsonPlaceholder);
+		}
+		if (!isStructuredOutput && !task?.expectedOutput) {
+			setExpectedOutput('');
+		}
+	}, [expectedOutput, isStructuredOutput, task]);
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -302,20 +348,63 @@ export default function TaskForm({
 						</div>
 
 						<div className='col-span-full'>
-							<label
-								htmlFor='expectedOutput'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Expected Output
-							</label>
-							<textarea
-								id='expectedOutput'
-								name='expectedOutput'
-								placeholder='Clear and detailed definition of expected output for the task.'
-								rows={4}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={taskState?.expectedOutput}
-							/>
+							<div className='flex w-full mb-2 items-center'>
+								<label
+									htmlFor='expectedOutput'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								>
+									Expected Output
+								</label>
+
+								<div className='ml-auto text-gray-900 dark:text-gray-50 text-sm mr-2'>
+									Structured Output
+								</div>
+								<Switch
+									checked={isStructuredOutput}
+									onChange={setIsStructuredOutput}
+									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
+								>
+									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
+								</Switch>
+							</div>
+
+							{isStructuredOutput ? (
+								<>
+									<ScriptEditor
+										height='30em'
+										code={expectedOutput}
+										setCode={setExpectedOutput}
+										editorOptions={{
+											stopRenderingLineAfter: 1000,
+											fontSize: '12pt',
+											//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+											minimap: { enabled: false },
+											scrollBeyondLastLine: false
+										}}
+										onInitializePane={onInitializePane}
+										language='json'
+									/>
+									<a
+										className='text-sm text-blue-500 dark:text-blue-400 underline'
+										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
+										target='_blank'
+										rel='noreferrer'
+									>
+										Instructions on how to create a schema for structure output
+									</a>
+								</>
+							) : (
+								<textarea
+									id='expectedOutput'
+									name='expectedOutput'
+									placeholder='Clear and detailed definition of expected output for the task.'
+									rows={4}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									defaultValue={taskState?.expectedOutput}
+									value={expectedOutput}
+									onChange={e => setExpectedOutput(e.target.value)}
+								/>
+							)}
 						</div>
 
 						<div className='sm:col-span-full'>
