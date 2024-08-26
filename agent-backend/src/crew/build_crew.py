@@ -167,6 +167,8 @@ class CrewAIBuilder:
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
             
+
+            output_pydantic = None
             if task.isStructuredOutput:
                 try:
                     task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
