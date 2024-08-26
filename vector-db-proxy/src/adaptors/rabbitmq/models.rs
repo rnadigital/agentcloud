@@ -66,7 +66,7 @@ pub async fn rabbit_consume(
                         BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = streaming_queue.basic_ack(args).await;
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
-                    match headers.get(&ShortStr::try_from("_stream").unwrap()) {
+                    match headers.get(&ShortStr::try_from("stream").unwrap()) {
                         Some(stream) => {
                             let stream_string: String = stream.to_string();
                             let stream_split: Vec<&str> = stream_string.split('_').collect();

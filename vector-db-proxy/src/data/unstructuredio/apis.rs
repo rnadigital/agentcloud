@@ -5,50 +5,50 @@ use crate::data::models::FileType;
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::utils::file_operations::determine_file_type;
 use anyhow::{anyhow, Result};
+use reqwest::blocking::multipart::{Form, Part};
+use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::{blocking, blocking::Client};
 use std::path::Path;
 use std::time::Duration;
 
-fn chunking_strategy_to_headers(
-    mut header_map: HeaderMap,
+fn chunking_strategy_to_form_data(
+    file_path: &Path,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
     file_type: Option<FileType>,
-) -> Result<HeaderMap> {
+) -> Result<Form> {
+    let mut form = Form::new().part("files", Part::file(file_path)?);
+
     if let Some(strategy_config) = chunking_strategy {
         let chunking_strategy = UnstructuredChunkingStrategy::as_str(&strategy_config.strategy);
-        header_map.insert(
-            "chunking_strategy",
-            HeaderValue::from_str(chunking_strategy)?,
-        );
+        form = form.text("chunking_strategy", chunking_strategy);
+
         let max_characters = strategy_config.max_characters.to_string();
-        header_map.insert(
-            "max_characters",
-            HeaderValue::from_str(max_characters.as_str())?,
-        );
+        form = form.text("max_characters", max_characters);
+
         let new_after_n_chars = strategy_config.new_after_n_chars.to_string();
-        header_map.insert(
-            "new_after_n_chars",
-            HeaderValue::from_str(new_after_n_chars.as_str())?,
-        );
+        form = form.text("new_after_n_chars", new_after_n_chars);
+
         let overlap = strategy_config.overlap.to_string();
-        header_map.insert("overlap", HeaderValue::from_str(overlap.as_str())?);
+        form = form.text("overlap", overlap);
+
         let overlap_all = strategy_config.overlap_all.to_string();
-        header_map.insert("overlap_all", HeaderValue::from_str(overlap_all.as_str())?);
+        form = form.text("overlap_all", overlap_all);
+
         let partitioning_strategy =
             UnstructuredPartitioningStrategy::as_str(&strategy_config.partitioning);
-        header_map.insert("strategy", HeaderValue::from_str(partitioning_strategy)?);
-        if let Some(file_type) = file_type {
-            match file_type {
-                FileType::PDF => {
-                    header_map.insert("pdf_infer_table_structure", HeaderValue::from_str("true")?);
-                    header_map.insert("split_pdf_page", HeaderValue::from_str("true")?);
-                }
-                _ => (),
+        form = form.text("strategy", partitioning_strategy);
+    }
+
+    if let Some(file_type) = file_type {
+        match file_type {
+            FileType::PDF => {
+                form = form.text("pdf_infer_table_structure", "true");
             }
+            _ => (),
         }
     }
-    Ok(header_map)
+
+    Ok(form)
 }
 
 pub fn chunk_text(
@@ -66,12 +66,10 @@ pub fn chunk_text(
     let file_path = Path::new(file_path);
     println!("File path in chunk : {:?}", file_path);
     // Create a multipart form with the file
-    let form =
-        blocking::multipart::Form::new().part("files", blocking::multipart::Part::file(file_path)?);
     // Send the POST request
     let mut header_map = HeaderMap::new();
     header_map.insert("accept", HeaderValue::from_str("application/json")?);
-    header_map = chunking_strategy_to_headers(header_map, chunking_strategy, Some(file_type))?;
+    let form = chunking_strategy_to_form_data(file_path, chunking_strategy, Some(file_type))?;
     api_key
         .map(|key| header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap()));
     match client.post(url).headers(header_map).multipart(form).send() {

@@ -1,4 +1,5 @@
 use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
+use crate::data::helpers::hash_string;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
@@ -33,15 +34,18 @@ pub async fn embed_text_construct_point(
                 // Construct a Point to insert into the vector DB
                 if !embedding_vec.is_empty() {
                     if let Some(vector) = embedding_vec.into_iter().next() {
-                        let point =
-                            Point::new(Some(Uuid::new_v4().to_string()), vector, Some(payload));
+                        let mut index = Uuid::new_v4().to_string();
+                        if let Some(hash_index) = payload.get("index") {
+                            index = hash_index.to_owned();
+                        }
+                        let point = Point::new(Some(index), vector, Some(payload));
                         return Ok(point);
                     }
                 }
             }
         } else {
             return Err(anyhow!(
-                "Could not find an stream ID for this payload. Aborting embedding!"
+                "Could not find a stream ID for this payload. Aborting embedding!"
             ));
         }
     }
@@ -127,9 +131,8 @@ pub async fn process_incoming_messages(
             Ok::<Value, _>(message_data) => {
                 let mongo = mongo_connection.read().await;
                 match get_model_and_embedding_key(&mongo, datasource_id.as_str()).await {
-                    Ok((model_parameter_result, embedding_field)) => match model_parameter_result {
-                        Some(model_parameters) => {
-                            let embedding_model_name = model_parameters.model;
+                    Ok(embedding_config) => {
+                        if let Some(embedding_model) = embedding_config.model {
                             let datasources_clone = datasource_id.clone();
                             if let Value::Object(mut data_obj) = message_data {
                                 // This is to account for airbyte sending the data in the _airbyte_data object when the destination is PubSub
@@ -138,9 +141,26 @@ pub async fn process_incoming_messages(
                                         data_obj = pubsub_is_obj.to_owned();
                                     }
                                 }
-                                let metadata =
+                                let mut metadata =
                                     convert_serde_value_to_hashmap_string(data_obj.to_owned());
-                                if let Some(embedding_field_name) = embedding_field {
+                                // If we find a primary key assoc
+                                if let Some(list_of_primary_keys) = embedding_config.primary_key {
+                                    let list_of_primary_key_values: Vec<String> =
+                                        list_of_primary_keys
+                                            .iter()
+                                            .map(|k| metadata.get(k).cloned().unwrap())
+                                            .collect();
+                                    if let Ok(json_string) =
+                                        serde_json::to_string(&list_of_primary_key_values)
+                                    {
+                                        let json_string_hash = hash_string(json_string);
+                                        metadata.insert(
+                                            String::from("index"),
+                                            json_string_hash.to_string(),
+                                        );
+                                    }
+                                };
+                                if let Some(embedding_field_name) = embedding_config.embedding_key {
                                     let mongo_connection_clone = Arc::clone(&mongo_connection);
                                     let vector_database = Arc::clone(&vector_database_client);
                                     let embed_text_worker = tokio::spawn(async move {
@@ -150,7 +170,7 @@ pub async fn process_incoming_messages(
                                             metadata,
                                             embedding_field_name,
                                             datasources_clone,
-                                            embedding_model_name,
+                                            embedding_model.model,
                                         )
                                         .await;
                                     });
@@ -160,10 +180,7 @@ pub async fn process_incoming_messages(
                                 }
                             }
                         }
-                        None => {
-                            log::error!("Model mongo object returned None!");
-                        }
-                    },
+                    }
                     Err(e) => {
                         log::error!("An error occurred: {}", e);
                     }
