@@ -18,14 +18,14 @@ from models.mongo import AppType, ToolType
 from init.mongo_session import start_mongo_session
 from storage import storage_provider 
 from src.utils.json_schema_to_pydantic import json_schema_to_pydantic
-from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
+from utils.model_helper import  keyset, match_key, \
     search_subordinate_keys
-from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
+from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN , SOCKET_URL
 from typing import Dict
 from models.sockets import SocketMessage, SocketEvents, Message
-from tools import CodeExecutionTool, RagTool, GoogleCloudFunctionTool
+from tools import  RagTool, GoogleCloudFunctionTool
 from messaging.send_message_to_socket import send
-from tools.global_tools import CustomHumanInput, GlobalBaseTool
+from tools.global_tools import  GlobalBaseTool
 from tools.builtin_tools import BuiltinTools
 from redisClient.utilities import RedisClass
 
@@ -87,7 +87,6 @@ class CrewAIBuilder:
 
     def build_models(self):
         for key, model in self.models_models.items():
-            credential = match_key(self.credentials_models, key)
             self.crew_models[key] = language_model_factory(model) #, credential)
 
     def build_tools_and_their_datasources(self):
