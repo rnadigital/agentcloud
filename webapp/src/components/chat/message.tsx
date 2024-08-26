@@ -234,11 +234,14 @@ export function Message({
 	const relativeDateString = relativeString(new Date(), messageDate);
 	const isThought =
 		(!isFeedback &&
+			typeof message === 'string' &&
 			message
 				?.split('\n')
 				.slice(-8)
 				.some(line => line.toLowerCase().startsWith('action input:'))) ||
-		(message?.startsWith('Thought:') && !message.includes('Final Answer:'));
+		(typeof message === 'string' &&
+			message?.startsWith('Thought:') &&
+			!message.includes('Final Answer:'));
 
 	const profilePicture = (
 		<div
@@ -312,7 +315,7 @@ export function Message({
 						? 'bg-slate-800 text-white'
 						: 'bg-white dark:bg-slate-900',
 				incoming ? 'rounded-br-none' : 'rounded-tl-none',
-				messageType !== 'code' ? 'px-3 py-2' : 'p-2'
+				messageType !== 'code' ? 'px-3 py-2' : 'p-2 w-full'
 			)}
 		>
 			<div className={`${incoming ? 'text-white' : ''} w-full`}>

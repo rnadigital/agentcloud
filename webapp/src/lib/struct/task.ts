@@ -39,4 +39,5 @@ export interface Task {
 	displayOnlyFinalOutput?: boolean;
 	hidden?: boolean;
 	formFields?: FormFieldConfig[];
+	isStructuredOutput?: boolean;
 }
