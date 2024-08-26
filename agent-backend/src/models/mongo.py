@@ -215,6 +215,7 @@ class Task(BaseModel):
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
     displayOnlyFinalOutput: bool = False
+    isStructuredOutput: Optional[bool] = False
 
 
 class Agent(BaseModel):
