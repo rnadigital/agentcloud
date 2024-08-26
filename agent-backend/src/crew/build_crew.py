@@ -13,7 +13,7 @@ from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
-from src.utils.json_schema_to_pydantic import json_schema_to_pydantic
+from utils.json_schema_to_pydantic import json_schema_to_pydantic
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -167,6 +167,8 @@ class CrewAIBuilder:
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
             
+
+            output_pydantic = None
             if task.isStructuredOutput:
                 try:
                     task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
