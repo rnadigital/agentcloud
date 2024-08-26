@@ -212,7 +212,7 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 							<button
 								type='button'
 								onClick={addOption}
-								className='inline-flex items-center rounded-md bg-transparent px-3 py-2 text-sm font-semibold text-white shadow-sm  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+								className='inline-flex items-center rounded-md bg-gray-600 px-3 py-2 mb-2 text-sm font-semibold text-white shadow-sm  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
 							>
 								Add Option
 							</button>

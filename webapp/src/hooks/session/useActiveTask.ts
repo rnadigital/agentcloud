@@ -8,8 +8,9 @@ const useActiveTask = (messages: any[]) => {
 	const [activeTask, setActiveTask] = useState<Task>();
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
-	const lastRunningTaskName = messages
-		.findLast(m => m.message?.text?.startsWith('**Running task**:'));
+	const lastRunningTaskName = messages.findLast(m =>
+		m.message?.text?.startsWith('**Running task**:')
+	);
 	const router = useRouter();
 
 	const { resourceSlug } = router.query;
@@ -19,7 +20,7 @@ const useActiveTask = (messages: any[]) => {
 			const taskNameMatch = lastRunningTaskName.message.text.match(
 				/\*\*Running task\*\*:\s(.+?)\s\*\*/
 			);
-			const taskName = taskNameMatch ? taskNameMatch[0].trim() : null;
+			const taskName = taskNameMatch ? taskNameMatch[1].trim() : null;
 
 			API.getTaskByName(
 				{

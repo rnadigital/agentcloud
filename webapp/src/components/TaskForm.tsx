@@ -553,6 +553,13 @@ export default function TaskForm({
 							</ToolTip>
 						</div>
 
+						{/* Form builder for human input */}
+						{requiredHumanInput && (
+							<div className='col-span-full'>
+								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+							</div>
+						)}
+
 						{/* displayOnlyFinalOutput tool checkbox */}
 						<div className='col-span-full'>
 							<ToolTip
@@ -588,11 +595,6 @@ export default function TaskForm({
 							</ToolTip>
 						</div>
 					</div>
-					{requiredHumanInput && (
-						<div className='col-span-full'>
-							<FormConfig formFields={formFields} setFormFields={setFormFields} />
-						</div>
-					)}
 				</div>
 
 				<div className='mt-6 flex items-center justify-between gap-x-6 dark:text-indigo-200'>
