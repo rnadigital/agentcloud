@@ -133,7 +133,12 @@ export const ModelList = {
 		'claude-3-opus-20240229',
 		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
+	[ModelType.GROQ]: [
+		'llama3-70b-8192',
+		'mixtral-8x7b-32768',
+		'llama3-groq-8b-8192-tool-use-preview',
+		'llama3-groq-70b-8192-tool-use-preview'
+	],
 	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
 	[ModelType.AZURE_OPENAI]: [
 		'gpt-4o-mini',
@@ -223,5 +228,6 @@ export const ChatAppAllowedModels = new Set([
 	ModelType.ANTHROPIC,
 	ModelType.GOOGLE_VERTEX,
 	ModelType.AZURE_OPENAI,
-	ModelType.OLLAMA
+	ModelType.OLLAMA,
+	ModelType.GROQ
 ]);
