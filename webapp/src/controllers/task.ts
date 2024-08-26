@@ -341,6 +341,7 @@ export async function editTaskApi(req, res, next) {
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		agentId: toObjectId(agentId),
+		formFields,
 		isStructuredOutput
 	});
 
