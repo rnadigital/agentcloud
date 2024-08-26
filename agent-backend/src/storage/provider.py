@@ -1,9 +1,9 @@
 class StorageProvider:
-    async def init(self):
+    def init(self):
         raise NotImplementedError('init method not implemented')
 
-    async def upload_local_file(self, filename, is_public=False):
+    def upload_local_file(self, filename, file_folder, is_public=False):
         raise NotImplementedError('upload_local_file method not implemented')
 
-    async def delete_file(self, filename, is_public=False):
+    def delete_file(self, filename, file_folder, is_public=False):
         raise NotImplementedError('delete_file method not implemented')
