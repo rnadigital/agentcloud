@@ -51,7 +51,7 @@ export default function AddTask(props) {
 				<title>{`New Task - ${teamName}`}</title>
 			</Head>
 
-			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
+			<span className='sm: w-full md:w-1/2'>
 				<TaskForm
 					tools={tools}
 					agents={agents}

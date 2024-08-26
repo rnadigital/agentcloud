@@ -1,12 +1,11 @@
 'use strict';
 
 import * as API from '@api';
+import { Switch } from '@headlessui/react';
 import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
-import ToolSelectIcons from 'components/ToolSelectIcons';
-import ToolStateBadge from 'components/ToolStateBadge';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
@@ -16,14 +15,40 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
-import { Task } from 'struct/task';
-import { ToolState, ToolType } from 'struct/tool';
-import SelectClassNames from 'styles/SelectClassNames';
+import { FormFieldConfig, Task } from 'struct/task';
+import { ToolType } from 'struct/tool';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
+import ScriptEditor, { MonacoOnInitializePane } from './Editor';
+import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+
+const jsonPlaceholder = `{
+	"schema": {
+		"name": {
+			"type": "string"
+		},
+		"age": {
+			"type": "number"
+		},
+		"address": {
+			"type": "object",
+			"schema": {
+				"street": {
+					"type": "string"
+				},
+				"city": {
+					"type": "string"
+				},
+				"state": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}`;
 
 export default function TaskForm({
 	task,
@@ -44,16 +69,36 @@ export default function TaskForm({
 	fetchTaskFormData?: Function;
 	taskChoices?: Task[];
 }) {
+	console.log(task);
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
 	const [taskState, setTask] = useState<Task | undefined>(task);
+
+	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
+		task?.formFields || [
+			{
+				position: '1',
+				type: 'string'
+			}
+		]
+	);
+	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
+
+	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
+
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
+	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
+
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
+		/* noop */
+	};
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -90,17 +135,19 @@ export default function TaskForm({
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
-			name: e.target.name.value,
-			description: e.target.description.value,
-			expectedOutput: e.target.expectedOutput.value,
+			name: e.target.task_name.value,
+			description: e.target.task_description.value,
+			expectedOutput,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			context: taskState?.context || [],
+			formFields: formFields || [],
+			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			storeTaskOutput: e.target.storeTaskOutput.checked,
-			taskOutputFileName: e.target.taskOutputFileName.value
+			taskOutputFileName: e.target.taskOutputFileName.value,
+			isStructuredOutput
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
@@ -109,7 +156,7 @@ export default function TaskForm({
 				body,
 				() => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -119,7 +166,7 @@ export default function TaskForm({
 				},
 				res => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -135,7 +182,7 @@ export default function TaskForm({
 				body,
 				() => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -145,7 +192,7 @@ export default function TaskForm({
 				},
 				res => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -210,6 +257,15 @@ export default function TaskForm({
 		}
 	}, [preferredAgent?.toolIds]);
 
+	useEffect(() => {
+		if (!expectedOutput && isStructuredOutput) {
+			setExpectedOutput(jsonPlaceholder);
+		}
+		if (!isStructuredOutput && !task?.expectedOutput) {
+			setExpectedOutput('');
+		}
+	}, [expectedOutput, isStructuredOutput, task]);
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -260,7 +316,7 @@ export default function TaskForm({
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
 						<div className='col-span-full'>
 							<label
-								htmlFor='name'
+								htmlFor='task_name'
 								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 							>
 								Name<span className='text-red-700'> *</span>
@@ -268,8 +324,8 @@ export default function TaskForm({
 							<input
 								required
 								type='text'
-								id='name'
-								name='name'
+								id='task_name'
+								name='task_name'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.name}
 							/>
@@ -277,15 +333,15 @@ export default function TaskForm({
 
 						<div className='col-span-full'>
 							<label
-								htmlFor='description'
+								htmlFor='task_description'
 								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 							>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
 								required
-								id='description'
-								name='description'
+								id='task_description'
+								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
@@ -294,20 +350,63 @@ export default function TaskForm({
 						</div>
 
 						<div className='col-span-full'>
-							<label
-								htmlFor='expectedOutput'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Expected Output
-							</label>
-							<textarea
-								id='expectedOutput'
-								name='expectedOutput'
-								placeholder='Clear and detailed definition of expected output for the task.'
-								rows={4}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={taskState?.expectedOutput}
-							/>
+							<div className='flex w-full mb-2 items-center'>
+								<label
+									htmlFor='expectedOutput'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								>
+									Expected Output
+								</label>
+
+								<div className='ml-auto text-gray-900 dark:text-gray-50 text-sm mr-2'>
+									Structured Output
+								</div>
+								<Switch
+									checked={isStructuredOutput}
+									onChange={setIsStructuredOutput}
+									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
+								>
+									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
+								</Switch>
+							</div>
+
+							{isStructuredOutput ? (
+								<>
+									<ScriptEditor
+										height='30em'
+										code={expectedOutput}
+										setCode={setExpectedOutput}
+										editorOptions={{
+											stopRenderingLineAfter: 1000,
+											fontSize: '12pt',
+											//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+											minimap: { enabled: false },
+											scrollBeyondLastLine: false
+										}}
+										onInitializePane={onInitializePane}
+										language='json'
+									/>
+									<a
+										className='text-sm text-blue-500 dark:text-blue-400 underline'
+										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
+										target='_blank'
+										rel='noreferrer'
+									>
+										Instructions on how to create a schema for structure output
+									</a>
+								</>
+							) : (
+								<textarea
+									id='expectedOutput'
+									name='expectedOutput'
+									placeholder='Clear and detailed definition of expected output for the task.'
+									rows={4}
+									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+									defaultValue={taskState?.expectedOutput}
+									value={expectedOutput}
+									onChange={e => setExpectedOutput(e.target.value)}
+								/>
+							)}
 						</div>
 
 						<div className='sm:col-span-full'>
@@ -461,7 +560,7 @@ export default function TaskForm({
 										const optionAgent = agents.find(ac => ac._id === data.value);
 										return (
 											<li
-												className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 												}`}
 											>
@@ -544,6 +643,13 @@ export default function TaskForm({
 								</div>
 							</ToolTip>
 						</div>
+
+						{/* Form builder for human input */}
+						{requiredHumanInput && (
+							<div className='col-span-full'>
+								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+							</div>
+						)}
 
 						{/* displayOnlyFinalOutput tool checkbox */}
 						<div className='col-span-full'>
