@@ -3,6 +3,17 @@
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
 
+export interface FormFieldConfig {
+	position: string;
+	type: 'string' | 'number' | 'radio' | 'checkbox' | 'select' | 'multiselect' | 'date';
+	name: string;
+	label: string;
+	description?: string;
+	required?: boolean;
+	options?: string[];
+	tooltip?: string;
+}
+
 export interface Task {
 	_id?: ObjectId | string;
 	orgId?: ObjectId | string;
@@ -27,5 +38,6 @@ export interface Task {
 	requiresHumanInput?: boolean;
 	displayOnlyFinalOutput?: boolean;
 	hidden?: boolean;
+	formFields?: FormFieldConfig[];
 	isStructuredOutput?: boolean;
 }

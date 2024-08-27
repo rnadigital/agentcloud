@@ -1,5 +1,5 @@
 import NProgress from 'nprogress';
-import { GetTeamModelsDispatch } from 'struct/dispatchtypes';
+import { GetTaskByNameDispatch, GetTeamModelsDispatch } from 'struct/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -263,6 +263,17 @@ export function getTask(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function getTaskByName(body, dispatch: GetTaskByNameDispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/task/get-by-name`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 export function addTask(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/task/add`,

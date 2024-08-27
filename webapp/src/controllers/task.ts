@@ -3,7 +3,14 @@
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
+import {
+	addTask,
+	deleteTaskById,
+	getTaskById,
+	getTaskByName,
+	getTasksByTeam,
+	updateTask
+} from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
@@ -64,6 +71,17 @@ export async function taskData(req, res, _next) {
 export async function taskJson(req, res, next) {
 	const data = await taskData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
+}
+export async function taskByName(req, res, next) {
+	try {
+		const task = await getTaskByName(req.params.resourceSlug, req.body.taskName);
+		if (!task) {
+			return res.status(404).json({ error: 'Task not found' });
+		}
+		return res.json({ ...task });
+	} catch (error) {
+		return next(error);
+	}
 }
 
 /**
@@ -133,6 +151,28 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
+	}
+
 	const {
 		name,
 		description,
@@ -144,6 +184,7 @@ export async function addTaskApi(req, res, next) {
 		agentId,
 		iconId,
 		context,
+		formFields,
 		isStructuredOutput
 	} = req.body;
 
@@ -183,6 +224,7 @@ export async function addTaskApi(req, res, next) {
 					filename: foundIcon.filename
 				}
 			: null,
+		formFields: formFields,
 		isStructuredOutput
 	});
 
@@ -237,6 +279,28 @@ export async function editTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
+	}
+
 	const {
 		name,
 		requiresHumanInput,
@@ -247,6 +311,7 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution,
 		agentId,
 		context,
+		formFields,
 		isStructuredOutput
 	} = req.body;
 
@@ -276,6 +341,7 @@ export async function editTaskApi(req, res, next) {
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		agentId: toObjectId(agentId),
+		formFields,
 		isStructuredOutput
 	});
 
