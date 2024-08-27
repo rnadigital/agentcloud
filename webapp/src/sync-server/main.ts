@@ -10,6 +10,28 @@ import debug from 'debug';
 import * as redis from 'lib/redis/redis';
 const log = debug('sync-server:main');
 import { vectorLimitTaskQueue } from 'queue/bull';
+import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+
+async function fetchJobList() {
+	const combinedJobList = [];
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+	const jobBody = {
+		jobType: 'sync',
+		limit: 100
+	};
+	let hasMore = true;
+	while (hasMore) {
+		const jobsRes = await jobsApi.listJobs(jobBody).then(res => res.data);
+		console.log('jobsRes', jobsRes);
+	}
+	// await vectorLimitTaskQueue.add(
+	// 	'sync',
+	// 	{
+	// 		data: 'test'
+	// 	},
+	// 	{ removeOnComplete: true, removeOnFail: true }
+	// );
+}
 
 async function main() {
 	log('main');
@@ -27,17 +49,10 @@ async function main() {
 		log('SENT READY SIGNAL TO PM2');
 		process.send('ready');
 	}
-	log('setInterval');
-	setInterval(() => {
-		log('add job');
-		vectorLimitTaskQueue.add(
-			'sync',
-			{
-				data: 'test'
-			},
-			{ removeOnComplete: true, removeOnFail: true }
-		);
-	}, 1000);
+	while (true) {
+		fetchJobList();
+		await new Promise(res => setTimeout(res, 10000));
+	}
 }
 
 main();

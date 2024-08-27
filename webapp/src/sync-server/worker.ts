@@ -9,8 +9,8 @@ import { migrate } from 'db/migrate';
 import debug from 'debug';
 import * as redis from 'lib/redis/redis';
 const log = debug('sync-server:worker');
-import { Worker } from 'queue/bull';
 import { Job } from 'bullmq';
+import { Worker } from 'queue/bull';
 import { client as redisClient } from 'redis/redis';
 
 async function handleJob(job: Job) {
