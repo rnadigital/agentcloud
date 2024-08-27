@@ -261,10 +261,10 @@ export default function TaskForm({
 		if (!expectedOutput && isStructuredOutput) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (!isStructuredOutput && !task?.expectedOutput) {
+		if (expectedOutput === jsonPlaceholder && !isStructuredOutput) {
 			setExpectedOutput('');
 		}
-	}, [expectedOutput, isStructuredOutput, task]);
+	}, [expectedOutput, isStructuredOutput]);
 
 	let modal;
 	switch (modalOpen) {
