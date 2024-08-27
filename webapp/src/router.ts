@@ -367,6 +367,10 @@ export default function router(server, app) {
 		taskController.taskAddPage.bind(null, app)
 	);
 	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
+	teamRouter.post(
+		'/task/get-by-name',
+		taskController.taskByName
+	);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TASK),

@@ -1,4 +1,2 @@
-pub mod client;
-pub mod models;
-pub mod utils;
+mod apis;
 pub mod helpers;
