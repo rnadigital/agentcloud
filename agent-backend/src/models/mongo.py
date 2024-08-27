@@ -152,13 +152,6 @@ class ApiCredentials(BaseModel):
     base_url: Optional[str] = Field(alias="endpointURL")
 
 
-class Credentials(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    type: Optional[Platforms] = Field(default=Platforms.ChatOpenAI)
-    credentials: Optional[ApiCredentials] = None
-
-
 class ModelType(str, Enum):
     llm = 'llm'
     embedding = 'embedding'

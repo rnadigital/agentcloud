@@ -41,7 +41,6 @@ class CrewAIBuilder:
             tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
             datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
-            credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials],
             chat_history: List[Dict],
             socket: Any = None
     ):
@@ -53,7 +52,6 @@ class CrewAIBuilder:
         self.tools_models = tools
         self.datasources_models = datasources
         self.models_models = models
-        self.credentials_models = credentials
         self.chat_history = chat_history
         self.socket = socket
         self.crew = None
@@ -80,9 +78,7 @@ class CrewAIBuilder:
             raise
 
     def build_models(self):
-        for key, model in self.models_models.items():
-            credential = match_key(self.credentials_models, key)
-            self.crew_models[key] = language_model_factory(model) #, credential)
+        self.crew_models = {key: language_model_factory(model) for key, model in self.models_models.items()}
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():

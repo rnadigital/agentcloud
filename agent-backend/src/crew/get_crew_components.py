@@ -2,7 +2,7 @@ from typing import Any, Optional, List, Dict, Set, Tuple, Union
 
 from crew.exceptions import CrewAIBuilderException
 from init.mongo_session import start_mongo_session
-from models.mongo import Agent, AppType, Credentials, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
+from models.mongo import Agent, AppType, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
     Platforms, PyObjectId, Session, Task, Tool, App
 from crew.build_crew import CrewAIBuilder
 from utils.model_helper import in_enums, keyset
@@ -17,17 +17,6 @@ def construct_models(parents: List[Tuple[Set[str], Agent | Datasource | Crew]]):
         if model is not None:
             models[keyset(parent_id_set, model.id)] = model
     return models
-
-
-def construct_model_credentials(models: List[Tuple[Set[str], Model]]):
-    credentials: Dict[Set[PyObjectId], Credentials] = dict()
-    for model_id_set, model in models:
-        if model.config:
-            credential = model.config
-            credentials[keyset(model_id_set, model.id if credential else None)] = credential
-        elif in_enums(enums=[FastEmbedModelsStandardFormat, FastEmbedModelsDocFormat], value=model.model_name):
-            credentials[keyset(model_id_set)] = Credentials(type=Platforms.FastEmbed)
-    return credentials
 
 
 def construct_tools(parents: List[Tuple[Set[str], Agent | Tool]]):
@@ -69,9 +58,6 @@ def construct_crew(session_id: str, socket: Any):
     # Agent > Model
     agent_models: Dict[Set[PyObjectId], Model] = construct_models(crew_agents_dict.items())
 
-    # Agent > Model > Credential
-    agent_model_credentials = construct_model_credentials(agent_models.items())
-
     # Put Tasks in a dictionary with their Ids as key
     crew_tasks_dict: Dict[Set[PyObjectId], Task] = dict([(keyset(task.id), task) for task in crew_tasks])
 
@@ -84,15 +70,8 @@ def construct_crew(session_id: str, socket: Any):
     # Agent > Datasource > Model
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
 
-    # Agent > Datasource > Model > Credentials
-    agents_tools_datasources_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(
-        agents_tools_datasources_models.items())
-
     # Crew > chat Model
     crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])
-
-    # Crew > chat Model > Credentials
-    crew_chat_models_credentials: Dict[Set[PyObjectId], Credentials] = construct_model_credentials(crew_chat_models.items())
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
@@ -106,7 +85,6 @@ def construct_crew(session_id: str, socket: Any):
         tools=agents_tasks_tools,
         datasources=agents_tools_datasources,  # | tasks_tools_datasources,
         models=agent_models | agents_tools_datasources_models | crew_chat_models,
-        credentials=agent_model_credentials | agents_tools_datasources_models_credentials | crew_chat_models_credentials,
         chat_history=chat_history
     )
     return crew_builder, app
