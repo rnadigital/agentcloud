@@ -38,10 +38,10 @@ export function CopyToClipboardButton({ dataToCopy }) {
 	return (
 		<button
 			onClick={handleCopyClick}
-			className='px-1 hover:bg-blue-600 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300'
+			className='px-1 py-1 hover:bg-blue-600 hover:text-white text-gray-900 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300'
 			aria-label='Copy to clipboard'
 		>
-			<ClipboardDocumentIcon className='h-4 w-4 text-white' />
+			<ClipboardDocumentIcon className='h-5 w-5 ' />
 		</button>
 	);
 }

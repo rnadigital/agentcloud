@@ -66,7 +66,8 @@ export default function ApiKeyForm() {
 		try {
 			await API.addKey(
 				{
-					...data
+					...data,
+					_csrf: csrf
 				},
 				null,
 				setError,

@@ -10,7 +10,7 @@ export function APIKeyCollection(): any {
 	return db.db().collection('apikeys');
 }
 
-export async function addKey(key: APIKey): Promise<APIKey> {
+export async function addKey(key: APIKey): Promise<InsertResult> {
 	return APIKeyCollection().insertOne(key);
 }
 
@@ -39,8 +39,7 @@ export function getKeyById(ownerId: db.IdOrStr, keyId: db.IdOrStr): Promise<APIK
 		.findOne({
 			_id: toObjectId(keyId),
 			ownerId: toObjectId(ownerId)
-		})
-		.project({ version: 0 });
+		});
 }
 
 export function getKeysByOwner(ownerId: db.IdOrStr): Promise<APIKey[]> {
@@ -54,9 +53,8 @@ export function getKeysByOwner(ownerId: db.IdOrStr): Promise<APIKey[]> {
 
 export async function incrementVersion(
 	ownerId: db.IdOrStr,
-	keyId: db.IdOrStr,
-	key: Partial<APIKey>
-): Promise<APIKey> {
+	keyId: db.IdOrStr
+): Promise<any> {
 	return APIKeyCollection()
 		.updateOne(
 			{
@@ -69,5 +67,4 @@ export async function incrementVersion(
 				}
 			}
 		)
-		.project({ version: 0 });
 }

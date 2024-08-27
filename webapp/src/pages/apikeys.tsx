@@ -6,11 +6,11 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
 import * as API from '../api';
-import AgentList from '../components/AgentList';
 import NewButtonSection from '../components/NewButtonSection';
 import { useAccountContext } from '../context/account';
+import ApiKeyLIst from 'components/ApiKeyList';
+import ApiKeyList from 'components/ApiKeyList';
 
 export default function APIKeys(props) {
 	const router = useRouter();
@@ -19,21 +19,23 @@ export default function APIKeys(props) {
 	const { resourceSlug } = router.query;
 	const [loading, setLoading] = useState(true);
 	const [state, dispatch] = useState(props);
+	const [existingKeys, setExistingKeys] = useState(false);
 	const [error, setError] = useState();
 	const { keys } = state;
-	function fetchKeys() {
-		API.getKeys({ resourceSlug }, dispatch, setError, router);
+	function fetchKeys(ownerId) {
+		API.getKeys({ ownerId, _csrf: csrf }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
-		fetchKeys();
+		const ownerId = accountContext?.account?._id;
+		fetchKeys(ownerId);
 		setLoading(false);
-	}, [state]);
+	}, []);
 
-	console.log('keys', keys);
 
-	if (loading) {
-		return <Spinner />;
+
+	if (loading || keys === undefined) {
+		return <Spinner/>;
 	}
 
 	return (
@@ -49,7 +51,7 @@ export default function APIKeys(props) {
 				href='/apikey/add'
 				slug={false}
 			/>
-			{!keys && (
+			{keys?.length === 0 ?(
 				<NewButtonSection
 					link={`/apikey/add`}
 					emptyMessage={'No keys'}
@@ -58,6 +60,16 @@ export default function APIKeys(props) {
 					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 					buttonMessage={'New Key'}
 				/>
+			):
+			(
+				<div>
+					{//need to properly implement this
+						<ApiKeyList 
+							keys={keys} 
+							fetchKeys={fetchKeys}							
+						/>
+					} 
+				</div>
 			)}
 		</>
 	);

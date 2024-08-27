@@ -252,13 +252,19 @@ export default function router(server, app) {
 		accountController.updateRole
 	);
 
-	accountRouter.post('/forms/account/apikey/add', apiKeyController.addKeyApi);
-	server.get('/apikey/add', apiKeyController.keyAddPage.bind(null, app));
-
-	server.use('/forms/account', accountRouter);
+	
 	//ApiKey Endpoints
-	server.get('/apikeys', apiKeyController.apiKeysPage.bind(null, app));
-	server.get('/apikeys.json', apiKeyController.apikeysJson);
+	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
+	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
+	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
+	
+	server.use('/account/forms', accountRouter);
+	server.get('/apikey/add',authedMiddlewareChain ,apiKeyController.keyAddPage.bind(null, app));
+
+	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
+	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
+
+
 
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
 	publicAppRouter.get(

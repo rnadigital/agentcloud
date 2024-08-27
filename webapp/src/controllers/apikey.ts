@@ -10,13 +10,14 @@ import {
 	incrementVersion
 } from 'db/apikey';
 import jwt from 'jsonwebtoken';
+import toObjectId from 'misc/toobjectid';
 import { chainValidations } from 'utils/validationutils';
 
 export async function keysData(req, res, _next) {
-	const keys = await getKeysByOwner(res.locals.account?._id);
-
+	const keys = await getKeysByOwner(res?.locals?.account?._id);
 	return {
-		keys
+		keys,
+		csrf: req.csrfToken(),
 	};
 }
 
@@ -41,8 +42,8 @@ export async function apikeysJson(req, res, next) {
 export async function keyData(req, res, next) {
 	const key = await getKeyById(res.locals.account._id, req.params.keyId);
 	return {
+		key,
 		csrf: req.csrfToken(),
-		key
 	};
 }
 
@@ -109,23 +110,75 @@ export async function addKeyApi(req, res, next) {
 		name: name,
 		description: description,
 		expirationDate: epxirationDate,
-		ownerId: ownerId
+		ownerId: toObjectId(ownerId)
 	});
 
 	//generate key for the user
 	const keyToken = jwt.sign(
-		{ keyId: addedKey._id, ownerId: ownerId, version: addedKey.version },
+		{ keyId: addedKey?.insertedId, ownerId: ownerId, version: 0 },
 		process.env.JWT_SECRET
 	);
-
+	console.log('keyToken', keyToken);
 	//add the token back into the key object
-	const updatedKey = await addTokenToKey(addedKey._id, keyToken);
+	const updatedKey = await addTokenToKey(addedKey?.insertedId, keyToken);
 	console.log('updatedKey', updatedKey);
 
 	return dynamicResponse(req, res, 302, {
-		keyId: addedKey._id,
-		ownerId: addedKey.ownerId,
+		keyId: addedKey.insertedId,
+		ownerId: ownerId,
 		token: keyToken,
 		redirect: '/apikeys'
+	});
+}
+
+export async function deleteKeyApi(req, res, next){
+	const { keyId, ownerId } = req.body;
+
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'keyId', validation: { notEmpty: true }},
+			{ field: 'ownerId', validation: { notEmpty: true } }
+		],
+		{ keyId: "Key", ownerId: "Key Creator"}
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	await deleteKey(toObjectId(ownerId), toObjectId(keyId));
+
+	return dynamicResponse(req, res, 302,{
+		//redirect: `/apikeys`
+	});
+}
+
+export async function incrementKeyApi(req, res, next){
+	const { keyId, ownerId } = req.body;
+
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'keyId', validation: { notEmpty: true }}
+		],
+		{ keyId: "Key"}
+	);
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	await incrementVersion(toObjectId(ownerId), toObjectId(keyId));
+
+	const modifiedKey = await getKeyById(toObjectId(ownerId), toObjectId(keyId));
+
+	const newToken = jwt.sign(
+		{ keyId: modifiedKey?._id, ownerId: modifiedKey?.ownerId, version: modifiedKey?.version },
+		process.env.JWT_SECRET
+	)
+
+	await addTokenToKey(toObjectId(modifiedKey?._id), newToken);
+
+	return dynamicResponse(req, res, 302, {
+
 	});
 }

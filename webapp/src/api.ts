@@ -283,9 +283,9 @@ export function getKey(body, dispatch, errorCallback, router) {
 	);
 }
 
-export function incrementVersion(keyId, body, dispatch, errorCallback, router) {
+export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 	return ApiCall(
-		`/forms/apikey/${keyId}/edit`,
+		`account/forms/apikey/${body.keyId}/increment`,
 		'POST',
 		body,
 		dispatch,
@@ -296,7 +296,7 @@ export function incrementVersion(keyId, body, dispatch, errorCallback, router) {
 
 export function deleteKey(body, dispatch, errorCallback, router) {
 	return ApiCall(
-		`/forms/apikey/${body.keyId}`,
+		`/account/forms/apikey/${body.keyId}`,
 		'DELETE',
 		body,
 		dispatch,
@@ -764,6 +764,9 @@ function buildOptions(_route, method, body) {
 		}
 	};
 	if (body != null) {
+		if(method === "GET"){
+			throw new Error("GET request can't have body");
+		}
 		//TODO: remove/change
 		if (body instanceof FormData) {
 			//formdata upload for files
