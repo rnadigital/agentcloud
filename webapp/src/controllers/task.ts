@@ -151,7 +151,7 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (req.body.formFields && req.body.formFields.length > 0) {
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
 		for (const field of req.body.formFields) {
 			if (!field.position || !field.type || !field.name || !field.label) {
 				return dynamicResponse(req, res, 400, {
