@@ -35,11 +35,10 @@ export function addTokenToKey(keyId: db.IdOrStr, token: string): Promise<APIKey>
 }
 
 export function getKeyById(ownerId: db.IdOrStr, keyId: db.IdOrStr): Promise<APIKey> {
-	return APIKeyCollection()
-		.findOne({
-			_id: toObjectId(keyId),
-			ownerId: toObjectId(ownerId)
-		});
+	return APIKeyCollection().findOne({
+		_id: toObjectId(keyId),
+		ownerId: toObjectId(ownerId)
+	});
 }
 
 export function getKeysByOwner(ownerId: db.IdOrStr): Promise<APIKey[]> {
@@ -51,20 +50,16 @@ export function getKeysByOwner(ownerId: db.IdOrStr): Promise<APIKey[]> {
 		.toArray();
 }
 
-export async function incrementVersion(
-	ownerId: db.IdOrStr,
-	keyId: db.IdOrStr
-): Promise<any> {
-	return APIKeyCollection()
-		.updateOne(
-			{
-				_id: toObjectId(keyId),
-				ownerId: toObjectId(ownerId)
-			},
-			{
-				$inc: {
-					version: 1
-				}
+export async function incrementVersion(ownerId: db.IdOrStr, keyId: db.IdOrStr): Promise<any> {
+	return APIKeyCollection().updateOne(
+		{
+			_id: toObjectId(keyId),
+			ownerId: toObjectId(ownerId)
+		},
+		{
+			$inc: {
+				version: 1
 			}
-		)
+		}
+	);
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 import * as API from '@api';
-import { TrashIcon, ArrowPathIcon, PencilSquareIcon } from '@heroicons/react/20/solid';
+import { ArrowPathIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
@@ -10,7 +10,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';
+
 import { CopyToClipboardButton } from './chat/message';
+import ConfirmModal from './ConfirmModal';
 
 export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys?: any }) {
 	const [accountContext]: any = useAccountContext();
@@ -24,7 +26,7 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [regenerateOpen, setRegenerateOpen] = useState(false);
 
-	const handleCopyClick = async (dataToCopy) => {
+	const handleCopyClick = async dataToCopy => {
 		try {
 			await navigator.clipboard.writeText(dataToCopy);
 			toast.success('Copied to clipboard');
@@ -48,17 +50,16 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 				toast.error('Error deleting Key');
 			},
 			router
-		)
-		
+		);
 	}
 
-	async function regenerateKey(keyId, ownerId){
+	async function regenerateKey(keyId, ownerId) {
 		//TODO: implement regeneration of key
 		API.incrementKeyVersion(
 			{
 				_csrf: csrf,
 				ownerId,
-				keyId,
+				keyId
 			},
 			() => {
 				fetchKeys();
@@ -84,7 +85,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 
 	return (
 		<>
-			<DeleteModal
+			<ConfirmModal
+				setOpen={setDeleteOpen}
 				open={deleteOpen}
 				confirmFunction={() => {
 					deleteKey(deletingModel?._id, deletingModel?.ownerId);
@@ -167,16 +169,10 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 									)}
 									style={{ borderColor: deletingMap[key._id] ? 'red' : '' }}
 								>
-									<td
-										className={'px-6 py-4 whitespace-nowrap'}
-										onClick={() => router.push(``)}
-									>
+									<td className={'px-6 py-4 whitespace-nowrap'} onClick={() => router.push(``)}>
 										<div className='text-sm text-gray-900 dark:text-white'>{key.name}</div>
 									</td>
-									<td
-										className='px-6 py-4 text-wrap'
-										onClick={() => router.push(``)}
-									>
+									<td className='px-6 py-4 text-wrap' onClick={() => router.push(``)}>
 										<div className='text-sm text-gray-900 dark:text-white'>{key?.description}</div>
 									</td>
 									<td
@@ -187,15 +183,11 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 											{key?.token}
 										</div>
 									</td>
-									<td
-										className='px-6 py-4 whitespace-nowrap'
-										onClick={() => router.push(``)}
-									>
+									<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(``)}>
 										<div className='text-sm max-w-36 text-gray-900 dark:text-white truncate'>
 											{keyDate?.toDateString()}
 										</div>
 									</td>
-
 
 									<td className='flex flex-row justify-center items-center w-full gap-5 px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 										<>
@@ -205,10 +197,9 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 													setDeleteOpen(true);
 												}}
 												className='text-red-500 hover:text-red-700'
-												data-tooltip-target = 'delete-tooltip'
+												data-tooltip-target='delete-tooltip'
 											>
 												<TrashIcon className='h-5 w-5' aria-hidden='true' />
-
 											</button>
 										</>
 										<button
@@ -219,7 +210,6 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 											className='text-gray-900 hover:text-gray-400'
 										>
 											<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
-
 										</button>
 										<button
 											onClick={() => {
@@ -229,12 +219,9 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 											className='text-gray-900 hover:text-gray-400'
 										>
 											<PencilSquareIcon className='h-5 w-5' aria-hidden='true' />
-
 										</button>
 
-										<CopyToClipboardButton
-											dataToCopy={key?.token}
-										/>
+										<CopyToClipboardButton dataToCopy={key?.token} />
 									</td>
 								</tr>
 							);

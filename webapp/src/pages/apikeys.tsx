@@ -1,16 +1,17 @@
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import { KeyIcon } from '@heroicons/react/24/outline';
+import ApiKeyLIst from 'components/ApiKeyList';
+import ApiKeyList from 'components/ApiKeyList';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+
 import * as API from '../api';
 import NewButtonSection from '../components/NewButtonSection';
 import { useAccountContext } from '../context/account';
-import ApiKeyLIst from 'components/ApiKeyList';
-import ApiKeyList from 'components/ApiKeyList';
 
 export default function APIKeys(props) {
 	const router = useRouter();
@@ -32,10 +33,8 @@ export default function APIKeys(props) {
 		setLoading(false);
 	}, []);
 
-
-
 	if (loading || keys === undefined) {
-		return <Spinner/>;
+		return <Spinner />;
 	}
 
 	return (
@@ -51,7 +50,7 @@ export default function APIKeys(props) {
 				href='/apikey/add'
 				slug={false}
 			/>
-			{keys?.length === 0 ?(
+			{keys?.length === 0 ? (
 				<NewButtonSection
 					link={`/apikey/add`}
 					emptyMessage={'No keys'}
@@ -60,15 +59,12 @@ export default function APIKeys(props) {
 					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 					buttonMessage={'New Key'}
 				/>
-			):
-			(
+			) : (
 				<div>
-					{//need to properly implement this
-						<ApiKeyList 
-							keys={keys} 
-							fetchKeys={fetchKeys}							
-						/>
-					} 
+					{
+						//need to properly implement this
+						<ApiKeyList keys={keys} fetchKeys={fetchKeys} />
+					}
 				</div>
 			)}
 		</>
