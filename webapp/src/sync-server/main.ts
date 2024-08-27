@@ -5,11 +5,11 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 import getAirbyteApi, { AirbyteApiType, fetchAllAirbyteJobs } from 'airbyte/api';
+import { getDatasourceByConnectionId } from 'db/datasource';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import debug from 'debug';
 import * as redis from 'lib/redis/redis';
-import { getDatasourceByConnectionId } from 'db/datasource';
 const log = debug('sync-server:main');
 
 /*

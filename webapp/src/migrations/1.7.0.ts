@@ -6,9 +6,5 @@ export default async function (db) {
 	log(
 		'adding a new index on datasources for "connectionId" so the enormous amount of queries from sync-server doesnt choke mongo'
 	);
-	await db
-		.collection(CollectionName.Datasources)
-		.createIndex(
-			{ connectionId: 1 },
-		);
+	await db.collection(CollectionName.Datasources).createIndex({ connectionId: 1 });
 }
