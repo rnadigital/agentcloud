@@ -62,6 +62,10 @@ class ChatAssistant:
 
         self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
 
+        if app.variableIds:
+            app_variables = {var.name: var.value for var in self.mongo_client.get_app_variables(app.variableIds)}
+            self.system_message = self.system_message.format(**app_variables)
+
         model = self.mongo_client.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         self.chat_model = language_model_factory(model)
 
