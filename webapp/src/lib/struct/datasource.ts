@@ -33,7 +33,8 @@ export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
 	EMBEDDING = 'embedding', //vector db proxy -> qdrant
-	READY = 'ready' //synced/embedded
+	READY = 'ready', //synced/embedded
+	ERROR = 'error' //rrror, currently used when the sync would exceed the remaining limit
 }
 
 export const datasourceStatusColors = {

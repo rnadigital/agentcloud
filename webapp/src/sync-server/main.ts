@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 import getAirbyteApi, { AirbyteApiType, fetchAllAirbyteJobs } from 'airbyte/api';
 import { getAccountById } from 'db/account';
-import { getDatasourceByConnectionId } from 'db/datasource';
+import { getDatasourceByConnectionId, setDatasourceStatus } from 'db/datasource';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { getOrgById } from 'db/org';
@@ -16,6 +16,7 @@ import { pricingMatrix } from 'struct/billing';
 import { AugmentedJob } from 'struct/syncserver';
 
 import getAirbyteInternalApi from '../lib/airbyte/internal';
+import { DatasourceStatus } from '../lib/struct/datasource';
 import VectorDBProxyClient from '../lib/vectorproxy/client';
 const log = debug('sync-server:main');
 
@@ -137,7 +138,8 @@ async function main() {
 					vectorCountLimit,
 					'rows, sending reset job (cancel sync)'
 				);
-				//Note: temporary to test a static limit, TODO update to use actual strpie limits per plan
+				//set the datasource to "error" state
+				setDatasourceStatus(job?.datasource?.teamId, job?.datasource?._id, DatasourceStatus.ERROR);
 				//cancel the job
 				try {
 					const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
