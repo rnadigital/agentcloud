@@ -116,7 +116,7 @@ async function main() {
 		for (let job of augmentedJobs) {
 			log('job', job?.jobId, 'rows synced', job?.rowsSynced);
 			const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
-				job?.datasource?._id
+				job?.datasource?.teamId
 			);
 			const storageVectorCount = teamVectorStorage?.data?.total_points;
 			log('current vector storage count:', storageVectorCount);
