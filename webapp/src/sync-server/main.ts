@@ -4,18 +4,15 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
-import { fetchAllAirbyteJobs } from 'airbyte/api';
+import getAirbyteApi, { AirbyteApiType, fetchAllAirbyteJobs } from 'airbyte/api';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import debug from 'debug';
 import * as redis from 'lib/redis/redis';
+import { getDatasourceByConnectionId } from 'db/datasource';
 const log = debug('sync-server:main');
 
 /*
-	//augment jobs with the actual "connection" and associated datasource from mongo by datasource ID
-	// const connectionAddedJobs = await Promise.all(combinedJobList.map(async j => {
-	//
-	// }));
 	// await vectorLimitTaskQueue.add(
 	// 	'sync',
 	// 	{
@@ -24,6 +21,41 @@ const log = debug('sync-server:main');
 	// 	{ removeOnComplete: true, removeOnFail: true }
 	// );
 */
+
+async function augmentJobs(jobList) {
+	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const augmentedJobs = await Promise.all(
+		jobList.map(async job => {
+			// fetch and attach the full airbyte "connection" object based on the jobs connectionId
+			let foundConnection;
+			try {
+				foundConnection = await connectionsApi
+					.getConnection(job.connectionId)
+					.then(res => res.data);
+				if (foundConnection) {
+					job.connection = foundConnection;
+				}
+			} catch (e) {
+				log(e);
+			}
+
+			// fetch and attach the the datasource from mongo based on the jobs connectionId
+			let foundDatasource;
+			try {
+				foundDatasource = await getDatasourceByConnectionId(job.connectionId);
+				if (foundDatasource) {
+					job.datasource = foundDatasource;
+				}
+			} catch (e) {
+				log(e);
+			}
+
+			return job;
+		})
+	);
+	log('augmentedJobs', augmentedJobs);
+	return augmentJobs;
+}
 
 async function main() {
 	await db.connect();
@@ -43,7 +75,8 @@ async function main() {
 
 	// start a loop to fetch all jobs and submit to queue every x seconds
 	while (true) {
-		const allJobs = fetchAllAirbyteJobs();
+		const jobList = await fetchAllAirbyteJobs();
+		const augmentedJobs = await augmentJobs(jobList);
 		await new Promise(res => setTimeout(res, 60000));
 	}
 }
