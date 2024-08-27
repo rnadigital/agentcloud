@@ -3,6 +3,7 @@ from google.cloud import storage
 import os
 import logging
 from pathlib import Path
+from init.env_variables import GCS_BUCKET_NAME, GCS_BUCKET_NAME_PRIVATE, PROJECT_ID
 
 from storage.provider import StorageProvider
 
@@ -11,7 +12,7 @@ log = logging.getLogger('storage.google')
 
 class GoogleStorageProvider(StorageProvider):
     def __init__(self):
-        options = {'project': os.getenv('PROJECT_ID')}
+        options = {'project': PROJECT_ID}
         self.storage_client = storage.Client(**options)
 
     async def init(self):
@@ -19,7 +20,7 @@ class GoogleStorageProvider(StorageProvider):
 
     async def create_bucket(self, bucket_name=None, options=None):
         if bucket_name is None:
-            bucket_name = os.getenv('GCS_BUCKET_NAME')
+            bucket_name = GCS_BUCKET_NAME
         try:
             bucket = self.storage_client.create_bucket(bucket_name, **(options or {}))
             log.debug(f'GCS Bucket {bucket.name} created.')
@@ -32,7 +33,7 @@ class GoogleStorageProvider(StorageProvider):
 
     def upload_local_file(self, filename, folder_path, is_public=False):
         log.debug('Uploading file %s', filename)
-        bucket_name = os.getenv('GCS_BUCKET_NAME' if is_public else 'GCS_BUCKET_NAME_PRIVATE')
+        bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
         bucket = self.storage_client.bucket(bucket_name)
         
         original_file_path = os.path.join(Path(__file__).resolve().parent.parent, 'outputs', filename)  
@@ -49,14 +50,14 @@ class GoogleStorageProvider(StorageProvider):
 
     async def delete_file(self, filename, file_folder, is_public=False):
         log.debug('Deleting file %s', filename)
-        bucket_name = os.getenv('GCS_BUCKET_NAME' if is_public else 'GCS_BUCKET_NAME_PRIVATE')
+        bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(f"{file_folder}/{filename}")
         blob.delete()
         
     def download_file(self, filename, file_folder, is_public=False):
         log.debug('Downloading file %s', filename)
-        bucket_name = os.getenv('GCS_BUCKET_NAME' if is_public else 'GCS_BUCKET_NAME_PRIVATE')
+        bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(f"{file_folder}/{filename}")
         signed_url= blob.generate_signed_url(

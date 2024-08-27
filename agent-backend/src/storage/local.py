@@ -2,6 +2,7 @@ import os
 import logging
 from pathlib import Path
 import shutil
+from src.init.env_variables import UPLOADS_BASE_PATH
 
 from storage.provider import StorageProvider
 
@@ -12,7 +13,7 @@ class LocalStorageProvider(StorageProvider):
     allowed_delete_error_codes = ['ENOENT']
 
     def __init__(self):
-        self.base_path = os.getenv('UPLOADS_BASE_PATH', './uploads')
+        self.base_path = UPLOADS_BASE_PATH if UPLOADS_BASE_PATH else "./uploads"
         self.init()
         
 

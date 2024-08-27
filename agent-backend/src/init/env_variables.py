@@ -22,6 +22,12 @@ REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 GOOGLE_FUNCTION_LOCATION = os.getenv("GOOGLE_FUNCTION_LOCATION", "us-central1")
+PROJECT_ID = os.getenv("PROJECT_ID")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+GCS_BUCKET_NAME_PRIVATE = os.getenv("GCS_BUCKET_NAME_PRIVATE")
+UPLOADS_BASE_PATH = os.getenv("UPLOADS_BASE_PATH")
+
+
 
 def _set_max_threads() -> int:
     try:
