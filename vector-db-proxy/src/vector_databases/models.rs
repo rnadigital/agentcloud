@@ -146,16 +146,16 @@ impl Default for Region {
 impl Region {
     pub fn to_str<'a>(region: Self) -> &'a str {
         match region {
-            Self::US => "us-west-2",
-            Self::EU => "eu-west-1",
+            Self::US => "us-central1",
+            Self::EU => "europe-west4",
             _ => panic!("Unknown Pinecone serverless region"),
         }
     }
 
     pub fn from_str(region: &str) -> Self {
         match region {
-            "us-west-2" => Region::US,
-            "eu-west-1" => Region::EU,
+            "us-central1" => Region::US,
+            "europe-west4" => Region::EU,
             _ => panic!("Unknown Pinecone serverless region"),
         }
     }
@@ -170,7 +170,7 @@ pub enum Cloud {
 
 impl Default for Cloud {
     fn default() -> Self {
-        Self::AWS
+        Self::GCP
     }
 }
 
