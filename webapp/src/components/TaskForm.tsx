@@ -16,8 +16,7 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
 import { Task } from 'struct/task';
-import { ToolState, ToolType } from 'struct/tool';
-import SelectClassNames from 'styles/SelectClassNames';
+import { ToolType } from 'struct/tool';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
@@ -248,10 +247,10 @@ export default function TaskForm({
 		if (!expectedOutput && isStructuredOutput) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (!isStructuredOutput && !task?.expectedOutput) {
+		if (expectedOutput === jsonPlaceholder && !isStructuredOutput) {
 			setExpectedOutput('');
 		}
-	}, [expectedOutput, isStructuredOutput, task]);
+	}, [expectedOutput, isStructuredOutput]);
 
 	let modal;
 	switch (modalOpen) {
