@@ -11,39 +11,56 @@ import * as redis from 'lib/redis/redis';
 const log = debug('sync-server:main');
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import { ListJobsBody } from 'struct/datasource';
+/* Limit the max number of loops in the fetchJobsList in case of an issue, to prevent an endless loop.
+   This would allow 10,000 jobs which should be enough for now. */
+const MAX_ITERATIONS = 100;
 
 async function fetchJobList() {
 	const combinedJobList = [];
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 	const listJobsBody: ListJobsBody = {
-		// jobType: 'sync',
+		jobType: 'sync',
 		limit: 100,
-		offset: 0,
-		// status: 'running' // Note: Will this cause issues for jobs that quickly complete that cause limits to be exceeded?
+		offset: 0
+		// NOTE: This will cause issues for jobs that quickly complete, or jobs that have a bytes synced in pending or incomplete state
+		// status: 'running'
 	};
+
+	//NOTE: because airbytes "next" doesn't use an ID, it's possible this will miss or duplicate some jobs.
 	let hasMore = true;
-	while (hasMore) {
-		console.log(listJobsBody);
+	let currentIteration = 0;
+	while (hasMore && currentIteration < MAX_ITERATIONS) {
+		currentIteration++;
+		// fetch some jobs
 		const jobsRes = await jobsApi.listJobs(listJobsBody).then(res => res.data);
-		console.log('jobsRes', jobsRes);
-		// Push all jobs to combinedJobList
+		// push them to the combined list
 		combinedJobList.push(...jobsRes.data);
 		if (!jobsRes?.next) {
 			hasMore = false;
 			break;
 		}
+		// if the response had a "next" property, which is a URL like 'airbyte-server:8001/api/public/v1/jobs?limit=100&offset=100'
 		let newOffset;
 		try {
+			// convert to a url and extract the "offset" query string parameter
 			const offsetUrl = new URL(jobsRes.next);
 			newOffset = offsetUrl?.searchParams?.get('offset');
 		} catch (e) {
 			log(e);
 		}
+		// if an offset was able to be extracted from the URL, set it in the body for the next request
 		if (newOffset) {
 			listJobsBody.offset = newOffset;
 		}
 	}
+
 	log('combinedJobList', combinedJobList);
+
+	//augment jobs with the actual "connection" and associated datasource from mongo by datasource ID
+	// const connectionAddedJobs = await Promise.all(combinedJobList.map(async j => {
+	//
+	// }));
+
 	// await vectorLimitTaskQueue.add(
 	// 	'sync',
 	// 	{
@@ -54,7 +71,6 @@ async function fetchJobList() {
 }
 
 async function main() {
-	log('main');
 	await db.connect();
 	await migrate();
 	const gracefulStop = () => {
@@ -69,9 +85,11 @@ async function main() {
 		log('SENT READY SIGNAL TO PM2');
 		process.send('ready');
 	}
+
+	// start a loop to fetch all jobs and submit to queue every x seconds
 	while (true) {
 		fetchJobList();
-		await new Promise(res => setTimeout(res, 3000));
+		await new Promise(res => setTimeout(res, 60000));
 	}
 }
 
