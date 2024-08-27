@@ -9,21 +9,41 @@ import { migrate } from 'db/migrate';
 import debug from 'debug';
 import * as redis from 'lib/redis/redis';
 const log = debug('sync-server:main');
-import { vectorLimitTaskQueue } from 'queue/bull';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import { ListJobsBody } from 'struct/datasource';
 
 async function fetchJobList() {
 	const combinedJobList = [];
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		jobType: 'sync',
-		limit: 100
+	const listJobsBody: ListJobsBody = {
+		// jobType: 'sync',
+		limit: 100,
+		offset: 0,
+		// status: 'running' // Note: Will this cause issues for jobs that quickly complete that cause limits to be exceeded?
 	};
 	let hasMore = true;
 	while (hasMore) {
-		const jobsRes = await jobsApi.listJobs(jobBody).then(res => res.data);
+		console.log(listJobsBody);
+		const jobsRes = await jobsApi.listJobs(listJobsBody).then(res => res.data);
 		console.log('jobsRes', jobsRes);
+		// Push all jobs to combinedJobList
+		combinedJobList.push(...jobsRes.data);
+		if (!jobsRes?.next) {
+			hasMore = false;
+			break;
+		}
+		let newOffset;
+		try {
+			const offsetUrl = new URL(jobsRes.next);
+			newOffset = offsetUrl?.searchParams?.get('offset');
+		} catch (e) {
+			log(e);
+		}
+		if (newOffset) {
+			listJobsBody.offset = newOffset;
+		}
 	}
+	log('combinedJobList', combinedJobList);
 	// await vectorLimitTaskQueue.add(
 	// 	'sync',
 	// 	{
@@ -51,7 +71,7 @@ async function main() {
 	}
 	while (true) {
 		fetchJobList();
-		await new Promise(res => setTimeout(res, 10000));
+		await new Promise(res => setTimeout(res, 3000));
 	}
 }
 
