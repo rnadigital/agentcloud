@@ -2,10 +2,9 @@ from typing import Any, Optional, List, Dict, Set, Tuple, Union
 
 from crew.exceptions import CrewAIBuilderException
 from init.mongo_session import start_mongo_session
-from models.mongo import Agent, AppType, Crew, Datasource, FastEmbedModelsDocFormat, FastEmbedModelsStandardFormat, Model, \
-    Platforms, PyObjectId, Session, Task, Tool, App
+from models.mongo import Agent, AppType, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, App
 from crew.build_crew import CrewAIBuilder
-from utils.model_helper import in_enums, keyset
+from utils.model_helper import keyset
 
 mongo_client = start_mongo_session()
 
@@ -35,6 +34,13 @@ def construct_tools_datasources(tools: List[Tuple[Set[str], Tool]]):
         if datasource:
             datasources[keyset(tool_id_set, datasource.id)] = datasource
     return datasources
+
+
+def construct_input_variables(variable_ids: List[PyObjectId]) -> Union[Dict[str, str], None]:
+    if variable_ids:
+        variables = mongo_client.get_app_variables(variable_ids)
+        return {var.name: var.value for var in variables}
+    return None
 
 
 def construct_crew(session_id: str, socket: Any):
@@ -70,6 +76,9 @@ def construct_crew(session_id: str, socket: Any):
     # Agent > Datasource > Model
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
 
+    # Inputs to pass to crew > kickoff()
+    crew_input_variables = construct_input_variables(app.variableIds)
+
     # Crew > chat Model
     crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])
 
@@ -85,6 +94,7 @@ def construct_crew(session_id: str, socket: Any):
         tools=agents_tasks_tools,
         datasources=agents_tools_datasources,  # | tasks_tools_datasources,
         models=agent_models | agents_tools_datasources_models | crew_chat_models,
+        input_variables=crew_input_variables,
         chat_history=chat_history
     )
     return crew_builder, app

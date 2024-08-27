@@ -295,8 +295,15 @@ class ChatAppConfig(BaseModel):
     recursionLimit: int = Field(default=30)
 
 
+class Variable(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    name: str
+    value: str
+
+
 class App(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     appType: Optional[AppType] = Field(default=None)
     crewId: Optional[PyObjectId] = Field(default=None)
     chatAppConfig: Optional[ChatAppConfig] = None
+    variableIds: Optional[List[PyObjectId]] = Field(default_factory=list)

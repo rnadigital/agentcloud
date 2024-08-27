@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-from typing import Any, List, Set, Type
+from typing import Any, List, Set, Type, Optional
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
@@ -41,6 +41,7 @@ class CrewAIBuilder:
             tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
             datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
+            input_variables: Optional[Dict[str, str]],
             chat_history: List[Dict],
             socket: Any = None
     ):
@@ -52,6 +53,7 @@ class CrewAIBuilder:
         self.tools_models = tools
         self.datasources_models = datasources
         self.models_models = models
+        self.input_variables = input_variables
         self.chat_history = chat_history
         self.socket = socket
         self.crew = None
@@ -279,7 +281,8 @@ class CrewAIBuilder:
         )
 
     def run_crew(self):
-        crew_output = self.crew.kickoff()
+        crew_output = self.crew.kickoff(inputs=self.input_variables if self.input_variables else None)
+
         if self.crew_model.fullOutput: # Note: do we need/want this check?
             self.send_to_sockets(
                 text=crew_output.raw,
