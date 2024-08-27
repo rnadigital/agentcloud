@@ -166,8 +166,6 @@ class CrewAIBuilder:
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
-            
-
             output_pydantic = None
             if task.isStructuredOutput:
                 try:

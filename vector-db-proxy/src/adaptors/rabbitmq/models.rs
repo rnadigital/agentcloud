@@ -1,15 +1,15 @@
-use std::sync::Arc;
+use crate::adaptors::rabbitmq::client::bind_queue_to_exchange;
+use crate::init::env_variables::GLOBAL_DATA;
+use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
+use crate::messages::tasks::process_message;
+use crate::vector_databases::vector_database::VectorDatabase;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
 use crossbeam::channel::Sender;
+use log::{error, warn};
 use mongodb::Database;
-use qdrant_client::client::QdrantClient;
-use tokio::sync::{RwLock};
-use crate::init::env_variables::GLOBAL_DATA;
-use crate::messages::tasks::process_message;
-use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
-use crate::adaptors::rabbitmq::client::{bind_queue_to_exchange};
-use log::{warn, error};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 pub struct RabbitConnect {
     pub host: String,
@@ -17,7 +17,6 @@ pub struct RabbitConnect {
     pub username: String,
     pub password: String,
 }
-
 
 impl Default for RabbitConnect {
     fn default() -> Self {
@@ -44,14 +43,15 @@ impl MessageQueueConnection for RabbitConnect {
             &global_data.rabbitmq_exchange,
             &global_data.rabbitmq_stream,
             &global_data.rabbitmq_routing_key,
-        ).await;
-        return Some(QueueConnectionTypes::RabbitMQ(channel));
+        )
+        .await;
+        Some(QueueConnectionTypes::RabbitMQ(channel))
     }
 }
 
 pub async fn rabbit_consume(
     streaming_queue: &Channel,
-    qdrant_client: Arc<RwLock<QdrantClient>>,
+    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     sender: Sender<(String, String)>,
 ) {
@@ -62,7 +62,8 @@ pub async fn rabbit_consume(
         match streaming_queue.basic_consume_rx(args.clone()).await {
             Ok((_, mut messages_rx)) => {
                 while let Some(message) = messages_rx.recv().await {
-                    let args = BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
+                    let args =
+                        BasicAckArguments::new(message.deliver.unwrap().delivery_tag(), false);
                     let _ = streaming_queue.basic_ack(args).await;
                     let headers = message.basic_properties.unwrap().headers().unwrap().clone();
                     match headers.get(&ShortStr::try_from("stream").unwrap()) {
@@ -71,23 +72,41 @@ pub async fn rabbit_consume(
                             let stream_split: Vec<&str> = stream_string.split('_').collect();
                             let datasource_id = stream_split.to_vec()[0];
                             if let Some(msg) = message.content {
-                                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec()) {
+                                if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())
+                                {
                                     let mut stream_type: Option<String> = None;
-                                    let stream_type_field_value = headers.get(&ShortStr::try_from("type").unwrap());
-                                    if let Some(s) = stream_type_field_value { stream_type = Some(s.to_string()); }
+                                    let stream_type_field_value =
+                                        headers.get(&ShortStr::try_from("type").unwrap());
+                                    if let Some(s) = stream_type_field_value {
+                                        stream_type = Some(s.to_string());
+                                    }
                                     let sender_clone = sender.clone();
-                                    let qdrant_client = Arc::clone(&qdrant_client);
+                                    let vector_database_client =
+                                        Arc::clone(&vector_database_client);
                                     let mongo_client = Arc::clone(&mongo_client);
-                                    process_message(message_string, stream_type, datasource_id, qdrant_client, mongo_client, sender_clone).await;
+                                    process_message(
+                                        message_string,
+                                        stream_type,
+                                        datasource_id,
+                                        vector_database_client,
+                                        mongo_client,
+                                        sender_clone,
+                                    )
+                                    .await;
                                 }
                             }
                         }
-                        None => { warn!("There was no stream ID present in message headers...can not proceed!") }
+                        None => {
+                            warn!("There was no stream ID present in message headers...can not proceed!")
+                        }
                     }
                 }
             }
             Err(e) => {
-                error!("There was an error when consuming messages from rabbitMQ. Error: {}", e);
+                error!(
+                    "There was an error when consuming messages from rabbitMQ. Error: {}",
+                    e
+                );
                 break; // Break out of the loop to reconnect
             }
         }

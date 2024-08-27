@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { Menu, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import {
 	ArrowPathIcon,
 	Cog6ToothIcon,
@@ -34,6 +34,7 @@ export default function DatasourceTable({
 	const [syncing, setSyncing] = useReducer(submittingReducer, {});
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
 	const [deletingMap, setDeletingMap] = useState({});
+	const [confirmClose, setConfirmClose] = useState(false);
 
 	async function deleteDatasource(datasourceId) {
 		setDeleting({ [datasourceId]: true });
@@ -215,15 +216,17 @@ export default function DatasourceTable({
 									<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 										{datasource.sourceType !== 'file' && (
 											<button
-												onClick={() => syncDatasource(datasource._id)}
+												onClick={() => {
+													// if (datasource.status !== DatasourceStatus.READY) {
+													// 	setConfirmClose(datasource._id);
+													// } else {
+													syncDatasource(datasource._id);
+													// }
+												}}
 												disabled={
 													syncing[datasource._id] ||
 													deleting[datasource._id] ||
-													(datasource.status === DatasourceStatus.DRAFT &&
-														!datasource?.connectionSettings?.configurations?.streams?.length) ||
-													[DatasourceStatus.PROCESSING, DatasourceStatus.EMBEDDING].includes(
-														datasource.status
-													)
+													datasource.status !== DatasourceStatus.READY
 												}
 												className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 											>
