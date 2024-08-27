@@ -15,7 +15,7 @@ module.exports = {
 				'src/test'
 			],
 			env: {
-				DEBUG: 'sync-server:*'
+				DEBUG: 'sync-server:main'
 			}
 		},
 		{
@@ -33,7 +33,7 @@ module.exports = {
 				'src/test'
 			],
 			env: {
-				DEBUG: 'sync-server:*'
+				DEBUG: 'sync-server:main'
 			}
 		}
 	]

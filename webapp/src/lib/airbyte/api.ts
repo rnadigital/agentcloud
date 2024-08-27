@@ -3,7 +3,7 @@
 import debug from 'debug';
 import { OpenAPIClientAxios } from 'openapi-client-axios';
 import { ListJobsBody } from 'struct/datasource';
-const log = debug('airybte:public-api');
+const log = debug('airbyte:public-api');
 
 export enum AirbyteApiType {
 	WORKSPACES,
@@ -59,7 +59,7 @@ export async function fetchAllAirbyteJobs(options?: Partial<ListJobsBody>) {
 		limit: 100,
 		offset: 0,
 		// NOTE: This will cause issues for jobs that quickly complete, or jobs that have a bytes synced in pending or incomplete state
-		// status: 'running' //Note: commented out for testing
+		status: 'running', //Note: commented out for testing
 		...options
 	};
 

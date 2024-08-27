@@ -8,6 +8,7 @@ module.exports = {
 				'node_modules',
 				'src/components',
 				'src/pages',
+				'src/sync-server',
 				'src/context',
 				'\\.next',
 				'\\.dist',

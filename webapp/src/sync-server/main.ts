@@ -5,11 +5,16 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 import getAirbyteApi, { AirbyteApiType, fetchAllAirbyteJobs } from 'airbyte/api';
+import { getAccountById } from 'db/account';
 import { getDatasourceByConnectionId } from 'db/datasource';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
+import { getOrgById } from 'db/org';
 import debug from 'debug';
-import * as redis from 'lib/redis/redis';
+import * as redis from 'redis/redis';
+import { AugmentedJob } from 'struct/syncserver';
+
+import getAirbyteInternalApi from '../lib/airbyte/internal';
 const log = debug('sync-server:main');
 
 /*
@@ -24,8 +29,27 @@ const log = debug('sync-server:main');
 
 async function augmentJobs(jobList) {
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
+	const internalApi = await getAirbyteInternalApi();
 	const augmentedJobs = await Promise.all(
 		jobList.map(async job => {
+			// get the actual rows/bytes synced from the internal airbyte API because the official one only returns committed values
+			try {
+				const getConnectionSyncProgressBody = {
+					connectionId: job?.connectionId
+				};
+				const connectionSyncProgress = await internalApi
+					.getConnectionSyncProgress(null, getConnectionSyncProgressBody)
+					.then(res => res.data);
+				if (connectionSyncProgress) {
+					connectionSyncProgress.bytesEmitted &&
+						(job.bytesSynced = connectionSyncProgress.bytesEmitted);
+					connectionSyncProgress.recordsEmitted &&
+						(job.rowsSynced = connectionSyncProgress.recordsEmitted);
+				}
+			} catch (e) {
+				console.log(e);
+			}
+
 			// fetch and attach the full airbyte "connection" object based on the jobs connectionId
 			let foundConnection;
 			try {
@@ -45,6 +69,14 @@ async function augmentJobs(jobList) {
 				foundDatasource = await getDatasourceByConnectionId(job.connectionId);
 				if (foundDatasource) {
 					job.datasource = foundDatasource;
+					// find the org -> ownerId -> account.stripe to know the limits for this connection
+					let limitOwnerId;
+					const datasourceOrg = await getOrgById(foundDatasource?.orgId);
+					if (datasourceOrg) {
+						limitOwnerId = datasourceOrg?.ownerId;
+					}
+					const ownerAccount = await getAccountById(limitOwnerId);
+					job.stripe = ownerAccount?.stripe;
 				}
 			} catch (e) {
 				log(e);
@@ -53,8 +85,7 @@ async function augmentJobs(jobList) {
 			return job;
 		})
 	);
-	log('augmentedJobs', augmentedJobs);
-	return augmentJobs;
+	return augmentedJobs;
 }
 
 async function main() {
@@ -74,10 +105,39 @@ async function main() {
 	}
 
 	// start a loop to fetch all jobs and submit to queue every x seconds
+	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 	while (true) {
 		const jobList = await fetchAllAirbyteJobs();
-		const augmentedJobs = await augmentJobs(jobList);
-		await new Promise(res => setTimeout(res, 60000));
+
+		//TODO: move to worker
+		const augmentedJobs: AugmentedJob[] = await augmentJobs(jobList);
+		for (let job of augmentedJobs) {
+			log('job', job?.jobId, 'rows synced', job?.rowsSynced);
+			if (job?.rowsSynced > 15000) {
+				log(
+					'job',
+					job?.jobId,
+					'exceeded 15000 rows, sending reset job (cancel sync)',
+					job?.rowsSynced
+				);
+				//Note: temporary to test a static limit, TODO update to use actual strpie limits per plan
+				//cancel the job
+				try {
+					const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+					const jobBody = {
+						connectionId: job.connectionId,
+						jobType: 'reset'
+					};
+					const resetJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
+					log('resetJob', resetJob);
+				} catch (e) {
+					// Continue but log a warning if the reset job api call fails
+					console.warn(e);
+				}
+			}
+		}
+
+		await new Promise(res => setTimeout(res, 2000));
 	}
 }
 
