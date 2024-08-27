@@ -98,7 +98,6 @@ export const ModelList = {
 		'gpt-4o',
 		'gpt-4-turbo',
 		'gpt-4',
-		'gpt-3.5-turbo',
 		'text-embedding-3-small',
 		'text-embedding-3-large',
 		'text-embedding-ada-002'
@@ -170,7 +169,6 @@ export const ModelContextWindow = {
 	'gpt-4o': 128000,
 	'gpt-4-turbo': 128000,
 	'gpt-4': 8192,
-	'gpt-3.5-turbo': 16385,
 	llama2: 4096,
 	llama3: 128000,
 	'llama3:8b': 8192,
@@ -199,7 +197,6 @@ export const ModelKnowledgeCutoff = {
 	'gpt-4o': new Date('2023-10-01'),
 	'gpt-4-turbo': new Date('2023-12-01'),
 	'gpt-4': new Date('2021-09-01'),
-	'gpt-3.5-turbo': new Date('2021-09-01'),
 	llama2: new Date('2023-07-01'),
 	llama3: new Date('2023-12-01'),
 	'llama3:8b': new Date('2023-03-01'),
