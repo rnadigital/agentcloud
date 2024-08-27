@@ -190,6 +190,8 @@ export async function addTaskApi(req, res, next) {
 		isStructuredOutput
 	} = req.body;
 
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
+
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -221,7 +223,7 @@ export async function addTaskApi(req, res, next) {
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOuput === true,
-		taskOutputFileName,
+		taskOutputFileName: formattedTaskOutputFileName,
 		icon: foundIcon
 			? {
 					id: foundIcon._id,
@@ -321,6 +323,8 @@ export async function editTaskApi(req, res, next) {
 		isStructuredOutput
 	} = req.body;
 
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
+
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -347,7 +351,7 @@ export async function editTaskApi(req, res, next) {
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOuput === true,
-		taskOutputFileName,
+		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
 		formFields,
 		isStructuredOutput
