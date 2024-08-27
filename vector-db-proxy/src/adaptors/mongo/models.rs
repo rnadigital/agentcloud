@@ -111,7 +111,7 @@ pub struct DataSources {
     pub timeWeightField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
-    pub streamConfig: Option<StreamConfig>,
+    pub streamConfig: Option<HashMap<String, StreamConfig>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

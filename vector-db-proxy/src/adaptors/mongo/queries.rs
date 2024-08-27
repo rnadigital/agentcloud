@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, StreamConfig};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -60,44 +60,53 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 pub async fn get_model_and_embedding_key(
     db: &Database,
     datasource_id: &str,
+    stream_config_key: &str,
 ) -> Result<EmbeddingConfig> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
     let mut embedding_config = EmbeddingConfig::default();
-    // Attempt to find the datasource. If not found or error, handle accordingly.
-    match datasources_collection
+
+    // Fetch the datasource
+    let datasource = match datasources_collection
         .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
         .await
     {
-        Ok(Some(datasource)) => {
-            log::debug!("Found datasource: {}", datasource._id);
-            // If datasource is found, attempt to find the related model.
-            match models_collection
-                .find_one(doc! {"_id": datasource.modelId}, None)
-                .await
-            {
-                Ok(model) => {
-                    embedding_config.model = model;
-                    embedding_config.embedding_key = datasource.embeddingField;
-                    embedding_config.primary_key =
-                        Some(datasource.streamConfig.unwrap().primaryKey);
-                    Ok(embedding_config)
-                } // Return the model if found (could be Some or None)
-                Err(e) => {
-                    log::error!("Error: {}", e);
-                    Err(anyhow!("Failed to find model: {}", e))
-                }
-            }
-        }
+        Ok(Some(ds)) => ds,
         Ok(None) => {
-            log::warn!("Query returned None");
-            Ok(embedding_config)
-        } // Return None if no datasource is found (so there was no 'error' however there was no datasource model found)
+            log::warn!("Datasource not found for ID: {}", datasource_id);
+            return Ok(embedding_config);
+        }
         Err(e) => {
-            log::error!("Error: {}", e);
-            Err(anyhow!("Failed to find datasource: {}", e))
+            log::error!("Failed to find datasource: {}", e);
+            return Err(anyhow!("Failed to find datasource: {}", e));
+        }
+    };
+
+    log::debug!("Found datasource: {}", datasource._id);
+
+    // Fetch the model
+    let model = match models_collection
+        .find_one(doc! {"_id": datasource.modelId}, None)
+        .await
+    {
+        Ok(m) => m,
+        Err(e) => {
+            log::error!("Failed to find model: {}", e);
+            return Err(anyhow!("Failed to find model: {}", e));
+        }
+    };
+
+    embedding_config.model = model;
+    embedding_config.embedding_key = datasource.embeddingField;
+
+    // Populate primary key if stream config exists
+    if let Some(stream_config) = datasource.streamConfig {
+        if let Some(datasource_stream_config) = stream_config.get(stream_config_key) {
+            embedding_config.primary_key = Some(datasource_stream_config.primaryKey.clone());
         }
     }
+
+    Ok(embedding_config)
 }
 
 pub async fn increment_by_one(db: &Database, datasource_id: &str, field_path: &str) -> Result<()> {
@@ -146,33 +155,33 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
-pub async fn get_stream_config(
-    db: &Database,
-    datasource_id: String,
-) -> Result<Option<StreamConfig>> {
-    let datasources_collection = db.collection::<DataSources>("datasources");
-    let datasource_id = ObjectId::from_str(datasource_id.as_str());
-    match datasources_collection
-        .find_one(doc! {"_id": datasource_id?}, None)
-        .await
-    {
-        Ok(datasource) => {
-            if let Some(ds) = datasource {
-                if let Some(stream_config) = ds.streamConfig {
-                    Ok(Some(stream_config))
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Ok(None)
-            }
-        }
-        Err(e) => Err(anyhow!(
-            "An error occurred while getting datasource from mongo. {}",
-            e
-        )),
-    }
-}
+//pub async fn get_stream_config(
+//    db: &Database,
+//    datasource_id: String,
+//) -> Result<Option<StreamConfig>> {
+//    let datasources_collection = db.collection::<DataSources>("datasources");
+//    let datasource_id = ObjectId::from_str(datasource_id.as_str());
+//    match datasources_collection
+//        .find_one(doc! {"_id": datasource_id?}, None)
+//        .await
+//    {
+//        Ok(datasource) => {
+//            if let Some(ds) = datasource {
+//                if let Some(stream_config) = ds.streamConfig {
+//                    Ok(Some(stream_config))
+//                } else {
+//                    Ok(None)
+//                }
+//            } else {
+//                Ok(None)
+//            }
+//        }
+//        Err(e) => Err(anyhow!(
+//            "An error occurred while getting datasource from mongo. {}",
+//            e
+//        )),
+//    }
+//}
 
 pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
     let mut list_of_datasources: Vec<DataSources> = vec![];

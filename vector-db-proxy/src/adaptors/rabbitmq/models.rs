@@ -53,7 +53,7 @@ pub async fn rabbit_consume(
     streaming_queue: &Channel,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String)>,
+    sender: Sender<(String, String, String)>,
 ) {
     let global_data = GLOBAL_DATA.read().await;
     let queue_name = global_data.rabbitmq_stream.as_str();
@@ -69,8 +69,9 @@ pub async fn rabbit_consume(
                     match headers.get(&ShortStr::try_from("stream").unwrap()) {
                         Some(stream) => {
                             let stream_string: String = stream.to_string();
-                            let stream_split: Vec<&str> = stream_string.split('_').collect();
-                            let datasource_id = stream_split.to_vec()[0];
+                            let stream_split: (&str, &str) = stream_string.split_once('_').unwrap();
+                            let datasource_id = stream_split.0;
+                            let stream_config_key = stream_split.1;
                             if let Some(msg) = message.content {
                                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())
                                 {
@@ -88,6 +89,7 @@ pub async fn rabbit_consume(
                                         message_string,
                                         stream_type,
                                         datasource_id,
+                                        stream_config_key,
                                         vector_database_client,
                                         mongo_client,
                                         sender_clone,
