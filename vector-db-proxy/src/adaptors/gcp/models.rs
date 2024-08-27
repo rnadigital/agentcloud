@@ -43,7 +43,7 @@ pub async fn pubsub_consume(
     stream: &Arc<Mutex<MessageStream>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String)>,
+    sender: Sender<(String, String, String)>,
 ) {
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
@@ -59,13 +59,15 @@ pub async fn pubsub_consume(
                         let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
                         let stream_string: String = stream.to_string();
-                        let stream_split: Vec<&str> = stream_string.split('_').collect();
-                        let datasource_id = stream_split.to_vec()[0];
+                        let stream_split: (&str, &str) = stream_string.split_once('_').unwrap();
+                        let datasource_id = stream_split.0;
+                        let stream_config_key = stream_split.1;
                         let sender = sender.clone();
                         process_message(
                             message_string,
                             stream_type,
                             datasource_id,
+                            stream_config_key,
                             qdrant_client,
                             mongo_client,
                             sender,

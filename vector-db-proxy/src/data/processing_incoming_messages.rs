@@ -119,18 +119,24 @@ async fn handle_embedding(
 }
 
 pub async fn process_incoming_messages(
-    receiver: Receiver<(String, String)>,
+    receiver: Receiver<(String, String, String)>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_conn: Arc<RwLock<Database>>,
 ) {
     let mongo_connection = Arc::clone(&mongo_conn);
     let receiver_clone = receiver.clone();
     while let Ok(msg) = receiver_clone.recv() {
-        let (datasource_id, message) = msg;
+        let (datasource_id, stream_config_key, message) = msg;
         match serde_json::from_str(message.as_str()) {
             Ok::<Value, _>(message_data) => {
                 let mongo = mongo_connection.read().await;
-                match get_model_and_embedding_key(&mongo, datasource_id.as_str()).await {
+                match get_model_and_embedding_key(
+                    &mongo,
+                    datasource_id.as_str(),
+                    stream_config_key.as_str(),
+                )
+                .await
+                {
                     Ok(embedding_config) => {
                         if let Some(embedding_model) = embedding_config.model {
                             let datasources_clone = datasource_id.clone();

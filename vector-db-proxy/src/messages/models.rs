@@ -51,7 +51,7 @@ impl MessageQueue for QueueConnectionTypes {
         streaming_queue: Self::Queue,
         vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
         mongo_client: Arc<RwLock<Database>>,
-        sender: Sender<(String, String)>,
+        sender: Sender<(String, String, String)>,
     ) {
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
@@ -74,6 +74,6 @@ pub trait MessageQueue {
         streaming_queue: Self::Queue,
         vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
         mongo_client: Arc<RwLock<Database>>,
-        sender: Sender<(String, String)>,
+        sender: Sender<(String, String, String)>,
     );
 }
