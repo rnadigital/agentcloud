@@ -546,7 +546,7 @@ pub async fn get_collection_info(
 }
 
 #[wherr]
-#[get("/storage-size/{dataset_id}")]
+#[get("/storage-size/{team_id}")]
 pub async fn get_storage_size(
     app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     Path(team_id): Path<String>,

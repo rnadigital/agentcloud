@@ -77,6 +77,14 @@ class VectorDBProxyClient {
 		});
 	}
 
+	// Method to get the total storage size for the team
+	static async getVectorStorageForTeam(teamId: IdOrStr): Promise<VectorResponseBody> {
+		log('getVectorStorageForTeam %s', teamId);
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/storage-size/${teamId}`).then(res => {
+			return res.json();
+		});
+	}
+
 	// Method to delete a collection
 	static async deleteCollection(collectionId: IdOrStr): Promise<VectorResponseBody> {
 		log('deleteCollection %s', collectionId);

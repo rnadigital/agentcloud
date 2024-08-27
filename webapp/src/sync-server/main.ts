@@ -12,9 +12,11 @@ import { migrate } from 'db/migrate';
 import { getOrgById } from 'db/org';
 import debug from 'debug';
 import * as redis from 'redis/redis';
+import { pricingMatrix } from 'struct/billing';
 import { AugmentedJob } from 'struct/syncserver';
 
 import getAirbyteInternalApi from '../lib/airbyte/internal';
+import VectorDBProxyClient from '../lib/vectorproxy/client';
 const log = debug('sync-server:main');
 
 /*
@@ -113,12 +115,27 @@ async function main() {
 		const augmentedJobs: AugmentedJob[] = await augmentJobs(jobList);
 		for (let job of augmentedJobs) {
 			log('job', job?.jobId, 'rows synced', job?.rowsSynced);
-			if (job?.rowsSynced > 15000) {
+			const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
+				job?.datasource?._id
+			);
+			const storageVectorCount = teamVectorStorage?.data?.total_points;
+			log('current vector storage count:', storageVectorCount);
+			let vectorCountLimit = 0;
+			const planLimits = pricingMatrix[job?.stripe?.stripePlan];
+			if (planLimits) {
+				const approxVectorCountLimit = Math.floor(
+					planLimits.maxVectorStorageBytes / (1536 * (32 / 8))
+				); //Note: inaccurate because there are other embedding models
+				log('plan approx. max vector count:', approxVectorCountLimit);
+				vectorCountLimit = approxVectorCountLimit;
+			}
+			if (storageVectorCount + job?.rowsSynced > vectorCountLimit) {
 				log(
 					'job',
 					job?.jobId,
-					'exceeded 15000 rows, sending reset job (cancel sync)',
-					job?.rowsSynced
+					'exceeded',
+					vectorCountLimit,
+					'rows, sending reset job (cancel sync)'
 				);
 				//Note: temporary to test a static limit, TODO update to use actual strpie limits per plan
 				//cancel the job
