@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "ts-node --project tsconfig.server.json -r tsconfig-paths/register src/server.ts",
+    "dev:sync-main": "ts-node --project tsconfig.server.json -r tsconfig-paths/register src/sync-server/main.ts",
+    "dev:sync-worker": "ts-node --project tsconfig.server.json -r tsconfig-paths/register src/sync-server/worker.ts",
     "build:next": "next build",
     "build:server": "tsc --project tsconfig.server.json",
     "build:doc": "apidoc -i src/controllers -o doc",
