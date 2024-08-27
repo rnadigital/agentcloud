@@ -150,18 +150,3 @@ export type Datasource = {
 	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };
-
-/* Airbyte list jobs api body typing for use in sync-server */
-export type ListJobsBody = {
-	connectionId?: string; // Filter the Jobs by connectionId
-	limit?: number; // Set the limit on the number of Jobs returned. Default is 20
-	offset?: number; // Set the offset to start at when returning Jobs. Default is 0
-	jobType?: string; // Filter the Jobs by jobType
-	workspaceIds?: string[]; // The UUIDs of the workspaces you wish to list jobs for. Empty list will retrieve all allowed workspaces
-	status?: string; // The Job status you want to filter by
-	createdAtStart?: string; // The start date to filter by (ISO 8601 format)
-	createdAtEnd?: string; // The end date to filter by (ISO 8601 format)
-	updatedAtStart?: string; // The start date to filter by (ISO 8601 format)
-	updatedAtEnd?: string; // The end date to filter by (ISO 8601 format)
-	orderBy?: 'createdAt' | 'updatedAt'; // The field and method to use for ordering. Allowed values: 'createdAt', 'updatedAt'
-};

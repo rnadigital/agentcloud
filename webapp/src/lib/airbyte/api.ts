@@ -2,7 +2,7 @@
 
 import debug from 'debug';
 import { OpenAPIClientAxios } from 'openapi-client-axios';
-import { ListJobsBody } from 'struct/datasource';
+import { ListJobsBody } from 'struct/syncserver';
 const log = debug('airbyte:public-api');
 
 export enum AirbyteApiType {

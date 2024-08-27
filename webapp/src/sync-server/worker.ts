@@ -15,7 +15,7 @@ import { client as redisClient } from 'redis/redis';
 
 async function handleJob(job: Job) {
 	log('Job received:', job.id, job.name, job.data);
-    //NOTE: UNUSED CURRENTLY
+	//NOTE: UNUSED CURRENTLY
 	return;
 }
 
