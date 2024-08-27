@@ -373,9 +373,7 @@ export async function addDatasourceApi(req, res, next) {
 	log('current team vector storage count:', storageVectorCount);
 	const planLimits = pricingMatrix[currentPlan];
 	if (planLimits) {
-		const approxVectorCountLimit = Math.floor(
-			planLimits.maxVectorStorageBytes / (1536 * (32 / 8))
-		); //Note: inaccurate because there are other embedding models
+		const approxVectorCountLimit = Math.floor(planLimits.maxVectorStorageBytes / (1536 * (32 / 8))); //Note: inaccurate because there are other embedding models
 		log('plan approx. max vector count:', approxVectorCountLimit);
 		if (storageVectorCount >= approxVectorCountLimit) {
 			return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
