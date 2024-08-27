@@ -1,3 +1,4 @@
+import datetime
 from google.cloud import storage
 import os
 import logging
@@ -52,5 +53,17 @@ class GoogleStorageProvider(StorageProvider):
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(f"{file_folder}/{filename}")
         blob.delete()
+        
+    def download_file(self, filename, file_folder, is_public=False):
+        log.debug('Downloading file %s', filename)
+        bucket_name = os.getenv('GCS_BUCKET_NAME' if is_public else 'GCS_BUCKET_NAME_PRIVATE')
+        bucket = self.storage_client.bucket(bucket_name)
+        blob = bucket.blob(f"{file_folder}/{filename}")
+        signed_url= blob.generate_signed_url(
+            version="v4",
+            expiration=datetime.timedelta(minutes=15),
+        )
+        return signed_url
+
 
 google_storage_provider = GoogleStorageProvider()

@@ -17,7 +17,7 @@ import models.mongo
 from models.mongo import AppType, ToolType
 from init.mongo_session import start_mongo_session
 from storage import storage_provider 
-from src.utils.json_schema_to_pydantic import json_schema_to_pydantic
+from utils.json_schema_to_pydantic import json_schema_to_pydantic
 from utils.model_helper import  keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN , SOCKET_URL
@@ -28,6 +28,7 @@ from messaging.send_message_to_socket import send
 from tools.global_tools import  GlobalBaseTool
 from tools.builtin_tools import BuiltinTools
 from redisClient.utilities import RedisClass
+from bson import ObjectId
 
 mongo_client = start_mongo_session()
 
@@ -175,16 +176,25 @@ class CrewAIBuilder:
 
             if task.storeTaskOutput:
                 def callback(output):
+                    
                     original_file_path = os.path.join(Path(__file__).resolve().parent.parent, 'outputs', task.taskOutputFileName)
+                    
                     with open(original_file_path, 'w') as f:
                         f.write(str(output)) 
-                    storage_provider.upload_local_file(task.taskOutputFileName, self.session_id)
+                    storage_provider.upload_local_file(task.taskOutputFileName, self.session_id, is_public=True)
                     mongo_client.insert_model("taskoutputs", {
                         "session_id": self.session_id,
                         "task_id": task.id,
-                        "task_output_file_name": task.taskOutputFileName
+                        "task_output_file_name": task.taskOutputFileName,
                     })
-                    self.send_to_sockets(f"{task.taskOutputFileName}", event=SocketEvents.MESSAGE, chunk_id=str(uuid.uuid4()))
+                    signed_url = storage_provider.download_file(task.taskOutputFileName, self.session_id, is_public=True)
+
+
+                    self.send_to_sockets(
+                        text=f"File uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
+                        event=SocketEvents.MESSAGE,
+                        chunk_id=str(uuid.uuid4())
+                    )
             
             output_pydantic = None  
             if task.isStructuredOutput:

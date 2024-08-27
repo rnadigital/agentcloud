@@ -32,8 +32,7 @@ class LocalStorageProvider(StorageProvider):
         except Exception as e:
             log.error(f"Failed to upload file: {e}")
             raise e
-
-
+    
     def delete_file(self, filename, file_folder):
         file_path = os.path.join(self.base_path, file_folder, filename)
         try:
@@ -43,5 +42,8 @@ class LocalStorageProvider(StorageProvider):
             if e.errno not in self.allowed_delete_error_codes:
                 log.error(f"Failed to delete file: {e.message}")
                 raise e
+            
+    def download_file(self, filename, file_folder):
+        return "Downloading file not implemented in local storage provider"
 
 local_storage_provider = LocalStorageProvider()
