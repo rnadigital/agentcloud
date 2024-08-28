@@ -11,19 +11,6 @@ use uuid::Uuid;
 use crate::embeddings::models::EmbeddingModels;
 use crate::vector_databases::models::{ScrollResults, VectorDatabaseStatus};
 
-///
-///
-/// # Arguments
-///
-/// * `qdrant_conn`:
-/// * &v.to_string()
-/// returns: Result<(ScrollResponse, String), Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub async fn get_next_page(
     qdrant_conn: &QdrantClient,
     scroll_point: &ScrollPoints,
