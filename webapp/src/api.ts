@@ -249,6 +249,62 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 	);
 }
 
+//APIKeys
+
+export function addKey(body, dispatch, errorCallback, router){
+	return ApiCall(
+		'/account/forms/apikey/add',
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
+
+export function getKeys(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/apikeys.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+export function getKey(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/apikey/${body.keyId}.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router	
+	);
+}
+
+export function incrementKeyVersion(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/account/forms/apikey/${body.keyId}/increment`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function deleteKey(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/account/forms/apikey/${body.keyId}`,
+		'DELETE',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 // Tasks
 export function getTasks(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/tasks.json`, 'GET', null, dispatch, errorCallback, router);
@@ -719,6 +775,9 @@ function buildOptions(_route, method, body) {
 		}
 	};
 	if (body != null) {
+		if(method === "GET"){
+			throw new Error("GET request can't have body");
+		}
 		//TODO: remove/change
 		if (body instanceof FormData) {
 			//formdata upload for files

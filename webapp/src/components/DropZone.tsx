@@ -115,7 +115,34 @@ export default function DropZone({
 			onDrop,
 			minSize: 0,
 			maxSize,
-			maxFiles: 1
+			maxFiles: 1,
+			accept: {
+				'text/csv': ['.csv'],
+				'message/rfc822': ['.eml', '.msg'],
+				'application/pkcs7-signature': ['.p7s'],
+				'application/epub+zip': ['.epub'],
+				'application/vnd.ms-excel': ['.xls'],
+				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+				'text/html': ['.html', '.htm'],
+				'image/bmp': ['.bmp'],
+				'image/heic': ['.heic'],
+				'image/jpeg': ['.jpeg', '.jpg'],
+				'image/png': ['.png'],
+				'image/tiff': ['.tiff'],
+				'text/markdown': ['.md'],
+				'text/org': ['.org'], // Unknown MIME type for .org
+				'application/vnd.oasis.opendocument.text': ['.odt'],
+				'application/pdf': ['.pdf'],
+				'text/plain': ['.txt'],
+				'application/vnd.ms-powerpoint': ['.ppt'],
+				'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+				'text/x-rst': ['.rst'],
+				'text/rtf': ['.rtf'],
+				'text/tab-separated-values': ['.tsv'],
+				'application/msword': ['.doc'],
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+				'application/xml': ['.xml']
+			}
 		});
 
 	const isFileTooLarge =

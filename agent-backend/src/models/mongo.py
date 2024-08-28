@@ -27,6 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
+    GoogleAI = "google_ai"
     Cohere = "cohere"
     Anthropic = "anthropic"
     Groq = "groq"
