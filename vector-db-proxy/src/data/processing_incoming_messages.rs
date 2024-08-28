@@ -1,7 +1,8 @@
 use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
-use crate::data::helpers::hash_string;
+use crate::data::helpers::hash_string_to_uuid;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_text;
+use crate::init::env_variables::GLOBAL_DATA;
 use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -12,7 +13,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use uuid::Uuid;
 
 pub async fn embed_text_construct_point(
     mongo_conn: Arc<RwLock<Database>>,
@@ -122,6 +122,7 @@ pub async fn process_incoming_messages(
 ) {
     let mongo_connection = Arc::clone(&mongo_conn);
     let receiver_clone = receiver.clone();
+    let global_data = GLOBAL_DATA.read().await;
     while let Ok(msg) = receiver_clone.recv() {
         let (datasource_id, stream_config_key, message) = msg;
         match serde_json::from_str(message.as_str()) {
@@ -156,7 +157,10 @@ pub async fn process_incoming_messages(
                                     if let Ok(json_string) =
                                         serde_json::to_string(&list_of_primary_key_values)
                                     {
-                                        let json_string_hash = hash_string(json_string);
+                                        let json_string_hash = hash_string_to_uuid(
+                                            global_data.hashing_salt.as_str(),
+                                            json_string.as_str(),
+                                        );
                                         metadata.insert(
                                             String::from("index"),
                                             json_string_hash.to_string(),

@@ -1,29 +1,15 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointId, PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::embeddings::models::EmbeddingModels;
 use crate::vector_databases::models::{ScrollResults, VectorDatabaseStatus};
 
-///
-///
-/// # Arguments
-///
-/// * `qdrant_conn`:
-/// * &v.to_string()
-/// returns: Result<(ScrollResponse, String), Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub async fn get_next_page(
     qdrant_conn: &QdrantClient,
     scroll_point: &ScrollPoints,
