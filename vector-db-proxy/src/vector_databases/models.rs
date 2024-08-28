@@ -6,6 +6,7 @@ use prost_types::value::Kind;
 use prost_types::{ListValue, Struct as Metadata, Struct};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
 pub enum VectorDatabaseStatus {
@@ -135,7 +136,6 @@ impl SearchRequest {
 pub enum Region {
     US,
     EU,
-    AU,
 }
 impl Default for Region {
     fn default() -> Self {
@@ -148,7 +148,6 @@ impl Region {
         match region {
             Self::US => "us-central1",
             Self::EU => "europe-west4",
-            _ => panic!("Unknown Pinecone serverless region"),
         }
     }
 
@@ -390,7 +389,7 @@ impl From<Point> for Vector {
     fn from(value: Point) -> Self {
         let metadata = Some(Metadata::from(value.clone()));
         Self {
-            id: value.index.unwrap(),
+            id: value.index.unwrap_or(Uuid::new_v4().to_string()),
             values: value.vector,
             sparse_values: None,
             metadata,

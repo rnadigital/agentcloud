@@ -4,6 +4,7 @@ from google.oauth2 import service_account
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseLanguageModel
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI, AzureChatOpenAI
@@ -31,6 +32,8 @@ def model_factory(agentcloud_model: models.mongo.Model) -> BaseLanguageModel | E
             return _build_ollama_model(agentcloud_model)
         case models.mongo.Platforms.GoogleVertex:
             return _build_google_vertex_ai_model(agentcloud_model)
+        case models.mongo.Platforms.GoogleAI:
+            return _build_google_ai_model(agentcloud_model)
         case models.mongo.Platforms.Cohere:
             return _build_cohere_model(agentcloud_model)
         case models.mongo.Platforms.Anthropic:
@@ -105,6 +108,15 @@ def _build_google_vertex_ai_model(model: models.mongo.Model) -> BaseLanguageMode
     credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
     return ChatVertexAI(**model_params, credentials=credentials)
+
+
+def _build_google_ai_model(model: models.mongo.Model) -> BaseLanguageModel:
+    return ChatGoogleGenerativeAI(
+        **model.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        ).get('config')
+    )
 
 
 def _build_cohere_model(model: models.mongo.Model) -> BaseLanguageModel:

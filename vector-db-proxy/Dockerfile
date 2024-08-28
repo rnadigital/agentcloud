@@ -45,10 +45,12 @@ WORKDIR /app
 ARG RELEASE
 ARG UNSTRUCTURED_API_KEY
 ARG UNSTRUCTURED_API_URL
+ARG PINECONE_API_KEY
 # Set ENV variables
 ENV IS_RELEASE=$RELEASE
 ENV UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL
 ENV UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY
+ENV PINECONE_API_KEY=$PINECONE_API_KEY
 # Copy from builder step
 COPY --from=builder /usr/local/src/vector-db-proxy/target/release/vector-db-proxy /app/vector-db-proxy-release
 COPY --from=builder /usr/local/src/vector-db-proxy/target/debug/vector-db-proxy /app/vector-db-proxy-debug

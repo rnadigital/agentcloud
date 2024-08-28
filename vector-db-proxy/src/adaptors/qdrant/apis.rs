@@ -136,7 +136,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn insert_point(
         &self,
-
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
@@ -152,7 +151,7 @@ impl VectorDatabase for QdrantClient {
                 ..ExponentialBackoff::default()
             };
         if let Some(point_struct) =
-            construct_point_struct(&point.vector, point.payload.unwrap(), None, None).await
+            construct_point_struct(&point.vector, point.payload.unwrap(), None, point.index).await
         {
             let _ = async {
                 loop {
@@ -162,7 +161,7 @@ impl VectorDatabase for QdrantClient {
                             None,
                             vec![point_struct.clone()], // Ensure point is Clone for retries
                             None,
-                            100,
+                            1,
                         )
                         .await
                     {

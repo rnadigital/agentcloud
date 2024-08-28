@@ -29,6 +29,7 @@ pub struct GlobalData {
     pub unstructuredio_api_key: String,
     pub vector_database: String,
     pub pinecone_api_key: String,
+    pub hashing_salt: String,
 }
 
 impl GlobalData {
@@ -67,10 +68,11 @@ impl GlobalData {
             message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER")
                 .unwrap_or("rabbitmq".to_string()),
             unstructuredio_url: dotenv::var("UNSTRUCTURED_API_URL")
-                .unwrap_or("http://localhost:8000/general/v0/general/".to_string()),
+                .unwrap_or("http://localhost:9500/general/v0/general/".to_string()),
             unstructuredio_api_key: dotenv::var("UNSTRUCTURED_API_KEY").unwrap_or(String::new()),
             vector_database: dotenv::var("VECTOR_DATABASE").unwrap_or("qdrant".to_string()),
             pinecone_api_key: dotenv::var("PINECONE_API_KEY").unwrap_or_default(),
+            hashing_salt: dotenv::var("HASHING_SALT").unwrap_or("something_secretive".to_string()),
         }
     }
 }
