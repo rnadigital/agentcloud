@@ -2,6 +2,7 @@
 
 import { ObjectId } from 'mongodb';
 
+//RMDVLP: this seems depreciated? do a file check on it to see
 export type Group = {
 	_id?: ObjectId;
 	orgId?: ObjectId;
@@ -12,11 +13,16 @@ export type Group = {
 	groupChat?: boolean;
 };
 
+//RMDVLP: can enum this using jsdoc
 export enum ProcessImpl {
 	SEQUENTIAL = 'sequential',
 	HIERARCHICAL = 'hierarchical'
 }
 
+/**
+ * @openapi
+ * 
+ */
 export type Crew = {
 	_id?: ObjectId;
 	orgId?: ObjectId;

@@ -1,7 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
-
+//RMDVLP: just make this pretty empty, just need it as a reference for controller documentation
 export type DatasourceStream = {
 	syncMode: string; //TODO: enum to match airbyte api
 	name: string;

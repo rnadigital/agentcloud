@@ -1,6 +1,6 @@
 import Permissions from 'permissions/permissions';
 import { ModelType, ModelTypes } from 'struct/model';
-
+//remove if this comment get accidentally pushed, don't need API docs for this file
 export const stripeEnvs: string[] = [
 	'STRIPE_FREE_PLAN_PRICE_ID',
 	'STRIPE_PRO_PLAN_PRICE_ID',

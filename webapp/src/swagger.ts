@@ -7,7 +7,7 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Agentcloud Webapp API Docs',
-      version: '0.1.1',
+      version: '0.1.2',
     },
     license: {
         name: 'GNU Affero General Public License v3.0 only',
@@ -18,4 +18,4 @@ const options = {
 };
 
 const openapiSpecification = swaggerJsdoc(options);
-console.log(inspect(openapiSpecification, true, 5))
+console.log(inspect(openapiSpecification, true, 10))
