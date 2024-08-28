@@ -108,7 +108,7 @@ async fn main() -> std::io::Result<()> {
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
-    let (s, r) = channel::unbounded::<(String, String, String)>();
+    let (s, r) = channel::unbounded::<(String, Option<String>, String)>();
     let sender_clone = s.clone();
 
     // This is to allow the use of multiple message queues
