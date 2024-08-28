@@ -106,8 +106,12 @@ pub async fn construct_point_struct(
                 None
             }
         } else {
-            log::warn!("Embedding Model name is None");
-            None
+            let qdrant_point_struct = PointStruct::new(
+                index.unwrap_or(Uuid::new_v4().to_string()),
+                vector.to_owned(),
+                json!(payload).try_into().unwrap(),
+            );
+            Some(qdrant_point_struct)
         };
     }
     None
