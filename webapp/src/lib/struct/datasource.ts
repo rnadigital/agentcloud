@@ -49,6 +49,52 @@ export type DatasourceRecordCount = {
 	failure?: number;
 };
 
+export const SyncModes = [
+	'full_refresh_overwrite',
+	'full_refresh_append',
+	'incremental_append'
+	// 'incremental_deduped_history'
+];
+export type SyncMode = (typeof SyncModes)[number];
+
+export type FieldDescription = {
+	description: string;
+	type: string;
+};
+
+export type StreamConfig = {
+	checkedChildren: string[];
+	primaryKey: string[];
+	syncMode: SyncMode;
+	cursorField: string[];
+	descriptionsMap: FieldDescriptionMap;
+};
+
+export type StreamConfigMap = {
+	[key: string]: StreamConfig;
+};
+
+export type FieldDescriptionMap = {
+	[key: string]: FieldDescription;
+};
+
+export function getMetadataFieldInfo(config: StreamConfigMap) {
+	return Object.keys(config).reduce((acc, topKey) => {
+		const descriptionsMap = config[topKey].descriptionsMap;
+		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
+			const { description, type } = descriptionsMap[key];
+			innerAcc.push({
+				name: key,
+				description: description || '',
+				type: type || ''
+			});
+			return innerAcc;
+		}, []);
+		acc = acc.concat(items);
+		return acc;
+	}, []);
+}
+
 export const UnstructuredChunkingStrategyValues = [
 	'basic',
 	'by_title',
@@ -101,6 +147,6 @@ export type Datasource = {
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
-	descriptionsMap?: Record<string, string>;
+	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };

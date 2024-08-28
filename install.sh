@@ -175,7 +175,7 @@ fi
 echo "=> Starting airbyte"
 
 # Define the target version
-AIRBYTE_TARGET_VERSION="v0.57.2"
+AIRBYTE_TARGET_VERSION="v0.63.9"
 
 # Clone and install airbyte
 if [ ! -d "airbyte" ]; then

@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use amqprs::channel::Channel;
-use crossbeam::channel::{Sender};
+use crossbeam::channel::Sender;
 use google_cloud_pubsub::subscription::MessageStream;
 use mongodb::Database;
-use qdrant_client::client::QdrantClient;
 use tokio::sync::{Mutex, RwLock};
 
 use crate::adaptors::gcp::models::pubsub_consume;
 use crate::adaptors::rabbitmq::models::rabbit_consume;
+use crate::vector_databases::vector_database::VectorDatabase;
 
 #[derive(Clone, Copy, Debug)]
 pub enum MessageQueueProvider {
@@ -22,7 +22,7 @@ impl From<String> for MessageQueueProvider {
         match value.as_str() {
             "google" => MessageQueueProvider::PUBSUB,
             "rabbitmq" => MessageQueueProvider::RABBITMQ,
-            _ => MessageQueueProvider::UNKNOWN
+            _ => MessageQueueProvider::UNKNOWN,
         }
     }
 }
@@ -34,21 +34,31 @@ pub enum QueueConnectionTypes {
 impl Clone for QueueConnectionTypes {
     fn clone(&self) -> Self {
         match self {
-            QueueConnectionTypes::PubSub(stream) => QueueConnectionTypes::PubSub(Arc::clone(stream)),
-            QueueConnectionTypes::RabbitMQ(channel) => QueueConnectionTypes::RabbitMQ(channel.clone()),
+            QueueConnectionTypes::PubSub(stream) => {
+                QueueConnectionTypes::PubSub(Arc::clone(stream))
+            }
+            QueueConnectionTypes::RabbitMQ(channel) => {
+                QueueConnectionTypes::RabbitMQ(channel.clone())
+            }
         }
     }
 }
 impl MessageQueue for QueueConnectionTypes {
     type Queue = Self;
 
-    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>) {
+    async fn consume(
+        &self,
+        streaming_queue: Self::Queue,
+        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+        mongo_client: Arc<RwLock<Database>>,
+        sender: Sender<(String, String, String)>,
+    ) {
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
-                pubsub_consume(&stream, qdrant_client, mongo_client, sender).await;
+                pubsub_consume(&stream, vector_database_client, mongo_client, sender).await;
             }
             QueueConnectionTypes::RabbitMQ(channel) => {
-                rabbit_consume(&channel, qdrant_client, mongo_client, sender).await;
+                rabbit_consume(&channel, vector_database_client, mongo_client, sender).await;
             }
         }
     }
@@ -59,11 +69,11 @@ pub trait MessageQueueConnection {
 }
 pub trait MessageQueue {
     type Queue;
-    async fn consume(&self, streaming_queue: Self::Queue, qdrant_client: Arc<RwLock<QdrantClient>>, mongo_client: Arc<RwLock<Database>>, sender: Sender<(String, String)>);
+    async fn consume(
+        &self,
+        streaming_queue: Self::Queue,
+        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+        mongo_client: Arc<RwLock<Database>>,
+        sender: Sender<(String, String, String)>,
+    );
 }
-
-
-
-
-
-

@@ -1,7 +1,7 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
-import React from 'react';
+import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
-import { ModelEmbeddingLength, ModelList, ModelTypeRequirements } from 'struct/model';
+import { ModelEmbeddingLength, ModelList, ModelType, ModelTypeRequirements } from 'struct/model';
 import { FieldRequirement } from 'struct/model';
 import SelectClassNames from 'styles/SelectClassNames';
 
@@ -25,6 +25,7 @@ const ModelTypeRequirementsComponent = ({
 			},
 			{ requiredFields: [], optionalFields: [] }
 		);
+	const [showOther, setShowOther] = useState(false);
 	const renderInput = ([key, req]: [string, FieldRequirement], ei) => {
 		return (
 			<div key={`modelName_${type}_${ei}`}>
@@ -58,6 +59,18 @@ const ModelTypeRequirementsComponent = ({
 			</div>
 		);
 	};
+	const modelOptions =
+		ModelList &&
+		ModelList[type] &&
+		ModelList[type]
+			.filter(m => {
+				if (!modelFilter) {
+					return true;
+				}
+				return modelFilter == 'embedding' ? ModelEmbeddingLength[m] : !ModelEmbeddingLength[m];
+			})
+			.map(m => ({ label: m, value: m }))
+			.concat(type === ModelType.OLLAMA ? [{ label: 'Other', value: 'other' }] : []);
 	return (
 		<>
 			{ModelList[type]?.length > 0 && (
@@ -73,27 +86,28 @@ const ModelTypeRequirementsComponent = ({
 							isClearable
 							primaryColor={'indigo'}
 							classNames={SelectClassNames}
-							value={config.model ? { label: config.model, value: config.model } : null}
+							value={
+								config.model
+									? { label: config.model, value: config.model }
+									: showOther
+										? { label: 'Other', value: 'other' }
+										: null
+							}
 							onChange={(v: any) => {
+								if (v?.value === 'other') {
+									setConfig({
+										name: 'model',
+										value: null
+									});
+									return setShowOther(true);
+								}
+								setShowOther(false);
 								setConfig({
 									name: 'model',
 									value: v?.value
 								});
 							}}
-							options={
-								ModelList &&
-								ModelList[type] &&
-								ModelList[type]
-									.filter(m => {
-										if (!modelFilter) {
-											return true;
-										}
-										return modelFilter == 'embedding'
-											? ModelEmbeddingLength[m]
-											: !ModelEmbeddingLength[m];
-									})
-									.map(m => ({ label: m, value: m }))
-							}
+							options={modelOptions}
 							formatOptionLabel={data => (
 								<li
 									className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 ${
@@ -107,6 +121,7 @@ const ModelTypeRequirementsComponent = ({
 					</div>
 				</div>
 			)}
+			{showOther && renderInput(['model', { type: 'text' }], 0)}
 			{requiredFields.map(renderInput)}
 			{optionalFields.length > 0 && (
 				<details className='space-y-4'>
