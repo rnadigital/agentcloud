@@ -181,6 +181,7 @@ impl std::str::FromStr for SyncMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldDescription {
     pub description: String,
+    #[serde(rename = "type")]
     pub field_type: String, // Renamed `type` to `field_type` because `type` is a reserved keyword in Rust
 }
 

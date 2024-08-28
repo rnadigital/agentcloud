@@ -86,6 +86,8 @@ pub async fn pubsub_consume(
                         log::warn!("No stream ID present in message. Can not proceed")
                     }
                 }
+            } else {
+                log::warn!("Could not get message content from PubSub")
             }
             let _ = message.ack().await;
         }
