@@ -79,8 +79,8 @@ export type FieldDescriptionMap = {
 	[key: string]: FieldDescription;
 };
 
-export function getMetadataFieldInfo(config: StreamConfigMap) {
-	return Object.keys(config || {}).reduce((acc, topKey) => {
+export function getMetadataFieldInfo(config: StreamConfigMap = {}) {
+	return Object.keys(config).reduce((acc, topKey) => {
 		const descriptionsMap = config[topKey].descriptionsMap;
 		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
 			const { description, type } = descriptionsMap[key];
