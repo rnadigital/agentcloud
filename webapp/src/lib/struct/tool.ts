@@ -235,7 +235,6 @@ export enum BaseOpenAPIParameters {
  *      - data
  *     properties:
  *      _id:
- *       description: Unique identifier for the tool.
  *       $ref: '#/components/schemas/ObjectId'
  *      orgId:
  *       description: Identifier of the organization to which the tool belongs.
@@ -252,7 +251,7 @@ export enum BaseOpenAPIParameters {
  *      type:
  *       description: The type of tool.
  *       $ref: '#/components/schemas/ToolType'
- *      schema:
+ *      asdf:
  *       description: The schema associated with the tool.
  *       type: string
  *      retriever_type:

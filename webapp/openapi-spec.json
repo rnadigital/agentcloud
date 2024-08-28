@@ -1,0 +1,1958 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Agentcloud Webapp API Docs",
+    "version": "0.1.6"
+  },
+  "license": {
+    "name": "GNU Affero General Public License v3.0 only",
+    "url": "https://www.gnu.org/licenses/agpl-3.0.txt"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "ObjectId": {
+        "summary": "Mongodb Object id, unique identifier, length of 24 characters fitting the following regex; [a-f0-9]{24}",
+        "required": [
+          "_id"
+        ],
+        "properties": {
+          "_id": "string"
+        }
+      },
+      "Agent": {
+        "summary": "An agent object used for tasks or apps",
+        "tags": [
+          "agent",
+          "agents"
+        ],
+        "descriminator": {
+          "propertyName": "_id"
+        },
+        "required": [
+          "_id",
+          "name",
+          "role",
+          "goal",
+          "backstory",
+          "modelId",
+          "verbose",
+          "allowDelegation"
+        ],
+        "properties": {
+          "_id": {
+            "type": {
+              "oneOf": {
+                "$ref": "#/components/schemas/ObjectId",
+                "type": "string"
+              }
+            },
+            "description": "Unique Mongodb identifier for the object"
+          },
+          "orgId": {
+            "description": "Organisation the agent is linked to (generally the org of the user that created the agent)",
+            "type": {
+              "oneOf": {
+                "$ref": "#/components/schemas/ObjectId",
+                "type": "string"
+              }
+            }
+          },
+          "teamId": {
+            "description": "Team the agent is linked to (generally the team of the user that created the agent)",
+            "type": {
+              "oneOf": {
+                "$ref": "#/components/schemas/ObjectId",
+                "type": "string"
+              }
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the agent"
+          },
+          "role": {
+            "description": "Fed into the LLM to help it provide a more detailed and correct response",
+            "type": "string"
+          },
+          "goal": {
+            "description": "The goal of the agent is fed into the LLM, this allows the LLM to know it's role in the RAG pipeline",
+            "type": "string"
+          },
+          "backstory": {
+            "description": "A detailed description of what the LLM will be doing",
+            "type": "string"
+          },
+          "modelId": {
+            "description": "The linked ObjectId of the model being used by this agent (this links to a Model object)",
+            "type": {
+              "oneOf": {
+                "$ref": "#/components/schemas/ObjectId",
+                "type": "string"
+              }
+            }
+          },
+          "functionModelId": {
+            "description": "A secondary model used to execute function calls (this links to a Model object), set to null if unused automatically by the API",
+            "type": {
+              "oneOf": {
+                "$ref": "#/components/schemas/ObjectId",
+                "type": "string"
+              }
+            }
+          },
+          "verbose": {
+            "description": "True or false check to determine if custom verbosity is used in agent, higher verbosity requires agent to include more of the retrieved documents at the expense of longer answers, lower verbosity can result in shorter answers but can also ommit crucial details",
+            "type": "boolean"
+          },
+          "allowDelegation": {
+            "description": "True or false check to determine if the agent is allowed to delegate tasks to other agents in the context of an app",
+            "type": "boolean"
+          },
+          "toolIds": {
+            "description": "Array of the tools the agent can access to improve performance and abstract tool functionality from agent usage",
+            "type": "array",
+            "items": {
+              "type": {
+                "oneOf": {
+                  "$ref": "#/components/schemas/ObjectId",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "icon": {
+            "description": "IconAttachment object used to hold the attached icon used for the agent (this links to an IconAttachment object);",
+            "type": {
+              "$ref": "#/components/schemas/IconAttachment"
+            }
+          }
+        }
+      },
+      "Asset": {
+        "desciption": "INCOMPLETE, when adding an IconAttachment, an asset is automatically created (this functionality is exposed) but any other CRUD operation associated with it isn't implemented",
+        "required": [
+          "teamId",
+          "orgId",
+          "filename",
+          "originalFilename",
+          "mimeType",
+          "uploadedAt"
+        ],
+        "properties": {
+          "_id": {
+            "type": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "teamId": {
+            "description": "Associated teamId (this links to a corresponding Team object)",
+            "type": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "orgId": {
+            "description": "Associated orgId (this links to a corresponding Org object)",
+            "type": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "filename": {
+            "description": "the filename of the asset, this is generally a string representation of the _id followed by the filtype. i.e. \"abcdef123456789.png\"",
+            "type": "string"
+          },
+          "originalFilename": {
+            "description": "the original filename of the asset at point of upload",
+            "type": "string"
+          },
+          "mimeType": {
+            "description": "The media type of the asset, indicating the format of the file. Common MIME types include 'image/jpeg' for JPEG",
+            "type": "string"
+          },
+          "uploadedAt": {
+            "description": "The date and time at which the asset was uploaded.",
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IconAttachment": {
+        "summary": "Attachment, generally used for image upload",
+        "required": [
+          "id",
+          "filename"
+        ],
+        "properties": {
+          "id": {
+            "description": "this is NOT a unique id for the IconAttachment, this is a Mongo id that links to an Asset object (neet to implement assets in docs)",
+            "type": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "filename": {
+            "type": "string",
+            "description": "Filename of the attachment at the point of upload"
+          }
+        }
+      },
+      "Crew": {
+        "type": "object",
+        "description": "Represents a crew responsible for handling tasks within an organisation.",
+        "required": [
+          "name",
+          "tasks",
+          "agents",
+          "process"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique Mongo identifier for the crew.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organisation to which the crew belongs (generally the same organisation of the user who created the Crew).",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the crew belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "name": {
+            "description": "The name of the crew.",
+            "type": "string"
+          },
+          "tasks": {
+            "description": "List of task identifiers assigned to the crew.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "agents": {
+            "description": "List of agent identifiers associated with the crew.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectId"
+            }
+          },
+          "managerModelId": {
+            "description": "Identifier of the manager model for the crew, if applicable.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "hidden": {
+            "description": "Indicates whether the crew is hidden from standard views.",
+            "type": "boolean"
+          },
+          "verbose": {
+            "description": "The verbosity level for crew-related outputs.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "fullOutput": {
+            "description": "Indicates whether to provide full output for crew operations.",
+            "type": "boolean"
+          }
+        }
+      },
+      "DatasourceStream": {
+        "type": "object",
+        "description": "Represents a data stream configuration for a datasource, typically used with Airbyte integrations.",
+        "required": [
+          "syncMode",
+          "name"
+        ],
+        "properties": {
+          "syncMode": {
+            "description": "The synchronization mode for the stream. This should match the enum values defined by the Airbyte API.",
+            "type": "string",
+            "enum": null
+          },
+          "name": {
+            "description": "The name of the data stream.",
+            "type": "string"
+          }
+        }
+      },
+      "DatasourceConnectionSettings": {
+        "type": "object",
+        "description": "Configuration settings for a datasource connection, including scheduling, data residency, and namespace details.",
+        "required": [
+          "prefix",
+          "name",
+          "sourceId",
+          "destinationId",
+          "status",
+          "configurations",
+          "nonBreakingSchemaUpdatesBehavior"
+        ],
+        "properties": {
+          "prefix": {
+            "description": "Optional prefix to be added to the destination's namespace. Can be null.",
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "description": "The name of the datasource connection.",
+            "type": "string"
+          },
+          "sourceId": {
+            "description": "The identifier of the data source.",
+            "type": "string"
+          },
+          "destinationId": {
+            "description": "The identifier of the data destination.",
+            "type": "string"
+          },
+          "status": {
+            "description": "The status of the datasource connection. This should match the enum values defined by the Airbyte API and should allow creation in a paused state.",
+            "type": "string"
+          },
+          "configurations": {
+            "description": "Configuration settings for the datasource connection. Structure is dependent on the datasource type.",
+            "type": "object"
+          },
+          "schedule": {
+            "type": "object",
+            "description": "Scheduling information for the datasource connection.",
+            "properties": {
+              "scheduleType": {
+                "description": "The type of schedule for the datasource connection.",
+                "type": "string",
+                "enum": [
+                  "cron",
+                  "manual"
+                ]
+              },
+              "cronExpression": {
+                "description": "The CRON expression for scheduling, required if the schedule type is 'cron'.",
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "dataResidency": {
+            "description": "Specifies where the data should be stored geographically.",
+            "type": "string",
+            "nullable": true
+          },
+          "namespaceDefinition": {
+            "description": "Defines how the namespace should be determined for the data.",
+            "type": "string",
+            "nullable": true
+          },
+          "namespaceFormat": {
+            "description": "The format of the namespace, can be null if not applicable.",
+            "type": "string",
+            "nullable": true
+          },
+          "nonBreakingSchemaUpdatesBehavior": {
+            "description": "Specifies the behavior for handling non-breaking schema updates.",
+            "type": "string"
+          }
+        }
+      },
+      "DatasourceRecordCount": {
+        "type": "object",
+        "description": "Represents the record count information for a datasource, including total, successful, and failed records.",
+        "properties": {
+          "total": {
+            "description": "The total number of records processed.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "success": {
+            "description": "The number of successfully processed records.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "failure": {
+            "description": "The number of records that failed to process.",
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "FieldDescription": {
+        "type": "object",
+        "description": "Provides details about a specific field, including its description and type.",
+        "required": [
+          "description",
+          "type"
+        ],
+        "properties": {
+          "description": {
+            "description": "A textual description of the field.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The data type of the field.",
+            "type": "string"
+          }
+        }
+      },
+      "FieldDescriptionMap": {
+        "type": "object",
+        "description": "A mapping of field names to their descriptions.",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/FieldDescription"
+        }
+      },
+      "StreamConfig": {
+        "type": "object",
+        "description": "Configuration settings for a specific stream, used to break down large volumes of data into smaller, manageable chunks for processing.",
+        "required": [
+          "checkedChildren",
+          "primaryKey",
+          "syncMode",
+          "cursorField",
+          "descriptionsMap"
+        ],
+        "properties": {
+          "checkedChildren": {
+            "description": "List of child stream identifiers that are checked for inclusion in the sync.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "primaryKey": {
+            "description": "List of fields that make up the primary key for the stream.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "syncMode": {
+            "description": "The synchronization mode used for the stream.",
+            "type": "string"
+          },
+          "cursorField": {
+            "description": "List of fields that act as the cursor for incremental syncs.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "descriptionsMap": {
+            "description": "A map of field names to their descriptions.",
+            "$ref": "#/components/schemas/FieldDescriptionMap"
+          }
+        }
+      },
+      "StreamConfigMap": {
+        "type": "object",
+        "description": "A mapping of stream names to their respective configuration settings.",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/StreamConfig"
+        }
+      },
+      "datasourceStatusColors": {
+        "type": "object",
+        "description": "Color mapping for different datasource statuses.",
+        "properties": {
+          "draft": {
+            "description": "Background color for draft status.",
+            "type": "string",
+            "example": "bg-yellow-500"
+          },
+          "processing": {
+            "description": "Background color for processing status.",
+            "type": "string",
+            "example": "bg-blue-300"
+          },
+          "embedding": {
+            "description": "Background color for embedding status.",
+            "type": "string",
+            "example": "bg-yellow-500"
+          },
+          "ready": {
+            "description": "Background color for ready status.",
+            "type": "string",
+            "example": "bg-green-500"
+          }
+        }
+      },
+      "SyncModes": {
+        "type": "array",
+        "description": "List of sync modes available for the datasource.",
+        "items": {
+          "type": "string",
+          "enum": [
+            "full_refresh_overwrite",
+            "full_refresh_append",
+            "incremental_append"
+          ]
+        }
+      },
+      "UnstructuredChunkingStrategyValues": {
+        "type": "array",
+        "description": "List of available strategies for unstructured chunking.",
+        "items": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "by_title",
+            "by_page",
+            "by_similarity"
+          ]
+        }
+      },
+      "UnstructuredPartitioningStrategyValues": {
+        "type": "array",
+        "description": "List of available strategies for unstructured partitioning.",
+        "items": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "fast",
+            "hi_res",
+            "ocr_only"
+          ]
+        }
+      },
+      "UnstructuredPartitioningStrategy": {
+        "type": "string",
+        "description": "Enum representing the strategy used for unstructured data partitioning.",
+        "enum": [
+          "auto",
+          "fast",
+          "hi_res",
+          "ocr_only"
+        ]
+      },
+      "UnstructuredChunkingStrategy": {
+        "type": "string",
+        "description": "Enum representing the strategy used for unstructured data chunking.",
+        "enum": [
+          "basic",
+          "by_title",
+          "by_page",
+          "by_similarity"
+        ]
+      },
+      "UnstructuredChunkingConfig": {
+        "type": "object",
+        "description": "Configuration for chunking unstructured data, including partitioning and chunking strategies, character limits, and similarity thresholds.",
+        "required": [
+          "partitioning",
+          "strategy",
+          "max_characters",
+          "new_after_n_chars",
+          "overlap",
+          "similarity_threshold",
+          "overlap_all"
+        ],
+        "properties": {
+          "partitioning": {
+            "description": "The partitioning strategy used for unstructured data.",
+            "$ref": "#/components/schemas/UnstructuredPartitioningStrategy"
+          },
+          "strategy": {
+            "description": "The chunking strategy used for unstructured data.",
+            "$ref": "#/components/schemas/UnstructuredChunkingStrategy"
+          },
+          "max_characters": {
+            "description": "The maximum number of characters allowed per chunk.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "new_after_n_chars": {
+            "description": "The number of characters after which a new chunk is created.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "overlap": {
+            "description": "The number of characters to overlap between chunks.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "similarity_threshold": {
+            "description": "Threshold for similarity when chunking by similarity, with a value between 0.0 and 1.0.",
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "overlap_all": {
+            "description": "Indicates whether to apply overlap to all chunks or only between adjacent chunks.",
+            "type": "boolean"
+          }
+        }
+      },
+      "Datasource": {
+        "type": "object",
+        "description": "Represents a data source configuration within the system, including connection details, status, chunking configurations, and record counts.",
+        "required": [
+          "name",
+          "originalName",
+          "sourceType",
+          "sourceId",
+          "destinationId",
+          "workspaceId",
+          "connectionId",
+          "createdDate"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the datasource.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the datasource belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the datasource belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "name": {
+            "description": "The name of the datasource.",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional description of the datasource.",
+            "type": "string"
+          },
+          "originalName": {
+            "description": "The original name of the datasource.",
+            "type": "string"
+          },
+          "filename": {
+            "description": "The name of the file associated with the datasource, if applicable.",
+            "type": "string",
+            "nullable": true
+          },
+          "sourceType": {
+            "description": "The type of source for the datasource.",
+            "type": "string"
+          },
+          "sourceId": {
+            "description": "The identifier of the data source.",
+            "type": "string"
+          },
+          "destinationId": {
+            "description": "The identifier of the data destination.",
+            "type": "string"
+          },
+          "workspaceId": {
+            "description": "The identifier of the workspace associated with the datasource.",
+            "type": "string"
+          },
+          "connectionId": {
+            "description": "The identifier of the connection associated with the datasource.",
+            "type": "string"
+          },
+          "recordCount": {
+            "description": "The record count details for the datasource, including total, successful, and failed records.",
+            "$ref": "#/components/schemas/DatasourceRecordCount"
+          },
+          "connectionSettings": {
+            "description": "Configuration settings for the datasource connection.",
+            "$ref": "#/components/schemas/DatasourceConnectionSettings"
+          },
+          "createdDate": {
+            "description": "The date and time when the datasource was created.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSyncedDate": {
+            "description": "The date and time when the datasource was last synced. Null indicates it has never been synced.",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "description": "The current status of the datasource.",
+            "type": "string",
+            "enum": [
+              "draft",
+              "processing",
+              "embedding",
+              "ready"
+            ]
+          },
+          "discoveredSchema": {
+            "description": "Schema discovered during the data source connection. The structure depends on the source type.",
+            "type": "object",
+            "nullable": true
+          },
+          "chunkingConfig": {
+            "description": "Configuration settings for chunking unstructured data, including partitioning and chunking strategies, character limits, and similarity thresholds.",
+            "$ref": "#/components/schemas/UnstructuredChunkingConfig"
+          },
+          "embeddingField": {
+            "description": "The field used for embedding within the datasource.",
+            "type": "string"
+          },
+          "timeWeightField": {
+            "description": "The field used to apply time weighting within the datasource.",
+            "type": "string"
+          },
+          "modelId": {
+            "description": "Identifier of the embedding model used, if applicable.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "hidden": {
+            "description": "Indicates whether the datasource is hidden from standard views.",
+            "type": "boolean"
+          },
+          "streamConfig": {
+            "description": "Configuration settings for processing streams of data, breaking them into smaller chunks for more manageable processing.",
+            "$ref": "#/components/schemas/StreamConfigMap"
+          },
+          "timeUnit": {
+            "description": "A temporary field to limit CRON frequency based on the plan. This will be replaced with a more robust solution in the future.",
+            "type": "string"
+          }
+        }
+      },
+      "InsertResult": {
+        "type": "object",
+        "description": "Represents the result of an insert operation in the database, including whether the operation was acknowledged and the ID of the inserted document.",
+        "properties": {
+          "acknowledged": {
+            "description": "Indicates whether the insert operation was acknowledged by the database.",
+            "type": "boolean"
+          },
+          "insertedId": {
+            "description": "The unique identifier of the inserted document.",
+            "$ref": "#/components/schemas/ObjectId"
+          }
+        }
+      },
+      "NotificationType": {
+        "type": "string",
+        "description": "Enum representing the different types of notifications.",
+        "enum": [
+          "Webhook",
+          "Tool",
+          "SystemUpdate",
+          "UserAction",
+          "ProcessingError"
+        ]
+      },
+      "WebhookType": {
+        "type": "string",
+        "description": "Enum representing the different types of webhooks.",
+        "enum": [
+          "FailedSync",
+          "SuccessfulSync",
+          "AutomaticConnectionUpdate",
+          "ConnectionUpdatesRequiringAction",
+          "WarningRepeatedFailures",
+          "SyncDisabledRepeatedFailures",
+          "EmbeddingCompleted"
+        ]
+      },
+      "WebhookDetails": {
+        "type": "object",
+        "description": "Details specific to webhook notifications.",
+        "required": [
+          "webhookType"
+        ],
+        "properties": {
+          "webhookType": {
+            "description": "The type of webhook.",
+            "$ref": "#/components/schemas/WebhookType"
+          }
+        }
+      },
+      "SystemUpdateDetails": {
+        "type": "object",
+        "description": "Details specific to system update notifications.",
+        "required": [
+          "updateDescription"
+        ],
+        "properties": {
+          "updateDescription": {
+            "description": "A description of the system update.",
+            "type": "string"
+          }
+        }
+      },
+      "UserActionDetails": {
+        "type": "object",
+        "description": "Details specific to user action notifications.",
+        "required": [
+          "userId",
+          "actionPerformed"
+        ],
+        "properties": {
+          "userId": {
+            "description": "The ID of the user who performed the action.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "actionPerformed": {
+            "description": "A description of the action performed by the user.",
+            "type": "string"
+          }
+        }
+      },
+      "ProcessingErrorDetails": {
+        "type": "object",
+        "description": "Details specific to processing error notifications.",
+        "required": [
+          "errorCode",
+          "errorMessage"
+        ],
+        "properties": {
+          "errorCode": {
+            "description": "The error code associated with the processing error.",
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "A description of the processing error.",
+            "type": "string"
+          }
+        }
+      },
+      "NotificationDetails": {
+        "type": "object",
+        "description": "Union type for various notification details, including webhook, system update, user action, and processing error details.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/WebhookDetails"
+          },
+          {
+            "$ref": "#/components/schemas/SystemUpdateDetails"
+          },
+          {
+            "$ref": "#/components/schemas/UserActionDetails"
+          },
+          {
+            "$ref": "#/components/schemas/ProcessingErrorDetails"
+          }
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "description": "Represents a notification in the system, including details about the notification type, target, and additional context.",
+        "required": [
+          "target",
+          "title",
+          "description",
+          "date",
+          "seen"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the notification.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the notification belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the notification belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "target": {
+            "type": "object",
+            "description": "Information about the target of the notification.",
+            "required": [
+              "id",
+              "collection",
+              "property",
+              "objectId"
+            ],
+            "properties": {
+              "id": {
+                "description": "The ID of the target object.",
+                "type": "string"
+              },
+              "collection": {
+                "description": "The collection name where the target object resides.",
+                "type": "string"
+              },
+              "property": {
+                "description": "The specific property within the target object.",
+                "type": "string"
+              },
+              "objectId": {
+                "description": "Indicates whether the target ID is an ObjectId.",
+                "type": "boolean"
+              }
+            }
+          },
+          "title": {
+            "description": "The title of the notification.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A brief description of the notification.",
+            "type": "string"
+          },
+          "date": {
+            "description": "The date and time when the notification was created.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "seen": {
+            "description": "Indicates whether the notification has been seen.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The type of the notification.",
+            "$ref": "#/components/schemas/NotificationType"
+          },
+          "details": {
+            "description": "Additional detailed context for the notification, depending on the notification type.",
+            "$ref": "#/components/schemas/NotificationDetails"
+          }
+        }
+      },
+      "OAUTH_PROVIDER": {
+        "type": "string",
+        "description": "Enum representing the supported OAuth providers.",
+        "enum": [
+          "google",
+          "github"
+        ]
+      },
+      "OAuthStrategy": {
+        "type": "object",
+        "description": "Configuration for an OAuth strategy, including the strategy itself, callback function, secret keys, and additional provider-specific options.",
+        "required": [
+          "strategy",
+          "callback",
+          "secretKeys",
+          "path"
+        ],
+        "properties": {
+          "strategy": {
+            "description": "The OAuth strategy object.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "callback": {
+            "description": "The callback function to handle OAuth responses.",
+            "type": "string",
+            "format": "function"
+          },
+          "secretKeys": {
+            "type": "object",
+            "description": "The client ID and secret key for the OAuth provider.",
+            "required": [
+              "clientId",
+              "secret"
+            ],
+            "properties": {
+              "clientId": {
+                "description": "The client ID for the OAuth provider.",
+                "type": "string"
+              },
+              "secret": {
+                "description": "The secret key for the OAuth provider.",
+                "type": "string"
+              }
+            }
+          },
+          "path": {
+            "description": "The path at which the OAuth strategy is available.",
+            "type": "string"
+          },
+          "extra": {
+            "description": "Additional provider-specific options, such as scope. The shape of this object varies by provider.",
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ShareLinkTypes": {
+        "type": "string",
+        "description": "Enum representing the types of share links.",
+        "enum": [
+          "app"
+        ]
+      },
+      "ShareLinkType": {
+        "type": "string",
+        "description": "Represents the type of the share link, currently only supporting 'app'.",
+        "enum": [
+          "app"
+        ]
+      },
+      "ShareLink": {
+        "type": "object",
+        "description": "Represents a shareable link within the system, including details about the linked object and the type of share link.",
+        "required": [
+          "orgId",
+          "teamId",
+          "shareId",
+          "type",
+          "createdDate",
+          "payload"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the share link.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the share link belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the share link belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "shareId": {
+            "description": "The actual ID that goes into the shareable link.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the share link.",
+            "$ref": "#/components/schemas/ShareLinkType"
+          },
+          "createdDate": {
+            "description": "The date and time when the share link was created.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "payload": {
+            "type": "object",
+            "description": "The payload of the share link, containing specific details related to the shared item.",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "description": "The identifier of the linked object, such as the app's _id.",
+                "$ref": "#/components/schemas/ObjectId"
+              }
+            }
+          }
+        }
+      },
+      "SharingMode": {
+        "type": "string",
+        "description": "Enum representing the different sharing modes.",
+        "enum": [
+          "restricted",
+          "team",
+          "public"
+        ]
+      },
+      "SharingConfig": {
+        "type": "object",
+        "description": "While the permissions object is intended to hold permissions presence in the permissions object as a key implies view/read access for now until we implement checks and update middleware chains for more complex permissions. Keys are intended to be user, team, or org IDs with a mapping to permissions.",
+        "required": [
+          "permissions",
+          "mode"
+        ],
+        "properties": {
+          "permissions": {
+            "description": "Permissions mapping where keys are user, team, or org IDs and values are permissions. Presence implies view/read access.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "mode": {
+            "description": "The mode of sharing.",
+            "$ref": "#/components/schemas/SharingMode"
+          }
+        }
+      },
+      "FormFieldConfig": {
+        "type": "object",
+        "description": "Configuration for a form field within a task, including position, type, and optional settings.",
+        "required": [
+          "position",
+          "type",
+          "name",
+          "label"
+        ],
+        "properties": {
+          "position": {
+            "description": "The position of the form field within the form layout.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The data type of the form field.",
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "radio",
+              "checkbox",
+              "select",
+              "multiselect",
+              "date"
+            ]
+          },
+          "name": {
+            "description": "The name attribute of the form field.",
+            "type": "string"
+          },
+          "label": {
+            "description": "The label displayed for the form field.",
+            "type": "string"
+          },
+          "description": {
+            "description": "An optional description for the form field.",
+            "type": "string"
+          },
+          "required": {
+            "description": "Indicates if the form field is required.",
+            "type": "boolean"
+          },
+          "options": {
+            "description": "Options available for fields like radio, select, or multiselect.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tooltip": {
+            "description": "A tooltip providing additional information about the form field.",
+            "type": "string"
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "description": "Represents a task within the system, including its configuration, expected output, and optional form fields.",
+        "required": [
+          "name",
+          "description"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the task.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObjectId"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the task belongs.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObjectId"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the task belongs.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObjectId"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "name": {
+            "description": "The name of the task.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A detailed description of the task.",
+            "type": "string"
+          },
+          "agentId": {
+            "description": "Identifier of the agent associated with the task.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObjectId"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "expectedOutput": {
+            "description": "The expected output of the task.",
+            "type": "string"
+          },
+          "toolIds": {
+            "description": "List of tool identifiers associated with the task.",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ObjectId"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "asyncExecution": {
+            "description": "Indicates if the task is executed asynchronously.",
+            "type": "boolean"
+          },
+          "context": {
+            "description": "Contextual information related to the task.",
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ObjectId"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "outputJson": {
+            "description": "The JSON output of the task.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "outputPydantic": {
+            "description": "The Pydantic output of the task.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "outputFile": {
+            "description": "The file output of the task.",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon associated with the task, either an attachment or an object containing the icon details.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IconAttachment"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "description": "Identifier for the icon.",
+                    "type": "string"
+                  },
+                  "filename": {
+                    "description": "Filename of the icon.",
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": null
+              }
+            ]
+          },
+          "requiresHumanInput": {
+            "description": "Indicates if the task requires human input.",
+            "type": "boolean"
+          },
+          "displayOnlyFinalOutput": {
+            "description": "Indicates if only the final output should be displayed.",
+            "type": "boolean"
+          },
+          "hidden": {
+            "description": "Indicates if the task is hidden from standard views.",
+            "type": "boolean"
+          },
+          "formFields": {
+            "description": "Array of form field configurations associated with the task.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormFieldConfig"
+            }
+          },
+          "isStructuredOutput": {
+            "description": "Indicates if the output of the task is structured.",
+            "type": "boolean"
+          }
+        }
+      },
+      "Model": {
+        "type": "object",
+        "description": "Represents an AI model used within a team or organization.",
+        "required": [
+          "_id",
+          "orgId",
+          "teamId",
+          "name",
+          "model",
+          "embeddingLength",
+          "modelType",
+          "type",
+          "config"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the model.",
+            "type": "string"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the model belongs.",
+            "type": "string"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the model belongs.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the model.",
+            "type": "string"
+          },
+          "model": {
+            "description": "The specific AI model used.",
+            "type": "string"
+          },
+          "embeddingLength": {
+            "description": "The length of the embeddings generated by the model.",
+            "type": "integer"
+          },
+          "modelType": {
+            "description": "The type of the model.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The general type of the model (e.g., embedding, language model).",
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "description": "Configuration settings for the model.",
+            "required": [
+              "model",
+              "api_key",
+              "base_url",
+              "cohere_api_key",
+              "groq_api_key"
+            ],
+            "properties": {
+              "model": {
+                "description": "The model configuration setting.",
+                "type": "string"
+              },
+              "api_key": {
+                "description": "API key for accessing the model.",
+                "type": "string"
+              },
+              "base_url": {
+                "description": "The base URL for the model's API.",
+                "type": "string"
+              },
+              "cohere_api_key": {
+                "description": "API key for accessing Cohere services.",
+                "type": "string"
+              },
+              "groq_api_key": {
+                "description": "API key for accessing Groq services.",
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Team": {
+        "type": "object",
+        "description": "Represents a team within an organization, including members, models, and permissions.",
+        "required": [
+          "_id",
+          "ownerId",
+          "name",
+          "orgId",
+          "members",
+          "dateCreated",
+          "permissions",
+          "llmModel",
+          "embeddingModel"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the team.",
+            "type": "string"
+          },
+          "ownerId": {
+            "description": "Identifier of the owner of the team.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the team.",
+            "type": "string"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the team belongs.",
+            "type": "string"
+          },
+          "members": {
+            "description": "List of member identifiers belonging to the team.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dateCreated": {
+            "description": "The date when the team was created.",
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "description": "A mapping of user, team, or org IDs to their permissions within the team.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "llmModel": {
+            "description": "The large language model associated with the team.",
+            "$ref": "#/components/schemas/Model"
+          },
+          "embeddingModel": {
+            "description": "The embedding model associated with the team.",
+            "$ref": "#/components/schemas/Model"
+          }
+        }
+      },
+      "TeamSummary": {
+        "type": "object",
+        "description": "A summary view of a team, typically used in an organization context.",
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "permissions"
+        ],
+        "properties": {
+          "id": {
+            "description": "Unique identifier for the team summary.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the team.",
+            "type": "string"
+          },
+          "ownerId": {
+            "description": "Identifier of the owner of the team.",
+            "type": "string"
+          },
+          "permissions": {
+            "description": "A mapping of user, team, or org IDs to their permissions within the team.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Org": {
+        "type": "object",
+        "description": "Represents an organization, including its teams and permissions.",
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "teams",
+          "permissions"
+        ],
+        "properties": {
+          "id": {
+            "description": "Unique identifier for the organization.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the organization.",
+            "type": "string"
+          },
+          "ownerId": {
+            "description": "Identifier of the owner of the organization.",
+            "type": "string"
+          },
+          "teams": {
+            "description": "List of team summaries belonging to the organization.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamSummary"
+            }
+          },
+          "permissions": {
+            "description": "A mapping of user, team, or org IDs to their permissions within the organization.",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Stripe": {
+        "type": "object",
+        "description": "Stripe-related information, including plan details and trial status.",
+        "required": [
+          "stripeCustomerId",
+          "stripePlan",
+          "stripeAddons",
+          "stripeTrial",
+          "stripeEndsAt"
+        ],
+        "properties": {
+          "stripeCustomerId": {
+            "description": "Stripe customer ID associated with the account.",
+            "type": "string"
+          },
+          "stripePlan": {
+            "description": "The current Stripe plan of the account.",
+            "type": "string"
+          },
+          "stripeAddons": {
+            "type": "object",
+            "description": "Additional Stripe features such as users and storage.",
+            "required": [
+              "users",
+              "storage"
+            ],
+            "properties": {
+              "users": {
+                "description": "Number of users included in the plan.",
+                "type": "integer"
+              },
+              "storage": {
+                "description": "Amount of storage included in the plan.",
+                "type": "integer"
+              }
+            }
+          },
+          "stripeTrial": {
+            "description": "Indicates whether the account is on a trial.",
+            "type": "boolean"
+          },
+          "stripeEndsAt": {
+            "description": "The timestamp when the Stripe subscription ends.",
+            "type": "integer"
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "description": "Represents an account, including personal details, organizational affiliations, and payment information.",
+        "required": [
+          "_id",
+          "name",
+          "email",
+          "orgs",
+          "currentOrg",
+          "currentTeam",
+          "stripe",
+          "oauth",
+          "permissions",
+          "onboarded",
+          "_stripe"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the account.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the account holder.",
+            "type": "string"
+          },
+          "email": {
+            "description": "The email address associated with the account.",
+            "type": "string"
+          },
+          "orgs": {
+            "description": "List of organizations the account is affiliated with.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Org"
+            }
+          },
+          "currentOrg": {
+            "description": "The ID of the currently active organization.",
+            "type": "string"
+          },
+          "currentTeam": {
+            "description": "The ID of the currently active team.",
+            "type": "string"
+          },
+          "stripe": {
+            "description": "Stripe-related information for the account.",
+            "$ref": "#/components/schemas/Stripe"
+          },
+          "oauth": {
+            "description": "OAuth-related information for the account.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "permissions": {
+            "description": "Permissions granted to the account.",
+            "type": "string"
+          },
+          "onboarded": {
+            "description": "Indicates whether the account holder has completed onboarding.",
+            "type": "boolean"
+          },
+          "_stripe": {
+            "description": "Additional Stripe-related information for internal use.",
+            "$ref": "#/components/schemas/Stripe"
+          }
+        }
+      },
+      "TeamModelResponse": {
+        "type": "object",
+        "description": "Response object containing details about a team, along with associated account information.",
+        "required": [
+          "data",
+          "csrf",
+          "account"
+        ],
+        "properties": {
+          "data": {
+            "description": "The data containing the team details.",
+            "$ref": "#/components/schemas/Team"
+          },
+          "csrf": {
+            "description": "CSRF token for security.",
+            "type": "string"
+          },
+          "account": {
+            "description": "The account information associated with the team.",
+            "$ref": "#/components/schemas/Account"
+          }
+        }
+      },
+      "Retriever": {
+        "type": "string",
+        "description": "Enum representing different types of retrievers used in tools.",
+        "enum": [
+          "raw",
+          "self_query",
+          "time_weighted",
+          "multi_query"
+        ]
+      },
+      "ToolType": {
+        "type": "string",
+        "description": "Enum representing different types of tools.",
+        "enum": [
+          "function",
+          "rag"
+        ]
+      },
+      "ToolState": {
+        "type": "string",
+        "description": "Enum representing the possible states of a tool.",
+        "enum": [
+          "pending",
+          "ready",
+          "error"
+        ]
+      },
+      "BaseOpenAPIParameters": {
+        "type": "string",
+        "description": "Enum representing base OpenAPI parameters.",
+        "enum": [
+          "__baseurl",
+          "__path",
+          "__method"
+        ]
+      },
+      "MetadataFieldInfo": {
+        "type": "object",
+        "description": "Information about a metadata field used in retriever configurations.",
+        "required": [
+          "name",
+          "description",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "description": "The name of the metadata field.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A description of the metadata field.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The data type of the metadata field.",
+            "type": "string",
+            "enum": [
+              "string",
+              "integer",
+              "float"
+            ]
+          }
+        }
+      },
+      "SelfQueryRetrieverConfig": {
+        "type": "object",
+        "description": "Configuration for the self-query retriever.",
+        "required": [
+          "metadata_field_info"
+        ],
+        "properties": {
+          "k": {
+            "description": "Number of results to retrieve.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "metadata_field_info": {
+            "description": "Array of metadata field information objects.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetadataFieldInfo"
+            }
+          }
+        }
+      },
+      "TimeWeightedRetrieverConfig": {
+        "type": "object",
+        "description": "Configuration for the time-weighted retriever.",
+        "properties": {
+          "k": {
+            "description": "Number of results to retrieve.",
+            "type": "integer",
+            "format": "int32"
+          },
+          "decay_rate": {
+            "description": "Decay rate applied to the time weighting.",
+            "type": "number",
+            "format": "float"
+          }
+        }
+      },
+      "SimilaritySearchRetrieverConfig": {
+        "type": "object",
+        "description": "Configuration for the similarity search retriever.",
+        "properties": {
+          "k": {
+            "description": "Number of results to retrieve.",
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MultiQueryRetrieverConfig": {
+        "type": "object",
+        "description": "Configuration for the multi-query retriever.",
+        "properties": {
+          "k": {
+            "description": "Number of results to retrieve.",
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RetrieverConfig": {
+        "type": "object",
+        "description": "Union type representing different retriever configurations.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SelfQueryRetrieverConfig"
+          },
+          {
+            "$ref": "#/components/schemas/TimeWeightedRetrieverConfig"
+          }
+        ]
+      },
+      "FunctionProperty": {
+        "type": "object",
+        "description": "Defines the properties of a function parameter in a tool.",
+        "required": [
+          "type",
+          "description"
+        ],
+        "properties": {
+          "type": {
+            "description": "The data type of the function property.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A description of the function property.",
+            "type": "string"
+          }
+        }
+      },
+      "Tool": {
+        "type": "object",
+        "description": "Represents a tool within the system, including its configuration, state, and associated retrievers.",
+        "required": [
+          "name",
+          "description",
+          "type",
+          "data"
+        ],
+        "properties": {
+          "_id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the tool belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the tool belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "name": {
+            "description": "The name of the tool.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A detailed description of the tool.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of tool.",
+            "$ref": "#/components/schemas/ToolType"
+          },
+          "asdf": {
+            "description": "The schema associated with the tool.",
+            "type": "string"
+          },
+          "retriever_type": {
+            "description": "The type of retriever used by the tool.",
+            "$ref": "#/components/schemas/Retriever"
+          },
+          "retriever_config": {
+            "description": "Configuration settings for the retriever.",
+            "$ref": "#/components/schemas/RetrieverConfig"
+          },
+          "datasourceId": {
+            "description": "Identifier of the datasource associated with the tool.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "state": {
+            "description": "The current state of the tool.",
+            "$ref": "#/components/schemas/ToolState"
+          },
+          "data": {
+            "type": "object",
+            "description": "Data related to the tool, including runtime, environment variables, and more.",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "runtime": {
+                "description": "The runtime environment for the tool.",
+                "type": "string"
+              },
+              "builtin": {
+                "description": "Indicates if the tool is a built-in feature.",
+                "type": "boolean"
+              },
+              "name": {
+                "description": "The name of the data.",
+                "type": "string"
+              },
+              "description": {
+                "description": "A description of the data.",
+                "type": "string"
+              },
+              "apiKey": {
+                "description": "API key associated with the tool.",
+                "type": "string"
+              },
+              "environmentVariables": {
+                "description": "Environment variables required by the tool.",
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Parameters for the tool's function.",
+                "properties": {
+                  "properties": {
+                    "description": "Properties of the function parameters.",
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/FunctionProperty"
+                    }
+                  },
+                  "required": {
+                    "description": "List of required parameter names.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "code": {
+                "description": "Code associated with the tool.",
+                "type": "string"
+              },
+              "requirements": {
+                "description": "Requirements needed by the tool.",
+                "type": "string"
+              },
+              "openAPIMatchKey": {
+                "description": "Key used to match OpenAPI specifications.",
+                "type": "string"
+              }
+            }
+          },
+          "icon": {
+            "description": "Icon associated with the tool.",
+            "$ref": "#/components/schemas/IconAttachment"
+          },
+          "hidden": {
+            "description": "Indicates whether the tool is hidden.",
+            "type": "boolean"
+          },
+          "functionId": {
+            "description": "Identifier of the function associated with the tool.",
+            "type": "string"
+          },
+          "revisionId": {
+            "description": "Identifier of the tool's revision.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "functionLogs": {
+            "description": "Logs related to the function's execution.",
+            "type": "string"
+          }
+        }
+      },
+      "ToolRevision": {
+        "type": "object",
+        "description": "Represents a revision of a tool, including the content of the revision and metadata such as the organization, team, and tool identifiers.",
+        "required": [
+          "toolId",
+          "content",
+          "date"
+        ],
+        "properties": {
+          "_id": {
+            "description": "Unique identifier for the tool revision.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "orgId": {
+            "description": "Identifier of the organization to which the tool revision belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "teamId": {
+            "description": "Identifier of the team to which the tool revision belongs.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "toolId": {
+            "description": "Identifier of the tool associated with this revision.",
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "content": {
+            "description": "The content of the tool revision.",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "date": {
+            "description": "The date and time when the revision was created.",
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

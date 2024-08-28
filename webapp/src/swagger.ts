@@ -1,4 +1,5 @@
 import {inspect} from 'node:util';
+import fs from 'fs';
 const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
@@ -19,3 +20,7 @@ const options = {
 
 const openapiSpecification = swaggerJsdoc(options);
 console.log(inspect(openapiSpecification, true, 10))
+// Convert the openapiSpecification object to JSON and write it to a file
+fs.writeFileSync('./openapi-spec.json', JSON.stringify(openapiSpecification, null, 2), 'utf-8');
+
+console.log('OpenAPI specification written to openapi-spec.json');

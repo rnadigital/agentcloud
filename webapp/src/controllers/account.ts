@@ -23,19 +23,7 @@ import { chainValidations } from 'lib/utils/validationutils';
 import Permissions from 'permissions/permissions';
 
 
-/**
- * @swagger
- * /:
- *  get:
- *   summary: Returns all the account data
- *   responses:
- *    200:
- *     description: the list ofthe books content
- *     schema:
- *      type: array
- *      items:
- *       $ref: '#/components/schemas/Agent'
- */
+
 export async function accountData(req, res, _next) {
 	return {
 		team: res.locals.matchingTeam,

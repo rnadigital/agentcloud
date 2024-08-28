@@ -332,6 +332,140 @@ export type Datasource = {
  */
 
 
+/**
+ * @openapi
+ *  components:
+ *   schemas:
+ *    datasourceStatusColors:
+ *     type: object
+ *     description: Color mapping for different datasource statuses.
+ *     properties:
+ *      draft:
+ *       description: Background color for draft status.
+ *       type: string
+ *       example: 'bg-yellow-500'
+ *      processing:
+ *       description: Background color for processing status.
+ *       type: string
+ *       example: 'bg-blue-300'
+ *      embedding:
+ *       description: Background color for embedding status.
+ *       type: string
+ *       example: 'bg-yellow-500'
+ *      ready:
+ *       description: Background color for ready status.
+ *       type: string
+ *       example: 'bg-green-500'
+
+ *    SyncModes:
+ *     type: array
+ *     description: List of sync modes available for the datasource.
+ *     items:
+ *      type: string
+ *      enum:
+ *       - full_refresh_overwrite
+ *       - full_refresh_append
+ *       - incremental_append
+ *       # 'incremental_deduped_history' can be added if needed in the future
+
+ *    UnstructuredChunkingStrategyValues:
+ *     type: array
+ *     description: List of available strategies for unstructured chunking.
+ *     items:
+ *      type: string
+ *      enum:
+ *       - basic
+ *       - by_title
+ *       - by_page
+ *       - by_similarity
+
+ *    UnstructuredPartitioningStrategyValues:
+ *     type: array
+ *     description: List of available strategies for unstructured partitioning.
+ *     items:
+ *      type: string
+ *      enum:
+ *       - auto
+ *       - fast
+ *       - hi_res
+ *       - ocr_only
+ */
+
+/**
+ * @openapi
+ *  components:
+ *   schemas:
+ *    UnstructuredPartitioningStrategy:
+ *     type: string
+ *     description: Enum representing the strategy used for unstructured data partitioning.
+ *     enum:
+ *      - auto
+ *      - fast
+ *      - hi_res
+ *      - ocr_only
+ */
+
+/**
+ * @openapi
+ *  components:
+ *   schemas:
+ *    UnstructuredChunkingStrategy:
+ *     type: string
+ *     description: Enum representing the strategy used for unstructured data chunking.
+ *     enum:
+ *      - basic
+ *      - by_title
+ *      - by_page
+ *      - by_similarity
+ */
+
+
+/**
+ * @openapi
+ *  components:
+ *   schemas:
+ *    UnstructuredChunkingConfig:
+ *     type: object
+ *     description: Configuration for chunking unstructured data, including partitioning and chunking strategies, character limits, and similarity thresholds.
+ *     required:
+ *      - partitioning
+ *      - strategy
+ *      - max_characters
+ *      - new_after_n_chars
+ *      - overlap
+ *      - similarity_threshold
+ *      - overlap_all
+ *     properties:
+ *      partitioning:
+ *       description: The partitioning strategy used for unstructured data.
+ *       $ref: '#/components/schemas/UnstructuredPartitioningStrategy'
+ *      strategy:
+ *       description: The chunking strategy used for unstructured data.
+ *       $ref: '#/components/schemas/UnstructuredChunkingStrategy'
+ *      max_characters:
+ *       description: The maximum number of characters allowed per chunk.
+ *       type: integer
+ *       format: int32
+ *      new_after_n_chars:
+ *       description: The number of characters after which a new chunk is created.
+ *       type: integer
+ *       format: int32
+ *      overlap:
+ *       description: The number of characters to overlap between chunks.
+ *       type: integer
+ *       format: int32
+ *      similarity_threshold:
+ *       description: Threshold for similarity when chunking by similarity, with a value between 0.0 and 1.0.
+ *       type: number
+ *       format: float
+ *       minimum: 0.0
+ *       maximum: 1.0
+ *      overlap_all:
+ *       description: Indicates whether to apply overlap to all chunks or only between adjacent chunks.
+ *       type: boolean
+ */
+
+
 
 /**
  * @openapi
