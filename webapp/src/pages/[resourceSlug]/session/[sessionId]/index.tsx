@@ -67,6 +67,7 @@ export default function Session(props) {
 	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
 
 	async function joinSessionRoom() {
+		console.log('joinSessionRoom', sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom() {
@@ -165,6 +166,7 @@ export default function Session(props) {
 	}
 
 	function handleSocketStart() {
+		console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
@@ -239,7 +241,7 @@ export default function Session(props) {
 		return () => {
 			handleSocketStop();
 		};
-	}, [resourceSlug, router?.query?.sessionId]);
+	}, [resourceSlug, router?.query?.sessionId, router.asPath]);
 	useEffect(() => {
 		if (currentSessionId !== router?.query?.sessionId) {
 			setMessages([]);
