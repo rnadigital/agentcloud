@@ -97,9 +97,9 @@ export async function addKeyApi(req, res, next) {
 	}
 
 	//generate expiration date
-	const epxirationDate = new Date();
+	let epxirationDate = new Date();
 	if (expirationDays === 'never') {
-		epxirationDate.setDate(epxirationDate.getDate() + 365); //need a better way to set never
+		epxirationDate = null;
 	} else {
 		const numOfDays = parseInt(expirationDays);
 		epxirationDate.setDate(epxirationDate.getDate() + numOfDays);
@@ -170,9 +170,19 @@ export async function incrementKeyApi(req, res, next) {
 
 	const modifiedKey = await getKeyById(toObjectId(ownerId), toObjectId(keyId));
 
+	let expireSeconds;
+	if (modifiedKey?.expirationDate === null) {
+		expireSeconds = null;
+	} else {
+		const expireDate = new Date(modifiedKey?.expirationDate).getSeconds();
+		const today = new Date().getSeconds();
+		expireSeconds = expireDate - today;
+	}
+
 	const newToken = jwt.sign(
 		{ keyId: modifiedKey?._id, ownerId: modifiedKey?.ownerId, version: modifiedKey?.version },
-		process.env.JWT_SECRET
+		process.env.JWT_SECRET,
+		expireSeconds === null ? {} : { expiresIn: `${expireSeconds}s` }
 	);
 
 	await addTokenToKey(toObjectId(modifiedKey?._id), newToken);

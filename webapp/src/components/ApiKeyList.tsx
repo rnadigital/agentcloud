@@ -64,13 +64,14 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 			() => {
 				fetchKeys();
 				toast('Regenerated Key');
+				setRegenerateOpen(false);
 			},
 			() => {
 				toast.error('Error Regenerating Key');
+				setRegenerateOpen(false);
 			},
 			router
 		);
-		setRegenerateOpen(false);
 	}
 
 	useEffect(() => {
@@ -157,7 +158,12 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 					</thead>
 					<tbody className='bg-white divide-y divide-gray-200 dark:bg-gray-700'>
 						{keys.map(key => {
-							const keyDate = new Date(key?.expirationDate);
+							let keyDate: string;
+							if (key?.expirationDate === null) {
+								keyDate = 'Never';
+							} else {
+								keyDate = new Date(key?.expirationDate).toDateString();
+							}
 							return (
 								<tr
 									key={key._id}
@@ -185,7 +191,7 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap' onClick={() => router.push(``)}>
 										<div className='text-sm max-w-36 text-gray-900 dark:text-white truncate'>
-											{keyDate?.toDateString()}
+											{keyDate}
 										</div>
 									</td>
 

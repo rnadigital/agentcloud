@@ -1,10 +1,9 @@
 'use strict';
 
 import * as db from 'db/index';
+import toObjectId from 'misc/toobjectid';
 import { APIKey } from 'struct/apikey';
 import { InsertResult } from 'struct/db';
-
-import toObjectId from '../lib/misc/toobjectid';
 
 export function APIKeyCollection(): any {
 	return db.db().collection('apikeys');

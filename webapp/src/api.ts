@@ -285,7 +285,7 @@ export function getKey(body, dispatch, errorCallback, router) {
 
 export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 	return ApiCall(
-		`account/forms/apikey/${body.keyId}/increment`,
+		`/account/forms/apikey/${body.keyId}/increment`,
 		'POST',
 		body,
 		dispatch,

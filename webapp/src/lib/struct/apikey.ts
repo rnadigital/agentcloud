@@ -6,7 +6,7 @@ export type APIKey = {
 	version?: number;
 	name: string;
 	description?: string;
-	expirationDate: Date;
+	expirationDate: Date | null;
 	ownerId: ObjectId;
 	token?: string;
 	permissions?: Binary; //TODO: set up permissions with API keys
