@@ -863,8 +863,8 @@ tools = ["crewai-tools (>=0.4.26,<0.5.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "undo-gemini"
-resolved_reference = "6908064b8579cf00a579f7bb2bd05be503293928"
+reference = "a8578735e86af5ec1a583544e3cf0c4eec9b3f91"
+resolved_reference = "a8578735e86af5ec1a583544e3cf0c4eec9b3f91"
 
 [[package]]
 name = "curl-cffi"
@@ -6033,4 +6033,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "1fc24223177b6e90dac3fed296666dfdc46db228706dc47b8d949d6307770736"
+content-hash = "a44c35c96d0ae5a491f521b8bc7f9fb8cf42796d8febf08c841d5ea83522267b"

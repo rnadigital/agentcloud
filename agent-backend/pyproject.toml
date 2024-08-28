@@ -23,7 +23,7 @@ diskcache = "^5.6.3"
 sse-starlette = "^1.8.2"
 chromadb = "^0.4.22"
 replicate = "^0.23.1"
-crewai = { git = "https://github.com/rnadigital/crewAI.git", branch="undo-gemini" }
+crewai = { git = "https://github.com/rnadigital/crewAI.git", rev = "a8578735e86af5ec1a583544e3cf0c4eec9b3f91" }
 onnxruntime = "1.17.0"
 fastembed = "^0.2.2"
 qdrant-client = "^1.8.0"
