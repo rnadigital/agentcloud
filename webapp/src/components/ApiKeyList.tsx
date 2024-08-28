@@ -86,8 +86,7 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 
 	return (
 		<>
-			<ConfirmModal
-				setOpen={setDeleteOpen}
+			<DeleteModal
 				open={deleteOpen}
 				confirmFunction={() => {
 					deleteKey(deletingModel?._id, deletingModel?.ownerId);
@@ -97,10 +96,11 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 					setDeleteOpen(false);
 				}}
 				title={'Delete Key'}
-				message={`Are you sure you want to delete the key "${deletingModel?.name}". This action cannot be undone and all compnents using this key will cease to function.`}
+				message={`Are you sure you want to delete the key "${deletingModel?.name}". This action cannot be undone and this key will cease to function.`}
 			/>
-			<DeleteModal
+			<ConfirmModal
 				open={regenerateOpen}
+				setOpen={setRegenerateOpen}
 				confirmFunction={() => {
 					regenerateKey(regeneratingKey?._id, regeneratingKey?.ownerId);
 					fetchKeys();
@@ -109,7 +109,7 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 					setRegenerateOpen(false);
 				}}
 				title={'Regenerate Key'}
-				message={`Are you sure you want to regenerate the key "${regeneratingKey?.name}". This action cannot be undone and all compnents using this key will cease to function.`}
+				message={`Are you sure you want to regenerate the key "${regeneratingKey?.name}". This action cannot be undone and old versions of this key will cease to function.`}
 			/>
 			{error && (
 				<div className='my-4'>
@@ -179,7 +179,9 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 										<div className='text-sm text-gray-900 dark:text-white'>{key.name}</div>
 									</td>
 									<td className='px-6 py-4 text-wrap' onClick={() => router.push(``)}>
-										<div className='text-sm text-gray-900 dark:text-white'>{key?.description}</div>
+										<div className='text-sm text-gray-900 dark:text-white'>
+											{key?.description || '-'}
+										</div>
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'
@@ -196,6 +198,18 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 									</td>
 
 									<td className='flex flex-row justify-center items-center w-full gap-5 px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
+										<button
+											onClick={() => {
+												setRegeneratingKey(key);
+												setRegenerateOpen(true);
+											}}
+											className='text-gray-900 hover:text-gray-400'
+										>
+											<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
+										</button>
+
+										<CopyToClipboardButton dataToCopy={key?.token} />
+
 										<>
 											<button
 												onClick={() => {
@@ -208,26 +222,6 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 												<TrashIcon className='h-5 w-5' aria-hidden='true' />
 											</button>
 										</>
-										<button
-											onClick={() => {
-												setRegeneratingKey(key);
-												setRegenerateOpen(true);
-											}}
-											className='text-gray-900 hover:text-gray-400'
-										>
-											<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
-										</button>
-										<button
-											onClick={() => {
-												setDeletingModel(key);
-												setDeleteOpen(true);
-											}}
-											className='text-gray-900 hover:text-gray-400'
-										>
-											<PencilSquareIcon className='h-5 w-5' aria-hidden='true' />
-										</button>
-
-										<CopyToClipboardButton dataToCopy={key?.token} />
 									</td>
 								</tr>
 							);

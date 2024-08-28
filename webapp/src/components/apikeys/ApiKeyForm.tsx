@@ -12,12 +12,14 @@ import React, { useState } from 'react';
 import { Controller, FieldValues, FormProvider, useForm } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
+
 export interface ApiKeyFormValues {
 	name?: '';
 	description: '';
-	expirationDays: '0';
+	expirationDays: '30';
 	ownerId?: ObjectId;
 }
+
 const dropdownOptions = [
 	{
 		value: '30',
@@ -33,7 +35,7 @@ const dropdownOptions = [
 	},
 	{
 		value: 'never',
-		label: 'never expire'
+		label: 'Never expire'
 	}
 ];
 
@@ -52,17 +54,14 @@ export default function ApiKeyForm() {
 	setValue('ownerId', account?._id);
 
 	const getFutureDate = expirationDays => {
-		if (expirationDays === 'never') {
-			return 'Will Never Expire';
-		}
 		const numOfDays = parseInt(expirationDays);
 		const today = new Date();
 		today.setDate(today.getDate() + numOfDays);
 		return today.toDateString();
 	};
+
 	const onSubmit = async (data: ApiKeyFormValues) => {
 		setSubmitting(true);
-		console.log('onSubmit-data', data);
 		try {
 			await API.addKey(
 				{
@@ -83,10 +82,15 @@ export default function ApiKeyForm() {
 	}
 
 	return (
-		<div className='flex min-h-full flex-1 flex-col justify-start py-12 sm:px-6 lg:px-4'>
+		<div className='flex min-h-full flex-1 flex-col justify-start p-2 pt-6'>
 			<FormProvider {...methods}>
-				<form onSubmit={handleSubmit(onSubmit)} action='/forms/account/apikey/add' method='POST'>
-					<div className='w-[20%] py-5'>
+				<form
+					onSubmit={handleSubmit(onSubmit)}
+					action='/forms/account/apikey/add'
+					method='POST'
+					className='space-y-4'
+				>
+					<div className='w-full md:w-1/2'>
 						<InputField<ApiKeyFormValues>
 							name='name'
 							control={control}
@@ -99,7 +103,7 @@ export default function ApiKeyForm() {
 						/>
 					</div>
 
-					<div className='w-[25%] py-5'>
+					<div className='w-full md:w-1/2'>
 						<InputField<ApiKeyFormValues>
 							name='description'
 							control={control}
@@ -111,17 +115,16 @@ export default function ApiKeyForm() {
 						/>
 					</div>
 
-					<div className='flex flex-col w-[25%] min-w-32 my-5'>
+					<div className='col-span-full'>
 						<p className='text-sm text-gray-900 pb-2'>Expiration</p>
-						<div className='flex flex-row w-full gap-2'>
-							<div className='flex w-[50%]'>
+						<div className='flex flex-row w-full gap-4'>
+							<div className='w-full md:w-1/2'>
 								<Controller
 									render={({ field: { onChange, onBlur, value, ref } }) => {
 										const label = dropdownOptions.find(x => x.value === value)?.label;
 										const handleChange = selected => {
 											onChange((selected as Option).value);
 											setEndDateStr((selected as Option).value);
-											getFutureDate;
 										};
 										return (
 											<Select
@@ -136,7 +139,7 @@ export default function ApiKeyForm() {
 													list: 'dark:bg-slate-700',
 													listGroupLabel: 'dark:bg-slate-700',
 													listItem: (value?: { isSelected?: boolean }) =>
-														`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 dark:hover:bg-slate-600 dark:text-gray-50 dark:hover:text-white`
+														'block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 dark:hover:bg-slate-600 dark:text-gray-50 dark:hover:text-white'
 												}}
 												placeholder='Select'
 											/>
@@ -150,18 +153,19 @@ export default function ApiKeyForm() {
 
 							{endDateStr !== null && (
 								<div className='flex flex-col text-sm text-gray-500'>
-									<p className=''>This token will expire on:</p>
-
-									<span>{getFutureDate(endDateStr)}</span>
+									<p>
+										{endDateStr === 'never'
+											? 'This token will never expire.'
+											: `This token will expire on: ${getFutureDate(endDateStr)}`}
+									</p>
 								</div>
 							)}
 						</div>
 					</div>
 
-					<div className='flex flex-row justify-between max-w-[25%]'>
+					<div className='flex justify-between items-center w-full pt-4'>
 						<Link href='/apikeys' className='text-sm font-semibold leading-6 text-gray-900'>
-							{' '}
-							Back{' '}
+							Back
 						</Link>
 						<button
 							type='submit'
