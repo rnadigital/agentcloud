@@ -2,6 +2,14 @@ name: agentcloud
 
 services:
 
+  unstructured-api:
+    ports:
+        - 9500:9500
+    container_name: unstructured-api
+    environment:
+        - PORT=9500
+    image: localhost:5000/unstructured-api
+
   docker_rabbitmq:
     image: rabbitmq:3.13.1-management
     environment:
