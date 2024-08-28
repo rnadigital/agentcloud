@@ -702,27 +702,52 @@ export async function syncDatasourceApi(req, res, next) {
 		});
 	}
 
-	// Create a job to trigger the connection to sync
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: datasource.connectionId,
-		jobType: 'sync'
-	};
+	if (datasource?.sourceType === 'file') {
+		// Fetch the appropriate message queue provider
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 
-	try {
-		const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-		log('createdJob', createdJob);
-	} catch (e) {
-		log(e);
-		console.log(e);
-		return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		// Prepare the message and metadata
+		const message = JSON.stringify({
+			bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE,
+			filename: datasource?.filename,
+			file: `/tmp/${datasource?.filename}`
+		});
+		const metadata = {
+			_stream: datasource._id.toString(),
+			stream: datasource._id.toString(),
+			type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
+		};
+
+		// Send the message using the provider
+		await messageQueueProvider.sendMessage(message, metadata);
+
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.EMBEDDING
+		});
+	} else {
+		// Create a job to trigger the connection to sync
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'sync'
+		};
+
+		try {
+			const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
+			log('createdJob', createdJob);
+		} catch (e) {
+			log(e);
+			console.log(e);
+			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		}
+
+		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.PROCESSING
+		});
 	}
-
-	//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
-	await editDatasource(req.params.resourceSlug, datasourceId, {
-		recordCount: { total: 0 },
-		status: DatasourceStatus.PROCESSING
-	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -995,6 +1020,7 @@ export async function uploadFileApi(req, res, next) {
 	});
 	const metadata = {
 		_stream: newDatasourceId.toString(),
+		stream: newDatasourceId.toString(),
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
 	};
 
