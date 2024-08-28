@@ -53,23 +53,21 @@ pub async fn pubsub_consume(
                 match message_attributes.get("_stream") {
                     Some(stream) => {
                         let stream_string: String = stream.to_string();
-                        let mut stream_type: Option<String> = None;
-                        let (datasource_id, stream_config_key) = match message_attributes
-                            .get("type")
-                        {
-                            Some(stream_type_field_value) => {
-                                let stream_split: Vec<&str> = stream_string.split('_').collect();
-                                stream_type = Some(stream_type_field_value.to_string());
-                                (stream_split.to_vec()[0], None)
-                            }
-                            None => {
-                                let stream_split: (&str, &str) =
-                                    stream_string.split_once('_').unwrap();
-                                let datasource_id = stream_split.0;
-                                let stream_config_key = stream_split.1.to_string();
-                                (datasource_id, Some(stream_config_key))
-                            }
-                        };
+                        let (datasource_id, stream_config_key, stream_type) =
+                            match message_attributes.get("type") {
+                                Some(stream_type_field_value) => {
+                                    let stream_split: Vec<&str> =
+                                        stream_string.split('_').collect();
+                                    let datasource_id = stream_split[0];
+                                    let stream_type = Some(stream_type_field_value.to_string());
+                                    (datasource_id, None, stream_type)
+                                }
+                                None => {
+                                    let (datasource_id, stream_config_key) = stream_string.split_once('_')
+                                        .expect("Expected string to contain an underscore for splitting");
+                                    (datasource_id, Some(stream_config_key.to_string()), None)
+                                }
+                            };
                         let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
                         let sender = sender.clone();

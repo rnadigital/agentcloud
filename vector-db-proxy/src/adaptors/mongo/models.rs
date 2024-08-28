@@ -154,6 +154,7 @@ pub struct Credentials {
 }
 /// Enum representing the sync modes
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SyncMode {
     FullRefreshOverwrite,
     FullRefreshAppend,
