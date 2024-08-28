@@ -136,7 +136,6 @@ impl VectorDatabase for QdrantClient {
 
     async fn insert_point(
         &self,
-
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
