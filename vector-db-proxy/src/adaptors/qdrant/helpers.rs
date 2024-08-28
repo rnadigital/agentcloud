@@ -1,39 +1,21 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
-use mongodb::Database;
+use anyhow::Result;
 use qdrant_client::client::QdrantClient;
-use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
+use qdrant_client::qdrant::{PointId, PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
-use tokio::sync::RwLock;
 use uuid::Uuid;
 
-use crate::hash_map_values_as_serde_values;
 use crate::embeddings::models::EmbeddingModels;
-use crate::embeddings::utils::embed_text;
-use crate::adaptors::qdrant::models::ScrollResults;
+use crate::vector_databases::models::{ScrollResults, VectorDatabaseStatus};
 
-///
-///
-/// # Arguments
-///
-/// * `qdrant_conn`:
-/// * &v.to_string()
-/// returns: Result<(ScrollResponse, String), Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub async fn get_next_page(
-    qdrant_conn: Arc<RwLock<QdrantClient>>,
+    qdrant_conn: &QdrantClient,
     scroll_point: &ScrollPoints,
 ) -> Result<(ScrollResponse, String)> {
-    let result = qdrant_conn.read().await.scroll(scroll_point).await?;
+    let result = qdrant_conn.scroll(scroll_point).await?;
 
     let mut offset = String::from("Done");
     if let Some(point_id) = result.clone().next_page_offset {
@@ -76,9 +58,14 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
                 }
             }
         }
+        let payload: HashMap<String, String> = new_payload
+            .iter()
+            .map(|(k, v)| (k.clone(), v.to_string()))
+            .collect();
         let res = ScrollResults {
+            status: VectorDatabaseStatus::Ok,
             id,
-            payload: new_payload, // Use the modified payload
+            payload, // Use the modified payload
             vector,
         };
         response.push(res);
@@ -86,78 +73,20 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
     Ok(response)
 }
 
-///
-///
-/// # Arguments
-///
-/// * `row`:
-///
-/// returns: Result<PointStruct, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
-pub async fn embed_payload(
-    mongo_conn: Arc<RwLock<Database>>,
-    data: &HashMap<String, String>,
-    embedding_field_name: &String,
-    datasource_id: Option<String>,
-    embedding_model: EmbeddingModels,
-) -> Result<PointStruct, anyhow::Error> {
-    if !data.is_empty() {
-        if let Some(_id) = datasource_id {
-            let mut payload: HashMap<String, serde_json::Value> =
-                hash_map_values_as_serde_values!(data);
-            // todo: this is too opinionated. this should happen outside of this function so that
-            // Convert embedding_field_name to lowercase
-            if let Some(value) = payload.remove(embedding_field_name) {
-                //Renaming the embedding field to page_content
-                payload.insert("page_content".to_string(), value.clone());
-                if let Ok(metadata) = json!(payload).try_into() {
-                    // Embedding data
-                    let embedding_vec = embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
-                    // Construct PointStruct to insert into DB
-                    // todo: need to break this out so that this happens in a different method so we can re-use this for files
-                    if !embedding_vec.is_empty() {
-                        if let Some(embedding) = embedding_vec.into_iter().next() {
-                            let point = PointStruct::new(
-                                Uuid::new_v4().to_string(),
-                                HashMap::from([(
-                                    String::from(embedding_model.to_str().unwrap()),
-                                    embedding.to_owned(),
-                                )]),
-                                metadata,
-                            );
-                            return Ok(point);
-                        }
-                    }
-                } else {
-                    return Err(anyhow!(
-                        "Could not convert payload to JSON type. Aborting embedding!"
-                    ));
-                }
-            }
-        } else {
-            return Err(anyhow!(
-                "Could not find an stream ID for this payload. Aborting embedding!"
-            ));
-        }
-    }
-    Err(anyhow!("Row is empty"))
-}
-
 pub async fn construct_point_struct(
     vector: &Vec<f32>,
     payload: HashMap<String, String>,
-    embedding_models: Option<EmbeddingModels>,
+    vector_name: Option<EmbeddingModels>,
+    index: Option<String>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
-        return if let Some(model_name) = embedding_models {
+        let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
+            PointId::from(id)
+        });
+        return if let Some(model_name) = vector_name {
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(
-                    Uuid::new_v4().to_string(),
+                    vector_id,
                     HashMap::from([(String::from(model), vector.to_owned())]),
                     json!(payload).try_into().unwrap(),
                 );
@@ -167,8 +96,12 @@ pub async fn construct_point_struct(
                 None
             }
         } else {
-            log::warn!("Embedding Model name is None");
-            None
+            let qdrant_point_struct = PointStruct::new(
+                vector_id,
+                vector.to_owned(),
+                json!(payload).try_into().unwrap(),
+            );
+            Some(qdrant_point_struct)
         };
     }
     None

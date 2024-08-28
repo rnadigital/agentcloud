@@ -1,11 +1,11 @@
-use actix_web::error::ResponseError;
-use actix_web::{http::StatusCode, HttpResponse};
+use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, ResponseError};
 use anyhow::Error;
 use mongodb::error::Error as MongoError;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
-pub enum CustomErrorType {
+pub enum CustomMongoError {
     #[error("an unspecified internal error occurred: {0}")]
     InternalError(#[from] Error),
     #[error("a standard error occurred: {0}")]
@@ -14,12 +14,12 @@ pub enum CustomErrorType {
     MongoError(#[from] MongoError),
 }
 
-impl ResponseError for CustomErrorType {
+impl ResponseError for CustomMongoError {
     fn status_code(&self) -> StatusCode {
         match self {
-            CustomErrorType::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            CustomErrorType::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            CustomErrorType::MongoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomMongoError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomMongoError::StdError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomMongoError::MongoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -29,4 +29,4 @@ impl ResponseError for CustomErrorType {
 }
 
 // Short hand alias, which allows you to use just Result<T>
-pub type Result<T> = std::result::Result<T, CustomErrorType>;
+pub type Result<T> = std::result::Result<T, CustomMongoError>;

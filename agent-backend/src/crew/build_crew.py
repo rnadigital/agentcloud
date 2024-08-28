@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from typing import Any, List, Set, Type
@@ -12,6 +13,7 @@ from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
+from utils.json_schema_to_pydantic import json_schema_to_pydantic
 from utils.model_helper import get_enum_key_from_value, get_enum_value_from_str_key, in_enums, keyset, match_key, \
     search_subordinate_keys
 from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, QDRANT_HOST, SOCKET_URL
@@ -124,10 +126,11 @@ class CrewAIBuilder:
         for key, agent in self.agents_models.items():
             model_obj = match_key(self.crew_models, key, exact=True)
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
-
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
-                    exclude_none=True, exclude_unset=True,
+                    by_alias=True,
+                    exclude_none=True,
+                    # exclude_unset=True,
                     exclude={"id", "toolIds", "modelId", "taskIds", "step_callback", "llm"}
                 ),
                 stop_generating_check=self.stop_generating_check,
@@ -163,15 +166,23 @@ class CrewAIBuilder:
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
+            output_pydantic = None
+            if task.isStructuredOutput:
+                try:
+                    task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
+                    output_pydantic = task_model
+                except Exception:
+                    output_pydantic = None
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
-                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput"}),
+                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "isStructuredOutput"}),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
-                stream_only_final_output=task.displayOnlyFinalOutput
+                stream_only_final_output=task.displayOnlyFinalOutput,
+                output_pydantic=output_pydantic
             )
 
     def make_user_question(self):
@@ -230,6 +241,7 @@ class CrewAIBuilder:
                 agentcloud_socket=self.socket,
                 agentcloud_session_id=self.session_id
             )
+            print(f"CrewAI Crew(): {self.crew}")
         except ValidationError as ve:
             self.send_to_sockets(text=f"""Validation Error:
             ``` 

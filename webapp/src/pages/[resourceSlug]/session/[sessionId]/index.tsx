@@ -1,22 +1,21 @@
 import * as API from '@api';
-import { StopIcon } from '@heroicons/react/24/outline';
 import { Message } from 'components/chat/message';
-import classNames from 'components/ClassNames';
 import ConversationStarters from 'components/ConversationStarters';
+import StructuredInputForm from 'components/session/StructuredInputForm';
 import SessionChatbox from 'components/SessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
 import debug from 'debug';
+import useActiveTask from 'hooks/session/useActiveTask';
 import Head from 'next/head';
+import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
-import { SessionStatus } from 'struct/session';
-const log = debug('webapp:socket');
-import AgentAvatar from 'components/AgentAvatar';
-import { usePathname } from 'next/navigation';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
+import { SessionStatus } from 'struct/session';
+const log = debug('webapp:socket');
 
 export default function Session(props) {
 	const scrollContainerRef = useRef(null);
@@ -44,6 +43,8 @@ export default function Session(props) {
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	const activeTask = useActiveTask(messages);
+	const requiredHumanInput = activeTask?.requiresHumanInput;
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +67,7 @@ export default function Session(props) {
 	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
 
 	async function joinSessionRoom() {
+		console.log('joinSessionRoom', sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom() {
@@ -164,6 +166,7 @@ export default function Session(props) {
 	}
 
 	function handleSocketStart() {
+		console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
@@ -238,7 +241,7 @@ export default function Session(props) {
 		return () => {
 			handleSocketStop();
 		};
-	}, [resourceSlug, router?.query?.sessionId]);
+	}, [resourceSlug, router?.query?.sessionId, router.asPath]);
 	useEffect(() => {
 		if (currentSessionId !== router?.query?.sessionId) {
 			setMessages([]);
@@ -353,27 +356,33 @@ export default function Session(props) {
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						</div>
 					)}
+					{requiredHumanInput &&
+						!chatBusyState &&
+						!loading &&
+						activeTask?.formFields?.length > 0 && (
+							<StructuredInputForm formFields={activeTask?.formFields} sendMessage={sendMessage} />
+						)}
 
 					<div ref={bottomRef} />
 				</div>
-				<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
-					<div className='flex flex-row justify-center'>
-						<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
-							{showConversationStarters &&
-								(!chatBusyState || !session) &&
-								app?.chatAppConfig?.conversationStarters && (
-									<div className='w-full flex items-center gap-2 py-1'>
-										<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
-										<ConversationStarters
-											session={session}
-											app={app}
-											sendMessage={message => sendMessage(message, null)}
-											conversationStarters={app?.chatAppConfig?.conversationStarters}
-										/>
-									</div>
-								)}
+				{!(requiredHumanInput && activeTask?.formFields?.length > 0) && (
+					<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
+						<div className='flex flex-row justify-center'>
+							<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
+								{showConversationStarters &&
+									(!chatBusyState || !session) &&
+									app?.chatAppConfig?.conversationStarters && (
+										<div className='w-full flex items-center gap-2 py-1'>
+											<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
+											<ConversationStarters
+												session={session}
+												app={app}
+												sendMessage={message => sendMessage(message, null)}
+												conversationStarters={app?.chatAppConfig?.conversationStarters}
+											/>
+										</div>
+									)}
 
-							<div className='flex items-start space-x-4'>
 								<div className='min-w-0 flex-1 h-full'>
 									{messages ? (
 										terminated ? (
@@ -410,7 +419,7 @@ export default function Session(props) {
 							</div>
 						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</>
 	);

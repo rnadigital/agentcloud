@@ -63,51 +63,53 @@ export default function ToolList({ tools, fetchTools }) {
 							<span>{tool.name.charAt(0).toUpperCase()}</span>
 						</div>
 					</div>
-					<div>
-						<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
-							<div className='flex w-0 flex-1'>
-								<a
-									href={`/${resourceSlug}/tool/${tool._id}/edit`}
-									className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
-								>
-									<PencilIcon
-										className='h-5 w-5 text-gray-400 dark:text-white'
-										aria-hidden='true'
-									/>
-									Edit
-								</a>
-							</div>
-							<div className='flex w-0 flex-1'>
-								<a
-									href={`/${resourceSlug}/tool/add?toolId=${encodeURIComponent(tool._id)}`}
-									className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
-								>
-									<DocumentDuplicateIcon
-										className='h-5 w-5 text-gray-400 dark:text-white'
-										aria-hidden='true'
-									/>
-									Clone
-								</a>
-							</div>
-							<div className='-ml-px flex w-0 flex-1'>
-								<button
-									onClick={e => {
-										posthog.capture('deleteTool', {
-											name: tool.name,
-											type: tool.type,
-											toolId: tool._id,
-											revisionId: tool?.revisionId
-										});
-										deleteTool(tool._id);
-									}}
-									className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
-								>
-									<TrashIcon className='h-5 w-5 text-red-600' aria-hidden='true' />
-									Delete
-								</button>
+					{!tool?.data?.builtin && (
+						<div>
+							<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
+								<div className='flex w-0 flex-1'>
+									<a
+										href={`/${resourceSlug}/tool/${tool._id}/edit`}
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
+									>
+										<PencilIcon
+											className='h-5 w-5 text-gray-400 dark:text-white'
+											aria-hidden='true'
+										/>
+										Edit
+									</a>
+								</div>
+								<div className='flex w-0 flex-1'>
+									<a
+										href={`/${resourceSlug}/tool/add?toolId=${encodeURIComponent(tool._id)}`}
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
+									>
+										<DocumentDuplicateIcon
+											className='h-5 w-5 text-gray-400 dark:text-white'
+											aria-hidden='true'
+										/>
+										Clone
+									</a>
+								</div>
+								<div className='-ml-px flex w-0 flex-1'>
+									<button
+										onClick={e => {
+											posthog.capture('deleteTool', {
+												name: tool.name,
+												type: tool.type,
+												toolId: tool._id,
+												revisionId: tool?.revisionId
+											});
+											deleteTool(tool._id);
+										}}
+										className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
+									>
+										<TrashIcon className='h-5 w-5 text-red-600' aria-hidden='true' />
+										Delete
+									</button>
+								</div>
 							</div>
 						</div>
-					</div>
+					)}
 				</li>
 			))}
 		</ul>

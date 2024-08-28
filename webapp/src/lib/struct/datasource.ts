@@ -29,8 +29,6 @@ export type DatasourceConnectionSettings = {
 	nonBreakingSchemaUpdatesBehavior: string;
 };
 
-export type DatasourceChunkStrategy = 'semantic' | 'character';
-
 export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
@@ -49,6 +47,80 @@ export type DatasourceRecordCount = {
 	total?: number;
 	success?: number;
 	failure?: number;
+};
+
+export const SyncModes = [
+	'full_refresh_overwrite',
+	'full_refresh_append',
+	'incremental_append'
+	// 'incremental_deduped_history'
+];
+export type SyncMode = (typeof SyncModes)[number];
+
+export type FieldDescription = {
+	description: string;
+	type: string;
+};
+
+export type StreamConfig = {
+	checkedChildren: string[];
+	primaryKey: string[];
+	syncMode: SyncMode;
+	cursorField: string[];
+	descriptionsMap: FieldDescriptionMap;
+};
+
+export type StreamConfigMap = {
+	[key: string]: StreamConfig;
+};
+
+export type FieldDescriptionMap = {
+	[key: string]: FieldDescription;
+};
+
+export function getMetadataFieldInfo(config: StreamConfigMap) {
+	return Object.keys(config).reduce((acc, topKey) => {
+		const descriptionsMap = config[topKey].descriptionsMap;
+		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
+			const { description, type } = descriptionsMap[key];
+			innerAcc.push({
+				name: key,
+				description: description || '',
+				type: type || ''
+			});
+			return innerAcc;
+		}, []);
+		acc = acc.concat(items);
+		return acc;
+	}, []);
+}
+
+export const UnstructuredChunkingStrategyValues = [
+	'basic',
+	'by_title',
+	'by_page',
+	'by_similarity'
+] as const;
+export const UnstructuredPartitioningStrategyValues = [
+	'auto',
+	'fast',
+	'hi_res',
+	'ocr_only'
+] as const;
+export type UnstructuredChunkingStrategy = (typeof UnstructuredChunkingStrategyValues)[number];
+export type UnstructuredPartitioningStrategy =
+	(typeof UnstructuredPartitioningStrategyValues)[number];
+export const UnstructuredChunkingStrategySet = new Set(UnstructuredChunkingStrategyValues);
+export const UnstructuredPartitioningStrategySet = new Set(UnstructuredPartitioningStrategyValues);
+
+export type UnstructuredChunkingConfig = {
+	partitioning: UnstructuredPartitioningStrategy;
+	strategy: UnstructuredChunkingStrategy;
+	max_characters: number;
+	new_after_n_chars: number;
+	overlap: number;
+	similarity_threshold: number; // between 0.0 and 1.0
+	overlap_all: boolean;
 };
 
 export type Datasource = {
@@ -70,12 +142,11 @@ export type Datasource = {
 	lastSyncedDate?: Date | null; //Note: null = never synced
 	status?: DatasourceStatus;
 	discoveredSchema?: any;
-	chunkStrategy?: DatasourceChunkStrategy;
-	chunkCharacter?: string | null;
+	chunkingConfig?: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
 	modelId?: ObjectId; //model id of embedding model in models collection
 	hidden?: boolean;
-	descriptionsMap?: Record<string, string>;
+	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };

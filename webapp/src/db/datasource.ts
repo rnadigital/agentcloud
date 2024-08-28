@@ -27,7 +27,7 @@ export function getDatasourceById(
 	});
 }
 
-export function getDatasourceByIdUnsafe(datasourceId: db.IdOrStr): Promise<Datasource> {
+export function unsafeGetDatasourceById(datasourceId: db.IdOrStr): Promise<Datasource> {
 	return DatasourceCollection().findOne({
 		_id: toObjectId(datasourceId)
 	});

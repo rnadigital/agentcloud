@@ -5,6 +5,7 @@ import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import InfoAlert from 'components/InfoAlert';
 import SuccessAlert from 'components/SuccessAlert';
+import { useSocketContext } from 'context/socket';
 import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
 import Head from 'next/head';
@@ -24,9 +25,10 @@ export default function Login() {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [submitting, setSubmitting] = useState(false);
-	const { verifysuccess, noverify, changepassword } = router.query;
+	const { verifysuccess, noverify, changepassword, goto } = router.query;
 	const posthog = usePostHog();
 	const { theme } = useThemeContext();
+	const [socketContext]: any = useSocketContext();
 
 	const { control, handleSubmit } = useForm<LoginFormValues>();
 
@@ -36,7 +38,17 @@ export default function Login() {
 			posthog.capture('login', {
 				email: data.email
 			});
-			await API.login(data, null, setError, router);
+			await API.login(
+				{
+					...data,
+					goto
+				},
+				() => {
+					socketContext.reconnect();
+				},
+				setError,
+				router
+			);
 		} finally {
 			setSubmitting(false);
 		}

@@ -68,16 +68,16 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 								leaveFrom='opacity-100 translate-y-0 sm:scale-100'
 								leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
 							>
-								<DialogPanel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 md:w-full lg:w-1/2 m-10 dark:bg-slate-800 dark:text-gray-50'>
+								<DialogPanel className='relative transform rounded-lg bg-white px-3 pb-2 pt-4 text-left shadow-xl transition-all sm:my-8 sm:p-6 m-10 dark:bg-slate-800 dark:text-gray-50'>
 									<DialogTitle
 										as='h3'
 										className='text-lg font-medium text-gray-900 dark:text-white'
 									>
 										Are you sure you want to exit?
 									</DialogTitle>
-									<div className='flex flex-col pt-4'>
-										<p className='pt-3'>Closing now will result in losing all progress.</p>
-										<div className='flex flex-row pt-2 gap-5'>
+									<div className='flex flex-col'>
+										<p className='py-4'>Closing now will result in losing all progress.</p>
+										<div className='flex flex-row pt-2 gap-5 text-sm'>
 											<button
 												className='px-3 py-2 bg-rose-500 text-white font-bold rounded-lg shadow-sm hover:shadow-lg'
 												onClick={onConfirmClose}

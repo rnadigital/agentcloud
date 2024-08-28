@@ -1,4 +1,6 @@
+import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import InfoAlert from 'components/InfoAlert';
+import ToolTip from 'components/shared/ToolTip';
 import React, { useEffect } from 'react';
 import { MetadataFieldInfo, Retriever, ToolType } from 'struct/tool';
 
@@ -37,7 +39,7 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 
 	return (
 		<div>
-			<div className='mt-2'>
+			<div className='mt-3'>
 				<label
 					htmlFor='toolRetriever'
 					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
@@ -144,9 +146,18 @@ const RetrievalStrategyComponent: React.FC<RetrievalStrategyProps> = ({
 			<div className='mt-2'>
 				<label
 					htmlFor='topK'
-					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-4 flex items-center'
 				>
 					Top K Results
+					<span className='ml-2'>
+						<ToolTip
+							content='The maximum number of documents that will be returned in a single RAG query by your agents.'
+							placement='top'
+							arrow={true}
+						>
+							<InformationCircleIcon className='h-4 w-4' />
+						</ToolTip>
+					</span>
 				</label>
 				<div>
 					<input
