@@ -7,7 +7,7 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Agentcloud Webapp API Docs',
-      version: '0.1.5',
+      version: '0.1.6',
     },
     license: {
         name: 'GNU Affero General Public License v3.0 only',
