@@ -206,7 +206,8 @@ export default function AgentForm({
 						ModelType.OLLAMA,
 						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
-						ModelType.GOOGLE_VERTEX
+						ModelType.GOOGLE_VERTEX,
+						ModelType.GOOGLE_AI
 					]}
 				/>
 			);
