@@ -53,7 +53,7 @@ pub async fn rabbit_consume(
     streaming_queue: &Channel,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String, String)>,
+    sender: Sender<(String, Option<String>, String)>,
 ) {
     let global_data = GLOBAL_DATA.read().await;
     let queue_name = global_data.rabbitmq_stream.as_str();
@@ -69,18 +69,26 @@ pub async fn rabbit_consume(
                     match headers.get(&ShortStr::try_from("stream").unwrap()) {
                         Some(stream) => {
                             let stream_string: String = stream.to_string();
-                            let stream_split: (&str, &str) = stream_string.split_once('_').unwrap();
-                            let datasource_id = stream_split.0;
-                            let stream_config_key = stream_split.1;
+                            let mut stream_type: Option<String> = None;
+                            let (datasource_id, stream_config_key) =
+                                match headers.get(&ShortStr::try_from("type").unwrap()) {
+                                    Some(stream_type_field_value) => {
+                                        let stream_split: Vec<&str> =
+                                            stream_string.split('_').collect();
+                                        stream_type = Some(stream_type_field_value.to_string());
+                                        (stream_split.to_vec()[0], None)
+                                    }
+                                    None => {
+                                        let stream_split: (&str, &str) =
+                                            stream_string.split_once('_').unwrap();
+                                        let datasource_id = stream_split.0;
+                                        let stream_config_key = stream_split.1.to_string();
+                                        (datasource_id, Some(stream_config_key))
+                                    }
+                                };
                             if let Some(msg) = message.content {
                                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())
                                 {
-                                    let mut stream_type: Option<String> = None;
-                                    let stream_type_field_value =
-                                        headers.get(&ShortStr::try_from("type").unwrap());
-                                    if let Some(s) = stream_type_field_value {
-                                        stream_type = Some(s.to_string());
-                                    }
                                     let sender_clone = sender.clone();
                                     let vector_database_client =
                                         Arc::clone(&vector_database_client);

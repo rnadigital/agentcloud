@@ -60,7 +60,7 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 pub async fn get_model_and_embedding_key(
     db: &Database,
     datasource_id: &str,
-    stream_config_key: &str,
+    stream_config_key: Option<String>,
 ) -> Result<EmbeddingConfig> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
@@ -101,8 +101,10 @@ pub async fn get_model_and_embedding_key(
 
     // Populate primary key if stream config exists
     if let Some(stream_config) = datasource.streamConfig {
-        if let Some(datasource_stream_config) = stream_config.get(stream_config_key) {
-            embedding_config.primary_key = Some(datasource_stream_config.primaryKey.clone());
+        if let Some(config_key) = stream_config_key {
+            if let Some(datasource_stream_config) = stream_config.get(config_key.as_str()) {
+                embedding_config.primary_key = Some(datasource_stream_config.primaryKey.clone());
+            }
         }
     }
 

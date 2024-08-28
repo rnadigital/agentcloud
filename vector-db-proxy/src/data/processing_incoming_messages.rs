@@ -116,7 +116,7 @@ async fn handle_embedding(
 }
 
 pub async fn process_incoming_messages(
-    receiver: Receiver<(String, String, String)>,
+    receiver: Receiver<(String, Option<String>, String)>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_conn: Arc<RwLock<Database>>,
 ) {
@@ -128,12 +128,8 @@ pub async fn process_incoming_messages(
         match serde_json::from_str(message.as_str()) {
             Ok::<Value, _>(message_data) => {
                 let mongo = mongo_connection.read().await;
-                match get_model_and_embedding_key(
-                    &mongo,
-                    datasource_id.as_str(),
-                    stream_config_key.as_str(),
-                )
-                .await
+                match get_model_and_embedding_key(&mongo, datasource_id.as_str(), stream_config_key)
+                    .await
                 {
                     Ok(embedding_config) => {
                         if let Some(embedding_model) = embedding_config.model {
