@@ -43,7 +43,7 @@ pub async fn pubsub_consume(
     stream: &Arc<Mutex<MessageStream>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String, String)>,
+    sender: Sender<(String, Option<String>, String)>,
 ) {
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
@@ -52,16 +52,26 @@ pub async fn pubsub_consume(
             if let Ok(message_string) = String::from_utf8(cloned_message.data) {
                 match message_attributes.get("_stream") {
                     Some(stream) => {
+                        let stream_string: String = stream.to_string();
                         let mut stream_type: Option<String> = None;
-                        if let Some(s) = message_attributes.get("type") {
-                            stream_type = Some(s.to_owned());
-                        }
+                        let (datasource_id, stream_config_key) = match message_attributes
+                            .get("type")
+                        {
+                            Some(stream_type_field_value) => {
+                                let stream_split: Vec<&str> = stream_string.split('_').collect();
+                                stream_type = Some(stream_type_field_value.to_string());
+                                (stream_split.to_vec()[0], None)
+                            }
+                            None => {
+                                let stream_split: (&str, &str) =
+                                    stream_string.split_once('_').unwrap();
+                                let datasource_id = stream_split.0;
+                                let stream_config_key = stream_split.1.to_string();
+                                (datasource_id, Some(stream_config_key))
+                            }
+                        };
                         let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
-                        let stream_string: String = stream.to_string();
-                        let stream_split: (&str, &str) = stream_string.split_once('_').unwrap();
-                        let datasource_id = stream_split.0;
-                        let stream_config_key = stream_split.1;
                         let sender = sender.clone();
                         process_message(
                             message_string,
