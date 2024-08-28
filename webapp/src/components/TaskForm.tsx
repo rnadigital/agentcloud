@@ -140,7 +140,6 @@ export default function TaskForm({
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			context: taskState?.context || [],
 			formFields: formFields || [],
 			isStructuredOutput
@@ -639,6 +638,13 @@ export default function TaskForm({
 								</div>
 							</ToolTip>
 						</div>
+
+						{/* Form builder for human input */}
+						{requiredHumanInput && (
+							<div className='col-span-full'>
+								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+							</div>
+						)}
 					</div>
 				</div>
 
