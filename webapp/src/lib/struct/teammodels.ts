@@ -141,7 +141,7 @@ export interface TeamModelResponse {
  *        groq_api_key:
  *         description: API key for accessing Groq services.
  *         type: string
- *    
+ *
  *    Team:
  *     type: object
  *     description: Represents a team within an organization, including members, models, and permissions.
@@ -188,7 +188,7 @@ export interface TeamModelResponse {
  *      embeddingModel:
  *       description: The embedding model associated with the team.
  *       $ref: '#/components/schemas/Model'
- *    
+ *
  *    TeamSummary:
  *     type: object
  *     description: A summary view of a team, typically used in an organization context.
@@ -212,7 +212,7 @@ export interface TeamModelResponse {
  *       type: object
  *       additionalProperties:
  *        type: string
- *    
+ *
  *    Org:
  *     type: object
  *     description: Represents an organization, including its teams and permissions.
@@ -242,7 +242,7 @@ export interface TeamModelResponse {
  *       type: object
  *       additionalProperties:
  *        type: string
- *    
+ *
  *    Stripe:
  *     type: object
  *     description: Stripe-related information, including plan details and trial status.
@@ -278,7 +278,7 @@ export interface TeamModelResponse {
  *      stripeEndsAt:
  *       description: The timestamp when the Stripe subscription ends.
  *       type: integer
- *    
+ *
  *    Account:
  *     type: object
  *     description: Represents an account, including personal details, organizational affiliations, and payment information.
@@ -331,7 +331,7 @@ export interface TeamModelResponse {
  *      _stripe:
  *       description: Additional Stripe-related information for internal use.
  *       $ref: '#/components/schemas/Stripe'
- *    
+ *
  *    TeamModelResponse:
  *     type: object
  *     description: Response object containing details about a team, along with associated account information.

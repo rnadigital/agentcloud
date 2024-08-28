@@ -24,7 +24,6 @@ export async function agentsData(req, res, _next) {
 	};
 }
 
-
 export async function agentsPage(app, req, res, next) {
 	const data = await agentsData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };

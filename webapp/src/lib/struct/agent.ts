@@ -10,7 +10,7 @@ export type CodeExecutionConfigType = {
 /**
  * GET /[resourceSlug]/agents
  * team page html
-*/
+ */
 export type Agent = {
 	_id?: ObjectId | string;
 	orgId?: ObjectId | string;
@@ -27,15 +27,14 @@ export type Agent = {
 	allowDelegation: boolean;
 	toolIds?: (ObjectId | string)[];
 	icon?:
-	| IconAttachment
-	| {
-		id: string;
-		filename: string;
-	};
+		| IconAttachment
+		| {
+				id: string;
+				filename: string;
+		  };
 	hidden?: boolean;
 	group?: any[];
 };
-
 
 /**
  * @openapi
@@ -54,14 +53,14 @@ export type Agent = {
  *  schemas:
  *   Agent:
  *    summary: An agent object used for tasks or apps
- * 
+ *
  *    tags:
  *     - agent
  *     - agents
- * 
+ *
  *    descriminator:
  *     propertyName: _id
- * 
+ *
  *    required:
  *     - _id
  *     - name
@@ -73,7 +72,7 @@ export type Agent = {
  *     - allowDelegation
  *
  *    properties:
- *     _id: 
+ *     _id:
  *      type:
  *       oneOf:
  *        $ref: '#/components/schemas/ObjectId'
@@ -135,8 +134,6 @@ export type Agent = {
  *       $ref: '#/components/schemas/IconAttachment'
  *
  */
-
-
 
 // export type Agent = {
 // 	_id?: ObjectId;

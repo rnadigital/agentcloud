@@ -22,8 +22,6 @@ import StripeClient from 'lib/stripe';
 import { chainValidations } from 'lib/utils/validationutils';
 import Permissions from 'permissions/permissions';
 
-
-
 export async function accountData(req, res, _next) {
 	return {
 		team: res.locals.matchingTeam,

@@ -101,7 +101,7 @@ export type Notification = {
  *      webhookType:
  *       description: The type of webhook.
  *       $ref: '#/components/schemas/WebhookType'
- *    
+ *
  *    SystemUpdateDetails:
  *     type: object
  *     description: Details specific to system update notifications.

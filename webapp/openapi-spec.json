@@ -4,31 +4,26 @@
     "title": "Agentcloud Webapp API Docs",
     "version": "0.1.6"
   },
-  "license": {
-    "name": "GNU Affero General Public License v3.0 only",
-    "url": "https://www.gnu.org/licenses/agpl-3.0.txt"
+  "paths": {
+   "/":{
+   
+   }
   },
-  "paths": {},
   "components": {
     "schemas": {
       "ObjectId": {
-        "summary": "Mongodb Object id, unique identifier, length of 24 characters fitting the following regex; [a-f0-9]{24}",
+        "description": "Mongodb Object id, unique identifier, length of 24 characters fitting the following regex; [a-f0-9]{24}",
         "required": [
           "_id"
         ],
         "properties": {
-          "_id": "string"
+          "_id":{
+           "type": "string"
+          }
         }
       },
       "Agent": {
-        "summary": "An agent object used for tasks or apps",
-        "tags": [
-          "agent",
-          "agents"
-        ],
-        "descriminator": {
-          "propertyName": "_id"
-        },
+        "description": "An agent object used for tasks or apps",
         "required": [
           "_id",
           "name",
@@ -41,30 +36,24 @@
         ],
         "properties": {
           "_id": {
-            "type": {
-              "oneOf": {
-                "$ref": "#/components/schemas/ObjectId",
-                "type": "string"
-              }
-            },
-            "description": "Unique Mongodb identifier for the object"
+            "type": "string",
+            "description": "Unique Mongodb identifier for the object",
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
+            }
           },
           "orgId": {
             "description": "Organisation the agent is linked to (generally the org of the user that created the agent)",
-            "type": {
-              "oneOf": {
-                "$ref": "#/components/schemas/ObjectId",
-                "type": "string"
-              }
+            "type": "string",
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "teamId": {
             "description": "Team the agent is linked to (generally the team of the user that created the agent)",
-            "type": {
-              "oneOf": {
-                "$ref": "#/components/schemas/ObjectId",
-                "type": "string"
-              }
+            "type": "string",
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "name": {
@@ -85,20 +74,16 @@
           },
           "modelId": {
             "description": "The linked ObjectId of the model being used by this agent (this links to a Model object)",
-            "type": {
-              "oneOf": {
-                "$ref": "#/components/schemas/ObjectId",
-                "type": "string"
-              }
+            "type": "string",
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "functionModelId": {
             "description": "A secondary model used to execute function calls (this links to a Model object), set to null if unused automatically by the API",
-            "type": {
-              "oneOf": {
-                "$ref": "#/components/schemas/ObjectId",
-                "type": "string"
-              }
+            "type": "string",
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "verbose": {
@@ -113,24 +98,22 @@
             "description": "Array of the tools the agent can access to improve performance and abstract tool functionality from agent usage",
             "type": "array",
             "items": {
-              "type": {
-                "oneOf": {
-                  "$ref": "#/components/schemas/ObjectId",
-                  "type": "string"
-                }
-              }
+              "type": "string",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ObjectId"
+            }
             }
           },
           "icon": {
             "description": "IconAttachment object used to hold the attached icon used for the agent (this links to an IconAttachment object);",
-            "type": {
-              "$ref": "#/components/schemas/IconAttachment"
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ObjectId"
             }
           }
         }
       },
       "Asset": {
-        "desciption": "INCOMPLETE, when adding an IconAttachment, an asset is automatically created (this functionality is exposed) but any other CRUD operation associated with it isn't implemented",
+        "description": "INCOMPLETE, when adding an IconAttachment, an asset is automatically created (this functionality is exposed) but any other CRUD operation associated with it isn't implemented",
         "required": [
           "teamId",
           "orgId",
@@ -141,20 +124,20 @@
         ],
         "properties": {
           "_id": {
-            "type": {
-              "$ref": "#/components/schemas/ObjectId"
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "teamId": {
             "description": "Associated teamId (this links to a corresponding Team object)",
-            "type": {
-              "$ref": "#/components/schemas/ObjectId"
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "orgId": {
             "description": "Associated orgId (this links to a corresponding Org object)",
-            "type": {
-              "$ref": "#/components/schemas/ObjectId"
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "filename": {
@@ -177,7 +160,7 @@
         }
       },
       "IconAttachment": {
-        "summary": "Attachment, generally used for image upload",
+        "description": "Attachment, generally used for image upload",
         "required": [
           "id",
           "filename"
@@ -185,8 +168,8 @@
         "properties": {
           "id": {
             "description": "this is NOT a unique id for the IconAttachment, this is a Mongo id that links to an Asset object (neet to implement assets in docs)",
-            "type": {
-              "$ref": "#/components/schemas/ObjectId"
+            "additionalProperties": {
+             "$ref": "#/components/schemas/ObjectId"
             }
           },
           "filename": {
@@ -265,7 +248,9 @@
           "syncMode": {
             "description": "The synchronization mode for the stream. This should match the enum values defined by the Airbyte API.",
             "type": "string",
-            "enum": null
+            "enum": [
+             "TODO"
+            ]
           },
           "name": {
             "description": "The name of the data stream.",
@@ -1239,9 +1224,6 @@
                     "type": "string"
                   }
                 }
-              },
-              {
-                "type": null
               }
             ]
           },
@@ -1412,9 +1394,9 @@
           }
         }
       },
-      "TeamSummary": {
+      "Teamdescription": {
         "type": "object",
-        "description": "A summary view of a team, typically used in an organization context.",
+        "description": "A description view of a team, typically used in an organization context.",
         "required": [
           "id",
           "name",
@@ -1423,7 +1405,7 @@
         ],
         "properties": {
           "id": {
-            "description": "Unique identifier for the team summary.",
+            "description": "Unique identifier for the team description.",
             "type": "string"
           },
           "name": {
@@ -1470,7 +1452,7 @@
             "description": "List of team summaries belonging to the organization.",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/TeamSummary"
+              "$ref": "#/components/schemas/Teamdescription"
             }
           },
           "permissions": {

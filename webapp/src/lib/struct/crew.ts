@@ -2,7 +2,6 @@
 
 import { ObjectId } from 'mongodb';
 
-
 export enum ProcessImpl {
 	SEQUENTIAL = 'sequential',
 	HIERARCHICAL = 'hierarchical'
@@ -28,7 +27,7 @@ export type Crew = {
  *   schemas:
  *    Crew:
  *     type: object
- *     description: Represents a crew responsible for handling tasks within an organisation. 
+ *     description: Represents a crew responsible for handling tasks within an organisation.
  *     required:
  *      - name
  *      - tasks
@@ -71,4 +70,3 @@ export type Crew = {
  *       description: Indicates whether to provide full output for crew operations.
  *       type: boolean
  */
-

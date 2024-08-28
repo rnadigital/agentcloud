@@ -57,7 +57,6 @@ export const SyncModes = [
 ];
 export type SyncMode = (typeof SyncModes)[number];
 
-
 export type FieldDescription = {
 	description: string;
 	type: string;
@@ -152,7 +151,6 @@ export type Datasource = {
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 };
 
-
 /**
  * @openapi
  *  components:
@@ -167,14 +165,12 @@ export type Datasource = {
  *      syncMode:
  *       description: The synchronization mode for the stream. This should match the enum values defined by the Airbyte API.
  *       type: string
- *       enum: 
+ *       enum:
  *        # Add the specific enum values here based on the Airbyte API
  *      name:
  *       description: The name of the data stream.
  *       type: string
  */
-
-
 
 /**
  * @openapi
@@ -243,7 +239,6 @@ export type Datasource = {
  *       type: string
  */
 
-
 /**
  * @openapi
  *  components:
@@ -265,7 +260,6 @@ export type Datasource = {
  *       type: integer
  *       format: int32
  */
-
 
 /**
  * @openapi
@@ -330,7 +324,6 @@ export type Datasource = {
  *     additionalProperties:
  *      $ref: '#/components/schemas/StreamConfig'
  */
-
 
 /**
  * @openapi
@@ -419,7 +412,6 @@ export type Datasource = {
  *      - by_similarity
  */
 
-
 /**
  * @openapi
  *  components:
@@ -464,8 +456,6 @@ export type Datasource = {
  *       description: Indicates whether to apply overlap to all chunks or only between adjacent chunks.
  *       type: boolean
  */
-
-
 
 /**
  * @openapi

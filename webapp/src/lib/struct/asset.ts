@@ -34,7 +34,7 @@ import { ObjectId } from 'mongodb';
  *       description: the original filename of the asset at point of upload
  *       type: string
  *      mimeType:
- *       description: The media type of the asset, indicating the format of the file. Common MIME types include 'image/jpeg' for JPEG 
+ *       description: The media type of the asset, indicating the format of the file. Common MIME types include 'image/jpeg' for JPEG
  *       type: string
  *      uploadedAt:
  *       description: The date and time at which the asset was uploaded.
