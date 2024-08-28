@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointId, PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::embeddings::models::EmbeddingModels;

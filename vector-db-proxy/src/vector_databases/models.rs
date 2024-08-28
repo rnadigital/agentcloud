@@ -136,7 +136,6 @@ impl SearchRequest {
 pub enum Region {
     US,
     EU,
-    AU,
 }
 impl Default for Region {
     fn default() -> Self {
@@ -149,7 +148,6 @@ impl Region {
         match region {
             Self::US => "us-central1",
             Self::EU => "europe-west4",
-            _ => panic!("Unknown Pinecone serverless region"),
         }
     }
 
