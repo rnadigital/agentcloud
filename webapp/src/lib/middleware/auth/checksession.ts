@@ -7,7 +7,9 @@ export default function checkSession(req, res, next, socket?) {
 		if (res.locals.isSocket) {
 			return socket.disconnect();
 		} else {
-			return dynamicResponse(req, res, 302, { redirect: '/login' });
+			return dynamicResponse(req, res, 302, {
+				redirect: `/login?goto=${encodeURIComponent(req.originalUrl)}`
+			});
 		}
 	}
 	next();

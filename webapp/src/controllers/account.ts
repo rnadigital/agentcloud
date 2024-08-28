@@ -131,6 +131,7 @@ export async function login(req, res) {
 	const email = req.body.email.toLowerCase();
 	const password = req.body.password;
 	const account: Account = await getAccountByEmail(email);
+	const goto = req.body.goto;
 
 	if (!account || (!account?.emailVerified && process.env.SKIP_EMAIL !== '1')) {
 		return dynamicResponse(req, res, 403, { error: 'Incorrect email or password' });
@@ -145,13 +146,13 @@ export async function login(req, res) {
 
 			if (account.onboarded === false) {
 				return dynamicResponse(req, res, 302, {
-					redirect: `/${account.currentTeam.toString()}/onboarding`,
+					redirect: goto || `/${account.currentTeam.toString()}/onboarding`,
 					token
 				});
 			}
 
 			return dynamicResponse(req, res, 302, {
-				redirect: `/${account.currentTeam.toString()}/apps`,
+				redirect: goto || `/${account.currentTeam.toString()}/apps`,
 				token
 			});
 		}
