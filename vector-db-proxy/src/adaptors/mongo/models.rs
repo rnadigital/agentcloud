@@ -154,6 +154,7 @@ pub struct Credentials {
 }
 /// Enum representing the sync modes
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SyncMode {
     FullRefreshOverwrite,
     FullRefreshAppend,
@@ -180,7 +181,7 @@ impl std::str::FromStr for SyncMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldDescription {
     pub description: String,
-    pub field_type: String, // Renamed `type` to `field_type` because `type` is a reserved keyword in Rust
+    pub r#type: String, // Renamed `type` to `field_type` because `type` is a reserved keyword in Rust
 }
 
 /// Type alias for a map of field descriptions
