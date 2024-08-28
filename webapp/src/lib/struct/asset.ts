@@ -31,7 +31,7 @@ import { ObjectId } from 'mongodb';
  *       description: the filename of the asset, this is generally a string representation of the _id followed by the filtype. i.e. "abcdef123456789.png"
  *       type: string
  *      originalFilename:
- *       description: the original filename of the asset
+ *       description: the original filename of the asset at point of upload
  *       type: string
  *      mimeType:
  *       description: The media type of the asset, indicating the format of the file. Common MIME types include 'image/jpeg' for JPEG 
