@@ -212,6 +212,8 @@ cd ..
 
 echo "=> Starting agentcloud backend..."
 
+docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest
+docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api
 docker compose up --build -d
 
 # At the end of the script, check the variables and kill containers if requested
