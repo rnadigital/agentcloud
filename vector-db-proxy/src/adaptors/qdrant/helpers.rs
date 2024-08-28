@@ -4,7 +4,7 @@ use anyhow::Result;
 use qdrant_client::client::QdrantClient;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
-use qdrant_client::qdrant::{PointStruct, ScrollPoints, ScrollResponse};
+use qdrant_client::qdrant::{PointId, PointStruct, ScrollPoints, ScrollResponse};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -93,10 +93,13 @@ pub async fn construct_point_struct(
     index: Option<String>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
+        let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
+            PointId::from(id)
+        });
         return if let Some(model_name) = vector_name {
             if let Some(model) = model_name.to_str() {
                 let qdrant_point_struct = PointStruct::new(
-                    index.unwrap_or(Uuid::new_v4().to_string()),
+                    vector_id,
                     HashMap::from([(String::from(model), vector.to_owned())]),
                     json!(payload).try_into().unwrap(),
                 );
@@ -107,7 +110,7 @@ pub async fn construct_point_struct(
             }
         } else {
             let qdrant_point_struct = PointStruct::new(
-                index.unwrap_or(Uuid::new_v4().to_string()),
+                vector_id,
                 vector.to_owned(),
                 json!(payload).try_into().unwrap(),
             );

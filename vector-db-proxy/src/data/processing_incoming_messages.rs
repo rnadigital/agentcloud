@@ -34,11 +34,8 @@ pub async fn embed_text_construct_point(
                 // Construct a Point to insert into the vector DB
                 if !embedding_vec.is_empty() {
                     if let Some(vector) = embedding_vec.into_iter().next() {
-                        let mut index = Uuid::new_v4().to_string();
-                        if let Some(hash_index) = payload.get("index") {
-                            index = hash_index.to_owned();
-                        }
-                        let point = Point::new(Some(index), vector, Some(payload));
+                        let index = payload.get("index").map_or(None, |id| Some(id.to_owned()));
+                        let point = Point::new(index, vector, Some(payload));
                         return Ok(point);
                     }
                 }
