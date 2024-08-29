@@ -951,6 +951,20 @@ export async function uploadFileApi(req, res, next) {
 		});
 	}
 
+	const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
+		req.params.resourceSlug
+	);
+	const storageVectorCount = teamVectorStorage?.data?.total_points;
+	log('current team vector storage count:', storageVectorCount);
+	const planLimits = pricingMatrix[currentPlan];
+	if (planLimits) {
+		const approxVectorCountLimit = Math.floor(planLimits.maxVectorStorageBytes / (1536 * (32 / 8))); //Note: inaccurate because there are other embedding models
+		log('plan approx. max vector count:', approxVectorCountLimit);
+		if (storageVectorCount >= approxVectorCountLimit) {
+			return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+		}
+	}
+
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
