@@ -6,12 +6,24 @@ import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors'
 import getAirbyteInternalApi from 'airbyte/internal';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import {
+	addDatasource,
+	deleteDatasourceById,
+	editDatasource,
+	getDatasourceById,
+	getDatasourcesByTeam,
+	setDatasourceConnectionSettings,
+	setDatasourceEmbedding,
+	setDatasourceStatus
+} from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationutils';
+import VectorDBProxyClient from 'lib/vectorproxy/client';
+import { isVectorLimitReached } from 'lib/vectorproxy/limit';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -23,23 +35,14 @@ import { pricingMatrix } from 'struct/billing';
 import {
 	DatasourceScheduleType,
 	DatasourceStatus,
+	getMetadataFieldInfo,
+	StreamConfig,
+	StreamConfigMap,
 	UnstructuredChunkingStrategySet,
 	UnstructuredPartitioningStrategySet
 } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
 import formatSize from 'utils/formatsize';
-import VectorDBProxy from 'vectordb/proxy';
-
-import {
-	addDatasource,
-	deleteDatasourceById,
-	editDatasource,
-	getDatasourceById,
-	getDatasourcesByTeam,
-	setDatasourceConnectionSettings,
-	setDatasourceEmbedding,
-	setDatasourceStatus
-} from '../db/datasource';
 
 const log = debug('webapp:controllers:datasource');
 const ajv = new Ajv({ strict: 'log' });
@@ -198,7 +201,6 @@ export async function testDatasourceApi(req, res, next) {
 		submittedConnector?.sourceType_oss;
 	try {
 		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-
 		const sourceBody = {
 			configuration: {
 				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
@@ -264,12 +266,28 @@ export async function testDatasourceApi(req, res, next) {
 		});
 	}
 
-	// Create the collection in qdrant
-	// try {
-	// 	await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
-	// } catch (e) {
-	// 	return dynamicResponse(req, res, 400, { error: 'Failed to create collection in vector database, please try again later.' });
-	// }
+	// Get stream properties to get correct sync modes from airbyte
+	let streamProperties;
+	try {
+		const streamsApi = await getAirbyteApi(AirbyteApiType.STREAMS);
+		const streamPropertiesBody = {
+			sourceId: createdSource.sourceId,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
+		};
+		log('streamPropertiesBody', streamPropertiesBody);
+		streamProperties = await streamsApi
+			.getStreamProperties(streamPropertiesBody)
+			.then(res => res.data);
+		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		if (!streamProperties) {
+			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
+		}
+	} catch (e) {
+		log(e);
+		return dynamicResponse(req, res, 400, {
+			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
+		});
+	}
 
 	// Create the actual datasource in the db
 	const createdDatasource = await addDatasource({
@@ -296,6 +314,7 @@ export async function testDatasourceApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		sourceId: createdSource.sourceId,
 		discoveredSchema,
+		streamProperties,
 		datasourceId: createdDatasource.insertedId
 	});
 }
@@ -305,12 +324,12 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId,
 		datasourceName,
 		datasourceDescription,
-		streams,
 		scheduleType,
 		cronExpression,
 		modelId,
 		embeddingField,
 		retriever,
+		streamConfig,
 		retriever_config,
 		timeUnit
 	} = req.body;
@@ -334,7 +353,6 @@ export async function addDatasourceApi(req, res, next) {
 				field: 'scheduleType',
 				validation: { notEmpty: true, inSet: new Set(Object.values(DatasourceScheduleType)) }
 			},
-			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
 			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 			//TODO: validation for retriever_config and streams?
 		],
@@ -347,6 +365,14 @@ export async function addDatasourceApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -370,9 +396,11 @@ export async function addDatasourceApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append'
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
+				name: e[0],
+				syncMode: e[1].syncMode,
+				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
+				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
 			}))
 		},
 		dataResidency: 'auto',
@@ -398,20 +426,17 @@ export async function addDatasourceApi(req, res, next) {
 		.then(res => res.data);
 
 	// Update the datasource with the connection settings and sync date
-	await Promise.all([
-		setDatasourceConnectionSettings(
-			req.params.resourceSlug,
-			datasourceId,
-			createdConnection.connectionId,
-			connectionBody
-		),
-		// setDatasourceLastSynced(req.params.resourceSlug, datasourceId, new Date()), //NOTE: not being used, updated in webhook handler instead
-		setDatasourceEmbedding(req.params.resourceSlug, datasourceId, modelId, embeddingField)
-	]);
+	await editDatasource(req.params.resourceSlug, datasourceId, {
+		connectionId: createdConnection.connectionId,
+		connectionSettings: connectionBody,
+		modelId: toObjectId(modelId),
+		embeddingField,
+		streamConfig
+	});
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -433,6 +458,17 @@ export async function addDatasourceApi(req, res, next) {
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
+	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
+	let metadata_field_info = [];
+	if (datasource) {
+		try {
+			metadata_field_info = getMetadataFieldInfo(datasource?.streamConfig);
+		} catch (e) {
+			log(e);
+			//supress
+		}
+	}
+
 	// Add a tool automatically for the datasource
 	let foundIcon; //TODO: icon/avatar id and upload
 	await addTool({
@@ -444,7 +480,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-		retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName)
@@ -531,12 +567,12 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 export async function updateDatasourceStreamsApi(req, res, next) {
 	const {
 		datasourceId,
-		streams,
 		sync,
-		descriptionsMap,
-		cronExpression,
-		timeUnit,
-		metadata_field_info
+		streamConfig
+	}: {
+		datasourceId: ObjectId;
+		sync: Boolean;
+		streamConfig: StreamConfigMap;
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -545,32 +581,13 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	let validationError = chainValidations(
 		req.body,
 		[
-			{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } },
-			{ field: 'streams', validation: { notEmpty: true, asArray: true, ofType: 'string' } },
-			{ field: 'metadata_field_info', validation: { notEmpty: true, asArray: true } },
-			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
-			//TODO: more validations?
+			{ field: 'datasourceId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }
+			//TODO: validation for StreamConfig type
 		],
-		{
-			datasourceName: 'Name',
-			datasourceDescription: 'Description',
-			connectorId: 'Connector ID',
-			modelId: 'Embedding Model'
-		}
+		{}
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
-	}
-
-	const validMetadata = (req.body.metadata_field_info || []).every(obj => {
-		return (
-			typeof obj?.name === 'string' &&
-			typeof obj?.description === 'string' &&
-			['string', 'integer', 'float'].includes(obj?.type)
-		);
-	});
-	if (!validMetadata) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid stream metadata' });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -579,8 +596,18 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	}
 
 	//update the metadata map of tools if found
+	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
+	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
+	let metadataFieldInfo = [];
+	try {
+		metadataFieldInfo = getMetadataFieldInfo(streamConfig);
+	} catch (e) {
+		log(e);
+		//suppressed
+	}
+
 	await editToolsForDatasource(req.params.resourceSlug, datasourceId, {
-		'retriever_config.metadata_field_info': metadata_field_info
+		'retriever_config.metadata_field_info': metadataFieldInfo
 	});
 
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
@@ -589,9 +616,11 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: streams.map(s => ({
-				name: s,
-				syncMode: 'full_refresh_append'
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
+				name: e[0],
+				syncMode: e[1].syncMode,
+				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
+				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
 			}))
 		},
 		dataResidency: 'auto',
@@ -601,32 +630,33 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		nonBreakingSchemaUpdatesBehavior: 'ignore',
 		status: 'active'
 	};
+
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
 			//cronExpression: convertCronToQuartz(cronExpression)
-			cronExpression: convertUnitToCron(timeUnit)
+			cronExpression: convertUnitToCron(datasource.timeUnit)
 		};
 	} else {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.MANUAL
 		};
 	}
+
 	const createdConnection = await connectionsApi
 		.patchConnection(datasource.connectionId, connectionBody)
 		.then(res => res.data);
 
-	// Create the collection in qdrant
-	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
-	} catch (e) {
-		console.error(e);
-		return dynamicResponse(req, res, 400, {
-			error: 'Failed to create collection in vector database, please try again later.'
-		});
-	}
-
 	if (sync === true) {
+		// Create the collection in qdrant
+		try {
+			await VectorDBProxyClient.createCollection(datasourceId);
+		} catch (e) {
+			console.error(e);
+			return dynamicResponse(req, res, 400, {
+				error: 'Failed to create collection in vector database, please try again later.'
+			});
+		}
 		// Create a job to trigger the connection to sync
 		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 		const jobBody = {
@@ -641,7 +671,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: datasource.connectionId,
 		connectionSettings: connectionBody,
-		descriptionsMap,
+		streamConfig,
 		...(sync ? { recordCount: { total: 0 } } : {})
 	});
 
@@ -657,9 +687,17 @@ export async function syncDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+	}
+
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -667,27 +705,52 @@ export async function syncDatasourceApi(req, res, next) {
 		});
 	}
 
-	// Create a job to trigger the connection to sync
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: datasource.connectionId,
-		jobType: 'sync'
-	};
+	if (datasource?.sourceType === 'file') {
+		// Fetch the appropriate message queue provider
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 
-	try {
-		const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-		log('createdJob', createdJob);
-	} catch (e) {
-		log(e);
-		console.log(e);
-		return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		// Prepare the message and metadata
+		const message = JSON.stringify({
+			bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE,
+			filename: datasource?.filename,
+			file: `/tmp/${datasource?.filename}`
+		});
+		const metadata = {
+			_stream: datasource._id.toString(),
+			stream: datasource._id.toString(),
+			type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
+		};
+
+		// Send the message using the provider
+		await messageQueueProvider.sendMessage(message, metadata);
+
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.EMBEDDING
+		});
+	} else {
+		// Create a job to trigger the connection to sync
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'sync'
+		};
+
+		try {
+			const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
+			log('createdJob', createdJob);
+		} catch (e) {
+			log(e);
+			console.log(e);
+			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		}
+
+		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.PROCESSING
+		});
 	}
-
-	//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
-	await editDatasource(req.params.resourceSlug, datasourceId, {
-		recordCount: { total: 0 },
-		status: DatasourceStatus.PROCESSING
-	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -769,7 +832,7 @@ export async function deleteDatasourceApi(req, res, next) {
 
 	// Delete the points in qdrant
 	try {
-		await VectorDBProxy.deleteCollectionFromQdrant(req.params.datasourceId);
+		await VectorDBProxyClient.deleteCollection(req.params.datasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -891,6 +954,14 @@ export async function uploadFileApi(req, res, next) {
 		});
 	}
 
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+	}
+
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -941,7 +1012,7 @@ export async function uploadFileApi(req, res, next) {
 
 	// Create the collection in qdrant
 	try {
-		await VectorDBProxy.createCollectionInQdrant(newDatasourceId);
+		await VectorDBProxyClient.createCollection(newDatasourceId);
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -960,6 +1031,7 @@ export async function uploadFileApi(req, res, next) {
 	});
 	const metadata = {
 		_stream: newDatasourceId.toString(),
+		stream: newDatasourceId.toString(),
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
 	};
 

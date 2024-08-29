@@ -25,7 +25,7 @@ logerror.log = console.error.bind(console);
 
 const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`).toString('base64')}`;
 const provider = process.env.MESSAGE_QUEUE_PROVIDER;
-const destinationDefinitionId =
+export const destinationDefinitionId =
 	provider === 'rabbitmq'
 		? 'e06ad785-ad6f-4647-b2e8-3027a5c59454' // RabbitMQ destination id
 		: '356668e2-7e34-47f3-a3b0-67a8a481b692'; // Google Pub/Sub destination id

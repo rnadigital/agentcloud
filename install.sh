@@ -133,6 +133,8 @@ echo "=> Starting airbyte"
 
 # env to disable airbyte telemetry
 DO_NOT_TRACK=1
+# Define the target version
+AIRBYTE_TARGET_VERSION="v0.63.9"
 
 if ! command -v abctl &> /dev/null; then
 	echo "'abctl' command not found. Installing Airbyte..."
@@ -184,11 +186,16 @@ echo $AIRBYTE_USERNAME
 
 echo "=> Starting agentcloud backend..."
 
+docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest
+docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api
 docker compose up --build -d
 
 # At the end of the script, check the variables and kill containers if requested
 if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then
     kill_container_by_service_name "webapp_next"
+fi
+if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then
+    kill_container_by_service_name "webapp_syncserver"
 fi
 if [ "$KILL_VECTOR_DB_PROXY" -eq 1 ]; then
     kill_container_by_service_name "vector_db_proxy"

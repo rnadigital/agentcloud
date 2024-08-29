@@ -2,6 +2,7 @@ use bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
@@ -110,6 +111,7 @@ pub struct DataSources {
     pub timeWeightField: Option<String>,
     pub createdDate: Option<DateTime>,
     pub status: String,
+    pub streamConfig: Option<HashMap<String, StreamConfig>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -149,4 +151,56 @@ pub struct Credentials {
     pub name: String,
     pub createdDate: Option<DateTime>,
     pub credentials: Option<CredentialsObj>,
+}
+/// Enum representing the sync modes
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SyncMode {
+    FullRefreshOverwrite,
+    FullRefreshAppend,
+    IncrementalAppend,
+    IncrementalDedupedHistory,
+}
+
+/// Conversion from &str to SyncMode enum
+impl std::str::FromStr for SyncMode {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<SyncMode, Self::Err> {
+        match input {
+            "full_refresh_overwrite" => Ok(SyncMode::FullRefreshOverwrite),
+            "full_refresh_append" => Ok(SyncMode::FullRefreshAppend),
+            "incremental_append" => Ok(SyncMode::IncrementalAppend),
+            "incremental_deduped_history" => Ok(SyncMode::IncrementalDedupedHistory),
+            _ => Err(()),
+        }
+    }
+}
+
+/// Struct representing the description of a field
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FieldDescription {
+    pub description: String,
+    #[serde(rename = "type")]
+    pub field_type: String, // escaping `type` because it's a reserved keyword in Rust
+}
+
+/// Type alias for a map of field descriptions
+pub type FieldDescriptionMap = HashMap<String, FieldDescription>;
+
+/// Struct representing the configuration of a stream
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamConfig {
+    pub checkedChildren: Vec<String>,
+    pub primaryKey: Vec<String>,
+    pub syncMode: SyncMode,
+    pub cursorField: Vec<String>,
+    pub descriptionsMap: FieldDescriptionMap,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EmbeddingConfig {
+    pub model: Option<Model>,
+    pub embedding_key: Option<String>,
+    pub primary_key: Option<Vec<String>>,
 }

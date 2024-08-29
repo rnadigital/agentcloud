@@ -69,13 +69,14 @@ export default function TaskForm({
 	fetchTaskFormData?: Function;
 	taskChoices?: Task[];
 }) {
-	console.log(task);
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-
 	const [taskState, setTask] = useState<Task | undefined>(task);
+	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
+
+	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
 	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
 		task?.formFields || [
@@ -85,9 +86,6 @@ export default function TaskForm({
 			}
 		]
 	);
-	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
-
-	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
@@ -137,14 +135,13 @@ export default function TaskForm({
 			resourceSlug,
 			name: e.target.task_name.value,
 			description: e.target.task_description.value,
-			expectedOutput,
+			expectedOutput: e.target.expectedOutput.value,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
 			context: taskState?.context || [],
 			formFields: formFields || [],
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			isStructuredOutput
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
@@ -259,10 +256,10 @@ export default function TaskForm({
 		if (!expectedOutput && isStructuredOutput) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (!isStructuredOutput && !task?.expectedOutput) {
+		if (expectedOutput === jsonPlaceholder && !isStructuredOutput) {
 			setExpectedOutput('');
 		}
-	}, [expectedOutput, isStructuredOutput, task]);
+	}, [expectedOutput, isStructuredOutput]);
 
 	let modal;
 	switch (modalOpen) {
@@ -648,41 +645,6 @@ export default function TaskForm({
 								<FormConfig formFields={formFields} setFormFields={setFormFields} />
 							</div>
 						)}
-
-						{/* displayOnlyFinalOutput tool checkbox */}
-						<div className='col-span-full'>
-							<ToolTip
-								content='Hides intermediate thought messages from agents and only display the final task output.'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='mt-2'>
-									<div className='sm:col-span-12'>
-										<label
-											htmlFor='displayOnlyFinalOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											<input
-												type='checkbox'
-												id='displayOnlyFinalOutput'
-												name='displayOnlyFinalOutput'
-												checked={taskState?.displayOnlyFinalOutput === true}
-												onChange={e => {
-													setTask(oldTask => {
-														return {
-															...oldTask,
-															displayOnlyFinalOutput: e.target.checked
-														};
-													});
-												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-											/>
-											Display Only Final Output
-										</label>
-									</div>
-								</div>
-							</ToolTip>
-						</div>
 					</div>
 				</div>
 

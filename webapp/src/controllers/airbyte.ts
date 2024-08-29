@@ -8,10 +8,10 @@ import getAirbyteInternalApi from 'airbyte/internal';
 import { listLatestSourceDefinitions } from 'airbyte/setup';
 import {
 	getDatasourceById,
-	getDatasourceByIdUnsafe,
 	setDatasourceLastSynced,
 	setDatasourceStatus,
-	setDatasourceTotalRecordCount
+	setDatasourceTotalRecordCount,
+	unsafeGetDatasourceById
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
@@ -138,8 +138,32 @@ export async function discoverSchemaApi(req, res, next) {
 		.then(res => res.data);
 	log('discoveredSchema %O', discoveredSchema);
 
+	// Get stream properties to get correct sync modes from airbyte
+	let streamProperties;
+	try {
+		const streamsApi = await getAirbyteApi(AirbyteApiType.STREAMS);
+		const streamPropertiesBody = {
+			sourceId: datasource.sourceId,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
+		};
+		log('streamPropertiesBody', streamPropertiesBody);
+		streamProperties = await streamsApi
+			.getStreamProperties(streamPropertiesBody)
+			.then(res => res.data);
+		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		if (!streamProperties) {
+			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
+		}
+	} catch (e) {
+		log(e);
+		return dynamicResponse(req, res, 400, {
+			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
+		});
+	}
+
 	return dynamicResponse(req, res, 200, {
-		discoveredSchema
+		discoveredSchema,
+		streamProperties
 	});
 }
 
@@ -222,7 +246,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 		req.body?.blocks || []
 	);
 	if (jobId && datasourceId) {
-		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		const datasource = await unsafeGetDatasourceById(datasourceId);
 		if (datasource) {
 			//Get latest airbyte job data (this success) and read the number of rows to know the total rows sent to destination
 			const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
@@ -299,7 +323,7 @@ export async function handleProblemWebhook(req, res, next) {
 	log('extractWebhookFailureDetails', { jobId, datasourceId, errorMessage, logUrl });
 
 	if (datasourceId) {
-		const datasource = await getDatasourceByIdUnsafe(datasourceId);
+		const datasource = await unsafeGetDatasourceById(datasourceId);
 		const team = await getTeamById(datasource?.teamId);
 		let logUrlPath = '';
 		try {
@@ -339,7 +363,7 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	// TODO: body validation
 	const { datasourceId } = req.body;
 
-	const datasource = await getDatasourceByIdUnsafe(datasourceId);
+	const datasource = await unsafeGetDatasourceById(datasourceId);
 	if (datasource) {
 		const notification = {
 			orgId: toObjectId(datasource.orgId.toString()),

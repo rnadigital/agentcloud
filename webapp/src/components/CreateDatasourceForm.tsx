@@ -13,11 +13,11 @@ import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
-import { DatasourceScheduleType } from 'struct/datasource';
+import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -28,6 +28,7 @@ import { StreamsList } from 'components/DatasourceStream';
 import FormContext from 'context/connectorform';
 import { usePostHog } from 'posthog-js/react';
 
+import submittingReducer from '../lib/utils/submittingreducer';
 import classNames from './ClassNames';
 
 const stepList = [
@@ -99,13 +100,10 @@ export default function CreateDatasourceForm({
 
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
-	const [streamState, setStreamState] = useState({
-		streams: [],
-		selectedFieldsMap: {},
-		descriptionsMap: {}
-	});
+	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
 	const [formData, setFormData] = useState(null);
 
 	async function getSpecification(sourceDefinitionId: string) {
@@ -225,6 +223,7 @@ export default function CreateDatasourceForm({
 						if (stagedDatasource) {
 							setDatasourceId(stagedDatasource.datasourceId);
 							setDiscoveredSchema(stagedDatasource.discoveredSchema);
+							setStreamProperties(stagedDatasource.streamProperties);
 							setStep(3);
 						} else {
 							setError('Datasource connection test failed.'); //TODO: any better way to get error?
@@ -246,6 +245,11 @@ export default function CreateDatasourceForm({
 				// callback && stagedDatasource && callback(stagedDatasource._id);
 			} else {
 				//step 4, saving datasource
+				const filteredStreamState = Object.fromEntries(
+					Object.entries(streamState).filter(
+						(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+					)
+				);
 				const body = {
 					_csrf: csrf,
 					datasourceId: datasourceId,
@@ -255,25 +259,14 @@ export default function CreateDatasourceForm({
 					units,
 					modelId,
 					cronExpression,
-					streams: streamState.streams,
-					selectedFieldsMap: streamState.selectedFieldsMap,
-					descriptionsMap: streamState.descriptionsMap,
+					streamConfig: filteredStreamState,
 					datasourceName,
 					datasourceDescription,
 					embeddingField,
 					retriever: toolRetriever,
 					retriever_config: {
 						timeWeightField: toolTimeWeightField,
-						decay_rate: toolDecayRate,
-						metadata_field_info: Object.entries(
-							discoveredSchema.catalog.streams[0].stream.jsonSchema.properties
-						).map(([ek, ev]) => {
-							return {
-								name: ek,
-								description: streamState.descriptionsMap[ek],
-								type: ev['airbyte_type'] || ev['type']
-							};
-						})
+						decay_rate: toolDecayRate
 					}
 				};
 				const addedDatasource: any = await API.addDatasource(
@@ -283,7 +276,7 @@ export default function CreateDatasourceForm({
 							datasourceName,
 							connectorId: connector?.value,
 							connectorName: connector?.label,
-							numStreams: streamState?.streams?.length,
+							numStreams: Object.keys(streamState)?.length,
 							syncSchedule: scheduleType
 						});
 						toast.success('Added datasource');
@@ -294,7 +287,7 @@ export default function CreateDatasourceForm({
 							connectorId: connector?.value,
 							connectorName: connector?.label,
 							syncSchedule: scheduleType,
-							numStreams: streamState?.streams?.length,
+							numStreams: Object.keys(streamState)?.length,
 							error: res
 						});
 						toast.error(res);
@@ -309,7 +302,7 @@ export default function CreateDatasourceForm({
 				connectorId: connector?.value,
 				connectorName: connector?.label,
 				syncSchedule: scheduleType,
-				numStreams: streamState?.streams?.length,
+				numStreams: Object.keys(streamState)?.length,
 				error: e?.message || e
 			});
 			console.error(e);
@@ -605,34 +598,21 @@ export default function CreateDatasourceForm({
 						<form
 							onSubmit={(e: any) => {
 								e.preventDefault();
-								//todo: make the streamlist fully controlled
-								const streams = Array.from(e.target.elements)
-									.filter(x => x['checked'] === true)
-									.filter(x => !x['dataset']['parent'])
-									.map(x => x['name']);
-								const selectedFieldsMap = Array.from(e.target.elements)
-									.filter(x => x['checked'] === true)
-									.filter(x => x['dataset']['parent'])
-									.reduce((acc, x) => {
-										acc[x['dataset']['parent']] = (acc[x['dataset']['parent']] || []).concat([
-											x['name']
-										]);
-										return acc;
-									}, {});
-								const descriptionsMap = Array.from(e.target.elements)
-									.filter(x => x['type'] === 'text')
-									.filter(x => x['dataset']['checked'] === 'true')
-									.reduce((acc, x) => {
-										if (streams.some(s => selectedFieldsMap[s].includes(x['name']))) {
-											acc[x['name']] = x['value'];
-										}
-										return acc;
-									}, {});
-								setStreamState({ streams, selectedFieldsMap, descriptionsMap });
+								//list of streams
+								//selected fields
+								//descriptions map
+								//sync mode
+								//cursor field
+								//primary key
+								console.log('Step 3 streamState:', streamState);
 								setStep(4);
 							}}
 						>
-							<StreamsList streams={discoveredSchema.catalog?.streams} />
+							<StreamsList
+								streams={discoveredSchema.catalog?.streams}
+								streamProperties={streamProperties}
+								setStreamReducer={setStreamReducer}
+							/>
 							<div className='flex justify-end'>
 								<button
 									disabled={submitting}
@@ -672,23 +652,19 @@ export default function CreateDatasourceForm({
 											value={embeddingField}
 											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 										>
-											{streamState?.streams?.map((stream, ei) => {
-												const foundStreamSchema = discoveredSchema?.catalog?.streams?.find(
-													st => st?.stream?.name === stream
-												);
-												const foundSchemaKeys =
-													streamState?.selectedFieldsMap[stream] ||
-													Object.keys(foundStreamSchema?.stream?.jsonSchema?.properties);
-												return (
-													<optgroup label={stream} key={`embeddingField_optgroup_${ei}`}>
-														{foundSchemaKeys.map((sk, ski) => (
-															<option key={`embeddingField_option_${ski}`} value={sk}>
-																{sk}
-															</option>
-														))}
-													</optgroup>
-												);
-											})}
+											{Object.entries(streamState)
+												.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
+												.map((stream: [string, StreamConfig], ei: number) => {
+													return (
+														<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
+															{stream[1].checkedChildren.map((sk, ski) => (
+																<option key={`embeddingField_option_${ski}`} value={sk}>
+																	{sk}
+																</option>
+															))}
+														</optgroup>
+													);
+												})}
 										</select>
 									</div>
 								</div>

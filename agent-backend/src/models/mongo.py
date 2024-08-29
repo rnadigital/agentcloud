@@ -27,6 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
+    GoogleAI = "google_ai"
     Cohere = "cohere"
     Anthropic = "anthropic"
     Groq = "groq"
@@ -222,14 +223,12 @@ class Task(BaseModel):
     outputFile: Optional[str] = None
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
-    displayOnlyFinalOutput: bool = False
     isStructuredOutput: Optional[bool] = False
 
 
 class Agent(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    """Data model for Autogen Agent Config"""
     name: str
     role: str
     goal: str

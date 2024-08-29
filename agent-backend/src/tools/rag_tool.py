@@ -9,9 +9,10 @@ from langchain.tools import BaseTool
 
 from .global_tools import GlobalBaseTool
 from models.mongo import Model, Tool, Datasource
-from init.env_variables import QDRANT_HOST
-from langchain_community.vectorstores.qdrant import Qdrant
-from qdrant_client import QdrantClient
+
+from vectorstores.factory import vectorstore_factory
+
+from langchain_community.vectorstores.qdrant import Qdrant #TODO: remove
 
 from .retrievers import BaseToolRetriever, retriever_factory
 
@@ -68,13 +69,7 @@ class RagTool(GlobalBaseTool):
 
         collection = str(datasource.id)
 
-        vector_store = Qdrant.from_existing_collection(
-            embedding=embedding_model,
-            path=None,
-            collection_name=collection,
-            vector_name=embedding_model.model,
-            url=QDRANT_HOST
-        )
+        vector_store = vectorstore_factory(embedding_model, collection)
 
         return RagTool(name=tool.name,
                        description=tool.description,
