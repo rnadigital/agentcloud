@@ -136,7 +136,7 @@ export default function ToolForm({
 			acc.push({ name: parname, description: par });
 			return acc;
 		}, []);
-
+	console.log('x', tool?.parameters, tool?.requiredParameters);
 	const initialParameters = tool?.parameters
 		? Object.entries(tool.parameters).reduce((acc, entry) => {
 				const [parname, par]: any = entry;
@@ -149,7 +149,7 @@ export default function ToolForm({
 				acc.push({ name: parname, description: '' });
 				return acc;
 			}, []);
-
+	console.log('initialParameters', initialParameters);
 	const [parameters, setParameters] = useState(
 		initialParameters || [{ name: '', type: '', description: '', required: false }]
 	);
@@ -189,7 +189,12 @@ export default function ToolForm({
 				data: {
 					...tool?.data
 				},
-				parameters,
+				parameters: parameters.reduce((acc, par) => {
+					if (par.name.trim().length > 0) {
+						acc[par.name.trim()] = par.description;
+					}
+					return acc;
+				}, {}),
 				schema: null,
 				datasourceId: datasourceState ? datasourceState.value : null,
 				description: toolDescription,
@@ -368,10 +373,10 @@ export default function ToolForm({
 							setToolType={setToolType}
 							toolDescription={toolDescription}
 							setToolDescription={setToolDescription}
-							isBuiltin={false}
+							isBuiltin={isBuiltin || tool?.requiredParameters}
 							initialType={initialType}
 						/>
-						{!isBuiltin ? (
+						{!tool?.requiredParameters ? (
 							<>
 								<div>
 									<div className='sm:hidden'>
