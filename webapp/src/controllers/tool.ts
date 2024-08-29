@@ -371,7 +371,7 @@ export async function editToolApi(req, res, next) {
 		datasourceId,
 		retriever,
 		retriever_config,
-		parameters,
+		parameters
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
