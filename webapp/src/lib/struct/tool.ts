@@ -24,6 +24,7 @@ export type SelfQueryRetrieverConfig = {
 export type TimeWeightedRetrieverConfig = {
 	k?: number;
 	decay_rate?: number;
+	timeWeightField: string;
 };
 
 export type SimilaritySearchRetrieverConfig = {
@@ -36,7 +37,7 @@ export type MultiQueryRetrieverConfig = {
 	//TODO: any specific configs?
 };
 
-export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
+export type RetrieverConfig = SelfQueryRetrieverConfig & TimeWeightedRetrieverConfig;
 
 export enum ToolState {
 	PENDING = 'pending',
@@ -67,6 +68,7 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
+		requirements?: string;
 	};
 	requiredParameters?: {
 		required: string[];

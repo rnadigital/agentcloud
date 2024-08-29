@@ -21,6 +21,7 @@ import { toast } from 'react-toastify';
 import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
+import InfoAlert from 'components/InfoAlert';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
@@ -43,7 +44,7 @@ export default function ToolForm({
 	fetchFormData,
 	initialType
 }: {
-	tool?: any;
+	tool?: Partial<Tool>;
 	revisions?: any[];
 	datasources?: any[];
 	editing?: boolean;
@@ -52,7 +53,6 @@ export default function ToolForm({
 	fetchFormData?: Function;
 	initialType?: ToolType;
 }) {
-
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
 	const router = useRouter();
@@ -177,15 +177,7 @@ export default function ToolForm({
 
 	async function toolPost(e) {
 		e.preventDefault();
-		setSubmitting(true); // Set submitting to true
-		if (tool?.data?.required && tool.data.required.length > 0) {
-			tool.data.required.forEach((field: string) => {
-				if (!requiredFields[field] || requiredFields[field].length === 0) {
-					toast.error(`The field ${field} is required but not present.`);
-					return setSubmitting(false);
-				}
-			});
-		}
+		setSubmitting(true);
 
 		const posthogEvent = editing ? 'updateTool' : 'createTool';
 		try {
@@ -195,9 +187,9 @@ export default function ToolForm({
 				name: toolName,
 				type: toolType,
 				data: {
-					...tool?.data,
-					...requiredFields
+					...tool?.data
 				},
+				parameters,
 				schema: null,
 				datasourceId: datasourceState ? datasourceState.value : null,
 				description: toolDescription,
@@ -207,13 +199,15 @@ export default function ToolForm({
 					timeWeightField: toolTimeWeightField,
 					decay_rate: toolDecayRate,
 					k: topK
-				} // TODO
+				},
+				linkedToolId: null
 			};
 			switch (true) {
-				case (tool?.data?.builtin === true):
-					// TODO: anything? or nah
+				case isBuiltin:
+					//todo: actually validate
+					body.linkedToolId = tool?.linkedToolId || tool?._id;
 					break;
-				case (toolType === ToolType.FUNCTION_TOOL):
+				case toolType === ToolType.FUNCTION_TOOL:
 					body.data = {
 						...body.data,
 						code: toolCode,
@@ -227,7 +221,6 @@ export default function ToolForm({
 							return acc;
 						}, {}),
 						parameters: {
-							type: 'object',
 							required: functionParameters.filter(x => x.required).map(x => x.name.trim()),
 							properties: functionParameters.reduce((acc, par) => {
 								acc[par.name.trim()] = {
@@ -239,7 +232,7 @@ export default function ToolForm({
 						}
 					};
 					break;
-				case (toolType === ToolType.RAG_TOOL):
+				case toolType === ToolType.RAG_TOOL:
 					// TODO: anything? or nah
 					break;
 				default:
@@ -290,7 +283,7 @@ export default function ToolForm({
 							revisionId: tool?.revisionId
 						});
 						if (!compact) {
-							if (toolType === ToolType.FUNCTION_TOOL) {
+							if (toolType === ToolType.FUNCTION_TOOL && !isBuiltin && !tool?.requiredParameters) {
 								toast.info('Tool deploying...');
 							} else {
 								toast.success('Tool created sucessfully');
@@ -378,35 +371,7 @@ export default function ToolForm({
 							isBuiltin={false}
 							initialType={initialType}
 						/>
-
-						{tool?.data?.required && tool.data.required.length > 0 && (
-							<div className='flex flex-col gap-y-1'>
-								<label className='font-semibold text-gray-900 dark:text-gray-50 mb-2'>
-									Required Fields:
-								</label>
-								{tool.data.required.map(field => (
-									<div key={field} className='flex flex-col'>
-										<label className='text-sm font-semibold text-gray-900 dark:text-gray-50 capitalize'>
-											{field}
-											<span className='text-red-500 ml-1'>*</span>
-										</label>
-										<input
-											value={requiredFields[field] || ''}
-											onChange={e => {
-												setRequiredFields(prevState => ({
-													...prevState,
-													[field]: e.target.value
-												}));
-											}}
-											type='text'
-											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-gray-50 mt-2'
-										/>
-									</div>
-								))}
-							</div>
-						)}
-
-						{!tool?.data?.builtin ? (
+						{!isBuiltin ? (
 							<>
 								<div>
 									<div className='sm:hidden'>

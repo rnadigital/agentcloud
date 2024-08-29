@@ -147,7 +147,10 @@ function validateTool(tool) {
 			{
 				field: 'data.environmentVariables',
 				validation: { notEmpty: true },
-				validateIf: { field: 'type', condition: value => value !== ToolType.RAG_TOOL && !tool?.data?.builtin }
+				validateIf: {
+					field: 'type',
+					condition: value => value !== ToolType.RAG_TOOL && !tool?.data?.builtin
+				}
 			},
 			{
 				field: 'data.parameters.code',
@@ -176,9 +179,11 @@ export async function addToolApi(req, res, next) {
 		schema,
 		datasourceId,
 		description,
+		parameters,
 		iconId,
 		retriever,
-		retriever_config
+		retriever_config,
+		linkedToolId
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -216,9 +221,15 @@ export async function addToolApi(req, res, next) {
 
 	const toolData = {
 		...data,
+		parameters,
 		builtin: false,
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
+
+	const linkedTool = await getToolById(req.params.resourceSlug, linkedToolId);
+	if (!linkedToolId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid linked tool ID' }); //note: should never hit
+	}
 
 	const functionId = isFunctionTool ? uuidv4() : null;
 	const addedTool = await addTool({
@@ -239,14 +250,17 @@ export async function addToolApi(req, res, next) {
 				}
 			: null,
 		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
-		functionId
+		parameters,
+		requiredParameters: linkedTool?.requiredParameters,
+		functionId,
+		linkedToolId: toObjectId(linkedToolId)
 	});
 
 	if (!addedTool?.insertedId) {
 		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
 	}
 
-	if (isFunctionTool) {
+	if (isFunctionTool && !parameters) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			functionProvider

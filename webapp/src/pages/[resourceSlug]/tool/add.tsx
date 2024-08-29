@@ -19,6 +19,7 @@ export default function AddTool(props) {
 	const { tools, datasources } = state;
 
 	console.log(cloneState, 'cloneState');
+	console.log('loading', loading)
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
