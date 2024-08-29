@@ -12,6 +12,7 @@
     "build:doc": "apidoc -i src/controllers -o doc",
     "build": "npm run build:next && npm run build:server",
     "start": "NODE_ENV=production ts-node --project tsconfig.server.json -r tsconfig-paths/register dist/server.js",
+    "start:syncserver": "NODE_ENV=production ts-node --project tsconfig.server.json -r tsconfig-paths/register src/sync-server/main.ts",
     "lint:nextjs": "next lint",
     "lint:all": "eslint src/ --fix && prettier --write src/",
     "dev:email": "email dev --dir ./src/emails",
