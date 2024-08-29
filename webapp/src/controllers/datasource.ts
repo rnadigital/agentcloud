@@ -23,6 +23,7 @@ import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationutils';
 import VectorDBProxyClient from 'lib/vectorproxy/client';
+import { isVectorLimitReached } from 'lib/vectorproxy/limit';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -366,18 +367,12 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
-		req.params.resourceSlug
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
 	);
-	const storageVectorCount = teamVectorStorage?.data?.total_points;
-	log('current team vector storage count:', storageVectorCount);
-	const planLimits = pricingMatrix[currentPlan];
-	if (planLimits) {
-		const approxVectorCountLimit = Math.floor(planLimits.maxVectorStorageBytes / (1536 * (32 / 8))); //Note: inaccurate because there are other embedding models
-		log('plan approx. max vector count:', approxVectorCountLimit);
-		if (storageVectorCount >= approxVectorCountLimit) {
-			return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
-		}
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -692,6 +687,14 @@ export async function syncDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+	}
+
 	// Create the collection in qdrant
 	try {
 		await VectorDBProxyClient.createCollection(datasourceId);
@@ -951,18 +954,12 @@ export async function uploadFileApi(req, res, next) {
 		});
 	}
 
-	const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
-		req.params.resourceSlug
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
 	);
-	const storageVectorCount = teamVectorStorage?.data?.total_points;
-	log('current team vector storage count:', storageVectorCount);
-	const planLimits = pricingMatrix[currentPlan];
-	if (planLimits) {
-		const approxVectorCountLimit = Math.floor(planLimits.maxVectorStorageBytes / (1536 * (32 / 8))); //Note: inaccurate because there are other embedding models
-		log('plan approx. max vector count:', approxVectorCountLimit);
-		if (storageVectorCount >= approxVectorCountLimit) {
-			return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
-		}
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
 	}
 
 	const model = await getModelById(req.params.resourceSlug, modelId);
