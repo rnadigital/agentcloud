@@ -145,8 +145,14 @@ The returned data includes essential details like the paper's title, authors, ab
 				}
 			},
 			builtin: true,
-			required: ['apiKey']
+		},
+		requiredParameters: {
+			required: ['serper_api_key'],
+			properties: {
+				serper_api_key: { type: 'string', description: 'The search query to send to Google' }
+			}
 		}
+
 	},
 	{
 		name: 'Search Google (Apify)',
@@ -165,6 +171,12 @@ The returned data includes essential details like the paper's title, authors, ab
 				}
 			},
 			builtin: true
+		},
+		requiredParameters: {
+			required: ['apify_api_token'],
+			properties: {
+				apify_api_token: { type: 'string', description: 'The search query to send to Google' }
+			}
 		}
 	}
 ].map((t: Tool) => {

@@ -32,7 +32,7 @@ class BaseBuiltinTool(GlobalBaseTool):
             function_name=tool.data.name,
             code=tool.data.code,
             properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else {},
-            api_key=tool.data.apiKey,
+            parameters=tool.parameters,
             verbose=True,
             handle_tool_error=True
         )

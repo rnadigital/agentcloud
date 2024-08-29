@@ -69,9 +69,13 @@ export type Tool = {
 			required?: string[];
 		};
 		code?: string;
-		requirements?: string;
 		openAPIMatchKey?: string;
 	};
+	requiredParameters?: {
+		required: string[];
+		properties: Record<string, FunctionProperty>;
+	};
+	parameters?: Record<string, string>;
 	icon?: IconAttachment;
 	hidden?: boolean;
 	functionId?: string;
