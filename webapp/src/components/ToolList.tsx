@@ -1,6 +1,4 @@
-import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
-import ButtonSpinner from 'components/ButtonSpinner';
-import Link from 'next/link';
+import { DocumentDuplicateIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
@@ -63,7 +61,7 @@ export default function ToolList({ tools, fetchTools }) {
 							<span>{tool.name.charAt(0).toUpperCase()}</span>
 						</div>
 					</div>
-					{!tool?.data?.builtin && (
+					{!tool?.data?.builtin ? (
 						<div>
 							<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
 								<div className='flex w-0 flex-1'>
@@ -106,6 +104,23 @@ export default function ToolList({ tools, fetchTools }) {
 										<TrashIcon className='h-5 w-5 text-red-600' aria-hidden='true' />
 										Delete
 									</button>
+								</div>
+							</div>
+						</div>
+					) : (
+						<div>
+							<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
+								<div className='flex w-0 flex-1'>
+									<a
+										href={`/${resourceSlug}/tool/add?toolId=${encodeURIComponent(tool._id)}`}
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
+									>
+										<PlusIcon
+											className='h-5 w-5 text-gray-400 dark:text-white'
+											aria-hidden='true'
+										/>
+										Install
+									</a>
 								</div>
 							</div>
 						</div>

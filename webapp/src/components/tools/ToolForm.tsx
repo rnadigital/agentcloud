@@ -4,10 +4,6 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
-import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
-import formatDatasourceOptionLabel from 'components/FormatDatasourceOptionLabel';
-import FunctionCard from 'components/FunctionCard';
-import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import Spinner from 'components/Spinner';
@@ -16,33 +12,15 @@ import FunctionToolForm from 'components/tools/form/FunctionToolForm';
 import ToolDetailsForm from 'components/tools/form/ToolDetailsForm';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
-import { dereferenceSync } from 'dereference-json-schema';
 import { WrapToolCode } from 'function/base';
-import yaml from 'js-yaml';
-import { generateOpenAPIMatchKey } from 'lib/utils/toolsUtils';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
-import React, { useEffect, useRef, useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import Select from 'react-tailwindcss-select';
-import { toast } from 'react-toastify';
-import { NotificationType } from 'struct/notification';
-import { Retriever, ToolType } from 'struct/tool';
-
-const authenticationMethods = [
-	{ label: 'None', value: 'none' },
-	{ label: 'API Key', value: 'api' },
-	{ label: 'Oauth', value: 'oauth' }
-];
-
-const authorizationMethods = [
-	{ label: 'Basic', value: 'basic' },
-	{ label: 'Bearer', value: 'bearer' },
-	{ label: 'Custom', value: 'custom' }
-];
 import { usePostHog } from 'posthog-js/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { runtimeOptions } from 'struct/function';
+import { NotificationType } from 'struct/notification';
+import { Retriever, Tool, ToolType } from 'struct/tool';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
@@ -75,29 +53,36 @@ export default function ToolForm({
 	initialType?: ToolType;
 }) {
 	//TODO: fix any type
+	console.log('initialType', initialType);
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext;
+	const { csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const posthog = usePostHog();
 	const [currentTab, setCurrentTab] = useState(tabs[0]);
-	const [debouncedValue, setDebouncedValue] = useState(null);
 	const isBuiltin = tool?.data?.builtin === true;
-	const [importOpen, setImportOpen] = useState(false);
-	const [importValue, setImportValue] = useState('');
 	const [toolCode, setToolCode] = useState(tool?.data?.code || '');
 	const [wrappedCode, setWrappedCode] = useState(WrapToolCode(toolCode));
 	const [requirementsTxt, setRequirementsTxt] = useState(tool?.data?.requirements || '');
-	const [toolAPISchema, setToolAPISchema] = useState(tool?.schema || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
 	const [toolDescription, setToolDescription] = useState(
 		tool?.data?.description || tool?.description || ''
 	);
-	const [toolType, setToolType] = useState(
-		initialType || (tool?.type as ToolType) || ToolType.RAG_TOOL
+	const [requiredFields, setRequiredFields] = useState<Record<string, string>>({});
+	const [toolType, setToolType] = useState((tool?.type as ToolType) || ToolType.RAG_TOOL);
+
+	const [submitting, setSubmitting] = useState(false);
+	const [style, setStyle] = useState(null);
+	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
+	const [topK, setTopK] = useState(tool?.retriever_config?.k || 3);
+	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(
+		tool?.retriever_config?.decay_rate || 0.5
 	);
-	const [submitting, setSubmitting] = useState(false); // Add submitting state
+	const [toolTimeWeightField, setToolTimeWeightField] = useState(
+		tool?.retriever_config?.timeWeightField || null
+	);
+
 	const [, notificationTrigger]: any = useSocketContext();
 
 	useEffect(() => {
@@ -113,7 +98,6 @@ export default function ToolForm({
 	const PreWithRef = preProps => {
 		return <pre {...preProps} ref={codeBlockRef} />;
 	};
-	const [style, setStyle] = useState(null);
 	try {
 		useEffect(() => {
 			if (!style) {
@@ -126,33 +110,12 @@ export default function ToolForm({
 		console.error(e);
 	}
 
-	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
-		/* noop */
-	};
 	// TODO: move into RetrievalStrategyComponent, keep the setters passed as props
-	const [toolRetriever, setToolRetriever] = useState(tool?.retriever_type || Retriever.SELF_QUERY);
-	const [topK, setTopK] = useState(tool?.retriever_config?.k || 3);
-	const [toolDecayRate, setToolDecayRate] = useState<number | undefined>(
-		tool?.retriever_config?.decay_rate || 0.5
-	);
 	useEffect(() => {
 		if (toolRetriever !== Retriever.TIME_WEIGHTED) {
 			setToolDecayRate(undefined);
 		}
 	}, [toolRetriever]);
-	const [toolTimeWeightField, setToolTimeWeightField] = useState(
-		tool?.retriever_config?.timeWeightField || null
-	);
-
-	const [authenticationMethodState, setAuthenticationMethod] = useState(
-		authenticationMethods[0].value
-	);
-	const [authorizationMethodState, setAuthorizationMethod] = useState(
-		authorizationMethods[0].value
-	);
-	const [tokenExchangeMethod, setTokenExchangeMethod] = useState('post'); // todo: array like ^ ?
-	const [searchTerm, setSearchTerm] = useState('');
-
 	// Initial state setup for parameters and environment variables
 	const initialParameters =
 		tool?.data?.parameters?.properties &&
@@ -182,12 +145,6 @@ export default function ToolForm({
 		initialEnvironmentVariables || [{ name: '', description: '' }]
 	);
 
-	const [functionsList, setFunctionsList] = useState(null);
-	const [filteredFunctionsList, setFilteredFunctionsList] = useState(null);
-	const [invalidFuns, setInvalidFuns] = useState(0);
-	const [selectedOpenAPIMatchKey, setSelectedOpenAPIMatchKey] = useState(null);
-	const [error, setError] = useState();
-
 	const initialDatasource = datasources.find(d => d._id === tool?.datasourceId);
 	const [datasourceState, setDatasourceState]: any = useState(
 		initialDatasource ? { label: initialDatasource.name, value: initialDatasource._id } : null
@@ -195,10 +152,6 @@ export default function ToolForm({
 	const currentDatasource = datasources.find(d => d._id === datasourceState?.value);
 
 	const [runtimeState, setRuntimeState] = useState(tool?.data?.runtime || runtimeOptions[0].value);
-
-	function handleSearchChange(event) {
-		setSearchTerm(event.target.value.toLowerCase());
-	}
 
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchFormData) && fetchFormData();
@@ -210,6 +163,15 @@ export default function ToolForm({
 	async function toolPost(e) {
 		e.preventDefault();
 		setSubmitting(true); // Set submitting to true
+		if (tool?.data?.required && tool.data.required.length > 0) {
+			tool.data.required.forEach((field: string) => {
+				if (!requiredFields[field] || requiredFields[field].length === 0) {
+					toast.error(`The field ${field} is required but not present.`);
+					return setSubmitting(false);
+				}
+			});
+		}
+
 		const posthogEvent = editing ? 'updateTool' : 'createTool';
 		try {
 			const body = {
@@ -218,7 +180,8 @@ export default function ToolForm({
 				name: toolName,
 				type: toolType,
 				data: {
-					...tool?.data
+					...tool?.data,
+					...requiredFields
 				},
 				schema: null,
 				datasourceId: datasourceState ? datasourceState.value : null,
@@ -337,15 +300,6 @@ export default function ToolForm({
 	}
 
 	useEffect(() => {
-		if (toolType == ToolType.FUNCTION_TOOL) {
-			setSearchTerm('');
-			setFunctionsList(null);
-			setInvalidFuns(0);
-			setSelectedOpenAPIMatchKey('');
-		}
-	}, [toolType]);
-
-	useEffect(() => {
 		const allowedTabs = tabs.filter(t => !t.toolTypes || t.toolTypes.includes(toolType));
 		if (typeof window !== 'undefined') {
 			const hashTab = window.location.hash;
@@ -357,6 +311,12 @@ export default function ToolForm({
 			}
 		}
 	}, [toolType]);
+
+	useEffect(() => {
+		if (initialType) {
+			setToolType(initialType);
+		}
+	}, [initialType]);
 
 	let modal;
 	switch (modalOpen) {
@@ -397,9 +357,36 @@ export default function ToolForm({
 							setToolType={setToolType}
 							toolDescription={toolDescription}
 							setToolDescription={setToolDescription}
-							isBuiltin={isBuiltin}
+							isBuiltin={false}
 							initialType={initialType}
 						/>
+
+						{tool?.data?.required && tool.data.required.length > 0 && (
+							<div className='flex flex-col gap-y-1'>
+								<label className='font-semibold text-gray-900 dark:text-gray-50 mb-2'>
+									Required Fields:
+								</label>
+								{tool.data.required.map(field => (
+									<div key={field} className='flex flex-col'>
+										<label className='text-sm font-semibold text-gray-900 dark:text-gray-50 capitalize'>
+											{field}
+											<span className='text-red-500 ml-1'>*</span>
+										</label>
+										<input
+											value={requiredFields[field] || ''}
+											onChange={e => {
+												setRequiredFields(prevState => ({
+													...prevState,
+													[field]: e.target.value
+												}));
+											}}
+											type='text'
+											className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:text-gray-50 mt-2'
+										/>
+									</div>
+								))}
+							</div>
+						)}
 
 						<div>
 							<div className='sm:hidden'>
@@ -496,7 +483,7 @@ export default function ToolForm({
 									wrappedCode={wrappedCode}
 									style={style}
 									PreWithRef={PreWithRef}
-									isBuiltin={isBuiltin}
+									isBuiltin={false}
 									runtimeOptions={runtimeOptions}
 								/>
 							</>
@@ -517,7 +504,7 @@ export default function ToolForm({
 						{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && (
 							<>
 								<ParameterForm
-									readonly={isBuiltin}
+									readonly={false}
 									parameters={parameters}
 									setParameters={setParameters}
 									title='Parameters'
@@ -528,7 +515,7 @@ export default function ToolForm({
 								/>
 
 								<ParameterForm
-									readonly={isBuiltin}
+									readonly={false}
 									parameters={environmentVariables}
 									setParameters={setEnvironmentVariables}
 									title='Environment Variables'
@@ -551,16 +538,14 @@ export default function ToolForm({
 							Back
 						</Link>
 					)}
-					{!isBuiltin && (
-						<button
-							type='submit'
-							disabled={submitting}
-							className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-						>
-							{submitting && <ButtonSpinner className='mr-2' />}
-							Save
-						</button>
-					)}
+					<button
+						type='submit'
+						disabled={submitting}
+						className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+					>
+						{submitting && <ButtonSpinner className='mr-2' />}
+						Save
+					</button>
 				</div>
 			</form>
 		</>

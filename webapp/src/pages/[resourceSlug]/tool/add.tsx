@@ -18,6 +18,7 @@ export default function AddTool(props) {
 	const [loading, setLoading] = useState(true);
 	const { tools, datasources } = state;
 
+	console.log(cloneState, 'cloneState');
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
@@ -60,7 +61,7 @@ export default function AddTool(props) {
 			<ToolForm
 				datasources={datasources}
 				fetchFormData={fetchTools}
-				initialType={null}
+				initialType={cloneState?.tool?.type}
 				tool={cloneState?.tool}
 			/>
 		</>

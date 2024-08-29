@@ -144,7 +144,8 @@ The returned data includes essential details like the paper's title, authors, ab
 					query: { type: 'string', description: 'The search query to send to Google' }
 				}
 			},
-			builtin: true
+			builtin: true,
+			required: ['apiKey']
 		}
 	},
 	{
