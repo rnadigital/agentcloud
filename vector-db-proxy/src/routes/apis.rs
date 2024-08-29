@@ -573,6 +573,7 @@ pub async fn get_storage_size(
                     .get_storage_size(search_request, embedding_model.embeddingLength as usize)
                     .await
                 {
+                    // println!("collection_storage_info: {:?}", collection_storage_info);
                     collection_size_response.total_points +=
                         collection_storage_info.points_count.unwrap();
                     collection_size_response.total_size += collection_storage_info.size.unwrap();

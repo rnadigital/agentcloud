@@ -166,22 +166,22 @@ impl VectorDatabase for PineconeClient {
         };
         Ok(None)
     }
-
     async fn get_storage_size(
         &self,
         search_request: SearchRequest,
         vector_length: usize,
     ) -> Result<Option<StorageSize>, VectorDatabaseError> {
-        if let Ok(collection_info) = self.get_collection_info(search_request.clone()).await {
-            let vector_count = collection_info.unwrap().collection_vector_count.unwrap();
-            let vector_storage_size =
-                calculate_vector_storage_size(vector_count as usize, vector_length);
-            return Ok(Some(StorageSize {
-                status: VectorDatabaseStatus::Ok,
-                collection_name: search_request.collection,
-                size: Some(vector_storage_size),
-                points_count: None,
-            }));
+        if let Ok(Some(collection_info)) = self.get_collection_info(search_request.clone()).await {
+            if let Some(vector_count) = collection_info.collection_vector_count {
+                let vector_storage_size =
+                    calculate_vector_storage_size(vector_count as usize, vector_length);
+                return Ok(Some(StorageSize {
+                    status: VectorDatabaseStatus::Ok,
+                    collection_name: search_request.collection,
+                    size: Some(vector_storage_size),
+                    points_count: Some(vector_count),
+                }));
+            }
         }
         Ok(None)
     }
