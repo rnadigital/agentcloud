@@ -152,7 +152,6 @@ impl VectorDatabase for PineconeClient {
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
-            // Need to figure out the the default index name here
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let index_stats = index.describe_index_stats(None).await.unwrap();
             let vector_count: Option<u64> = index_stats.namespaces.iter().find_map(|(k, v)| {
