@@ -370,7 +370,8 @@ export async function editToolApi(req, res, next) {
 		description,
 		datasourceId,
 		retriever,
-		retriever_config
+		retriever_config,
+		parameters,
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -450,6 +451,7 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
+		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
@@ -460,7 +462,7 @@ export async function editToolApi(req, res, next) {
 	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (functionNeedsUpdate) {
+	} else if (functionNeedsUpdate && !parameters) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
