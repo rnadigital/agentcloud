@@ -258,7 +258,7 @@ export default function router(server, app) {
 	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
 	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
 	
-	server.use('/account/forms', accountRouter);
+	server.use('/forms/account', accountRouter);
 	server.get('/apikey/add',authedMiddlewareChain ,apiKeyController.keyAddPage.bind(null, app));
 
 	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));

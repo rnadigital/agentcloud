@@ -33,7 +33,8 @@ export enum DatasourceStatus {
 	DRAFT = 'draft', //connection test
 	PROCESSING = 'processing', //airybte -> vector db proxy for non file type only
 	EMBEDDING = 'embedding', //vector db proxy -> qdrant
-	READY = 'ready' //synced/embedded
+	READY = 'ready', //synced/embedded
+	ERROR = 'error' //rrror, currently used when the sync would exceed the remaining limit
 }
 
 export const datasourceStatusColors = {
@@ -78,8 +79,8 @@ export type FieldDescriptionMap = {
 	[key: string]: FieldDescription;
 };
 
-export function getMetadataFieldInfo(config: StreamConfigMap) {
-	return Object.keys(config || {}).reduce((acc, topKey) => {
+export function getMetadataFieldInfo(config: StreamConfigMap = {}) {
+	return Object.keys(config).reduce((acc, topKey) => {
 		const descriptionsMap = config[topKey].descriptionsMap;
 		const items = Object.keys(descriptionsMap).reduce((innerAcc, key) => {
 			const { description, type } = descriptionsMap[key];

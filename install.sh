@@ -220,6 +220,9 @@ docker compose up --build -d
 if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then
     kill_container_by_service_name "webapp_next"
 fi
+if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then
+    kill_container_by_service_name "webapp_syncserver"
+fi
 if [ "$KILL_VECTOR_DB_PROXY" -eq 1 ]; then
     kill_container_by_service_name "vector_db_proxy"
 fi

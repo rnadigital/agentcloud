@@ -23,6 +23,7 @@ import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationutils';
 import VectorDBProxyClient from 'lib/vectorproxy/client';
+import { isVectorLimitReached } from 'lib/vectorproxy/limit';
 import getFileFormat from 'misc/getfileformat';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
@@ -200,7 +201,6 @@ export async function testDatasourceApi(req, res, next) {
 		submittedConnector?.sourceType_oss;
 	try {
 		const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
-
 		const sourceBody = {
 			configuration: {
 				//NOTE: sourceType_oss is "file" (which is incorrect) for e.g. for google sheets, so we use a workaround.
@@ -365,6 +365,14 @@ export async function addDatasourceApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
 	}
 
 	const datasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
@@ -679,6 +687,14 @@ export async function syncDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+	}
+
 	// Create the collection in qdrant
 	try {
 		await VectorDBProxyClient.createCollection(datasourceId);
@@ -689,27 +705,52 @@ export async function syncDatasourceApi(req, res, next) {
 		});
 	}
 
-	// Create a job to trigger the connection to sync
-	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
-	const jobBody = {
-		connectionId: datasource.connectionId,
-		jobType: 'sync'
-	};
+	if (datasource?.sourceType === 'file') {
+		// Fetch the appropriate message queue provider
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 
-	try {
-		const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-		log('createdJob', createdJob);
-	} catch (e) {
-		log(e);
-		console.log(e);
-		return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		// Prepare the message and metadata
+		const message = JSON.stringify({
+			bucket: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE,
+			filename: datasource?.filename,
+			file: `/tmp/${datasource?.filename}`
+		});
+		const metadata = {
+			_stream: datasource._id.toString(),
+			stream: datasource._id.toString(),
+			type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
+		};
+
+		// Send the message using the provider
+		await messageQueueProvider.sendMessage(message, metadata);
+
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.EMBEDDING
+		});
+	} else {
+		// Create a job to trigger the connection to sync
+		const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
+		const jobBody = {
+			connectionId: datasource.connectionId,
+			jobType: 'sync'
+		};
+
+		try {
+			const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
+			log('createdJob', createdJob);
+		} catch (e) {
+			log(e);
+			console.log(e);
+			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
+		}
+
+		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
+		await editDatasource(req.params.resourceSlug, datasourceId, {
+			recordCount: { total: 0 },
+			status: DatasourceStatus.PROCESSING
+		});
 	}
-
-	//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
-	await editDatasource(req.params.resourceSlug, datasourceId, {
-		recordCount: { total: 0 },
-		status: DatasourceStatus.PROCESSING
-	});
 
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
@@ -913,6 +954,14 @@ export async function uploadFileApi(req, res, next) {
 		});
 	}
 
+	const limitReached = await isVectorLimitReached(
+		req.params.resourceSlug,
+		res.locals?.subscription?.stripePlan
+	);
+	if (limitReached) {
+		return dynamicResponse(req, res, 400, { error: 'Vector storage limit reached' });
+	}
+
 	const model = await getModelById(req.params.resourceSlug, modelId);
 	if (!model) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -982,6 +1031,7 @@ export async function uploadFileApi(req, res, next) {
 	});
 	const metadata = {
 		_stream: newDatasourceId.toString(),
+		stream: newDatasourceId.toString(),
 		type: process.env.NEXT_PUBLIC_STORAGE_PROVIDER
 	};
 

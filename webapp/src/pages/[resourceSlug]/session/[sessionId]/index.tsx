@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
+import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 
@@ -34,7 +35,7 @@ export default function Session(props) {
 	const { sessionId } = router.query;
 	const [currentSessionId, setCurrentSessionId] = useState(sessionId);
 	const [session, setSession] = useState(props.session);
-	const [app, setApp] = useState(props.app);
+	const [app, setApp]: [App, Function] = useState(props.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
@@ -317,7 +318,7 @@ export default function Session(props) {
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
-							if (m?.isFeedback) {
+							if (m?.isFeedback && app?.type === AppType.CREW) {
 								return null;
 							}
 							const authorName = m?.authorName || m?.message?.authorName;

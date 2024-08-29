@@ -21,6 +21,7 @@ class VectorDBProxyClient {
 		log('createCollection %s %O', collectionId, createOptions);
 		// Note: Checks if the collection exists beforehand
 		const collectionExists: VectorResponseBody = await this.checkCollectionExists(collectionId);
+		log('collectionExists res:', collectionExists);
 		if (collectionExists?.error_message) {
 			//TODO: have vector-db-poxy return a boolean or something logical for actually just knowing if the collection exists or not
 			if (!createOptions) {
@@ -44,8 +45,8 @@ class VectorDBProxyClient {
 				createOptions = {
 					collection_name: collectionId.toString(),
 					dimensions: existingModel.embeddingLength,
-					distance: Distance.Cosine, // As per the note: always cosine (for now)
-					vector_name: existingModel.model // This assumes vector_name is the model name
+					distance: Distance.Cosine // As per the note: always cosine (for now)
+					// vector_name: existingModel.model // This assumes vector_name is the model name
 					// region: Region.US,
 					// cloud: Cloud.GCP
 				};
@@ -73,6 +74,14 @@ class VectorDBProxyClient {
 		return fetch(
 			`${process.env.VECTOR_APP_URL}/api/v1/check-collection-exists/${collectionId}`
 		).then(res => {
+			return res.json();
+		});
+	}
+
+	// Method to get the total storage size for the team
+	static async getVectorStorageForTeam(teamId: IdOrStr): Promise<VectorResponseBody> {
+		log('getVectorStorageForTeam %s', teamId);
+		return fetch(`${process.env.VECTOR_APP_URL}/api/v1/storage-size/${teamId}`).then(res => {
 			return res.json();
 		});
 	}

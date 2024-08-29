@@ -95,7 +95,7 @@ def vectorstore_factory(embedding_model, collection_name):
                 embedding=embedding_model,
                 path=None,
                 collection_name=collection_name,
-                vector_name=embedding_model.model,
+                # vector_name=embedding_model.model,
                 url=QDRANT_HOST
             )
         case VectorDatabase.Pinecone:
@@ -103,7 +103,7 @@ def vectorstore_factory(embedding_model, collection_name):
             from langchain_community.vectorstores.pinecone import Pinecone
 
             return Pinecone.from_existing_index(
-                index_name="us-west-2", #TODO: make customisable
+                index_name="us-central1", #TODO: make customisable
                 embedding=embedding_model,
                 text_key="page_content", #TODO: check
                 namespace=collection_name,

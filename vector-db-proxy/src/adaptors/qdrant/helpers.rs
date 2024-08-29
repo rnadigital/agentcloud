@@ -82,25 +82,25 @@ pub async fn construct_point_struct(
         let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
             PointId::from(id)
         });
-        return if let Some(model_name) = vector_name {
-            if let Some(model) = model_name.to_str() {
+        match vector_name {
+            Some(embedding_model) => {
+                if let Some(model) = embedding_model.to_str() {
+                    let qdrant_point_struct = PointStruct::new(
+                        vector_id,
+                        HashMap::from([(String::from(model), vector.to_owned())]),
+                        json!(payload).try_into().unwrap(),
+                    );
+                    return Some(qdrant_point_struct);
+                };
+            }
+            None => {
                 let qdrant_point_struct = PointStruct::new(
                     vector_id,
-                    HashMap::from([(String::from(model), vector.to_owned())]),
+                    vector.to_owned(),
                     json!(payload).try_into().unwrap(),
                 );
-                Some(qdrant_point_struct)
-            } else {
-                log::error!("Could not convert model to a string slice");
-                None
+                return Some(qdrant_point_struct);
             }
-        } else {
-            let qdrant_point_struct = PointStruct::new(
-                vector_id,
-                vector.to_owned(),
-                json!(payload).try_into().unwrap(),
-            );
-            Some(qdrant_point_struct)
         };
     }
     None
