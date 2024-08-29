@@ -156,35 +156,6 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
         }
     }
 }
-
-//pub async fn get_stream_config(
-//    db: &Database,
-//    datasource_id: String,
-//) -> Result<Option<StreamConfig>> {
-//    let datasources_collection = db.collection::<DataSources>("datasources");
-//    let datasource_id = ObjectId::from_str(datasource_id.as_str());
-//    match datasources_collection
-//        .find_one(doc! {"_id": datasource_id?}, None)
-//        .await
-//    {
-//        Ok(datasource) => {
-//            if let Some(ds) = datasource {
-//                if let Some(stream_config) = ds.streamConfig {
-//                    Ok(Some(stream_config))
-//                } else {
-//                    Ok(None)
-//                }
-//            } else {
-//                Ok(None)
-//            }
-//        }
-//        Err(e) => Err(anyhow!(
-//            "An error occurred while getting datasource from mongo. {}",
-//            e
-//        )),
-//    }
-//}
-
 pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
     let mut list_of_datasources: Vec<DataSources> = vec![];
     let datasources_collection = db.collection::<DataSources>("datasources");

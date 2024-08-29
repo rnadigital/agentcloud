@@ -5,7 +5,7 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UnstructuredIOResponse {
     #[serde(rename = "type")]
-    pub r#type: String,
+    pub field_type: String,
     pub element_id: String,
     pub text: String,
     pub metadata: Metadata,
@@ -24,7 +24,7 @@ impl From<&UnstructuredIOResponse> for HashMap<String, String> {
         let mut map = HashMap::new();
 
         // Convert fields of UnstructuredIOResponse to strings and insert them into the map
-        map.insert("ac_type".to_string(), value.r#type.clone());
+        map.insert("ac_type".to_string(), value.field_type.clone());
         map.insert("ac_element_id".to_string(), value.element_id.clone());
         map.insert("page_content".to_string(), value.text.clone());
         // Convert fields of Metadata to strings and insert them into the map

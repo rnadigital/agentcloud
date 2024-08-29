@@ -562,34 +562,41 @@ pub async fn get_storage_size(
     let mongodb_connection = start_mongo_connection().await?;
     let list_of_team_datasources =
         get_team_datasources(&mongodb_connection, team_id.as_str()).await?;
-
     for datasource in list_of_team_datasources {
-        let model_result = get_model(&mongodb_connection, datasource._id.to_string().as_str()).await;
+        let model_result =
+            get_model(&mongodb_connection, datasource._id.to_string().as_str()).await;
         match model_result {
             Ok(Some(embedding_model)) => {
-                let search_request = SearchRequest::new(SearchType::Collection, datasource._id.to_string());
+                let search_request =
+                    SearchRequest::new(SearchType::Collection, datasource._id.to_string());
                 if let Ok(Some(collection_storage_info)) = vector_database_client
                     .get_storage_size(search_request, embedding_model.embeddingLength as usize)
                     .await
                 {
-                    collection_size_response.total_points += collection_storage_info.points_count.unwrap();
+                    collection_size_response.total_points +=
+                        collection_storage_info.points_count.unwrap();
                     collection_size_response.total_size += collection_storage_info.size.unwrap();
                     collection_size_response
                         .list_of_datasources
                         .push(collection_storage_info);
                 }
-            },
+            }
             Ok(None) => {
-                println!("No embedding model found for datasource: {}", datasource._id);
+                println!(
+                    "No embedding model found for datasource: {}",
+                    datasource._id
+                );
                 continue;
-            },
+            }
             Err(e) => {
-                println!("Error retrieving model for datasource {}: {:?}", datasource._id, e);
+                println!(
+                    "Error retrieving model for datasource {}: {:?}",
+                    datasource._id, e
+                );
                 continue;
             }
         }
     }
-
     Ok(HttpResponse::Ok()
         .content_type(ContentType::json())
         .json(json!(ResponseBody {
