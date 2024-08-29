@@ -253,7 +253,7 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 
 export function addKey(body, dispatch, errorCallback, router){
 	return ApiCall(
-		'/account/forms/apikey/add',
+		'/forms/account/apikey/add',
 		'POST',
 		body,
 		dispatch,
@@ -285,7 +285,7 @@ export function getKey(body, dispatch, errorCallback, router) {
 
 export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 	return ApiCall(
-		`/account/forms/apikey/${body.keyId}/increment`,
+		`/forms/account/apikey/${body.keyId}/increment`,
 		'POST',
 		body,
 		dispatch,
@@ -296,7 +296,7 @@ export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 
 export function deleteKey(body, dispatch, errorCallback, router) {
 	return ApiCall(
-		`/account/forms/apikey/${body.keyId}`,
+		`/forms/account/apikey/${body.keyId}`,
 		'DELETE',
 		body,
 		dispatch,

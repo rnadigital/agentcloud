@@ -45,7 +45,7 @@ class VectorDBProxyClient {
 				createOptions = {
 					collection_name: collectionId.toString(),
 					dimensions: existingModel.embeddingLength,
-					distance: Distance.Cosine, // As per the note: always cosine (for now)
+					distance: Distance.Cosine // As per the note: always cosine (for now)
 					// vector_name: existingModel.model // This assumes vector_name is the model name
 					// region: Region.US,
 					// cloud: Cloud.GCP
