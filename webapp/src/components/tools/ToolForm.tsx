@@ -4,6 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
+import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import Spinner from 'components/Spinner';
@@ -21,7 +22,6 @@ import { toast } from 'react-toastify';
 import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
-import InfoAlert from 'components/InfoAlert';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
