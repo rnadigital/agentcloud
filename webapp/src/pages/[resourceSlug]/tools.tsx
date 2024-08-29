@@ -38,7 +38,10 @@ export default function Tools(props) {
 	}, [resourceSlug]);
 
 	const { tools } = state;
-	const filteredTools = tools?.filter(x => !x.hidden);
+	const filteredTools = tools?.filter(
+		x => !x.hidden && !(x.data?.builtin && x?.requiredParameters)
+	);
+	const installableTools = tools?.filter(x => x.data?.builtin && x?.requiredParameters);
 
 	if (!tools) {
 		return <Spinner />;
@@ -91,6 +94,9 @@ export default function Tools(props) {
 				/>
 			)}
 			<ToolList tools={filteredTools} fetchTools={fetchTools} />
+			<div className='mt-4' />
+			<PageTitleWithNewButton list={installableTools} title='Unconfigured tools' />
+			<ToolList tools={installableTools} fetchTools={fetchTools} />
 		</>
 	);
 }
