@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { ToolState, ToolType } from 'struct/tool';
+import { Tool, ToolState, ToolType } from 'struct/tool';
 
 import * as API from '../api';
 import { useAccountContext } from '../context/account';
 import ToolStateBadge from './ToolStateBadge';
 
-export default function ToolList({ tools, fetchTools }) {
+export default function ToolList({ tools, fetchTools }: { tools: Tool; fetchTools: Function }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
@@ -61,7 +61,7 @@ export default function ToolList({ tools, fetchTools }) {
 							<span>{tool.name.charAt(0).toUpperCase()}</span>
 						</div>
 					</div>
-					{!tool?.data?.builtin ? (
+					{!tool?.data?.builtin && (
 						<div>
 							<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
 								<div className='flex w-0 flex-1'>
@@ -107,7 +107,8 @@ export default function ToolList({ tools, fetchTools }) {
 								</div>
 							</div>
 						</div>
-					) : (
+					)}
+					{tool?.requiredParameters && (
 						<div>
 							<div className='-mt-px flex divide-x divide-gray-200 dark:divide-slate-600'>
 								<div className='flex w-0 flex-1'>

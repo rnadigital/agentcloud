@@ -61,15 +61,12 @@ export type Tool = {
 		builtin?: boolean;
 		name: string;
 		description?: string;
-		apiKey?: string;
 		environmentVariables?: Record<string, string>;
-		parameters?: { // TODO: rename "functionParameters"
-			//type: string;
+		parameters?: {
 			properties: Record<string, FunctionProperty>;
 			required?: string[];
 		};
 		code?: string;
-		openAPIMatchKey?: string;
 	};
 	requiredParameters?: {
 		required: string[];
@@ -81,10 +78,11 @@ export type Tool = {
 	functionId?: string;
 	revisionId?: ObjectId;
 	functionLogs?: string;
+	linkedToolId?: ObjectId;
 };
 
 export type FunctionProperty = {
-	type: string; // should probably be string | number | whatever
+	type: string;
 	description: string;
 };
 

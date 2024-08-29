@@ -34,13 +34,19 @@ export default function AddTool(props) {
 	useEffect(() => {
 		if (typeof location != undefined) {
 			const toolId = new URLSearchParams(location.search).get('toolId');
-			fetchEditData(toolId);
+			if (toolId) {
+				fetchEditData(toolId);
+			} else {
+				setLoading(false);
+			}
 		}
 	}, []);
 
 	useEffect(() => {
-		setLoading(false);
-	}, [cloneState?.tools, state?.tools]);
+		if (cloneState != null) {
+			setLoading(false);
+		}
+	}, [cloneState]);
 
 	if (loading) {
 		return <Spinner />;

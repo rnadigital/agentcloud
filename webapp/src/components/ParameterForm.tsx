@@ -5,7 +5,8 @@ import React from 'react';
 export default function ParameterForm({
 	parameters,
 	setParameters,
-	readonly,
+	readonlyKeys = false,
+	readonlyValues = false,
 	title = 'Parameters',
 	disableTypes = false,
 	disableDescription = false,
@@ -40,7 +41,7 @@ export default function ParameterForm({
 			{parameters.map((param, index) => (
 				<div key={index} className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-4'>
 					<input
-						readOnly={readonly}
+						readOnly={readonlyKeys}
 						type='text'
 						placeholder={namePlaceholder}
 						pattern={namePattern}
@@ -54,7 +55,7 @@ export default function ParameterForm({
 					/>
 					{!disableTypes && (
 						<select
-							disabled={readonly}
+							disabled={readonlyKeys}
 							value={param.type}
 							onChange={e => updateParameter(index, 'type', e.target.value)}
 							className='rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
@@ -68,11 +69,12 @@ export default function ParameterForm({
 					)}
 					{!disableDescription && (
 						<input
-							readOnly={readonly}
+							readOnly={readonlyValues}
 							type='text'
 							placeholder={descriptionPlaceholder}
 							pattern={descriptionPattern}
 							value={param.description}
+							required
 							onChange={e => updateParameter(index, 'description', e.target.value)}
 							className='col-span-2 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
 						/>
@@ -81,7 +83,7 @@ export default function ParameterForm({
 						{!hideRequired && (
 							<label className='flex items-center space-x-2'>
 								<input
-									disabled={readonly}
+									disabled={readonlyKeys}
 									type='checkbox'
 									checked={param.required}
 									onChange={e => updateParameter(index, 'required', e.target.checked)}
@@ -90,7 +92,7 @@ export default function ParameterForm({
 								<span>Required</span>
 							</label>
 						)}
-						{!readonly && (
+						{!readonlyKeys && (
 							<button
 								type='button'
 								onClick={() => removeParameter(index)}
@@ -102,7 +104,7 @@ export default function ParameterForm({
 					</div>
 				</div>
 			))}
-			{!readonly && (
+			{!readonlyKeys && (
 				<div className='flex justify-between mt-4'>
 					<button
 						type='button'

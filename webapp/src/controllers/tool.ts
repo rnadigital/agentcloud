@@ -147,7 +147,7 @@ function validateTool(tool) {
 			{
 				field: 'data.environmentVariables',
 				validation: { notEmpty: true },
-				validateIf: { field: 'type', condition: value => value !== ToolType.RAG_TOOL }
+				validateIf: { field: 'type', condition: value => value !== ToolType.RAG_TOOL && !tool?.data?.builtin }
 			},
 			{
 				field: 'data.parameters.code',

@@ -52,8 +52,6 @@ export default function ToolForm({
 	fetchFormData?: Function;
 	initialType?: ToolType;
 }) {
-	//TODO: fix any type
-	console.log('initialType', initialType);
 
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
@@ -139,6 +137,22 @@ export default function ToolForm({
 			return acc;
 		}, []);
 
+	const initialParameters = tool?.parameters
+		? Object.entries(tool.parameters).reduce((acc, entry) => {
+				const [parname, par]: any = entry;
+				acc.push({ name: parname, description: par });
+				return acc;
+			}, [])
+		: tool?.requiredParameters &&
+			Object.entries(tool?.requiredParameters.properties).reduce((acc, entry) => {
+				const [parname, par]: any = entry;
+				acc.push({ name: parname, description: '' });
+				return acc;
+			}, []);
+
+	const [parameters, setParameters] = useState(
+		initialParameters || [{ name: '', type: '', description: '', required: false }]
+	);
 	const [functionParameters, setFunctionParameters] = useState(
 		initialFunctionParameters || [{ name: '', type: '', description: '', required: false }]
 	);
@@ -195,8 +209,11 @@ export default function ToolForm({
 					k: topK
 				} // TODO
 			};
-			switch (toolType) {
-				case ToolType.FUNCTION_TOOL:
+			switch (true) {
+				case (tool?.data?.builtin === true):
+					// TODO: anything? or nah
+					break;
+				case (toolType === ToolType.FUNCTION_TOOL):
 					body.data = {
 						...body.data,
 						code: toolCode,
@@ -222,7 +239,7 @@ export default function ToolForm({
 						}
 					};
 					break;
-				case ToolType.RAG_TOOL:
+				case (toolType === ToolType.RAG_TOOL):
 					// TODO: anything? or nah
 					break;
 				default:
@@ -389,141 +406,157 @@ export default function ToolForm({
 							</div>
 						)}
 
-						<div>
-							<div className='sm:hidden'>
-								<label htmlFor='tabs' className='sr-only'>
-									Select a tab
-								</label>
-								<select
-									id='tabs'
-									name='tabs'
-									className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-									onChange={e => {
-										setCurrentTab(tabs.find(t => t.name === e.target.value));
-									}}
-									defaultValue={currentTab.name}
-								>
-									{tabs
-										.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
-										.map(tab => (
-											<option key={tab.name}>{tab.name}</option>
-										))}
-								</select>
-							</div>
-							<div className='hidden sm:block'>
-								<div className='border-b border-gray-200'>
-									<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
-										{tabs
-											.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
-											.map(tab => (
-												<a
-													key={tab.name}
-													href={tab.href}
-													onClick={e => {
-														setCurrentTab(tabs.find(t => t.name === tab.name));
-													}}
-													className={classNames(
-														currentTab.name === tab.name
-															? 'border-indigo-500 text-indigo-600'
-															: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-														'whitespace-nowrap border-b-2 px-2 py-4 text-sm font-medium flex'
-													)}
-													aria-current={currentTab.name === tab.name ? 'page' : undefined}
-												>
-													{tab.name}
-													{tab.name === 'Version History' && tool?.functionLogs && (
-														<svg
-															className='ms-2 h-2 w-2 fill-red-500'
-															viewBox='0 0 6 6'
-															aria-hidden='true'
+						{!tool?.data?.builtin ? (
+							<>
+								<div>
+									<div className='sm:hidden'>
+										<label htmlFor='tabs' className='sr-only'>
+											Select a tab
+										</label>
+										<select
+											id='tabs'
+											name='tabs'
+											className='block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+											onChange={e => {
+												setCurrentTab(tabs.find(t => t.name === e.target.value));
+											}}
+											defaultValue={currentTab.name}
+										>
+											{tabs
+												.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+												.map(tab => (
+													<option key={tab.name}>{tab.name}</option>
+												))}
+										</select>
+									</div>
+									<div className='hidden sm:block'>
+										<div className='border-b border-gray-200'>
+											<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
+												{tabs
+													.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
+													.map(tab => (
+														<a
+															key={tab.name}
+															href={tab.href}
+															onClick={e => {
+																setCurrentTab(tabs.find(t => t.name === tab.name));
+															}}
+															className={classNames(
+																currentTab.name === tab.name
+																	? 'border-indigo-500 text-indigo-600'
+																	: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+																'whitespace-nowrap border-b-2 px-2 py-4 text-sm font-medium flex'
+															)}
+															aria-current={currentTab.name === tab.name ? 'page' : undefined}
 														>
-															<circle cx='3' cy='3' r='3' />
-														</svg>
-													)}
-												</a>
-											))}
-									</nav>
+															{tab.name}
+															{tab.name === 'Version History' && tool?.functionLogs && (
+																<svg
+																	className='ms-2 h-2 w-2 fill-red-500'
+																	viewBox='0 0 6 6'
+																	aria-hidden='true'
+																>
+																	<circle cx='3' cy='3' r='3' />
+																</svg>
+															)}
+														</a>
+													))}
+											</nav>
+										</div>
+									</div>
 								</div>
-							</div>
-						</div>
 
-						{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && (
-							<>
-								<div className='sm:col-span-12'>
-									<DatasourcesSelect
-										datasourceState={datasourceState}
-										setDatasourceState={setDatasourceState}
-										datasources={datasources}
-										addNewCallback={setModalOpen}
-									/>
-									<RetrievalStrategyComponent
-										toolRetriever={toolRetriever}
-										setToolRetriever={setToolRetriever}
-										toolDecayRate={toolDecayRate}
-										setToolDecayRate={setToolDecayRate}
-										toolTimeWeightField={toolTimeWeightField}
-										setToolTimeWeightField={setToolTimeWeightField}
-										metadataFieldInfo={tool.retriever_config?.metadata_field_info}
-										currentDatasource={currentDatasource}
-										topK={topK}
-										setTopK={setTopK}
-									/>
-								</div>
+								{toolType === ToolType.RAG_TOOL && currentTab?.name === 'Datasource' && (
+									<>
+										<div className='sm:col-span-12'>
+											<DatasourcesSelect
+												datasourceState={datasourceState}
+												setDatasourceState={setDatasourceState}
+												datasources={datasources}
+												addNewCallback={setModalOpen}
+											/>
+											<RetrievalStrategyComponent
+												toolRetriever={toolRetriever}
+												setToolRetriever={setToolRetriever}
+												toolDecayRate={toolDecayRate}
+												setToolDecayRate={setToolDecayRate}
+												toolTimeWeightField={toolTimeWeightField}
+												setToolTimeWeightField={setToolTimeWeightField}
+												metadataFieldInfo={tool.retriever_config?.metadata_field_info}
+												currentDatasource={currentDatasource}
+												topK={topK}
+												setTopK={setTopK}
+											/>
+										</div>
+									</>
+								)}
+
+								{toolType === ToolType.FUNCTION_TOOL &&
+									!isBuiltin &&
+									currentTab?.name === 'Source' && (
+										<>
+											<FunctionToolForm
+												toolCode={toolCode}
+												setToolCode={setToolCode}
+												requirementsTxt={requirementsTxt}
+												setRequirementsTxt={setRequirementsTxt}
+												runtimeState={runtimeState}
+												setRuntimeState={setRuntimeState}
+												wrappedCode={wrappedCode}
+												style={style}
+												PreWithRef={PreWithRef}
+												isBuiltin={false}
+												runtimeOptions={runtimeOptions}
+											/>
+										</>
+									)}
+
+								{toolType === ToolType.FUNCTION_TOOL &&
+									!isBuiltin &&
+									currentTab?.name === 'Version History' && (
+										<>
+											<FunctionRevisionForm
+												fetchFormData={fetchFormData}
+												revisions={revisions}
+												tool={tool}
+											/>
+										</>
+									)}
+
+								{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && (
+									<>
+										<ParameterForm
+											parameters={functionParameters}
+											setParameters={setFunctionParameters}
+											title='Parameters'
+											disableTypes={false}
+											hideRequired={false}
+											namePlaceholder='Name'
+											descriptionPlaceholder='Description'
+										/>
+
+										<ParameterForm
+											parameters={environmentVariables}
+											setParameters={setEnvironmentVariables}
+											title='Environment Variables'
+											disableTypes={true}
+											hideRequired={true}
+											namePattern='[A-Z][A-Z0-9_]*'
+											namePlaceholder='Key must be uppercase seperated by underscores'
+											descriptionPlaceholder='Value'
+										/>
+									</>
+								)}
 							</>
-						)}
-
-						{toolType === ToolType.FUNCTION_TOOL && !isBuiltin && currentTab?.name === 'Source' && (
-							<>
-								<FunctionToolForm
-									toolCode={toolCode}
-									setToolCode={setToolCode}
-									requirementsTxt={requirementsTxt}
-									setRequirementsTxt={setRequirementsTxt}
-									runtimeState={runtimeState}
-									setRuntimeState={setRuntimeState}
-									wrappedCode={wrappedCode}
-									style={style}
-									PreWithRef={PreWithRef}
-									isBuiltin={false}
-									runtimeOptions={runtimeOptions}
-								/>
-							</>
-						)}
-
-						{toolType === ToolType.FUNCTION_TOOL &&
-							!isBuiltin &&
-							currentTab?.name === 'Version History' && (
-								<>
-									<FunctionRevisionForm
-										fetchFormData={fetchFormData}
-										revisions={revisions}
-										tool={tool}
-									/>
-								</>
-							)}
-
-						{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && (
+						) : (
 							<>
 								<ParameterForm
-									readonly={false}
-									parameters={functionParameters}
-									setParameters={setFunctionParameters}
-									title='Parameters'
-									disableTypes={false}
-									hideRequired={false}
-									namePlaceholder='Name'
-									descriptionPlaceholder='Description'
-								/>
-
-								<ParameterForm
-									readonly={false}
-									parameters={environmentVariables}
-									setParameters={setEnvironmentVariables}
-									title='Environment Variables'
+									readonlyKeys={true}
+									parameters={parameters}
+									setParameters={setParameters}
+									title='Required Parameters'
 									disableTypes={true}
 									hideRequired={true}
-									namePattern='[A-Z][A-Z0-9_]*'
-									namePlaceholder='Key must be uppercase seperated by underscores'
 									descriptionPlaceholder='Value'
 								/>
 							</>
