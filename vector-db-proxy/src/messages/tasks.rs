@@ -170,14 +170,6 @@ pub async fn process_message(
                                                                     )
                                                                     .await
                                                                     .unwrap();
-                                                                    let _ =
-                                                                        send_webapp_embed_ready(
-                                                                            datasource_id,
-                                                                        )
-                                                                        .await
-                                                                        .map_err(|e| {
-                                                                            log::error!("{}", e)
-                                                                        });
                                                                 }
                                                                 VectorDatabaseStatus::Failure
                                                                 | VectorDatabaseStatus::NotFound => {
@@ -227,6 +219,9 @@ pub async fn process_message(
                                             e
                                         ),
                                     }
+                                    let _ = send_webapp_embed_ready(datasource_id)
+                                        .await
+                                        .map_err(|e| log::error!("{}", e));
                                 }
                                 None => {
                                     log::warn!(

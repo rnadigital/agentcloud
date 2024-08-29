@@ -238,7 +238,7 @@ impl VectorDatabase for QdrantClient {
                         },
                         None => return Err(anyhow!("Results returned None")),
                     },
-                    Err(e) => log::error!("Error upserting to Qdrant: {}, retrying...", e),
+                    Err(e) => log::error!("Error batch upserting to Qdrant: {}, retrying...", e),
                 }
 
                 if backoff.next_backoff().is_none() {
