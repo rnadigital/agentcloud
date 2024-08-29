@@ -63,7 +63,7 @@ export type Tool = {
 		description?: string;
 		apiKey?: string;
 		environmentVariables?: Record<string, string>;
-		parameters?: {
+		parameters?: { // TODO: rename "functionParameters"
 			//type: string;
 			properties: Record<string, FunctionProperty>;
 			required?: string[];

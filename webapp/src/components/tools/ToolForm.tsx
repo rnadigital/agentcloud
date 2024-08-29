@@ -116,8 +116,9 @@ export default function ToolForm({
 			setToolDecayRate(undefined);
 		}
 	}, [toolRetriever]);
+
 	// Initial state setup for parameters and environment variables
-	const initialParameters =
+	const initialFunctionParameters =
 		tool?.data?.parameters?.properties &&
 		Object.entries(tool.data.parameters.properties).reduce((acc, entry) => {
 			const [parname, par]: any = entry;
@@ -138,8 +139,8 @@ export default function ToolForm({
 			return acc;
 		}, []);
 
-	const [parameters, setParameters] = useState(
-		initialParameters || [{ name: '', type: '', description: '', required: false }]
+	const [functionParameters, setFunctionParameters] = useState(
+		initialFunctionParameters || [{ name: '', type: '', description: '', required: false }]
 	);
 	const [environmentVariables, setEnvironmentVariables] = useState(
 		initialEnvironmentVariables || [{ name: '', description: '' }]
@@ -210,8 +211,8 @@ export default function ToolForm({
 						}, {}),
 						parameters: {
 							type: 'object',
-							required: parameters.filter(x => x.required).map(x => x.name.trim()),
-							properties: parameters.reduce((acc, par) => {
+							required: functionParameters.filter(x => x.required).map(x => x.name.trim()),
+							properties: functionParameters.reduce((acc, par) => {
 								acc[par.name.trim()] = {
 									type: par.type,
 									description: par.description
@@ -505,8 +506,8 @@ export default function ToolForm({
 							<>
 								<ParameterForm
 									readonly={false}
-									parameters={parameters}
-									setParameters={setParameters}
+									parameters={functionParameters}
+									setParameters={setFunctionParameters}
 									title='Parameters'
 									disableTypes={false}
 									hideRequired={false}
