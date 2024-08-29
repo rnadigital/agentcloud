@@ -13,7 +13,7 @@ RUN npm ci --only=production
 COPY . .
 
 # ARGs for environment variables that need to be passed at build time
-uARG GOOGLE_KEYPATH
+ARG GOOGLE_KEYPATH
 ARG NEXT_PUBLIC_SECRET_PROVIDER
 ARG NEXT_PUBLIC_STORAGE_PROVIDER
 ARG GOOGLE_APPLICATION_CREDENTIALS
