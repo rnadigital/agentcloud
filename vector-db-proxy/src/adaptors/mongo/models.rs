@@ -181,7 +181,8 @@ impl std::str::FromStr for SyncMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldDescription {
     pub description: String,
-    pub r#type: String, // escaping `type` because it's a reserved keyword in Rust
+    #[serde(rename = "type")]
+    pub field_type: String, // escaping `type` because it's a reserved keyword in Rust
 }
 
 /// Type alias for a map of field descriptions
