@@ -15,12 +15,13 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
-import { Task } from 'struct/task';
+import { FormFieldConfig, Task } from 'struct/task';
 import { ToolType } from 'struct/tool';
 
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
 import ScriptEditor, { MonacoOnInitializePane } from './Editor';
+import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 
@@ -68,19 +69,27 @@ export default function TaskForm({
 	fetchTaskFormData?: Function;
 	taskChoices?: Task[];
 }) {
-	console.log(task);
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-
 	const [taskState, setTask] = useState<Task | undefined>(task);
 	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
 
 	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
+	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
+		task?.formFields || [
+			{
+				position: '1',
+				type: 'string'
+			}
+		]
+	);
+
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
+	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
@@ -124,15 +133,15 @@ export default function TaskForm({
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
-			name: e.target.name.value,
-			description: e.target.description.value,
-			expectedOutput,
+			name: e.target.task_name.value,
+			description: e.target.task_description.value,
+			expectedOutput: e.target.expectedOutput.value,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			context: taskState?.context || [],
+			formFields: formFields || [],
 			isStructuredOutput
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
@@ -142,7 +151,7 @@ export default function TaskForm({
 				body,
 				() => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -152,7 +161,7 @@ export default function TaskForm({
 				},
 				res => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -168,7 +177,7 @@ export default function TaskForm({
 				body,
 				() => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -178,7 +187,7 @@ export default function TaskForm({
 				},
 				res => {
 					posthog.capture(posthogEvent, {
-						name: e.target.name.value,
+						name: e.target.task_name.value,
 						id: taskState?._id,
 						toolIds: taskState?.toolIds || [],
 						preferredAgentId: taskState?.agentId,
@@ -302,7 +311,7 @@ export default function TaskForm({
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
 						<div className='col-span-full'>
 							<label
-								htmlFor='name'
+								htmlFor='task_name'
 								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 							>
 								Name<span className='text-red-700'> *</span>
@@ -310,8 +319,8 @@ export default function TaskForm({
 							<input
 								required
 								type='text'
-								id='name'
-								name='name'
+								id='task_name'
+								name='task_name'
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.name}
 							/>
@@ -319,15 +328,15 @@ export default function TaskForm({
 
 						<div className='col-span-full'>
 							<label
-								htmlFor='description'
+								htmlFor='task_description'
 								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 							>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
 								required
-								id='description'
-								name='description'
+								id='task_description'
+								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
@@ -546,7 +555,7 @@ export default function TaskForm({
 										const optionAgent = agents.find(ac => ac._id === data.value);
 										return (
 											<li
-												className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 												}`}
 											>
@@ -630,40 +639,12 @@ export default function TaskForm({
 							</ToolTip>
 						</div>
 
-						{/* displayOnlyFinalOutput tool checkbox */}
-						<div className='col-span-full'>
-							<ToolTip
-								content='Hides intermediate thought messages from agents and only display the final task output.'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='mt-2'>
-									<div className='sm:col-span-12'>
-										<label
-											htmlFor='displayOnlyFinalOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											<input
-												type='checkbox'
-												id='displayOnlyFinalOutput'
-												name='displayOnlyFinalOutput'
-												checked={taskState?.displayOnlyFinalOutput === true}
-												onChange={e => {
-													setTask(oldTask => {
-														return {
-															...oldTask,
-															displayOnlyFinalOutput: e.target.checked
-														};
-													});
-												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-											/>
-											Display Only Final Output
-										</label>
-									</div>
-								</div>
-							</ToolTip>
-						</div>
+						{/* Form builder for human input */}
+						{requiredHumanInput && (
+							<div className='col-span-full'>
+								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+							</div>
+						)}
 					</div>
 				</div>
 

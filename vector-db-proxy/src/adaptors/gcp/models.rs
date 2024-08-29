@@ -43,7 +43,7 @@ pub async fn pubsub_consume(
     stream: &Arc<Mutex<MessageStream>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String, String)>,
+    sender: Sender<(String, Option<String>, String)>,
 ) {
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
@@ -52,16 +52,24 @@ pub async fn pubsub_consume(
             if let Ok(message_string) = String::from_utf8(cloned_message.data) {
                 match message_attributes.get("_stream") {
                     Some(stream) => {
-                        let mut stream_type: Option<String> = None;
-                        if let Some(s) = message_attributes.get("type") {
-                            stream_type = Some(s.to_owned());
-                        }
+                        let stream_string: String = stream.to_string();
+                        let (datasource_id, stream_config_key, stream_type) =
+                            match message_attributes.get("type") {
+                                Some(stream_type_field_value) => {
+                                    let stream_split: Vec<&str> =
+                                        stream_string.split('_').collect();
+                                    let datasource_id = stream_split[0];
+                                    let stream_type = Some(stream_type_field_value.to_string());
+                                    (datasource_id, None, stream_type)
+                                }
+                                None => {
+                                    let (datasource_id, stream_config_key) = stream_string.split_once('_')
+                                        .expect("Expected string to contain an underscore for splitting");
+                                    (datasource_id, Some(stream_config_key.to_string()), None)
+                                }
+                            };
                         let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
-                        let stream_string: String = stream.to_string();
-                        let stream_split: (&str, &str) = stream_string.split_once('_').unwrap();
-                        let datasource_id = stream_split.0;
-                        let stream_config_key = stream_split.1;
                         let sender = sender.clone();
                         process_message(
                             message_string,
@@ -78,6 +86,8 @@ pub async fn pubsub_consume(
                         log::warn!("No stream ID present in message. Can not proceed")
                     }
                 }
+            } else {
+                log::warn!("Could not get message content from PubSub")
             }
             let _ = message.ack().await;
         }

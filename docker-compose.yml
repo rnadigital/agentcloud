@@ -2,6 +2,14 @@ name: agentcloud
 
 services:
 
+  unstructured-api:
+    ports:
+        - 9500:9500
+    container_name: unstructured-api
+    environment:
+        - PORT=9500
+    image: localhost:5000/unstructured-api
+
   docker_rabbitmq:
     image: rabbitmq:3.13.1-management
     environment:
@@ -109,6 +117,34 @@ services:
       - GOOGLE_FUNCTION_LOCATION=us-central1
     volumes:
       - datasource_files:/tmp
+
+  webapp_syncserver:
+    restart: always
+    build:
+      context: webapp/
+      dockerfile: Dockerfile_syncserver
+      args:
+        - GOOGLE_KEYPATH=keyfile.json
+        - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+    depends_on:
+      - docker_rabbitmq
+      - docker_mongo
+      - docker_redis
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+      - NODE_ENV=development
+      - DB_URL=mongodb://docker_mongo:27017/test
+      - REDIS_HOST=docker_redis
+      - REDIS_PASS=
+      - DEBUG=webapp:*,sync-server:*
+      - VECTOR_APP_URL=http://vector_db_proxy:9001
+      - AIRBYTE_WEB_URL=http://airbyte-proxy:8000
+      - AIRBYTE_API_URL=http://airbyte-proxy:8006
+      - AIRBYTE_USERNAME=airbyte
+      - AIRBYTE_PASSWORD=password
+      - NEXT_PUBLIC_STORAGE_PROVIDER=local
+      - NEXT_PUBLIC_SECRET_PROVIDER=local
+      - MESSAGE_QUEUE_PROVIDER=rabbitmq
 
   agent_backend:
     restart: always

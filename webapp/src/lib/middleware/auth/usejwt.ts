@@ -1,5 +1,6 @@
 'use strict';
 
+import { getKeyById } from 'db/apikey';
 import debug from 'debug';
 import jwt from 'jsonwebtoken';
 
@@ -13,11 +14,23 @@ export type JWTData = {
 
 export function verifyJwt(token): Promise<JWTData> {
 	return new Promise((res, rej) => {
-		jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+		jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
+			console.log('decoded', decoded);
+			console.log('token', token);
 			if (err != null) {
 				res(null);
 			} else if (decoded != null) {
-				res(decoded);
+				//get version from res if it has version property, get the keyId from the jwt as well, check if the version matches the database object version and reject if they don't
+				if (decoded?.version) {
+					const key = await getKeyById(decoded?.ownerId, decoded?.keyId);
+					if (key?.version === decoded?.version) {
+						res(decoded);
+					} else {
+						res(null);
+					}
+				} else {
+					res(decoded);
+				}
 			} else {
 				//Should never get here, but just in case
 				rej(new Error('Error validating login token, please contact support.'));
@@ -31,10 +44,10 @@ export default async function useJWT(req, res, next): Promise<void> {
 	if (req?.session?.token) {
 		res.locals.checkCsrf = true;
 		token = req.session.token;
-	} else if (req.headers && req.headers['Authorization']?.startsWith('Bearer ')) {
-		token = req.headers['Authorization'].substring(7);
+	} else if (req.headers && req.headers['authorization']?.startsWith('Bearer ')) {
+		token = req.headers['authorization'].substring(7);
 	}
-	// log('useJWT token: %s', token);
+	log('useJWT token: %s', token);
 	if (token && token.length > 0) {
 		try {
 			const verifiedToken: JWTData = await verifyJwt(token);

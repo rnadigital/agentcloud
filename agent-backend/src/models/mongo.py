@@ -27,6 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
+    GoogleAI = "google_ai"
     Cohere = "cohere"
     Anthropic = "anthropic"
     Groq = "groq"
@@ -222,7 +223,6 @@ class Task(BaseModel):
     outputFile: Optional[str] = None
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
-    displayOnlyFinalOutput: bool = False
     isStructuredOutput: Optional[bool] = False
 
 

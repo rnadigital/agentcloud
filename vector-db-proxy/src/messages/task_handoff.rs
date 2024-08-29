@@ -1,7 +1,10 @@
 use crossbeam::channel::Sender;
 
 /// Adds the incoming task to the execution Queue to be processes when threads are available
-pub async fn send_task(sender: Sender<(String, String, String)>, params: (String, String, String)) {
+pub async fn send_task(
+    sender: Sender<(String, Option<String>, String)>,
+    params: (String, Option<String>, String),
+) {
     let (dataset_id, stream_config_key, message) = params;
     // Instantiate a new instance of the MyQueue
     let _ = sender

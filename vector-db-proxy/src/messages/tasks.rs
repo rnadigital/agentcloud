@@ -56,10 +56,10 @@ pub async fn process_message(
     message_string: String,
     stream_type: Option<String>,
     datasource_id: &str,
-    stream_config_key: &str,
+    stream_config_key: Option<String>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, String, String)>,
+    sender: Sender<(String, Option<String>, String)>,
 ) {
     let mongodb_connection = mongo_client.read().await;
     let global_data = GLOBAL_DATA.read().await.clone();
@@ -170,14 +170,6 @@ pub async fn process_message(
                                                                     )
                                                                     .await
                                                                     .unwrap();
-                                                                    let _ =
-                                                                        send_webapp_embed_ready(
-                                                                            datasource_id,
-                                                                        )
-                                                                        .await
-                                                                        .map_err(|e| {
-                                                                            log::error!("{}", e)
-                                                                        });
                                                                 }
                                                                 VectorDatabaseStatus::Failure
                                                                 | VectorDatabaseStatus::NotFound => {
@@ -227,6 +219,9 @@ pub async fn process_message(
                                             e
                                         ),
                                     }
+                                    let _ = send_webapp_embed_ready(datasource_id)
+                                        .await
+                                        .map_err(|e| log::error!("{}", e));
                                 }
                                 None => {
                                     log::warn!(
@@ -239,11 +234,7 @@ pub async fn process_message(
                         // This is where data is coming from airbyte rather than a direct file upload
                         let _ = send_task(
                             sender,
-                            (
-                                datasource_id.to_string(),
-                                stream_config_key.to_string(),
-                                message_string,
-                            ),
+                            (datasource_id.to_string(), stream_config_key, message_string),
                         )
                         .await;
                     }

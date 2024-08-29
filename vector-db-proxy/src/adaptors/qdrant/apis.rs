@@ -210,7 +210,8 @@ impl VectorDatabase for QdrantClient {
         let mut list_of_points: Vec<PointStruct> = vec![];
         for point in points {
             if let Some(point_struct) =
-                construct_point_struct(&point.vector, point.payload.unwrap(), None, None).await
+                construct_point_struct(&point.vector, point.payload.unwrap(), None, point.index)
+                    .await
             {
                 list_of_points.push(point_struct)
             }
@@ -238,7 +239,7 @@ impl VectorDatabase for QdrantClient {
                         },
                         None => return Err(anyhow!("Results returned None")),
                     },
-                    Err(e) => log::error!("Error upserting to Qdrant: {}, retrying...", e),
+                    Err(e) => log::error!("Error batch upserting to Qdrant: {}, retrying...", e),
                 }
 
                 if backoff.next_backoff().is_none() {
