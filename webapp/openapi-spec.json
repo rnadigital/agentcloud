@@ -10,7 +10,7 @@
 			"get": {
         "description": "Retrieve a JSON list of all agents the user has access to",
 				"operationId": "agentsJson",
-				"tags": ["Agents", "Get Object"],
+				"tags": ["Agents"],
 				"parameters": [
 					{
 						"name": "resourceSlug",
@@ -76,7 +76,7 @@
 			"get": {
         "description": "Retrieve a JSON object of a single agent from agentId and the resourceSlug",
 				"operationId": "agentJson",
-				"tags": ["Agents", "Get Object"],
+				"tags": ["Agents"],
 				"parameters": [
 					{
 						"name": "resourceSlug",
@@ -148,7 +148,7 @@
 			"post": {
 				"operationId": "addAgentApi",
         "description": "Add a new Agent",
-				"tags": ["Agents", "Add Object"],
+				"tags": ["Agents"],
 				"parameters": [
 					{
 						"name": "Agent",
@@ -224,7 +224,7 @@
 			"post": {
 				"operationId": "editAgentApi",
         "description": "Add a new Agent",
-				"tags": ["Agents", "Edit Object"],
+				"tags": ["Agents"],
 				"parameters": [
 					{
 						"name": "Agent",
@@ -314,7 +314,7 @@
 			"delete": {
 				"operationId": "deleteAgentApi",
         "description": "Delete an agent",
-				"tags": ["Agents", "Delete Object"],
+				"tags": ["Agents"],
 				"parameters": [
           {
             "name": "agentId",
@@ -390,7 +390,149 @@
 					}
 				}
 			}
-		}
+		},
+    "/{resourceSlug}/tasks.json": {
+			"get": {
+        "description": "Retrieve a JSON list of all tasks the user has access to",
+				"operationId": "tasksJson",
+				"tags": ["Tasks"],
+				"parameters": [
+					{
+						"name": "resourceSlug",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectId"
+						},
+						"description": "The resourceSlug is a url parameter of the teamId associated with the user. Anywhere the resourceSlug is used can be interpreted as a teamId"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "JSON object containing an array of all the tasks associated tasks with that teamId, will return an empty array if the request is successful but there are no associated tasks.",
+						"content": {
+							"tasks.json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Task"
+									}
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Invalid Permissions on the resourceSlug, attempting to access a task outside the permissions of the team",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+					},
+          "400": {
+            "description": "Invalid toolIds, modelIds or function calling modelIds. The content will contain an error message which will detail which field is incorrect.",
+            "content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Internal error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+					}
+				}
+			}
+    },
+     "/{resourceSlug}/task/{taskId}.json": {
+			"get": {
+        "description": "Retrieve a JSON object with a singular task to be retrieved by id.",
+				"operationId": "taskJson",
+				"tags": ["Tasks"],
+				"parameters": [
+					{
+						"name": "resourceSlug",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/ObjectId"
+						},
+						"description": "The resourceSlug is a url parameter of the teamId associated with the user. Anywhere the resourceSlug is used can be interpreted as a teamId"
+					},
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "properties": {
+                "taskId":{
+                  "type": "string",
+                  "description": "Id of the task to get"
+                }
+              }
+            }
+          }
+				],
+				"responses": {
+					"200": {
+						"description": "JSON object containing the retrieved task.",
+						"content": {
+							"tasks.json": {
+								"schema": {
+										"$ref": "#/components/schemas/Task"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Invalid Permissions on the resourceSlug, attempting to access a task outside the permissions of the team",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+					},
+          "400": {
+            "description": "Invalid toolIds, modelIds or function calling modelIds. The content will contain an error message which will detail which field is incorrect.",
+            "content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Internal error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string",
+                  "description": "Error message, this will provide more detail"
+								}
+							}
+						}
+					}
+				}
+			}
+    }
   },
   "components": {
     "schemas": {
