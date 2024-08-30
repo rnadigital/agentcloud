@@ -1,7 +1,7 @@
 import logging
 import re
 from abc import abstractmethod
-from typing import Type, Optional
+from typing import Type, Optional, Dict
 
 from langchain_core.tools import ToolException
 from pydantic.v1 import BaseModel, Field
@@ -23,6 +23,7 @@ class BaseBuiltinTool(GlobalBaseTool):
     api_key: Optional[str] = None
     args_schema: Type[BaseModel] = BuiltinToolArgsSchema
     logger: logging.Logger = None
+    parameters: Optional[Dict[str, str]] = {}
 
     @classmethod
     def factory(cls, tool: Tool, **kwargs):

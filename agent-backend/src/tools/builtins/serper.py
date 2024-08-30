@@ -7,7 +7,6 @@ class SerperGoogleSearchTool(BaseBuiltinTool):
     serper: GoogleSerperAPIWrapper
 
     def __init__(self, **kwargs):
-        print(f"KWARGS IN SERPER: {kwargs}")
         kwargs["serper"] = GoogleSerperAPIWrapper(**kwargs["parameters"])
         super().__init__(**kwargs)
 

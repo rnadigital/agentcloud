@@ -146,6 +146,8 @@ class Tool(BaseModel):
     data: Optional[ToolData] = None
     retriever_type: Optional[Retriever] = Retriever.SELF_QUERY
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
+    linkedToolId: Optional[PyObjectId] = None
+    parameters: Optional[Dict[str, str]] = {}
 
 
 class ApiCredentials(BaseModel):

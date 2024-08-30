@@ -92,10 +92,18 @@ class ChatAssistant:
                                    models=[(embedding, embedding_model)],
                                    datasources=[datasource],
                                    llm=self.chat_model)
-        elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL and not agentcloud_tool.data.builtin:
+        elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL:
             tool_class = GoogleCloudFunctionTool
-        elif agentcloud_tool.data.builtin:
-            tool_class = BuiltinTools.get_tool_class(agentcloud_tool.data.name)
+        
+        if agentcloud_tool.data.builtin or agentcloud_tool.linkedToolId:
+            tool_name = agentcloud_tool.data.name
+            if agentcloud_tool.linkedToolId:
+                linked_tool = self.mongo_client.get_tool(agentcloud_tool.id)
+                print(f"linked_tool: {linked_tool}")
+                if linked_tool:
+                    tool_class = BuiltinTools.get_tool_class(linked_tool.data.name)
+                else:
+                    logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
 
         return tool_class.factory(agentcloud_tool)
 

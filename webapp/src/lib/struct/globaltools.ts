@@ -134,7 +134,7 @@ The returned data includes essential details like the paper's title, authors, ab
 		type: ToolType.FUNCTION_TOOL,
 		data: {
 			code: '',
-			name: 'search_google',
+			name: 'search_google_serper',
 			description: 'This tool takes a string query as input and fetches relevant data from Google.',
 			apiKey: '',
 			parameters: {

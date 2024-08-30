@@ -14,7 +14,7 @@ class BuiltinTools:
         'search_duckduckgo': DuckDuckGoSearchTool,
         'search_stackexchange': StackExchangeTool,
         'search_youtube': YoutubeSearchTool,
-        'search_google': SerperGoogleSearchTool,
+        'search_google_serper': SerperGoogleSearchTool,
         'apify_search_google': ApifyGoogleSearchTool,
     }
 
