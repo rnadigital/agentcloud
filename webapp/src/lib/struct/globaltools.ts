@@ -127,7 +127,7 @@ The returned data includes essential details like the paper's title, authors, ab
 		description: 'This tool takes a string query as input and fetches relevant data from Google.',
 		type: ToolType.BUILTIN_TOOL,
 		data: {
-			name: 'search_google_serper',
+			name: 'search_google',
 			description: 'This tool takes a string query as input and fetches relevant data from Google.',
 			apiKey: '',
 			parameters: {
