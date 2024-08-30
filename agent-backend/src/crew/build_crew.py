@@ -1,5 +1,6 @@
 import json
 import logging
+from io import BytesIO
 import os
 from pathlib import Path
 import uuid
@@ -177,23 +178,27 @@ class CrewAIBuilder:
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
             
-
             if task.storeTaskOutput:
                 def callback(output):
-                    
-                    original_file_path = os.path.join(Path(__file__).resolve().parent.parent, 'outputs', task.taskOutputFileName)
-                    
-                    with open(original_file_path, 'w') as f:
-                        f.write(str(output)) 
-                    storage_provider.upload_local_file(task.taskOutputFileName, self.session_id, is_public=True)
+                    # Convert the output to bytes and create an in-memory buffer
+                    buffer = BytesIO()
+                    buffer.write(str(output).encode())
+                    buffer.seek(0)  # Rewind the buffer to the beginning
+
+                    # Upload the in-memory buffer directly to the storage provider
+                    storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, self.session_id, is_public=True)
+
+                    # Insert the output metadata into MongoDB
                     mongo_client.insert_model("taskoutputs", {
                         "session_id": self.session_id,
                         "task_id": task.id,
                         "task_output_file_name": task.taskOutputFileName,
                     })
+
+                    # Get the signed URL for downloading the file
                     signed_url = storage_provider.download_file(task.taskOutputFileName, self.session_id, is_public=True)
 
-
+                    # Send the notification to the sockets
                     self.send_to_sockets(
                         text=f"File uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
                         event=SocketEvents.MESSAGE,

@@ -185,7 +185,8 @@ export async function addTaskApi(req, res, next) {
 		storeTaskOuput,
 		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -316,7 +317,8 @@ export async function editTaskApi(req, res, next) {
 		storeTaskOuput,
 		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -336,7 +338,7 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-
+	console.log('backend storeTaskOuput', storeTaskOuput);
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,

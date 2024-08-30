@@ -41,4 +41,5 @@ export interface Task {
 	taskOutputFileName?: string;
 	formFields?: FormFieldConfig[];
 	isStructuredOutput?: boolean;
+	displayOnlyFinalOutput?: boolean;
 }

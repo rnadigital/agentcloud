@@ -31,6 +31,20 @@ class GoogleStorageProvider(StorageProvider):
             log.error(f'Failed to create GCS bucket: {e.message}')
             raise e
 
+    def upload_file_buffer(self, buffer, filename, folder_path, is_public=False):
+        log.debug('Uploading buffer content as file %s', filename)
+        bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
+        bucket = self.storage_client.bucket(bucket_name)
+        blob = bucket.blob(f"{folder_path}/{filename}")
+        try:
+            blob.upload_from_file(buffer, rewind=True)
+            log.debug('Buffer content uploaded successfully.')
+            if is_public:
+                blob.make_public()
+        except Exception as err:
+            log.error('Buffer upload error:', err)
+            raise err
+
     def upload_local_file(self, filename, folder_path, is_public=False):
         log.debug('Uploading file %s', filename)
         bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
