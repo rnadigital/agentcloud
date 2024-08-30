@@ -88,7 +88,7 @@ class ToolParameters(BaseModel):
 
 class ToolData(BaseModel):
     name: str
-    code: Optional[str] = None
+    code: Optional[str] = ''
     description: Optional[str] = None
     parameters: Optional[ToolParameters] = None
     apiKey: Optional[str] = None
