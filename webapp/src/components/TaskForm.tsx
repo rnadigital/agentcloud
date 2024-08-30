@@ -135,7 +135,7 @@ export default function TaskForm({
 			resourceSlug,
 			name: e.target.task_name.value,
 			description: e.target.task_description.value,
-			expectedOutput: e.target.expectedOutput.value,
+			expectedOutput,
 			toolIds: taskState?.toolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
