@@ -291,6 +291,8 @@ export default function TaskForm({
 					callback={agentCallback}
 				/>
 			);
+			break;
+
 		default:
 			modal = (
 				<CreateToolModal
