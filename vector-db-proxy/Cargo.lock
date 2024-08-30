@@ -4362,7 +4362,6 @@ name = "vector-db-proxy"
 version = "0.2.0"
 dependencies = [
  "actix-cors",
- "actix-service",
  "actix-web",
  "actix-web-lab",
  "amqp_serde",
@@ -4393,14 +4392,12 @@ dependencies = [
  "pinecone-sdk",
  "prost-types 0.12.3",
  "qdrant-client",
- "regex",
  "reqwest 0.12.4",
  "serde",
  "serde_json",
  "thiserror",
  "time",
  "tokio",
- "tonic 0.12.1",
  "tracing",
  "uuid",
  "wherr",
