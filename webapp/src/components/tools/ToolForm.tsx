@@ -136,7 +136,6 @@ export default function ToolForm({
 			acc.push({ name: parname, description: par });
 			return acc;
 		}, []);
-	console.log('x', tool?.parameters, tool?.requiredParameters);
 	const initialParameters = tool?.parameters
 		? Object.entries(tool.parameters).reduce((acc, entry) => {
 				const [parname, par]: any = entry;
@@ -149,7 +148,6 @@ export default function ToolForm({
 				acc.push({ name: parname, description: '' });
 				return acc;
 			}, []);
-	console.log('initialParameters', initialParameters);
 	const [parameters, setParameters] = useState(
 		initialParameters || [{ name: '', type: '', description: '', required: false }]
 	);
@@ -208,7 +206,7 @@ export default function ToolForm({
 				linkedToolId: null
 			};
 			switch (true) {
-				case isBuiltin:
+				case toolType === ToolType.BUILTIN_TOOL:
 					//todo: actually validate
 					body.linkedToolId = tool?.linkedToolId || tool?._id;
 					break;
@@ -373,7 +371,7 @@ export default function ToolForm({
 							setToolType={setToolType}
 							toolDescription={toolDescription}
 							setToolDescription={setToolDescription}
-							isBuiltin={isBuiltin || tool?.requiredParameters}
+							isBuiltin={isBuiltin}
 							initialType={initialType}
 						/>
 						{!tool?.requiredParameters ? (

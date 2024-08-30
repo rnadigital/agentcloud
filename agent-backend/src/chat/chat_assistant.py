@@ -94,11 +94,10 @@ class ChatAssistant:
                                    llm=self.chat_model)
         elif agentcloud_tool.type == ToolType.HOSTED_FUNCTION_TOOL:
             tool_class = GoogleCloudFunctionTool
-        
-        if agentcloud_tool.data.builtin or agentcloud_tool.linkedToolId:
+        elif agentcloud_tool.type == ToolType.BUILTIN_TOOL:
             tool_name = agentcloud_tool.data.name
             if agentcloud_tool.linkedToolId:
-                linked_tool = self.mongo_client.get_tool(agentcloud_tool.id)
+                linked_tool = self.mongo_client.get_tool(agentcloud_tool.linkedToolId)
                 print(f"linked_tool: {linked_tool}")
                 if linked_tool:
                     tool_class = BuiltinTools.get_tool_class(linked_tool.data.name)

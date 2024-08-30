@@ -149,7 +149,7 @@ function validateTool(tool) {
 				validation: { notEmpty: true },
 				validateIf: {
 					field: 'type',
-					condition: value => value !== ToolType.RAG_TOOL && !tool?.data?.builtin
+					condition: value => value === ToolType.FUNCTION_TOOL
 				}
 			},
 			{

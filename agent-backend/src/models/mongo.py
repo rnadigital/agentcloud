@@ -16,7 +16,7 @@ class Process(str, Enum):
 
 
 class ToolType(str, Enum):
-    API_TOOL = "api"
+    BUILTIN_TOOL = "builtin"
     HOSTED_FUNCTION_TOOL = "function",
     RAG_TOOL = "rag",
 
