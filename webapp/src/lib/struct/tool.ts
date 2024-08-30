@@ -91,7 +91,7 @@ export type FunctionProperty = {
 export enum ToolType {
 	FUNCTION_TOOL = 'function',
 	RAG_TOOL = 'rag',
-	BUILTIN_TOOL = 'builtin',
+	BUILTIN_TOOL = 'builtin'
 	//To prevent considering installed tools "function" and counting towards limits, etc
 	//TODO: remove data.builtin
 }
