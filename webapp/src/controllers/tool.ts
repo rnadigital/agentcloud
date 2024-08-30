@@ -221,7 +221,6 @@ export async function addToolApi(req, res, next) {
 
 	const toolData = {
 		...data,
-		parameters,
 		builtin: false,
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
