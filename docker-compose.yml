@@ -174,7 +174,14 @@ services:
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
       # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
       - FUNCTION_PROVIDER=google
+      # Notes: Modify the following google cloud storage values to use your own:
       - GOOGLE_FUNCTION_LOCATION=us-central1
+      - GCS_BUCKET_NAME_PRIVATE=agentcloud-bucket-dev
+      - GCS_BUCKET_NAME=agentcloud-public-dev
+      - UPLOADS_BASE_PATH=/tmp
+      - GOOGLE_APPLICATION_CREDENTIALS=keyfile.json
+      - PROJECT_ID=agentcloud-dev
+      - STORAGE_PROVIDER=google
 
   vector_db_proxy:
     restart: always
