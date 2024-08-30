@@ -111,7 +111,6 @@ export async function addTaskApi(req, res, next) {
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'expectedOutput', validation: { ofType: 'string' } },
 			{
 				field: 'toolIds',
@@ -177,7 +176,6 @@ export async function addTaskApi(req, res, next) {
 		name,
 		description,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
@@ -246,7 +244,6 @@ export async function editTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
@@ -285,7 +282,7 @@ export async function editTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (req.body.formFields && req.body.formFields.length > 0) {
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
 		for (const field of req.body.formFields) {
 			if (!field.position || !field.type || !field.name || !field.label) {
 				return dynamicResponse(req, res, 400, {
@@ -310,7 +307,6 @@ export async function editTaskApi(req, res, next) {
 	const {
 		name,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		description,
 		expectedOutput,
 		toolIds,

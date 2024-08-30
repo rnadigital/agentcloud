@@ -69,13 +69,14 @@ export default function TaskForm({
 	fetchTaskFormData?: Function;
 	taskChoices?: Task[];
 }) {
-	console.log(task);
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-
 	const [taskState, setTask] = useState<Task | undefined>(task);
+	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
+
+	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
 	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
 		task?.formFields || [
@@ -85,9 +86,6 @@ export default function TaskForm({
 			}
 		]
 	);
-	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
-
-	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 
 	const [, notificationTrigger]: any = useSocketContext();
 	const posthog = usePostHog();
@@ -296,6 +294,8 @@ export default function TaskForm({
 					callback={agentCallback}
 				/>
 			);
+			break;
+
 		default:
 			modal = (
 				<CreateToolModal

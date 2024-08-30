@@ -102,7 +102,9 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 		// return res.status(403).send({ error: 'No current organization available' });
 		log('No current organization available');
 		req.session.destroy();
-		return dynamicResponse(req, res, 302, { redirect: '/login' });
+		return dynamicResponse(req, res, 302, {
+			redirect: `/login?goto=${encodeURIComponent(req.originalUrl)}`
+		});
 	}
 	//TODO: cache in redis
 	const foundOrg = await getOrgById(currentOrg);

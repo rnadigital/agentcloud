@@ -1,12 +1,13 @@
-use crossbeam::channel::{Sender};
+use crossbeam::channel::Sender;
 
 /// Adds the incoming task to the execution Queue to be processes when threads are available
 pub async fn send_task(
-    sender: Sender<(String, String)>,
-    params: (String, String),
+    sender: Sender<(String, Option<String>, String)>,
+    params: (String, Option<String>, String),
 ) {
-    let (dataset_id, message) = params;
+    let (dataset_id, stream_config_key, message) = params;
     // Instantiate a new instance of the MyQueue
-    let _ = sender.send((dataset_id, message))
+    let _ = sender
+        .send((dataset_id, stream_config_key, message))
         .map_err(|err| log::error!("An error occurred while sending task to channel: {}", err));
 }

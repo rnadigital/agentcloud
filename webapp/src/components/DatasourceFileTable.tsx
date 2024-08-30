@@ -57,6 +57,28 @@ export default function DatasourceFileTable({
 		}
 	}
 
+	async function syncDatasource(datasourceId) {
+		setSyncing({ [datasourceId]: true });
+		try {
+			await API.syncDatasource(
+				{
+					_csrf: csrf,
+					resourceSlug,
+					datasourceId
+				},
+				() => {
+					fetchDatasources();
+				},
+				() => {
+					toast.error('Error syncing');
+				},
+				router
+			);
+		} finally {
+			setSyncing({ [datasourceId]: false });
+		}
+	}
+
 	return (
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 			{datasources?.length > 0 && (
@@ -100,11 +122,11 @@ export default function DatasourceFileTable({
 							return (
 								<tr
 									key={datasource._id}
-									className='cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'
+									className='hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'
 								>
 									<td
 										className='px-6 py-3 whitespace-nowrap flex items-center'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<div className='flex items-cente'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
@@ -114,7 +136,7 @@ export default function DatasourceFileTable({
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<div className='flex items-center'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
@@ -124,13 +146,13 @@ export default function DatasourceFileTable({
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<DatasourceStatusIndicator datasource={datasource} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
+										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
 										<span
 											suppressHydrationWarning
@@ -140,6 +162,26 @@ export default function DatasourceFileTable({
 										</span>
 									</td>
 									<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
+										<button
+											onClick={() => {
+												// if (datasource.status !== DatasourceStatus.READY) {
+												// 	setConfirmClose(datasource._id);
+												// } else {
+												syncDatasource(datasource._id);
+												// }
+											}}
+											disabled={
+												syncing[datasource._id] ||
+												deleting[datasource._id] ||
+												datasource.status !== DatasourceStatus.READY
+											}
+											className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
+										>
+											{syncing[datasource._id] && (
+												<ButtonSpinner size={14} className='ms-2 -me-1' />
+											)}
+											{syncing[datasource._id] ? 'Syncing...' : 'Sync Now'}
+										</button>
 										{/*<a href={`/${resourceSlug}/datasource/${datasource._id}`} className='text-gray-500 hover:text-gray-700'>
 		                            <Cog6ToothIcon className='h-5 w-5' aria-hidden='true' />
 		                        </a>*/}

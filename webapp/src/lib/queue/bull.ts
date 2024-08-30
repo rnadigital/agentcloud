@@ -1,12 +1,12 @@
 import { Queue, Worker } from 'bullmq';
+import { client as redisClient } from 'redis/redis';
 
-import { client as redisClient } from '../redis/redis';
-
-export const taskQueue = new Queue('task_queue', {
+export const sessionTaskQueue = new Queue('task_queue', {
 	connection: redisClient
-	/*{
-		host: process.env.REDIS_HOST || '127.0.0.1',
-		port: parseInt(process.env.REDIS_PORT) || 6379,
-		password: process.env.REDIS_PASS || '',
-	}*/
 });
+
+export const vectorLimitTaskQueue = new Queue('vector_limit_check', {
+	connection: redisClient
+});
+
+export { Worker };

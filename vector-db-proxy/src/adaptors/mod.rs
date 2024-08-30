@@ -1,5 +1,5 @@
+pub mod gcp;
 pub mod mongo;
+pub mod pinecone;
 pub mod qdrant;
 pub mod rabbitmq;
-mod redis_rs;
-pub mod gcp;

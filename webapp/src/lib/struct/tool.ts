@@ -24,6 +24,7 @@ export type SelfQueryRetrieverConfig = {
 export type TimeWeightedRetrieverConfig = {
 	k?: number;
 	decay_rate?: number;
+	timeWeightField: string;
 };
 
 export type SimilaritySearchRetrieverConfig = {
@@ -36,7 +37,7 @@ export type MultiQueryRetrieverConfig = {
 	//TODO: any specific configs?
 };
 
-export type RetrieverConfig = SelfQueryRetrieverConfig | TimeWeightedRetrieverConfig;
+export type RetrieverConfig = SelfQueryRetrieverConfig & TimeWeightedRetrieverConfig;
 
 export enum ToolState {
 	PENDING = 'pending',
@@ -61,32 +62,38 @@ export type Tool = {
 		builtin?: boolean;
 		name: string;
 		description?: string;
-		apiKey?: string;
 		environmentVariables?: Record<string, string>;
 		parameters?: {
-			//type: string;
 			properties: Record<string, FunctionProperty>;
 			required?: string[];
 		};
 		code?: string;
 		requirements?: string;
-		openAPIMatchKey?: string;
 	};
+	requiredParameters?: {
+		required: string[];
+		properties: Record<string, FunctionProperty>;
+	};
+	parameters?: Record<string, string>;
 	icon?: IconAttachment;
 	hidden?: boolean;
 	functionId?: string;
 	revisionId?: ObjectId;
 	functionLogs?: string;
+	linkedToolId?: ObjectId;
 };
 
 export type FunctionProperty = {
-	type: string; // should probably be string | number | whatever
+	type: string;
 	description: string;
 };
 
 export enum ToolType {
 	FUNCTION_TOOL = 'function',
-	RAG_TOOL = 'rag'
+	RAG_TOOL = 'rag',
+	BUILTIN_TOOL = 'builtin'
+	//To prevent considering installed tools "function" and counting towards limits, etc
+	//TODO: remove data.builtin
 }
 
 export const ToolTypes = Object.values(ToolType);

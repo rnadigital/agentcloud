@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from models.vectordatabase import VectorDatabase
 
 from dotenv import load_dotenv
 
@@ -26,8 +27,8 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 GCS_BUCKET_NAME_PRIVATE = os.getenv("GCS_BUCKET_NAME_PRIVATE")
 UPLOADS_BASE_PATH = os.getenv("UPLOADS_BASE_PATH")
-
-
+PINECOE_API_KEY = os.getenv("PINECONE_API_KEY")
+VECTOR_DATABASE = os.getenv("VECTOR_DATABASE", VectorDatabase.Qdrant)
 
 def _set_max_threads() -> int:
     try:

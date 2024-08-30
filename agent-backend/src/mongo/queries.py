@@ -80,6 +80,9 @@ class MongoClientConnection(MongoConnection):
     def get_tools(self, toolsIds: List[str]):
         return self.get_models_by_ids("tools", Tool, toolsIds)
 
+    def get_tool(self, toolsId: str):
+        return self.get_single_model_by_id("tools", Tool, toolsId)
+
     def get_agent_tasks(self, taskIds: List[str]):
         return self.get_models_by_ids("tasks", Task, taskIds)
 
