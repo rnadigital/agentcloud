@@ -6,6 +6,7 @@ import {
 	InformationCircleIcon
 } from '@heroicons/react/20/solid';
 import InfoAlert from 'components/InfoAlert';
+import Link from 'next/link';
 import { useEffect, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { FieldDescriptionMap, StreamConfig, StreamConfigMap, SyncModes } from 'struct/datasource';
@@ -36,8 +37,10 @@ export function StreamRow({
 		sourceDefinedPrimaryKey?.length > 1 || defaultCursorField?.length > 1;
 	const [cursorField, setCursorField] = useState(streamState?.cursorField || defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
 	const [primaryKey, setPrimaryKey] = useState(streamState?.primaryKey || sourceDefinedPrimaryKey);
-	const [syncMode, setSyncMode] = useState(streamState?.syncMode || streamProperty?.syncModes[0]);
-	const canSelectCursors = syncMode && !syncMode.includes('full_');
+	const initialSyncMode =
+		streamProperty?.syncModes.find(m => m?.includes('incremental')) || streamProperty?.syncModes[0];
+	const [syncMode, setSyncMode] = useState(streamState?.syncMode || initialSyncMode);
+	const canSelectCursors = syncMode && syncMode !== 'full_refresh_overwrite';
 	const canSelectPrimaryKey = sourceDefinedCursorField === false && canSelectCursors;
 
 	//descriptions map
@@ -133,7 +136,7 @@ export function StreamRow({
 				<div
 					className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'} dark:text-white space-y-2 flex flex-col`}
 				>
-					{sourceDefinedCursorField && (
+					{sourceDefinedCursorField ? (
 						<div>
 							<InfoAlert
 								textColor='black'
@@ -144,6 +147,27 @@ export function StreamRow({
 								deselected.
 							</InfoAlert>
 						</div>
+					) : (
+						syncMode !== initialSyncMode && (
+							<InfoAlert
+								textColor='black'
+								className='col-span-full bg-blue-100 text-blue-900 p-4 text-sm rounded-md mt-2'
+								message={
+									<>
+										<strong>Warning:</strong> Different sync modes affect how data is transferred
+										and stored. Make sure to choose the mode that best suits your needs.{' '}
+										<Link
+											className='text-blue-600'
+											href={'https://docs.agentcloud.dev/documentation/get-started/introduction'}
+											rel='noopener noreferrer'
+											target='_blank'
+										>
+											Learn more about sync modes here
+										</Link>
+									</>
+								}
+							/>
+						)
 					)}
 					<div>
 						<label
@@ -154,7 +178,7 @@ export function StreamRow({
 						</label>
 						<select
 							name={`${streamName}_syncMode`}
-							className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+							className='capitalize mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 							value={syncMode}
 							data-parent={streamName}
 							onChange={e => {
@@ -164,7 +188,9 @@ export function StreamRow({
 							disabled={readonly}
 						>
 							{SyncModes.map(mode => {
-								const modeAvailable = streamProperty?.syncModes?.includes(mode);
+								const modeAvailable =
+									mode === 'full_refresh_overwrite' || //Note: experimental, forcing to always allow full refresh
+									streamProperty?.syncModes?.includes(mode);
 								return (
 									<option key={mode} value={mode} disabled={!modeAvailable}>
 										{mode.replace(/_/g, ' ')}{' '}
@@ -260,7 +286,7 @@ export function StreamRow({
 											</label>
 										</td>
 										<td className='p-2 font-semibold'>{key}</td>
-										{!syncMode.includes('full_') && (
+										{canSelectCursors && (
 											<td className='p-2 font-semibold'>
 												<input
 													onChange={() => {
