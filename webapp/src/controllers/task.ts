@@ -182,7 +182,7 @@ export async function addTaskApi(req, res, next) {
 		agentId,
 		iconId,
 		context,
-		storeTaskOuput,
+		storeTaskOutput,
 		taskOutputFileName,
 		formFields,
 		isStructuredOutput,
@@ -221,7 +221,7 @@ export async function addTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
-		storeTaskOutput: storeTaskOuput === true,
+		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
 		icon: foundIcon
 			? {
@@ -314,7 +314,7 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution,
 		agentId,
 		context,
-		storeTaskOuput,
+		storeTaskOutput,
 		taskOutputFileName,
 		formFields,
 		isStructuredOutput,
@@ -338,7 +338,6 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-	console.log('backend storeTaskOuput', storeTaskOuput);
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -348,7 +347,7 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
-		storeTaskOutput: storeTaskOuput === true,
+		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
 		formFields,
