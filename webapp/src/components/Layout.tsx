@@ -8,6 +8,7 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
+	CubeIcon,
 	MoonIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
@@ -104,6 +105,12 @@ const agentNavigation: any[] = [
 		href: '/models',
 		base: '/model',
 		icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+	},
+	{
+		name: 'Variables',
+		href: '/variables',
+		base: '/variable',
+		icon: <CubeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
 	}
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];

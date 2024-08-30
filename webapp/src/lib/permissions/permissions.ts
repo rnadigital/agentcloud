@@ -56,6 +56,10 @@ const Permissions = Object.seal(
 			UPLOAD_ASSET: 195,
 			DELETE_ASSET: 200,
 
+			CREATE_VARIABLE: 205,
+			EDIT_VARIABLE: 210,
+			DELETE_VARIABLE: 215,
+
 			DUMMY_BIT: 255 // Just padding
 		})
 	)

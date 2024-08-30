@@ -1,5 +1,5 @@
 import NProgress from 'nprogress';
-import { GetTaskByNameDispatch, GetTeamModelsDispatch } from 'struct/dispatchtypes';
+import { GetTaskByNameDispatch, GetTeamModelsDispatch, GetVariableDispatch } from 'struct/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -705,6 +705,26 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 		errorCallback,
 		router
 	);
+}
+
+export function getVariables(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/variables.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function getVariable(body, dispatch:GetVariableDispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/variable/${body.variableId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function addVariable(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/add`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function updateVariable(body, dispatch , errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/${body.variableId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function deleteVariable(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/${body.variableId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

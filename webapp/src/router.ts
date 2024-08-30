@@ -53,6 +53,7 @@ import * as stripeController from 'controllers/stripe';
 import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
+import * as variableController from 'controllers/variables';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -614,6 +615,33 @@ export default function router(server, app) {
 	//notifications
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
+
+	teamRouter.get(
+		'/variables.json',
+		variableController.variablesJson
+	);
+	
+	teamRouter.get(
+		'/variable/:variableId/edit',
+		hasPerms.one(Permissions.EDIT_VARIABLE),
+		variableController.variableEditPage.bind(null, app)
+	)
+
+	teamRouter.post(
+		'/forms/variable/add',
+		// hasPerms.one(Permissions.CREATE_VARIABLE),
+		variableController.addVariableApi
+	);
+	teamRouter.post(
+		'/forms/variable/:variableId/edit',
+		// hasPerms.one(Permissions.EDIT_VARIABLE),
+		variableController.editVariableApi
+	);
+	teamRouter.delete(
+		'/forms/variable/:variableId',
+		// hasPerms.one(Permissions.DELETE_VARIABLE),
+		variableController.deleteVariableApi
+	);
 
 	server.use(
 		'/:resourceSlug([a-f0-9]{24})',
