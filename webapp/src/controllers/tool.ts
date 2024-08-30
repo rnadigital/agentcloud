@@ -253,7 +253,7 @@ export async function addToolApi(req, res, next) {
 					filename: foundIcon.filename
 				}
 			: null,
-		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
+		state: linkedTool ? null : isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
 		parameters,
 		requiredParameters: linkedTool?.requiredParameters,
 		functionId,
