@@ -225,6 +225,9 @@ class Task(BaseModel):
     outputFile: Optional[str] = None
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
+    displayOnlyFinalOutput: bool = False
+    storeTaskOutput: bool = False
+    taskOutputFileName: Optional[str] = ''
     isStructuredOutput: Optional[bool] = False
 
 

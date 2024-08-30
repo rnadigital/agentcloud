@@ -142,6 +142,9 @@ export default function TaskForm({
 			requiresHumanInput: e.target.requiresHumanInput.checked,
 			context: taskState?.context || [],
 			formFields: formFields || [],
+			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
+			storeTaskOutput: e.target.storeTaskOutput.checked,
+			taskOutputFileName: e.target.taskOutputFileName?.value,
 			isStructuredOutput
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
@@ -646,6 +649,100 @@ export default function TaskForm({
 							<div className='col-span-full'>
 								<FormConfig formFields={formFields} setFormFields={setFormFields} />
 							</div>
+						)}
+
+						{/* displayOnlyFinalOutput tool checkbox */}
+						<div className='col-span-full'>
+							<ToolTip
+								content='Hides intermediate thought messages from agents and only display the final task output.'
+								placement='top-start'
+								arrow={false}
+							>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='displayOnlyFinalOutput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+										>
+											<input
+												type='checkbox'
+												id='displayOnlyFinalOutput'
+												name='displayOnlyFinalOutput'
+												checked={taskState?.displayOnlyFinalOutput === true}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															displayOnlyFinalOutput: e.target.checked
+														};
+													});
+												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+											/>
+											Display Only Final Output
+										</label>
+									</div>
+								</div>
+							</ToolTip>
+						</div>
+
+						<div className='col-span-full'>
+							<ToolTip
+								content='Stores the task output in a file that can be downloaded by the user after the task is completed.'
+								placement='top-start'
+								arrow={false}
+							>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='storeTaskOutput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+										>
+											<input
+												type='checkbox'
+												id='storeTaskOutput'
+												name='storeTaskOutput'
+												checked={taskState?.storeTaskOutput === true}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															storeTaskOutput: e.target.checked
+														};
+													});
+												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+											/>
+											Store Task Output
+										</label>
+									</div>
+								</div>
+							</ToolTip>
+						</div>
+
+						{taskState?.storeTaskOutput && (
+							<ToolTip
+								content='Task output file name can only be .txt or .csv'
+								placement='top-start'
+								arrow={false}
+							>
+								<div className='col-span-full'>
+									<label
+										htmlFor='name'
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+									>
+										Task Output File Name<span className='text-red-700'> *</span>
+									</label>
+									<input
+										required
+										type='text'
+										id='taskOutputFileName'
+										name='taskOutputFileName'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+										defaultValue={taskState?.taskOutputFileName}
+									/>
+								</div>
+							</ToolTip>
 						)}
 					</div>
 				</div>

@@ -37,6 +37,9 @@ export interface Task {
 		| null;
 	requiresHumanInput?: boolean;
 	hidden?: boolean;
+	storeTaskOutput?: boolean;
+	taskOutputFileName?: string;
 	formFields?: FormFieldConfig[];
 	isStructuredOutput?: boolean;
+	displayOnlyFinalOutput?: boolean;
 }

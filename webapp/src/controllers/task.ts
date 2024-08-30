@@ -182,9 +182,14 @@ export async function addTaskApi(req, res, next) {
 		agentId,
 		iconId,
 		context,
+		storeTaskOutput,
+		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
@@ -215,6 +220,9 @@ export async function addTaskApi(req, res, next) {
 		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
+		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		icon: foundIcon
 			? {
 					id: foundIcon._id,
@@ -306,9 +314,14 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution,
 		agentId,
 		context,
+		storeTaskOutput,
+		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -325,7 +338,6 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -334,6 +346,9 @@ export async function editTaskApi(req, res, next) {
 		context: context ? context.map(toObjectId) : [],
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
+		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
 		formFields,
 		isStructuredOutput
