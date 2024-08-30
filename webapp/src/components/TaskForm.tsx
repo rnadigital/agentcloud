@@ -74,7 +74,6 @@ export default function TaskForm({
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState<Task | undefined>(task);
-	console.log('taskState', taskState);
 	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
 
 	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
@@ -148,7 +147,6 @@ export default function TaskForm({
 			taskOutputFileName: e.target.taskOutputFileName?.value,
 			isStructuredOutput
 		};
-		console.log('body', body);
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
 			await API.editTask(

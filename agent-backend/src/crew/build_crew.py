@@ -157,6 +157,35 @@ class CrewAIBuilder:
         except:
             return False
 
+    # Factory to create the callback function so we dont overwrite it with the one from the last task
+    def make_task_callback(self, task, session_id):
+        def callback(output):
+            # Convert the output to bytes and create an in-memory buffer
+            buffer = BytesIO()
+            buffer.write(str(output).encode())
+            buffer.seek(0)  # Rewind the buffer to the beginning
+
+            # Upload the in-memory buffer directly to the storage provider
+            storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, session_id, is_public=True)
+
+            # Insert the output metadata into MongoDB
+            mongo_client.insert_model("taskoutputs", {
+                "session_id": session_id,
+                "task_id": task.id,
+                "task_output_file_name": task.taskOutputFileName,
+            })
+
+            # Get the signed URL for downloading the file
+            signed_url = storage_provider.download_file(task.taskOutputFileName, session_id, is_public=True)
+
+            # Send the notification to the sockets
+            self.send_to_sockets(
+                text=f"Task output file uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
+                event=SocketEvents.MESSAGE,
+                chunk_id=str(uuid.uuid4())
+            )
+        return callback
+
     def build_tasks(self):
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
@@ -165,7 +194,7 @@ class CrewAIBuilder:
             for task_tool_id in task.toolIds:
                 task_tool_set = search_subordinate_keys(self.crew_tools, keyset(task_tool_id))
                 if len(list(task_tool_set.values())) > 0:
-                    task_tool = list(task_tool_set.values())[0] # Note: this dict/list always holds 1 item
+                    task_tool = list(task_tool_set.values())[0]  # Note: this dict/list always holds 1 item
                     task_tools_objs[task_tool.name] = task_tool
 
             context_task_objs = []
@@ -177,34 +206,10 @@ class CrewAIBuilder:
                             f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
                             f"(Is it ordered later in Crew tasks list?)")
                     context_task_objs.append(context_task)
-            
-            if task.storeTaskOutput:
-                def callback(output):
-                    # Convert the output to bytes and create an in-memory buffer
-                    buffer = BytesIO()
-                    buffer.write(str(output).encode())
-                    buffer.seek(0)  # Rewind the buffer to the beginning
 
-                    # Upload the in-memory buffer directly to the storage provider
-                    storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, self.session_id, is_public=True)
+            # Create the callback function for this specific task
+            callback = self.make_task_callback(task, self.session_id) if task.storeTaskOutput else None
 
-                    # Insert the output metadata into MongoDB
-                    mongo_client.insert_model("taskoutputs", {
-                        "session_id": self.session_id,
-                        "task_id": task.id,
-                        "task_output_file_name": task.taskOutputFileName,
-                    })
-
-                    # Get the signed URL for downloading the file
-                    signed_url = storage_provider.download_file(task.taskOutputFileName, self.session_id, is_public=True)
-
-                    # Send the notification to the sockets
-                    self.send_to_sockets(
-                        text=f"File uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
-                        event=SocketEvents.MESSAGE,
-                        chunk_id=str(uuid.uuid4())
-                    )
-            
             output_pydantic = None
             if task.isStructuredOutput:
                 try:
@@ -215,13 +220,13 @@ class CrewAIBuilder:
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True,
-                                  exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"}),
+                                exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"}),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
                 stream_only_final_output=task.displayOnlyFinalOutput,
-                callback=callback if task.storeTaskOutput else None,
+                callback=callback,
                 output_pydantic=output_pydantic
             )
 

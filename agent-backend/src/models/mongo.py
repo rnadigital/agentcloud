@@ -227,7 +227,7 @@ class Task(BaseModel):
     requiresHumanInput: bool = False
     displayOnlyFinalOutput: bool = False
     storeTaskOutput: bool = False
-    taskOutputFileName: Optional[str] = None
+    taskOutputFileName: Optional[str] = ''
     isStructuredOutput: Optional[bool] = False
 
 
