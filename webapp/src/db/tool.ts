@@ -19,16 +19,38 @@ export async function initGlobalTools() {
 		log('No global tools found.');
 		return;
 	}
-	await ToolCollection().deleteMany({ 'data.builtin': true }); //monkey patch until we have a better deployment flow for alpha
-	return ToolCollection().bulkWrite(
-		GlobalTools.map(gt => ({
-			replaceOne: {
-				filter: { 'data.builtin': true, name: gt.name },
-				replacement: gt,
-				upsert: true
-			}
-		}))
-	);
+
+	// Fetch all existing built-in tools from the database
+	const existingTools = await ToolCollection().find({ 'data.builtin': true }).toArray();
+
+	// Create a map of existing tools by name
+	const existingToolsMap: Map<string, Tool> = new Map(existingTools.map(tool => [tool.name, tool]));
+
+	// Prepare the bulk operations for updating or inserting tools
+	const bulkOperations = GlobalTools.map(gt => {
+		const existingTool: Tool = existingToolsMap.get(gt.name);
+
+		// If the tool already exists, update it while keeping the _id
+		if (existingTool) {
+			return {
+				replaceOne: {
+					filter: { _id: existingTool._id }, // Use the existing _id to replace the tool
+					replacement: { ...gt, _id: existingTool._id }, // Keep the _id the same
+					upsert: true // In case a tool was removed between find and replace, ensure it's reinserted
+				}
+			};
+		} else {
+			// If the tool does not exist, insert it as a new document
+			return {
+				insertOne: {
+					document: gt
+				}
+			};
+		}
+	});
+
+	// Execute the bulk operations
+	return ToolCollection().bulkWrite(bulkOperations);
 }
 
 export function getToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Tool> {

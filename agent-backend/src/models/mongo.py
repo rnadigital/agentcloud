@@ -16,7 +16,7 @@ class Process(str, Enum):
 
 
 class ToolType(str, Enum):
-    API_TOOL = "api"
+    BUILTIN_TOOL = "builtin"
     HOSTED_FUNCTION_TOOL = "function",
     RAG_TOOL = "rag",
 
@@ -88,7 +88,7 @@ class ToolParameters(BaseModel):
 
 class ToolData(BaseModel):
     name: str
-    code: Optional[str] = None
+    code: Optional[str] = ''
     description: Optional[str] = None
     parameters: Optional[ToolParameters] = None
     apiKey: Optional[str] = None
@@ -146,6 +146,8 @@ class Tool(BaseModel):
     data: Optional[ToolData] = None
     retriever_type: Optional[Retriever] = Retriever.SELF_QUERY
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
+    linkedToolId: Optional[PyObjectId] = None
+    parameters: Optional[Dict[str, str]] = {}
 
 
 class ApiCredentials(BaseModel):
