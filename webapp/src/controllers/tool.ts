@@ -221,13 +221,18 @@ export async function addToolApi(req, res, next) {
 
 	const toolData = {
 		...data,
+
 		builtin: false,
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
 
-	const linkedTool = await getToolById(req.params.resourceSlug, linkedToolId);
-	if (!linkedToolId) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid linked tool ID' }); //note: should never hit
+	let linkedTool;
+	if (linkedToolId) {
+		linkedTool = await getToolById(req.params.resourceSlug, linkedToolId);
+		if (!linkedTool) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid linked tool ID' }); //note: should never hit
+		}
+		toolData.parameters = linkedTool.data.parameters;
 	}
 
 	const functionId = isFunctionTool ? uuidv4() : null;
