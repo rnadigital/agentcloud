@@ -104,8 +104,15 @@ class CrewAIBuilder:
                     tool_class = RagTool
                 case ToolType.HOSTED_FUNCTION_TOOL:
                     tool_class = GoogleCloudFunctionTool
-            if tool.data.builtin:
-                tool_class = BuiltinTools.get_tool_class(tool.data.name)
+            if tool.data.builtin or tool.linkedToolId:
+                tool_name = tool.data.name
+                if tool.linkedToolId:
+                    linked_tool = mongo_client.get_tool(tool.id)
+                    if linked_tool:
+                        tool_name = linked_tool.data.name
+                    else:
+                        logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
+                tool_class = BuiltinTools.get_tool_class(tool_name)
                 logging.debug(f"tool_class: {tool_class}")
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
