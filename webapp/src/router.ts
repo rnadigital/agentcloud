@@ -642,17 +642,17 @@ export default function router(server, app) {
 
 	teamRouter.post(
 		'/forms/variable/add',
-		// hasPerms.one(Permissions.CREATE_VARIABLE),
+		hasPerms.one(Permissions.CREATE_VARIABLE),
 		variableController.addVariableApi
 	);
 	teamRouter.post(
 		'/forms/variable/:variableId/edit',
-		// hasPerms.one(Permissions.EDIT_VARIABLE),
+		hasPerms.one(Permissions.EDIT_VARIABLE),
 		variableController.editVariableApi
 	);
 	teamRouter.delete(
 		'/forms/variable/:variableId',
-		// hasPerms.one(Permissions.DELETE_VARIABLE),
+		hasPerms.one(Permissions.DELETE_VARIABLE),
 		variableController.deleteVariableApi
 	);
 
