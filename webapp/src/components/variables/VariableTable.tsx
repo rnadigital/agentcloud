@@ -110,6 +110,19 @@ export default function VariableTable({
 							</th>
 							<th
 								scope='col'
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Created By
+							</th>
+							<th
+								scope='col'
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
+								Created On
+							</th>
+
+							<th
+								scope='col'
 								className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
 								Actions
@@ -140,6 +153,15 @@ export default function VariableTable({
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap'>
 									<div className='text-sm text-gray-900 dark:text-white'>{variable.type}</div>
+								</td>
+								<td className='px-6 py-4 whitespace-nowrap'>
+									<div className='text-sm text-gray-900 dark:text-white'>{variable.createdBy}</div>
+								</td>
+
+								<td className='px-6 py-4 whitespace-nowrap'>
+									<div className='text-sm text-gray-900 dark:text-white'>
+										{new Date(variable.createDate).toDateString()}
+									</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
 									<button

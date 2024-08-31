@@ -17,12 +17,30 @@ export function getVariableById(teamId: db.IdOrStr, variableId: db.IdOrStr): Pro
 	});
 }
 
-export function getVariablesByTeam(teamId: db.IdOrStr): Promise<Variable[]> {
-	return VariableCollection()
+export async function getVariablesByTeam(
+	teamId: db.IdOrStr
+): Promise<(Variable & { createdBy: string })[]> {
+	const variables = await VariableCollection()
 		.find({
 			teamId: toObjectId(teamId)
 		})
 		.toArray();
+
+	const accountIds = variables.map(variable => variable.createdBy);
+	const accounts = await db
+		.db()
+		.collection('accounts')
+		.find({
+			_id: { $in: accountIds.map(toObjectId) }
+		})
+		.toArray();
+
+	const accountMap = new Map(accounts.map(account => [account._id.toString(), account.name]));
+
+	return variables.map(variable => ({
+		...variable,
+		createdBy: accountMap.get(variable.createdBy.toString()) || 'Unknown'
+	}));
 }
 
 export async function addVariable(variable: Variable): Promise<InsertResult> {
