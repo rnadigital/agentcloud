@@ -10,8 +10,6 @@ import React, { useEffect, useState } from 'react';
 
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
-import Permission from '@permission';
-import Roles from 'permissions/roles';
 
 export default function Apps(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -22,28 +20,6 @@ export default function Apps(props) {
 	const [error, setError] = useState();
 	const { apps } = state;
 	const filteredApps = apps?.filter(x => !x.hidden);
-
-	console.log(accountContext, refreshAccountContext);
-	function getUserRoles(permissionBinary: string): string[] {
-		const userPermissions = new Permission(permissionBinary);
-		const userRoles: string[] = [];
-
-		for (const [roleName, rolePermissions] of Object.entries(Roles)) {
-			if (
-				//@ts-ignore
-				rolePermissions.array.every(
-					(bit, index) => userPermissions.get(bit) === rolePermissions.get(bit)
-				)
-			) {
-				userRoles.push(roleName);
-			}
-		}
-
-		return userRoles;
-	}
-	const permissionBinary = accountContext.account.permissions;
-	const roles = getUserRoles(permissionBinary);
-	console.log(roles);
 
 	async function startSession(appId) {
 		await API.addSession(
