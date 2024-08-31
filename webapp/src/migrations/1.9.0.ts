@@ -8,14 +8,16 @@ const log = debug('webapp:migration:1.9.0');
 async function updateTeamMemberPermissions(db) {
 	const teamMemberPermissions = new Permission();
 	teamMemberPermissions.setAll(Roles.TEAM_MEMBER.array);
-
 	const accounts = await db.collection('accounts').find().toArray();
 	for (const account of accounts) {
 		const accountPermissions = new Permission(account.permissions.buffer);
+		const isTeamMember = Roles.TEAM_MEMBER.array.some(bit => accountPermissions.get(bit));
+		if (!isTeamMember) {
+			continue;
+		}
 		const hasAllTeamMemberPermissions = Roles.TEAM_MEMBER.array.every(bit =>
 			accountPermissions.get(bit)
 		);
-
 		if (!hasAllTeamMemberPermissions) {
 			accountPermissions.setAll(teamMemberPermissions.array);
 			await db
