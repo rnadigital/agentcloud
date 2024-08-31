@@ -111,7 +111,6 @@ export async function addTaskApi(req, res, next) {
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'expectedOutput', validation: { ofType: 'string' } },
 			{
 				field: 'toolIds',
@@ -151,7 +150,7 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (req.body.formFields && req.body.formFields.length > 0) {
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
 		for (const field of req.body.formFields) {
 			if (!field.position || !field.type || !field.name || !field.label) {
 				return dynamicResponse(req, res, 400, {
@@ -177,16 +176,20 @@ export async function addTaskApi(req, res, next) {
 		name,
 		description,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
 		agentId,
 		iconId,
 		context,
+		storeTaskOutput,
+		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
@@ -218,6 +221,8 @@ export async function addTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		icon: foundIcon
 			? {
 					id: foundIcon._id,
@@ -240,7 +245,6 @@ export async function editTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
@@ -279,7 +283,7 @@ export async function editTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (req.body.formFields && req.body.formFields.length > 0) {
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
 		for (const field of req.body.formFields) {
 			if (!field.position || !field.type || !field.name || !field.label) {
 				return dynamicResponse(req, res, 400, {
@@ -304,16 +308,20 @@ export async function editTaskApi(req, res, next) {
 	const {
 		name,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		description,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
 		agentId,
 		context,
+		storeTaskOutput,
+		taskOutputFileName,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -330,7 +338,6 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -340,6 +347,8 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
 		formFields,
 		isStructuredOutput

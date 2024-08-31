@@ -3,7 +3,7 @@ import ToolSelectIcons from 'components/ToolSelectIcons';
 import ToolStateBadge from 'components/ToolStateBadge';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
-import { ToolState } from 'struct/tool';
+import { Tool, ToolState } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
 
 export default function ToolsSelect({
@@ -15,6 +15,7 @@ export default function ToolsSelect({
 	setModalOpen,
 	enableAddNew = true
 }) {
+	tools = tools.filter((t: Tool) => !t?.data?.builtin || !t?.requiredParameters);
 	return (
 		<div className='sm:col-span-12'>
 			<label

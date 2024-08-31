@@ -16,7 +16,7 @@ class Process(str, Enum):
 
 
 class ToolType(str, Enum):
-    API_TOOL = "api"
+    BUILTIN_TOOL = "builtin"
     HOSTED_FUNCTION_TOOL = "function",
     RAG_TOOL = "rag",
 
@@ -27,6 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
+    GoogleAI = "google_ai"
     Cohere = "cohere"
     Anthropic = "anthropic"
     Groq = "groq"
@@ -87,7 +88,7 @@ class ToolParameters(BaseModel):
 
 class ToolData(BaseModel):
     name: str
-    code: Optional[str] = None
+    code: Optional[str] = ''
     description: Optional[str] = None
     parameters: Optional[ToolParameters] = None
     apiKey: Optional[str] = None
@@ -145,6 +146,8 @@ class Tool(BaseModel):
     data: Optional[ToolData] = None
     retriever_type: Optional[Retriever] = Retriever.SELF_QUERY
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
+    linkedToolId: Optional[PyObjectId] = None
+    parameters: Optional[Dict[str, str]] = {}
 
 
 class ApiCredentials(BaseModel):
@@ -216,13 +219,14 @@ class Task(BaseModel):
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
     displayOnlyFinalOutput: bool = False
+    storeTaskOutput: bool = False
+    taskOutputFileName: Optional[str] = ''
     isStructuredOutput: Optional[bool] = False
 
 
 class Agent(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    """Data model for Autogen Agent Config"""
     name: str
     role: str
     goal: str

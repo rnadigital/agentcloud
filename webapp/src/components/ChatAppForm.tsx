@@ -371,7 +371,6 @@ export default function ChatAppForm({
 									Conversation Starters
 								</label>
 								<ParameterForm
-									readonly={false}
 									parameters={conversationStarters}
 									setParameters={setConversationStarters}
 									title={null}

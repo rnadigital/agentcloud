@@ -70,6 +70,11 @@ export function SocketWrapper({ children }) {
 	}
 
 	useEffect(() => {
+		sharedSocket.disconnect();
+		tryReconnect();
+	}, [resourceSlug]);
+
+	useEffect(() => {
 		sharedSocket.connect();
 		const reconnectInterval = setInterval(tryReconnect, 10000);
 		return () => {

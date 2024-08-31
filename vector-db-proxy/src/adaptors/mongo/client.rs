@@ -1,9 +1,9 @@
-use crate::errors::types::CustomErrorType;
+use crate::adaptors::mongo::error::CustomMongoError;
+use crate::init::env_variables::GLOBAL_DATA;
 use anyhow::{anyhow, Result};
 use mongodb::{options::ClientOptions, Client, Database};
-use crate::init::env_variables::GLOBAL_DATA;
 
-pub async fn start_mongo_connection() -> Result<Database, CustomErrorType> {
+pub async fn start_mongo_connection() -> Result<Database, CustomMongoError> {
     let global_data = GLOBAL_DATA.read().await;
     let client_options = ClientOptions::parse(global_data.mongo_uri.as_str())
         .await
@@ -14,7 +14,7 @@ pub async fn start_mongo_connection() -> Result<Database, CustomErrorType> {
         Err(e) => {
             println!("Failed to create client: {}", e);
             log::error!("Failed to create client: {}", e);
-            return Err(CustomErrorType::InternalError(anyhow!(e)));
+            return Err(CustomMongoError::InternalError(anyhow!(e)));
         }
     };
     // Get a handle to a database.

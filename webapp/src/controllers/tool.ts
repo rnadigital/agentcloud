@@ -30,6 +30,7 @@ import getDotProp from 'lib/misc/getdotprop';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { PlanLimitsKeys } from 'struct/billing';
+import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
 import { runtimeValues } from 'struct/function';
 import { NotificationDetails, NotificationType, WebhookType } from 'struct/notification';
@@ -146,7 +147,10 @@ function validateTool(tool) {
 			{
 				field: 'data.environmentVariables',
 				validation: { notEmpty: true },
-				validateIf: { field: 'type', condition: value => value !== ToolType.RAG_TOOL }
+				validateIf: {
+					field: 'type',
+					condition: value => value === ToolType.FUNCTION_TOOL
+				}
 			},
 			{
 				field: 'data.parameters.code',
@@ -175,9 +179,11 @@ export async function addToolApi(req, res, next) {
 		schema,
 		datasourceId,
 		description,
+		parameters,
 		iconId,
 		retriever,
-		retriever_config
+		retriever_config,
+		linkedToolId
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -215,9 +221,19 @@ export async function addToolApi(req, res, next) {
 
 	const toolData = {
 		...data,
+
 		builtin: false,
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
+
+	let linkedTool;
+	if (linkedToolId) {
+		linkedTool = await getToolById(req.params.resourceSlug, linkedToolId);
+		if (!linkedTool) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid linked tool ID' }); //note: should never hit
+		}
+		toolData.parameters = linkedTool.data.parameters;
+	}
 
 	const functionId = isFunctionTool ? uuidv4() : null;
 	const addedTool = await addTool({
@@ -237,15 +253,18 @@ export async function addToolApi(req, res, next) {
 					filename: foundIcon.filename
 				}
 			: null,
-		state: isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
-		functionId
+		state: linkedTool ? null : isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
+		parameters,
+		requiredParameters: linkedTool?.requiredParameters,
+		functionId,
+		linkedToolId: toObjectId(linkedToolId)
 	});
 
 	if (!addedTool?.insertedId) {
 		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
 	}
 
-	if (isFunctionTool) {
+	if (isFunctionTool && !parameters) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			functionProvider
@@ -355,7 +374,8 @@ export async function editToolApi(req, res, next) {
 		description,
 		datasourceId,
 		retriever,
-		retriever_config
+		retriever_config,
+		parameters
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -364,8 +384,9 @@ export async function editToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	let foundDatasource;
 	if (datasourceId && (typeof datasourceId !== 'string' || datasourceId.length !== 24)) {
-		const foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
+		foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
 		if (!foundDatasource) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
 		}
@@ -414,6 +435,17 @@ export async function editToolApi(req, res, next) {
 		name: (type as ToolType) === ToolType.FUNCTION_TOOL ? toSnakeCase(name) : name
 	};
 
+	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
+	let metadata_field_info = [];
+	if (foundDatasource) {
+		try {
+			metadata_field_info = getMetadataFieldInfo(foundDatasource?.streamConfig);
+		} catch (e) {
+			log(e);
+			//supress
+		}
+	}
+
 	await editTool(req.params.resourceSlug, toolId, {
 		name,
 		type: type as ToolType,
@@ -421,8 +453,9 @@ export async function editToolApi(req, res, next) {
 		schema: schema,
 		datasourceId: toObjectId(datasourceId),
 		retriever_type: retriever || null,
-		retriever_config: retriever_config || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
+		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
@@ -433,7 +466,7 @@ export async function editToolApi(req, res, next) {
 	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (functionNeedsUpdate) {
+	} else if (functionNeedsUpdate && !parameters) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
