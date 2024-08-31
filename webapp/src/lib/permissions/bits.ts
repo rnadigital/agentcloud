@@ -62,7 +62,11 @@ export const TEAM_BITS = Object.seal(
 
 			Permissions.DELETE_DATASOURCE,
 			Permissions.UPLOAD_ASSET,
-			Permissions.DELETE_ASSET
+			Permissions.DELETE_ASSET,
+
+			Permissions.CREATE_VARIABLE,
+			Permissions.EDIT_VARIABLE,
+			Permissions.DELETE_VARIABLE
 		])
 	)
 );

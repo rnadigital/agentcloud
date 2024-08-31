@@ -43,7 +43,10 @@ TEAM_MEMBER.setAll([
 	Permissions.SYNC_DATASOURCE,
 	Permissions.DELETE_DATASOURCE,
 	Permissions.UPLOAD_ASSET,
-	Permissions.DELETE_ASSET
+	Permissions.DELETE_ASSET,
+	Permissions.CREATE_VARIABLE,
+	Permissions.EDIT_VARIABLE,
+	Permissions.DELETE_VARIABLE
 ]);
 
 const TEAM_ADMIN = new Permission();
