@@ -1,10 +1,15 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 interface UseAutocompleteDropdownProps {
-	options: Record<string, string>[];
+	options: { label: string; value: string }[];
 	value: string;
-	setValue: Function;
+	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
+}
+
+interface DropdownPosition {
+	top: number;
+	left: number;
 }
 
 const useAutocompleteDropdown = ({
@@ -14,13 +19,13 @@ const useAutocompleteDropdown = ({
 	setSelectedVariables
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
-	const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
 	const [filterText, setFilterText] = useState('');
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
 	const inputRef = useRef(null);
 
 	const filteredOptions = options.filter(option =>
-		Object.values(option).some(val => val.toLowerCase().startsWith(filterText.toLowerCase()))
+		option.label.toLowerCase().startsWith(filterText.toLowerCase())
 	);
 
 	useEffect(() => {
@@ -29,7 +34,7 @@ const useAutocompleteDropdown = ({
 		}
 	}, [filteredOptions.length, highlightedIndex, showDropdown]);
 
-	const handleChange = e => {
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const newText = e.target.value;
@@ -55,7 +60,7 @@ const useAutocompleteDropdown = ({
 		);
 	};
 
-	const handleKeyDown = e => {
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === '{') {
 			const input = inputRef.current;
 			const cursorPosition = input.selectionStart;
@@ -90,7 +95,7 @@ const useAutocompleteDropdown = ({
 		}
 	};
 
-	const handleOptionSelect = (option: Record<string, string>) => {
+	const handleOptionSelect = (option: { label: string; value: string }) => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const textUpToCursor = value.slice(0, cursorPosition);
@@ -109,11 +114,14 @@ const useAutocompleteDropdown = ({
 
 		setTimeout(() => {
 			input.focus();
-			input.selectionEnd = lastOpenBraceIndex + option.length + 4;
+			input.selectionEnd = newText.length;
 		}, 0);
 	};
 
-	const calculateDoubleCurlyBracePosition = (input, braceIndex) => {
+	const calculateDoubleCurlyBracePosition = (
+		input: HTMLInputElement,
+		braceIndex: number
+	): DropdownPosition => {
 		const { scrollTop, scrollLeft, offsetTop, offsetLeft } = input;
 		const inputStyle = window.getComputedStyle(input);
 		const lineHeight = parseInt(inputStyle.lineHeight) || 20;
