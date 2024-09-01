@@ -49,6 +49,10 @@ const useAutocompleteDropdown = ({
 			setShowDropdown(false);
 			setFilterText('');
 		}
+
+		setSelectedVariables(prevSelectedVariables =>
+			prevSelectedVariables.filter(variable => newText.includes(variable.label))
+		);
 	};
 
 	const handleKeyDown = e => {

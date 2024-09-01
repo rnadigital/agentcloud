@@ -128,13 +128,13 @@ export default function TaskForm({
 	const [selectedVariables, setSelectedVariables] = useState<{ label: string; value: string }[]>(
 		[]
 	);
+	console.log(selectedVariables);
+
 	const variableOptions = variables
 		.map(v => ({ label: v.name, value: v._id.toString() }))
 		.filter(v => !selectedVariables.some(sv => sv.value === v.value));
 
 	const [description, setDescription] = useState(task?.description || '');
-
-	console.log(selectedVariables);
 
 	const {
 		showDropdown,
