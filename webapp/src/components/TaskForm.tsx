@@ -125,20 +125,20 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	console.log(variables);
-	const variableOptions = variables.map(v => ({ label: v.name, value: v._id.toString() }));
-
-	const [description, setDescription] = useState(task?.description || '');
-
 	const [selectedVariables, setSelectedVariables] = useState<{ label: string; value: string }[]>(
 		[]
 	);
+	const variableOptions = variables
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !selectedVariables.some(sv => sv.value === v.value));
+
+	const [description, setDescription] = useState(task?.description || '');
+
 	console.log(selectedVariables);
 
 	const {
 		showDropdown,
 		dropdownPosition,
-		filterText,
 		highlightedIndex,
 		filteredOptions,
 		handleChange,

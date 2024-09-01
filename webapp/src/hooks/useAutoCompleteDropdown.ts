@@ -130,7 +130,6 @@ const useAutocompleteDropdown = ({
 		setText: setValue,
 		showDropdown,
 		dropdownPosition,
-		filterText,
 		highlightedIndex,
 		filteredOptions,
 		handleChange,
