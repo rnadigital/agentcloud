@@ -10,11 +10,13 @@ import { toast } from 'react-toastify';
 export default function VariableForm({
 	variable,
 	editing,
-	fetchVariableFormData
+	fetchVariableFormData,
+	callback
 }: {
 	variable?: any;
 	editing?: boolean;
 	fetchVariableFormData?: Function;
+	callback?: Function;
 }) {
 	const {
 		register,
@@ -55,7 +57,11 @@ export default function VariableForm({
 			);
 		}
 		if (fetchVariableFormData) fetchVariableFormData();
-		router.push(`/${resourceSlug}/variables`);
+		if (callback) {
+			callback({ label: data.name, value: data.defaultValue });
+		} else {
+			router.push(`/${resourceSlug}/variables`);
+		}
 	};
 
 	return (

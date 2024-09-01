@@ -5,6 +5,7 @@ interface UseAutocompleteDropdownProps {
 	value: string;
 	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
+	setCreateVariableModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 interface DropdownPosition {
@@ -16,23 +17,34 @@ const useAutocompleteDropdown = ({
 	options,
 	value,
 	setValue,
-	setSelectedVariables
+	setSelectedVariables,
+	setCreateVariableModalOpen
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
 	const [filterText, setFilterText] = useState('');
 	const [highlightedIndex, setHighlightedIndex] = useState(0);
+
 	const inputRef = useRef(null);
 
-	const filteredOptions = options.filter(option =>
-		option.label.toLowerCase().startsWith(filterText.toLowerCase())
-	);
+	const filteredOptions = [
+		...options.filter(option => option.label.toLowerCase().startsWith(filterText.toLowerCase())),
+		{ label: 'Create new variable', value: 'create_new' }
+	];
 
 	useEffect(() => {
 		if (showDropdown && highlightedIndex >= filteredOptions.length) {
 			setHighlightedIndex(0);
 		}
 	}, [filteredOptions.length, highlightedIndex, showDropdown]);
+
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		setValue(prevValue => `${prevValue}${newVariable.label}}`);
+		setSelectedVariables(prev => [...prev, newVariable]);
+		setCreateVariableModalOpen(false);
+		setShowDropdown(false);
+		setFilterText('');
+	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const input = inputRef.current;
@@ -96,6 +108,10 @@ const useAutocompleteDropdown = ({
 	};
 
 	const handleOptionSelect = (option: { label: string; value: string }) => {
+		if (option.value === 'create_new') {
+			setCreateVariableModalOpen(true);
+			return;
+		}
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const textUpToCursor = value.slice(0, cursorPosition);
@@ -147,7 +163,8 @@ const useAutocompleteDropdown = ({
 		handleChange,
 		handleKeyDown,
 		handleOptionSelect,
-		inputRef
+		inputRef,
+		handleNewVariableCreation
 	};
 };
 

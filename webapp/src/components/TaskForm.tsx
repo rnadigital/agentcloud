@@ -26,6 +26,7 @@ import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+import CreateVariableModal from './variables/CreateVariableModal';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -135,6 +136,7 @@ export default function TaskForm({
 		.filter(v => !selectedVariables.some(sv => sv.value === v.value));
 
 	const [description, setDescription] = useState(task?.description || '');
+	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
 
 	const {
 		showDropdown,
@@ -144,12 +146,14 @@ export default function TaskForm({
 		handleChange,
 		handleKeyDown,
 		handleOptionSelect,
-		inputRef
+		inputRef,
+		handleNewVariableCreation
 	} = useAutocompleteDropdown({
 		value: description,
 		options: variableOptions,
 		setValue: setDescription,
-		setSelectedVariables: setSelectedVariables
+		setSelectedVariables,
+		setCreateVariableModalOpen
 	});
 
 	async function createDatasourceCallback(createdDatasource) {
@@ -820,6 +824,11 @@ export default function TaskForm({
 					</button>
 				</div>
 			</form>
+			<CreateVariableModal
+				open={isCreateVariableModalOpen}
+				setOpen={setCreateVariableModalOpen}
+				callback={handleNewVariableCreation}
+			/>
 		</>
 	);
 }
