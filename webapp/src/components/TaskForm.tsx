@@ -8,6 +8,7 @@ import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
+import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -120,6 +121,24 @@ export default function TaskForm({
 	const [datasourceState, setDatasourceState] = useState(
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
+
+	const [description, setDescription] = useState(task?.description || '');
+
+	const {
+		showDropdown,
+		dropdownPosition,
+		filterText,
+		highlightedIndex,
+		filteredOptions,
+		handleChange,
+		handleKeyDown,
+		handleOptionSelect,
+		inputRef
+	} = useAutocompleteDropdown({
+		value: description,
+		options: ['one', 'two', 'three'],
+		setValue: setDescription
+	});
 
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchTaskFormData) && fetchTaskFormData();
@@ -339,14 +358,46 @@ export default function TaskForm({
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
+								ref={inputRef}
+								value={description}
+								onChange={handleChange}
+								onKeyDown={handleKeyDown}
 								required
 								id='task_description'
 								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={taskState?.description}
+								// defaultValue={taskState?.description}
 							/>
+							{showDropdown && filteredOptions.length > 0 && (
+								<ul
+									style={{
+										position: 'absolute',
+										top: dropdownPosition.top + 20,
+										left: dropdownPosition.left,
+										backgroundColor: 'white',
+										border: '1px solid #ccc',
+										listStyle: 'none',
+										padding: '5px',
+										margin: 0,
+										cursor: 'pointer'
+									}}
+								>
+									{filteredOptions.map((option, index) => (
+										<li
+											key={index}
+											onClick={() => handleOptionSelect(option)}
+											style={{
+												padding: '5px',
+												backgroundColor: highlightedIndex === index ? '#ddd' : 'white'
+											}}
+										>
+											{option}
+										</li>
+									))}
+								</ul>
+							)}
 						</div>
 
 						<div className='col-span-full'>

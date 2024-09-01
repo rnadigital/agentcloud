@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-const useAutocompleteDropdown = options => {
-	const [text, setText] = useState('');
+interface UseAutocompleteDropdownProps {
+	options: string[];
+	value: string;
+	setValue: Function;
+}
+
+const useAutocompleteDropdown = ({ options, value, setValue }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 	const [filterText, setFilterText] = useState('');
@@ -22,17 +27,17 @@ const useAutocompleteDropdown = options => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const newText = e.target.value;
-		setText(newText);
+		setValue(newText);
 
 		const textUpToCursor = newText.slice(0, cursorPosition);
-		const lastDoubleOpenBraceIndex = textUpToCursor.lastIndexOf('{{');
+		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
-		if (lastDoubleOpenBraceIndex !== -1) {
-			const typedAfterBraces = textUpToCursor.slice(lastDoubleOpenBraceIndex + 2);
+		if (lastOpenBraceIndex !== -1) {
+			const typedAfterBraces = textUpToCursor.slice(lastOpenBraceIndex + 2);
 			setFilterText(typedAfterBraces);
 			setShowDropdown(true);
 			setHighlightedIndex(0);
-			const { top, left } = calculateDoubleCurlyBracePosition(input, lastDoubleOpenBraceIndex);
+			const { top, left } = calculateDoubleCurlyBracePosition(input, lastOpenBraceIndex);
 			setDropdownPosition({ top, left });
 		} else {
 			setShowDropdown(false);
@@ -48,8 +53,8 @@ const useAutocompleteDropdown = options => {
 
 			if (textUpToCursor.slice(-1) === '{') {
 				setShowDropdown(true);
-				const lastDoubleOpenBraceIndex = textUpToCursor.lastIndexOf('{{');
-				const { top, left } = calculateDoubleCurlyBracePosition(input, lastDoubleOpenBraceIndex);
+				const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
+				const { top, left } = calculateDoubleCurlyBracePosition(input, lastOpenBraceIndex);
 				setDropdownPosition({ top, left });
 				setFilterText('');
 				setHighlightedIndex(0);
@@ -78,22 +83,19 @@ const useAutocompleteDropdown = options => {
 	const handleOptionSelect = option => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
-		const textUpToCursor = text.slice(0, cursorPosition);
-		const lastDoubleOpenBraceIndex = textUpToCursor.lastIndexOf('{{');
+		const textUpToCursor = value.slice(0, cursorPosition);
+		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
 		const newText =
-			textUpToCursor.slice(0, lastDoubleOpenBraceIndex + 2) +
-			option +
-			'}}' +
-			text.slice(cursorPosition);
+			textUpToCursor.slice(0, lastOpenBraceIndex + 2) + option + '}' + value.slice(cursorPosition);
 
-		setText(newText);
+		setValue(newText);
 		setShowDropdown(false);
 		setFilterText('');
 
 		setTimeout(() => {
 			input.focus();
-			input.selectionEnd = lastDoubleOpenBraceIndex + option.length + 4;
+			input.selectionEnd = lastOpenBraceIndex + option.length + 4;
 		}, 0);
 	};
 
@@ -114,8 +116,8 @@ const useAutocompleteDropdown = options => {
 	};
 
 	return {
-		text,
-		setText,
+		text: value,
+		setText: setValue,
 		showDropdown,
 		dropdownPosition,
 		filterText,
