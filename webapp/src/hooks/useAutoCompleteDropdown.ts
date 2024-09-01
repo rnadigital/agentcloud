@@ -1,12 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 interface UseAutocompleteDropdownProps {
-	options: string[];
+	options: Record<string, string>[];
 	value: string;
 	setValue: Function;
+	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
 }
 
-const useAutocompleteDropdown = ({ options, value, setValue }: UseAutocompleteDropdownProps) => {
+const useAutocompleteDropdown = ({
+	options,
+	value,
+	setValue,
+	setSelectedVariables
+}: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 	const [filterText, setFilterText] = useState('');
@@ -14,7 +20,7 @@ const useAutocompleteDropdown = ({ options, value, setValue }: UseAutocompleteDr
 	const inputRef = useRef(null);
 
 	const filteredOptions = options.filter(option =>
-		option.toLowerCase().startsWith(filterText.toLowerCase())
+		Object.values(option).some(val => val.toLowerCase().startsWith(filterText.toLowerCase()))
 	);
 
 	useEffect(() => {
@@ -80,16 +86,20 @@ const useAutocompleteDropdown = ({ options, value, setValue }: UseAutocompleteDr
 		}
 	};
 
-	const handleOptionSelect = option => {
+	const handleOptionSelect = (option: Record<string, string>) => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const textUpToCursor = value.slice(0, cursorPosition);
 		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
 		const newText =
-			textUpToCursor.slice(0, lastOpenBraceIndex + 2) + option + '}' + value.slice(cursorPosition);
+			textUpToCursor.slice(0, lastOpenBraceIndex + 2) +
+			option.label +
+			'}' +
+			value.slice(cursorPosition);
 
 		setValue(newText);
+		setSelectedVariables(prev => [...prev, option]);
 		setShowDropdown(false);
 		setFilterText('');
 

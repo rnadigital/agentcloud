@@ -12,20 +12,25 @@ import {
 	updateTask
 } from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
+import { getVariablesByTeam } from 'db/variable';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 
+export type TasksDataReturnType = Awaited<ReturnType<typeof tasksData>>;
+
 export async function tasksData(req, res, _next) {
-	const [tasks, tools, agents] = await Promise.all([
+	const [tasks, tools, agents, variables] = await Promise.all([
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug)
+		getAgentsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		tasks,
-		agents
+		agents,
+		variables
 	};
 }
 

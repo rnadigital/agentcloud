@@ -8,6 +8,7 @@ import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
+import { TasksDataReturnType } from 'controllers/task';
 import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -55,15 +56,17 @@ export default function TaskForm({
 	task,
 	tools = [],
 	agents = [],
+	variables = [],
 	editing,
 	compact = false,
 	callback,
 	fetchTaskFormData,
 	taskChoices = []
 }: {
-	task?: Task;
-	tools?: any[];
-	agents?: any[];
+	task?: TasksDataReturnType['tasks']['0'];
+	tools?: TasksDataReturnType['tools'];
+	agents?: TasksDataReturnType['agents'];
+	variables?: TasksDataReturnType['variables'];
 	editing?: boolean;
 	compact?: boolean;
 	callback?: Function;
@@ -122,7 +125,15 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
+	console.log(variables);
+	const variableOptions = variables.map(v => ({ label: v.name, value: v._id.toString() }));
+
 	const [description, setDescription] = useState(task?.description || '');
+
+	const [selectedVariables, setSelectedVariables] = useState<{ label: string; value: string }[]>(
+		[]
+	);
+	console.log(selectedVariables);
 
 	const {
 		showDropdown,
@@ -136,8 +147,9 @@ export default function TaskForm({
 		inputRef
 	} = useAutocompleteDropdown({
 		value: description,
-		options: ['one', 'two', 'three'],
-		setValue: setDescription
+		options: variableOptions,
+		setValue: setDescription,
+		setSelectedVariables: setSelectedVariables
 	});
 
 	async function createDatasourceCallback(createdDatasource) {
@@ -393,7 +405,7 @@ export default function TaskForm({
 												backgroundColor: highlightedIndex === index ? '#ddd' : 'white'
 											}}
 										>
-											{option}
+											{option.label}
 										</li>
 									))}
 								</ul>
@@ -581,7 +593,7 @@ export default function TaskForm({
 									}}
 									value={
 										preferredAgent
-											? { label: preferredAgent.name, value: preferredAgent._id }
+											? { label: preferredAgent.name, value: preferredAgent._id.toString() }
 											: null
 									}
 									onChange={(v: any) => {
@@ -602,8 +614,8 @@ export default function TaskForm({
 										{ label: '+ Create new agent', value: 'new', allowDelegation: false }
 									].concat(
 										agents.map(a => ({
-											label: a.name,
-											value: a._id,
+											label: a.name.toString(),
+											value: a._id.toString(),
 											allowDelegation: a.allowDelegation
 										}))
 									)}
