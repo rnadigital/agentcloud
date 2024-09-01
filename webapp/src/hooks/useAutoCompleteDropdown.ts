@@ -46,7 +46,7 @@ const useAutocompleteDropdown = ({
 		setFilterText('');
 	};
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		const input = inputRef.current;
 		const cursorPosition = input.selectionStart;
 		const newText = e.target.value;
@@ -72,7 +72,7 @@ const useAutocompleteDropdown = ({
 		);
 	};
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		if (e.key === '{') {
 			const input = inputRef.current;
 			const cursorPosition = input.selectionStart;

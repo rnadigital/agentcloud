@@ -27,6 +27,7 @@ import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 import CreateVariableModal from './variables/CreateVariableModal';
+import AutocompleteDropdown from './variables/VariableDropdown';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -138,17 +139,7 @@ export default function TaskForm({
 	const [description, setDescription] = useState(task?.description || '');
 	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
 
-	const {
-		showDropdown,
-		dropdownPosition,
-		highlightedIndex,
-		filteredOptions,
-		handleChange,
-		handleKeyDown,
-		handleOptionSelect,
-		inputRef,
-		handleNewVariableCreation
-	} = useAutocompleteDropdown({
+	const autocompleteDescription = useAutocompleteDropdown({
 		value: description,
 		options: variableOptions,
 		setValue: setDescription,
@@ -374,46 +365,27 @@ export default function TaskForm({
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
-								ref={inputRef}
+								ref={autocompleteDescription.inputRef}
 								value={description}
-								onChange={handleChange}
-								onKeyDown={handleKeyDown}
+								onChange={autocompleteDescription.handleChange}
+								onKeyDown={autocompleteDescription.handleKeyDown}
 								required
 								id='task_description'
 								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								// defaultValue={taskState?.description}
+								defaultValue={taskState?.description}
 							/>
-							{showDropdown && filteredOptions.length > 0 && (
-								<ul
-									style={{
-										position: 'absolute',
-										top: dropdownPosition.top + 20,
-										left: dropdownPosition.left,
-										backgroundColor: 'white',
-										border: '1px solid #ccc',
-										listStyle: 'none',
-										padding: '5px',
-										margin: 0,
-										cursor: 'pointer'
-									}}
-								>
-									{filteredOptions.map((option, index) => (
-										<li
-											key={index}
-											onClick={() => handleOptionSelect(option)}
-											style={{
-												padding: '5px',
-												backgroundColor: highlightedIndex === index ? '#ddd' : 'white'
-											}}
-										>
-											{option.label}
-										</li>
-									))}
-								</ul>
-							)}
+							{autocompleteDescription.showDropdown &&
+								autocompleteDescription.filteredOptions.length > 0 && (
+									<AutocompleteDropdown
+										options={autocompleteDescription.filteredOptions}
+										highlightedIndex={autocompleteDescription.highlightedIndex}
+										dropdownPosition={autocompleteDescription.dropdownPosition}
+										handleOptionSelect={autocompleteDescription.handleOptionSelect}
+									/>
+								)}
 						</div>
 
 						<div className='col-span-full'>
@@ -827,7 +799,7 @@ export default function TaskForm({
 			<CreateVariableModal
 				open={isCreateVariableModalOpen}
 				setOpen={setCreateVariableModalOpen}
-				callback={handleNewVariableCreation}
+				callback={autocompleteDescription.handleNewVariableCreation}
 			/>
 		</>
 	);
