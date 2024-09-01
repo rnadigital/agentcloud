@@ -152,37 +152,3 @@ const useAutocompleteDropdown = ({
 };
 
 export default useAutocompleteDropdown;
-
-// example usage
-// <div style={{ position: 'relative' }}>
-// 				<input ref={inputRef} value={text} onChange={handleChange} onKeyDown={handleKeyDown} />
-
-// 				{showDropdown && filteredOptions.length > 0 && (
-// 					<ul
-// 						style={{
-// 							position: 'absolute',
-// 							top: dropdownPosition.top + 20,
-// 							left: dropdownPosition.left,
-// 							backgroundColor: 'white',
-// 							border: '1px solid #ccc',
-// 							listStyle: 'none',
-// 							padding: '5px',
-// 							margin: 0,
-// 							cursor: 'pointer'
-// 						}}
-// 					>
-// 						{filteredOptions.map((option, index) => (
-// 							<li
-// 								key={index}
-// 								onClick={() => handleOptionSelect(option)}
-// 								style={{
-// 									padding: '5px',
-// 									backgroundColor: highlightedIndex === index ? '#ddd' : 'white'
-// 								}}
-// 							>
-// 								{option}
-// 							</li>
-// 						))}
-// 					</ul>
-// 				)}
-// 			</div>
