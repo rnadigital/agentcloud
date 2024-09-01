@@ -55,7 +55,7 @@ const useAutocompleteDropdown = ({
 		const textUpToCursor = newText.slice(0, cursorPosition);
 		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
-		if (lastOpenBraceIndex !== -1) {
+		if (lastOpenBraceIndex !== -1 && textUpToCursor.slice(lastOpenBraceIndex + 1).trim() === '') {
 			const typedAfterBraces = textUpToCursor.slice(lastOpenBraceIndex + 2);
 			setFilterText(typedAfterBraces);
 			setShowDropdown(true);
