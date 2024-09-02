@@ -19,10 +19,10 @@ export async function resyncAllDatasources() {
 
 	// Fetch all datasources in the system
 	const allDatasources = await getAllDatasources({
-        connectionId: {
-            $ne: null
-        }
-    });
+		connectionId: {
+			$ne: null
+		}
+	});
 
 	for (const datasource of allDatasources) {
 		// Fetch the organization by orgId
