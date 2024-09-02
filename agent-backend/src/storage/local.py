@@ -2,7 +2,7 @@ import os
 import logging
 from pathlib import Path
 import shutil
-from src.init.env_variables import UPLOADS_BASE_PATH
+from init.env_variables import UPLOADS_BASE_PATH
 
 from storage.provider import StorageProvider
 
