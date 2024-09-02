@@ -736,7 +736,7 @@ export default withRouter(function Layout(props) {
 																		</button>
 																	);
 																}
-
+																//TODO: developer mode toggle
 																if (item.theme) {
 																	return (
 																		<div className='flex flex-col space-y-2 py-2'>
