@@ -128,16 +128,18 @@ export default function TaskForm({
 		setModalOpen(false);
 	}
 	const [modalOpen, setModalOpen]: any = useState(false);
-
 	async function taskPost(e) {
 		e.preventDefault();
+		const toolIds = toolState ? toolState.map(x => x?.value) : [];
+		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
+		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.task_name.value,
 			description: e.target.task_description.value,
 			expectedOutput,
-			toolIds: taskState?.toolIds || [],
+			toolIds: dedupedCombinedToolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
