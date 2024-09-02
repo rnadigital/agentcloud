@@ -147,8 +147,8 @@ const useAutocompleteDropdown = ({
 		const lines = textUpToBraces.split('\n');
 		const currentLine = lines[lines.length - 1];
 
-		const top = offsetTop + (lines.length - 1) * lineHeight - scrollTop;
-		const left = offsetLeft + (currentLine.length - 2) * charWidth - scrollLeft;
+		const top = offsetTop + (lines.length - 1) * lineHeight - scrollTop + 25;
+		const left = offsetLeft + (currentLine.length - 2) * charWidth - scrollLeft + 25;
 
 		return { top, left };
 	};

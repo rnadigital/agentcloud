@@ -1,3 +1,6 @@
+import cn from 'lib/cn';
+import SelectClassNames from 'lib/styles/SelectClassNames';
+
 interface AutocompleteDropdownProps {
 	options: { label: string; value: string }[];
 	highlightedIndex: number;
@@ -13,27 +16,21 @@ const AutocompleteDropdown = ({
 }: AutocompleteDropdownProps) => {
 	return (
 		<ul
+			className={cn(
+				'absolute list-none p-1 m-0 cursor-pointer z-10',
+				SelectClassNames.menu,
+				'w-fit'
+			)}
 			style={{
-				position: 'absolute',
-				top: dropdownPosition.top + 20,
-				left: dropdownPosition.left,
-				backgroundColor: 'white',
-				border: '1px solid #ccc',
-				listStyle: 'none',
-				padding: '5px',
-				margin: 0,
-				cursor: 'pointer',
-				zIndex: 10
+				top: dropdownPosition.top,
+				left: dropdownPosition.left
 			}}
 		>
 			{options.map((option, index) => (
 				<li
 					key={index}
 					onClick={() => handleOptionSelect(option)}
-					style={{
-						padding: '5px',
-						backgroundColor: highlightedIndex === index ? '#ddd' : 'white'
-					}}
+					className={cn(SelectClassNames.listItem({ isSelected: highlightedIndex === index }))}
 				>
 					{option.label}
 				</li>
