@@ -41,7 +41,8 @@ import StorageProviderFactory from 'lib/storage';
 import StripeClient from 'lib/stripe';
 import { v4 as uuidv4 } from 'uuid';
 
-import { initSocket } from './socketio';
+import { initSocket } from '@socketio';
+import { resyncAllDatasources } from 'utils/resync';
 const log = debug('webapp:server');
 
 app
@@ -62,6 +63,7 @@ app
 		await initGlobalTools();
 		await ses.init();
 		await PassportManager.init();
+		await resyncAllDatasources();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);
