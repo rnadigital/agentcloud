@@ -9,7 +9,7 @@ import ModelSelect from 'components/models/ModelSelect';
 import Spinner from 'components/Spinner';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
-import { AgentsDataReturnType } from 'controllers/agent';
+import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -19,7 +19,7 @@ import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
 export default function AgentForm({
-	agent = {},
+	agent,
 	models = [],
 	tools = [],
 	variables = [],
@@ -29,7 +29,7 @@ export default function AgentForm({
 	callback,
 	fetchAgentFormData
 }: {
-	agent?: any;
+	agent?: AgentDataReturnType['agent'];
 	models?: AgentsDataReturnType['models'];
 	tools?: AgentsDataReturnType['tools'];
 	variables?: AgentsDataReturnType['variables'];
@@ -46,13 +46,11 @@ export default function AgentForm({
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [callbackKey, setCallbackKey] = useState(null);
-	const [allowDelegation, setAllowDelegation] = useState(agent.allowDelegation || false);
-	const [verbose, setVerbose] = useState(agent.verbose || false);
+	const [allowDelegation, setAllowDelegation] = useState(agent?.allowDelegation);
+	const [verbose, setVerbose] = useState(agent?.verbose);
 	const [icon, setIcon] = useState(agent?.icon);
-	const [agentState, setAgent] = useState(agent);
-	const { _id, name, modelId, functionModelId, toolIds, role, goal, backstory } = agentState;
-	const foundModel = models && models.find(m => m._id === modelId);
-	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
+	const [agentState, setAgent] = useState<Partial<AgentDataReturnType['agent']>>(agent || {});
+	const { name, modelId, functionModelId, role, goal, backstory } = agentState;
 	const posthog = usePostHog();
 
 	const getInitialTools = (acc, tid) => {
@@ -338,24 +336,6 @@ export default function AgentForm({
 							/>
 						</div>
 					</div>
-
-					{/*<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
-					<div className='col-span-full'>
-						<label htmlFor='systemMessage' className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-							System Message
-						</label>
-						<div className='mt-2'>
-							<textarea
-								required
-								id='systemMessage'
-								name='systemMessage'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								defaultValue={systemMessage}
-								placeholder='Enter the system message that will guide the language model. For example: "You are a helpful assistant who provides accurate information and helpful suggestions."'
-							/>
-						</div>
-					</div>
-				</div>*/}
 
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2'>
 						<ToolsSelect

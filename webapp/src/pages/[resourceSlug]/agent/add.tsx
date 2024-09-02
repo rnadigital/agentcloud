@@ -1,23 +1,23 @@
+import * as API from '@api';
+import AgentForm from 'components/AgentForm';
 import Spinner from 'components/Spinner';
+import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-import * as API from '../../../api';
-import AgentForm from '../../../components/AgentForm';
 import { useAccountContext } from '../../../context/account';
 
 export default function AddAgent(props) {
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { teamName } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug, agentId } = router.query;
-	const [state, dispatch] = useState(props);
-	const [cloneState, setCloneState] = useState(null);
+	const { resourceSlug } = router.query;
+	const [state, dispatch] = useState<AgentsDataReturnType>(props);
+	const [cloneState, setCloneState] = useState<AgentDataReturnType>(null);
 	const [error, setError] = useState();
 	const [loading, setLoading] = useState(true);
-	const { agents, models, tools, variables } = state;
+	const { models, tools, variables } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -40,7 +40,7 @@ export default function AddAgent(props) {
 
 	useEffect(() => {
 		setLoading(false);
-	}, [state?.agents, cloneState?.agents]);
+	}, [state?.agents, cloneState?.agent]);
 
 	if (loading) {
 		return <Spinner />;

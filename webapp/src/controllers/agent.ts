@@ -58,6 +58,8 @@ export async function agentAddPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/agent/add`);
 }
 
+export type AgentDataReturnType = Awaited<ReturnType<typeof agentData>>;
+
 export async function agentData(req, res, _next) {
 	const [agent, models, tools] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
