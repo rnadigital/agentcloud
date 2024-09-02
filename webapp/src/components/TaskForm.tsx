@@ -24,6 +24,7 @@ import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+import { log } from 'console';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -310,7 +311,7 @@ export default function TaskForm({
 	return (
 		<>
 			{modal}
-			<form onSubmit={taskPost}>
+			<form onSubmit={e => taskPost(e)}>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className={`space-y-${compact ? '6' : '12'}`}>
 					<div className='grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-3'>
