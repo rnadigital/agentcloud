@@ -127,32 +127,40 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	const [selectedVariables, setSelectedVariables] = useState<{ label: string; value: string }[]>(
-		[]
-	);
-	console.log(selectedVariables);
+	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<
+		{ label: string; value: string }[]
+	>([]);
+	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] = useState<
+		{ label: string; value: string }[]
+	>([]);
 
-	const variableOptions = variables
+	const descriptionVariableOptions = variables
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !selectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !descriptionSelectedVariables.some(sv => sv.value === v.value));
+
+	const expectedOutputVariableOptions = variables
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !expectedOutputSelectedVariables.some(sv => sv.value === v.value));
 
 	const [description, setDescription] = useState(task?.description || '');
 	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
 
 	const autocompleteDescription = useAutocompleteDropdown({
 		value: description,
-		options: variableOptions,
+		options: descriptionVariableOptions,
 		setValue: setDescription,
-		setSelectedVariables,
-		setCreateVariableModalOpen
+		setSelectedVariables: setDescriptionSelectedVariables,
+		setCreateVariableModalOpen,
+		initialState: variables
 	});
 
 	const autocompleteExpectedOutput = useAutocompleteDropdown({
 		value: expectedOutput,
-		options: variableOptions,
+		options: expectedOutputVariableOptions,
 		setValue: setExpectedOutput,
-		setSelectedVariables,
-		setCreateVariableModalOpen
+		setSelectedVariables: setExpectedOutputSelectedVariables,
+		setCreateVariableModalOpen,
+		initialState: variables
 	});
 
 	async function createDatasourceCallback(createdDatasource) {
@@ -180,7 +188,14 @@ export default function TaskForm({
 			storeTaskOutput: e.target.storeTaskOutput.checked,
 			taskOutputFileName: e.target.taskOutputFileName?.value,
 			isStructuredOutput,
-			variableIds: selectedVariables.map(variable => variable.value) || []
+			variableIds:
+				Array.from(
+					new Set(
+						[...descriptionSelectedVariables, ...expectedOutputSelectedVariables].map(
+							variable => variable.value
+						)
+					)
+				) || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {

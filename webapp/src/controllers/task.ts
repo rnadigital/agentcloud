@@ -327,7 +327,8 @@ export async function editTaskApi(req, res, next) {
 		taskOutputFileName,
 		formFields,
 		isStructuredOutput,
-		displayOnlyFinalOutput
+		displayOnlyFinalOutput,
+		variableIds
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -360,7 +361,8 @@ export async function editTaskApi(req, res, next) {
 		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		variableIds: variableIds ? variableIds.map(toObjectId) : []
 	});
 
 	return dynamicResponse(req, res, 302, {

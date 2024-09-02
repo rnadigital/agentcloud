@@ -1,3 +1,4 @@
+import { TasksDataReturnType } from 'controllers/task';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 interface UseAutocompleteDropdownProps {
@@ -6,6 +7,7 @@ interface UseAutocompleteDropdownProps {
 	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
 	setCreateVariableModalOpen: Dispatch<SetStateAction<boolean>>;
+	initialState?: TasksDataReturnType['variables'];
 }
 
 interface DropdownPosition {
@@ -18,7 +20,8 @@ const useAutocompleteDropdown = ({
 	value,
 	setValue,
 	setSelectedVariables,
-	setCreateVariableModalOpen
+	setCreateVariableModalOpen,
+	initialState
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
@@ -37,6 +40,20 @@ const useAutocompleteDropdown = ({
 			setHighlightedIndex(0);
 		}
 	}, [filteredOptions.length, highlightedIndex, showDropdown]);
+
+	useEffect(() => {
+		if (initialState) {
+			const selectedFromInitialState = initialState.filter(variable =>
+				value.includes(`{${variable.name}}`)
+			);
+			setSelectedVariables(
+				selectedFromInitialState.map(variable => ({
+					label: variable.name,
+					value: variable._id.toString()
+				}))
+			);
+		}
+	}, [initialState, value, setSelectedVariables]);
 
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
 		setValue(prevValue => `${prevValue}${newVariable.label}}`);
