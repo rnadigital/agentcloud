@@ -71,7 +71,7 @@ export function getChatMessageAfterId(
 		.find({
 			sessionId: toObjectId(sessionId),
 			teamId: toObjectId(teamId),
-			_id: {$gt : chatId }
+			_id: { $gt: chatId }
 		})
 		.toArray();
 }
