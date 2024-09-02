@@ -9,6 +9,7 @@ import ModelSelect from 'components/models/ModelSelect';
 import Spinner from 'components/Spinner';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
+import { AgentsDataReturnType } from 'controllers/agent';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -21,6 +22,7 @@ export default function AgentForm({
 	agent = {},
 	models = [],
 	tools = [],
+	variables = [],
 	groups = [],
 	editing,
 	compact = false,
@@ -28,8 +30,9 @@ export default function AgentForm({
 	fetchAgentFormData
 }: {
 	agent?: any;
-	models?: any[];
-	tools?: any[];
+	models?: AgentsDataReturnType['models'];
+	tools?: AgentsDataReturnType['tools'];
+	variables?: AgentsDataReturnType['variables'];
 	groups?: any[];
 	editing?: boolean;
 	compact?: boolean;

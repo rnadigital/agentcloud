@@ -7,20 +7,25 @@ import { removeAgentFromCrews } from 'db/crew';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById, getToolsByTeam } from 'db/tool';
+import { getVariablesByTeam } from 'db/variable';
 import toObjectId from 'lib/misc/toobjectid';
 import { chainValidations } from 'lib/utils/validationutils';
 
+export type AgentsDataReturnType = Awaited<ReturnType<typeof agentsData>>;
+
 export async function agentsData(req, res, _next) {
-	const [agents, models, tools] = await Promise.all([
+	const [agents, models, tools, variables] = await Promise.all([
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
 		models,
-		tools
+		tools,
+		variables
 	};
 }
 

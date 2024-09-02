@@ -17,7 +17,7 @@ export default function AddAgent(props) {
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const [loading, setLoading] = useState(true);
-	const { agents, models, tools } = state;
+	const { agents, models, tools, variables } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -51,7 +51,7 @@ export default function AddAgent(props) {
 			<Head>
 				<title>{`New Agent - ${teamName}`}</title>
 			</Head>
-
+			{console.log(variables)}
 			<span className='sm:w-full md:w-1/2 xl:w-1/3'>
 				<AgentForm
 					models={models}
@@ -59,6 +59,7 @@ export default function AddAgent(props) {
 					fetchAgentFormData={fetchAgentFormData}
 					agent={cloneState?.agent}
 					editing={false}
+					variables={variables}
 				/>
 			</span>
 		</>
