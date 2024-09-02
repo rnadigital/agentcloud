@@ -257,10 +257,10 @@ export default function TaskForm({
 	}, [preferredAgent?.toolIds]);
 
 	useEffect(() => {
-		if (!expectedOutput && isStructuredOutput) {
+		if (!expectedOutput && isStructuredOutput === true) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (expectedOutput === jsonPlaceholder && !isStructuredOutput) {
+		if (expectedOutput === jsonPlaceholder && isStructuredOutput === false) {
 			setExpectedOutput('');
 		}
 	}, [expectedOutput, isStructuredOutput]);
