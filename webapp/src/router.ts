@@ -42,6 +42,7 @@ import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
+import * as apiKeyController from 'controllers/apikey';
 import * as appController from 'controllers/app';
 import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
@@ -251,7 +252,19 @@ export default function router(server, app) {
 		accountController.updateRole
 	);
 
+	
+	//ApiKey Endpoints
+	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
+	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
+	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
+	
 	server.use('/forms/account', accountRouter);
+	server.get('/apikey/add',authedMiddlewareChain ,apiKeyController.keyAddPage.bind(null, app));
+
+	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
+	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
+
+
 
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
 	publicAppRouter.get(
@@ -354,6 +367,10 @@ export default function router(server, app) {
 		taskController.taskAddPage.bind(null, app)
 	);
 	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
+	teamRouter.post(
+		'/task/get-by-name',
+		taskController.taskByName
+	);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TASK),

@@ -20,7 +20,7 @@ import {
 	unsafeGetSessionById
 } from 'db/session';
 import toObjectId from 'misc/toobjectid';
-import { taskQueue } from 'queue/bull';
+import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
@@ -238,10 +238,14 @@ export async function addSessionApi(req, res, next) {
 	});
 
 	if (!skipRun) {
-		taskQueue.add('execute_rag', {
-			type: app?.type,
-			sessionId: addedSession.insertedId.toString()
-		});
+		sessionTaskQueue.add(
+			'execute_rag',
+			{
+				type: app?.type,
+				sessionId: addedSession.insertedId.toString()
+			},
+			{ removeOnComplete: true, removeOnFail: true }
+		);
 	}
 
 	return dynamicResponse(req, res, 302, {

@@ -16,7 +16,7 @@ class Process(str, Enum):
 
 
 class ToolType(str, Enum):
-    API_TOOL = "api"
+    BUILTIN_TOOL = "builtin"
     HOSTED_FUNCTION_TOOL = "function",
     RAG_TOOL = "rag",
 
@@ -27,6 +27,7 @@ class Platforms(str, Enum):
     FastEmbed = "fastembed"
     Ollama = "ollama"
     GoogleVertex = "google_vertex"
+    GoogleAI = "google_ai"
     Cohere = "cohere"
     Anthropic = "anthropic"
     Groq = "groq"
@@ -45,6 +46,8 @@ class ModelVariant(str, Enum):
     Sonnet = "claude-3-sonnet-20240229"
     Haiku = "claude-3-haiku-20240307"
     LLaMA3_70b = "llama3-70b-8192"
+    LLaMA3_70b_Tool_Use = "llama3-groq-70b-8192-tool-use-preview"
+    LLaMA3_8b_Tool_Use = "llama3-groq-8b-8192-tool-use-preview"
     Mixtral_8x7b = "mixtral-8x7b-32768"
     Llama3_Groq_8b_Tool_Use = "llama3-groq-tool-use"
     Llama3_Groq_70b_Tool_Use = "llama3-groq-tool-use:70b"
@@ -59,6 +62,7 @@ class FastEmbedModelsStandardFormat(str, Enum):
     FAST_ALL_MINILM_L6_V2 = 'fast-all-MiniLM-L6-v2'
     FAST_MULTILINGUAL_E5_LARGE = 'fast-multilingual-e5-large'
 
+
 class FastEmbedModelsDocFormat(str, Enum):
     FAST_BGE_SMALL_EN = "BAAI/bge-small-en"
     FAST_BGE_SMALL_EN_V15 = "BAAI/bge-small-en-v1.5"
@@ -66,6 +70,7 @@ class FastEmbedModelsDocFormat(str, Enum):
     FAST_BGE_BASE_EN_V15 = "BAAI/bge-base-en-v1.5"
     FAST_ALL_MINILM_L6_V2 = "sentence-transformers/all-MiniLM-L6-v2"
     FAST_MULTILINGUAL_E5_LARGE = "intfloat/multilingual-e5-large"
+
 
 # Models
 class FunctionProperty(BaseModel):
@@ -83,7 +88,7 @@ class ToolParameters(BaseModel):
 
 class ToolData(BaseModel):
     name: str
-    code: Optional[str] = None
+    code: Optional[str] = ''
     description: Optional[str] = None
     parameters: Optional[ToolParameters] = None
     apiKey: Optional[str] = None
@@ -91,14 +96,16 @@ class ToolData(BaseModel):
 
 
 class Retriever(str, Enum):
-    RAW = "raw" # no structured query formatting
+    RAW = "raw"  # no structured query formatting
     SELF_QUERY = "self_query"
     TIME_WEIGHTED = "time_weighted"
     MULTI_QUERY = "multi_query"
 
 
-#TODO: figure out integer vs float vs number
+# TODO: figure out integer vs float vs number
 AllowedLiterals = Literal['string', 'integer', 'float', 'number', 'null']
+
+
 class MetadataFieldInfo(BaseModel):
     name: str
     description: Optional[str] = ""
@@ -120,16 +127,18 @@ class TimeWeightedRetrieverConfig(BaseModel):
 class CombinedRetrieverConfig(SelfQueryRetrieverConfig, TimeWeightedRetrieverConfig):
     pass
 
+
 class ToolState(str, Enum):
-	PENDING = 'pending'
-	READY = 'ready'
-	ERROR = 'error'
+    PENDING = 'pending'
+    READY = 'ready'
+    ERROR = 'error'
+
 
 class Tool(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
     functionId: Optional[str] = None
-    state: Optional[ToolState] = None 
+    state: Optional[ToolState] = None
     name: str
     description: Optional[str] = None
     type: Optional[str] = "function"
@@ -137,6 +146,8 @@ class Tool(BaseModel):
     data: Optional[ToolData] = None
     retriever_type: Optional[Retriever] = Retriever.SELF_QUERY
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
+    linkedToolId: Optional[PyObjectId] = None
+    parameters: Optional[Dict[str, str]] = {}
 
 
 class ApiCredentials(BaseModel):
@@ -215,13 +226,14 @@ class Task(BaseModel):
     callback: Optional[Callable] = None
     requiresHumanInput: bool = False
     displayOnlyFinalOutput: bool = False
+    storeTaskOutput: bool = False
+    taskOutputFileName: Optional[str] = ''
     isStructuredOutput: Optional[bool] = False
 
 
 class Agent(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     model_config = ConfigDict(extra='ignore')
-    """Data model for Autogen Agent Config"""
     name: str
     role: str
     goal: str
@@ -299,4 +311,3 @@ class App(BaseModel):
     appType: Optional[AppType] = Field(default=None)
     crewId: Optional[PyObjectId] = Field(default=None)
     chatAppConfig: Optional[ChatAppConfig] = None
-

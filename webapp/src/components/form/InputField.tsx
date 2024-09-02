@@ -58,7 +58,7 @@ const InputField = <TFieldValues extends FieldValues>({
 								disabled={disabled}
 								placeholder={placeholder}
 								className={clsx(
-									'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm',
+									'bg-white dark:bg-gray-700 rounded-lg border focus:ring-indigo-600 border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm',
 									type === 'checkbox' &&
 										'h-4 rounded-none cursor-pointer dark:checked:bg-indigo-600 dark:text-white focus:text-indigo-600'
 								)}

@@ -8,7 +8,8 @@ export enum ModelType {
 	// COHERE = 'cohere',
 	ANTHROPIC = 'anthropic',
 	GROQ = 'groq',
-	GOOGLE_VERTEX = 'google_vertex'
+	GOOGLE_VERTEX = 'google_vertex',
+	GOOGLE_AI = 'google_ai'
 }
 
 export const modelOptions = [
@@ -32,6 +33,11 @@ export const modelOptions = [
 		value: ModelType.GOOGLE_VERTEX,
 		label: 'Google Vertex',
 		iconURL: '/images/onboarding/google-vertex.svg'
+	},
+	{
+		value: ModelType.GOOGLE_AI,
+		label: 'Google AI',
+		iconURL: '/images/onboarding/google-ai-studio.svg'
 	}
 ];
 
@@ -89,6 +95,9 @@ export const ModelTypeRequirements: Record<ModelType, ModelRequirements> = {
 			placeholder: 'us-central1'
 		},
 		project: { type: 'text', tooltip: 'GCP project name' }
+	},
+	[ModelType.GOOGLE_AI]: {
+		api_key: { type: 'text' }
 	}
 };
 
@@ -132,8 +141,14 @@ export const ModelList = {
 		'claude-3-opus-20240229',
 		'claude-3-haiku-20240307'
 	],
-	[ModelType.GROQ]: ['llama3-70b-8192', 'mixtral-8x7b-32768'],
+	[ModelType.GROQ]: [
+		'llama3-70b-8192',
+		'mixtral-8x7b-32768',
+		'llama3-groq-8b-8192-tool-use-preview',
+		'llama3-groq-70b-8192-tool-use-preview'
+	],
 	[ModelType.GOOGLE_VERTEX]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
+	[ModelType.GOOGLE_AI]: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
 	[ModelType.AZURE_OPENAI]: [
 		'gpt-4o-mini',
 		'gpt-4o',
@@ -219,6 +234,8 @@ export const ChatAppAllowedModels = new Set([
 	ModelType.OPENAI,
 	ModelType.ANTHROPIC,
 	ModelType.GOOGLE_VERTEX,
+	ModelType.GOOGLE_AI,
 	ModelType.AZURE_OPENAI,
-	ModelType.OLLAMA
+	ModelType.OLLAMA,
+	ModelType.GROQ
 ]);

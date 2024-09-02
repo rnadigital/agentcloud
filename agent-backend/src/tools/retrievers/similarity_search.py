@@ -16,4 +16,4 @@ class SimilaritySearchRetriever(BaseRetriever):
         embedded_question = self.embedding.embed_query(query)
         if isinstance(self.vector_store, Qdrant):
             return self.vector_store.similarity_search_with_score_by_vector(embedded_question, k=self.k)
-        return self.vector_store.similarity_search_by_vector(embedded_question, k=self.k)
+        return self.vector_store.similarity_search_by_vector_with_score(embedded_question, k=self.k)

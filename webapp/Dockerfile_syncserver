@@ -1,0 +1,42 @@
+# First Stage: Build
+FROM node:20 as builder
+
+WORKDIR /app
+
+# Copy package.json and package-lock.json for npm install
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy the rest of your application code
+COPY . .
+
+# ARGs for environment variables that need to be passed at build time
+ARG GOOGLE_KEYPATH
+ARG NEXT_PUBLIC_SECRET_PROVIDER
+ARG NEXT_PUBLIC_STORAGE_PROVIDER
+ARG GOOGLE_APPLICATION_CREDENTIALS
+
+# Set environment variables based on ARGs
+ENV NEXT_PUBLIC_SECRET_PROVIDER=$NEXT_PUBLIC_SECRET_PROVIDER
+ENV NEXT_PUBLIC_STORAGE_PROVIDER=$NEXT_PUBLIC_STORAGE_PROVIDER
+
+# Second Stage: Runtime
+FROM node:20
+
+WORKDIR /app
+
+# Set NODE_ENV environment variable
+ENV NODE_ENV production
+
+COPY --from=builder /app ./
+
+# Display the environment variables to verify
+RUN echo "NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY}"
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Command to run your app
+CMD ["npm", "run", "start:syncserver"]

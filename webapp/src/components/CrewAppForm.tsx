@@ -262,7 +262,8 @@ export default function CrewAppForm({
 						ModelType.OLLAMA,
 						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
-						ModelType.GOOGLE_VERTEX
+						ModelType.GOOGLE_VERTEX,
+						ModelType.GOOGLE_AI
 					]}
 				/>
 			);

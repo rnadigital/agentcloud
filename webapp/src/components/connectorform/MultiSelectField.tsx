@@ -1,5 +1,6 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
+import Spinner from 'components/Spinner';
 import { Controller, useFormContext } from 'react-hook-form';
 import Select from 'react-tailwindcss-select';
 import { Option } from 'react-tailwindcss-select/dist/components/type';
@@ -21,6 +22,7 @@ const MultiSelectField = ({
 }: MultiSelectFieldProps) => {
 	const { control, watch } = useFormContext();
 
+	console.log('MultiSelectField');
 	return (
 		<div>
 			<div className='flex items-center'>

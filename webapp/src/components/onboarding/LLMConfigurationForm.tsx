@@ -75,7 +75,6 @@ export default function LLMConfigurationForm() {
 	});
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
-	console.log(LLMType.iconURL);
 
 	const modelList =
 		[
@@ -127,9 +126,19 @@ export default function LLMConfigurationForm() {
 			return { name: `embeddedModelConfig.${key}`, label, placeholder };
 		});
 
+	/* If the vendor is the same, don't show the same fields twice */
+	const sameVendor = LLMType.value === embeddingType.value;
+
 	const { isTablet, isMobile } = useResponsive();
 
 	const onSubmit = async (data: LLMConfigurationFormValues) => {
+		if (sameVendor) {
+			// see earlier comment
+			data.embeddedModelConfig = {
+				...data.llmModelConfig,
+				model: data.embeddingModel.value
+			};
+		}
 		posthog.capture('configuremodels', {
 			llmModel: {
 				model: data.LLMModel.value,
@@ -151,8 +160,8 @@ export default function LLMConfigurationForm() {
 				model: data.LLMModel.value,
 				type: data.LLMType.value,
 				config: {
-					model: data.LLMModel.value,
-					...data.llmModelConfig
+					...data.llmModelConfig,
+					model: data.LLMModel.value
 				}
 			};
 
@@ -185,8 +194,8 @@ export default function LLMConfigurationForm() {
 				model: data.embeddingModel.value,
 				type: data.embeddingType.value,
 				config: {
-					model: data.embeddingModel.value,
-					...data.embeddedModelConfig
+					...data.embeddedModelConfig,
+					model: data.embeddingModel.value
 				}
 			};
 
@@ -450,24 +459,26 @@ export default function LLMConfigurationForm() {
 								</div>
 							))}
 					</div>
-					<div className='flex-1'>
-						{EmbeddingModelRequiredFields.length > 0 &&
-							EmbeddingModelRequiredFields.map(field => (
-								<div key={field.name}>
-									<InputField<LLMConfigurationFormValues>
-										name={field.name as keyof LLMConfigurationFormValues}
-										rules={{
-											required: embeddingModel?.value ? `${field.label} is required` : false
-										}}
-										label={field.label}
-										type='text'
-										control={control}
-										placeholder={field.placeholder}
-										disabled={!embeddingModel || !embeddingModel.value}
-									/>
-								</div>
-							))}
-					</div>
+					{!sameVendor && (
+						<div className='flex-1'>
+							{EmbeddingModelRequiredFields.length > 0 &&
+								EmbeddingModelRequiredFields.map(field => (
+									<div key={field.name}>
+										<InputField<LLMConfigurationFormValues>
+											name={field.name as keyof LLMConfigurationFormValues}
+											rules={{
+												required: embeddingModel?.value ? `${field.label} is required` : false
+											}}
+											label={field.label}
+											type='text'
+											control={control}
+											placeholder={field.placeholder}
+											disabled={!embeddingModel || !embeddingModel.value}
+										/>
+									</div>
+								))}
+						</div>
+					)}
 				</div>
 			)}
 

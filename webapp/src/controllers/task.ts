@@ -3,7 +3,14 @@
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
 import { getAssetById } from 'db/asset';
-import { addTask, deleteTaskById, getTaskById, getTasksByTeam, updateTask } from 'db/task';
+import {
+	addTask,
+	deleteTaskById,
+	getTaskById,
+	getTaskByName,
+	getTasksByTeam,
+	updateTask
+} from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
@@ -65,6 +72,17 @@ export async function taskJson(req, res, next) {
 	const data = await taskData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
+export async function taskByName(req, res, next) {
+	try {
+		const task = await getTaskByName(req.params.resourceSlug, req.body.taskName);
+		if (!task) {
+			return res.status(404).json({ error: 'Task not found' });
+		}
+		return res.json({ ...task });
+	} catch (error) {
+		return next(error);
+	}
+}
 
 /**
  * GET /[resourceSlug]/task/:taskId/edit
@@ -93,7 +111,6 @@ export async function addTaskApi(req, res, next) {
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'expectedOutput', validation: { ofType: 'string' } },
 			{
 				field: 'toolIds',
@@ -133,19 +150,46 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
+	}
+
 	const {
 		name,
 		description,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
 		agentId,
 		iconId,
 		context,
-		isStructuredOutput
+		storeTaskOutput,
+		taskOutputFileName,
+		formFields,
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
@@ -177,12 +221,15 @@ export async function addTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		icon: foundIcon
 			? {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
 			: null,
+		formFields: formFields,
 		isStructuredOutput
 	});
 
@@ -198,7 +245,6 @@ export async function editTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
-			{ field: 'displayOnlyFinalOutput', validation: { notEmpty: true, ofType: 'boolean' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
@@ -237,18 +283,45 @@ export async function editTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (req.body.requiresHumanInput && req.body.formFields && req.body.formFields.length > 0) {
+		for (const field of req.body.formFields) {
+			if (!field.position || !field.type || !field.name || !field.label) {
+				return dynamicResponse(req, res, 400, {
+					error: 'Each human input field must have position, type, name, and label'
+				});
+			}
+			if (['radio', 'checkbox', 'select'].includes(field.type)) {
+				if (
+					!field.options ||
+					field.options.length === 0 ||
+					field.options.some(option => option === '')
+				) {
+					return dynamicResponse(req, res, 400, {
+						error:
+							'Human input field of type radio, checkbox, or select must have non-empty options'
+					});
+				}
+			}
+		}
+	}
+
 	const {
 		name,
 		requiresHumanInput,
-		displayOnlyFinalOutput,
 		description,
 		expectedOutput,
 		toolIds,
 		asyncExecution,
 		agentId,
 		context,
-		isStructuredOutput
+		storeTaskOutput,
+		taskOutputFileName,
+		formFields,
+		isStructuredOutput,
+		displayOnlyFinalOutput
 	} = req.body;
+
+	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
@@ -265,7 +338,6 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -275,7 +347,10 @@ export async function editTaskApi(req, res, next) {
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
+		storeTaskOutput: storeTaskOutput === true,
+		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
+		formFields,
 		isStructuredOutput
 	});
 

@@ -2,9 +2,15 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Fragment, useRef, useState } from 'react';
 
-export default function DeleteModal({ open, title, message, confirmFunction, cancelFunction }) {
+export default function DeleteModal({
+	open,
+	title,
+	message,
+	confirmFunction,
+	cancelFunction,
+	buttonText = 'Delete'
+}) {
 	const cancelButtonRef = useRef(null);
-
 	return (
 		<Transition show={open} as={Fragment}>
 			<Dialog
@@ -59,7 +65,7 @@ export default function DeleteModal({ open, title, message, confirmFunction, can
 										className='inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto'
 										onClick={() => confirmFunction()}
 									>
-										Delete
+										{buttonText}
 									</button>
 									<button
 										type='button'

@@ -27,7 +27,7 @@ export function getDatasourceById(
 	});
 }
 
-export function getDatasourceByIdUnsafe(datasourceId: db.IdOrStr): Promise<Datasource> {
+export function unsafeGetDatasourceById(datasourceId: db.IdOrStr): Promise<Datasource> {
 	return DatasourceCollection().findOne({
 		_id: toObjectId(datasourceId)
 	});
@@ -182,4 +182,8 @@ export function deleteDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrSt
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId)
 	});
+}
+
+export function getAllDatasources(filter = {}) {
+	return DatasourceCollection().find(filter).toArray();
 }
