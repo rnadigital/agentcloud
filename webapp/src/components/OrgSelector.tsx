@@ -22,7 +22,7 @@ export default function OrgSelector({ orgs }) {
 	const team = account?.teams;
 	useEffect(() => {
 		const matchingOrg = account?.orgs?.find(o => o.teams.some(t => t.id === resourceSlug));
-		const team = matchingOrg.teams.find(t => t.id === resourceSlug);
+		const team = matchingOrg?.teams?.find(t => t.id === resourceSlug);
 		setTeamName(team?.name || _teamName);
 	}, [router?.query?.resourceSlug, account?.currentTeam]);
 	const [_state, dispatch] = useState();
