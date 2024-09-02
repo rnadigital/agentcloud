@@ -245,6 +245,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(
 		req.body?.blocks || []
 	);
+	const noDataToSync = recordsLoaded === 0;
 	if (jobId && datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
 		if (datasource) {
@@ -267,7 +268,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 				seen: false,
 				// stuff specific to notification type
 				description:
-					datasource?.sourceType === 'file'
+					datasource?.sourceType === 'file' || noDataToSync
 						? `Your sync for datasource "${datasource.name}" has completed.`
 						: `Embedding is in progress for datasource "${datasource.name}".`,
 				type: NotificationType.Webhook,
@@ -278,7 +279,11 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			await Promise.all([
 				addNotification(notification),
 				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
-				setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.EMBEDDING),
+				setDatasourceStatus(
+					datasource.teamId,
+					datasourceId,
+					noDataToSync ? DatasourceStatus.READY : DatasourceStatus.EMBEDDING
+				),
 				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded)
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);

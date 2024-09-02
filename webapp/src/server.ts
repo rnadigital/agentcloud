@@ -27,6 +27,7 @@ const dev = process.env.NODE_ENV !== 'production',
 
 import { dynamicResponse } from '@dr';
 import PassportManager from '@mw/passportmanager';
+import { initSocket } from '@socketio';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
@@ -39,9 +40,8 @@ import * as redis from 'lib/redis/redis';
 import SecretProviderFactory from 'lib/secret';
 import StorageProviderFactory from 'lib/storage';
 import StripeClient from 'lib/stripe';
+import { resyncAllDatasources } from 'utils/resync';
 import { v4 as uuidv4 } from 'uuid';
-
-import getAirbyteInternalApi from './lib/airbyte/internal';
 import { initSocket } from './socketio';
 const log = debug('webapp:server');
 
@@ -63,6 +63,7 @@ app
 		await initGlobalTools();
 		await ses.init();
 		await PassportManager.init();
+		await resyncAllDatasources();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);

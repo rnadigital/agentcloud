@@ -2,7 +2,7 @@ import os
 import logging
 from pathlib import Path
 import shutil
-from src.init.env_variables import UPLOADS_BASE_PATH
+from init.env_variables import UPLOADS_BASE_PATH
 
 from storage.provider import StorageProvider
 
@@ -44,7 +44,7 @@ class LocalStorageProvider(StorageProvider):
                 log.error(f"Failed to delete file: {e.message}")
                 raise e
             
-    def download_file(self, filename, file_folder):
+    def get_signed_url(self, filename, file_folder):
         return "Downloading file not implemented in local storage provider"
 
 local_storage_provider = LocalStorageProvider()

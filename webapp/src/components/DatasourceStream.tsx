@@ -306,7 +306,7 @@ export function StreamRow({
 													disabled={sourceDefinedCursorField || readonly || !canSelectCursors}
 													defaultChecked={streamState?.checkedChildren?.includes(key)}
 													checked={cursorField.includes(key)}
-													required={cursorField?.length === 0}
+													required={isExpanded && cursorField?.length === 0}
 												/>
 											</td>
 										)}
