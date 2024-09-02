@@ -1,6 +1,8 @@
 import datetime
 from google.cloud import storage
+from google.oauth2 import service_account
 import os
+import json
 import logging
 from pathlib import Path
 from init.env_variables import GCS_BUCKET_NAME, GCS_BUCKET_NAME_PRIVATE, PROJECT_ID
@@ -12,8 +14,16 @@ log = logging.getLogger('storage.google')
 
 class GoogleStorageProvider(StorageProvider):
     def __init__(self):
-        options = {'project': PROJECT_ID}
-        self.storage_client = storage.Client(**options)
+        # Load the credentials JSON from the environment variable
+        credentials_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+        if credentials_json:
+            credentials_info = json.loads(credentials_json)
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
+            # Initialize the storage client with the credentials
+            self.storage_client = storage.Client(credentials=credentials, project=PROJECT_ID)
+        else:
+            logging.warn('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set.')
+            self.storage_client = storage.Client(project=PROJECT_ID)
 
     async def init(self):
         pass

@@ -166,7 +166,7 @@ class CrewAIBuilder:
             buffer.seek(0)  # Rewind the buffer to the beginning
 
             # Upload the in-memory buffer directly to the storage provider
-            storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, session_id, is_public=True)
+            storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, session_id, is_public=False)
 
             # Insert the output metadata into MongoDB
             mongo_client.insert_model("taskoutputs", {
@@ -176,7 +176,7 @@ class CrewAIBuilder:
             })
 
             # Get the signed URL for downloading the file
-            signed_url = storage_provider.download_file(task.taskOutputFileName, session_id, is_public=True)
+            signed_url = storage_provider.get_signed_url(task.taskOutputFileName, session_id, is_public=False)
 
             # Send the notification to the sockets
             self.send_to_sockets(
