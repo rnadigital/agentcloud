@@ -62,6 +62,20 @@ export function getChatMessagesBySession(
 		.toArray();
 }
 
+export function getChatMessageAfterId(
+	teamId: db.IdOrStr,
+	sessionId: db.IdOrStr,
+	chatId: db.IdOrStr
+): Promise<ChatMessage[]> {
+	return ChatCollection()
+		.find({
+			sessionId: toObjectId(sessionId),
+			teamId: toObjectId(teamId),
+			_id: {$gt : chatId }
+		})
+		.toArray();
+}
+
 export function unsafeGetChatMessagesBySession(sessionId: db.IdOrStr): Promise<ChatMessage[]> {
 	return ChatCollection()
 		.find({
