@@ -79,7 +79,7 @@ class GoogleStorageProvider(StorageProvider):
         blob = bucket.blob(f"{file_folder}/{filename}")
         blob.delete()
         
-    def download_file(self, filename, file_folder, is_public=False):
+    def get_signed_url(self, filename, file_folder, is_public=False):
         log.debug('Downloading file %s', filename)
         bucket_name = GCS_BUCKET_NAME if is_public else GCS_BUCKET_NAME_PRIVATE
         bucket = self.storage_client.bucket(bucket_name)
