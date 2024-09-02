@@ -147,6 +147,14 @@ export default function TaskForm({
 		setCreateVariableModalOpen
 	});
 
+	const autocompleteExpectedOutput = useAutocompleteDropdown({
+		value: expectedOutput,
+		options: variableOptions,
+		setValue: setExpectedOutput,
+		setSelectedVariables,
+		setCreateVariableModalOpen
+	});
+
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
@@ -436,16 +444,27 @@ export default function TaskForm({
 								</>
 							) : (
 								<textarea
+									ref={autocompleteExpectedOutput.inputRef}
 									id='expectedOutput'
 									name='expectedOutput'
 									placeholder='Clear and detailed definition of expected output for the task.'
 									rows={4}
 									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									defaultValue={taskState?.expectedOutput}
-									value={expectedOutput}
-									onChange={e => setExpectedOutput(e.target.value)}
+									value={autocompleteExpectedOutput.text}
+									onChange={autocompleteExpectedOutput.handleChange}
+									onKeyDown={autocompleteExpectedOutput.handleKeyDown}
 								/>
 							)}
+							{autocompleteExpectedOutput.showDropdown &&
+								autocompleteExpectedOutput.filteredOptions.length > 0 && (
+									<AutocompleteDropdown
+										options={autocompleteExpectedOutput.filteredOptions}
+										highlightedIndex={autocompleteExpectedOutput.highlightedIndex}
+										dropdownPosition={autocompleteExpectedOutput.dropdownPosition}
+										handleOptionSelect={autocompleteExpectedOutput.handleOptionSelect}
+									/>
+								)}
 						</div>
 
 						<div className='sm:col-span-full'>
