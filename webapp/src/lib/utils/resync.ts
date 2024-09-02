@@ -18,7 +18,11 @@ export async function resyncAllDatasources() {
 	log('resyncing all datasources...');
 
 	// Fetch all datasources in the system
-	const allDatasources = await getAllDatasources(); // You'll need to implement this function to fetch all datasources.
+	const allDatasources = await getAllDatasources({
+        connectionId: {
+            $ne: null
+        }
+    });
 
 	for (const datasource of allDatasources) {
 		// Fetch the organization by orgId

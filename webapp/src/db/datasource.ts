@@ -184,6 +184,6 @@ export function deleteDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrSt
 	});
 }
 
-export function getAllDatasources() {
-	return DatasourceCollection().find().toArray();
+export function getAllDatasources(filter = {}) {
+	return DatasourceCollection().find(filter).toArray();
 }
