@@ -33,13 +33,19 @@ export default function AddTask(props) {
 	useEffect(() => {
 		if (typeof location != undefined) {
 			const taskId = new URLSearchParams(location.search).get('taskId');
-			fetchEditData(taskId);
+			if (taskId) {
+				fetchEditData(taskId);
+			} else {
+				setLoading(false);
+			}
 		}
 	}, []);
 
 	useEffect(() => {
-		setLoading(false);
-	}, [cloneState?.tasks, state?.tasks]);
+		if (cloneState != null) {
+			setLoading(false);
+		}
+	}, [cloneState]);
 
 	if (loading) {
 		return <Spinner />;

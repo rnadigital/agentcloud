@@ -11,5 +11,5 @@ class StorageProvider:
     def delete_file(self, filename, file_folder, is_public=False):
         raise NotImplementedError('delete_file method not implemented')
     
-    def download_file(self, filename, file_folder, is_public=False):
+    def get_signed_url(self, filename, file_folder, is_public=False):
         raise NotImplementedError('download_file method not implemented')

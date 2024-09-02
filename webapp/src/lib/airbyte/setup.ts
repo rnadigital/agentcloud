@@ -34,6 +34,11 @@ async function fetchInstanceConfiguration() {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration`, {
 		headers: { Authorization: authorizationHeader }
 	});
+	if (!response || response.status !== 200) {
+		log('Unable to fetch airbyte instance configuration, waiting & restarting...');
+		await new Promise(res => setTimeout(res, 60000));
+		process.exit(1);
+	}
 	return response.json();
 }
 
