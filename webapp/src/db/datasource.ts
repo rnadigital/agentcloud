@@ -183,3 +183,7 @@ export function deleteDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrSt
 		teamId: toObjectId(teamId)
 	});
 }
+
+export function getAllDatasources(filter = {}) {
+	return DatasourceCollection().find(filter).toArray();
+}
