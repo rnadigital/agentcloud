@@ -50,7 +50,7 @@ export async function resyncAllDatasources() {
 
 		const mockRes = {
 			locals: {
-				subscription: account.stripe, // Assuming stripe plan is stored under the account's stripe field
+				subscription: account.stripe,
 				matchingOrg: org,
 				account: account
 			}
