@@ -179,7 +179,8 @@ export default function TaskForm({
 			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
 			storeTaskOutput: e.target.storeTaskOutput.checked,
 			taskOutputFileName: e.target.taskOutputFileName?.value,
-			isStructuredOutput
+			isStructuredOutput,
+			variableIds: selectedVariables.map(variable => variable.value) || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
