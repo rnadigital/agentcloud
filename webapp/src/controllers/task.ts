@@ -54,18 +54,20 @@ export async function tasksJson(req, res, next) {
 }
 
 export async function taskData(req, res, _next) {
-	const [task, tools, agents, tasks] = await Promise.all([
+	const [task, tools, agents, tasks, variables] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
-		getTasksByTeam(req.params.resourceSlug)
+		getTasksByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		task,
 		tasks,
-		agents
+		agents,
+		variables
 	};
 }
 
