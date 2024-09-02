@@ -6,6 +6,7 @@ import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
+import { log } from 'console';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import Link from 'next/link';
@@ -24,7 +25,6 @@ import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
-import { log } from 'console';
 
 const jsonPlaceholder = `{
 	"schema": {
