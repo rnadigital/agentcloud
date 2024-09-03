@@ -132,7 +132,7 @@ const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProp
 			<button
 				disabled={submitting}
 				type='submit'
-				className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+				className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-3'
 			>
 				{submitting && <ButtonSpinner />}
 				{submitting ? 'Testing connection...' : 'Submit'}

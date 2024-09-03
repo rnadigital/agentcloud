@@ -133,7 +133,6 @@ export async function testDatasourceApi(req, res, next) {
 			{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
 		],
 		{
 			datasourceName: 'Name',
@@ -307,8 +306,7 @@ export async function testDatasourceApi(req, res, next) {
 		discoveredSchema,
 		createdDate: new Date(),
 		status: DatasourceStatus.DRAFT,
-		recordCount: { total: 0 },
-		timeUnit: timeUnit
+		recordCount: { total: 0 }
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -331,7 +329,8 @@ export async function addDatasourceApi(req, res, next) {
 		retriever,
 		streamConfig,
 		retriever_config,
-		timeUnit
+		timeUnit,
+		chunkingConfig,
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -431,7 +430,8 @@ export async function addDatasourceApi(req, res, next) {
 		connectionSettings: connectionBody,
 		modelId: toObjectId(modelId),
 		embeddingField,
-		streamConfig
+		streamConfig,
+		chunkingConfig, //TODO: validation
 	});
 
 	// Create the collection in qdrant

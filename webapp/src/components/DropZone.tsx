@@ -15,6 +15,7 @@ import { pricingMatrix, SubscriptionPlan } from 'struct/billing';
 import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import submittingReducer from 'utils/submittingreducer';
+import { defaultChunkingOptions } from '../lib/misc/defaultchunkingoptions';
 
 export default function DropZone({
 	modalOpen,
@@ -47,15 +48,7 @@ export default function DropZone({
 	const { resourceSlug } = router.query;
 	const maxSize = pricingMatrix[stripePlan]?.maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
-	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
-		partitioning: 'auto',
-		strategy: 'basic',
-		max_characters: 500,
-		new_after_n_chars: null, // Defaults to max_characters unless changed
-		overlap: 0,
-		similarity_threshold: 0.5,
-		overlap_all: false
-	});
+	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, { ...defaultChunkingOptions });
 	const cancelButtonRef = useRef(null);
 
 	const uploadFiles = async e => {
