@@ -10,6 +10,7 @@ import Spinner from 'components/Spinner';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
+import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -17,6 +18,8 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
+
+import AutocompleteDropdown from './variables/VariableDropdown';
 
 export default function AgentForm({
 	agent,
@@ -50,8 +53,66 @@ export default function AgentForm({
 	const [verbose, setVerbose] = useState(agent?.verbose);
 	const [icon, setIcon] = useState(agent?.icon);
 	const [agentState, setAgent] = useState<Partial<AgentDataReturnType['agent']>>(agent || {});
-	const { name, modelId, functionModelId, role, goal, backstory } = agentState;
+	const name = agentState?.name;
+	const modelId = agentState?.modelId;
+	const functionModelId = agentState?.functionModelId;
 	const posthog = usePostHog();
+
+	const [backstory, setBackstory] = useState(agent?.backstory || '');
+	const [goal, setGoal] = useState(agent?.goal || '');
+	const [role, setRole] = useState(agent?.role || '');
+	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
+
+	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<
+		{ label: string; value: string }[]
+	>([]);
+
+	const [goalSelectedVariables, setGoalSelectedVariables] = useState<
+		{ label: string; value: string }[]
+	>([]);
+
+	const [roleSelectedVariables, setRoleSelectedVariables] = useState<
+		{ label: string; value: string }[]
+	>([]);
+
+	const backstoryVariableOptions = variables
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !backstorySelectedVariables.some(sv => sv.value === v.value));
+
+	const goalVariableOptions = variables
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !goalSelectedVariables.some(sv => sv.value === v.value));
+
+	const roleVariableOptions = variables
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !roleSelectedVariables.some(sv => sv.value === v.value));
+
+	const autocompleteBackstory = useAutocompleteDropdown({
+		value: backstory,
+		options: backstoryVariableOptions,
+		setValue: setBackstory,
+		setSelectedVariables: setBackstorySelectedVariables,
+		setCreateVariableModalOpen,
+		initialState: variables
+	});
+
+	const autocompleteGoal = useAutocompleteDropdown({
+		value: goal,
+		options: goalVariableOptions,
+		setValue: setGoal,
+		setSelectedVariables: setGoalSelectedVariables,
+		setCreateVariableModalOpen,
+		initialState: variables
+	});
+
+	const autocompleteRole = useAutocompleteDropdown({
+		value: role,
+		options: roleVariableOptions,
+		setValue: setRole,
+		setSelectedVariables: setRoleSelectedVariables,
+		setCreateVariableModalOpen,
+		initialState: variables
+	});
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
@@ -278,7 +339,7 @@ export default function AgentForm({
 						</div>
 					</div>
 
-					<div className='isolate space-y-px rounded-md shadow-sm'>
+					<div className='space-y-px rounded-md shadow-sm'>
 						<label
 							htmlFor='systemMessage'
 							className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50 mb-2'
@@ -293,6 +354,7 @@ export default function AgentForm({
 								Role
 							</label>
 							<textarea
+								ref={autocompleteRole.inputRef}
 								required
 								id='role'
 								name='role'
@@ -300,7 +362,19 @@ export default function AgentForm({
 								className='relative block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={role}
 								rows={3}
+								value={autocompleteRole.text}
+								onChange={autocompleteRole.handleChange}
+								onKeyDown={autocompleteRole.handleKeyDown}
 							/>
+
+							{autocompleteRole.showDropdown && autocompleteRole.filteredOptions.length > 0 && (
+								<AutocompleteDropdown
+									options={autocompleteRole.filteredOptions}
+									highlightedIndex={autocompleteRole.highlightedIndex}
+									dropdownPosition={autocompleteRole.dropdownPosition}
+									handleOptionSelect={autocompleteRole.handleOptionSelect}
+								/>
+							)}
 						</div>
 						<div className='bg-white dark:bg-slate-800 relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<label
@@ -310,6 +384,7 @@ export default function AgentForm({
 								Goal
 							</label>
 							<textarea
+								ref={autocompleteGoal.inputRef}
 								required
 								id='goal'
 								name='goal'
@@ -317,9 +392,20 @@ export default function AgentForm({
 								className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={goal}
 								rows={2}
+								value={autocompleteGoal.text}
+								onChange={autocompleteGoal.handleChange}
+								onKeyDown={autocompleteGoal.handleKeyDown}
 							/>
+							{autocompleteGoal.showDropdown && autocompleteGoal.filteredOptions.length > 0 && (
+								<AutocompleteDropdown
+									options={autocompleteGoal.filteredOptions}
+									highlightedIndex={autocompleteGoal.highlightedIndex}
+									dropdownPosition={autocompleteGoal.dropdownPosition}
+									handleOptionSelect={autocompleteGoal.handleOptionSelect}
+								/>
+							)}
 						</div>
-						<div className='bg-white dark:bg-slate-800 relative overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+						<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 							<label
 								htmlFor='backstory'
 								className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -327,13 +413,27 @@ export default function AgentForm({
 								Backstory
 							</label>
 							<textarea
+								ref={autocompleteBackstory.inputRef}
 								required
 								id='backstory'
 								name='backstory'
 								placeholder="Provides context to the agent's role and goal, enriching the interaction and collaboration dynamics."
 								className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={backstory}
+								value={autocompleteBackstory.text}
+								onChange={autocompleteBackstory.handleChange}
+								onKeyDown={autocompleteBackstory.handleKeyDown}
 							/>
+
+							{autocompleteBackstory.showDropdown &&
+								autocompleteBackstory.filteredOptions.length > 0 && (
+									<AutocompleteDropdown
+										options={autocompleteBackstory.filteredOptions}
+										highlightedIndex={autocompleteBackstory.highlightedIndex}
+										dropdownPosition={autocompleteBackstory.dropdownPosition}
+										handleOptionSelect={autocompleteBackstory.handleOptionSelect}
+									/>
+								)}
 						</div>
 					</div>
 
