@@ -16,6 +16,8 @@ import { Retriever } from 'struct/tool';
 import formatSize from 'utils/formatsize';
 import submittingReducer from 'utils/submittingreducer';
 
+import { defaultChunkingOptions } from '../lib/misc/defaultchunkingoptions';
+
 export default function DropZone({
 	modalOpen,
 	children,
@@ -48,13 +50,7 @@ export default function DropZone({
 	const maxSize = pricingMatrix[stripePlan]?.maxFileUploadBytes;
 	const [loading, setLoading] = useState(false);
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
-		partitioning: 'auto',
-		strategy: 'basic',
-		max_characters: 500,
-		new_after_n_chars: null, // Defaults to max_characters unless changed
-		overlap: 0,
-		similarity_threshold: 0.5,
-		overlap_all: false
+		...defaultChunkingOptions
 	});
 	const cancelButtonRef = useRef(null);
 
@@ -171,10 +167,15 @@ export default function DropZone({
 						</li>
 					))}
 				{children}
-				<DatasourceChunkingForm
-					chunkingConfig={chunkingConfig}
-					setChunkingConfig={setChunkingConfig}
-				/>
+				<details>
+					<summary className='text-sm cursor-pointer ms-1 my-4 mb-5 dark:text-gray-50'>
+						Chunking options
+					</summary>
+					<DatasourceChunkingForm
+						chunkingConfig={chunkingConfig}
+						setChunkingConfig={setChunkingConfig}
+					/>
+				</details>
 				<button
 					disabled={
 						loading || !files || !modelId

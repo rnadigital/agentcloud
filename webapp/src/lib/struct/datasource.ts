@@ -122,6 +122,7 @@ export type UnstructuredChunkingConfig = {
 	overlap: number;
 	similarity_threshold: number; // between 0.0 and 1.0
 	overlap_all: boolean;
+	file_type?: 'txt' | 'markdown'; //Note: only used for connectors
 };
 
 export type Datasource = {
