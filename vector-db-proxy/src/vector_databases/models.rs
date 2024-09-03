@@ -259,7 +259,7 @@ impl From<&str> for Distance {
     fn from(value: &str) -> Self {
         match value {
             "cosine" => Distance::Cosine,
-            "euclidian" => Distance::Euclid,
+            "euclidean" => Distance::Euclid,
             "dotproduct" => Distance::Dot,
             "manhattan" => Distance::Manhattan,
             _ => Distance::UnknownDistance,
