@@ -190,7 +190,15 @@ export default function AgentForm({
 			toolIds: (toolState || [])
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
-			iconId: icon?.id
+			iconId: icon?.id,
+			variableIds:
+				Array.from(
+					new Set(
+						[...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables].map(
+							variable => variable.value
+						)
+					)
+				) || []
 		};
 		if (editing) {
 			await API.editAgent(

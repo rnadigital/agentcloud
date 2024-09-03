@@ -115,7 +115,8 @@ export async function addAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-		iconId
+		iconId,
+		variableIds
 	} = req.body;
 
 	let validationError = chainValidations(
@@ -187,7 +188,8 @@ export async function addAgentApi(req, res, next) {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
-			: null
+			: null,
+		variableIds: variableIds.map(toObjectId)
 	});
 
 	return dynamicResponse(req, res, 302, {
@@ -218,7 +220,8 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-		iconId
+		iconId,
+		variableIds
 	} = req.body;
 
 	let validationError = chainValidations(
@@ -270,7 +273,8 @@ export async function editAgentApi(req, res, next) {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
-			: null
+			: null,
+		variableIds: variableIds.map(toObjectId)
 	});
 
 	return dynamicResponse(req, res, 302, {
