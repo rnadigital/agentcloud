@@ -1,22 +1,20 @@
-import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import * as API from '@api';
+import AgentForm from 'components/AgentForm';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
+import { AgentDataReturnType } from 'controllers/agent';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-import * as API from '../../../../api';
-import AgentForm from '../../../../components/AgentForm';
-import { useAccountContext } from '../../../../context/account';
-
 export default function EditAgent(props) {
 	const [accountContext]: any = useAccountContext();
-	const { teamName, account, csrf } = accountContext as any;
+	const { teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
-	const [error, setError] = useState();
-	const { agent, models, tools } = state;
+	const [state, dispatch] = useState<AgentDataReturnType>(props);
+	const [_, setError] = useState();
+	const { agent, models, tools, variables } = state;
 
 	async function fetchAgentData() {
 		await API.getAgent(
@@ -55,6 +53,7 @@ export default function EditAgent(props) {
 					models={models}
 					tools={tools}
 					fetchAgentFormData={fetchAgentData}
+					variables={variables}
 				/>
 			</span>
 		</>

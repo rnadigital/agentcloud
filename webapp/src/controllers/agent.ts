@@ -61,16 +61,18 @@ export async function agentAddPage(app, req, res, next) {
 export type AgentDataReturnType = Awaited<ReturnType<typeof agentData>>;
 
 export async function agentData(req, res, _next) {
-	const [agent, models, tools] = await Promise.all([
+	const [agent, models, tools, variables] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
 		getModelsByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
 		models,
-		tools
+		tools,
+		variables
 	};
 }
 
