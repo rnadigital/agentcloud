@@ -2,14 +2,13 @@ import dynamic from 'next/dynamic';
 const CreateDatasourceForm = dynamic(() => import('components/CreateDatasourceForm'), {
 	ssr: false
 });
+import * as API from 'api';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../../api';
 
 export default function AddDatasource(props) {
 	const [accountContext]: any = useAccountContext();

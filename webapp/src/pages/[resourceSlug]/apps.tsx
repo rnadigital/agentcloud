@@ -1,17 +1,14 @@
+import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
-import Flow from 'components/Flow';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../api';
-import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();

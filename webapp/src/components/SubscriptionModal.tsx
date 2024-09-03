@@ -1,13 +1,12 @@
+import * as API from '@api';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { CreditCardIcon } from '@heroicons/react/24/outline';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { Fragment, useEffect } from 'react';
 import { toast } from 'react-toastify';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
 
 export default function SubscriptionModal({
 	open,

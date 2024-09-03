@@ -1,15 +1,13 @@
+import * as API from '@api';
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
+import AgentList from 'components/AgentList';
+import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../api';
-import AgentList from '../../components/AgentList';
-import NewButtonSection from '../../components/NewButtonSection';
-import { useAccountContext } from '../../context/account';
 
 export default function Agents(props) {
 	const router = useRouter();
@@ -21,6 +19,7 @@ export default function Agents(props) {
 	const [error, setError] = useState();
 	const { agents } = state;
 	const filteredAgents = agents?.filter(x => !x.hidden);
+
 	function fetchAgents() {
 		API.getAgents({ resourceSlug }, dispatch, setError, router);
 	}
