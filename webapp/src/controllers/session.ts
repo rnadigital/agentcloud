@@ -163,6 +163,16 @@ export async function publicSessionMessagesData(req, res, _next) {
  * get session messages
  */
 export async function sessionMessagesJson(req, res, next) {
+	let validationError = chainValidations(
+		req?.query,
+		[{ field: 'messageId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ messageId: 'Message ID' }
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
 	if (req?.query?.messageId) {
 		const messages = await getChatMessageAfterId(
 			req.params.resourceSlug,
