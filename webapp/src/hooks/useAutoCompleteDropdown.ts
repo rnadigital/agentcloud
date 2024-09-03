@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 interface UseAutocompleteDropdownProps {
 	options: { label: string; value: string }[];
-	value: string;
+	value?: string;
 	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
 	setCreateVariableModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -44,7 +44,7 @@ const useAutocompleteDropdown = ({
 	useEffect(() => {
 		if (initialState) {
 			const selectedFromInitialState = initialState.filter(variable =>
-				value.includes(`{${variable.name}}`)
+				value?.includes(`{${variable.name}}`)
 			);
 			setSelectedVariables(
 				selectedFromInitialState.map(variable => ({
