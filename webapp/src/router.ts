@@ -285,12 +285,6 @@ export default function router(server, app) {
 		setParamOrgAndTeam,
 		sessionController.sessionMessagesJson
 	);
-	publicAppRouter.get(
-		'/session/:dessionId([a-f0-9]{24}/messagesAfterId.json',
-		csrfMiddleware,
-		setParamOrgAndTeam,
-		sessionController.sessionMessagesAfterIdJson
-	);
 	publicAppRouter.post(
 		'/forms/app/:appId([a-f0-9]{24})/start',
 		setParamOrgAndTeam,
