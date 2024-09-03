@@ -9,7 +9,7 @@ import {
 	unsafeGetAgentNameMap
 } from 'db/agent';
 import { getAppById, unsafeGetAppById } from 'db/app';
-import { getChatMessagesBySession, unsafeGetChatMessagesBySession } from 'db/chat';
+import { getChatMessagesBySession, unsafeGetChatMessagesBySession, getChatMessageAfterId } from 'db/chat';
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
 	addSession,
@@ -161,6 +161,15 @@ export async function publicSessionMessagesData(req, res, _next) {
 export async function sessionMessagesJson(req, res, next) {
 	const data = await sessionMessagesData(req, res, next);
 	return res.json(data);
+}
+
+
+/**
+ * GET /[resourceSlug]/session/[sessionId]/messagesAfterId.json
+ */
+export async function sessionMessagesAfterIdJson(req, res, next) {
+	const messages = await getChatMessageAfterId(req.params.resourceSlug, req.params.sessionId, req.query.messageId);
+	return res.json(messages);
 }
 
 /**

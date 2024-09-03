@@ -203,6 +203,16 @@ export function getMessages(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+export function getMessagesAfterid(body, dispatch, errorCallback, router){
+	return ApiCall(
+		`/${body.resourceSlug}/sesison/${body.sessionId}/messagesAfterId.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
 
 // Agents
 export function addAgent(body, dispatch, errorCallback, router) {
