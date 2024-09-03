@@ -102,7 +102,10 @@ class ChatAssistant:
                 if linked_tool:
                     tool_class = BuiltinTools.get_tool_class(linked_tool.data.name)
                 else:
-                    logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
+                    logging.warning(
+                        f"linked tool ID {agentcloud_tool.linkedToolId} not found for installed tool {agentcloud_tool.id}")
+            else:
+                tool_class = BuiltinTools.get_tool_class(tool_name)
 
         return tool_class.factory(agentcloud_tool)
 
