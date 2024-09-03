@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
+import CreateVariableModal from './variables/CreateVariableModal';
 import AutocompleteDropdown from './variables/VariableDropdown';
 
 export default function AgentForm({
@@ -531,6 +532,12 @@ export default function AgentForm({
 					</button>
 				</div>
 			</form>
+
+			<CreateVariableModal
+				open={isCreateVariableModalOpen}
+				setOpen={setCreateVariableModalOpen}
+				callback={autocompleteBackstory.handleNewVariableCreation}
+			/>
 		</>
 	);
 }
