@@ -472,7 +472,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Add a tool automatically for the datasource
 	let foundIcon; //TODO: icon/avatar id and upload
-	await addTool({
+	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name: datasourceName,
@@ -494,7 +494,10 @@ export async function addDatasourceApi(req, res, next) {
 			: null
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
+	return dynamicResponse(req, res, 302, {
+		redirect: `/${req.params.resourceSlug}/datasources`,
+		toolId: addedTool.insertedId
+	});
 }
 
 export async function updateDatasourceScheduleApi(req, res, next) {
