@@ -259,7 +259,7 @@ impl From<&str> for Distance {
     fn from(value: &str) -> Self {
         match value {
             "cosine" => Distance::Cosine,
-            "euclidian" => Distance::Euclid,
+            "euclidean" => Distance::Euclid,
             "dotproduct" => Distance::Dot,
             "manhattan" => Distance::Manhattan,
             _ => Distance::UnknownDistance,
@@ -328,7 +328,7 @@ impl From<Point> for Metadata {
             btree_map.insert(
                 k,
                 prost_types::Value {
-                    kind: Some(prost_types::value::Kind::StringValue(v)),
+                    kind: Some(Kind::StringValue(v.as_str().to_string())),
                 },
             );
         }
@@ -360,7 +360,7 @@ fn struct_value_to_string(struct_value: &Struct) -> Option<String> {
 fn value_to_string(value: &Option<Kind>) -> Option<String> {
     match value {
         Some(kind) => match kind {
-            Kind::StringValue(s) => Some(s.to_owned()),
+            Kind::StringValue(s) => Some(s.to_owned().as_str().to_string()),
             Kind::NumberValue(n) => Some(n.to_string()),
             Kind::BoolValue(b) => Some(b.to_string()),
             Kind::NullValue(i) => Some(i.to_string()),
