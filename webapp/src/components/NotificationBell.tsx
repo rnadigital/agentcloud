@@ -4,11 +4,10 @@ import * as API from '@api';
 import { Dialog, Menu, Transition } from '@headlessui/react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { Notification } from 'components/Notification';
+import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
-
-import { useAccountContext } from '../context/account';
 
 export default function NotificationBell() {
 	const [accountContext]: any = useAccountContext();

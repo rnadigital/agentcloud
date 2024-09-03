@@ -7,6 +7,7 @@ import 'tippy.js/themes/material.css';
 import Layout from 'components/Layout';
 import { AccountWrapper } from 'context/account';
 import { ChatWrapper } from 'context/chat';
+import { DeveloperWrapper } from 'context/developer';
 import { NotificationWrapper } from 'context/notifications';
 import { SocketWrapper } from 'context/socket';
 import { StepWrapper } from 'context/stepwrapper';
@@ -23,12 +24,6 @@ import { ToastContainer } from 'react-toastify';
 if (typeof window !== 'undefined') {
 	posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
 		api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
-		// Enable debug mode in development
-		loaded: posthog => {
-			if (process.env.NODE_ENV === 'development') {
-				posthog.debug();
-			}
-		},
 		capture_pageview: false // Disable automatic pageview capture, as we capture manually
 	});
 }
@@ -54,34 +49,36 @@ export default function App({ Component, pageProps }) {
 	const [pagePropsState] = useState(pageProps);
 	return (
 		<PostHogProvider client={posthog}>
-			<AccountWrapper pageProps={pagePropsState}>
-				<ChatWrapper>
-					<SocketWrapper>
-						<NotificationWrapper>
-							<StepWrapper>
-								<ToastContainer
-									progressClassName='toast-container'
-									bodyClassName='toast-body'
-									theme='colored'
-									position='bottom-right'
-									autoClose={3000}
-									newestOnTop={true}
-									pauseOnFocusLoss={false}
-									pauseOnHover={true}
-									hideProgressBar={true}
-									limit={3}
-								/>
-								<ThemeProvider>
-									<Layout {...pageProps}>
-										<style>{''}</style>
-										<Component {...pageProps} />
-									</Layout>
-								</ThemeProvider>
-							</StepWrapper>
-						</NotificationWrapper>
-					</SocketWrapper>
-				</ChatWrapper>
-			</AccountWrapper>
+			<DeveloperWrapper>
+				<AccountWrapper pageProps={pagePropsState}>
+					<ChatWrapper>
+						<SocketWrapper>
+							<NotificationWrapper>
+								<StepWrapper>
+									<ToastContainer
+										progressClassName='toast-container'
+										bodyClassName='toast-body'
+										theme='colored'
+										position='bottom-right'
+										autoClose={3000}
+										newestOnTop={true}
+										pauseOnFocusLoss={false}
+										pauseOnHover={true}
+										hideProgressBar={true}
+										limit={3}
+									/>
+									<ThemeProvider>
+										<Layout {...pageProps}>
+											<style>{''}</style>
+											<Component {...pageProps} />
+										</Layout>
+									</ThemeProvider>
+								</StepWrapper>
+							</NotificationWrapper>
+						</SocketWrapper>
+					</ChatWrapper>
+				</AccountWrapper>
+			</DeveloperWrapper>
 		</PostHogProvider>
 	);
 }

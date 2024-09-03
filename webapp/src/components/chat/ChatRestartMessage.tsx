@@ -1,9 +1,8 @@
 import * as API from '@api';
+import { useChatContext } from 'context/chat';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'react-toastify';
-
-import { useChatContext } from '../../context/chat';
 
 export default function ChatRestartMessage() {
 	const [chatContext]: any = useChatContext();

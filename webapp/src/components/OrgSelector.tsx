@@ -4,7 +4,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import CreateTeamModal from 'components/CreateTeamModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 
 const TEAM_PARENT_LOCATIONS = ['agent', 'task', 'tool', 'datasource', 'model'];
 
@@ -14,10 +14,16 @@ function classNames(...classes) {
 
 export default function OrgSelector({ orgs }) {
 	const [accountContext, refreshAccountContext, setSwitchingContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
-	// const { stripePlan } = account?.stripe || {};
+	const { account, csrf, teamName: _teamName } = accountContext as any;
+	const [teamName, setTeamName] = useState('Loading...');
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+	const team = account?.teams;
+	useEffect(() => {
+		const matchingOrg = account?.orgs?.find(o => o.teams.some(t => t.id === resourceSlug));
+		const team = matchingOrg?.teams?.find(t => t.id === resourceSlug);
+		setTeamName(team?.name || _teamName);
+	}, [router?.query?.resourceSlug, account?.currentTeam]);
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);

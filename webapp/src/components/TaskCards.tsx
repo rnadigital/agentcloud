@@ -1,13 +1,13 @@
 import { Menu, MenuItem, Transition } from '@headlessui/react';
 import { CheckIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
+import * as API from 'api';
+import DevBadge from 'components/DevBadge';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { Fragment } from 'react';
 import { toast } from 'react-toastify';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
@@ -46,6 +46,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 					className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm dark:text-white'
 				>
 					<div className='flex flex-col'>
+						<DevBadge text={`Task ID: ${task?._id}`} />
 						<h3 className='text-sm font-semibold truncate'>
 							<Link href={`/${resourceSlug}/task/${task._id}/edit`}>{task.name}</Link>
 						</h3>
