@@ -27,15 +27,14 @@ const DynamicConnectorForm = dynamic(
 		ssr: false
 	}
 );
-import { StreamsList } from 'components/DatasourceStream';
-import FormContext from 'context/connectorform';
-import { usePostHog } from 'posthog-js/react';
-
-import submittingReducer from 'utils/submittingreducer';
 import classNames from 'components/ClassNames';
-import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
+import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
+import FormContext from 'context/connectorform';
+import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
+import { usePostHog } from 'posthog-js/react';
+import submittingReducer from 'utils/submittingreducer';
 // import InfoAlert from 'components/InfoAlert';
 
 const stepList = [
@@ -275,7 +274,7 @@ export default function CreateDatasourceForm({
 						decay_rate: toolDecayRate
 					},
 					chunkingConfig,
-					enableConnectorChunking,
+					enableConnectorChunking
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,

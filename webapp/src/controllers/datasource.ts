@@ -132,7 +132,7 @@ export async function testDatasourceApi(req, res, next) {
 		[
 			{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
+			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } }
 		],
 		{
 			datasourceName: 'Name',
@@ -330,7 +330,7 @@ export async function addDatasourceApi(req, res, next) {
 		streamConfig,
 		retriever_config,
 		timeUnit,
-		chunkingConfig,
+		chunkingConfig
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -431,7 +431,7 @@ export async function addDatasourceApi(req, res, next) {
 		modelId: toObjectId(modelId),
 		embeddingField,
 		streamConfig,
-		chunkingConfig, //TODO: validation
+		chunkingConfig //TODO: validation
 	});
 
 	// Create the collection in qdrant

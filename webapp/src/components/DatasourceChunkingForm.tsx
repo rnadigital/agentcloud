@@ -3,7 +3,11 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
 
-export default function DatasourceChunkingForm({ chunkingConfig, setChunkingConfig, isConnector = false }) {
+export default function DatasourceChunkingForm({
+	chunkingConfig,
+	setChunkingConfig,
+	isConnector = false
+}) {
 	const handleInputChange = key => e => {
 		setChunkingConfig({ [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 	};
