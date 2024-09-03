@@ -167,10 +167,15 @@ export default function DropZone({
 						</li>
 					))}
 				{children}
-				<DatasourceChunkingForm
-					chunkingConfig={chunkingConfig}
-					setChunkingConfig={setChunkingConfig}
-				/>
+				<details>
+					<summary className='text-sm cursor-pointer ms-1 my-4 mb-5 dark:text-gray-50'>
+						Chunking options
+					</summary>
+					<DatasourceChunkingForm
+						chunkingConfig={chunkingConfig}
+						setChunkingConfig={setChunkingConfig}
+					/>
+				</details>
 				<button
 					disabled={
 						loading || !files || !modelId

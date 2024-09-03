@@ -14,6 +14,30 @@ export default function DatasourceChunkingForm({
 
 	return (
 		<div className='mb-4 mt-3'>
+			{isConnector && (
+				<>
+					<label
+						htmlFor='chunkStrategy'
+						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
+					>
+						Format<span className='text-red-700'> *</span>
+					</label>
+					<div>
+						<select
+							required
+							name='file_format'
+							id='file_format'
+							onChange={handleInputChange('file_format')}
+							value={chunkingConfig.file_format}
+							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+						>
+							<option value='txt'>Basic</option>
+							<option value='markdown'>By Title</option>
+						</select>
+					</div>
+				</>
+			)}
+
 			<label
 				htmlFor='partitioning'
 				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
@@ -181,28 +205,6 @@ export default function DatasourceChunkingForm({
 					onChange={handleInputChange('overlap_all')}
 					className='ml-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-slate-800 dark:ring-slate-600'
 				/>
-			</div>
-
-			<label
-				htmlFor='chunkStrategy'
-				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-			>
-				Format<span className='text-red-700'> *</span>
-			</label>
-			<div>
-				<select
-					required
-					name='chunkStrategy'
-					id='chunkStrategy'
-					onChange={handleInputChange('strategy')}
-					value={chunkingConfig.strategy}
-					className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-				>
-					<option value='basic'>Basic</option>
-					<option value='by_title'>By Title</option>
-					<option value='by_page'>By Page</option>
-					<option value='by_similarity'>By Similarity</option>
-				</select>
 			</div>
 		</div>
 	);

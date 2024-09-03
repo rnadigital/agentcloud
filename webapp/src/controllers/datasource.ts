@@ -330,7 +330,8 @@ export async function addDatasourceApi(req, res, next) {
 		streamConfig,
 		retriever_config,
 		timeUnit,
-		chunkingConfig
+		chunkingConfig,
+		enableConnectorChunking
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -430,8 +431,8 @@ export async function addDatasourceApi(req, res, next) {
 		connectionSettings: connectionBody,
 		modelId: toObjectId(modelId),
 		embeddingField,
-		streamConfig,
-		chunkingConfig //TODO: validation
+		streamConfig, //TODO: validation
+		chunkingConfig: enableConnectorChunking ? chunkingConfig : null //TODO: validation
 	});
 
 	// Create the collection in qdrant
