@@ -1,10 +1,9 @@
+import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
+import AgentForm from 'components/AgentForm';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import AgentForm from './AgentForm';
 
 export default function CreateAgentModal({ open, setOpen, callback }) {
 	const [accountContext]: any = useAccountContext();

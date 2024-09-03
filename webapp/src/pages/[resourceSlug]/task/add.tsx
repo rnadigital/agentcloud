@@ -1,11 +1,10 @@
+import * as API from '@api';
 import Spinner from 'components/Spinner';
+import TaskForm from 'components/TaskForm';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../../api';
-import TaskForm from '../../../components/TaskForm'; // Assuming you have a TaskForm component
-import { useAccountContext } from '../../../context/account';
 
 export default function AddTask(props) {
 	const [accountContext]: any = useAccountContext();

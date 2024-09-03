@@ -1,6 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { Context, createContext, useContext, useEffect, useState } from 'react';
 
-const DeveloperContext = createContext({});
+export type DeveloperContextProps = {
+	developerMode: boolean;
+	toggleDeveloperMode: Function;
+};
+
+const DeveloperContext: Context<DeveloperContextProps> = createContext(null);
 
 export function DeveloperWrapper({ children }) {
 	const [developerMode, setDeveloperMode] = useState(false);
@@ -13,6 +18,7 @@ export function DeveloperWrapper({ children }) {
 	const toggleDeveloperMode = () => {
 		const isDeveloper = localStorage.getItem('developer') === '1';
 		localStorage.setItem('developer', isDeveloper === true ? '0' : '1');
+		setDeveloperMode(!isDeveloper);
 	};
 
 	return (

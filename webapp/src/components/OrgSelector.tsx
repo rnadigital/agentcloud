@@ -17,7 +17,6 @@ export default function OrgSelector({ orgs }) {
 	const { account, csrf, teamName: _teamName } = accountContext as any;
 	const [teamName, setTeamName] = useState('Loading...');
 	const router = useRouter();
-	console.log('router?.query', router?.query?.resourceSlug);
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const team = account?.teams;
 	useEffect(() => {

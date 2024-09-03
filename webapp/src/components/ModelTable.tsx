@@ -3,6 +3,7 @@
 import * as API from '@api';
 import { TrashIcon } from '@heroicons/react/20/solid';
 import DeleteModal from 'components/DeleteModal';
+import DevBadge from 'components/DevBadge';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
@@ -150,6 +151,7 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>{model.name}</div>
+										<DevBadge text={`ID: ${model?._id}`} />
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'
