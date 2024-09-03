@@ -11,7 +11,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
 use crate::messages::task_handoff::send_task;
 use crate::utils::file_operations;
-use crate::utils::file_operations::save_file_to_disk;
+use crate::utils::file_operations::determine_file_type;
 use crate::utils::webhook::send_webapp_embed_ready;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -19,6 +19,7 @@ use crossbeam::channel::Sender;
 use mongodb::Database;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::io::Cursor;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -79,7 +80,8 @@ pub async fn process_message(
                             .await
                             {
                                 Some((_, file, file_path)) => {
-                                    save_file_to_disk(file, file_path.as_str()).await.unwrap();
+                                    let buffer = Cursor::new(file);
+                                    let file_type = determine_file_type(file_path.as_str());
                                     let unstructuredio_url = global_data.unstructuredio_url;
                                     let unstructuredio_api_key =
                                         Some(global_data.unstructuredio_api_key)
@@ -90,8 +92,10 @@ pub async fn process_message(
                                         let response = chunk_text(
                                             unstructuredio_url,
                                             unstructuredio_api_key,
-                                            file_path.as_str(),
+                                            buffer,
+                                            file_path,
                                             chunking_strategy,
+                                            file_type,
                                         );
                                         response
                                     });

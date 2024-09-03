@@ -1,3 +1,4 @@
+use crate::data::models::FileType;
 use bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
@@ -85,6 +86,7 @@ pub struct UnstructuredChunkingConfig {
     pub overlap: usize,
     pub similarity_threshold: f64, // between 0.0 and 1.0
     pub overlap_all: bool,
+    pub file_type: FileType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -203,4 +205,5 @@ pub struct EmbeddingConfig {
     pub model: Option<Model>,
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
+    pub chunking_strategy: Option<UnstructuredChunkingConfig>,
 }

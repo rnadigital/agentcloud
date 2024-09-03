@@ -3,20 +3,20 @@ use crate::adaptors::mongo::models::{
 };
 use crate::data::models::FileType;
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
-use crate::utils::file_operations::determine_file_type;
 use anyhow::{anyhow, Result};
 use reqwest::blocking::multipart::{Form, Part};
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue};
-use std::path::Path;
+use std::io::Cursor;
 use std::time::Duration;
 
 fn chunking_strategy_to_form_data(
-    file_path: &Path,
+    file_buffer: Cursor<Vec<u8>>,
+    file_name: String,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
     file_type: Option<FileType>,
 ) -> Result<Form> {
-    let mut form = Form::new().part("files", Part::file(file_path)?);
+    let mut form = Form::new().part("files", Part::reader(file_buffer).file_name(file_name));
 
     if let Some(strategy_config) = chunking_strategy {
         let chunking_strategy = UnstructuredChunkingStrategy::as_str(&strategy_config.strategy);
@@ -54,22 +54,20 @@ fn chunking_strategy_to_form_data(
 pub fn chunk_text(
     url: String,
     api_key: Option<String>,
-    file_path: &str,
+    file_buffer: Cursor<Vec<u8>>,
+    file_name: String,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
+    file_type: FileType,
 ) -> Result<Vec<UnstructuredIOResponse>> {
     let client = Client::builder()
         .timeout(Duration::from_secs(2000))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?;
-    let file_path = file_path.trim_matches('"');
-    let file_type = determine_file_type(file_path);
-    let file_path = Path::new(file_path);
-    println!("File path in chunk : {:?}", file_path);
-    // Create a multipart form with the file
-    // Send the POST request
+    // Create a multipart form with the file and sends the POST request
     let mut header_map = HeaderMap::new();
     header_map.insert("accept", HeaderValue::from_str("application/json")?);
-    let form = chunking_strategy_to_form_data(file_path, chunking_strategy, Some(file_type))?;
+    let form =
+        chunking_strategy_to_form_data(file_buffer, file_name, chunking_strategy, Some(file_type))?;
     api_key
         .map(|key| header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap()));
     match client.post(url).headers(header_map).multipart(form).send() {
