@@ -12,7 +12,7 @@ import {
 	updateTask
 } from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
-import { getVariablesByTeam } from 'db/variable';
+import { getVariableById, getVariablesByTeam, updateVariable } from 'db/variable';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 
@@ -242,6 +242,18 @@ export async function addTaskApi(req, res, next) {
 		variableIds: variableIds.map(toObjectId)
 	});
 
+	if (variableIds && variableIds.length > 0) {
+		const updatePromises = variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const updatedVariable = {
+				...variable,
+				usedInTasks: [...(variable.usedInTasks || []), addedTask.insertedId]
+			};
+			return updateVariable(req.params.resourceSlug, id, updatedVariable);
+		});
+		await Promise.all(updatePromises);
+	}
+
 	return dynamicResponse(req, res, 302, {
 		_id: addedTask.insertedId,
 		redirect: `/${req.params.resourceSlug}/tasks`
@@ -348,6 +360,27 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
+
+	const existingTask = await getTaskById(req.params.resourceSlug, req.params.taskId);
+	const existingVariableIds = new Set(existingTask?.variableIds.map(v => v.toString()) || []);
+	const newVariableIds = new Set(variableIds);
+
+	const updatePromises = [...existingVariableIds, ...newVariableIds].map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		const usedInTasks = new Set(variable.usedInTasks.map(v => v.toString()) || []);
+
+		if (existingVariableIds.has(id) && !newVariableIds.has(id)) {
+			usedInTasks.delete(req.params.taskId);
+		} else if (!existingVariableIds.has(id) && newVariableIds.has(id)) {
+			usedInTasks.add(req.params.taskId);
+		}
+
+		const updatedVariable = { ...variable, usedInTasks: Array.from(usedInTasks) };
+		return updateVariable(req.params.resourceSlug, id, updatedVariable);
+	});
+
+	await Promise.all(updatePromises);
+
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -364,6 +397,8 @@ export async function editTaskApi(req, res, next) {
 		isStructuredOutput,
 		variableIds: variableIds ? variableIds.map(toObjectId) : []
 	});
+
+	await Promise.all(updatePromises);
 
 	return dynamicResponse(req, res, 302, {
 		/*redirect: `/${req.params.resourceSlug}/tasks`*/

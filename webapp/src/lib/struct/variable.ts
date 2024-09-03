@@ -11,5 +11,6 @@ export interface Variable {
 	type: 'string' | 'number' | 'boolean';
 	createdBy?: ObjectId | string;
 	createDate?: Date;
-	usedIn?: (ObjectId | string)[];
+	usedInTasks?: (ObjectId | string)[];
+	usedInAgents?: (ObjectId | string)[];
 }
