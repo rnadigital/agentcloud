@@ -19,7 +19,7 @@ pub enum CreateDisposition {
     CreateIfNeeded,
     CreateNever,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct Point {
     pub index: Option<String>,
     pub vector: Vec<f32>,
@@ -328,7 +328,7 @@ impl From<Point> for Metadata {
             btree_map.insert(
                 k,
                 prost_types::Value {
-                    kind: Some(Kind::StringValue(v.as_str().to_string())),
+                    kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
                 },
             );
         }
