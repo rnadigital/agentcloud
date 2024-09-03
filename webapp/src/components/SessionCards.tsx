@@ -5,13 +5,13 @@ import {
 	EllipsisHorizontalIcon,
 	PlayIcon
 } from '@heroicons/react/20/solid';
+import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import * as API from '../api';
-import { useAccountContext } from '../context/account';
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');

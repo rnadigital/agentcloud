@@ -1,13 +1,12 @@
+import * as API from '@api';
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import AgentForm from 'components/AgentForm';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../../../api';
-import AgentForm from '../../../../components/AgentForm';
-import { useAccountContext } from '../../../../context/account';
 
 export default function EditAgent(props) {
 	const [accountContext]: any = useAccountContext();
