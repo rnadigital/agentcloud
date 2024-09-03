@@ -63,7 +63,10 @@ pub async fn embed_text_construct_point(
                             return Ok(None);
                         }
                         Err(e) => {
-                            log::error!("{}", e);
+                            log::error!(
+                                "Error embedding response from unstructuredIO. Error: {}",
+                                e
+                            );
                         }
                     }
                 } else {
