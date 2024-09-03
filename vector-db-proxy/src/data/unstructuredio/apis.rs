@@ -12,11 +12,17 @@ use std::time::Duration;
 
 fn chunking_strategy_to_form_data(
     file_buffer: Cursor<Vec<u8>>,
-    file_name: String,
+    file_name: Option<String>,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
     file_type: Option<FileType>,
 ) -> Result<Form> {
-    let mut form = Form::new().part("files", Part::reader(file_buffer).file_name(file_name));
+    // If there's no file name give we send with a placeholder name and the file extension
+    // associated with the file type
+    let name = file_name.unwrap_or(format!(
+        "text_file.{}",
+        FileType::to_str(file_type.unwrap())
+    ));
+    let mut form = Form::new().part("files", Part::reader(file_buffer).file_name(name));
 
     if let Some(strategy_config) = chunking_strategy {
         let chunking_strategy = UnstructuredChunkingStrategy::as_str(&strategy_config.strategy);
@@ -55,9 +61,9 @@ pub fn chunk_text(
     url: String,
     api_key: Option<String>,
     file_buffer: Cursor<Vec<u8>>,
-    file_name: String,
+    file_name: Option<String>,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
-    file_type: FileType,
+    file_type: Option<FileType>,
 ) -> Result<Vec<UnstructuredIOResponse>> {
     let client = Client::builder()
         .timeout(Duration::from_secs(2000))
@@ -67,7 +73,7 @@ pub fn chunk_text(
     let mut header_map = HeaderMap::new();
     header_map.insert("accept", HeaderValue::from_str("application/json")?);
     let form =
-        chunking_strategy_to_form_data(file_buffer, file_name, chunking_strategy, Some(file_type))?;
+        chunking_strategy_to_form_data(file_buffer, file_name, chunking_strategy, file_type)?;
     api_key
         .map(|key| header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap()));
     match client.post(url).headers(header_map).multipart(form).send() {

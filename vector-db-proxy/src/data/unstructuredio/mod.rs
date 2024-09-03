@@ -1,2 +1,2 @@
 pub mod apis;
-mod models;
+pub mod models;

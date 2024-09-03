@@ -86,7 +86,7 @@ pub struct UnstructuredChunkingConfig {
     pub overlap: usize,
     pub similarity_threshold: f64, // between 0.0 and 1.0
     pub overlap_all: bool,
-    pub file_type: FileType,
+    pub file_type: Option<FileType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

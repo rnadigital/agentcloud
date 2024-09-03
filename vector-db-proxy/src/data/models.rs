@@ -1,4 +1,6 @@
-#[derive(Copy, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum FileType {
     PDF,
     TXT,
@@ -9,7 +11,16 @@ pub enum FileType {
 }
 
 impl FileType {
-    pub fn to_str(Self) -> &str {}
+    pub fn to_str<'a>(value: Self) -> &'a str {
+        match value {
+            Self::MARKDOWN => "markdown",
+            Self::CSV => "csv",
+            Self::DOCX => "docx",
+            Self::PDF => "pdf",
+            Self::TXT => "txt",
+            _ => "unknown",
+        }
+    }
 }
 
 impl From<String> for FileType {
@@ -24,5 +35,3 @@ impl From<String> for FileType {
         }
     }
 }
-
-

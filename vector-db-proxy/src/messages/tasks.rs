@@ -1,28 +1,23 @@
 use crate::adaptors::gcp::models::PubSubConnect;
 use crate::adaptors::mongo::models::UnstructuredChunkingConfig;
-use crate::adaptors::mongo::queries::{
-    get_datasource, get_model, increment_by_one, set_record_count_total,
-};
+use crate::adaptors::mongo::queries::{get_datasource, get_model};
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::models::EmbeddingModels;
-use crate::embeddings::utils::embed_text_chunks_async;
+use crate::embeddings::utils::embed_bulk_insert_unstructured_response;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
 use crate::messages::task_handoff::send_task;
 use crate::utils::file_operations;
 use crate::utils::file_operations::determine_file_type;
 use crate::utils::webhook::send_webapp_embed_ready;
-use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
 use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use mongodb::Database;
 use serde_json::Value;
-use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use uuid::Uuid;
 
 pub async fn get_message_queue(
     message_queue_provider: MessageQueueProvider,
@@ -93,129 +88,26 @@ pub async fn process_message(
                                             unstructuredio_url,
                                             unstructuredio_api_key,
                                             buffer,
-                                            file_path,
+                                            Some(file_path),
                                             chunking_strategy,
-                                            file_type,
+                                            Some(file_type),
                                         );
                                         response
                                     });
                                     // dynamically get user's chunking strategy of choice from the database
                                     let model_obj_clone = model_parameters.clone();
                                     let model_name = EmbeddingModels::from(model_obj_clone.model);
-                                    let mongo_connection_clone = Arc::clone(&mongo_client);
                                     match handle.await.unwrap() {
                                         Ok(documents) => {
-                                            let mongo_connection = mongodb_connection.clone();
-                                            // Construct a collection of the texts from the
-                                            // Unstructured IO response to embed
-                                            let list_of_text: Vec<String> = documents
-                                                .iter()
-                                                .map(|doc| doc.text.clone())
-                                                .collect();
-                                            set_record_count_total(
-                                                &mongo_connection,
-                                                datasource_id,
-                                                list_of_text.len() as i32,
-                                            )
-                                            .await
-                                            .unwrap();
-                                            match embed_text_chunks_async(
-                                                mongo_connection_clone,
+                                            embed_bulk_insert_unstructured_response(
+                                                documents,
                                                 datasource_id.to_string(),
-                                                list_of_text.clone(),
-                                                EmbeddingModels::from(model_name),
+                                                vector_database_client.clone(),
+                                                mongo_client.clone(),
+                                                model_name,
+                                                None,
                                             )
-                                            .await
-                                            {
-                                                Ok(embeddings) => {
-                                                    // Initialise vector database client
-                                                    let vector_database =
-                                                        Arc::clone(&vector_database_client);
-                                                    let vector_database_client =
-                                                        vector_database.read().await;
-                                                    let mut points_to_upload: Vec<Point> = vec![];
-                                                    // Construct point to upload
-                                                    for i in 0..list_of_text.len() {
-                                                        // Construct metadata hashmap
-                                                        let file_metadata =
-                                                            documents.get(i).unwrap();
-                                                        let metadata_map =
-                                                            HashMap::from(file_metadata);
-                                                        // Embed text and return vector
-                                                        let embedding_vector = embeddings.get(i);
-                                                        if let Some(vector) = embedding_vector {
-                                                            let point = Point::new(
-                                                                Some(Uuid::new_v4().to_string()),
-                                                                vector.to_vec(),
-                                                                Some(metadata_map),
-                                                            );
-                                                            points_to_upload.push(point)
-                                                        }
-                                                        let search_request = SearchRequest::new(
-                                                            SearchType::Point,
-                                                            datasource_id.to_string(),
-                                                        );
-                                                        //Attempt vector database insert
-                                                        if let Ok(bulk_insert_status) =
-                                                            vector_database_client
-                                                                .bulk_insert_points(
-                                                                    search_request,
-                                                                    points_to_upload.clone(),
-                                                                )
-                                                                .await
-                                                        {
-                                                            match bulk_insert_status {
-                                                                VectorDatabaseStatus::Ok => {
-                                                                    log::debug!("points uploaded successfully!");
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
-                                                                        datasource_id,
-                                                                        "recordCount.success",
-                                                                    )
-                                                                    .await
-                                                                    .unwrap();
-                                                                }
-                                                                VectorDatabaseStatus::Failure
-                                                                | VectorDatabaseStatus::NotFound => {
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
-                                                                        datasource_id,
-                                                                        "recordCount.failure",
-                                                                    )
-                                                                    .await
-                                                                    .unwrap();
-                                                                    log::warn!(
-                                                                        "Could not find \
-                                                                    collection :{}",
-                                                                        datasource_id
-                                                                    );
-                                                                }
-                                                                VectorDatabaseStatus::Error(e) => {
-                                                                    increment_by_one(
-                                                                        &mongo_connection,
-                                                                        datasource_id,
-                                                                        "recordCount.failure",
-                                                                    )
-                                                                    .await
-                                                                    .unwrap();
-                                                                    log::error!(
-                                                                        "An error \
-                                                                    occurred while attempting \
-                                                                    point insert operation. \
-                                                                    Error: {:?}",
-                                                                        e
-                                                                    )
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                Err(e) => log::error!(
-                                                    "An error occurred while \
-                                                embedding text. Error: {}",
-                                                    e
-                                                ),
-                                            }
+                                            .await;
                                         }
                                         Err(e) => log::error!(
                                             "An error occurred while retrieving 
