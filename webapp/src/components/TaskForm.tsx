@@ -81,8 +81,9 @@ export default function TaskForm({
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState<Task | undefined>(task);
 	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
-
 	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
+	const [modalOpen, setModalOpen] = useState<string>();
+	const [currentInput, setCurrentInput] = useState<string>();
 
 	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
 		task?.formFields || [
@@ -143,15 +144,15 @@ export default function TaskForm({
 		.filter(v => !expectedOutputSelectedVariables.some(sv => sv.value === v.value));
 
 	const [description, setDescription] = useState(task?.description || '');
-	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
 
 	const autocompleteDescription = useAutocompleteDropdown({
 		value: description,
 		options: descriptionVariableOptions,
 		setValue: setDescription,
 		setSelectedVariables: setDescriptionSelectedVariables,
-		setCreateVariableModalOpen,
-		initialState: variables
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput
 	});
 
 	const autocompleteExpectedOutput = useAutocompleteDropdown({
@@ -159,16 +160,29 @@ export default function TaskForm({
 		options: expectedOutputVariableOptions,
 		setValue: setExpectedOutput,
 		setSelectedVariables: setExpectedOutputSelectedVariables,
-		setCreateVariableModalOpen,
-		initialState: variables
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput
 	});
+
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		switch (currentInput) {
+			case 'task_description':
+				autocompleteDescription.handleNewVariableCreation(newVariable);
+				break;
+			case 'expectedOutput':
+				autocompleteExpectedOutput.handleNewVariableCreation(newVariable);
+				break;
+			default:
+				break;
+		}
+	};
 
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
-		setModalOpen(false);
+		setModalOpen(null);
 	}
-	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function taskPost(e) {
 		e.preventDefault();
@@ -257,7 +271,7 @@ export default function TaskForm({
 
 	const toolCallback = async (addedToolId, body) => {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 		setTask(oldTask => {
 			return {
 				...oldTask,
@@ -267,7 +281,7 @@ export default function TaskForm({
 	};
 	const agentCallback = async addedAgentId => {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 		setTask(oldTask => {
 			return {
 				...oldTask,
@@ -278,7 +292,7 @@ export default function TaskForm({
 
 	async function createTaskCallback() {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 	}
 
 	useEffect(() => {
@@ -319,7 +333,7 @@ export default function TaskForm({
 		case 'datasource':
 			modal = (
 				<CreateDatasourceModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={createDatasourceCallback}
 					initialStep={0}
@@ -329,7 +343,7 @@ export default function TaskForm({
 		case 'task':
 			modal = (
 				<CreateTaskModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={createTaskCallback}
 				/>
@@ -339,20 +353,26 @@ export default function TaskForm({
 		case 'agent':
 			modal = (
 				<CreateAgentModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={agentCallback}
 				/>
 			);
 			break;
 
+		case 'variable':
+			modal = (
+				<CreateVariableModal
+					open={Boolean(modalOpen)}
+					setOpen={setModalOpen}
+					callback={handleNewVariableCreation}
+				/>
+			);
+			break;
+
 		default:
 			modal = (
-				<CreateToolModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					callback={toolCallback}
-				/>
+				<CreateToolModal open={Boolean(modalOpen)} setOpen={setModalOpen} callback={toolCallback} />
 			);
 			break;
 	}
@@ -831,11 +851,6 @@ export default function TaskForm({
 					</button>
 				</div>
 			</form>
-			<CreateVariableModal
-				open={isCreateVariableModalOpen}
-				setOpen={setCreateVariableModalOpen}
-				callback={autocompleteDescription.handleNewVariableCreation}
-			/>
 		</>
 	);
 }

@@ -6,8 +6,9 @@ interface UseAutocompleteDropdownProps {
 	value?: string;
 	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
-	setCreateVariableModalOpen: Dispatch<SetStateAction<boolean>>;
+	setModalOpen: Dispatch<SetStateAction<string>>;
 	initialState?: TasksDataReturnType['variables'];
+	setCurrentInput: Dispatch<SetStateAction<string>>;
 }
 
 interface DropdownPosition {
@@ -20,8 +21,9 @@ const useAutocompleteDropdown = ({
 	value,
 	setValue,
 	setSelectedVariables,
-	setCreateVariableModalOpen,
-	initialState
+	setModalOpen,
+	initialState,
+	setCurrentInput
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
@@ -58,9 +60,9 @@ const useAutocompleteDropdown = ({
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
 		setValue(prevValue => `${prevValue}${newVariable.label}}`);
 		setSelectedVariables(prev => [...prev, newVariable]);
-		setCreateVariableModalOpen(false);
 		setShowDropdown(false);
 		setFilterText('');
+		setModalOpen(null);
 	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -126,7 +128,8 @@ const useAutocompleteDropdown = ({
 
 	const handleOptionSelect = (option: { label: string; value: string }) => {
 		if (option.value === 'create_new') {
-			setCreateVariableModalOpen(true);
+			setModalOpen('variable');
+			setCurrentInput(inputRef.current?.name || null);
 			return;
 		}
 		const input = inputRef.current;

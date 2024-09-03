@@ -45,10 +45,10 @@ export default function AgentForm({
 }) {
 	//TODO: fix any types
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [modalOpen, setModalOpen]: any = useState(false);
+	const [modalOpen, setModalOpen]: any = useState<string>();
 	const [callbackKey, setCallbackKey] = useState(null);
 	const [allowDelegation, setAllowDelegation] = useState(agent?.allowDelegation);
 	const [verbose, setVerbose] = useState(agent?.verbose);
@@ -62,7 +62,8 @@ export default function AgentForm({
 	const [backstory, setBackstory] = useState(agent?.backstory || '');
 	const [goal, setGoal] = useState(agent?.goal || '');
 	const [role, setRole] = useState(agent?.role || '');
-	const [isCreateVariableModalOpen, setCreateVariableModalOpen] = useState(false);
+
+	const [currentInput, setCurrentInput] = useState<string>();
 
 	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<
 		{ label: string; value: string }[]
@@ -93,8 +94,9 @@ export default function AgentForm({
 		options: backstoryVariableOptions,
 		setValue: setBackstory,
 		setSelectedVariables: setBackstorySelectedVariables,
-		setCreateVariableModalOpen,
-		initialState: variables
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput
 	});
 
 	const autocompleteGoal = useAutocompleteDropdown({
@@ -102,8 +104,9 @@ export default function AgentForm({
 		options: goalVariableOptions,
 		setValue: setGoal,
 		setSelectedVariables: setGoalSelectedVariables,
-		setCreateVariableModalOpen,
-		initialState: variables
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput
 	});
 
 	const autocompleteRole = useAutocompleteDropdown({
@@ -111,8 +114,9 @@ export default function AgentForm({
 		options: roleVariableOptions,
 		setValue: setRole,
 		setSelectedVariables: setRoleSelectedVariables,
-		setCreateVariableModalOpen,
-		initialState: variables
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput
 	});
 
 	const getInitialTools = (acc, tid) => {
@@ -262,6 +266,22 @@ export default function AgentForm({
 		return <Spinner />;
 	}
 
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		switch (currentInput) {
+			case 'backstory':
+				autocompleteBackstory.handleNewVariableCreation(newVariable);
+				break;
+			case 'goal':
+				autocompleteGoal.handleNewVariableCreation(newVariable);
+				break;
+			case 'role':
+				autocompleteRole.handleNewVariableCreation(newVariable);
+				break;
+			default:
+				break;
+		}
+	};
+
 	let modal;
 	switch (modalOpen) {
 		case 'model':
@@ -299,6 +319,15 @@ export default function AgentForm({
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
 					callback={toolCallback}
+				/>
+			);
+			break;
+		case 'variable':
+			modal = (
+				<CreateVariableModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={handleNewVariableCreation}
 				/>
 			);
 			break;
@@ -532,12 +561,6 @@ export default function AgentForm({
 					</button>
 				</div>
 			</form>
-
-			<CreateVariableModal
-				open={isCreateVariableModalOpen}
-				setOpen={setCreateVariableModalOpen}
-				callback={autocompleteBackstory.handleNewVariableCreation}
-			/>
 		</>
 	);
 }
