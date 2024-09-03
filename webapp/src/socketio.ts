@@ -204,7 +204,7 @@ export function initSocket(rawHttpServer) {
 				teamId: session.teamId,
 				sessionId: session._id,
 				authorId:
-					socketRequest.locals.isAgentBackend === true ? socketRequest?.locals?.account?._id : null,
+					socketRequest.locals.isAgentBackend !== true ? socketRequest?.locals?.account?._id : null,
 				authorName: finalMessage.authorName,
 				ts: finalMessage.ts || messageTimestamp,
 				isFeedback: finalMessage.isFeedback === true,

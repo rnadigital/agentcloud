@@ -194,15 +194,12 @@ export function getSessions(body, dispatch, errorCallback, router) {
 	);
 }
 export function getMessages(body, dispatch, errorCallback, router) {
-	return ApiCall(
-		`/${body.resourceSlug}/session/${body.sessionId}/messages.json`,
-		'GET',
-		null,
-		dispatch,
-		errorCallback,
-		router
-	);
+	const queryString = new URLSearchParams({
+		...(body?.messageId ? { messageId: body.messageId } : {})
+	}).toString();
+	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
 }
+
 
 // Agents
 export function addAgent(body, dispatch, errorCallback, router) {
