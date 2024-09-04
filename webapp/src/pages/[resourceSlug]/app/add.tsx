@@ -125,7 +125,7 @@ export default function AddApp(props: AddAppProps) {
 											<div className='text-lg font-semibold text-gray-900 dark:text-white'>
 												Chat App
 											</div>
-											<div className='text-gray-500 max-w-sm dark:text-gray-50'>
+											<div className='text-gray-500 max-w-sm dark:text-gray-50 mr-2'>
 												Build your chat app effortlessly with intelligent agents handling
 												conversations
 											</div>
@@ -133,7 +133,7 @@ export default function AddApp(props: AddAppProps) {
 									</div>
 
 									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto md:max-w-sm border border-gray-200 dark:text-white ml-auto'
 										onClick={handleCreateChatApp}
 									>
 										+ Create
@@ -164,14 +164,14 @@ export default function AddApp(props: AddAppProps) {
 											<div className='text-lg font-semibold text-gray-900 dark:text-white'>
 												Process App
 											</div>
-											<div className='text-gray-500 max-w-sm dark:text-gray-50'>
+											<div className='text-gray-500 max-w-sm dark:text-gray-50 mr-2'>
 												Effortlessly organize tasks and automate them with intelligent agents.
 											</div>
 										</div>
 									</div>
 
 									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
+										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto md:max-w-sm border border-gray-200 dark:text-white ml-auto'
 										onClick={handleCreateProcessApp}
 									>
 										+ Create
