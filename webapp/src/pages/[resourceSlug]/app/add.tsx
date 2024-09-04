@@ -106,7 +106,7 @@ export default function AddApp(props: AddAppProps) {
 						<h2 className='text-gray-400 text-sm sm:text-base mt-2 dark:text-gray-50'>
 							Easily Build Intelligent Chat and Process Apps to Streamline Your Workflow
 						</h2>
-						<div className='md:flex gap-8 w-full mt-10'>
+						<div className='md:flex gap-2 lg:gap-8 w-full mt-10'>
 							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
 								<ReactSVG
 									src={
