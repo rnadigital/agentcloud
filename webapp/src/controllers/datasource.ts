@@ -432,7 +432,8 @@ export async function addDatasourceApi(req, res, next) {
 		new_after_n_chars,
 		similarity_threshold,
 		overlap,
-		overlap_all
+		overlap_all,
+		file_type
 	} = chunkingConfig || {};
 
 	// Update the datasource with the connection settings and sync date
@@ -452,7 +453,8 @@ export async function addDatasourceApi(req, res, next) {
 						: parseInt(max_characters),
 					overlap: parseInt(overlap),
 					similarity_threshold: parseFloat(similarity_threshold),
-					overlap_all: overlap_all === 'true'
+					overlap_all: overlap_all === 'true',
+					file_type
 				}
 			: null //TODO: validation
 	});
