@@ -425,6 +425,16 @@ export async function addDatasourceApi(req, res, next) {
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
 
+	const {
+		partitioning,
+		strategy,
+		max_characters,
+		new_after_n_chars,
+		similarity_threshold,
+		overlap,
+		overlap_all
+	} = chunkingConfig || {};
+
 	// Update the datasource with the connection settings and sync date
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: createdConnection.connectionId,
@@ -432,7 +442,19 @@ export async function addDatasourceApi(req, res, next) {
 		modelId: toObjectId(modelId),
 		embeddingField,
 		streamConfig, //TODO: validation
-		chunkingConfig: enableConnectorChunking ? chunkingConfig : null //TODO: validation
+		chunkingConfig: enableConnectorChunking
+			? {
+					partitioning,
+					strategy,
+					max_characters: parseInt(max_characters),
+					new_after_n_chars: new_after_n_chars
+						? parseInt(new_after_n_chars)
+						: parseInt(max_characters),
+					overlap: parseInt(overlap),
+					similarity_threshold: parseFloat(similarity_threshold),
+					overlap_all: overlap_all === 'true'
+				}
+			: null //TODO: validation
 	});
 
 	// Create the collection in qdrant
