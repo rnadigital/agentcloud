@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint import MemorySaver
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode
 

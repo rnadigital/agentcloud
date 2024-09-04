@@ -4,15 +4,16 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 
-from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import BaseMessage
-from langchain_core.tools import BaseTool
 from langgraph.errors import GraphRecursionError
-from socketio import SimpleClient
-
+from typing import TYPE_CHECKING
+    
 from messaging.send_message_to_socket import send
 from models.sockets import SocketEvents, SocketMessage, Message
 from redisClient.utilities import RedisClass
+
+if TYPE_CHECKING:
+    from ..chat_assistant import ChatAssistant
 
 
 class BaseChatAgent:
@@ -20,15 +21,16 @@ class BaseChatAgent:
     Base class for the chatbot agent runtime.
     """
 
-    def __init__(self, chat_model: BaseLanguageModel, tools: list[BaseTool], agent_name: str, session_id: str,
-                 socket: SimpleClient):
-        self.chat_model = chat_model
-        self.tools = tools
-        self.agent_name = agent_name
-        self.session_id = session_id
-        self.socket = socket
+    def __init__(self, chat_assistant_obj: 'ChatAssistant'):
+        self.chat_model = chat_assistant_obj.chat_model
+        self.tools = chat_assistant_obj.tools
+        self.agent_name = chat_assistant_obj.agent_name
+        self.session_id = chat_assistant_obj.session_id
+        self.socket = chat_assistant_obj.socket
+        self.system_message = chat_assistant_obj.system_message
         self.graph = self.build_graph()
         self.redis_con = RedisClass()
+        self.chat_assistant_obj = chat_assistant_obj
 
     @abstractmethod
     def build_graph(self):
@@ -86,7 +88,7 @@ class BaseChatAgent:
 
         try:
             async for event in self.graph.astream_events({"messages": messages},
-                                                         config=config, version="v1"):
+                                                         config=config, version="v2"):
                 if self.stop_generating_check():
                     self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
                                         first=True, chunk_id=str(uuid.uuid4()),
@@ -191,4 +193,3 @@ class BaseChatAgent:
                 """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                 timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
             pass
-

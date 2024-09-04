@@ -32,8 +32,7 @@ class ChatAssistant:
         self.mongo_client = start_mongo_session()
         self.init_socket()
         self.init_app_state()
-        self.chat_agent = chat_agent_factory(chat_model=self.chat_model, tools=self.tools, agent_name=self.agent_name,
-                                             session_id=session_id, socket=self.socket)
+        self.chat_agent = chat_agent_factory(chat_assistant_obj=self)
 
     def init_socket(self):
         try:
