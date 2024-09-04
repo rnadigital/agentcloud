@@ -14,6 +14,9 @@ import {
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { SharingMode } from 'struct/sharing';
+
+import { Session, unsafeGetSessionById } from '../db/session';
 
 export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
@@ -68,13 +71,32 @@ export async function taskData(req, res, _next) {
  * GET /[resourceSlug]/task/:taskId.json
  * task json data
  */
-export async function taskJson(req, res, next) {
+export async function getTaskByIdJson(req, res, next) {
 	const data = await taskData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
-export async function taskByName(req, res, next) {
+
+export async function getTaskJson(req, res, next) {
+	const { name } = req?.query || {};
 	try {
-		const task = await getTaskByName(req.params.resourceSlug, req.body.taskName);
+		const task = await getTaskByName(req.params.resourceSlug, name);
+		if (!task) {
+			return res.status(404).json({ error: 'Task not found' });
+		}
+		return res.json({ ...task });
+	} catch (error) {
+		return next(error);
+	}
+}
+
+export async function publicGetTaskJson(req, res, next) {
+	const { name, sessionId } = req?.query || {};
+	try {
+		const session = await unsafeGetSessionById(sessionId);
+		if (session?.sharingConfig?.mode !== SharingMode.PUBLIC) {
+			return res.status(404).json({ error: 'No permission' });
+		}
+		const task = await getTaskByName(session?.teamId, name);
 		if (!task) {
 			return res.status(404).json({ error: 'Task not found' });
 		}
