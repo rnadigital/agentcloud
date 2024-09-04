@@ -61,20 +61,20 @@ pub enum UnstructuredPartitioningStrategy {
 impl UnstructuredPartitioningStrategy {
     pub fn from_str(strategy: &str) -> Option<Self> {
         match strategy {
-            "Auto" => Some(Self::Auto),
-            "Fast" => Some(Self::Fast),
-            "HiRes" => Some(Self::HiRes),
-            "OcrOnly" => Some(Self::OcrOnly),
+            "auto" => Some(Self::Auto),
+            "fast" => Some(Self::Fast),
+            "hi_res" => Some(Self::HiRes),
+            "ocr_only" => Some(Self::OcrOnly),
             _ => None,
         }
     }
 
     pub fn as_str<'a>(strategy: &Self) -> &'a str {
         match strategy {
-            Self::Auto => "Auto",
-            Self::Fast => "Fast",
-            Self::HiRes => "HiRes",
-            Self::OcrOnly => "OcrOnly",
+            Self::Auto => "auto",
+            Self::Fast => "fast",
+            Self::HiRes => "hi_res",
+            Self::OcrOnly => "ocr_only",
         }
     }
 }
