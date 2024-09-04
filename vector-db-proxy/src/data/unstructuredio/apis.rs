@@ -69,21 +69,47 @@ pub fn chunk_text(
         .timeout(Duration::from_secs(2000))
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?;
+
     // Create a multipart form with the file and sends the POST request
     let mut header_map = HeaderMap::new();
     header_map.insert("accept", HeaderValue::from_str("application/json")?);
+
     let form =
         chunking_strategy_to_form_data(file_buffer, file_name, chunking_strategy, file_type)?;
-    api_key
-        .map(|key| header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap()));
+
+    if let Some(key) = api_key {
+        header_map.insert("unstructured-api-key", HeaderValue::from_str(&key).unwrap());
+    }
+
     match client.post(url).headers(header_map).multipart(form).send() {
-        Ok(response_obj) => match response_obj.json::<Vec<UnstructuredIOResponse>>() {
-            Ok(unstructuredio_response) => Ok(unstructuredio_response),
-            Err(e) => Err(anyhow!(
-                "An error occurred while unpacking the response from Unstructured IO. Error : {:?}",
-                e
-            )),
-        },
-        Err(e) => Err(anyhow!("Encountered an error: {}", e)),
+        Ok(response_obj) => {
+            if response_obj.status().is_success() {
+                // If the request was successful, try to deserialize the response
+                match response_obj.json::<Vec<UnstructuredIOResponse>>() {
+                    Ok(unstructuredio_response) => Ok(unstructuredio_response),
+                    Err(e) => Err(anyhow!(
+                        "An error occurred while unpacking the successful response. Error: {:?}",
+                        e
+                    )),
+                }
+            } else {
+                // If the response status is not 2xx, handle the error and print the response
+                let status = response_obj.status();
+                let error_text = response_obj.text()?;
+                log::error!(
+                    "Received error response with status {}: {}",
+                    status,
+                    error_text
+                );
+                Err(anyhow!(
+                    "Received an error response from Unstructured IO: {}",
+                    error_text
+                ))
+            }
+        }
+        Err(e) => Err(anyhow!(
+            "Encountered an error while sending the request: {}",
+            e
+        )),
     }
 }
