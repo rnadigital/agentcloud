@@ -367,7 +367,9 @@ export async function editTaskApi(req, res, next) {
 
 	const updatePromises = [...existingVariableIds, ...newVariableIds].map(async (id: string) => {
 		const variable = await getVariableById(req.params.resourceSlug, id);
-		const usedInTasks = new Set(variable.usedInTasks.map(v => v.toString()) || []);
+		const usedInTasks = variable.usedInTasks
+			? new Set(variable.usedInTasks?.map(v => v.toString()))
+			: new Set([]);
 
 		if (existingVariableIds.has(id) && !newVariableIds.has(id)) {
 			usedInTasks.delete(req.params.taskId);

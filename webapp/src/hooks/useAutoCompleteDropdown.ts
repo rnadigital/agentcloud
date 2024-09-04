@@ -9,6 +9,7 @@ interface UseAutocompleteDropdownProps {
 	setModalOpen: Dispatch<SetStateAction<string>>;
 	initialState?: TasksDataReturnType['variables'];
 	setCurrentInput: Dispatch<SetStateAction<string>>;
+	fetchTaskFormData?: Function;
 }
 
 interface DropdownPosition {
@@ -23,7 +24,8 @@ const useAutocompleteDropdown = ({
 	setSelectedVariables,
 	setModalOpen,
 	initialState,
-	setCurrentInput
+	setCurrentInput,
+	fetchTaskFormData
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
@@ -48,18 +50,26 @@ const useAutocompleteDropdown = ({
 			const selectedFromInitialState = initialState.filter(variable =>
 				value?.includes(`{${variable.name}}`)
 			);
-			setSelectedVariables(
-				selectedFromInitialState.map(variable => ({
-					label: variable.name,
-					value: variable._id.toString()
-				}))
-			);
+			setSelectedVariables(prev => {
+				const merged = [
+					...prev,
+					...selectedFromInitialState.map(variable => ({
+						label: variable.name,
+						value: variable._id.toString()
+					}))
+				];
+				const unique = Array.from(new Set(merged.map(v => v.value))).map(value =>
+					merged.find(v => v.value === value)
+				);
+				return unique;
+			});
 		}
 	}, [initialState, value, setSelectedVariables]);
 
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
 		setValue(prevValue => `${prevValue}${newVariable.label}}`);
 		setSelectedVariables(prev => [...prev, newVariable]);
+		fetchTaskFormData();
 		setShowDropdown(false);
 		setFilterText('');
 		setModalOpen(null);

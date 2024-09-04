@@ -47,7 +47,8 @@ export default function VariableForm({
 			// Call API to create new variable
 			await API.addVariable(
 				{ _csrf: csrf, resourceSlug, ...data },
-				() => {
+				res => {
+					callback({ label: data.name, value: res._id });
 					toast.success('Variable Added');
 				},
 				res => {
@@ -56,10 +57,11 @@ export default function VariableForm({
 				null
 			);
 		}
-		if (fetchVariableFormData) fetchVariableFormData();
-		if (callback) {
-			callback({ label: data.name, value: data.defaultValue });
-		} else {
+
+		if (!callback) {
+			if (fetchVariableFormData) {
+				fetchVariableFormData();
+			}
 			router.push(`/${resourceSlug}/variables`);
 		}
 	};

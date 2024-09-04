@@ -152,7 +152,8 @@ export default function TaskForm({
 		setSelectedVariables: setDescriptionSelectedVariables,
 		setModalOpen,
 		initialState: variables,
-		setCurrentInput
+		setCurrentInput,
+		fetchTaskFormData
 	});
 
 	const autocompleteExpectedOutput = useAutocompleteDropdown({
@@ -162,7 +163,8 @@ export default function TaskForm({
 		setSelectedVariables: setExpectedOutputSelectedVariables,
 		setModalOpen,
 		initialState: variables,
-		setCurrentInput
+		setCurrentInput,
+		fetchTaskFormData
 	});
 
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
