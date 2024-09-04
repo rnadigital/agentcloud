@@ -19,7 +19,7 @@ export default function EditTask(props) {
 	const taskChoices = tasks?.filter(x => x._id.toString() !== task._id.toString()) || [];
 
 	async function fetchTaskFormData() {
-		await API.getTask(
+		await API.getTaskById(
 			{
 				resourceSlug,
 				taskId
