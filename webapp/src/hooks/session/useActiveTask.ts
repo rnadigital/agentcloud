@@ -16,7 +16,7 @@ const useActiveTask = (messages: any[]) => {
 	);
 	const router = useRouter();
 
-	const { resourceSlug } = router.query;
+	const { resourceSlug, sessionId } = router.query;
 
 	useEffect(() => {
 		if (lastRunningTaskName) {
@@ -25,10 +25,11 @@ const useActiveTask = (messages: any[]) => {
 			);
 			const taskName = taskNameMatch ? taskNameMatch[1].trim() : null;
 
-			API.getTaskByName(
+			API.getTask(
 				{
 					resourceSlug,
-					taskName,
+					sessionId,
+					name: taskName,
 					_csrf: csrf
 				},
 				setActiveTask,
