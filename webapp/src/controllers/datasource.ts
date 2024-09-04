@@ -1003,7 +1003,7 @@ export async function uploadFileApi(req, res, next) {
 			partitioning,
 			strategy,
 			max_characters: parseInt(max_characters),
-			new_after_n_chars: parseInt(new_after_n_chars) || parseInt(max_characters),
+			new_after_n_chars: new_after_n_chars ? parseInt(new_after_n_chars) : parseInt(max_characters),
 			overlap: parseInt(overlap),
 			similarity_threshold: parseFloat(similarity_threshold),
 			overlap_all: overlap_all === 'true'
