@@ -9,7 +9,11 @@ import {
 	unsafeGetAgentNameMap
 } from 'db/agent';
 import { getAppById, unsafeGetAppById } from 'db/app';
-import { getChatMessagesBySession, unsafeGetChatMessagesBySession } from 'db/chat';
+import {
+	getChatMessageAfterId,
+	getChatMessagesBySession,
+	unsafeGetChatMessagesBySession
+} from 'db/chat';
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
 	addSession,
@@ -159,6 +163,24 @@ export async function publicSessionMessagesData(req, res, _next) {
  * get session messages
  */
 export async function sessionMessagesJson(req, res, next) {
+	if (req?.query?.messageId) {
+		let validationError = chainValidations(
+			req?.query,
+			[{ field: 'messageId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+			{ messageId: 'Message ID' }
+		);
+
+		if (validationError) {
+			return dynamicResponse(req, res, 400, { error: validationError });
+		}
+
+		const messages = await getChatMessageAfterId(
+			req.params.resourceSlug,
+			req.params.sessionId,
+			req.query.messageId
+		);
+		return res.json(messages);
+	}
 	const data = await sessionMessagesData(req, res, next);
 	return res.json(data);
 }

@@ -13,6 +13,7 @@ from models.mongo import Model, Tool, Datasource
 from vectorstores.factory import vectorstore_factory
 
 from langchain_community.vectorstores.qdrant import Qdrant #TODO: remove
+from langchain_community.vectorstores.pinecone import Pinecone #TODO: remove
 
 from .retrievers import BaseToolRetriever, retriever_factory
 
@@ -79,6 +80,7 @@ class RagTool(GlobalBaseTool):
         # Monkey-patching `similarity_search` because that's what's called by
         # self_query and multi_query retrievers internally, but we want scores too
         Qdrant.similarity_search = Qdrant.similarity_search_with_score
+        Pinecone.similarity_search = Pinecone.similarity_search_with_score
         super().__init__(**kwargs)
 
     @staticmethod
@@ -97,3 +99,4 @@ class RagTool(GlobalBaseTool):
     def __del__(self):
         # Restore to earlier state
         Qdrant.similarity_search = Qdrant.similarity_search
+        Pinecone.similarity_search = Pinecone.similarity_search

@@ -1,6 +1,5 @@
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-
-import { useAccountContext } from '../context/account';
 
 export default function Index() {
 	const [accountContext]: any = useAccountContext();

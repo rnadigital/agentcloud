@@ -1,4 +1,5 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
+import * as API from 'api';
 import ModelTable from 'components/ModelTable';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
@@ -8,8 +9,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import * as API from '../../api';
 
 export default function Models(props) {
 	const [accountContext]: any = useAccountContext();

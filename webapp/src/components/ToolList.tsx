@@ -1,13 +1,13 @@
+import * as API from '@api';
 import { DocumentDuplicateIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/20/solid';
+import DevBadge from 'components/DevBadge';
+import ToolStateBadge from 'components/ToolStateBadge';
+import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Tool, ToolState, ToolType } from 'struct/tool';
-
-import * as API from '../api';
-import { useAccountContext } from '../context/account';
-import ToolStateBadge from './ToolStateBadge';
 
 export default function ToolList({ tools, fetchTools }: { tools: Tool[]; fetchTools: Function }) {
 	const [accountContext]: any = useAccountContext();
@@ -59,6 +59,7 @@ export default function ToolList({ tools, fetchTools }: { tools: Tool[]; fetchTo
 										</span>
 									)}
 								</div>
+								<DevBadge text={`Tool ID: ${tool?._id}`} />
 								<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>
 									{tool.type} - {tool?.data?.description || tool?.description}
 								</p>

@@ -39,11 +39,10 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 					case 'number':
 					case 'date':
 						return (
-							<>
+							<React.Fragment key={field.name}>
 								<div className='invisible xl:visible col-span-1'></div>
 
 								<div
-									key={field.name}
 									className={cn(
 										index === 0 && 'rounded-t-lg',
 										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
@@ -69,14 +68,13 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
-							</>
+							</React.Fragment>
 						);
 					case 'radio':
 						return (
-							<>
+							<React.Fragment key={field.name}>
 								<div className='invisible xl:visible col-span-1'></div>
 								<div
-									key={field.name}
 									className={cn(
 										index === 0 && 'rounded-t-lg',
 										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3'
@@ -114,14 +112,13 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
-							</>
+							</React.Fragment>
 						);
 					case 'checkbox':
 						return (
-							<>
+							<React.Fragment key={field.name}>
 								<div className='invisible xl:visible col-span-1'></div>
 								<div
-									key={field.name}
 									className={cn(
 										index === 0 && 'rounded-t-lg',
 										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 my-2'
@@ -168,16 +165,15 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
-							</>
+							</React.Fragment>
 						);
 					case 'select':
 					case 'multiselect':
 						return (
-							<>
+							<React.Fragment key={field.name}>
 								<div className='invisible xl:visible col-span-1'></div>
 
 								<div
-									key={field.name}
 									className={cn(
 										index === 0 && 'rounded-t-lg',
 										'flex flex-col ps-2 justify-start px-4 pt-1 col-span-1 xl:col-span-3 my-2'
@@ -207,7 +203,7 @@ const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) =
 									)}
 								</div>
 								<div className='invisible xl:visible col-span-1'></div>
-							</>
+							</React.Fragment>
 						);
 					default:
 						return null;

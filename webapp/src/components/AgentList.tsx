@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import AgentAvatar from 'components/AgentAvatar';
+import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -47,6 +48,7 @@ export default function AgentList({ agents, fetchAgents }) {
 								<h3 className='truncate text-sm font-medium text-gray-900 dark:text-white'>
 									{agent.name}
 								</h3>
+								<DevBadge text={`Agent ID: ${agent?._id}`} />
 							</div>
 							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>
 								{agent.model}

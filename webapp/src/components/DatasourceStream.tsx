@@ -158,7 +158,7 @@ export function StreamRow({
 										and stored. Make sure to choose the mode that best suits your needs.{' '}
 										<Link
 											className='text-blue-600'
-											href={'https://docs.agentcloud.dev/documentation/get-started/introduction'}
+											href={'https://docs.airbyte.com/using-airbyte/core-concepts/sync-modes/'}
 											rel='noopener noreferrer'
 											target='_blank'
 										>

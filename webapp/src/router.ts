@@ -294,6 +294,10 @@ export default function router(server, app) {
 		'/:shareLinkShareId(app_[a-f0-9]{64,})', //Note: app_prefix to be removed once we handle other sharinglinktypes
 		sharelinkController.handleRedirect
 	);
+	publicAppRouter.get(
+		'/task',
+		taskController.publicGetTaskJson
+	);
 	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
 
 	// Airbyte webhooks
@@ -367,10 +371,10 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.CREATE_TASK),
 		taskController.taskAddPage.bind(null, app)
 	);
-	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
-	teamRouter.post(
-		'/task/get-by-name',
-		taskController.taskByName
+	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.getTaskByIdJson);
+	teamRouter.get(
+		'/task',
+		taskController.getTaskJson
 	);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',

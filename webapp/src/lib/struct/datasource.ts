@@ -51,7 +51,7 @@ export type DatasourceRecordCount = {
 };
 
 export const SyncModes = [
-	'full_refresh_overwrite',
+	// 'full_refresh_overwrite',
 	'full_refresh_append',
 	'incremental_append'
 	// 'incremental_deduped_history'
@@ -122,6 +122,7 @@ export type UnstructuredChunkingConfig = {
 	overlap: number;
 	similarity_threshold: number; // between 0.0 and 1.0
 	overlap_all: boolean;
+	file_type?: 'txt' | 'markdown'; //Note: only used for connectors
 };
 
 export type Datasource = {

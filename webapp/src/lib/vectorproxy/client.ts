@@ -8,9 +8,8 @@ dotenv.config({ path: '.env' });
 // Import structs from the alias
 import { unsafeGetDatasourceById } from 'db/datasource';
 import { IdOrStr } from 'db/index';
+import { getModelById } from 'db/model';
 import { CollectionCreateBody, Distance, VectorResponseBody } from 'struct/vectorproxy';
-
-import { getModelById } from '../../db/model';
 
 class VectorDBProxyClient {
 	// Method to create a collection

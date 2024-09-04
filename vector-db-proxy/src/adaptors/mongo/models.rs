@@ -1,3 +1,4 @@
+use crate::data::models::FileType;
 use bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
@@ -58,20 +59,20 @@ pub enum UnstructuredPartitioningStrategy {
 impl UnstructuredPartitioningStrategy {
     pub fn from_str(strategy: &str) -> Option<Self> {
         match strategy {
-            "auto" => Some(Self::Auto),
-            "fast" => Some(Self::Fast),
-            "hi_res" => Some(Self::HiRes),
-            "ocr_only" => Some(Self::OcrOnly),
+            "Auto" => Some(Self::Auto),
+            "Fast" => Some(Self::Fast),
+            "HiRes" => Some(Self::HiRes),
+            "OcrOnly" => Some(Self::OcrOnly),
             _ => None,
         }
     }
 
     pub fn as_str<'a>(strategy: &Self) -> &'a str {
         match strategy {
-            Self::Auto => "auto",
-            Self::Fast => "fast",
-            Self::HiRes => "hi_res",
-            Self::OcrOnly => "ocr_only",
+            Self::Auto => "Auto",
+            Self::Fast => "Fast",
+            Self::HiRes => "HiRes",
+            Self::OcrOnly => "OcrOnly",
         }
     }
 }
@@ -85,6 +86,7 @@ pub struct UnstructuredChunkingConfig {
     pub overlap: usize,
     pub similarity_threshold: f64, // between 0.0 and 1.0
     pub overlap_all: bool,
+    pub file_type: Option<FileType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -203,4 +205,5 @@ pub struct EmbeddingConfig {
     pub model: Option<Model>,
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
+    pub chunking_strategy: Option<UnstructuredChunkingConfig>,
 }

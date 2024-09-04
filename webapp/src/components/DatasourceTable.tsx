@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
+import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
 import Link from 'next/link';
@@ -162,9 +163,10 @@ export default function DatasourceTable({
 											src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`}
 											className='w-6 me-1.5'
 										/>
-										<span className='ps-2 inline-flex text-sm leading-6 rounded-full capitalize'>
+										<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
 											{datasource.sourceType}
 										</span>
+										<DevBadge text={`ID: ${datasource?._id}`} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'

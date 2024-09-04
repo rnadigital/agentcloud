@@ -98,6 +98,7 @@ pub async fn get_model_and_embedding_key(
 
     embedding_config.model = model;
     embedding_config.embedding_key = datasource.embeddingField;
+    embedding_config.chunking_strategy = datasource.chunkStrategy;
 
     // Populate primary key if stream config exists
     if let Some(stream_config) = datasource.streamConfig {

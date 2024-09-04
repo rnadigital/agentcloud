@@ -42,7 +42,7 @@ import StorageProviderFactory from 'lib/storage';
 import StripeClient from 'lib/stripe';
 import { resyncAllDatasources } from 'utils/resync';
 import { v4 as uuidv4 } from 'uuid';
-import { initSocket } from './socketio';
+
 const log = debug('webapp:server');
 
 app
