@@ -20,6 +20,7 @@ pub struct DatasourceConnectionSettings {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredChunkingStrategy {
     Basic,
     ByTitle,
@@ -49,6 +50,7 @@ impl UnstructuredChunkingStrategy {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredPartitioningStrategy {
     Auto,
     Fast,
