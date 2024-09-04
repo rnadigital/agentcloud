@@ -26,7 +26,9 @@ fn chunking_strategy_to_form_data(
 
     if let Some(strategy_config) = chunking_strategy {
         let chunking_strategy = UnstructuredChunkingStrategy::as_str(&strategy_config.strategy);
-        form = form.text("chunking_strategy", chunking_strategy);
+        if strategy_config.strategy != UnstructuredChunkingStrategy::Basic {
+            form = form.text("chunking_strategy", chunking_strategy);
+        }
 
         let max_characters = strategy_config.max_characters.to_string();
         form = form.text("max_characters", max_characters);
