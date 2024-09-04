@@ -96,7 +96,8 @@ export default function AgentForm({
 		setSelectedVariables: setBackstorySelectedVariables,
 		setModalOpen,
 		initialState: variables,
-		setCurrentInput
+		setCurrentInput,
+		fetchFormData: fetchAgentFormData
 	});
 
 	const autocompleteGoal = useAutocompleteDropdown({
@@ -106,7 +107,8 @@ export default function AgentForm({
 		setSelectedVariables: setGoalSelectedVariables,
 		setModalOpen,
 		initialState: variables,
-		setCurrentInput
+		setCurrentInput,
+		fetchFormData: fetchAgentFormData
 	});
 
 	const autocompleteRole = useAutocompleteDropdown({
@@ -116,7 +118,8 @@ export default function AgentForm({
 		setSelectedVariables: setRoleSelectedVariables,
 		setModalOpen,
 		initialState: variables,
-		setCurrentInput
+		setCurrentInput,
+		fetchFormData: fetchAgentFormData
 	});
 
 	const getInitialTools = (acc, tid) => {

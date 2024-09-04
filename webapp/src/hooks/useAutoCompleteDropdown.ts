@@ -9,7 +9,7 @@ interface UseAutocompleteDropdownProps {
 	setModalOpen: Dispatch<SetStateAction<string>>;
 	initialState?: TasksDataReturnType['variables'];
 	setCurrentInput: Dispatch<SetStateAction<string>>;
-	fetchTaskFormData?: Function;
+	fetchFormData: Function;
 }
 
 interface DropdownPosition {
@@ -25,7 +25,7 @@ const useAutocompleteDropdown = ({
 	setModalOpen,
 	initialState,
 	setCurrentInput,
-	fetchTaskFormData
+	fetchFormData
 }: UseAutocompleteDropdownProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
@@ -69,7 +69,7 @@ const useAutocompleteDropdown = ({
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
 		setValue(prevValue => `${prevValue}${newVariable.label}}`);
 		setSelectedVariables(prev => [...prev, newVariable]);
-		fetchTaskFormData();
+		fetchFormData();
 		setShowDropdown(false);
 		setFilterText('');
 		setModalOpen(null);

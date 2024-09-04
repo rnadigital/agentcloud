@@ -7,7 +7,7 @@ import { removeAgentFromCrews } from 'db/crew';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById, getToolsByTeam } from 'db/tool';
-import { getVariablesByTeam } from 'db/variable';
+import { getVariableById, getVariablesByTeam, updateVariable } from 'db/variable';
 import toObjectId from 'lib/misc/toobjectid';
 import { chainValidations } from 'lib/utils/validationutils';
 
@@ -194,6 +194,18 @@ export async function addAgentApi(req, res, next) {
 		variableIds: variableIds.map(toObjectId)
 	});
 
+	if (variableIds && variableIds.length > 0) {
+		const updatePromises = variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const updatedVariable = {
+				...variable,
+				usedInAgents: [...(variable.usedInAgents || []), addedAgent.insertedId]
+			};
+			return updateVariable(req.params.resourceSlug, id, updatedVariable);
+		});
+		await Promise.all(updatePromises);
+	}
+
 	return dynamicResponse(req, res, 302, {
 		_id: addedAgent.insertedId,
 		redirect: `/${req.params.resourceSlug}/agents`
@@ -257,6 +269,29 @@ export async function editAgentApi(req, res, next) {
 	}
 
 	const foundIcon = await getAssetById(iconId);
+
+	const existingAgent = await getAgentById(req.params.resourceSlug, req.params.agentId);
+	const existingVariableIds = new Set(existingAgent?.variableIds?.map(v => v.toString()) || []);
+	const newVariableIds = new Set(variableIds);
+
+	const updatePromises = [...existingVariableIds, ...newVariableIds].map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		console.log(variable.usedInAgents);
+		const usedInAgents = variable?.usedInAgents
+			? new Set(variable.usedInAgents?.map(v => v.toString()))
+			: new Set([]);
+
+		if (existingVariableIds.has(id) && !newVariableIds.has(id)) {
+			usedInAgents.delete(req.params.agentId);
+		} else if (!existingVariableIds.has(id) && newVariableIds.has(id)) {
+			usedInAgents.add(req.params.agentId);
+		}
+
+		const updatedVariable = { ...variable, usedInAgents: Array.from(usedInAgents) };
+		return updateVariable(req.params.resourceSlug, id, updatedVariable);
+	});
+
+	await Promise.all(updatePromises);
 
 	await updateAgent(req.params.resourceSlug, req.params.agentId, {
 		name,
