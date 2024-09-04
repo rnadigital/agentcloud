@@ -66,7 +66,9 @@ export default function DropZone({
 			formData.set('retriever', retriever as string);
 			formData.set('_csrf', csrf as string);
 			Object.entries(chunkingConfig).forEach(([key, value]) => {
-				formData.set(key, value as string);
+				if (value != null) {
+					formData.set(key, value as string);
+				}
 			});
 			acceptedFiles.forEach(file => {
 				formData.append('file', file);
