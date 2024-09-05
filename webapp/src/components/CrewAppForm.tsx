@@ -74,8 +74,6 @@ export default function CrewAppForm({
 	const [verboseInt, setVerboseInt] = useState(verbose);
 	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
-	// const requiredVariables= variableChoices?.filter(v => v.required === true);
-	console.log(agentChoices, taskChoices);
 
 	function getInitialData(initData) {
 		const { agents, tasks } = initData;
@@ -121,6 +119,8 @@ export default function CrewAppForm({
 	);
 	const [variableValues, setVariableValues] = useState<{ [key: string]: string }>({});
 
+	console.log(variableValues);
+
 	const handleVariableChange = (id: string, value: string) => {
 		setVariableValues(prev => ({ ...prev, [id]: value }));
 	};
@@ -150,6 +150,23 @@ export default function CrewAppForm({
 		setAgentsState(initialAgents || []);
 		setTasksState(initialTasks);
 	}, [app?._id]);
+
+	useEffect(() => {
+		const newVariableValues = { ...variableValues };
+		let hasChanges = false;
+
+		selectedVariables.forEach(variable => {
+			const variableId = variable._id.toString();
+			if (!(variableId in newVariableValues)) {
+				newVariableValues[variableId] = null;
+				hasChanges = true;
+			}
+		});
+
+		if (hasChanges) {
+			setVariableValues(newVariableValues);
+		}
+	}, [selectedVariables, variableValues]);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -184,7 +201,8 @@ export default function CrewAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: app._id
+								id: app._id,
+								variableValues
 							},
 							null,
 							toast.error,
@@ -204,7 +222,8 @@ export default function CrewAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: res._id
+								id: res._id,
+								variableValues
 							},
 							null,
 							toast.error,
