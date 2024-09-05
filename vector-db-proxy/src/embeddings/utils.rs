@@ -245,13 +245,19 @@ pub async fn embed_bulk_insert_unstructured_response(
     let total_adjustment_amount = (list_of_text.len() as i32)-1;
     if total_adjustment_amount > 0 {
         //if more than 1 chunk was produced in unstructured, update the total to keep it accurate
-        incremental_total_record_count(
+        if let Err(e) = incremental_total_record_count(
             &mongo_connection,
             datasource_id.as_str(),
-            (list_of_text.len() as i32)-1,
+            total_adjustment_amount,
         )
         .await
-        .unwrap();
+        {
+            log::error!(
+                "An error occurred while updating the total record count for datasource {}. Error: {:?}",
+                datasource_id,
+                e
+            );
+        }
     }
     match embed_text_chunks_async(
         mongo_client.clone(),
