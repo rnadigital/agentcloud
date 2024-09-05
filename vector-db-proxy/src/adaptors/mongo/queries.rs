@@ -157,6 +157,28 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
         }
     }
 }
+
+pub async fn incremental_total_record_count(db: &Database, datasource_id: &str, amount: i32) -> Result<()> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    let update = doc! {
+        "$inc": {
+            "recordCount.total": amount,
+        },
+    };
+    let update_options = mongodb::options::UpdateOptions::default();
+    match datasources_collection
+        .update_one(filter, update, update_options)
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Error: {}", e);
+            Err(anyhow!("Failed to increment total count. Error: {}", e))
+        }
+    }
+}
+
 pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
     let mut list_of_datasources: Vec<DataSources> = vec![];
     let datasources_collection = db.collection::<DataSources>("datasources");

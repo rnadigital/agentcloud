@@ -15,7 +15,7 @@ use tokio::sync::RwLock;
 use tokio::task;
 use uuid::Uuid;
 
-use crate::adaptors::mongo::queries::{get_model, increment_by_one, set_record_count_total};
+use crate::adaptors::mongo::queries::{get_model, increment_by_one, incremental_total_record_count};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
@@ -242,13 +242,17 @@ pub async fn embed_bulk_insert_unstructured_response(
     // Construct a collection of the texts from the
     // Unstructured IO response to embed
     let list_of_text: Vec<String> = documents.iter().map(|doc| doc.text.clone()).collect();
-    set_record_count_total(
-        &mongo_connection,
-        datasource_id.as_str(),
-        list_of_text.len() as i32,
-    )
-    .await
-    .unwrap();
+    let total_adjustment_amount = (list_of_text.len() as i32)-1;
+    if total_adjustment_amount > 0 {
+        //if more than 1 chunk was produced in unstructured, update the total to keep it accurate
+        incremental_total_record_count(
+            &mongo_connection,
+            datasource_id.as_str(),
+            (list_of_text.len() as i32)-1,
+        )
+        .await
+        .unwrap();
+    }
     match embed_text_chunks_async(
         mongo_client.clone(),
         datasource_id.to_string(),

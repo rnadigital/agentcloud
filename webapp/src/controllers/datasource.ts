@@ -753,7 +753,7 @@ export async function syncDatasourceApi(req, res, next) {
 		await messageQueueProvider.sendMessage(message, metadata);
 
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.EMBEDDING
 		});
 	} else {
@@ -775,7 +775,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.PROCESSING
 		});
 	}
