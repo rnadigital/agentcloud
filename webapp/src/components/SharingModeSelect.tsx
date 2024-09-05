@@ -10,6 +10,7 @@ import { pricingMatrix } from 'struct/billing';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
 import SelectClassNames from 'styles/SelectClassNames';
+import WhiteListSharing from 'components/sharingmodes/WhiteListSharing';
 
 const sharingModeOptions = [
 	{
@@ -19,6 +20,14 @@ const sharingModeOptions = [
 	{
 		label: 'Public',
 		value: SharingMode.PUBLIC
+	},
+	{
+		label: 'Owner & Admins Only',
+		value: SharingMode.OWNER
+	},
+	{
+		label: 'Whitelist',
+		value: SharingMode.WHITELIST
 	}
 ];
 
@@ -28,7 +37,10 @@ const SharingModeSelect = ({
 	setSharingMode,
 	shareLinkShareId,
 	setShareLinkShareId,
-	showInfoAlert = false
+	showInfoAlert = false,
+	accountState = undefined,
+	onChange = undefined,
+	setModalOpen = undefined
 }) => {
 	const [loading, setLoading] = useState(false);
 	const [accountContext]: any = useAccountContext();
@@ -81,7 +93,7 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							if (v?.value === SharingMode.PUBLIC) {
+							if (v?.value === SharingMode.PUBLIC || v?.value === SharingMode.OWNER || v?.value === SharingMode.WHITELIST) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
 								}
@@ -109,6 +121,24 @@ const SharingModeSelect = ({
 			{showInfoAlert && sharingMode === SharingMode.PUBLIC && (
 				<div className='col-span-12'>
 					<SharingModeInfoAlert shareLinkShareId={shareLinkShareId} />
+				</div>
+			)}
+			{sharingMode == SharingMode.WHITELIST && (
+				<div className='col-span-12'>
+					<WhiteListSharing
+						shareLinkShareId={shareLinkShareId} 
+						setModalOpen={setModalOpen} 
+						accounts={accountState} 
+						onChange={onChange}
+					/>
+				</div>
+			)}
+			{sharingMode == SharingMode.OWNER && (
+				<div className='col-span-12'>
+					<SharingModeInfoAlert
+						shareLinkShareId={shareLinkShareId}
+						message = "This app will only be accessible by the creator of the app, team/org admins and team/org owner only."
+					/>
 				</div>
 			)}
 		</>
