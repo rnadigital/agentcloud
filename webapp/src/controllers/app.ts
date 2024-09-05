@@ -148,7 +148,7 @@ export async function addAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		maxMessages
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -326,7 +326,7 @@ export async function addAppApi(req, res, next) {
 					chatAppConfig: {
 						agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
-						recursionLimit
+						maxMessages
 					}
 				}),
 		sharingConfig: {
@@ -388,7 +388,7 @@ export async function editAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		maxMessages
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -562,7 +562,7 @@ export async function editAppApi(req, res, next) {
 					chatAppConfig: {
 						agentId: toObjectId(agentId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
-						recursionLimit
+						maxMessages
 					}
 				}),
 		sharingConfig: {

@@ -82,16 +82,25 @@ class BaseChatAgent:
         return chunk_content
 
     async def stream_execute(self):
-        config = {
-            "configurable": {
-                "thread_id": self.session_id
-            },
-            "recursion_limit": self.chat_assistant_obj.recursion_limit
-        }
+        config = {"configurable": {"thread_id": self.session_id}}
 
         while True:
             past_messages = self.graph.get_state(config).values.get("messages")
-            messages = [SystemMessage(content=self.system_message)] if not past_messages else past_messages
+
+            if past_messages:
+                if len(past_messages) > self.chat_assistant_obj.max_messages:
+                    # Not enforcing this check within the chain to allow chain to complete even if it exceeds limit
+                    # slightly. Move it to inside `astream_events` for-loop to enforce this limit strictly.
+                    logging.info(f"Maximum messages limit reached for session '{self.session_id}'. Ending chat.")
+                    self.send_to_socket(text=f"MAX_MESSAGES_LIMIT REACHED", event=SocketEvents.MESSAGE,
+                                        first=True, chunk_id=str(uuid.uuid4()),
+                                        timestamp=datetime.now().timestamp() * 1000,
+                                        display_type="inline")
+                    self.send_to_socket(event=SocketEvents.STOP_GENERATING, chunk_id=str(uuid.uuid4()))
+                    return
+                messages = past_messages
+            else:
+                messages = [SystemMessage(content=self.system_message)]
 
             chunk_id = str(uuid.uuid4())
             tool_chunk_id = {}
@@ -180,7 +189,7 @@ class BaseChatAgent:
                             logging.debug(f"unhandled {kind} event")
             except GraphRecursionError as ge:
                 logging.info(f"Maximum recursion limit reached for session '{self.session_id}'. Ending chat.")
-                self.send_to_socket(text=f"⛔ MAX_RECURSION_LIMIT REACHED", event=SocketEvents.MESSAGE,
+                self.send_to_socket(text=f"MAX_RECURSION_LIMIT REACHED", event=SocketEvents.MESSAGE,
                                     first=True, chunk_id=str(uuid.uuid4()),
                                     timestamp=datetime.now().timestamp() * 1000,
                                     display_type="inline")

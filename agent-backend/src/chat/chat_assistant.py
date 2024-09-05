@@ -24,7 +24,7 @@ class ChatAssistant:
     chat_agent: BaseChatAgent
     system_message: str
     agent_name: str
-    recursion_limit: int
+    max_messages: int
 
     def __init__(self, session_id: str):
         self.session_id = session_id
@@ -66,7 +66,7 @@ class ChatAssistant:
 
         self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
 
-        self.recursion_limit = app_config.recursionLimit
+        self.max_messages = app_config.maxMessages
 
     @staticmethod
     def _transform_tool_name(tool_name: str) -> str:
