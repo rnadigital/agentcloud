@@ -9,17 +9,17 @@ pub async fn get_namespaces_for_index(
     client: &PineconeClient,
     index: &IndexModel,
 ) -> Option<Vec<String>> {
-    let mut namespaces: Vec<String> = vec![];
     if let Ok(mut index) = client.index(index.name.as_str()).await {
         if let Ok(index_stats) = index.describe_index_stats(None).await {
-            namespaces = index_stats
+            let namespaces = index_stats
                 .namespaces
                 .iter()
                 .map(|(k, _)| k.clone())
                 .collect();
-        }
+            return Some(namespaces);
+        };
     }
-    Some(namespaces)
+    None
 }
 
 pub async fn get_indexes(client: &PineconeClient) -> Vec<String> {

@@ -98,6 +98,7 @@ pub async fn get_model_and_embedding_key(
 
     embedding_config.model = model;
     embedding_config.embedding_key = datasource.embeddingField;
+    embedding_config.chunking_strategy = datasource.chunkingConfig;
 
     // Populate primary key if stream config exists
     if let Some(stream_config) = datasource.streamConfig {
@@ -156,6 +157,51 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
         }
     }
 }
+
+pub async fn set_datasource_state(db: &Database, datasource_id: &str, state: &str) -> Result<()> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    match datasources_collection
+        .update_one(
+            filter,
+            doc! {"$set": {"status": state}},
+            mongodb::options::UpdateOptions::default(),
+        )
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Error: {}", e);
+            Err(anyhow!("Failed to increment variable. Error: {}", e))
+        }
+    }
+}
+
+pub async fn incremental_total_record_count(
+    db: &Database,
+    datasource_id: &str,
+    amount: i32,
+) -> Result<()> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    let update = doc! {
+        "$inc": {
+            "recordCount.total": amount,
+        },
+    };
+    let update_options = mongodb::options::UpdateOptions::default();
+    match datasources_collection
+        .update_one(filter, update, update_options)
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Error: {}", e);
+            Err(anyhow!("Failed to increment total count. Error: {}", e))
+        }
+    }
+}
+
 pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<DataSources>> {
     let mut list_of_datasources: Vec<DataSources> = vec![];
     let datasources_collection = db.collection::<DataSources>("datasources");
