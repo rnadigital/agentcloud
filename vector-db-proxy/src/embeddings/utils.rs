@@ -15,7 +15,7 @@ use tokio::sync::RwLock;
 use tokio::task;
 use uuid::Uuid;
 
-use crate::adaptors::mongo::queries::{get_model, increment_by_one, incremental_total_record_count};
+use crate::adaptors::mongo::queries::{get_model, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
@@ -242,23 +242,6 @@ pub async fn embed_bulk_insert_unstructured_response(
     // Construct a collection of the texts from the
     // Unstructured IO response to embed
     let list_of_text: Vec<String> = documents.iter().map(|doc| doc.text.clone()).collect();
-    let total_adjustment_amount = (list_of_text.len() as i32)-1;
-    if total_adjustment_amount > 0 {
-        //if more than 1 chunk was produced in unstructured, update the total to keep it accurate
-        if let Err(e) = incremental_total_record_count(
-            &mongo_connection,
-            datasource_id.as_str(),
-            total_adjustment_amount,
-        )
-        .await
-        {
-            log::error!(
-                "An error occurred while updating the total record count for datasource {}. Error: {:?}",
-                datasource_id,
-                e
-            );
-        }
-    }
     match embed_text_chunks_async(
         mongo_client.clone(),
         datasource_id.to_string(),
@@ -301,13 +284,6 @@ pub async fn embed_bulk_insert_unstructured_response(
                     match bulk_insert_status {
                         VectorDatabaseStatus::Ok => {
                             log::debug!("points uploaded successfully!");
-                            increment_by_one(
-                                &mongo_connection,
-                                datasource_id.as_str(),
-                                "recordCount.success",
-                            )
-                            .await
-                            .unwrap();
                         }
                         VectorDatabaseStatus::Failure | VectorDatabaseStatus::NotFound => {
                             increment_by_one(

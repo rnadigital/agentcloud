@@ -158,7 +158,30 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
-pub async fn incremental_total_record_count(db: &Database, datasource_id: &str, amount: i32) -> Result<()> {
+pub async fn set_datasource_state(db: &Database, datasource_id: &str, state: &str) -> Result<()> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    match datasources_collection
+        .update_one(
+            filter,
+            doc! {"$set": {"status": state}},
+            mongodb::options::UpdateOptions::default(),
+        )
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Error: {}", e);
+            Err(anyhow!("Failed to increment variable. Error: {}", e))
+        }
+    }
+}
+
+pub async fn incremental_total_record_count(
+    db: &Database,
+    datasource_id: &str,
+    amount: i32,
+) -> Result<()> {
     let datasources_collection = db.collection::<DataSources>("datasources");
     let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
     let update = doc! {
