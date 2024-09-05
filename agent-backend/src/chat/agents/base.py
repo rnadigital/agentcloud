@@ -4,7 +4,7 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, SystemMessage
 from langgraph.errors import GraphRecursionError
 from typing import TYPE_CHECKING
     
@@ -81,115 +81,126 @@ class BaseChatAgent:
     def _parse_model_chunk(chunk_content) -> str:
         return chunk_content
 
-    async def stream_execute(self, messages: list[BaseMessage], config: dict):
-        chunk_id = str(uuid.uuid4())
-        tool_chunk_id = {}
-        first = True
+    async def stream_execute(self):
+        config = {
+            "configurable": {
+                "thread_id": self.session_id
+            },
+            "recursion_limit": self.chat_assistant_obj.recursion_limit
+        }
 
-        try:
-            async for event in self.graph.astream_events({"messages": messages},
-                                                         config=config, version="v2"):
-                if self.stop_generating_check():
-                    self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
-                                        first=True, chunk_id=str(uuid.uuid4()),
-                                        timestamp=datetime.now().timestamp() * 1000,
-                                        display_type="inline")
-                    return
+        while True:
+            past_messages = self.graph.get_state(config).values.get("messages")
+            messages = [SystemMessage(content=self.system_message)] if not past_messages else past_messages
 
-                kind = event["event"]
-                logging.debug(f"{kind}:\n{event}")
-                match kind:
-                    # message chunk
-                    case "on_chat_model_stream":
-                        content = event['data']['chunk'].content
-                        chunk = repr(content)
-                        content = self._parse_model_chunk(content)
-                        tags = event['tags'] or []
-                        if type(content) is str and not any(x in tags for x in {'rag_retrieval', 'no_stream'}):
-                            self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
-                                                first=first, chunk_id=chunk_id,
-                                                timestamp=datetime.now().timestamp() * 1000,
-                                                author_name=self.agent_name.capitalize(),
-                                                display_type="bubble")
-                        first = False
-                        logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
+            chunk_id = str(uuid.uuid4())
+            tool_chunk_id = {}
+            first = True
 
-                    # parser chunk
-                    case "on_parser_stream":
-                        logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
-
-                    # tool chat message finished
-                    case "on_chain_end":
-                        # Reset chunk_id
-                        chunk_id = str(uuid.uuid4())
-                        # Reset first
-                        first = True
-
-                    # tool started being used
-                    case "on_tool_start":
-                        logging.debug(f"{kind}:\n{event}")
-
-                        # No longer sending human input tool usage start/end messages
-                        raw_tool_name = event.get('name')
-                        if raw_tool_name == 'human_input':
-                            continue
-
-                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
-
-                        # Use event->run_id as key for tool_chunk_id as that is guaranteed to be unique
-                        # and won't be overwritten on concurrent runs of the same tool
-                        run_id = event["run_id"]
-                        tool_chunk_id[run_id] = str(uuid.uuid4())
-
-                        self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[run_id],
+            try:
+                async for event in self.graph.astream_events({"messages": messages},
+                                                             config=config, version="v2"):
+                    if self.stop_generating_check():
+                        self.send_to_socket(text=f"🛑 Stopped generating.", event=SocketEvents.MESSAGE,
+                                            first=True, chunk_id=str(uuid.uuid4()),
                                             timestamp=datetime.now().timestamp() * 1000,
                                             display_type="inline")
+                        return
 
-                    # tool finished being used
-                    case "on_tool_end":
-                        logging.debug(f"{kind}:\n{event}")
+                    kind = event["event"]
+                    logging.debug(f"{kind}:\n{event}")
+                    match kind:
+                        # message chunk
+                        case "on_chat_model_stream":
+                            content = event['data']['chunk'].content
+                            chunk = repr(content)
+                            content = self._parse_model_chunk(content)
+                            tags = event['tags'] or []
+                            if type(content) is str and not any(x in tags for x in {'rag_retrieval', 'no_stream'}):
+                                self.send_to_socket(text=content, event=SocketEvents.MESSAGE,
+                                                    first=first, chunk_id=chunk_id,
+                                                    timestamp=datetime.now().timestamp() * 1000,
+                                                    author_name=self.agent_name.capitalize(),
+                                                    display_type="bubble")
+                            first = False
+                            logging.debug(f"Text chunk_id ({chunk_id}): {chunk}")
 
-                        # No longer sending human input tool usage start/end messages
-                        raw_tool_name = event.get('name')
-                        if raw_tool_name == 'human_input':
-                            continue
+                        # parser chunk
+                        case "on_parser_stream":
+                            logging.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
 
-                        run_id = event["run_id"]
+                        # tool chat message finished
+                        case "on_chain_end":
+                            # Reset chunk_id
+                            chunk_id = str(uuid.uuid4())
+                            # Reset first
+                            first = True
 
-                        tool_name = raw_tool_name.replace('_', ' ').capitalize()
-                        self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
-                                            first=True, chunk_id=tool_chunk_id[run_id],
-                                            timestamp=datetime.now().timestamp() * 1000,
-                                            display_type="inline", overwrite=True)
-                        del tool_chunk_id[run_id]
+                        # tool started being used
+                        case "on_tool_start":
+                            logging.debug(f"{kind}:\n{event}")
 
-                    # see https://python.langchain.com/docs/expression_language/streaming#event-reference
-                    case _:
-                        logging.debug(f"unhandled {kind} event")
-        except GraphRecursionError as ge:
-            logging.info(f"Maximum recursion limit reached for session '{self.session_id}'. Ending chat.")
-            self.send_to_socket(text=f"⛔ MAX_RECURSION_LIMIT REACHED", event=SocketEvents.MESSAGE,
-                                first=True, chunk_id=str(uuid.uuid4()),
-                                timestamp=datetime.now().timestamp() * 1000,
-                                display_type="inline")
-            self.send_to_socket(
-                event=SocketEvents.STOP_GENERATING,
-                chunk_id=str(uuid.uuid4()),
-            )
+                            # No longer sending human input tool usage start/end messages
+                            raw_tool_name = event.get('name')
+                            if raw_tool_name == 'human_input':
+                                continue
 
-        except Exception as chunk_error:
-            logging.error(traceback.format_exc())
-            self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
-                                first=True, chunk_id=str(uuid.uuid4()),
-                                timestamp=datetime.now().timestamp() * 1000,
-                                display_type="inline")
-            # TODO: if debug:
-            self.send_to_socket(text=f"""Stack trace:
+                            tool_name = raw_tool_name.replace('_', ' ').capitalize()
 
-```
-{chunk_error}
-```
-                """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
-                                timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
-            pass
+                            # Use event->run_id as key for tool_chunk_id as that is guaranteed to be unique
+                            # and won't be overwritten on concurrent runs of the same tool
+                            run_id = event["run_id"]
+                            tool_chunk_id[run_id] = str(uuid.uuid4())
+
+                            self.send_to_socket(text=f"Using tool: {tool_name}", event=SocketEvents.MESSAGE,
+                                                first=True, chunk_id=tool_chunk_id[run_id],
+                                                timestamp=datetime.now().timestamp() * 1000,
+                                                display_type="inline")
+
+                        # tool finished being used
+                        case "on_tool_end":
+                            logging.debug(f"{kind}:\n{event}")
+
+                            # No longer sending human input tool usage start/end messages
+                            raw_tool_name = event.get('name')
+                            if raw_tool_name == 'human_input':
+                                continue
+
+                            run_id = event["run_id"]
+
+                            tool_name = raw_tool_name.replace('_', ' ').capitalize()
+                            self.send_to_socket(text=f"Finished using tool: {tool_name}", event=SocketEvents.MESSAGE,
+                                                first=True, chunk_id=tool_chunk_id[run_id],
+                                                timestamp=datetime.now().timestamp() * 1000,
+                                                display_type="inline", overwrite=True)
+                            del tool_chunk_id[run_id]
+
+                        # see https://python.langchain.com/docs/expression_language/streaming#event-reference
+                        case _:
+                            logging.debug(f"unhandled {kind} event")
+            except GraphRecursionError as ge:
+                logging.info(f"Maximum recursion limit reached for session '{self.session_id}'. Ending chat.")
+                self.send_to_socket(text=f"⛔ MAX_RECURSION_LIMIT REACHED", event=SocketEvents.MESSAGE,
+                                    first=True, chunk_id=str(uuid.uuid4()),
+                                    timestamp=datetime.now().timestamp() * 1000,
+                                    display_type="inline")
+                self.send_to_socket(
+                    event=SocketEvents.STOP_GENERATING,
+                    chunk_id=str(uuid.uuid4()),
+                )
+
+            except Exception as chunk_error:
+                logging.error(traceback.format_exc())
+                self.send_to_socket(text=f"⛔ An unexpected error occurred", event=SocketEvents.MESSAGE,
+                                    first=True, chunk_id=str(uuid.uuid4()),
+                                    timestamp=datetime.now().timestamp() * 1000,
+                                    display_type="inline")
+                # TODO: if debug:
+                self.send_to_socket(text=f"""Stack trace:
+    
+    ```
+    {chunk_error}
+    ```
+                    """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                                    timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
+                pass

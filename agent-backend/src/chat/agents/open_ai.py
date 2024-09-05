@@ -1,5 +1,6 @@
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.constants import END
 from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode
 
@@ -23,7 +24,7 @@ class OpenAIChatAgent(BaseChatAgent):
         """
         messages = (state["messages"] +
                     [HumanMessage(content="Use the human_input tool to ask the user what assistance they need")])
-        response = await self.chat_model.ainvoke(messages, config)
+        response = await self.chat_model.ainvoke(messages, config={**config, 'tags': ['no_stream']})
         return {"messages": [response]}
 
     def build_graph(self):
@@ -66,7 +67,7 @@ class OpenAIChatAgent(BaseChatAgent):
                 "continue": "tools",
                 "human_input": "human_input",
                 # Otherwise we finish and go back to human input invoker. Always end with human_input_invoker
-                "end": "human_input_invoker"
+                "end": END
             },
         )
 
