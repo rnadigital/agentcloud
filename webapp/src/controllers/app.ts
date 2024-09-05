@@ -10,20 +10,24 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import { getVariablesByTeam } from 'db/variable';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
+export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
+
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+	const [apps, tasks, tools, agents, models, datasources, variables] = await Promise.all([
 		getAppsByTeam(req.params.resourceSlug),
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug)
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
@@ -32,9 +36,12 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
-		datasources
+		datasources,
+		variables
 	};
 }
+
+export type AppDataReturnType = Awaited<ReturnType<typeof appData>>;
 
 export async function appData(req, res, _next) {
 	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
@@ -148,7 +155,8 @@ export async function addAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		recursionLimit,
+		variableIds
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -388,7 +396,8 @@ export async function editAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		recursionLimit,
+		variableIds
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
