@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 import logging
 from pathlib import Path
@@ -43,16 +44,17 @@ class LocalStorageProvider(StorageProvider):
     def upload_file_buffer(self, buffer, filename, folder_path, is_public=False):
         log.debug("Uploading buffer content as file %s", filename)
         try:
+            buffer_size = buffer.getbuffer().nbytes
             self.minio_client.put_object(
                 self.bucket_name,
                 f"{folder_path}/{filename}",
                 buffer,
-                len(buffer),
+                buffer_size,
                 content_type="application/octet-stream",
             )
             log.debug("Buffer content uploaded successfully.")
         except Exception as err:
-            log.error("Buffer upload error:", err)
+            log.error("Buffer upload error: %s", err)
             raise err
 
     def upload_local_file(self, filename, folder_path, is_public=False):
