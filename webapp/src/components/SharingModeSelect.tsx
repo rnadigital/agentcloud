@@ -1,5 +1,6 @@
 import * as API from '@api';
 import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
+import WhiteListSharing from 'components/sharingmodes/WhiteListSharing';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
@@ -10,7 +11,6 @@ import { pricingMatrix } from 'struct/billing';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
 import SelectClassNames from 'styles/SelectClassNames';
-import WhiteListSharing from 'components/sharingmodes/WhiteListSharing';
 
 const sharingModeOptions = [
 	{
@@ -93,7 +93,11 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							if (v?.value === SharingMode.PUBLIC || v?.value === SharingMode.OWNER || v?.value === SharingMode.WHITELIST) {
+							if (
+								v?.value === SharingMode.PUBLIC ||
+								v?.value === SharingMode.OWNER ||
+								v?.value === SharingMode.WHITELIST
+							) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
 								}
@@ -126,9 +130,9 @@ const SharingModeSelect = ({
 			{sharingMode == SharingMode.WHITELIST && (
 				<div className='col-span-12'>
 					<WhiteListSharing
-						shareLinkShareId={shareLinkShareId} 
-						setModalOpen={setModalOpen} 
-						accounts={accountState} 
+						shareLinkShareId={shareLinkShareId}
+						setModalOpen={setModalOpen}
+						accounts={accountState}
 						onChange={onChange}
 					/>
 				</div>
@@ -137,7 +141,7 @@ const SharingModeSelect = ({
 				<div className='col-span-12'>
 					<SharingModeInfoAlert
 						shareLinkShareId={shareLinkShareId}
-						message = "This app will only be accessible by the creator of the app, team/org admins and team/org owner only."
+						message='This app will only be accessible by the creator of the app, team/org admins and team/org owner only.'
 					/>
 				</div>
 			)}

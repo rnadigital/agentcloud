@@ -21,6 +21,7 @@ import { App, AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
+
 import AddEmailModal from './AddEmailModal';
 
 export default function ChatAppForm({
@@ -87,15 +88,15 @@ export default function ChatAppForm({
 		return acc;
 	};
 	const getInitialAccounts = (acc, tid) => {
-		//TODO: Implement to get accounts in the same team as the user and fetch their emails, then place it in an array of type {value: , label: }, use API.welcomeData? It gets all required data for this field 
+		//TODO: Implement to get accounts in the same team as the user and fetch their emails, then place it in an array of type {value: , label: }, use API.welcomeData? It gets all required data for this field
 		return [];
-	}
+	};
 	const { initialTools, initialDatasources } = (initialAgent?.toolIds || []).reduce(
 		getInitialTools,
 		{ initialTools: [], initialDatasources: [] }
 	);
 	const initialAccounts = getInitialAccounts(account?._id, resourceSlug);
-	const [ accountState, setAccountState ] = useState (
+	const [accountState, setAccountState] = useState(
 		initialAccounts.length > 0 ? initialAccounts : []
 	);
 	const [agentsState, setAgentsState] = useState(
@@ -267,9 +268,9 @@ export default function ChatAppForm({
 		setModalOpen(false);
 	}
 
-	async function emailCallback(newEmail){
+	async function emailCallback(newEmail) {
 		console.log('addedEmail', newEmail);
-		setAccountState(() => [...accountState, {value: newEmail, label: newEmail}])
+		setAccountState(() => [...accountState, { value: newEmail, label: newEmail }]);
 		setModalOpen(false);
 	}
 
@@ -309,12 +310,14 @@ export default function ChatAppForm({
 		case 'whitelist':
 			modal = (
 				<AddEmailModal
-					open = {modalOpen !== false}
-					setOpen = {setModalOpen}
-					confirmFunction = {emailCallback}
-					cancelFunction = {() => {setModalOpen(false)}}
-					title = "Share with new email"
-					callback ={ emailCallback }
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={emailCallback}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title='Share with new email'
+					callback={emailCallback}
 				/>
 			);
 			break;
@@ -394,9 +397,11 @@ export default function ChatAppForm({
 								showInfoAlert={true}
 								setShareLinkShareId={setShareLinkShareId}
 								shareLinkShareId={shareLinkShareId}
-								accountState = {accountState}
-								onChange = {setAccountState}
-								setModalOpen={x => {setModalOpen('whitelist')}}
+								accountState={accountState}
+								onChange={setAccountState}
+								setModalOpen={x => {
+									setModalOpen('whitelist');
+								}}
 							/>
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>

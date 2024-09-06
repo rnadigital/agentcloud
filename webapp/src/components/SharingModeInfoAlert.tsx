@@ -3,7 +3,10 @@ import InfoAlert from 'components/InfoAlert';
 import { useRouter } from 'next/router';
 import React from 'react';
 
-export default function SharingModeInfoAlert({ shareLinkShareId, message = 'Public apps can be accessed by anyone, potentially incurring token costs.' }) {
+export default function SharingModeInfoAlert({
+	shareLinkShareId,
+	message = 'Public apps can be accessed by anyone, potentially incurring token costs.'
+}) {
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const router = useRouter();
 	const { resourceSlug } = router.query;

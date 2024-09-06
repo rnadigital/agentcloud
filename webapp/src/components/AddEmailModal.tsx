@@ -3,6 +3,7 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import ButtonSpinner from 'components/ButtonSpinner';
 import { Fragment, useState } from 'react';
+
 import InputField from './form/InputField';
 
 export default function AddEmailModal({
@@ -11,10 +12,10 @@ export default function AddEmailModal({
 	confirmFunction,
 	cancelFunction,
 	title,
-    callback
+	callback
 }) {
 	const [submitting, setSubmitting] = useState(false);
-	const [email, setEmail] = useState("")
+	const [email, setEmail] = useState('');
 
 	return (
 		<Transition show={open} as={Fragment}>
@@ -51,11 +52,12 @@ export default function AddEmailModal({
 										{title}
 									</DialogTitle>
 									<div className='mt-2'>
-									The below email will recieve a prompt to create an account, once the account is created they will have access to the app
-										<label 
-											htmlFor="email"
+										The below email will recieve a prompt to create an account, once the account is
+										created they will have access to the app
+										<label
+											htmlFor='email'
 											className='block text-sm font-medium leading-6 text-gray-900 dard:text-slate-400'
-											>
+										>
 											Email
 										</label>
 										<input
@@ -63,7 +65,9 @@ export default function AddEmailModal({
 											name='email'
 											id='email'
 											className='bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
-											onChange={e => {setEmail(e.target.value)}}
+											onChange={e => {
+												setEmail(e.target.value);
+											}}
 											required
 											value={email}
 										/>
@@ -90,7 +94,7 @@ export default function AddEmailModal({
 													setTimeout(() => setSubmitting(false), 1000);
 												}
 											}}
-											>
+										>
 											{submitting && <ButtonSpinner className='mt-0.5 me-2' />}
 											Submit
 										</button>
