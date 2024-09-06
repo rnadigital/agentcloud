@@ -1,4 +1,5 @@
 from datetime import timedelta
+import json
 import os
 import logging
 from pathlib import Path
@@ -19,7 +20,7 @@ class LocalStorageProvider(StorageProvider):
         self.base_path = UPLOADS_BASE_PATH if UPLOADS_BASE_PATH else "./uploads"
         self.init()
         self.minio_client = Minio(
-            os.getenv("MINIO_ENDPOINT", "localhost:9000"),
+            os.getenv("MINIO_INTERNAL_ENDPOINT", "minio:9000"),
             access_key=os.getenv("MINIO_ROOT_USER", "minioadmin"),
             secret_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
             secure=False,
@@ -40,6 +41,26 @@ class LocalStorageProvider(StorageProvider):
         except S3Error as e:
             log.error(f"Failed to create bucket: {e}")
             raise e
+        self.set_bucket_policy()
+
+    def set_bucket_policy(self):
+
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": f"arn:aws:s3:::{self.bucket_name}/*",
+                }
+            ],
+        }
+
+        policy_str = json.dumps(policy)
+
+        self.minio_client.set_bucket_policy(self.bucket_name, policy_str)
+        print(f"Public read policy applied to bucket '{self.bucket_name}'.")
 
     def upload_file_buffer(self, buffer, filename, folder_path, is_public=False):
         log.debug("Uploading buffer content as file %s", filename)
@@ -85,17 +106,14 @@ class LocalStorageProvider(StorageProvider):
                 raise e
 
     def get_signed_url(self, filename, file_folder, is_public=False):
-        log.debug("Generating signed URL for file %s", filename)
+        log.debug("Generating public URL for file %s", filename)
         try:
-            expires = timedelta(days=7)
-            url = self.minio_client.presigned_get_object(
-                self.bucket_name,
-                f"{file_folder}/{filename}",
-                expires=expires,
-            )
-            return url
-        except S3Error as e:
-            log.error(f"Failed to get signed URL: {e}")
+            external_endpoint = os.getenv("MINIO_EXTERNAL_ENDPOINT", "localhost:9000")
+            file_url = f"http://{external_endpoint}/{self.bucket_name}/{file_folder}/{filename}"
+
+            return file_url
+        except Exception as e:
+            log.error(f"Failed to get public URL: {e}")
             raise e
 
 
