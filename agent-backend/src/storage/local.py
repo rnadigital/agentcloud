@@ -87,10 +87,11 @@ class LocalStorageProvider(StorageProvider):
     def get_signed_url(self, filename, file_folder, is_public=False):
         log.debug("Generating signed URL for file %s", filename)
         try:
+            expires = timedelta(days=7)
             url = self.minio_client.presigned_get_object(
                 self.bucket_name,
                 f"{file_folder}/{filename}",
-                expires=60 * 60 * 24 * 365 * 100,  # 100 years
+                expires=expires,
             )
             return url
         except S3Error as e:
