@@ -179,7 +179,11 @@ services:
       - UPLOADS_BASE_PATH=/tmp
       - GOOGLE_APPLICATION_CREDENTIALS=keyfile.json
       - PROJECT_ID=agentcloud-dev
-      - STORAGE_PROVIDER=google
+      - STORAGE_PROVIDER=local
+      - MINIO_INTERNAL_ENDPOINT=minio:9000  
+      - MINIO_EXTERNAL_ENDPOINT=localhost:9000 
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
 
   vector_db_proxy:
     restart: always
