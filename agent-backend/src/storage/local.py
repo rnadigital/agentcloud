@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 import logging
 from pathlib import Path
@@ -43,16 +44,17 @@ class LocalStorageProvider(StorageProvider):
     def upload_file_buffer(self, buffer, filename, folder_path, is_public=False):
         log.debug("Uploading buffer content as file %s", filename)
         try:
+            buffer_size = buffer.getbuffer().nbytes
             self.minio_client.put_object(
                 self.bucket_name,
                 f"{folder_path}/{filename}",
                 buffer,
-                len(buffer),
+                buffer_size,
                 content_type="application/octet-stream",
             )
             log.debug("Buffer content uploaded successfully.")
         except Exception as err:
-            log.error("Buffer upload error:", err)
+            log.error("Buffer upload error: %s", err)
             raise err
 
     def upload_local_file(self, filename, folder_path, is_public=False):
@@ -85,10 +87,11 @@ class LocalStorageProvider(StorageProvider):
     def get_signed_url(self, filename, file_folder, is_public=False):
         log.debug("Generating signed URL for file %s", filename)
         try:
+            expires = timedelta(days=7)
             url = self.minio_client.presigned_get_object(
                 self.bucket_name,
                 f"{file_folder}/{filename}",
-                expires=60 * 60 * 24 * 365 * 100,  # 100 years
+                expires=expires,
             )
             return url
         except S3Error as e:
