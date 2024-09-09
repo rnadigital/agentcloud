@@ -107,7 +107,6 @@ export default function CreateDatasourceForm({
 		}
 	}, [toolRetriever]);
 	const [toolTimeWeightField, setToolTimeWeightField] = useState(null);
-
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
 	const [streamProperties, setStreamProperties] = useState(null);
@@ -600,13 +599,6 @@ export default function CreateDatasourceForm({
 						<form
 							onSubmit={(e: any) => {
 								e.preventDefault();
-								//list of streams
-								//selected fields
-								//descriptions map
-								//sync mode
-								//cursor field
-								//primary key
-								console.log('Step 3 streamState:', streamState);
 								setStep(4);
 							}}
 						>
