@@ -23,15 +23,15 @@ export default function AddEmailModal({
 	const [submitting, setSubmitting] = useState(false);
 	const [email, setEmail] = useState('');
 
-	async function onSubmit(data){
+	async function onSubmit(data) {
 		setSubmitting(true);
 		try {
 			await confirmFunction(email);
-		}finally {
-			setTimeout(() => setSubmitting(false), 1000)
+		} finally {
+			setTimeout(() => setSubmitting(false), 1000);
 		}
-	};
-	
+	}
+
 	return (
 		<Transition show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={cancelFunction}>
@@ -68,27 +68,26 @@ export default function AddEmailModal({
 									</DialogTitle>
 									<form onSubmit={handleSubmit(onSubmit)}>
 										<div className='mt-2'>
-											The below email will recieve a prompt to create an account, once the account is
-											created they will have access to the app
+											The below email will recieve a prompt to create an account, once the account
+											is created they will have access to the app
 											<label
 												htmlFor='email'
 												className='block text-sm font-medium leading-6 text-gray-900 dard:text-slate-400'
 											>
 												Email
 											</label>
-
 											<input
-												type="email"
+												type='email'
 												name='email'
 												id='email'
-												pattern=".+@.+\..+"
+												pattern='.+@.+\..+'
 												className='bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
 												onChange={e => {
 													setEmail(e.target.value);
 												}}
 												required
 												value={email}
-												/>
+											/>
 										</div>
 										<div className='mt-4 flex justify-end space-x-2'>
 											<button
@@ -98,7 +97,7 @@ export default function AddEmailModal({
 													setSubmitting(false);
 													cancelFunction();
 												}}
-												>
+											>
 												Cancel
 											</button>
 											<button
@@ -112,7 +111,7 @@ export default function AddEmailModal({
 													// 	setTimeout(() => setSubmitting(false), 1000);
 													// }
 												}}
-												>
+											>
 												{submitting && <ButtonSpinner className='mt-0.5 me-2' />}
 												Submit
 											</button>

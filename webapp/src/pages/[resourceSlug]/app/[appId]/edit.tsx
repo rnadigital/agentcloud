@@ -20,7 +20,6 @@ export default function EditApp(props) {
 	const [error, setError] = useState();
 	const { app, tools, agents, tasks, models, datasources, teamMembers } = state;
 
-
 	async function fetchAppFormData() {
 		API.getApp(
 			{

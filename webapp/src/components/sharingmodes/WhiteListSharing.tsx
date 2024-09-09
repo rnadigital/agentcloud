@@ -11,13 +11,13 @@ export default function WhiteListSharing({
 	enableAddNew = true,
 	setModalOpen,
 	emailOptions = [],
-    emailState = [],
+	emailState = [],
 	onChange,
 	addNewTitle = '+ New Email'
 }) {
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const router = useRouter();
-    console.log("emailOptions:", emailOptions)
+	console.log('emailOptions:', emailOptions);
 	const { resourceSlug } = router.query;
 	return (
 		<>
@@ -30,10 +30,10 @@ export default function WhiteListSharing({
 								setModalOpen();
 								return;
 							}
-                            if (v === null){
-                                onChange([]);
-                                return;
-                            }
+							if (v === null) {
+								onChange([]);
+								return;
+							}
 							onChange(v);
 						}}
 						primaryColor={'indigo'}
@@ -42,17 +42,16 @@ export default function WhiteListSharing({
 						placeholder='Select...'
 						classNames={SelectClassNames}
 						options={[
-                                    {
-                                        label: addNewTitle,
-                                        value: null,
-                                        disabled: false
-                                    },
-                                    {
-                                        label: "Suggested members from your team",
-                                        options: emailOptions
-                                    }
-                                ]
-						}
+							{
+								label: addNewTitle,
+								value: null,
+								disabled: false
+							},
+							{
+								label: 'Suggested members from your team',
+								options: emailOptions
+							}
+						]}
 						formatOptionLabel={data => {
 							let optionAccount;
 							if (emailOptions) {
@@ -64,9 +63,7 @@ export default function WhiteListSharing({
 										data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 									}`}
 								>
-									<span className='ms-2 w-full overflow-hidden text-ellipsis'>
-										{data.label}
-									</span>
+									<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}</span>
 								</li>
 							);
 						}}

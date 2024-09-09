@@ -91,8 +91,10 @@ export default function ChatAppForm({
 		getInitialTools,
 		{ initialTools: [], initialDatasources: [] }
 	);
-	const initialEmails = whiteListSharingChoices ? whiteListSharingChoices.map((email) => ({label: email, value: email})) : null
-	const [ sharingEmailState, setSharingEmailState ] = useState( [] );
+	const initialEmails = whiteListSharingChoices
+		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
+		: null;
+	const [sharingEmailState, setSharingEmailState] = useState([]);
 	const [agentsState, setAgentsState] = useState(
 		initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null
 	);
@@ -264,7 +266,7 @@ export default function ChatAppForm({
 
 	async function emailCallback(newEmail) {
 		console.log('addedEmail', newEmail);
-		setSharingEmailState(() => [...sharingEmailState, {label: newEmail, value:newEmail}]);
+		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
 		setModalOpen(false);
 	}
 

@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import { InformationCircleIcon, PlayIcon } from '@heroicons/react/20/solid';
+import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateAgentModal from 'components/CreateAgentModal';
@@ -10,7 +11,6 @@ import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
-import AddEmailModal from 'components/AddEmailModal';
 import { useStepContext } from 'context/stepwrapper';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -96,8 +96,10 @@ export default function CrewAppForm({
 		return { initialAgents, initialTasks };
 	}
 
-	const initialEmails = whiteListSharingChoices ? whiteListSharingChoices.map((email) => ({label: email, value: email})) : null
-	const [ sharingEmailState, setSharingEmailState ] = useState( [] );
+	const initialEmails = whiteListSharingChoices
+		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
+		: null;
+	const [sharingEmailState, setSharingEmailState] = useState([]);
 
 	const { initialAgents, initialTasks } = getInitialData({ agents, tasks });
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
@@ -236,7 +238,7 @@ export default function CrewAppForm({
 
 	async function emailCallback(newEmail) {
 		console.log('addedEmail', newEmail);
-		setSharingEmailState(() => [...sharingEmailState, {label: newEmail, value:newEmail}]);
+		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
 		setModalOpen(false);
 	}
 

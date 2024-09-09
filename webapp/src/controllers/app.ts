@@ -25,12 +25,13 @@ export async function appsData(req, res, _next) {
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
 		getDatasourcesByTeam(req.params.resourceSlug),
-		getAccountsById(res.locals.matchingTeam.members),
+		getAccountsById(res.locals.matchingTeam.members)
 	]);
-	const teamMemberemails = teamMembers.reduce((acc, curr) => { //get AccountsById gets the entire account object, which we don't need so we extract the emails from them
+	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
 		return acc;
-	}, [])
+	}, []);
 	return {
 		csrf: req.csrfToken(),
 		apps,
@@ -53,10 +54,11 @@ export async function appData(req, res, _next) {
 		getDatasourcesByTeam(req.params.resourceSlug),
 		getAccountsById(res.locals.matchingTeam.members)
 	]);
-	const teamMemberemails = teamMembers.reduce((acc, curr) => { //get AccountsById gets the entire account object, which we don't need so we extract the emails from them
+	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
 		return acc;
-	}, [])
+	}, []);
 	return {
 		csrf: req.csrfToken(),
 		app,
