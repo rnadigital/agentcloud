@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum FileType {
     PDF,
     TXT,

@@ -1,5 +1,7 @@
 use crate::adaptors::mongo::models::UnstructuredChunkingConfig;
-use crate::adaptors::mongo::queries::{get_model_and_embedding_key, increment_by_one};
+use crate::adaptors::mongo::queries::{
+    get_model_and_embedding_key, increment_by_one, set_datasource_state,
+};
 use crate::data::helpers::hash_string_to_uuid;
 use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::models::EmbeddingModels;
@@ -108,7 +110,7 @@ async fn handle_embedding(
     let metadata = metadata.clone();
     let datasource_id_clone = datasource_id.clone();
     let datasource_id_clone_2 = datasource_id.clone();
-    let mut field_path = "recordCount.failure";
+    let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
     let vector_database_client_connection = vector_database_clone.read().await;
     let search_request = SearchRequest::new(SearchType::Collection, datasource_id_clone_2.clone());
@@ -130,12 +132,7 @@ async fn handle_embedding(
                     .await
                 {
                     Ok(result) => match result {
-                        VectorDatabaseStatus::Ok => {
-                            field_path = "recordCount.success";
-                            increment_by_one(&mongo, &datasource_id_clone_2, field_path)
-                                .await
-                                .unwrap();
-                        }
+                        VectorDatabaseStatus::Ok => (),
                         _ => {
                             log::warn!("An error occurred while inserting into vector database");
                             increment_by_one(&mongo, &datasource_id_clone_2, field_path)
@@ -237,7 +234,14 @@ pub async fn process_incoming_messages(
                                         .await;
                                     });
                                     tokio::select! {
-                                        _ = embed_text_worker => log::info!("Finished embedding task")
+                                        _ = embed_text_worker => {
+                                            set_datasource_state(
+                                                &mongo,
+                                                datasource_id.as_str(),
+                                                "ready"
+                                            ).await.unwrap();
+                                            log::info!("Finished embedding task")
+                                        }
                                     }
                                 }
                             }

@@ -425,6 +425,17 @@ export async function addDatasourceApi(req, res, next) {
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
 
+	const {
+		partitioning,
+		strategy,
+		max_characters,
+		new_after_n_chars,
+		similarity_threshold,
+		overlap,
+		overlap_all,
+		file_type
+	} = chunkingConfig || {};
+
 	// Update the datasource with the connection settings and sync date
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: createdConnection.connectionId,
@@ -432,7 +443,20 @@ export async function addDatasourceApi(req, res, next) {
 		modelId: toObjectId(modelId),
 		embeddingField,
 		streamConfig, //TODO: validation
-		chunkingConfig: enableConnectorChunking ? chunkingConfig : null //TODO: validation
+		chunkingConfig: enableConnectorChunking
+			? {
+					partitioning,
+					strategy,
+					max_characters: parseInt(max_characters),
+					new_after_n_chars: new_after_n_chars
+						? parseInt(new_after_n_chars)
+						: parseInt(max_characters),
+					overlap: parseInt(overlap),
+					similarity_threshold: parseFloat(similarity_threshold),
+					overlap_all: overlap_all === 'true',
+					file_type
+				}
+			: null //TODO: validation
 	});
 
 	// Create the collection in qdrant
@@ -729,7 +753,7 @@ export async function syncDatasourceApi(req, res, next) {
 		await messageQueueProvider.sendMessage(message, metadata);
 
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.EMBEDDING
 		});
 	} else {
@@ -751,7 +775,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.PROCESSING
 		});
 	}
@@ -997,13 +1021,13 @@ export async function uploadFileApi(req, res, next) {
 		embeddingField: 'document', //Note: always document for sourceType: file
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
-			total: null
+			total: 0
 		},
 		chunkingConfig: {
 			partitioning,
 			strategy,
 			max_characters: parseInt(max_characters),
-			new_after_n_chars: parseInt(new_after_n_chars) || parseInt(max_characters),
+			new_after_n_chars: new_after_n_chars ? parseInt(new_after_n_chars) : parseInt(max_characters),
 			overlap: parseInt(overlap),
 			similarity_threshold: parseFloat(similarity_threshold),
 			overlap_all: overlap_all === 'true'

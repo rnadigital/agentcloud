@@ -8,9 +8,9 @@ import getAirbyteInternalApi from 'airbyte/internal';
 import { listLatestSourceDefinitions } from 'airbyte/setup';
 import {
 	getDatasourceById,
+	incrementDatasourceTotalRecordCount,
 	setDatasourceLastSynced,
 	setDatasourceStatus,
-	setDatasourceTotalRecordCount,
 	unsafeGetDatasourceById
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
@@ -284,7 +284,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 					datasourceId,
 					noDataToSync ? DatasourceStatus.READY : DatasourceStatus.EMBEDDING
 				),
-				setDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded)
+				incrementDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded)
 			]);
 			io.to(datasource.teamId.toString()).emit('notification', notification);
 		}
