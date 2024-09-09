@@ -38,7 +38,8 @@ const SharingModeSelect = ({
 	shareLinkShareId,
 	setShareLinkShareId,
 	showInfoAlert = false,
-	accountState = undefined,
+	emailOptions,
+	emailState,
 	onChange = undefined,
 	setModalOpen = undefined
 }) => {
@@ -132,7 +133,8 @@ const SharingModeSelect = ({
 					<WhiteListSharing
 						shareLinkShareId={shareLinkShareId}
 						setModalOpen={setModalOpen}
-						accounts={accountState}
+						emailState={emailState}
+						emailOptions={emailOptions}
 						onChange={onChange}
 					/>
 				</div>

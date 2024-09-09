@@ -49,6 +49,7 @@ export async function checkResourceSlug(req, res, next) {
 	//TODO: cache in redis
 	const foundTeam = await getTeamById(matchingTeam.id);
 	res.locals.matchingTeam.permissions = foundTeam.permissions;
+	res.locals.matchingTeam.members = foundTeam.members;
 
 	next();
 }

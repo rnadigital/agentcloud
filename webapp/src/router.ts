@@ -164,7 +164,7 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.welcomeJson,
-	)
+	);
 
 	//TODO: move and rename all these
 	server.post(

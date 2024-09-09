@@ -1,7 +1,7 @@
 import CopyToClipboardInput from 'components/CopyToClipboardInput';
 import InfoAlert from 'components/InfoAlert';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { SelectValue } from 'react-tailwindcss-select/dist/components/type';
 import SelectClassNames from 'styles/SelectClassNames';
@@ -10,34 +10,27 @@ export default function WhiteListSharing({
 	shareLinkShareId,
 	enableAddNew = true,
 	setModalOpen,
-	accounts = [],
+	emailOptions = [],
+    emailState = [],
 	onChange,
 	addNewTitle = '+ New Email'
 }) {
-	const setAccountsToOptions = (accounts: any[]) => {
-		accounts.forEach(acc => {
-			return { value: acc, label: acc };
-		});
-		return accounts;
-		console.log(accounts);
-	};
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const router = useRouter();
+    console.log("emailOptions:", emailOptions)
 	const { resourceSlug } = router.query;
-	const accountOptionFormat = accounts ? setAccountsToOptions(accounts) : [];
-	console.log(accountOptionFormat);
 	return (
 		<>
-			<InfoAlert message="Select accounts from the dropdown of the people to share this app with. If you wish to share with someone who doesn't have an account, enter their email and they will be sent an email to prompt them to create an account.">
+			<InfoAlert message="Select emails from the dropdown of the people to share this app with. If you wish to share with someone who doesn't have an account, enter their email and they will be sent an email to prompt them to create an account.">
 				<div className='flex flex-col'>
 					<Select
-						value={accountOptionFormat}
+						value={emailState}
 						onChange={(v: any) => {
-							// if (v?.some(val => val?.disabled)) { return; }
 							if (v?.some(val => val.value === null)) {
 								setModalOpen();
 								return;
 							}
+                            //handle empty array
 							onChange(v);
 						}}
 						primaryColor={'indigo'}
@@ -45,21 +38,22 @@ export default function WhiteListSharing({
 						isSearchable
 						placeholder='Select...'
 						classNames={SelectClassNames}
-						options={
-							enableAddNew
-								? [
-										{
-											label: addNewTitle,
-											value: null,
-											disabled: false
-										}
-									]
-								: accountOptionFormat
+						options={[
+                                    {
+                                        label: addNewTitle,
+                                        value: null,
+                                        disabled: false
+                                    },
+                                    {
+                                        label: "Suggested members from your team",
+                                        options: emailOptions
+                                    }
+                                ]
 						}
 						formatOptionLabel={data => {
 							let optionAccount;
-							if (accounts) {
-								optionAccount = accounts.find(account => account.value === data.value);
+							if (emailOptions) {
+								optionAccount = emailOptions.find(account => account.value === data.value);
 							}
 							return (
 								<li
@@ -69,9 +63,6 @@ export default function WhiteListSharing({
 								>
 									<span className='ms-2 w-full overflow-hidden text-ellipsis'>
 										{data.label}
-										{optionAccount
-											? ` - ${optionAccount?.data?.description || optionAccount?.description}`
-											: ''}
 									</span>
 								</li>
 							);

@@ -1,6 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { getAccountsById } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
@@ -37,14 +38,19 @@ export async function appsData(req, res, _next) {
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
+	const [app, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
 		getAppById(req.params.resourceSlug, req.params.appId),
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug)
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getAccountsById(res.locals.matchingTeam.members)
 	]);
+	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+		acc.push(curr.email);
+		return acc;
+	}, [])
 	return {
 		csrf: req.csrfToken(),
 		app,
@@ -52,7 +58,8 @@ export async function appData(req, res, _next) {
 		tools,
 		agents,
 		models,
-		datasources
+		datasources,
+		teamMembers: teamMemberemails
 	};
 }
 

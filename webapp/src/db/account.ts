@@ -59,6 +59,16 @@ export async function getAccountById(userId: db.IdOrStr): Promise<Account> {
 	});
 }
 
+export async function getAccountsById(userIds: db.IdOrStr[]): Promise<Account[]> {
+	return AccountCollection()
+	.find({
+		_id: {
+			$in: userIds.map(toObjectId)
+		}
+	})
+	.toArray();
+}
+
 export async function getAccountTeamMember(
 	userId: db.IdOrStr,
 	teamId: db.IdOrStr
