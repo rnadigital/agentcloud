@@ -307,7 +307,7 @@ export function deleteKey(body, dispatch, errorCallback, router) {
 export function getTasks(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/tasks.json`, 'GET', null, dispatch, errorCallback, router);
 }
-export function getTask(body, dispatch, errorCallback, router) {
+export function getTaskById(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/task/${body.taskId}.json`,
 		'GET',
@@ -317,11 +317,15 @@ export function getTask(body, dispatch, errorCallback, router) {
 		router
 	);
 }
-export function getTaskByName(body, dispatch: GetTaskByNameDispatch, errorCallback, router) {
+export function getTask(body, dispatch: GetTaskByNameDispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		...(body.name ? { name: body.name } : {}),
+		...(body.sessionId ? { sessionId: body.sessionId } : {}), //could go in params but whatever
+	});
 	return ApiCall(
-		`/${body.resourceSlug}/task/get-by-name`,
-		'POST',
-		body,
+		`/${body.resourceSlug}/task?${queryString}`,
+		'GET',
+		null,
 		dispatch,
 		errorCallback,
 		router

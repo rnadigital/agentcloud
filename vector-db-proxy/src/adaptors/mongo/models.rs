@@ -20,6 +20,7 @@ pub struct DatasourceConnectionSettings {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredChunkingStrategy {
     Basic,
     ByTitle,
@@ -49,6 +50,7 @@ impl UnstructuredChunkingStrategy {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredPartitioningStrategy {
     Auto,
     Fast,
@@ -59,20 +61,20 @@ pub enum UnstructuredPartitioningStrategy {
 impl UnstructuredPartitioningStrategy {
     pub fn from_str(strategy: &str) -> Option<Self> {
         match strategy {
-            "Auto" => Some(Self::Auto),
-            "Fast" => Some(Self::Fast),
-            "HiRes" => Some(Self::HiRes),
-            "OcrOnly" => Some(Self::OcrOnly),
+            "auto" => Some(Self::Auto),
+            "fast" => Some(Self::Fast),
+            "hi_res" => Some(Self::HiRes),
+            "ocr_only" => Some(Self::OcrOnly),
             _ => None,
         }
     }
 
     pub fn as_str<'a>(strategy: &Self) -> &'a str {
         match strategy {
-            Self::Auto => "Auto",
-            Self::Fast => "Fast",
-            Self::HiRes => "HiRes",
-            Self::OcrOnly => "OcrOnly",
+            Self::Auto => "auto",
+            Self::Fast => "fast",
+            Self::HiRes => "hi_res",
+            Self::OcrOnly => "ocr_only",
         }
     }
 }
@@ -106,8 +108,7 @@ pub struct DataSources {
     pub destinationId: Option<String>,
     pub workspaceId: Option<String>,
     pub connectionId: Option<String>,
-    pub chunkStrategy: Option<UnstructuredChunkingConfig>,
-    pub chunkCharacter: Option<String>,
+    pub chunkingConfig: Option<UnstructuredChunkingConfig>,
     pub lastSyncedDate: Option<DateTime>,
     pub embeddingField: Option<String>,
     pub timeWeightField: Option<String>,

@@ -55,4 +55,8 @@ class BaseToolRetriever(ABC):
                     'score': result[1]
                 })
             case _:
-                return result.page_content
+                # return result.page_content
+                return str({
+                    'data': result.page_content,
+                    'metadata': result.metadata,
+                })

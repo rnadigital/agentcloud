@@ -15,7 +15,7 @@ use tokio::sync::RwLock;
 use tokio::task;
 use uuid::Uuid;
 
-use crate::adaptors::mongo::queries::{get_model, increment_by_one, set_record_count_total};
+use crate::adaptors::mongo::queries::{get_model, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
@@ -242,13 +242,6 @@ pub async fn embed_bulk_insert_unstructured_response(
     // Construct a collection of the texts from the
     // Unstructured IO response to embed
     let list_of_text: Vec<String> = documents.iter().map(|doc| doc.text.clone()).collect();
-    set_record_count_total(
-        &mongo_connection,
-        datasource_id.as_str(),
-        list_of_text.len() as i32,
-    )
-    .await
-    .unwrap();
     match embed_text_chunks_async(
         mongo_client.clone(),
         datasource_id.to_string(),
@@ -291,13 +284,6 @@ pub async fn embed_bulk_insert_unstructured_response(
                     match bulk_insert_status {
                         VectorDatabaseStatus::Ok => {
                             log::debug!("points uploaded successfully!");
-                            increment_by_one(
-                                &mongo_connection,
-                                datasource_id.as_str(),
-                                "recordCount.success",
-                            )
-                            .await
-                            .unwrap();
                         }
                         VectorDatabaseStatus::Failure | VectorDatabaseStatus::NotFound => {
                             increment_by_one(

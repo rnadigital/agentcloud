@@ -22,7 +22,7 @@ export default function AddTask(props) {
 	}
 
 	async function fetchEditData(taskId) {
-		await API.getTask({ resourceSlug, taskId }, setCloneState, setError, router);
+		await API.getTaskById({ resourceSlug, taskId }, setCloneState, setError, router);
 	}
 
 	useEffect(() => {
