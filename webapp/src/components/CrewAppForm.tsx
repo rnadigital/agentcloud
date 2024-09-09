@@ -12,6 +12,7 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { Model } from 'db/model';
+import { ObjectId } from 'mongodb';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
@@ -194,7 +195,8 @@ export default function CrewAppForm({
 			sharingMode,
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
-			fullOutput
+			fullOutput,
+			variableConfig: appVariables?.map(v => ({ id: v._id, name: v.name }))
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -334,7 +336,7 @@ export default function CrewAppForm({
 				<SessionVariableModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
-					variables={appVariables}
+					variables={appVariables.map(v => ({ id: v._id as ObjectId, name: v.name }))}
 					onSubmit={async variables => {
 						const form = document.forms[0];
 						await appPost({ target: form }, variables);

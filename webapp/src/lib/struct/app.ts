@@ -15,6 +15,11 @@ export type ChatAppConfig = {
 	recursionLimit?: number;
 };
 
+export type VariableConfig = {
+	id: ObjectId;
+	name: string;
+};
+
 export type App = {
 	_id?: ObjectId;
 	orgId: ObjectId;
@@ -33,4 +38,5 @@ export type App = {
 	cache?: boolean;
 	crewId?: ObjectId;
 	shareLinkShareId?: string;
+	variableConfig?: VariableConfig[];
 };

@@ -1,32 +1,50 @@
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
+import SessionVariableModal from 'components/modal/SessionVariableModal';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import { AppsDataReturnType } from 'controllers/app';
+import { ObjectId } from 'mongodb';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { App } from 'struct/app';
 
 import * as API from '../../api';
 import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, teamName, csrf } = accountContext as any;
+	const { teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
+	const [state, dispatch] = useState<AppsDataReturnType>(props);
 	const [error, setError] = useState();
 	const { apps } = state;
 	const filteredApps = apps?.filter(x => !x.hidden);
+	const [sessionVariableOpen, setSessionVariableOpen] = useState(false);
+	const [selectedApp, setSelectedApp] = useState<App>(null);
 
-	async function startSession(appId) {
+	const handleStartSession = async appId => {
+		const app = apps.find(app => app._id === appId);
+		setSelectedApp(app);
+
+		if (app?.variableConfig?.length > 0) {
+			setSessionVariableOpen(true);
+		} else {
+			startSession(appId);
+		}
+	};
+
+	async function startSession(appId: ObjectId, variables?: { [key: string]: string }) {
 		await API.addSession(
 			{
 				_csrf: csrf,
 				resourceSlug,
-				id: appId
+				id: appId,
+				variables
 			},
 			null,
 			setError,
@@ -98,9 +116,21 @@ export default function Apps(props) {
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
 				{filteredApps.map((a, ai) => (
-					<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />
+					<AppCard key={ai} app={a} startSession={handleStartSession} fetchFormData={fetchApps} />
 				))}
 			</div>
+
+			{sessionVariableOpen && (
+				<SessionVariableModal
+					open={sessionVariableOpen}
+					setOpen={setSessionVariableOpen}
+					variables={selectedApp?.variableConfig || []}
+					onSubmit={async variables => {
+						await startSession(selectedApp?._id, variables);
+						setSessionVariableOpen(false);
+					}}
+				/>
+			)}
 		</>
 	);
 }
@@ -113,6 +143,14 @@ export async function getServerSideProps({
 	locale,
 	locales,
 	defaultLocale
+}: {
+	req: any;
+	res: any;
+	query: any;
+	resolvedUrl: string;
+	locale: string;
+	locales: string[];
+	defaultLocale: string;
 }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

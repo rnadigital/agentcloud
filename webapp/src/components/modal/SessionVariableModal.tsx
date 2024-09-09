@@ -1,11 +1,11 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useRef, useState } from 'react';
-import { Variable } from 'struct/variable';
+import { VariableConfig } from 'struct/app';
 
 interface SessionVariableModalProps {
 	open: boolean;
 	setOpen: (open: boolean) => void;
-	variables: Variable[];
+	variables: VariableConfig[];
 	onSubmit: (variableValues: { [key: string]: string }) => void;
 }
 
@@ -61,20 +61,20 @@ export default function SessionVariableModal({
 										</Dialog.Title>
 										<div className='mt-2'>
 											{variables.map(variable => (
-												<div key={variable._id.toString()} className='mt-4'>
+												<div key={variable.id.toString()} className='mt-4'>
 													<label
-														htmlFor={variable._id.toString()}
+														htmlFor={variable.id.toString()}
 														className='block text-sm font-medium text-gray-700'
 													>
 														{variable.name}
 													</label>
 													<input
 														type='text'
-														name={variable._id.toString()}
-														id={variable._id.toString()}
-														value={variableValues[variable._id.toString()] || ''}
+														name={variable.id.toString()}
+														id={variable.id.toString()}
+														value={variableValues[variable.id.toString()] || ''}
 														onChange={e =>
-															handleVariableChange(variable._id.toString(), e.target.value)
+															handleVariableChange(variable.id.toString(), e.target.value)
 														}
 														className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
 													/>
