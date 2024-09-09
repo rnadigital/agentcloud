@@ -3,6 +3,8 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import ButtonSpinner from 'components/ButtonSpinner';
 import { Fragment, useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
 
 import InputField from './form/InputField';
 
@@ -14,9 +16,22 @@ export default function AddEmailModal({
 	title,
 	callback
 }) {
+	const {
+		handleSubmit,
+		formState: { errors }
+	} = useForm();
 	const [submitting, setSubmitting] = useState(false);
 	const [email, setEmail] = useState('');
 
+	async function onSubmit(data){
+		setSubmitting(true);
+		try {
+			await confirmFunction(email);
+		}finally {
+			setTimeout(() => setSubmitting(false), 1000)
+		}
+	};
+	
 	return (
 		<Transition show={open} as={Fragment}>
 			<Dialog as='div' className='relative z-50' onClose={cancelFunction}>
@@ -51,7 +66,7 @@ export default function AddEmailModal({
 									>
 										{title}
 									</DialogTitle>
-									<form>
+									<form onSubmit={handleSubmit(onSubmit)}>
 										<div className='mt-2'>
 											The below email will recieve a prompt to create an account, once the account is
 											created they will have access to the app
@@ -90,12 +105,12 @@ export default function AddEmailModal({
 												type='submit'
 												className='inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 sm:ml-3 sm:w-auto'
 												onClick={async () => {
-													setSubmitting(true);
-													try {
-														await confirmFunction(email);
-													} finally {
-														setTimeout(() => setSubmitting(false), 1000);
-													}
+													// setSubmitting(true);
+													// try {
+													// 	await confirmFunction(email);
+													// } finally {
+													// 	setTimeout(() => setSubmitting(false), 1000);
+													// }
 												}}
 												>
 												{submitting && <ButtonSpinner className='mt-0.5 me-2' />}
