@@ -82,7 +82,6 @@ export default function CreateDatasourceForm({
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
-	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('day');
@@ -109,6 +108,31 @@ export default function CreateDatasourceForm({
 	const [toolTimeWeightField, setToolTimeWeightField] = useState(null);
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+
+	const getInitialEmbeddingField = () => {
+		const fieldsArray = discoveredSchema?.catalog?.streams.reduce((acc, stream) => {
+			const properties = stream.stream.jsonSchema.properties;
+			const fields = Object.entries(properties).map(([fieldName, fieldSchema]: [string, any]) => ({
+				name: fieldName,
+				type: fieldSchema.type || fieldSchema.airbyte_type
+			}));
+			return acc.concat(fields);
+		}, []);
+		const firstStringField = fieldsArray?.find(
+			//Get the first field that is a string, ane usea heuristic to not pick ones named "date".
+			field => field.type === 'string' && !/date/i.test(field?.name || '')
+		);
+		return firstStringField?.name || fieldsArray?.[0]?.name || null;
+	};
+	const [embeddingField, setEmbeddingField] = useState('');
+	useEffect(() => {
+		if (!embeddingField) {
+			const initialEmbeddingField = getInitialEmbeddingField();
+			console.log('setting initial embedding field', initialEmbeddingField);
+			setEmbeddingField(getInitialEmbeddingField);
+		}
+	}, [discoveredSchema?.catalog?.streams?.length]);
+
 	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
