@@ -47,7 +47,7 @@ class LocalStorageProvider(StorageProvider):
             raise err
 
     def get_signed_url(self, filename, file_folder, is_public=False):
-        return f"http://localhost:3000/tmp/{file_folder}/{filename}"
+        return f"{os.getenv('WEBAPP_URL')}/tmp/{file_folder}/{filename}"
 
 
 

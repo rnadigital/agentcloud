@@ -181,6 +181,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=keyfile.json
       - PROJECT_ID=agentcloud-dev
       - STORAGE_PROVIDER=local
+      - WEBAPP_URL=http://localhost:3000/
 
   vector_db_proxy:
     restart: always
