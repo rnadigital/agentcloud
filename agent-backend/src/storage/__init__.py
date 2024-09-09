@@ -1,8 +1,6 @@
 import os
 
 STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local")
-print(f"STORAGE_PROVIDER: {STORAGE_PROVIDER}")
-
 
 if STORAGE_PROVIDER == "google":
     from .google import google_storage_provider
