@@ -671,9 +671,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		};
 	}
 
-	const createdConnection = await connectionsApi
-		.patchConnection(datasource.connectionId, connectionBody)
-		.then(res => res.data);
+	try {
+		const createdConnection = await connectionsApi
+			.patchConnection(datasource.connectionId, connectionBody)
+			.then(res => res.data);
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, {
+			error: 'An error occurred when trying to update the datasource.'
+		});
+	}
 
 	if (sync === true) {
 		// Create the collection in qdrant

@@ -154,6 +154,7 @@ export default function Datasource(props) {
 				() => {
 					toast.success(`Updated streams${sync ? ' and triggered sync job' : ''}`);
 					setSchemaDiscoverState(null);
+					fetchSchema();
 					fetchDatasource();
 				},
 				res => {
