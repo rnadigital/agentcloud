@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
+import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
@@ -11,7 +12,6 @@ import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
 import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
-import AddEmailModal from 'components/AddEmailModal';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useRouter } from 'next/router';
@@ -22,7 +22,6 @@ import { App, AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
-
 
 export default function ChatAppForm({
 	app,
