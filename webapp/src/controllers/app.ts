@@ -18,14 +18,19 @@ import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
 		getAppsByTeam(req.params.resourceSlug),
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug)
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getAccountsById(res.locals.matchingTeam.members),
 	]);
+	const teamMemberemails = teamMembers.reduce((acc, curr) => { //get AccountsById gets the entire account object, which we don't need so we extract the emails from them
+		acc.push(curr.email);
+		return acc;
+	}, [])
 	return {
 		csrf: req.csrfToken(),
 		apps,
@@ -33,7 +38,8 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
-		datasources
+		datasources,
+		teamMembers: teamMemberemails
 	};
 }
 
@@ -47,7 +53,7 @@ export async function appData(req, res, _next) {
 		getDatasourcesByTeam(req.params.resourceSlug),
 		getAccountsById(res.locals.matchingTeam.members)
 	]);
-	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+	const teamMemberemails = teamMembers.reduce((acc, curr) => { //get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
 		return acc;
 	}, [])

@@ -31,6 +31,10 @@ export default function WhiteListSharing({
 								return;
 							}
                             //handle empty array
+                            if (v === null){
+                                onChange([]);
+                                return;
+                            }
 							onChange(v);
 						}}
 						primaryColor={'indigo'}

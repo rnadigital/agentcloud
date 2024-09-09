@@ -51,54 +51,58 @@ export default function AddEmailModal({
 									>
 										{title}
 									</DialogTitle>
-									<div className='mt-2'>
-										The below email will recieve a prompt to create an account, once the account is
-										created they will have access to the app
-										<label
-											htmlFor='email'
-											className='block text-sm font-medium leading-6 text-gray-900 dard:text-slate-400'
-										>
-											Email
-										</label>
-										<input
-											type='email'
-											name='email'
-											id='email'
-											className='bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
-											onChange={e => {
-												setEmail(e.target.value);
-											}}
-											required
-											value={email}
-										/>
-									</div>
-									<div className='mt-4 flex justify-end space-x-2'>
-										<button
-											type='reset'
-											className='inline-flex w-full justify-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 sm:ml-3 sm:w-auto'
-											onClick={() => {
-												setSubmitting(false);
-												cancelFunction();
-											}}
-										>
-											Cancel
-										</button>
-										<button
-											type='submit'
-											className='inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 sm:ml-3 sm:w-auto'
-											onClick={async () => {
-												setSubmitting(true);
-												try {
-													await confirmFunction(email);
-												} finally {
-													setTimeout(() => setSubmitting(false), 1000);
-												}
-											}}
-										>
-											{submitting && <ButtonSpinner className='mt-0.5 me-2' />}
-											Submit
-										</button>
-									</div>
+									<form>
+										<div className='mt-2'>
+											The below email will recieve a prompt to create an account, once the account is
+											created they will have access to the app
+											<label
+												htmlFor='email'
+												className='block text-sm font-medium leading-6 text-gray-900 dard:text-slate-400'
+											>
+												Email
+											</label>
+
+											<input
+												type="email"
+												name='email'
+												id='email'
+												pattern=".+@.+\..+"
+												className='bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-gray-600 w-full h-9 p-1 pl-3 text-gray-500 dark:text-gray-50 disabled:bg-gray-200 text-sm focus:ring-indigo-600'
+												onChange={e => {
+													setEmail(e.target.value);
+												}}
+												required
+												value={email}
+												/>
+										</div>
+										<div className='mt-4 flex justify-end space-x-2'>
+											<button
+												type='reset'
+												className='inline-flex w-full justify-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 sm:ml-3 sm:w-auto'
+												onClick={() => {
+													setSubmitting(false);
+													cancelFunction();
+												}}
+												>
+												Cancel
+											</button>
+											<button
+												type='submit'
+												className='inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 sm:ml-3 sm:w-auto'
+												onClick={async () => {
+													setSubmitting(true);
+													try {
+														await confirmFunction(email);
+													} finally {
+														setTimeout(() => setSubmitting(false), 1000);
+													}
+												}}
+												>
+												{submitting && <ButtonSpinner className='mt-0.5 me-2' />}
+												Submit
+											</button>
+										</div>
+									</form>
 								</div>
 							</DialogPanel>
 						</TransitionChild>

@@ -18,6 +18,7 @@ interface AddAppProps {
 	tasks: any[];
 	models: any[];
 	datasources: any[];
+	teamMembers: any[];
 }
 const chatAppTaglines = [
 	'Build single agent chat bots (like GPTS)',
@@ -45,7 +46,7 @@ export default function AddApp(props: AddAppProps) {
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
 	const [loading, setLoading] = useState(true);
-	const { apps, tools, agents, tasks, models, datasources } = state;
+	const { apps, tools, agents, tasks, models, datasources, teamMembers } = state;
 
 	const { theme } = useThemeContext();
 
@@ -194,6 +195,7 @@ export default function AddApp(props: AddAppProps) {
 						modelChoices={models}
 						toolChoices={tools}
 						app={cloneState?.app}
+						whiteListSharingChoices={teamMembers}
 					/>
 				);
 			case 2:
