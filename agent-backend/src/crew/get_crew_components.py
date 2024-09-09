@@ -36,13 +36,6 @@ def construct_tools_datasources(tools: List[Tuple[Set[str], Tool]]):
     return datasources
 
 
-def construct_input_variables(variable_ids: List[PyObjectId]) -> Union[Dict[str, str], None]:
-    if variable_ids:
-        variables = mongo_client.get_app_variables(variable_ids)
-        return {var.name: var.value for var in variables}
-    return None
-
-
 def construct_crew(session_id: str, socket: Any):
     """Construct crew. Collate every element into dictionary by type.
     The key is a set of all the parent ids.
@@ -77,7 +70,7 @@ def construct_crew(session_id: str, socket: Any):
     agents_tools_datasources_models: Dict[Set[PyObjectId], Model] = construct_models(agents_tools_datasources.items())
 
     # Inputs to pass to crew > kickoff()
-    crew_input_variables = construct_input_variables(app.variableIds)
+    crew_input_variables = session.variables
 
     # Crew > chat Model
     crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])

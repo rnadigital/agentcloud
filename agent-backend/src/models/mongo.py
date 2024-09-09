@@ -271,6 +271,7 @@ class Session(BaseModel):
     model_config = ConfigDict(extra='ignore')
     crewId: Crew
     appId: Optional[PyObjectId] = None
+    variables: Dict[str, str] = {}
 
 
 class Datasource(BaseModel):
@@ -310,4 +311,3 @@ class App(BaseModel):
     appType: Optional[AppType] = Field(default=None)
     crewId: Optional[PyObjectId] = Field(default=None)
     chatAppConfig: Optional[ChatAppConfig] = None
-    variableIds: Optional[List[PyObjectId]] = Field(default_factory=list)
