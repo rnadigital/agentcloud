@@ -19,6 +19,7 @@ export type Session = {
 	appId?: ObjectId;
 	previewLabel?: string;
 	sharingConfig: SharingConfig;
+	variables?: { [key: string]: string };
 };
 
 export function SessionCollection(): any {

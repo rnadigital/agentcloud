@@ -181,7 +181,7 @@ export async function publicSessionMessagesJson(req, res, next) {
  * @apiParam {String} type team | task Type of session
  */
 export async function addSessionApi(req, res, next) {
-	let { id: appId, skipRun } = req.body;
+	let { id: appId, skipRun, variables } = req.body;
 
 	let validationError = chainValidations(
 		req.body,
@@ -234,7 +234,8 @@ export async function addSessionApi(req, res, next) {
 		sharingConfig: {
 			permissions: {},
 			mode: app?.sharingConfig?.mode
-		}
+		},
+		variables
 	});
 
 	if (!skipRun) {
