@@ -72,6 +72,7 @@ export default function EditApp(props) {
 					agentChoices={agents}
 					modelChoices={models}
 					taskChoices={tasks}
+					whiteListSharingChoices={teamMembers}
 					// toolChoices={tools}
 				/>
 			)}

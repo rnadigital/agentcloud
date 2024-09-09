@@ -30,7 +30,6 @@ export default function WhiteListSharing({
 								setModalOpen();
 								return;
 							}
-                            //handle empty array
                             if (v === null){
                                 onChange([]);
                                 return;

@@ -207,6 +207,7 @@ export default function AddApp(props: AddAppProps) {
 						fetchFormData={fetchAppFormData}
 						app={cloneState?.app}
 						crew={cloneState?.crew}
+						whiteListSharingChoices={teamMembers}
 					/>
 				);
 			default:

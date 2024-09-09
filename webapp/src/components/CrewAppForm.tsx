@@ -10,6 +10,7 @@ import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
+import AddEmailModal from 'components/AddEmailModal';
 import { useStepContext } from 'context/stepwrapper';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -28,6 +29,7 @@ export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
 	/*toolChoices = [], */ modelChoices = [],
+	whiteListSharingChoices = [],
 	crew = {},
 	app = {},
 	editing,
@@ -40,6 +42,7 @@ export default function CrewAppForm({
 	/*toolChoices?: any[],*/
 	crew?: any;
 	modelChoices: any;
+	whiteListSharingChoices?: any[];
 	app?: any;
 	editing?: boolean;
 	compact?: boolean;
@@ -92,6 +95,9 @@ export default function CrewAppForm({
 				.filter(n => n);
 		return { initialAgents, initialTasks };
 	}
+
+	const initialEmails = whiteListSharingChoices ? whiteListSharingChoices.map((email) => ({label: email, value: email})) : null
+	const [ sharingEmailState, setSharingEmailState ] = useState( [] );
 
 	const { initialAgents, initialTasks } = getInitialData({ agents, tasks });
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
@@ -228,6 +234,12 @@ export default function CrewAppForm({
 		setManagerModel({ value: addedModelId, name: body?.name });
 	};
 
+	async function emailCallback(newEmail) {
+		console.log('addedEmail', newEmail);
+		setSharingEmailState(() => [...sharingEmailState, {label: newEmail, value:newEmail}]);
+		setModalOpen(false);
+	}
+
 	let modal;
 	switch (modalOpen) {
 		case 'agent':
@@ -265,6 +277,20 @@ export default function CrewAppForm({
 						ModelType.GOOGLE_VERTEX,
 						ModelType.GOOGLE_AI
 					]}
+				/>
+			);
+			break;
+		case 'whitelist':
+			modal = (
+				<AddEmailModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={emailCallback}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title='Share with new email'
+					callback={emailCallback}
 				/>
 			);
 			break;
@@ -353,6 +379,12 @@ export default function CrewAppForm({
 								showInfoAlert={true}
 								setShareLinkShareId={setShareLinkShareId}
 								shareLinkShareId={shareLinkShareId}
+								emailState={sharingEmailState}
+								emailOptions={initialEmails}
+								onChange={setSharingEmailState}
+								setModalOpen={x => {
+									setModalOpen('whitelist');
+								}}
 							/>
 
 							<div className='sm:col-span-12'>
