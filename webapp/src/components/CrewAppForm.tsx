@@ -13,7 +13,7 @@ import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { Model } from 'db/model';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { Agent } from 'struct/agent';
@@ -24,15 +24,16 @@ import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
 import { Variable } from 'struct/variable';
 
+import SessionVariableModal from './modal/SessionVariableModal';
 import ToolTip from './shared/ToolTip';
 
 export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
 	modelChoices = [],
+	variableChoices = [],
 	crew = {},
 	app = {},
-	variableChoices = [],
 	editing,
 	compact = false,
 	callback,
@@ -40,9 +41,9 @@ export default function CrewAppForm({
 }: {
 	agentChoices?: Agent[];
 	taskChoices?: Task[];
-	variableChoices?: Variable[];
 	crew?: any;
 	modelChoices: Model[];
+	variableChoices: Variable[];
 	app?: any;
 	editing?: boolean;
 	compact?: boolean;
@@ -114,16 +115,10 @@ export default function CrewAppForm({
 
 	const combinedVariables = Array.from(new Set([...agentVariables, ...taskVariables])).sort();
 
-	const selectedVariables = variableChoices.filter(v =>
-		combinedVariables.includes(v._id.toString())
-	);
-	const [variableValues, setVariableValues] = useState<{ [key: string]: string }>({});
+	const appVariables = variableChoices.filter(v => combinedVariables.includes(v._id.toString()));
+	console.log(appVariables);
 
-	console.log(variableValues);
-
-	const handleVariableChange = (id: string, value: string) => {
-		setVariableValues(prev => ({ ...prev, [id]: value }));
-	};
+	// const [variableValues, setVariableValues] = useState<{ [key: string]: string }>({});
 
 	const missingAgents: Agent[] = tasksState?.reduce((acc, t) => {
 		const task = taskChoices.find(tc => tc._id === t.value);
@@ -151,25 +146,36 @@ export default function CrewAppForm({
 		setTasksState(initialTasks);
 	}, [app?._id]);
 
-	useEffect(() => {
-		const newVariableValues = { ...variableValues };
-		let hasChanges = false;
+	// useEffect(() => {
+	// 	const newVariableValues = { ...variableValues };
+	// 	let hasChanges = false;
 
-		selectedVariables.forEach(variable => {
-			const variableId = variable._id.toString();
-			if (!(variableId in newVariableValues)) {
-				newVariableValues[variableId] = null;
-				hasChanges = true;
-			}
-		});
+	// 	appVariables.forEach(variable => {
+	// 		const variableId = variable._id.toString();
+	// 		if (!(variableId in newVariableValues)) {
+	// 			newVariableValues[variableId] = null;
+	// 			hasChanges = true;
+	// 		}
+	// 	});
 
-		if (hasChanges) {
-			setVariableValues(newVariableValues);
-		}
-	}, [selectedVariables, variableValues]);
+	// 	if (hasChanges) {
+	// 		setVariableValues(newVariableValues);
+	// 	}
+	// }, [appVariables, variableValues]);
 
-	async function appPost(e) {
+	const handleSubmit = async e => {
 		e.preventDefault();
+		if (appVariables.length > 0 && run === true) {
+			console.log('running vairable');
+			setModalOpen('variable');
+		} else {
+			await appPost(e);
+		}
+	};
+
+	async function appPost(e, variables?: { [key: string]: string }) {
+		console.log(e, variables);
+		// e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -202,7 +208,7 @@ export default function CrewAppForm({
 								_csrf: e.target._csrf.value,
 								resourceSlug,
 								id: app._id,
-								variableValues
+								variables
 							},
 							null,
 							toast.error,
@@ -223,7 +229,7 @@ export default function CrewAppForm({
 								_csrf: e.target._csrf.value,
 								resourceSlug,
 								id: res._id,
-								variableValues
+								variables
 							},
 							null,
 							toast.error,
@@ -271,6 +277,7 @@ export default function CrewAppForm({
 		setModalOpen(false);
 		setManagerModel({ value: addedModelId, name: body?.name });
 	};
+	console.log(modalOpen);
 
 	let modal;
 	switch (modalOpen) {
@@ -322,6 +329,19 @@ export default function CrewAppForm({
 			);
 			// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
 			break;
+		case 'variable':
+			modal = (
+				<SessionVariableModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					variables={appVariables}
+					onSubmit={async variables => {
+						const form = document.forms[0];
+						await appPost({ target: form }, variables);
+					}}
+				/>
+			);
+			break;
 		default:
 			modal = null;
 			break;
@@ -331,7 +351,7 @@ export default function CrewAppForm({
 		<>
 			{modal}
 			{!editing && <h2 className='text-xl font-bold mb-6 dark:text-white'>Process App</h2>}
-			<form onSubmit={appPost}>
+			<form onSubmit={handleSubmit}>
 				<input type='hidden' name='_csrf' value={csrf} />
 
 				<div className='space-y-4'>
@@ -479,40 +499,6 @@ export default function CrewAppForm({
 												<span className='text-gray-900 dark:text-slate-200'>{agent.name}</span>
 											</div>
 										))}
-									</div>
-								</div>
-							)}
-
-							{selectedVariables.length > 0 && (
-								<div className='sm:col-span-12'>
-									<div className='flex flex-col gap-2'>
-										<label
-											htmlFor='variables'
-											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											Variables
-										</label>
-										<div className='mt-2 space-y-2'>
-											{selectedVariables.map(variable => (
-												<div key={variable._id.toString()} className='flex gap-2 items-center'>
-													<label
-														htmlFor={`variable-${variable._id}`}
-														className='text-sm text-gray-900 dark:text-slate-400'
-													>
-														{variable.name}
-													</label>
-													<input
-														type='text'
-														id={`variable-${variable._id}`}
-														value={variableValues[variable._id.toString()] || ''}
-														onChange={e =>
-															handleVariableChange(variable._id.toString(), e.target.value)
-														}
-														className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-													/>
-												</div>
-											))}
-										</div>
 									</div>
 								</div>
 							)}
