@@ -66,6 +66,7 @@ export async function getAccountsById(userIds: db.IdOrStr[]): Promise<Account[]>
 				$in: userIds.map(toObjectId)
 			}
 		})
+		.project({passwordHash: 0})
 		.toArray();
 }
 
@@ -76,7 +77,8 @@ export async function getAccountTeamMember(
 	return AccountCollection().findOne({
 		_id: toObjectId(userId),
 		'orgs.teams.id': toObjectId(teamId)
-	});
+	})
+	.project({passwordHash: 0});
 }
 
 export function getAccountByEmail(email: string): Promise<Account> {

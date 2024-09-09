@@ -143,7 +143,7 @@ const SharingModeSelect = ({
 				<div className='col-span-12'>
 					<SharingModeInfoAlert
 						shareLinkShareId={shareLinkShareId}
-						message='This app will only be accessible by the creator of the app, team/org admins and team/org owner only.'
+						message='the creator of the app and team/org owners only.'
 					/>
 				</div>
 			)}

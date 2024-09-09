@@ -11,6 +11,7 @@ import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
 import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
+import AddEmailModal from 'components/AddEmailModal';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useRouter } from 'next/router';
@@ -22,7 +23,6 @@ import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 
-import AddEmailModal from './AddEmailModal';
 
 export default function ChatAppForm({
 	app,
