@@ -16,6 +16,7 @@ import { timingSafeEqual } from 'crypto';
 import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
 import {
+	checkCanAccessSession,
 	getSessionById,
 	setSessionStatus,
 	unsafeGetSessionById,
@@ -92,37 +93,14 @@ export function initSocket(rawHttpServer) {
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
-			const session = await unsafeGetSessionById(
-				socketRequest.locals.isAgentBackend ? room.substring(1) : room
-			); // removing _
-			if (!session) {
-				log('socket.id "%s" invalid session %s', socket.id, room);
-				return;
-			}
-			const foundApp = await unsafeGetAppById(session?.appId);
-			if (!foundApp) {
-				log('socket.id "%s" app id "%s" not found %s', socket.id, session?.appId, room);
-				return;
-			}
-			log('socket.id "%s" sent join_room %s', socket.id, room);
-			// log('foundApp', foundApp);
-			switch (foundApp?.sharingConfig?.mode as SharingMode) {
-				case SharingMode.PUBLIC:
-					socket.join(room);
-					break;
-				case SharingMode.TEAM:
-					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
-						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
-					);
-					if (!sessionTeamMatch && !socketRequest.locals.isAgentBackend) {
-						return;
-					}
-					socket.join(room);
-					break;
-				//case SharingMode.RESTRICTED:
-				default:
-					return; //TODO
-			}
+
+			// Perform session and permission checking using the extracted function
+			const canJoinRoom = await checkCanAccessSession(
+				room,
+				socketRequest.locals.isAgentBackend,
+				socketRequest.locals.account
+			);
+
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients

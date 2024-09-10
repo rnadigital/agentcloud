@@ -3,7 +3,6 @@
 import { Binary } from 'mongodb';
 
 export enum SharingMode {
-	RESTRICTED = 'restricted',
 	TEAM = 'team',
 	PUBLIC = 'public',
 	OWNER = 'owner',

@@ -5,7 +5,10 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { SessionStatus } from 'struct/session';
-import { SharingConfig } from 'struct/sharing';
+import { SharingConfig, SharingMode } from 'struct/sharing';
+import debug from 'debug';
+const log = debug('webapp:db:session')
+import { unsafeGetAppById } from 'db/app';
 
 export type Session = {
 	_id?: ObjectId;
@@ -140,4 +143,36 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 		_id: toObjectId(sessionId),
 		teamId: toObjectId(teamId)
 	});
+}
+
+export async function checkCanAccessSession(sessionId: string, isAgentBackend: boolean, account: any): Promise<boolean> {
+	const session = await unsafeGetSessionById(isAgentBackend ? sessionId.substring(1) : sessionId);
+	if (!session) {
+		log('Invalid session %s', sessionId);
+		return false;
+	}
+
+	const foundApp = await unsafeGetAppById(session?.appId);
+	if (!foundApp) {
+		log('App id "%s" not found for session %s', session?.appId, sessionId);
+		return false;
+	}
+
+	switch (foundApp?.sharingConfig?.mode as SharingMode) {
+		case SharingMode.PUBLIC:
+			return true;
+		case SharingMode.TEAM:
+			const sessionTeamMatch = account?.orgs?.some(o =>
+				o?.teams?.some(t => t.id.toString() === session.teamId.toString())
+			);
+			return sessionTeamMatch || isAgentBackend;
+		case SharingMode.WHITELIST:
+			const hasPermissionEntry = foundApp?.sharingConfig?.permissions[account?._id];
+			return hasPermissionEntry || isAgentBackend;
+		case SharingMode.OWNER:
+			const isAppOwner = foundApp?.sharingConfig?.permissions[account?._id];
+			return isAppOwner || isAgentBackend;
+		default:
+			return false;
+	}
 }

@@ -95,9 +95,7 @@ const SharingModeSelect = ({
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
 							if (
-								v?.value === SharingMode.PUBLIC ||
-								v?.value === SharingMode.OWNER ||
-								v?.value === SharingMode.WHITELIST
+								v?.value !== SharingMode.TEAM
 							) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
