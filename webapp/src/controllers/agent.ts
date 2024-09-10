@@ -3,10 +3,10 @@
 import { dynamicResponse } from '@dr';
 import {
 	addAgent,
-	deleteAgentById,
 	getAgentById,
 	getAgentsByTeam,
 	updateAgent,
+	deleteAgentById,
 	updateAgentGetOldAgent,
 	deleteAgentByIdReturnAgent
 } from 'db/agent';

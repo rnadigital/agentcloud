@@ -5,7 +5,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import { removeAgentsTool } from 'db/agent';
-import { getAssetById } from 'db/asset';
+import { attachAssetToObject, getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import {
@@ -37,6 +37,7 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
+import { ObjectId } from 'mongodb';
 
 const log = debug('webapp:controllers:tool');
 
@@ -236,6 +237,11 @@ export async function addToolApi(req, res, next) {
 	}
 
 	const functionId = isFunctionTool ? uuidv4() : null;
+
+	const newToolId = new ObjectId();
+	const collectionType = CollectionName.Tools;
+	const attachedIconToTool = await attachAssetToObject(iconId, newToolId, collectionType);
+
 	const addedTool = await addTool({
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
@@ -247,10 +253,11 @@ export async function addToolApi(req, res, next) {
 		retriever_config: retriever_config || {}, //TODO: validation
 		schema: schema,
 		data: toolData,
-		icon: foundIcon
+		icon: attachedIconToTool
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToTool._id,
+					filename: attachedIconToTool.filename,
+					linkedId: newToolId
 				}
 			: null,
 		state: linkedTool ? null : isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
@@ -445,6 +452,7 @@ export async function editToolApi(req, res, next) {
 			//supress
 		}
 	}
+
 
 	await editTool(req.params.resourceSlug, toolId, {
 		name,
