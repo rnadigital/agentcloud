@@ -212,8 +212,21 @@ cd ..
 
 echo "=> Starting agentcloud backend..."
 
-docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest
-docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api
+
+docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest || {
+	clear
+	echo "⚠️  Warning: Failed to pull the 'unstructured-api' image from the remote repository."
+	echo "    Proceeding without the latest 'unstructured-api' image. Please check your network or the repository URL."
+	sleep 1
+}
+
+docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api || {
+	clear
+	echo "⚠️  Warning: Failed to tag the 'unstructured-api' image for local use."
+	echo "    Proceeding without updating the image tag. Please ensure the image was pulled correctly."
+	sleep 1
+}
+
 docker compose up --build -d
 
 # At the end of the script, check the variables and kill containers if requested
