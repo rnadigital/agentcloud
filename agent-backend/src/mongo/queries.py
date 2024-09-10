@@ -25,10 +25,12 @@ class MongoClientConnection(MongoConnection):
             session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
             ).find_one(
-                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1, "appId": 1}
+                {"_id": ObjectId(session_id)},
+                {"_id": 1, "appId": 1, "variables": 1}
             )
+            print("session_query_results", session_query_results)
             assert session_query_results
-            return session_query_results
+            return Session(**session_query_results)
         except AssertionError as ae:
             logging.exception(f"Query returned NO sessions: {ae}")
         except Exception as e:
@@ -36,7 +38,7 @@ class MongoClientConnection(MongoConnection):
 
     def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
-            app_id = session.get("appId")
+            app_id = session.appId
             print(f"App ID: {app_id}")
             apps_collection: collection.Collection = self._get_collection("apps")
             the_app: Dict = apps_collection.find_one({"_id": ObjectId(app_id)})
@@ -45,7 +47,7 @@ class MongoClientConnection(MongoConnection):
             try:
                 assert crew_id is not None
             except AssertionError:
-                raise AssertionError(f"no Crew ID found for Session Id {session.get('id')}")
+                raise AssertionError(f"no Crew ID found for Session Id {session.id}")
             crews_collection: collection.Collection = self._get_collection("crews")
             tasks_collection: collection.Collection = self._get_collection("tasks")
             agents_collection: collection.Collection = self._get_collection("agents")

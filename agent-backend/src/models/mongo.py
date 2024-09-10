@@ -267,10 +267,8 @@ class Crew(BaseModel):
 
 
 class Session(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    crewId: Crew
-    appId: Optional[PyObjectId] = None
+    id: PyObjectId = Field(alias="_id", default=None)
+    appId: PyObjectId = None
     variables: Dict[str, str] = {}
 
 

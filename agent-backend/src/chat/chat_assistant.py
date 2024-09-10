@@ -49,7 +49,7 @@ class ChatAssistant:
     def init_app_state(self):
         session = self.mongo_client.get_session(self.session_id)
 
-        app = self.mongo_client.get_single_model_by_id("apps", App, session.get('appId'))
+        app = self.mongo_client.get_single_model_by_id("apps", App, session.appId)
 
         app_config = app.chatAppConfig
         if not app_config:
