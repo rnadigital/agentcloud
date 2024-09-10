@@ -156,7 +156,7 @@ export async function addAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		variableConfig	
+		variables
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -342,7 +342,7 @@ export async function addAppApi(req, res, next) {
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {}),
-		variableConfig
+		variables
 	});
 
 	if (shareLinkShareId) {
@@ -398,7 +398,7 @@ export async function editAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		variableConfig	
+		variables
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router

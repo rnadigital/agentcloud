@@ -1,11 +1,10 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useRef, useState } from 'react';
-import { VariableConfig } from 'struct/app';
 
 interface SessionVariableModalProps {
 	open: boolean;
 	setOpen: (open: boolean) => void;
-	variables: VariableConfig[];
+	variables: string[];
 	onSubmit: (variableValues: { [key: string]: string }) => void;
 }
 
@@ -61,21 +60,19 @@ export default function SessionVariableModal({
 										</Dialog.Title>
 										<div className='mt-2'>
 											{variables.map(variable => (
-												<div key={variable.id.toString()} className='mt-4'>
+												<div key={variable} className='mt-4'>
 													<label
-														htmlFor={variable.id.toString()}
+														htmlFor={variable}
 														className='block text-sm font-medium text-gray-700'
 													>
-														{variable.name}
+														{variable}
 													</label>
 													<input
 														type='text'
-														name={variable.id.toString()}
-														id={variable.id.toString()}
-														value={variableValues[variable.id.toString()] || ''}
-														onChange={e =>
-															handleVariableChange(variable.id.toString(), e.target.value)
-														}
+														name={variable}
+														id={variable}
+														value={variableValues[variable] || ''}
+														onChange={e => handleVariableChange(variable, e.target.value)}
 														className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm'
 													/>
 												</div>

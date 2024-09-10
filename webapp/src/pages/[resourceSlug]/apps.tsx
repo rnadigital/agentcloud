@@ -31,7 +31,7 @@ export default function Apps(props) {
 		const app = apps.find(app => app._id === appId);
 		setSelectedApp(app);
 
-		if (app?.variableConfig?.length > 0) {
+		if (app?.variables?.length > 0) {
 			setSessionVariableOpen(true);
 		} else {
 			startSession(appId);
@@ -124,7 +124,7 @@ export default function Apps(props) {
 				<SessionVariableModal
 					open={sessionVariableOpen}
 					setOpen={setSessionVariableOpen}
-					variables={selectedApp?.variableConfig || []}
+					variables={selectedApp?.variables || []}
 					onSubmit={async variables => {
 						await startSession(selectedApp?._id, variables);
 						setSessionVariableOpen(false);

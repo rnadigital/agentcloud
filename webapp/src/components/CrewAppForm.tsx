@@ -167,7 +167,6 @@ export default function CrewAppForm({
 	const handleSubmit = async e => {
 		e.preventDefault();
 		if (appVariables.length > 0 && run === true) {
-			console.log('running vairable');
 			setModalOpen('variable');
 		} else {
 			await appPost(e);
@@ -196,7 +195,7 @@ export default function CrewAppForm({
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
 			fullOutput,
-			variableConfig: appVariables?.map(v => ({ id: v._id, name: v.name }))
+			variables: appVariables?.map(v => v.name)
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -336,7 +335,7 @@ export default function CrewAppForm({
 				<SessionVariableModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
-					variables={appVariables.map(v => ({ id: v._id as ObjectId, name: v.name }))}
+					variables={appVariables.map(v => v.name)}
 					onSubmit={async variables => {
 						const form = document.forms[0];
 						await appPost({ target: form }, variables);
