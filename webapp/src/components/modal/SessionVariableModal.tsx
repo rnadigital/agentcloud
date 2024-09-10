@@ -28,7 +28,7 @@ export default function SessionVariableModal({
 
 	return (
 		<Transition show={open} as={Fragment}>
-			<Dialog as='div' className='relative z-10' initialFocus={cancelButtonRef} onClose={setOpen}>
+			<Dialog as='div' className='relative z-50' initialFocus={cancelButtonRef} onClose={setOpen}>
 				<TransitionChild
 					as={Fragment}
 					enter='ease-out duration-300'
