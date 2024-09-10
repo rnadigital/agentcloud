@@ -222,6 +222,7 @@ services:
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
       - LOGGING_LEVEL=warn
+      - UNSTRUCTURED_API_URL=http://unstructured-api:9500/general/v0/general
 
     volumes:
       - datasource_files:/tmp
