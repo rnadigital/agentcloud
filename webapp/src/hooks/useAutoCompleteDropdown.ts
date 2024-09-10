@@ -84,13 +84,18 @@ const useAutocompleteDropdown = ({
 		const textUpToCursor = newText.slice(0, cursorPosition);
 		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
-		if (lastOpenBraceIndex !== -1 && textUpToCursor.slice(lastOpenBraceIndex + 1).trim() === '') {
-			const typedAfterBraces = textUpToCursor.slice(lastOpenBraceIndex + 2);
-			setFilterText(typedAfterBraces);
-			setShowDropdown(true);
-			setHighlightedIndex(0);
-			const { top, left } = calculateDoubleCurlyBracePosition(input, lastOpenBraceIndex);
-			setDropdownPosition({ top, left });
+		if (lastOpenBraceIndex !== -1) {
+			const typedAfterBraces = textUpToCursor.slice(lastOpenBraceIndex + 1);
+			if (!typedAfterBraces.includes(' ') && !typedAfterBraces.includes('}')) {
+				setFilterText(typedAfterBraces);
+				setShowDropdown(true);
+				setHighlightedIndex(0);
+				const { top, left } = calculateDoubleCurlyBracePosition(input, lastOpenBraceIndex);
+				setDropdownPosition({ top, left });
+			} else {
+				setShowDropdown(false);
+				setFilterText('');
+			}
 		} else {
 			setShowDropdown(false);
 			setFilterText('');
@@ -129,7 +134,7 @@ const useAutocompleteDropdown = ({
 			} else if (e.key === 'Enter') {
 				e.preventDefault();
 				handleOptionSelect(filteredOptions[highlightedIndex]);
-			} else if (e.key === 'Escape') {
+			} else if (e.key === 'Escape' || e.key === ' ') {
 				e.preventDefault();
 				setShowDropdown(false);
 			}
@@ -148,7 +153,7 @@ const useAutocompleteDropdown = ({
 		const lastOpenBraceIndex = textUpToCursor.lastIndexOf('{');
 
 		const newText =
-			textUpToCursor.slice(0, lastOpenBraceIndex + 2) +
+			textUpToCursor.slice(0, lastOpenBraceIndex + 1) + // Include the '{'
 			option.label +
 			'}' +
 			value.slice(cursorPosition);
@@ -160,7 +165,7 @@ const useAutocompleteDropdown = ({
 
 		setTimeout(() => {
 			input.focus();
-			input.selectionEnd = newText.length;
+			input.selectionEnd = lastOpenBraceIndex + 1 + option.label.length + 1; // Position cursor after the closing '}'
 		}, 0);
 	};
 
