@@ -14,11 +14,11 @@ import {
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+import { CollectionName } from 'struct/db';
 import { SharingMode } from 'struct/sharing';
 
 import { Session, unsafeGetSessionById } from '../db/session';
-import { ObjectId } from 'mongodb';
-import { CollectionName } from 'struct/db';
 
 export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
@@ -235,7 +235,6 @@ export async function addTaskApi(req, res, next) {
 	const collectionType = CollectionName.Tasks;
 	const attachedIconToTask = await attachAssetToObject(iconId, newTaskId, collectionType);
 
-
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -366,7 +365,7 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-	
+
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,

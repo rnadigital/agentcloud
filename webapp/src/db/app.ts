@@ -67,7 +67,6 @@ export function unsafeGetAppById(appId: db.IdOrStr): Promise<App> {
 	return res.then(docs => (docs.length > 0 ? docs[0] : null));
 }
 
-
 export function getAppsByTeam(teamId: db.IdOrStr): Promise<App[]> {
 	return AppCollection()
 		.aggregate([
@@ -110,7 +109,7 @@ export async function updateAppGetOldApp(
 	return AppCollection().findOneAndUpdate(
 		{
 			_id: toObjectId(appId),
-			teamId: toObjectId(teamId),
+			teamId: toObjectId(teamId)
 		},
 		{
 			$set: app
@@ -118,7 +117,7 @@ export async function updateAppGetOldApp(
 		{
 			returnDocument: 'before'
 		}
-	)
+	);
 }
 
 export function deleteAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<any> {
@@ -128,11 +127,9 @@ export function deleteAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<an
 	});
 }
 
-export function deleteAppByIdReturnApp( teamId: db.IdOrStr, appId: db.IdOrStr ): Promise<App> {
-	return AppCollection().findOneAndDelete(
-		{
-			_id: toObjectId(appId),
-			teamId: toObjectId(teamId)
-		}
-	)
+export function deleteAppByIdReturnApp(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> {
+	return AppCollection().findOneAndDelete({
+		_id: toObjectId(appId),
+		teamId: toObjectId(teamId)
+	});
 }

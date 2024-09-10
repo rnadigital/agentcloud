@@ -3,7 +3,15 @@
 import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
-import { addApp, deleteAppById, deleteAppByIdReturnApp, getAppById, getAppsByTeam, updateApp, updateAppGetOldApp } from 'db/app';
+import {
+	addApp,
+	deleteAppById,
+	deleteAppByIdReturnApp,
+	getAppById,
+	getAppsByTeam,
+	updateApp,
+	updateAppGetOldApp
+} from 'db/app';
 import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
@@ -581,8 +589,8 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	if(oldApp?.icon){
-		deleteAssetById(oldApp?.icon.id)
+	if (oldApp?.icon) {
+		deleteAssetById(oldApp?.icon.id);
 	}
 
 	if (shareLinkShareId) {
@@ -623,8 +631,8 @@ export async function deleteAppApi(req, res, next) {
 
 	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
 
-	if (oldApp?.icon.id){
-		await deleteAssetById(oldApp.icon.id)
+	if (oldApp?.icon.id) {
+		await deleteAssetById(oldApp.icon.id);
 	}
 
 	return dynamicResponse(req, res, 302, {});

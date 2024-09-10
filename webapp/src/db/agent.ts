@@ -145,13 +145,14 @@ export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promis
 	});
 }
 
-export function deleteAgentByIdReturnAgent(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Agent> {
-	return AgentCollection().findOneAndDelete(
-		{
-			_id: toObjectId(agentId),
-			teamId: toObjectId(teamId)
-		}
-	)
+export function deleteAgentByIdReturnAgent(
+	teamId: db.IdOrStr,
+	agentId: db.IdOrStr
+): Promise<Agent> {
+	return AgentCollection().findOneAndDelete({
+		_id: toObjectId(agentId),
+		teamId: toObjectId(teamId)
+	});
 }
 
 export async function getAgentNameMap(

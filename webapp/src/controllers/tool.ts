@@ -29,6 +29,7 @@ import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
+import { ObjectId } from 'mongodb';
 import { PlanLimitsKeys } from 'struct/billing';
 import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
@@ -37,7 +38,6 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
-import { ObjectId } from 'mongodb';
 
 const log = debug('webapp:controllers:tool');
 
@@ -453,7 +453,6 @@ export async function editToolApi(req, res, next) {
 			//supress
 		}
 	}
-
 
 	await editTool(req.params.resourceSlug, toolId, {
 		name,

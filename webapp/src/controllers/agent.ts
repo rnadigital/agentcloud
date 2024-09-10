@@ -3,12 +3,12 @@
 import { dynamicResponse } from '@dr';
 import {
 	addAgent,
+	deleteAgentById,
+	deleteAgentByIdReturnAgent,
 	getAgentById,
 	getAgentsByTeam,
 	updateAgent,
-	deleteAgentById,
-	updateAgentGetOldAgent,
-	deleteAgentByIdReturnAgent
+	updateAgentGetOldAgent
 } from 'db/agent';
 import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { removeAgentFromCrews } from 'db/crew';
@@ -282,7 +282,7 @@ export async function editAgentApi(req, res, next) {
 			: null
 	});
 
-	if(oldAgent?.icon.id){
+	if (oldAgent?.icon.id) {
 		await deleteAssetById(oldAgent.icon.id);
 	}
 
@@ -313,8 +313,8 @@ export async function deleteAgentApi(req, res, next) {
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	const oldAgent = await deleteAgentByIdReturnAgent(req.params.resourceSlug, agentId);
-	
-	if(oldAgent?.icon){
+
+	if (oldAgent?.icon) {
 		await deleteAssetById(oldAgent.icon.id);
 	}
 
