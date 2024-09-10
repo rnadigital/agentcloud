@@ -5,17 +5,19 @@ import { isDeepStrictEqual } from 'node:util';
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import { removeAgentsTool } from 'db/agent';
-import { attachAssetToObject, getAssetById } from 'db/asset';
+import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import {
 	addTool,
 	deleteToolById,
+	deleteToolByIdReturnTool,
 	editTool,
 	editToolUnsafe,
 	getToolById,
 	getToolsByTeam,
-	getToolsForDatasource
+	getToolsForDatasource,
+	updateToolGetOldTool
 } from 'db/tool';
 import {
 	addToolRevision,
@@ -218,7 +220,6 @@ export async function addToolApi(req, res, next) {
 	}
 
 	const isFunctionTool = (type as ToolType) === ToolType.FUNCTION_TOOL;
-	const foundIcon = await getAssetById(iconId);
 
 	const toolData = {
 		...data,
@@ -383,7 +384,8 @@ export async function editToolApi(req, res, next) {
 		datasourceId,
 		retriever,
 		retriever_config,
-		parameters
+		parameters,
+		iconId
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -453,8 +455,10 @@ export async function editToolApi(req, res, next) {
 			//supress
 		}
 	}
+	const collectionType = CollectionName.Tools;
+	const attachedIconToTool = await attachAssetToObject(iconId, req.params.toolId, collectionType);
 
-	await editTool(req.params.resourceSlug, toolId, {
+	const oldTool = await updateToolGetOldTool(req.params.resourceSlug, toolId, {
 		name,
 		type: type as ToolType,
 		description,
@@ -463,10 +467,20 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
+		icon: attachedIconToTool
+			? {
+					id: attachedIconToTool._id,
+					filename: attachedIconToTool.filename,
+					linkedId: req.params.toolId
+				}
+			: null,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
+	if (oldTool?.icon?.id) {
+		deleteAssetById(oldTool?.icon?.id);
+	}
 	let functionProvider;
 	if (
 		(existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
@@ -769,8 +783,11 @@ export async function deleteToolApi(req, res, next) {
 		}
 	}
 
+	const oldTool = await deleteToolByIdReturnTool(req.params.resourceSlug, toolId);
+	if (oldTool?.icon?.id) {
+		deleteAssetById(oldTool.icon.id);
+	}
 	await Promise.all([
-		deleteToolById(req.params.resourceSlug, toolId),
 		removeAgentsTool(req.params.resourceSlug, toolId),
 		deleteRevisionsForTool(req.params.resourceSlug, toolId)
 	]);
@@ -800,4 +817,22 @@ export async function deleteToolRevisionApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/agents`*/
 	});
+}
+function editTupdateToolGetOldToolool(
+	resourceSlug: any,
+	toolId: any,
+	arg2: {
+		state?: ToolState;
+		name: any;
+		type: ToolType;
+		description: any;
+		schema: any;
+		datasourceId: ObjectId;
+		retriever_type: any;
+		retriever_config: any; //TODO: validation
+		data: any;
+		parameters: any;
+	}
+) {
+	throw new Error('Function not implemented.');
 }

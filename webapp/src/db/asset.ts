@@ -36,8 +36,10 @@ export async function attachAssetToObject(
 			_id: toObjectId(assetId)
 		},
 		{
-			linkedToId: toObjectId(linkedId),
-			linkedCollection: linkedCollection
+			$set: {
+				linkedToId: toObjectId(linkedId),
+				linkedCollection: linkedCollection
+			}
 		}
 	);
 }
