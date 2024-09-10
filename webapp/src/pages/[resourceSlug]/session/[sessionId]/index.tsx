@@ -29,6 +29,8 @@ export default function Session(props) {
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
 	const hasAppSegment = path.includes('/app');
+	console.log('isShared', isShared);
+	console.log('hasAppSegment', hasAppSegment);
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
@@ -274,19 +276,6 @@ export default function Session(props) {
 		if (!message || message.trim().length === 0) {
 			return null;
 		}
-		if (isShared && showConversationStarters) {
-			const res = await API.publicStartApp(
-				{
-					resourceSlug: app?.teamId,
-					id: app?._id
-				},
-				null,
-				toast.error,
-				null
-			);
-			res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
-			return;
-		}
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account?.name,
@@ -298,12 +287,6 @@ export default function Session(props) {
 		reset && reset();
 		return true;
 	}
-
-	useEffect(() => {
-		if (hasAppSegment && isShared) {
-			sendMessage('!', null);
-		}
-	}, [hasAppSegment, isShared]);
 
 	return (
 		<>
