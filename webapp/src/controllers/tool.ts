@@ -243,6 +243,7 @@ export async function addToolApi(req, res, next) {
 	const attachedIconToTool = await attachAssetToObject(iconId, newToolId, collectionType);
 
 	const addedTool = await addTool({
+		_id: newToolId,
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 		name,

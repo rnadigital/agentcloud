@@ -1,9 +1,10 @@
 'use strict';
 
+import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
-import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
-import { getAssetById } from 'db/asset';
+import { addApp, deleteAppById, deleteAppByIdReturnApp, getAppById, getAppsByTeam, updateApp, updateAppGetOldApp } from 'db/app';
+import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
@@ -12,7 +13,9 @@ import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { AppType } from 'struct/app';
+import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
@@ -231,7 +234,9 @@ export async function addAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const newAppId = new ObjectId();
+	const collectionType = CollectionName.Apps;
+	const attachedIconToApp = await attachAssetToObject(iconId, newAppId, collectionType);
 
 	let addedCrew, chatAgent;
 	if ((type as AppType) === AppType.CREW) {
@@ -303,16 +308,18 @@ export async function addAppApi(req, res, next) {
 	}
 
 	const addedApp = await addApp({
+		_id: newAppId,
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
 		author: res.locals.matchingTeam.name,
-		icon: foundIcon
+		icon: attachedIconToApp
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToApp._id,
+					filename: attachedIconToApp.filename,
+					linkedId: newAppId
 				}
 			: null,
 		type,
@@ -541,16 +548,18 @@ export async function editAppApi(req, res, next) {
 		}
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const collectionType = CollectionName.Apps;
+	const attachedIconToApp = await attachAssetToObject(iconId, req.params.appId, collectionType);
 
-	await updateApp(req.params.resourceSlug, req.params.appId, {
+	const oldApp = await updateAppGetOldApp(req.params.resourceSlug, req.params.appId, {
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: foundIcon
+		icon: attachedIconToApp
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToApp._id,
+					filename: attachedIconToApp.filename,
+					linkedId: req.params.appId
 				}
 			: null,
 		...(app.type === AppType.CREW
@@ -571,6 +580,10 @@ export async function editAppApi(req, res, next) {
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
+
+	if(oldApp?.icon){
+		deleteAssetById(oldApp?.icon.id)
+	}
 
 	if (shareLinkShareId) {
 		await updateShareLinkPayload({
@@ -608,7 +621,11 @@ export async function deleteAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	await deleteAppById(req.params.resourceSlug, appId);
+	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
+
+	if (oldApp?.icon.id){
+		await deleteAssetById(oldApp.icon.id)
+	}
 
 	return dynamicResponse(req, res, 302, {});
 }

@@ -2,7 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
-import { getAssetById } from 'db/asset';
+import { attachAssetToObject, getAssetById } from 'db/asset';
 import {
 	addTask,
 	deleteTaskById,
@@ -17,6 +17,8 @@ import toObjectId from 'misc/toobjectid';
 import { SharingMode } from 'struct/sharing';
 
 import { Session, unsafeGetSessionById } from '../db/session';
+import { ObjectId } from 'mongodb';
+import { CollectionName } from 'struct/db';
 
 export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
@@ -229,7 +231,10 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const newTaskId = new ObjectId();
+	const collectionType = CollectionName.Tasks;
+	const attachedIconToTask = await attachAssetToObject(iconId, newTaskId, collectionType);
+
 
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
@@ -245,10 +250,11 @@ export async function addTaskApi(req, res, next) {
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
-		icon: foundIcon
+		icon: attachedIconToTask
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToTask._id,
+					filename: attachedIconToTask.filename,
+					linkedId: newTaskId
 				}
 			: null,
 		formFields: formFields,
@@ -360,6 +366,7 @@ export async function editTaskApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
+	
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,

@@ -282,8 +282,9 @@ export async function editAgentApi(req, res, next) {
 			: null
 	});
 
-	const oldAssetId = oldAgent.icon.id;
-	await deleteAssetById(oldAssetId);
+	if(oldAgent?.icon.id){
+		await deleteAssetById(oldAgent.icon.id);
+	}
 
 	return dynamicResponse(req, res, 302, {
 		/*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/
@@ -312,8 +313,10 @@ export async function deleteAgentApi(req, res, next) {
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	const oldAgent = await deleteAgentByIdReturnAgent(req.params.resourceSlug, agentId);
-
-	await deleteAssetById(oldAgent.icon.id);
+	
+	if(oldAgent?.icon){
+		await deleteAssetById(oldAgent.icon.id);
+	}
 
 	return dynamicResponse(req, res, 302, {
 		/*redirect: `/${req.params.resourceSlug}/agents`*/
