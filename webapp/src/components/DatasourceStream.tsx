@@ -36,7 +36,9 @@ export function StreamRow({
 	const containsNestedFields =
 		sourceDefinedPrimaryKey?.length > 1 || defaultCursorField?.length > 1;
 	const [cursorField, setCursorField] = useState(streamState?.cursorField || defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
-	const [primaryKey, setPrimaryKey] = useState(streamState?.primaryKey || sourceDefinedPrimaryKey);
+	const [primaryKey, setPrimaryKey] = useState(
+		streamState?.primaryKey || sourceDefinedPrimaryKey?.flat() || []
+	);
 	const initialSyncMode =
 		streamProperty?.syncModes.find(m => m?.includes('incremental')) || streamProperty?.syncModes[0];
 	const [syncMode, setSyncMode] = useState(streamState?.syncMode || initialSyncMode);
