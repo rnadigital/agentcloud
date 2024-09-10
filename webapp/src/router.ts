@@ -57,6 +57,7 @@ import * as toolController from 'controllers/tool';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
+	server.use('/tmp', express.static('/tmp'));
 
 	// Stripe webhook handler
 	server.post(
@@ -253,7 +254,7 @@ export default function router(server, app) {
 	);
 
 	
-	//ApiKey Endpoints
+	// api key endpoints
 	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
 	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
 	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
@@ -264,15 +265,8 @@ export default function router(server, app) {
 	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
 	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
 
-
-
+	// public session endpoints
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
-	publicAppRouter.get(
-		'/app/:appId([a-f0-9]{24})',
-		csrfMiddleware,
-		setParamOrgAndTeam,
-		sessionController.publicSessionPage.bind(null, app)
-	);
 	publicAppRouter.get(
 		'/session/:sessionId([a-f0-9]{24})',
 		csrfMiddleware,
