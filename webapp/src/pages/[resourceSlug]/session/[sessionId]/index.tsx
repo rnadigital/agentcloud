@@ -29,8 +29,6 @@ export default function Session(props) {
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
 	const hasAppSegment = path.includes('/app');
-	console.log('isShared', isShared);
-	console.log('hasAppSegment', hasAppSegment);
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
 	// @ts-ignore
