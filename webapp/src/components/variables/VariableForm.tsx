@@ -101,26 +101,6 @@ export default function VariableForm({
 						{errors.defaultValue && <span className='text-red-500'>This field is required</span>}
 					</div>
 
-					<div>
-						<label
-							htmlFor='type'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-						>
-							Type<span className='text-red-700'> *</span>
-						</label>
-						<select
-							id='type'
-							{...register('type', { required: true })}
-							className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white ${errors.type ? 'border-red-500' : ''}`}
-						>
-							<option value=''>Select Type</option>
-							<option value='string'>String</option>
-							<option value='number'>Number</option>
-							<option value='boolean'>Boolean</option>
-						</select>
-						{errors.type && <span className='text-red-500'>This field is required</span>}
-					</div>
-
 					<div className='mt-6 flex items-center justify-between gap-x-6'>
 						<button
 							type='submit'

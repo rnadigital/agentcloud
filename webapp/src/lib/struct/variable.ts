@@ -8,7 +8,6 @@ export interface Variable {
 	teamId?: ObjectId | string;
 	name: string;
 	defaultValue: string;
-	type: 'string' | 'number' | 'boolean';
 	createdBy?: ObjectId | string;
 	createDate?: Date;
 	usedInTasks?: (ObjectId | string)[];

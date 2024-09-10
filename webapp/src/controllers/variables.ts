@@ -69,13 +69,11 @@ export async function addVariableApi(req, res, next) {
 		req.body,
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'defaultValue', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'type', validation: { notEmpty: true, ofType: 'string' } }
+			{ field: 'defaultValue', validation: { notEmpty: true, ofType: 'string' } }
 		],
 		{
 			name: 'Variable Name',
-			defaultValue: 'Default Value',
-			type: 'Type'
+			defaultValue: 'Default Value'
 		}
 	);
 
@@ -88,7 +86,6 @@ export async function addVariableApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name: req.body.name,
 		defaultValue: req.body.defaultValue,
-		type: req.body.type,
 		createdBy: toObjectId(res.locals.account._id),
 		createDate: new Date()
 	};
@@ -106,13 +103,11 @@ export async function editVariableApi(req, res, next) {
 		req.body,
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'defaultValue', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'type', validation: { notEmpty: true, ofType: 'string' } }
+			{ field: 'defaultValue', validation: { notEmpty: true, ofType: 'string' } }
 		],
 		{
 			name: 'Variable Name',
-			defaultValue: 'Default Value',
-			type: 'Type'
+			defaultValue: 'Default Value'
 		}
 	);
 
@@ -122,8 +117,7 @@ export async function editVariableApi(req, res, next) {
 
 	const updatedVariable = {
 		name: req.body.name,
-		defaultValue: req.body.defaultValue,
-		type: req.body.type
+		defaultValue: req.body.defaultValue
 	};
 
 	await updateVariable(req.params.resourceSlug, req.params.variableId, updatedVariable);
