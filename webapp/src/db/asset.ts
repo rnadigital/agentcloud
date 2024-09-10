@@ -2,6 +2,7 @@ import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { Collection, InsertOneResult } from 'mongodb';
 import { Asset } from 'struct/asset'; // Ensure this path is correct
+import { CollectionName } from 'struct/db';
 
 import * as db from './index';
 
@@ -22,6 +23,23 @@ export async function getAssetById(assetId: db.IdOrStr): Promise<Asset | null> {
 	return assetCollection().findOne({
 		_id: toObjectId(assetId)
 	});
+}
+
+//Function to link an asset to an agent
+export async function attachAssetToObject(
+	assetId: db.IdOrStr,
+	linkedId: db.IdOrStr,
+	linkedCollection: CollectionName
+): Promise<Asset> {
+	return assetCollection().findOneAndUpdate(
+		{
+			_id: toObjectId(assetId)
+		},
+		{
+			linkedToId: toObjectId(linkedId),
+			linkedCollection: linkedCollection
+		}
+	);
 }
 
 // Function to update an asset by its ID

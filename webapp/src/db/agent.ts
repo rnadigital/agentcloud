@@ -1,13 +1,15 @@
 'use strict';
 
 import * as db from 'db/index';
+import { Collection, InsertOneResult } from 'mongodb';
 import { Agent, CodeExecutionConfigType } from 'struct/agent';
+import { Asset } from 'struct/asset';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
 
-export function AgentCollection(): any {
-	return db.db().collection('agents');
+export function AgentCollection(): Collection<Agent> {
+	return db.db().collection<Agent>('agents');
 }
 
 export function getAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Agent> {
@@ -51,7 +53,7 @@ export function getAgentsByTeam(teamId: db.IdOrStr): Promise<Agent[]> {
 				}
 			}
 		])
-		.toArray();
+		.toArray() as Promise<Agent[]>;
 }
 
 export function getAgents(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promise<Agent[]> {
@@ -65,7 +67,7 @@ export function getAgents(teamId: db.IdOrStr, agentIds: db.IdOrStr[]): Promise<A
 		.toArray();
 }
 
-export async function addAgent(agent: Agent): Promise<InsertResult> {
+export async function addAgent(agent: Agent): Promise<InsertOneResult<Agent>> {
 	return AgentCollection().insertOne(agent);
 }
 
@@ -85,6 +87,25 @@ export async function updateAgent(
 		},
 		{
 			$set: agent
+		}
+	);
+}
+
+export async function updateAgentGetOldAgent(
+	teamId: db.IdOrStr,
+	agentId: db.IdOrStr,
+	agent: Partial<Agent>
+): Promise<Agent> {
+	return AgentCollection().findOneAndUpdate(
+		{
+			_id: toObjectId(agentId),
+			teamId: toObjectId(teamId)
+		},
+		{
+			$set: agent
+		},
+		{
+			returnDocument: 'before'
 		}
 	);
 }
@@ -124,6 +145,15 @@ export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promis
 	});
 }
 
+export function deleteAgentByIdReturnAgent(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Agent> {
+	return AgentCollection().findOneAndDelete(
+		{
+			_id: toObjectId(agentId),
+			teamId: toObjectId(teamId)
+		}
+	)
+}
+
 export async function getAgentNameMap(
 	teamId: db.IdOrStr,
 	agentIds: db.IdOrStr[] = []
@@ -139,7 +169,7 @@ export async function getAgentNameMap(
 	return (agents || []).reduce((acc, x) => {
 		acc[x.name.toLowerCase()] = x?.icon?.filename;
 		return acc;
-	}, {});
+	}, {}) as Agent[];
 }
 
 export async function unsafeGetAgentNameMap(agentIds: db.IdOrStr[] = []): Promise<Agent[]> {
@@ -153,5 +183,5 @@ export async function unsafeGetAgentNameMap(agentIds: db.IdOrStr[] = []): Promis
 	return (agents || []).reduce((acc, x) => {
 		acc[x.name] = x?.icon?.filename;
 		return acc;
-	}, {});
+	}, {}) as Agent[];
 }

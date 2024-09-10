@@ -51,6 +51,12 @@ export default function AgentForm({
 	const foundModel = models && models.find(m => m._id === modelId);
 	const foundFunctionModel = models && models.find(m => m._id === functionModelId);
 	const posthog = usePostHog();
+	let ifExistingIcon = { bool: false, oldIconId: '' };
+
+	if (agent?.icon) {
+		ifExistingIcon.bool = true;
+		ifExistingIcon.oldIconId = agent?.icon._id;
+	}
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = tools.find(t => t._id === tid);
