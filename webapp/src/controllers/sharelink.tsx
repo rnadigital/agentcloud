@@ -9,6 +9,7 @@ import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { sessionTaskQueue } from 'queue/bull';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { ShareLinkTypes } from 'struct/sharelink';
@@ -99,12 +100,21 @@ export async function handleRedirect(req, res, next) {
 	});
 	const sessionId = addedSession.insertedId;
 
+	sessionTaskQueue.add(
+		'execute_rag',
+		{
+			type: app?.type,
+			sessionId: addedSession.insertedId.toString()
+		},
+		{ removeOnComplete: true, removeOnFail: true }
+	);
+
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
 			//There are no other sharinglinktypes yet
 			return dynamicResponse(req, res, 302, {
-				redirect: `/s/${resourceSlug}/app/${foundShareLink.payload.id}?sessionId=${sessionId}`
+				redirect: `/s/${resourceSlug}/session/${sessionId}`
 			});
 	}
 }
