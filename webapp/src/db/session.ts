@@ -152,7 +152,10 @@ export async function checkCanAccessApp(
 	isAgentBackend: boolean,
 	account: any
 ): Promise<boolean> {
-	if (isAgentBackend === true) {
+	if (
+		isAgentBackend === true ||
+		account?._permissions?.hasAny(Permissions.ROOT, Permissions.TEAM_ADMIN, Permissions.ORG_ADMIN)
+	) {
 		return true;
 	}
 	const foundApp = await unsafeGetAppById(appId);
@@ -172,13 +175,7 @@ export async function checkCanAccessApp(
 			const hasPermissionEntry = foundApp?.sharingConfig?.permissions[account?._id];
 			return hasPermissionEntry;
 		case SharingMode.PRIVATE:
-			const isAppOwner = foundApp?.sharingConfig?.permissions[account?._id];
-			const hasTeamAdminPerm = account?._permissions?.hasAny(
-				Permissions.ROOT,
-				Permissions.TEAM_ADMIN,
-				Permissions.ORG_ADMIN
-			);
-			return isAppOwner || hasTeamAdminPerm;
+			return foundApp.createdBy.toString() === account?._id.toString();
 		default:
 			return false;
 	}
