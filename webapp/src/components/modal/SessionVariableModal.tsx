@@ -22,13 +22,15 @@ export default function SessionVariableModal({
 		setVariableValues(prev => ({ ...prev, [id]: value }));
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = e => {
+		e.preventDefault();
 		const finalValues = { ...variableValues };
 		variables.forEach(variable => {
 			if (!finalValues[variable.name]) {
 				finalValues[variable.name] = variable.defaultValue;
 			}
 		});
+
 		onSubmit(finalValues);
 		setOpen(false);
 	};
