@@ -1,13 +1,13 @@
 'use strict';
 
 import * as db from 'db/index';
+import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { SessionStatus } from 'struct/session';
 import { SharingConfig, SharingMode } from 'struct/sharing';
-import debug from 'debug';
-const log = debug('webapp:db:session')
+const log = debug('webapp:db:session');
 import { unsafeGetAppById } from 'db/app';
 
 export type Session = {
@@ -145,7 +145,11 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 	});
 }
 
-export async function checkCanAccessSession(sessionId: string, isAgentBackend: boolean, account: any): Promise<boolean> {
+export async function checkCanAccessSession(
+	sessionId: string,
+	isAgentBackend: boolean,
+	account: any
+): Promise<boolean> {
 	const session = await unsafeGetSessionById(isAgentBackend ? sessionId.substring(1) : sessionId);
 	if (!session) {
 		log('Invalid session %s', sessionId);

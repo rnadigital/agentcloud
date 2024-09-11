@@ -12,11 +12,7 @@ export default function SharingModeInfoAlert({
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	return (
-		<InfoAlert
-			textColor='black'
-			className={classNames}
-			message={message}
-		>
+		<InfoAlert textColor='black' className={classNames} message={message}>
 			<CopyToClipboardInput dataToCopy={`${origin}/s/${resourceSlug}/${shareLinkShareId}`} />
 		</InfoAlert>
 	);

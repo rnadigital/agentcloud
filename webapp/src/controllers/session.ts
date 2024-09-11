@@ -160,11 +160,7 @@ export async function sessionMessagesData(req, res, _next) {
 }
 
 export async function publicSessionMessagesData(req, res, _next) {
-	const canAccess = await checkCanAccessSession(
-		req.params.sessionId,
-		false,
-		res.locals.account
-	);
+	const canAccess = await checkCanAccessSession(req.params.sessionId, false, res.locals.account);
 	if (!canAccess) {
 		return null;
 	}

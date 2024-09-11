@@ -93,7 +93,12 @@ export default function ChatAppForm({
 	const initialEmails = whiteListSharingChoices
 		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
 		: null;
-		const [sharingEmailState, setSharingEmailState] = useState(Object.values(app?.sharingConfig?.permissions||{}).map(x => ({ label: x, value: x })));
+	const [sharingEmailState, setSharingEmailState] = useState(
+		Object.values(app?.sharingConfig?.permissions || {}).map(x => ({
+			label: x as string,
+			value: x as string
+		}))
+	);
 	const [agentsState, setAgentsState] = useState(
 		initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null
 	);

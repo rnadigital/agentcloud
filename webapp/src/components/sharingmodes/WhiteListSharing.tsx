@@ -70,10 +70,10 @@ export default function WhiteListSharing({
 						}}
 						formatGroupLabel={data => {
 							return (
-								<li
-									className='flex align-items-center !overflow-visible transition duration-200 py-2 cursor-pointer select-none truncate rounded'
-								>
-									<span className='border-t pt-3 ms-2 w-full overflow-hidden text-ellipsis'>{data.label}</span>
+								<li className='flex align-items-center !overflow-visible transition duration-200 py-2 cursor-pointer select-none truncate rounded'>
+									<span className='border-t pt-3 ms-2 w-full overflow-hidden text-ellipsis'>
+										{data.label}
+									</span>
 								</li>
 							);
 						}}

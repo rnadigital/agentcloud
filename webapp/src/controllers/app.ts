@@ -11,14 +11,15 @@ import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import createAccount from 'lib/account/create';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
-import createAccount from 'lib/account/create';
-import Roles from '../lib/permissions/roles';
+
 import { addTeamMember } from '../db/team';
+import Roles from '../lib/permissions/roles';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
