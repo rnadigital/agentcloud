@@ -33,4 +33,5 @@ export type App = {
 	cache?: boolean;
 	crewId?: ObjectId;
 	shareLinkShareId?: string;
+	createdBy: ObjectId;
 };

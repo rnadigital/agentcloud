@@ -359,6 +359,7 @@ export async function addAppApi(req, res, next) {
 
 	const addedApp = await addApp({
 		_id: newAppId,
+		createdBy: res.locals.account._id,
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
