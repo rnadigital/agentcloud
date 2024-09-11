@@ -221,18 +221,12 @@ export default function CrewAppForm({
 	}
 
 	async function createAgentCallback(addedAgentId, body) {
-		console.log('createAgentCallback addedAgentId', addedAgentId);
 		(await fetchFormData) && fetchFormData();
 		setAgentsState(oldAgentsState => {
 			return oldAgentsState.concat({ label: body.name, value: addedAgentId });
 		});
 		setModalOpen(false);
 	}
-
-	// async function createToolCallback() { // TODO:
-	// 	await fetchFormData && fetchFormData();
-	// 	setModalOpen(false);
-	// }
 
 	async function createTaskCallback(addedTaskId, body) {
 		(await fetchFormData) && fetchFormData();
@@ -253,7 +247,6 @@ export default function CrewAppForm({
 		setModalOpen(false);
 		setManagerModel({ value: addedModelId, name: body?.name });
 	};
-	console.log(modalOpen);
 
 	let modal;
 	switch (modalOpen) {

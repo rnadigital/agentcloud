@@ -4,7 +4,6 @@ import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import VariableTable from 'components/variables/VariableTable';
-// import VariableCards from 'components/VariableCards'; // Assuming you have a VariableCards component
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

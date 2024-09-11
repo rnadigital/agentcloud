@@ -32,7 +32,6 @@ export default function VariableForm({
 
 	const onSubmit = async (data: any) => {
 		if (editing) {
-			// Call API to update variable
 			await API.updateVariable(
 				{ _csrf: csrf, resourceSlug, variableId: variable._id, ...data },
 				() => {
@@ -44,7 +43,6 @@ export default function VariableForm({
 				null
 			);
 		} else {
-			// Call API to create new variable
 			await API.addVariable(
 				{ _csrf: csrf, resourceSlug, ...data },
 				res => {
