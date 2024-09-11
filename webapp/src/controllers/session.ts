@@ -21,7 +21,8 @@ import {
 	getSessionById,
 	getSessionsByTeam,
 	setSessionStatus,
-	unsafeGetSessionById
+	unsafeGetSessionById,
+	updateSession
 } from 'db/session';
 import toObjectId from 'misc/toobjectid';
 import { sessionTaskQueue } from 'queue/bull';
@@ -56,6 +57,8 @@ export async function sessionsJson(req, res, next) {
 	const data = await sessionsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
+
+export type SessionDataReturnType = Awaited<ReturnType<typeof sessionData>>;
 
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
@@ -340,5 +343,44 @@ export async function cancelSessionApi(req, res, next) {
 
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/apps`*/
+	});
+}
+
+export async function editSessionApi(req, res, next) {
+	let validationError = chainValidations(
+		req.body,
+		[
+			{ field: 'name', validation: { ofType: 'string' } },
+			{ field: 'status', validation: { ofType: 'string' } },
+			{ field: 'appId', validation: { ofType: 'string' } },
+			{ field: 'previewLabel', validation: { ofType: 'string' } },
+			{ field: 'sharingConfig', validation: { ofType: 'object' } },
+			{ field: 'variables', validation: { ofType: 'object' } }
+		],
+		{
+			name: 'Name',
+			status: 'Status',
+			appId: 'App ID',
+			previewLabel: 'Preview Label',
+			sharingConfig: 'Sharing Config',
+			variables: 'Variables'
+		}
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const sessionId = req.params.sessionId;
+
+	const updatedSession = await updateSession(req.params.resourceSlug, sessionId, req.body);
+
+	if (!updatedSession) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	}
+
+	return dynamicResponse(req, res, 200, {
+		message: 'Session updated successfully',
+		session: updatedSession
 	});
 }

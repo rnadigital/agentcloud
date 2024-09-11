@@ -9,7 +9,7 @@ import { useSocketContext } from 'context/socket';
 import debug from 'debug';
 import useActiveTask from 'hooks/session/useActiveTask';
 import Head from 'next/head';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import ContentLoader from 'react-content-loader';
@@ -17,23 +17,29 @@ import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
+import SessionVariableModal from 'components/modal/SessionVariableModal';
+import { SessionDataReturnType } from 'controllers/session';
 
-export default function Session(props) {
+interface SessionProps extends SessionDataReturnType {
+	sessionId: string;
+	resourceSlug: string;
+}
+
+export default function Session(props: SessionProps) {
 	const scrollContainerRef = useRef(null);
+	const { sessionId, resourceSlug } = props;
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
 	const hasAppSegment = path.includes('/app');
 	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
 	const [error, setError] = useState();
-	// @ts-ignore
-	const { sessionId } = router.query;
-	const [currentSessionId, setCurrentSessionId] = useState(sessionId);
+
+	// const [currentSessionId, setCurrentSessionId] = useState(sessionId);
 	const [session, setSession] = useState(props.session);
 	const [app, setApp]: [App, Function] = useState(props.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
@@ -48,6 +54,22 @@ export default function Session(props) {
 	const requiredHumanInput = activeTask?.requiresHumanInput;
 
 	const bottomRef = useRef<HTMLDivElement>(null);
+
+	const searchParams = useSearchParams();
+
+	const paramsArray = Array.from(searchParams.entries()).map(([key, value]) => ({
+		name: key,
+		defaultValue: value
+	}));
+
+	const [sessionVariableModalOpen, setSessionVariableModalOpen] = useState(false);
+	const [sessionVariablesSubmitted, setSessionVariablesSubmitted] = useState(false);
+
+	useEffect(() => {
+		if (paramsArray.length > 0 && !sessionVariablesSubmitted) {
+			setSessionVariableModalOpen(true);
+		}
+	}, [paramsArray]);
 
 	useEffect(() => {
 		const scrollToBottom = () => {
@@ -243,13 +265,14 @@ export default function Session(props) {
 			handleSocketStop();
 		};
 	}, [resourceSlug, router?.query?.sessionId, router.asPath]);
-	useEffect(() => {
-		if (currentSessionId !== router?.query?.sessionId) {
-			setMessages([]);
-			setLoading(true);
-			setCurrentSessionId(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
-		}
-	}, [router?.query?.sessionId]);
+
+	// useEffect(() => {
+	// 	if (currentSessionId !== router?.query?.sessionId) {
+	// 		setMessages([]);
+	// 		setLoading(true);
+	// 		setCurrentSessionId(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
+	// 	}
+	// }, [router?.query?.sessionId]);
 
 	function stopGenerating() {
 		API.cancelSession(
@@ -291,7 +314,6 @@ export default function Session(props) {
 			<Head>
 				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
-
 			<div
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
@@ -406,6 +428,15 @@ export default function Session(props) {
 					</div>
 				)}
 			</div>
+			<SessionVariableModal
+				open={sessionVariableModalOpen}
+				setOpen={setSessionVariableModalOpen}
+				variables={paramsArray}
+				onSubmit={async variables => {
+					setSessionVariablesSubmitted(true);
+					console.log('variables', variables);
+				}}
+			/>
 		</>
 	);
 }
@@ -419,5 +450,5 @@ export async function getServerSideProps({
 	locales,
 	defaultLocale
 }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
+	return JSON.parse(JSON.stringify({ props: { ...res?.locals?.data, ...query } || {} }));
 }

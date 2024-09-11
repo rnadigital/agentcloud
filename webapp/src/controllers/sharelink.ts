@@ -53,6 +53,7 @@ export async function addShareLinkApi(req, res, next) {
 //Note: dont really need other CRUD endpoints for these. They have an index and auto expire
 
 export async function handleRedirect(req, res, next) {
+	console.log('handleRedirect');
 	const { resourceSlug, shareLinkShareId } = req.params;
 	const foundShareLink = await getShareLinkByShareId(resourceSlug, shareLinkShareId);
 
@@ -83,7 +84,7 @@ export async function handleRedirect(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
-
+	// block
 	const addedSession = await addSession({
 		orgId: toObjectId(app.orgId),
 		teamId: toObjectId(resourceSlug),
@@ -98,23 +99,52 @@ export async function handleRedirect(req, res, next) {
 			mode: SharingMode.PUBLIC
 		}
 	});
-	const sessionId = addedSession.insertedId;
 
-	sessionTaskQueue.add(
-		'execute_rag',
-		{
-			type: app?.type,
-			sessionId: addedSession.insertedId.toString()
-		},
-		{ removeOnComplete: true, removeOnFail: true }
-	);
+	const hasVariables = app.variables?.length > 0;
+
+	if (!hasVariables) {
+		sessionTaskQueue.add(
+			'execute_rag',
+			{
+				type: app?.type,
+				sessionId: addedSession.insertedId.toString()
+			},
+			{ removeOnComplete: true, removeOnFail: true }
+		);
+	}
+	// const redirectUrl = new URL(`/s/${resourceSlug}/session/${addedSession.insertedId}`);
+	// console.log('redirectUrl', redirectUrl);
+
+	// if (hasVariables) {
+	// 	app.variables.forEach(variable => {
+	// 		redirectUrl.searchParams.set(variable.name, variable.defaultValue);
+	// 	});
+	// }
+	// console.log('redirectUrl', redirectUrl);
 
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
-			//There are no other sharinglinktypes yet
+			// //There are no other sharinglinktypes yet
+			// return dynamicResponse(req, res, 302, {
+			// 	redirect: redirectUrl
+			// });
+			let redirectUrl = `/s/${resourceSlug}/session/${addedSession.insertedId}`;
+			const searchParams = new URLSearchParams();
+
+			if (hasVariables) {
+				app.variables.forEach(variable => {
+					searchParams.set(variable.name, variable.defaultValue);
+				});
+			}
+
+			redirectUrl += `?${searchParams.toString()}`;
+
 			return dynamicResponse(req, res, 302, {
-				redirect: `/s/${resourceSlug}/session/${sessionId}`
+				redirect: redirectUrl
 			});
 	}
+
+	// const sessionId = addedSession.insertedId;
+	// if*=(!variables). sesion task
 }
