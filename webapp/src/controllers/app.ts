@@ -2,8 +2,8 @@
 
 import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
-import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
 import { cloneAssetInStorageProvider } from 'controllers/asset';
+import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
@@ -609,37 +609,6 @@ export async function editAppApi(req, res, next) {
 	}
 
 	const sharePermissions = await getSharePermissions(req, res);
-
-	const foundIcon = await getAssetById(iconId);
-
-	console.log('updating app with', {
-		name,
-		description,
-		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: foundIcon
-			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
-				}
-			: null,
-		...(app.type === AppType.CREW
-			? {
-					memory: memory === true,
-					cache: cache === true
-				}
-			: {
-					chatAppConfig: {
-						agentId: toObjectId(agentId),
-						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
-						recursionLimit
-					}
-				}),
-		sharingConfig: {
-			permissions: sharePermissions,
-			mode: sharingMode as SharingMode
-		},
-		...(shareLinkShareId ? { shareLinkShareId } : {})
-	});
 
 	let attachedIconToApp: IconAttachment = app?.icon;
 	if (app?.icon.id !== iconId) {
