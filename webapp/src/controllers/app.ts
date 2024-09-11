@@ -710,7 +710,7 @@ export async function getSharePermissions(req, res) {
 			if (!foundAccount) {
 				const { addedAccount } = await createAccount({
 					email: em,
-					name: em, //TODO: some way to let them set their name on login
+					name: em //TODO: some way to let them set their name on login
 				});
 				foundAccount = await getAccountByEmail(em);
 			}
