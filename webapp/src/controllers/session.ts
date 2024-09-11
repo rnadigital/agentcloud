@@ -17,7 +17,7 @@ import {
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
 	addSession,
-	checkCanAccessSession,
+	checkCanAccessApp,
 	deleteSessionById,
 	getSessionById,
 	getSessionsByTeam,
@@ -100,8 +100,8 @@ export async function publicSessionData(req, res, _next) {
 			}
 			break;
 	}
-	const canAccess = await checkCanAccessSession(
-		session?._id?.toString(),
+	const canAccess = await checkCanAccessApp(
+		app?._id?.toString(),
 		false,
 		res.locals.account
 	);
@@ -136,7 +136,7 @@ export async function sessionPage(app, req, res, next) {
 export async function publicSessionPage(app, req, res, next) {
 	const data = await publicSessionData(req, res, next);
 	if (!data) {
-		return dynamicResponse(req, res, 403, { error: 'No permission' });
+		return next();
 	}
 	res.locals.data = {
 		...data,
@@ -160,7 +160,8 @@ export async function sessionMessagesData(req, res, _next) {
 }
 
 export async function publicSessionMessagesData(req, res, _next) {
-	const canAccess = await checkCanAccessSession(req.params.sessionId, false, res.locals.account);
+	const session = await unsafeGetSessionById(req.params.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return null;
 	}
@@ -201,7 +202,7 @@ export async function sessionMessagesJson(req, res, next) {
 export async function publicSessionMessagesJson(req, res, next) {
 	const data = await publicSessionMessagesData(req, res, next);
 	if (!data) {
-		return dynamicResponse(req, res, 403, { error: 'No permission' });
+		return next();
 	}
 	return res.json(data);
 }

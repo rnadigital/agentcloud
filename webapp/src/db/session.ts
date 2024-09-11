@@ -145,38 +145,33 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 	});
 }
 
-export async function checkCanAccessSession(
-	sessionId: string,
+export async function checkCanAccessApp(
+	appId: string,
 	isAgentBackend: boolean,
 	account: any
 ): Promise<boolean> {
-	const session = await unsafeGetSessionById(isAgentBackend ? sessionId.substring(1) : sessionId);
-	if (!session) {
-		log('Invalid session %s', sessionId);
-		return false;
+	if (isAgentBackend === true) {
+		return true;
 	}
-
-	const foundApp = await unsafeGetAppById(session?.appId);
+	const foundApp = await unsafeGetAppById(appId);
 	if (!foundApp) {
-		log('App id "%s" not found for session %s', session?.appId, sessionId);
+		log('checkCanAccessApp app id "%s" not found', appId);
 		return false;
 	}
-
-	//TODO: maybe adjust whether the session or app sharingConfig is checked
 	switch (foundApp?.sharingConfig?.mode as SharingMode) {
 		case SharingMode.PUBLIC:
 			return true;
 		case SharingMode.TEAM:
 			const sessionTeamMatch = account?.orgs?.some(o =>
-				o?.teams?.some(t => t.id.toString() === session.teamId.toString())
+				o?.teams?.some(t => t.id.toString() === foundApp.teamId.toString())
 			);
-			return sessionTeamMatch || isAgentBackend;
+			return sessionTeamMatch;
 		case SharingMode.WHITELIST:
 			const hasPermissionEntry = foundApp?.sharingConfig?.permissions[account?._id];
-			return hasPermissionEntry || isAgentBackend;
+			return hasPermissionEntry;
 		case SharingMode.OWNER:
 			const isAppOwner = foundApp?.sharingConfig?.permissions[account?._id];
-			return isAppOwner || isAgentBackend;
+			return isAppOwner;
 		default:
 			return false;
 	}

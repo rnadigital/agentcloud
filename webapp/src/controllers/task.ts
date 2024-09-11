@@ -16,7 +16,7 @@ import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { SharingMode } from 'struct/sharing';
 
-import { checkCanAccessSession, Session, unsafeGetSessionById } from '../db/session';
+import { checkCanAccessApp, Session, unsafeGetSessionById } from '../db/session';
 
 export async function tasksData(req, res, _next) {
 	const [tasks, tools, agents] = await Promise.all([
@@ -93,13 +93,13 @@ export async function publicGetTaskJson(req, res, next) {
 	const { name, sessionId } = req?.query || {};
 	try {
 		const session = await unsafeGetSessionById(sessionId);
-		const canAccess = await checkCanAccessSession(
-			session?._id?.toString(),
+		const canAccess = await checkCanAccessApp(
+			session?.appId?.toString(),
 			false,
 			res.locals.account
 		);
 		if (!canAccess) {
-			return res.status(403).json({ error: 'No permission' });
+			return next();
 		}
 		const task = await getTaskByName(session?.teamId, name);
 		if (!task) {

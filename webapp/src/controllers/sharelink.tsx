@@ -4,7 +4,7 @@ import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsById } from 'db/agent';
 import { getAppById } from 'db/app';
 import { getCrewById } from 'db/crew';
-import { addSession } from 'db/session';
+import { addSession, checkCanAccessApp } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationutils';
@@ -82,6 +82,15 @@ export async function handleRedirect(req, res, next) {
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
+	}
+
+	const canAccess = await checkCanAccessApp(
+		app?._id?.toString(),
+		false,
+		res.locals.account
+	);
+	if (!canAccess) {
+		return next();
 	}
 
 	const addedSession = await addSession({

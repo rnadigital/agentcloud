@@ -16,7 +16,7 @@ import { timingSafeEqual } from 'crypto';
 import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
 import {
-	checkCanAccessSession,
+	checkCanAccessApp,
 	getSessionById,
 	setSessionStatus,
 	unsafeGetSessionById,
@@ -94,9 +94,11 @@ export function initSocket(rawHttpServer) {
 				return socket.emit('joined', room);
 			}
 
-			// Perform session and permission checking using the extracted function
-			const canJoinRoom = await checkCanAccessSession(
-				room,
+			const session = await unsafeGetSessionById(
+				socketRequest.locals.isAgentBackend ? room.substring(1) : room
+			);
+			const canJoinRoom = await checkCanAccessApp(
+				session?.appId?.toString(),
 				socketRequest.locals.isAgentBackend,
 				socketRequest.locals.account
 			);
