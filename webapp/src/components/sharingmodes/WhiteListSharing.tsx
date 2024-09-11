@@ -21,10 +21,10 @@ export default function WhiteListSharing({
 	const { resourceSlug } = router.query;
 	return (
 		<>
-			<InfoAlert message="Select emails from the dropdown of the people to share this app with. If you wish to share with someone who doesn't have an account, enter their email and they will be sent an email to prompt them to create an account.">
+			<InfoAlert message="Select emails from the dropdown to share this app. If the person doesn't have an account, enter their email, and they'll receive an invitation email to join.">
 				<div className='flex flex-col'>
 					<Select
-						value={emailState}
+						value={emailState?.length > 0 ? emailState : null}
 						onChange={(v: any) => {
 							if (v?.some(val => val.value === null)) {
 								setModalOpen();
@@ -39,6 +39,7 @@ export default function WhiteListSharing({
 						primaryColor={'indigo'}
 						isMultiple
 						isSearchable
+						isClearable
 						placeholder='Select...'
 						classNames={SelectClassNames}
 						options={[
@@ -48,7 +49,7 @@ export default function WhiteListSharing({
 								disabled: false
 							},
 							{
-								label: 'Suggested members from your team',
+								label: 'Suggested members from your team:',
 								options: emailOptions
 							}
 						]}
@@ -64,6 +65,15 @@ export default function WhiteListSharing({
 									}`}
 								>
 									<span className='ms-2 w-full overflow-hidden text-ellipsis'>{data.label}</span>
+								</li>
+							);
+						}}
+						formatGroupLabel={data => {
+							return (
+								<li
+									className='flex align-items-center !overflow-visible transition duration-200 py-2 cursor-pointer select-none truncate rounded'
+								>
+									<span className='border-t pt-3 ms-2 w-full overflow-hidden text-ellipsis'>{data.label}</span>
 								</li>
 							);
 						}}

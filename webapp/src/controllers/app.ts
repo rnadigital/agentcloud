@@ -1,7 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAccountsById } from 'db/account';
+import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
 import { getAssetById } from 'db/asset';
@@ -16,6 +16,9 @@ import toObjectId from 'misc/toobjectid';
 import { AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
+import createAccount from 'lib/account/create';
+import Roles from '../lib/permissions/roles';
+import { addTeamMember } from '../db/team';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
@@ -160,6 +163,7 @@ export async function addAppApi(req, res, next) {
 		type,
 		run,
 		sharingMode,
+		sharingEmails,
 		shareLinkShareId,
 		verbose,
 		fullOutput,
@@ -176,7 +180,16 @@ export async function addAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode !== SharingMode.TEAM, ofType: 'string' }
+			},
+			{
+				field: 'sharingEmails',
+				validation: {
+					notEmpty: true,
+					asArray: true,
+					ofType: 'string'
+				},
+				validateIf: { field: 'sharingMode', condition: value => value === SharingMode.WHITELIST }
 			},
 			{
 				field: 'type',
@@ -317,6 +330,8 @@ export async function addAppApi(req, res, next) {
 		}
 	}
 
+	const sharePermissions = await getSharePermissions(req, res);
+
 	const addedApp = await addApp({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -345,7 +360,7 @@ export async function addAppApi(req, res, next) {
 					}
 				}),
 		sharingConfig: {
-			permissions: {}, //TODO once we have per-user, team, org perms
+			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
@@ -400,6 +415,7 @@ export async function editAppApi(req, res, next) {
 		modelId,
 		run,
 		sharingMode,
+		sharingEmails,
 		shareLinkShareId,
 		verbose,
 		fullOutput,
@@ -421,7 +437,16 @@ export async function editAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode !== SharingMode.TEAM, ofType: 'string' }
+			},
+			{
+				field: 'sharingEmails',
+				validation: {
+					notEmpty: true,
+					asArray: true,
+					ofType: 'string'
+				},
+				validateIf: { field: 'sharingMode', condition: value => value === SharingMode.WHITELIST }
 			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
@@ -556,7 +581,38 @@ export async function editAppApi(req, res, next) {
 		}
 	}
 
+	const sharePermissions = await getSharePermissions(req, res);
+
 	const foundIcon = await getAssetById(iconId);
+
+	console.log('updating app with', {
+		name,
+		description,
+		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
+		icon: foundIcon
+			? {
+					id: foundIcon._id,
+					filename: foundIcon.filename
+				}
+			: null,
+		...(app.type === AppType.CREW
+			? {
+					memory: memory === true,
+					cache: cache === true
+				}
+			: {
+					chatAppConfig: {
+						agentId: toObjectId(agentId),
+						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
+						recursionLimit
+					}
+				}),
+		sharingConfig: {
+			permissions: sharePermissions,
+			mode: sharingMode as SharingMode
+		},
+		...(shareLinkShareId ? { shareLinkShareId } : {})
+	});
 
 	await updateApp(req.params.resourceSlug, req.params.appId, {
 		name,
@@ -581,7 +637,7 @@ export async function editAppApi(req, res, next) {
 					}
 				}),
 		sharingConfig: {
-			permissions: {}, //TODO once we have per-user, team, org perms
+			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
@@ -626,4 +682,52 @@ export async function deleteAppApi(req, res, next) {
 	await deleteAppById(req.params.resourceSlug, appId);
 
 	return dynamicResponse(req, res, 302, {});
+}
+
+//TODO: move
+export async function getSharePermissions(req, res) {
+	const { sharingEmails } = req.body;
+	const sharePermissions = {};
+	await Promise.all(
+		(sharingEmails || []).map(async em => {
+			let foundAccount = await getAccountByEmail(em);
+			const invitingTeam = res.locals.matchingOrg.teams.find(
+				t => t.id.toString() === req.params.resourceSlug
+			);
+			//Note: very similar code to inviting team member, maybe possible to refactor
+			if (!foundAccount) {
+				const { addedAccount } = await createAccount({
+					email: em,
+					name: em, //TODO: some way to let them set their name on login
+					roleTemplate: 'TEAM_MEMBER', //Note: this adds them all as team members
+					invite: true,
+					teamName: invitingTeam.name,
+					invitingTeamId: invitingTeam.id,
+					invitingOrgId: res.locals.matchingOrg.id
+				});
+				await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, 'TEAM_MEMBER');
+				foundAccount = await getAccountByEmail(em);
+			}
+			sharePermissions[foundAccount?._id.toString()] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
+			const alreadyInOrg = foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id);
+			const alreadyInTeam = alreadyInOrg && alreadyInOrg.teams.find(t => t.id === invitingTeam.id);
+			console.log('foundAccount', foundAccount);
+			console.log('res.locals.matchingOrg', res.locals.matchingOrg);
+			console.log('alreadyInOrg', alreadyInOrg);
+			console.log('alreadyInTeam', alreadyInTeam);
+			if (!alreadyInOrg) {
+				//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
+				await pushAccountOrg(foundAccount._id, {
+					...res.locals.matchingOrg,
+					teams: [invitingTeam]
+				});
+			} else if (alreadyInOrg && !alreadyInTeam) {
+				//TODO: does this need an elseif for team similar to the previous condition
+				//otherwise theyre already in the org, just push the single team to the matching org
+				await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
+			}
+		})
+	);
+	console.log('sharePermissions', sharePermissions);
+	return sharePermissions;
 }

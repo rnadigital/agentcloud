@@ -5,7 +5,8 @@ import React from 'react';
 
 export default function SharingModeInfoAlert({
 	shareLinkShareId,
-	message = 'Public apps can be accessed by anyone, potentially incurring token costs.'
+	message = 'Public apps can be accessed by anyone, potentially incurring token costs.',
+	classNames = 'rounded bg-yellow-200 p-4 -mt-3 sm:col-span-12'
 }) {
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const router = useRouter();
@@ -13,7 +14,7 @@ export default function SharingModeInfoAlert({
 	return (
 		<InfoAlert
 			textColor='black'
-			className='rounded bg-yellow-200 p-4 -mt-3 sm:col-span-12'
+			className={classNames}
 			message={message}
 		>
 			<CopyToClipboardInput dataToCopy={`${origin}/s/${resourceSlug}/${shareLinkShareId}`} />

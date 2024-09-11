@@ -94,8 +94,8 @@ export async function handleRedirect(req, res, next) {
 		status: SessionStatus.STARTED,
 		appId: toObjectId(app?._id),
 		sharingConfig: {
-			permissions: {},
-			mode: SharingMode.PUBLIC
+			permissions: app?.sharingConfig?.permissions,
+			mode: app?.sharingConfig?.mode as SharingMode
 		}
 	});
 	const sessionId = addedSession.insertedId;

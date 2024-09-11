@@ -158,6 +158,7 @@ export async function checkCanAccessSession(sessionId: string, isAgentBackend: b
 		return false;
 	}
 
+	//TODO: maybe adjust whether the session or app sharingConfig is checked
 	switch (foundApp?.sharingConfig?.mode as SharingMode) {
 		case SharingMode.PUBLIC:
 			return true;

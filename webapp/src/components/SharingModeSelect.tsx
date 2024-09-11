@@ -14,7 +14,7 @@ import SelectClassNames from 'styles/SelectClassNames';
 
 const sharingModeOptions = [
 	{
-		label: 'Team Only',
+		label: 'Team Only (Default)',
 		value: SharingMode.TEAM
 	},
 	{
@@ -22,12 +22,12 @@ const sharingModeOptions = [
 		value: SharingMode.PUBLIC
 	},
 	{
-		label: 'Owner & Admins Only',
-		value: SharingMode.OWNER
-	},
-	{
 		label: 'Whitelist',
 		value: SharingMode.WHITELIST
+	},
+	{
+		label: 'Owner & Admins Only',
+		value: SharingMode.OWNER
 	}
 ];
 
@@ -94,9 +94,7 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							if (
-								v?.value !== SharingMode.TEAM
-							) {
+							if (v?.value !== SharingMode.TEAM) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
 								}
@@ -141,7 +139,8 @@ const SharingModeSelect = ({
 				<div className='col-span-12'>
 					<SharingModeInfoAlert
 						shareLinkShareId={shareLinkShareId}
-						message='the creator of the app and team/org owners only.'
+						message='Accessible by the creator of the app and team/org owners only.'
+						classNames='rounded bg-blue-200 p-4 -mt-3 sm:col-span-12'
 					/>
 				</div>
 			)}

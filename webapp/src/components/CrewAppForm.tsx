@@ -99,7 +99,7 @@ export default function CrewAppForm({
 	const initialEmails = whiteListSharingChoices
 		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
 		: null;
-	const [sharingEmailState, setSharingEmailState] = useState([]);
+	const [sharingEmailState, setSharingEmailState] = useState(Object.values(app?.sharingConfig?.permissions||{}).map(x => ({ label: x, value: x })));
 
 	const { initialAgents, initialTasks } = getInitialData({ agents, tasks });
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
@@ -152,6 +152,7 @@ export default function CrewAppForm({
 			type: AppType.CREW,
 			run,
 			sharingMode,
+			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
 			fullOutput
