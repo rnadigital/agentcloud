@@ -27,6 +27,7 @@ import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
+import { AppDataReturnType } from 'controllers/app';
 import cn from 'lib/cn';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -34,10 +35,12 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
-import { Fragment, useContext, useRef, useState } from 'react';
+import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { App } from 'struct/app';
 
 import packageJson from '../../package.json';
+import SessionVariableModal from './modal/SessionVariableModal';
 
 const noNavPages = [
 	'/login',
@@ -149,10 +152,46 @@ export default withRouter(function Layout(props) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 	const scrollRef = useRef(null);
+	const [currentApp, setCurrentApp] = useState<AppDataReturnType>();
+	const [sessionVariableOpen, setSessionVariableOpen] = useState(false);
 
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
 	}
+
+	const handleRestartSession = async () => {
+		if (currentApp.app.variables && currentApp.app.variables.length > 0) {
+			setSessionVariableOpen(true);
+		} else {
+			await restartSession();
+		}
+	};
+
+	const restartSession = (variables?: { [key: string]: string }) => {
+		posthog.capture('restartSession', {
+			appId: chatContext?.app._id,
+			appType: chatContext?.app.type,
+			appName: chatContext?.app.name
+		});
+		API.addSession(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				id: chatContext?.app?._id,
+				variables
+			},
+			null,
+			toast.error,
+			router
+		);
+	};
+
+	useEffect(() => {
+		if (chatContext?.app?._id) {
+			API.getApp({ resourceSlug, appId: chatContext?.app?._id }, setCurrentApp, null, router);
+		}
+	}, [chatContext?.app?._id]);
+	console.log('currentApp', currentApp);
 
 	return (
 		<>
@@ -594,23 +633,7 @@ export default withRouter(function Layout(props) {
 							{chatContext?.app?.name && (
 								<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
 									<button
-										onClick={() => {
-											posthog.capture('restartSession', {
-												appId: chatContext?.app._id,
-												appType: chatContext?.app.type,
-												appName: chatContext?.app.name
-											});
-											API.addSession(
-												{
-													_csrf: csrf,
-													resourceSlug,
-													id: chatContext?.app?._id
-												},
-												null,
-												toast.error,
-												router
-											);
-										}}
+										onClick={handleRestartSession}
 										className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded dark:text-white'
 									>
 										<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
@@ -954,6 +977,18 @@ export default withRouter(function Layout(props) {
 					</div>
 				</footer>
 			</div>
+
+			{sessionVariableOpen && (
+				<SessionVariableModal
+					open={sessionVariableOpen}
+					setOpen={setSessionVariableOpen}
+					variables={currentApp.app?.variables || []}
+					onSubmit={async variables => {
+						await restartSession(variables);
+						setSessionVariableOpen(false);
+					}}
+				/>
+			)}
 		</>
 	);
 });
