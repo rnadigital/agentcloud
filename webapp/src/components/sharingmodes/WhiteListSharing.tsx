@@ -17,7 +17,6 @@ export default function WhiteListSharing({
 }) {
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const router = useRouter();
-	console.log('emailOptions:', emailOptions);
 	const { resourceSlug } = router.query;
 	return (
 		<>

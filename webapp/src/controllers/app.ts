@@ -710,8 +710,12 @@ export async function getSharePermissions(req, res) {
 				foundAccount = await getAccountByEmail(em);
 			}
 			sharePermissions[foundAccount?._id.toString()] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
-			const alreadyInOrg = foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id);
-			const alreadyInTeam = alreadyInOrg && alreadyInOrg.teams.find(t => t.id === invitingTeam.id);
+			const alreadyInOrg = foundAccount.orgs.find(
+				f => f.id.toString() === res.locals.matchingOrg.id.toString()
+			);
+			const alreadyInTeam =
+				alreadyInOrg &&
+				alreadyInOrg.teams.find(t => t.id.toString() === invitingTeam.id.toString());
 			console.log('foundAccount', foundAccount);
 			console.log('res.locals.matchingOrg', res.locals.matchingOrg);
 			console.log('alreadyInOrg', alreadyInOrg);
