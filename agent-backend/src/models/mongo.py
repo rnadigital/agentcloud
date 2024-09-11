@@ -269,7 +269,7 @@ class Crew(BaseModel):
 class Session(BaseModel):
     id: PyObjectId = Field(alias="_id", default=None)
     appId: PyObjectId = None
-    variables: Dict[str, str] = {}
+    variables: Optional[Dict[str, str]] = None
 
 
 class Datasource(BaseModel):

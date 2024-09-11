@@ -28,7 +28,6 @@ class MongoClientConnection(MongoConnection):
                 {"_id": ObjectId(session_id)},
                 {"_id": 1, "appId": 1, "variables": 1}
             )
-            print("session_query_results", session_query_results)
             assert session_query_results
             return Session(**session_query_results)
         except AssertionError as ae:
