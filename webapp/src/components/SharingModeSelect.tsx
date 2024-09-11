@@ -3,7 +3,7 @@ import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
@@ -58,6 +58,12 @@ const SharingModeSelect = ({
 			setLoading(false);
 		}
 	}
+
+	useEffect(() => {
+		if(shareLinkShareId === null){
+			createShareLink();
+		}
+	}, [])
 	return (
 		<>
 			<SubscriptionModal
@@ -81,7 +87,7 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							if (v?.value === SharingMode.PUBLIC) {
+							if (v?.value !== SharingMode.TEAM) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
 								}
