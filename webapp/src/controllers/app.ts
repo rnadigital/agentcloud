@@ -612,7 +612,7 @@ export async function editAppApi(req, res, next) {
 	const sharePermissions = await getSharePermissions(req, res);
 
 	let attachedIconToApp: IconAttachment = app?.icon;
-	if (app?.icon.id !== iconId) {
+	if (app?.icon?.id !== iconId) {
 		const collectionType = CollectionName.Apps;
 		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
 		if (newAttachment) {
@@ -648,7 +648,7 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	if (iconId !== oldApp?.icon.id) {
+	if (oldApp?.icon?.id && oldApp?.icon?.id !== iconId) {
 		deleteAssetById(oldApp?.icon.id);
 	}
 
@@ -707,37 +707,14 @@ export async function getSharePermissions(req, res) {
 			const invitingTeam = res.locals.matchingOrg.teams.find(
 				t => t.id.toString() === req.params.resourceSlug
 			);
-			//Note: very similar code to inviting team member, maybe possible to refactor
 			if (!foundAccount) {
 				const { addedAccount } = await createAccount({
 					email: em,
 					name: em, //TODO: some way to let them set their name on login
-					roleTemplate: 'TEAM_MEMBER', //Note: this adds them all as team members
-					invite: true,
-					teamName: invitingTeam.name,
-					invitingTeamId: invitingTeam.id,
-					invitingOrgId: res.locals.matchingOrg.id
 				});
-				await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, 'TEAM_MEMBER');
 				foundAccount = await getAccountByEmail(em);
 			}
 			sharePermissions[foundAccount?._id.toString()] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
-			const alreadyInOrg = foundAccount.orgs.find(
-				f => f.id.toString() === res.locals.matchingOrg.id.toString()
-			);
-			const alreadyInTeam =
-				alreadyInOrg &&
-				alreadyInOrg.teams.find(t => t.id.toString() === invitingTeam.id.toString());
-			if (!alreadyInOrg) {
-				//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
-				await pushAccountOrg(foundAccount._id, {
-					...res.locals.matchingOrg,
-					teams: [invitingTeam]
-				});
-			} else if (alreadyInOrg && !alreadyInTeam) {
-				//otherwise theyre already in the org, just push the single team to the matching org
-				await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
-			}
 		})
 	);
 	return sharePermissions;

@@ -280,7 +280,7 @@ export async function editAgentApi(req, res, next) {
 		filename: agent?.icon.filename,
 		linkedId: toObjectId(agent?.icon.linkedId)
 	};
-	if (agent?.icon.id !== iconId) {
+	if (agent?.icon?.id !== iconId) {
 		const collectionType = CollectionName.Agents;
 		const newAttachment = await attachAssetToObject(iconId, req.params.agentId, collectionType);
 		if (newAttachment) {
@@ -307,7 +307,7 @@ export async function editAgentApi(req, res, next) {
 		icon: iconId ? attachedIconToApp : null
 	});
 
-	if (oldAgent?.icon.id != iconId) {
+	if (oldAgent?.icon?.id && oldAgent?.icon?.id !== iconId) {
 		await deleteAssetById(oldAgent.icon.id);
 	}
 
