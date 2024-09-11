@@ -73,7 +73,8 @@ const SharingModeSelect = ({
 	}
 
 	useEffect(() => {
-		if (shareLinkShareId === null) {
+		if (shareLinkShareId === null && sharingMode !== SharingMode.TEAM) {
+			//for cloning, sharingMode may not be team but the ID will be null in initial state, recreate the share link
 			createShareLink();
 		}
 	}, []);
