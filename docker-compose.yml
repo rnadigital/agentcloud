@@ -159,6 +159,7 @@ services:
     image: agent_backend
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - datasource_files:/tmp
     environment:
       - LOCAL=True
       - MAX_THREADS=50
@@ -179,7 +180,8 @@ services:
       - UPLOADS_BASE_PATH=/tmp
       - GOOGLE_APPLICATION_CREDENTIALS=keyfile.json
       - PROJECT_ID=agentcloud-dev
-      - STORAGE_PROVIDER=google
+      - STORAGE_PROVIDER=local
+      - WEBAPP_URL=http://localhost:3000/
 
   vector_db_proxy:
     restart: always

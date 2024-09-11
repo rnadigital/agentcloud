@@ -6,6 +6,7 @@ import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
+import { log } from 'console';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import { TasksDataReturnType } from 'controllers/task';
@@ -185,16 +186,18 @@ export default function TaskForm({
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(null);
 	}
-
 	async function taskPost(e) {
 		e.preventDefault();
+		const toolIds = toolState ? toolState.map(x => x?.value) : [];
+		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
+		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
 			name: e.target.task_name.value,
 			description: e.target.task_description.value,
 			expectedOutput,
-			toolIds: taskState?.toolIds || [],
+			toolIds: dedupedCombinedToolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
 			requiresHumanInput: e.target.requiresHumanInput.checked,
@@ -322,10 +325,10 @@ export default function TaskForm({
 	}, [preferredAgent?.toolIds]);
 
 	useEffect(() => {
-		if (!expectedOutput && isStructuredOutput) {
+		if (!expectedOutput && isStructuredOutput === true) {
 			setExpectedOutput(jsonPlaceholder);
 		}
-		if (expectedOutput === jsonPlaceholder && !isStructuredOutput) {
+		if (expectedOutput === jsonPlaceholder && isStructuredOutput === false) {
 			setExpectedOutput('');
 		}
 	}, [expectedOutput, isStructuredOutput]);

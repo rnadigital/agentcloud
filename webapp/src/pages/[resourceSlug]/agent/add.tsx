@@ -1,12 +1,11 @@
 import * as API from '@api';
 import AgentForm from 'components/AgentForm';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
 import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-
-import { useAccountContext } from '../../../context/account';
 
 export default function AddAgent(props) {
 	const [accountContext]: any = useAccountContext();

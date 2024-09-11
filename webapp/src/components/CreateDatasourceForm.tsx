@@ -1,7 +1,7 @@
 'use strict';
 
 import * as API from '@api';
-import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/20/solid';
+import { CheckCircleIcon, InformationCircleIcon, LockClosedIcon } from '@heroicons/react/20/solid';
 import getConnectors from 'airbyte/getconnectors';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateModelModal from 'components/CreateModelModal';
@@ -12,31 +12,36 @@ import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
 import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
-import { ModelEmbeddingLength, ModelList } from 'struct/model';
+import { ModelEmbeddingLength } from 'struct/model';
 import { Retriever } from 'struct/tool';
 import SelectClassNames from 'styles/SelectClassNames';
-const DynamicConnectorForm = dynamic(() => import('./connectorform/DynamicConnectorForm'), {
-	ssr: false
-});
+const DynamicConnectorForm = dynamic(
+	() => import('components/connectorform/DynamicConnectorForm'),
+	{
+		ssr: false
+	}
+);
+import classNames from 'components/ClassNames';
+import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { StreamsList } from 'components/DatasourceStream';
+import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
+import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
-
-import submittingReducer from '../lib/utils/submittingreducer';
-import classNames from './ClassNames';
+import submittingReducer from 'utils/submittingreducer';
+// import InfoAlert from 'components/InfoAlert';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
-	{ id: 'Step 1', name: 'Connect datasource', href: '#', steps: [1, 2] },
-	{ id: 'Step 2', name: 'Choose which data to sync', href: '#', steps: [3] },
-	{ id: 'Step 3', name: 'Pick an embedding model', href: '#', steps: [4] }
+	{ id: 'Step 1', name: 'Connect your datasource', href: '#', steps: [1, 2] },
+	{ id: 'Step 2', name: 'Choose which streams to sync', href: '#', steps: [3] },
+	{ id: 'Step 3', name: 'Configure chunking & embedding', href: '#', steps: [4] }
 ];
 // @ts-ignore
 const DatasourceScheduleForm = dynamic(() => import('components/DatasourceScheduleForm'), {
@@ -69,7 +74,7 @@ export default function CreateDatasourceForm({
 
 	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { account, csrf } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -77,7 +82,6 @@ export default function CreateDatasourceForm({
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
-	const [embeddingField, setEmbeddingField] = useState('');
 	const [modalOpen, setModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('day');
@@ -87,7 +91,11 @@ export default function CreateDatasourceForm({
 	const [topK, setTopK] = useState(3);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
+	const [enableConnectorChunking, setEnableConnectorChunking] = useState(false);
 	const posthog = usePostHog();
+	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
+		...defaultChunkingOptions
+	});
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -98,9 +106,33 @@ export default function CreateDatasourceForm({
 		}
 	}, [toolRetriever]);
 	const [toolTimeWeightField, setToolTimeWeightField] = useState(null);
-
 	const [datasourceId, setDatasourceId] = useState(null);
 	const [discoveredSchema, setDiscoveredSchema] = useState(null);
+
+	const getInitialEmbeddingField = () => {
+		const fieldsArray = discoveredSchema?.catalog?.streams.reduce((acc, stream) => {
+			const properties = stream.stream.jsonSchema.properties;
+			const fields = Object.entries(properties).map(([fieldName, fieldSchema]: [string, any]) => ({
+				name: fieldName,
+				type: fieldSchema.type || fieldSchema.airbyte_type
+			}));
+			return acc.concat(fields);
+		}, []);
+		const firstStringField = fieldsArray?.find(
+			//Get the first field that is a string, ane usea heuristic to not pick ones named "date".
+			field => field.type === 'string' && !/date/i.test(field?.name || '')
+		);
+		return firstStringField?.name || fieldsArray?.[0]?.name || null;
+	};
+	const [embeddingField, setEmbeddingField] = useState('');
+	useEffect(() => {
+		if (!embeddingField) {
+			const initialEmbeddingField = getInitialEmbeddingField();
+			console.log('setting initial embedding field', initialEmbeddingField);
+			setEmbeddingField(getInitialEmbeddingField);
+		}
+	}, [discoveredSchema?.catalog?.streams?.length]);
+
 	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
@@ -263,7 +295,9 @@ export default function CreateDatasourceForm({
 					retriever_config: {
 						timeWeightField: toolTimeWeightField,
 						decay_rate: toolDecayRate
-					}
+					},
+					chunkingConfig,
+					enableConnectorChunking
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,
@@ -303,6 +337,7 @@ export default function CreateDatasourceForm({
 			});
 			console.error(e);
 		} finally {
+			await new Promise(res => setTimeout(res, 750));
 			setSubmitting(false);
 		}
 	}
@@ -514,73 +549,67 @@ export default function CreateDatasourceForm({
 							) : (
 								spec?.schema && (
 									<>
-										<div className='sm:col-span-12 my-3'>
-											<label
-												htmlFor='name'
-												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-											>
-												Datasource Name<span className='text-red-700'> *</span>
-											</label>
+										<div className='sm:col-span-12 my-3 space-y-2'>
 											<div>
-												<input
-													required
-													type='text'
-													name='name'
-													id='name'
-													onChange={e => setDatasourceName(e.target.value)}
-													value={datasourceName}
-													className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-												/>
+												<label
+													htmlFor='name'
+													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
+												>
+													Datasource Name<span className='text-red-700'> *</span>
+												</label>
+												<div>
+													<input
+														required
+														type='text'
+														name='name'
+														id='name'
+														onChange={e => setDatasourceName(e.target.value)}
+														value={datasourceName}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+													/>
+												</div>
 											</div>
-											<label
-												htmlFor='description'
-												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-											>
-												Description<span className='text-red-700'> *</span>
-											</label>
 											<div>
-												<input
-													required
-													type='text'
-													name='description'
-													id='description'
-													onChange={e => setDatasourceDescription(e.target.value)}
-													value={datasourceDescription}
-													className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-												/>
+												<label
+													htmlFor='description'
+													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+												>
+													Description<span className='text-red-700'> *</span>
+												</label>
+												<div>
+													<input
+														required
+														type='text'
+														name='description'
+														id='description'
+														onChange={e => setDatasourceDescription(e.target.value)}
+														value={datasourceDescription}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+													/>
+												</div>
 											</div>
-											<RetrievalStrategyComponent
-												toolRetriever={toolRetriever}
-												setToolRetriever={setToolRetriever}
-												toolDecayRate={toolDecayRate}
-												setToolDecayRate={setToolDecayRate}
-												currentDatasource={null}
-												defaultRetriever={Retriever.SELF_QUERY}
-												// toolTimeWeightField={toolTimeWeightField}
-												// setToolTimeWeightField={setToolTimeWeightField}
-												// schema={['example']}
-												topK={topK}
-												setTopK={setTopK}
-											/>
-											<DatasourceScheduleForm
-												scheduleType={scheduleType}
-												setScheduleType={setScheduleType}
-												timeUnit={timeUnit}
-												setTimeUnit={setTimeUnit}
-												units={units}
-												setUnits={setUnits}
-												cronExpression={cronExpression}
-												setCronExpression={setCronExpression}
-											/>
 										</div>
-										{spec.schema && (
-											<FormContext schema={spec.schema.connectionSpecification}>
-												<DynamicConnectorForm
-													schema={spec.schema.connectionSpecification}
-													datasourcePost={datasourcePost}
-													error={error}
-												/>
-											</FormContext>
+										{spec.schema && connector?.label && (
+											<>
+												<hr className='border-gray-200 dark:border-slate-700 my-2 ' />
+												<h3 className='text-base font-semibold text-gray-900'>
+													{connector?.icon && (
+														<img
+															src={connector.icon}
+															loading='lazy'
+															className='inline-flex me-2 w-6 w-6'
+														/>
+													)}
+													{connector?.label || 'Connector'} Configuration:
+												</h3>
+												<FormContext schema={spec.schema.connectionSpecification}>
+													<DynamicConnectorForm
+														schema={spec.schema.connectionSpecification}
+														datasourcePost={datasourcePost}
+														error={error}
+													/>
+												</FormContext>
+											</>
 										)}
 									</>
 								)
@@ -594,13 +623,6 @@ export default function CreateDatasourceForm({
 						<form
 							onSubmit={(e: any) => {
 								e.preventDefault();
-								//list of streams
-								//selected fields
-								//descriptions map
-								//sync mode
-								//cursor field
-								//primary key
-								console.log('Step 3 streamState:', streamState);
 								setStep(4);
 							}}
 						>
@@ -663,6 +685,18 @@ export default function CreateDatasourceForm({
 												})}
 										</select>
 									</div>
+									{/* {enableConnectorChunking && (
+										<InfoAlert
+											textColor='blue'
+											className='rounded bg-blue-200 pt-3 pb-1 px-2 my-2'
+											message={
+												<>
+													<strong>Note:</strong> Chunking is enabled; this field will be broken down
+													by the chunking strategy before embedding.
+												</>
+											}
+										/>
+									)} */}
 								</div>
 								{toolRetriever === Retriever.TIME_WEIGHTED && (
 									<RetrievalStrategyComponent
@@ -686,7 +720,7 @@ export default function CreateDatasourceForm({
 									>
 										Embedding Model
 									</label>
-									<div className='mt-2'>
+									<div>
 										<Select
 											isClearable
 											primaryColor={'indigo'}
@@ -708,13 +742,69 @@ export default function CreateDatasourceForm({
 										/>
 									</div>
 								</div>
+
+								<RetrievalStrategyComponent
+									toolRetriever={toolRetriever}
+									setToolRetriever={setToolRetriever}
+									toolDecayRate={toolDecayRate}
+									setToolDecayRate={setToolDecayRate}
+									currentDatasource={null}
+									defaultRetriever={Retriever.SELF_QUERY}
+									// toolTimeWeightField={toolTimeWeightField}
+									// setToolTimeWeightField={setToolTimeWeightField}
+									// schema={['example']}
+									topK={topK}
+									setTopK={setTopK}
+								/>
+								<DatasourceScheduleForm
+									scheduleType={scheduleType}
+									setScheduleType={setScheduleType}
+									timeUnit={timeUnit}
+									setTimeUnit={setTimeUnit}
+									units={units}
+									setUnits={setUnits}
+									cronExpression={cronExpression}
+									setCronExpression={setCronExpression}
+								/>
+
+								<div className='mt-4'>
+									<label
+										htmlFor='overlap_all'
+										className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+									>
+										Enable row chunking
+										<span className='ml-2'>
+											<ToolTip
+												content='If enabled, applies the configured chunking strategy to the "Field to embed". Useful if your field to embed contains text or markdown that needs to be broken into smaller chunks.'
+												placement='top'
+												arrow={true}
+											>
+												<InformationCircleIcon className='h-4 w-4' />
+											</ToolTip>
+										</span>
+									</label>
+									<input
+										type='checkbox'
+										name='enableConnectorChunking'
+										checked={enableConnectorChunking}
+										onChange={e => setEnableConnectorChunking(e.target.checked)}
+										className='ml-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-slate-800 dark:ring-slate-600'
+									/>
+								</div>
+								{enableConnectorChunking && (
+									<DatasourceChunkingForm
+										chunkingConfig={chunkingConfig}
+										setChunkingConfig={setChunkingConfig}
+										isConnector={true}
+									/>
+								)}
 								<button
 									disabled={submitting}
 									type='submit'
 									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
 									{submitting && <ButtonSpinner />}
-									Continue
+									Submit
 								</button>
 							</div>
 						</form>

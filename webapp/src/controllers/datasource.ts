@@ -132,8 +132,7 @@ export async function testDatasourceApi(req, res, next) {
 		[
 			{ field: 'connectorId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'datasourceName', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'timeUnit', validation: { inSet: new Set(allowedPeriods) } }
+			{ field: 'datasourceDescription', validation: { notEmpty: true, ofType: 'string' } }
 		],
 		{
 			datasourceName: 'Name',
@@ -307,8 +306,7 @@ export async function testDatasourceApi(req, res, next) {
 		discoveredSchema,
 		createdDate: new Date(),
 		status: DatasourceStatus.DRAFT,
-		recordCount: { total: 0 },
-		timeUnit: timeUnit
+		recordCount: { total: 0 }
 	});
 
 	return dynamicResponse(req, res, 200, {
@@ -331,7 +329,9 @@ export async function addDatasourceApi(req, res, next) {
 		retriever,
 		streamConfig,
 		retriever_config,
-		timeUnit
+		timeUnit,
+		chunkingConfig,
+		enableConnectorChunking
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -425,13 +425,38 @@ export async function addDatasourceApi(req, res, next) {
 		.createConnection(null, connectionBody)
 		.then(res => res.data);
 
+	const {
+		partitioning,
+		strategy,
+		max_characters,
+		new_after_n_chars,
+		similarity_threshold,
+		overlap,
+		overlap_all,
+		file_type
+	} = chunkingConfig || {};
+
 	// Update the datasource with the connection settings and sync date
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: createdConnection.connectionId,
 		connectionSettings: connectionBody,
 		modelId: toObjectId(modelId),
 		embeddingField,
-		streamConfig
+		streamConfig, //TODO: validation
+		chunkingConfig: enableConnectorChunking
+			? {
+					partitioning,
+					strategy,
+					max_characters: parseInt(max_characters),
+					new_after_n_chars: new_after_n_chars
+						? parseInt(new_after_n_chars)
+						: parseInt(max_characters),
+					overlap: parseInt(overlap),
+					similarity_threshold: parseFloat(similarity_threshold),
+					overlap_all: overlap_all === 'true',
+					file_type
+				}
+			: null //TODO: validation
 	});
 
 	// Create the collection in qdrant
@@ -471,7 +496,7 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Add a tool automatically for the datasource
 	let foundIcon; //TODO: icon/avatar id and upload
-	await addTool({
+	const addedTool = await addTool({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name: datasourceName,
@@ -493,7 +518,10 @@ export async function addDatasourceApi(req, res, next) {
 			: null
 	});
 
-	return dynamicResponse(req, res, 302, { redirect: `/${req.params.resourceSlug}/datasources` });
+	return dynamicResponse(req, res, 302, {
+		redirect: `/${req.params.resourceSlug}/datasources`,
+		toolId: addedTool.insertedId
+	});
 }
 
 export async function updateDatasourceScheduleApi(req, res, next) {
@@ -643,9 +671,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		};
 	}
 
-	const createdConnection = await connectionsApi
-		.patchConnection(datasource.connectionId, connectionBody)
-		.then(res => res.data);
+	try {
+		const createdConnection = await connectionsApi
+			.patchConnection(datasource.connectionId, connectionBody)
+			.then(res => res.data);
+	} catch (e) {
+		console.error(e);
+		return dynamicResponse(req, res, 400, {
+			error: 'An error occurred when trying to update the datasource.'
+		});
+	}
 
 	if (sync === true) {
 		// Create the collection in qdrant
@@ -725,7 +760,7 @@ export async function syncDatasourceApi(req, res, next) {
 		await messageQueueProvider.sendMessage(message, metadata);
 
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.EMBEDDING
 		});
 	} else {
@@ -747,7 +782,7 @@ export async function syncDatasourceApi(req, res, next) {
 
 		//Note: edited after job submission to avoid being stuck PROCESSING if airbyte returns an error
 		await editDatasource(req.params.resourceSlug, datasourceId, {
-			recordCount: { total: 0 },
+			recordCount: { total: 0, success: 0, failure: 0 },
 			status: DatasourceStatus.PROCESSING
 		});
 	}
@@ -993,13 +1028,13 @@ export async function uploadFileApi(req, res, next) {
 		embeddingField: 'document', //Note: always document for sourceType: file
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
-			total: null
+			total: 0
 		},
 		chunkingConfig: {
 			partitioning,
 			strategy,
 			max_characters: parseInt(max_characters),
-			new_after_n_chars: parseInt(new_after_n_chars) || parseInt(max_characters),
+			new_after_n_chars: new_after_n_chars ? parseInt(new_after_n_chars) : parseInt(max_characters),
 			overlap: parseInt(overlap),
 			similarity_threshold: parseFloat(similarity_threshold),
 			overlap_all: overlap_all === 'true'

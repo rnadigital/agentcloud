@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 const TEAM_PARENT_LOCATIONS = ['agent', 'task', 'tool', 'datasource', 'model'];
 
@@ -24,8 +25,6 @@ export default function Welcome(props) {
 	const router = useRouter();
 	const [error, setError] = useState();
 	const [loading, setLoading] = useState(true);
-	const [submitting, setSubmitting] = useState(false);
-	const { verifysuccess, noverify, changepassword } = router.query;
 	const [state, dispatch] = useState(props);
 	const { teamMembers } = state;
 	const { account, csrf } = accountContext || {};
@@ -39,6 +38,15 @@ export default function Welcome(props) {
 	useEffect(() => {
 		fetchWelcomeData();
 		setLoading(false);
+	}, []);
+
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const noaccess = new URLSearchParams(location.search).get('noaccess');
+			if (noaccess) {
+				toast.error("You don't have permission to access that resource");
+			}
+		}
 	}, []);
 
 	async function switchTeam(orgId, teamId) {

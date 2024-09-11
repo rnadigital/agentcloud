@@ -58,6 +58,7 @@ import * as variableController from 'controllers/variables';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
+	server.use('/tmp', express.static('/tmp'));
 
 	// Stripe webhook handler
 	server.post(
@@ -254,7 +255,7 @@ export default function router(server, app) {
 	);
 
 	
-	//ApiKey Endpoints
+	// api key endpoints
 	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
 	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
 	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
@@ -265,15 +266,8 @@ export default function router(server, app) {
 	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
 	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
 
-
-
+	// public session endpoints
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
-	publicAppRouter.get(
-		'/app/:appId([a-f0-9]{24})',
-		csrfMiddleware,
-		setParamOrgAndTeam,
-		sessionController.publicSessionPage.bind(null, app)
-	);
 	publicAppRouter.get(
 		'/session/:sessionId([a-f0-9]{24})',
 		csrfMiddleware,
@@ -294,6 +288,10 @@ export default function router(server, app) {
 	publicAppRouter.get(
 		'/:shareLinkShareId(app_[a-f0-9]{64,})', //Note: app_prefix to be removed once we handle other sharinglinktypes
 		sharelinkController.handleRedirect
+	);
+	publicAppRouter.get(
+		'/task',
+		taskController.publicGetTaskJson
 	);
 	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);
 
@@ -367,10 +365,10 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.CREATE_TASK),
 		taskController.taskAddPage.bind(null, app)
 	);
-	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.taskJson);
-	teamRouter.post(
-		'/task/get-by-name',
-		taskController.taskByName
+	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.getTaskByIdJson);
+	teamRouter.get(
+		'/task',
+		taskController.getTaskJson
 	);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',

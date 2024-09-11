@@ -1,6 +1,12 @@
 import url from 'node:url';
 
+import debug from 'debug';
+const log = debug('webapp:dynamicresponse');
+
 export function dynamicResponse(req, res, code, data) {
+	if (typeof res?.status !== 'function') {
+		return log('res.status is not a function, returning from mock call');
+	}
 	const isRedirect = code === 302;
 	if (
 		req.headers &&

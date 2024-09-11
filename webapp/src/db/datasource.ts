@@ -137,7 +137,7 @@ export async function setDatasourceStatus(
 	);
 }
 
-export async function setDatasourceTotalRecordCount(
+export async function incrementDatasourceTotalRecordCount(
 	teamId: db.IdOrStr,
 	datasourceId: db.IdOrStr,
 	total: number
@@ -148,10 +148,8 @@ export async function setDatasourceTotalRecordCount(
 			teamId: toObjectId(teamId)
 		},
 		{
-			$set: {
-				'recordCount.total': total,
-				'recordCount.success': 0,
-				'recordCount.failure': 0
+			$inc: {
+				'recordCount.total': total
 			}
 		}
 	);
@@ -182,4 +180,8 @@ export function deleteDatasourceById(teamId: db.IdOrStr, datasourceId: db.IdOrSt
 		_id: toObjectId(datasourceId),
 		teamId: toObjectId(teamId)
 	});
+}
+
+export function getAllDatasources(filter = {}) {
+	return DatasourceCollection().find(filter).toArray();
 }

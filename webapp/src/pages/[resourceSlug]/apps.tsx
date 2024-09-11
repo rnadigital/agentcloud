@@ -1,3 +1,4 @@
+import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
@@ -5,15 +6,13 @@ import SessionVariableModal from 'components/modal/SessionVariableModal';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
+import { useAccountContext } from 'context/account';
 import { AppsDataReturnType } from 'controllers/app';
 import { ObjectId } from 'mongodb';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { App } from 'struct/app';
-
-import * as API from '../../api';
-import { useAccountContext } from '../../context/account';
 
 export default function Apps(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();

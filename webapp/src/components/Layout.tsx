@@ -1,5 +1,5 @@
 import * as API from '@api';
-import { Dialog, Menu, Transition } from '@headlessui/react';
+import { Dialog, Menu, Switch, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import {
 	ArrowPathIcon,
@@ -25,6 +25,7 @@ import { SessionStatus } from 'components/SessionCards';
 import TrialNag from 'components/TrialNag';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
+import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
 import cn from 'lib/cn';
 import Head from 'next/head';
@@ -127,6 +128,7 @@ const userNavigation = [
 	//{ name: 'My Account', href: '/account' },
 	{ name: 'Billing', href: '/billing' },
 	{ name: 'Theme', href: '#', theme: true },
+	{ name: 'Developer Mode', href: '#', developer: true },
 	{ name: 'Sign out', href: '#', logout: true }
 ];
 
@@ -136,6 +138,7 @@ export default withRouter(function Layout(props) {
 	const { account, csrf, switching } = accountContext as any;
 	const { children } = props as any;
 	const router = useRouter();
+	const { developerMode, toggleDeveloperMode } = useDeveloperContext();
 	const posthog = usePostHog();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
@@ -741,7 +744,38 @@ export default withRouter(function Layout(props) {
 																		</button>
 																	);
 																}
-
+																if (item.developer) {
+																	return (
+																		<>
+																			<div className='flex items-center px-3 py-1.5'>
+																				<span className='text-sm text-left mr-3 dark:text-white'>
+																					{item.name}
+																				</span>
+																				<Switch
+																					checked={developerMode}
+																					onChange={() => toggleDeveloperMode()}
+																					className='group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-0 active:bg-transparent'
+																				>
+																					<span className='sr-only'>Use setting</span>
+																					<span
+																						aria-hidden='true'
+																						className='pointer-events-none absolute h-full w-full rounded-md bg-white dark:bg-slate-800'
+																					/>
+																					<span
+																						aria-hidden='true'
+																						className='pointer-events-none absolute mx-auto h-5 w-10 rounded-full bg-gray-200 dark:bg-slate-700 transition-colors duration-200 ease-in-out group-data-[checked]:bg-indigo-600 dark:group-data-[checked]:bg-slate-500'
+																					/>
+																					<span
+																						aria-hidden='true'
+																						className='pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-400 shadow ring-0 transition-transform duration-200 ease-in-out group-data-[checked]:translate-x-5'
+																					/>
+																				</Switch>
+																			</div>
+																			<hr className='border-gray-200 dark:border-slate-700 mt-2' />
+																		</>
+																	);
+																}
+																//TODO: developer mode toggle
 																if (item.theme) {
 																	return (
 																		<div className='flex flex-col space-y-2 py-2'>
@@ -751,19 +785,19 @@ export default withRouter(function Layout(props) {
 																				Theme
 																			</p>
 																			<button
-																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
 																				onClick={() => toggleTheme('light')}
 																			>
 																				Light
 																			</button>
 																			<button
-																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
 																				onClick={() => toggleTheme('dark')}
 																			>
 																				Dark
 																			</button>
 																			<button
-																				className='w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white'
+																				className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
 																				onClick={() => toggleUseSystemTheme()}
 																			>
 																				System

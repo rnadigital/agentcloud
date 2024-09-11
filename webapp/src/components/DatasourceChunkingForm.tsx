@@ -3,13 +3,41 @@
 import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import ToolTip from 'components/shared/ToolTip';
 
-export default function DatasourceChunkingForm({ chunkingConfig, setChunkingConfig }) {
+export default function DatasourceChunkingForm({
+	chunkingConfig,
+	setChunkingConfig,
+	isConnector = false
+}) {
 	const handleInputChange = key => e => {
 		setChunkingConfig({ [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 	};
 
 	return (
 		<div className='mb-4 mt-3'>
+			{isConnector && (
+				<>
+					<label
+						htmlFor='chunkStrategy'
+						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
+					>
+						Format<span className='text-red-700'> *</span>
+					</label>
+					<div>
+						<select
+							required
+							name='file_format'
+							id='file_format'
+							onChange={handleInputChange('file_format')}
+							value={chunkingConfig.file_format}
+							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+						>
+							<option value='txt'>Text</option>
+							<option value='markdown'>Markdown</option>
+						</select>
+					</div>
+				</>
+			)}
+
 			<label
 				htmlFor='partitioning'
 				className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'

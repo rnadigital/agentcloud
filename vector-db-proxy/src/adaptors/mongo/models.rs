@@ -1,3 +1,4 @@
+use crate::data::models::FileType;
 use bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
@@ -19,6 +20,7 @@ pub struct DatasourceConnectionSettings {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredChunkingStrategy {
     Basic,
     ByTitle,
@@ -48,6 +50,7 @@ impl UnstructuredChunkingStrategy {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UnstructuredPartitioningStrategy {
     Auto,
     Fast,
@@ -85,6 +88,7 @@ pub struct UnstructuredChunkingConfig {
     pub overlap: usize,
     pub similarity_threshold: f64, // between 0.0 and 1.0
     pub overlap_all: bool,
+    pub file_type: Option<FileType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -104,8 +108,7 @@ pub struct DataSources {
     pub destinationId: Option<String>,
     pub workspaceId: Option<String>,
     pub connectionId: Option<String>,
-    pub chunkStrategy: Option<UnstructuredChunkingConfig>,
-    pub chunkCharacter: Option<String>,
+    pub chunkingConfig: Option<UnstructuredChunkingConfig>,
     pub lastSyncedDate: Option<DateTime>,
     pub embeddingField: Option<String>,
     pub timeWeightField: Option<String>,
@@ -203,4 +206,5 @@ pub struct EmbeddingConfig {
     pub model: Option<Model>,
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
+    pub chunking_strategy: Option<UnstructuredChunkingConfig>,
 }
