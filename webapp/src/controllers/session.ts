@@ -100,11 +100,7 @@ export async function publicSessionData(req, res, _next) {
 			}
 			break;
 	}
-	const canAccess = await checkCanAccessApp(
-		app?._id?.toString(),
-		false,
-		res.locals.account
-	);
+	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return null;
 	}

@@ -10,6 +10,8 @@ import { SharingConfig, SharingMode } from 'struct/sharing';
 const log = debug('webapp:db:session');
 import { unsafeGetAppById } from 'db/app';
 
+import Permissions from '../lib/permissions/permissions';
+
 export type Session = {
 	_id?: ObjectId;
 	orgId: ObjectId;
@@ -171,7 +173,12 @@ export async function checkCanAccessApp(
 			return hasPermissionEntry;
 		case SharingMode.OWNER:
 			const isAppOwner = foundApp?.sharingConfig?.permissions[account?._id];
-			return isAppOwner;
+			const hasTeamAdminPerm = account?._permissions?.hasAny(
+				Permissions.ROOT,
+				Permissions.TEAM_ADMIN,
+				Permissions.ORG_ADMIN
+			);
+			return isAppOwner || hasTeamAdminPerm;
 		default:
 			return false;
 	}

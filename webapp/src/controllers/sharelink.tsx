@@ -84,11 +84,7 @@ export async function handleRedirect(req, res, next) {
 		}
 	}
 
-	const canAccess = await checkCanAccessApp(
-		app?._id?.toString(),
-		false,
-		res.locals.account
-	);
+	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return next();
 	}
