@@ -26,7 +26,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import path from 'path';
 import { AppType } from 'struct/app';
-import { Asset } from 'struct/asset';
+import { Asset, IconAttachment } from 'struct/asset';
 import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
@@ -567,20 +567,24 @@ export async function editAppApi(req, res, next) {
 		}
 	}
 
-	const collectionType = CollectionName.Apps;
-	const attachedIconToApp = await attachAssetToObject(iconId, req.params.appId, collectionType);
+	let attachedIconToApp: IconAttachment = app?.icon;
+	if (app?.icon.id !== iconId) {
+		const collectionType = CollectionName.Apps;
+		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
+		if (newAttachment) {
+			attachedIconToApp = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
 
 	const oldApp = await updateAppGetOldApp(req.params.resourceSlug, req.params.appId, {
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: attachedIconToApp
-			? {
-					id: attachedIconToApp._id,
-					filename: attachedIconToApp.filename,
-					linkedId: req.params.appId
-				}
-			: null,
+		icon: iconId ? attachedIconToApp : null,
 		...(app.type === AppType.CREW
 			? {
 					memory: memory === true,
@@ -600,7 +604,8 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	if (oldApp?.icon) {
+	console.log('iconId', iconId, '\noldApp.icon.id', oldApp?.icon.id);
+	if (iconId !== oldApp?.icon.id) {
 		deleteAssetById(oldApp?.icon.id);
 	}
 

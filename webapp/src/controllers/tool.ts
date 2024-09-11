@@ -34,7 +34,7 @@ import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
 import path from 'path';
-import { Asset } from 'struct/asset';
+import { Asset, IconAttachment } from 'struct/asset';
 import { PlanLimitsKeys } from 'struct/billing';
 import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
@@ -467,8 +467,20 @@ export async function editToolApi(req, res, next) {
 			//supress
 		}
 	}
-	const collectionType = CollectionName.Tools;
-	const attachedIconToTool = await attachAssetToObject(iconId, req.params.toolId, collectionType);
+
+
+	let attachedIconToTool: IconAttachment = { id: toObjectId(existingTool?.icon.id), filename: existingTool?.icon.filename, linkedId: toObjectId(existingTool?.icon.linkedId)};
+	if (existingTool?.icon.id !== iconId) {
+		const collectionType = CollectionName.Agents;
+		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
+		if (newAttachment) {
+			attachedIconToTool = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
 
 	const oldTool = await updateToolGetOldTool(req.params.resourceSlug, toolId, {
 		name,
@@ -480,17 +492,13 @@ export async function editToolApi(req, res, next) {
 		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
 		icon: attachedIconToTool
-			? {
-					id: attachedIconToTool._id,
-					filename: attachedIconToTool.filename,
-					linkedId: req.params.toolId
-				}
+			? iconId ? attachedIconToTool : null
 			: null,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
-	if (oldTool?.icon?.id) {
+	if (oldTool?.icon?.id !== iconId) {
 		deleteAssetById(oldTool?.icon?.id);
 	}
 	let functionProvider;

@@ -20,7 +20,7 @@ import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import { ObjectId } from 'mongodb';
 import path from 'path';
-import { Asset } from 'struct/asset';
+import { Asset, IconAttachment } from 'struct/asset';
 import { CollectionName } from 'struct/db';
 
 import { cloneAssetInStorageProvider } from './asset';
@@ -270,8 +270,23 @@ export async function editAgentApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const collectionType = CollectionName.Agents;
-	const attachedIconToAgent = await attachAssetToObject(iconId, req.params.agentId, collectionType);
+	const agent = await getAgentById(req.params.resourceSlug, req.params.agentId);
+	if(!agent){
+		return dynamicResponse(req, res, 400, { error: 'AgentId not valid' });
+	}
+
+	let attachedIconToApp: IconAttachment = { id: toObjectId(agent?.icon.id), filename: agent?.icon.filename, linkedId: toObjectId(agent?.icon.linkedId)};
+	if (agent?.icon.id !== iconId) {
+		const collectionType = CollectionName.Agents;
+		const newAttachment = await attachAssetToObject(iconId, req.params.agentId, collectionType);
+		if (newAttachment) {
+			attachedIconToApp = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
 
 	const oldAgent = await updateAgentGetOldAgent(req.params.resourceSlug, req.params.agentId, {
 		name,
@@ -285,16 +300,10 @@ export async function editAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
-		icon: attachedIconToAgent
-			? {
-					id: attachedIconToAgent._id,
-					filename: attachedIconToAgent.filename,
-					linkedId: req.params.agentId
-				}
-			: null
+		icon: iconId ? attachedIconToApp : null
 	});
 
-	if (oldAgent?.icon.id) {
+	if (oldAgent?.icon.id != iconId) {
 		await deleteAssetById(oldAgent.icon.id);
 	}
 
