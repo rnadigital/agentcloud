@@ -12,7 +12,6 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { Model } from 'db/model';
-import { ObjectId } from 'mongodb';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
@@ -54,7 +53,7 @@ export default function CrewAppForm({
 	//TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const { step, setStep }: any = useStepContext();
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -71,10 +70,8 @@ export default function CrewAppForm({
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
-	const [error, setError] = useState();
 	const { name, agents, tasks, verbose } = crewState || {};
 	const [verboseInt, setVerboseInt] = useState(verbose);
-	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
 	function getInitialData(initData) {
@@ -117,9 +114,6 @@ export default function CrewAppForm({
 	const combinedVariables = Array.from(new Set([...agentVariables, ...taskVariables])).sort();
 
 	const appVariables = variableChoices.filter(v => combinedVariables.includes(v._id.toString()));
-	console.log(appVariables);
-
-	// const [variableValues, setVariableValues] = useState<{ [key: string]: string }>({});
 
 	const missingAgents: Agent[] = tasksState?.reduce((acc, t) => {
 		const task = taskChoices.find(tc => tc._id === t.value);
@@ -147,23 +141,6 @@ export default function CrewAppForm({
 		setTasksState(initialTasks);
 	}, [app?._id]);
 
-	// useEffect(() => {
-	// 	const newVariableValues = { ...variableValues };
-	// 	let hasChanges = false;
-
-	// 	appVariables.forEach(variable => {
-	// 		const variableId = variable._id.toString();
-	// 		if (!(variableId in newVariableValues)) {
-	// 			newVariableValues[variableId] = null;
-	// 			hasChanges = true;
-	// 		}
-	// 	});
-
-	// 	if (hasChanges) {
-	// 		setVariableValues(newVariableValues);
-	// 	}
-	// }, [appVariables, variableValues]);
-
 	const handleSubmit = async e => {
 		e.preventDefault();
 		if (appVariables.length > 0 && run === true) {
@@ -174,8 +151,6 @@ export default function CrewAppForm({
 	};
 
 	async function appPost(e, variables?: { [key: string]: string }) {
-		console.log(e, variables);
-		// e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -195,7 +170,7 @@ export default function CrewAppForm({
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
 			fullOutput,
-			variables: appVariables?.map(v => v.name)
+			variables: appVariables?.map(v => ({ name: v.name, defaultValue: v.defaultValue }))
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -335,7 +310,7 @@ export default function CrewAppForm({
 				<SessionVariableModal
 					open={modalOpen !== false}
 					setOpen={setModalOpen}
-					variables={appVariables.map(v => v.name)}
+					variables={appVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }))}
 					onSubmit={async variables => {
 						const form = document.forms[0];
 						await appPost({ target: form }, variables);
@@ -456,7 +431,7 @@ export default function CrewAppForm({
 											const optionTask = taskChoices.find(tc => tc._id === data.value);
 											return (
 												<li
-													className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+													className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 														data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 													}`}
 												>

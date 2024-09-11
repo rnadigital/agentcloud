@@ -1,10 +1,11 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { VariableConfig } from 'struct/app';
 
 interface SessionVariableModalProps {
 	open: boolean;
 	setOpen: (open: boolean) => void;
-	variables: string[];
+	variables: VariableConfig[];
 	onSubmit: (variableValues: { [key: string]: string }) => void;
 }
 
@@ -22,7 +23,13 @@ export default function SessionVariableModal({
 	};
 
 	const handleSubmit = () => {
-		onSubmit(variableValues);
+		const finalValues = { ...variableValues };
+		variables.forEach(variable => {
+			if (!finalValues[variable.name]) {
+				finalValues[variable.name] = variable.defaultValue;
+			}
+		});
+		onSubmit(finalValues);
 		setOpen(false);
 	};
 
@@ -63,19 +70,20 @@ export default function SessionVariableModal({
 										</DialogTitle>
 										<div className='mt-2'>
 											{variables.map(variable => (
-												<div key={variable} className='mt-4'>
+												<div key={variable.name} className='mt-4'>
 													<label
-														htmlFor={variable}
+														htmlFor={variable.name}
 														className='block text-sm font-medium text-gray-700 dark:text-gray-300 text-left'
 													>
-														{variable}
+														{variable.name}
 													</label>
 													<input
 														type='text'
-														name={variable}
-														id={variable}
-														value={variableValues[variable] || ''}
-														onChange={e => handleVariableChange(variable, e.target.value)}
+														name={variable.name}
+														id={variable.name}
+														placeholder={variable.defaultValue}
+														value={variableValues[variable.name] || ''}
+														onChange={e => handleVariableChange(variable.name, e.target.value)}
 														className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-slate-700 dark:text-white'
 													/>
 												</div>
