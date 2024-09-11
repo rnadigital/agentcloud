@@ -142,3 +142,19 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 		teamId: toObjectId(teamId)
 	});
 }
+
+export function updateSession(
+	teamId: db.IdOrStr,
+	sessionId: db.IdOrStr,
+	updateData: Partial<Session>
+): Promise<any> {
+	return SessionCollection().updateOne(
+		{
+			teamId: toObjectId(teamId),
+			_id: toObjectId(sessionId)
+		},
+		{
+			$set: updateData
+		}
+	);
+}
