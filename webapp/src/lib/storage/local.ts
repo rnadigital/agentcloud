@@ -63,6 +63,26 @@ class LocalStorageProvider extends StorageProvider {
 		}
 	}
 
+	async cloneFile(sourceFilename: string, destinationFilename: string): Promise<any> {
+		const sourceFilePath = path.join(this.#basePath, sourceFilename);
+		const destinationFilePath = path.join(this.#basePath, destinationFilename);
+
+		try {
+			// Read the source file
+			const fileContent = await util.promisify(fs.readFile)(sourceFilePath);
+
+			// Write the content to the destination file
+			await writeFile(destinationFilePath, fileContent);
+
+			log(`File cloned successfully from '${sourceFilename}' to '${destinationFilename}'`);
+
+			return destinationFilePath;
+		} catch (err) {
+			log(`Failed to clone file: ${err.message}`);
+			throw err;
+		}
+	}
+
 	async deleteFile(filename) {
 		const filePath = path.join(this.#basePath, filename);
 		try {

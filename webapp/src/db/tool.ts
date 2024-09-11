@@ -120,6 +120,25 @@ export async function editTool(
 	);
 }
 
+export async function updateToolGetOldTool(
+	teamId: db.IdOrStr,
+	toolId: db.IdOrStr,
+	update: Partial<Tool>
+): Promise<Tool> {
+	return ToolCollection().findOneAndUpdate(
+		{
+			_id: toObjectId(toolId),
+			teamId: toObjectId(teamId)
+		},
+		{
+			$set: update
+		},
+		{
+			returnDocument: 'before'
+		}
+	);
+}
+
 export async function editToolUnsafe(
 	filter: Partial<Tool>,
 	update: Partial<Tool>
@@ -179,6 +198,13 @@ export function deleteToolsForDatasource(
 
 export function deleteToolById(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<any> {
 	return ToolCollection().deleteOne({
+		_id: toObjectId(toolId),
+		teamId: toObjectId(teamId)
+	});
+}
+
+export function deleteToolByIdReturnTool(teamId: db.IdOrStr, toolId: db.IdOrStr): Promise<Tool> {
+	return ToolCollection().findOneAndDelete({
 		_id: toObjectId(toolId),
 		teamId: toObjectId(teamId)
 	});

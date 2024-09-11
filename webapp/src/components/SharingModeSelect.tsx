@@ -4,7 +4,7 @@ import WhiteListSharing from 'components/sharingmodes/WhiteListSharing';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
@@ -71,6 +71,12 @@ const SharingModeSelect = ({
 			setLoading(false);
 		}
 	}
+
+	useEffect(() => {
+		if (shareLinkShareId === null) {
+			createShareLink();
+		}
+	}, []);
 	return (
 		<>
 			<SubscriptionModal

@@ -1,10 +1,20 @@
 'use strict';
 
+import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
 import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
+import { cloneAssetInStorageProvider } from 'controllers/asset';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
-import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
-import { getAssetById } from 'db/asset';
+import {
+	addApp,
+	deleteAppById,
+	deleteAppByIdReturnApp,
+	getAppById,
+	getAppsByTeam,
+	updateApp,
+	updateAppGetOldApp
+} from 'db/app';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
@@ -12,9 +22,14 @@ import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import createAccount from 'lib/account/create';
+import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+import path from 'path';
 import { AppType } from 'struct/app';
+import { Asset, IconAttachment } from 'struct/asset';
+import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
@@ -168,7 +183,8 @@ export async function addAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		recursionLimit,
+		cloning
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -260,7 +276,15 @@ export async function addAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const newAppId = new ObjectId();
+	const collectionType = CollectionName.Apps;
+	let attachedIconToApp = await cloneAssetInStorageProvider(
+		toObjectId(iconId),
+		cloning,
+		toObjectId(newAppId),
+		collectionType,
+		req.params.resourceSlug
+	);
 
 	let addedCrew, chatAgent;
 	if ((type as AppType) === AppType.CREW) {
@@ -334,16 +358,18 @@ export async function addAppApi(req, res, next) {
 	const sharePermissions = await getSharePermissions(req, res);
 
 	const addedApp = await addApp({
+		_id: newAppId,
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
 		author: res.locals.matchingTeam.name,
-		icon: foundIcon
+		icon: attachedIconToApp
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToApp._id,
+					filename: attachedIconToApp.filename,
+					linkedId: newAppId
 				}
 			: null,
 		type,
@@ -615,16 +641,24 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	await updateApp(req.params.resourceSlug, req.params.appId, {
+	let attachedIconToApp: IconAttachment = app?.icon;
+	if (app?.icon.id !== iconId) {
+		const collectionType = CollectionName.Apps;
+		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
+		if (newAttachment) {
+			attachedIconToApp = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
+
+	const oldApp = await updateAppGetOldApp(req.params.resourceSlug, req.params.appId, {
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: foundIcon
-			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
-				}
-			: null,
+		icon: iconId ? attachedIconToApp : null,
 		...(app.type === AppType.CREW
 			? {
 					memory: memory === true,
@@ -643,6 +677,11 @@ export async function editAppApi(req, res, next) {
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
+
+	console.log('iconId', iconId, '\noldApp.icon.id', oldApp?.icon.id);
+	if (iconId !== oldApp?.icon.id) {
+		deleteAssetById(oldApp?.icon.id);
+	}
 
 	if (shareLinkShareId) {
 		await updateShareLinkPayload({
@@ -680,7 +719,11 @@ export async function deleteAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	await deleteAppById(req.params.resourceSlug, appId);
+	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
+
+	if (oldApp?.icon) {
+		await deleteAssetById(oldApp.icon.id);
+	}
 
 	return dynamicResponse(req, res, 302, {});
 }

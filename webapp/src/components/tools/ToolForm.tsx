@@ -64,6 +64,7 @@ export default function ToolForm({
 	const [wrappedCode, setWrappedCode] = useState(WrapToolCode(toolCode));
 	const [requirementsTxt, setRequirementsTxt] = useState(tool?.data?.requirements || '');
 	const [toolName, setToolName] = useState(tool?.name || tool?.data?.name || '');
+	const [icon, setIcon] = useState(tool?.icon);
 	const [toolDescription, setToolDescription] = useState(
 		tool?.data?.description || tool?.description || ''
 	);
@@ -171,6 +172,11 @@ export default function ToolForm({
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(false);
 	}
+	const iconCallback = async addedIcon => {
+		(await fetchFormData) && fetchFormData();
+		setModalOpen(false);
+		setIcon({ id: addedIcon?._id, ...addedIcon });
+	};
 	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function toolPost(e) {
@@ -203,7 +209,9 @@ export default function ToolForm({
 					decay_rate: toolDecayRate,
 					k: topK
 				},
-				linkedToolId: null
+				linkedToolId: null,
+				iconId: icon?.id,
+				cloning: tool && !editing
 			};
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
@@ -373,6 +381,8 @@ export default function ToolForm({
 							setToolDescription={setToolDescription}
 							isBuiltin={isBuiltin}
 							initialType={initialType}
+							icon={icon}
+							iconCallback={iconCallback}
 						/>
 						{!tool?.requiredParameters ? (
 							<>

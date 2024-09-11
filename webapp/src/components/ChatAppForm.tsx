@@ -55,7 +55,7 @@ export default function ChatAppForm({
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
-	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
+	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
@@ -161,7 +161,8 @@ export default function ChatAppForm({
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
-			iconId: icon?.id
+			iconId: icon?.id,
+			cloning: app && !editing
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {

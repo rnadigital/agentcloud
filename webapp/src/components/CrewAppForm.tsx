@@ -64,7 +64,7 @@ export default function CrewAppForm({
 		initialModel ? { label: initialModel.name, value: initialModel._id } : null
 	);
 	const [sharingMode, setSharingMode] = useState(appState?.sharingConfig?.mode || SharingMode.TEAM);
-	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
+	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
@@ -160,7 +160,8 @@ export default function CrewAppForm({
 			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
-			fullOutput
+			fullOutput,
+			cloning: app && !editing
 		};
 		if (editing === true) {
 			await API.editApp(
