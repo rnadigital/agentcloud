@@ -362,7 +362,7 @@ export async function editTaskApi(req, res, next) {
 	}
 
 	const existingTask = await getTaskById(req.params.resourceSlug, req.params.taskId);
-	const existingVariableIds = new Set(existingTask?.variableIds.map(v => v.toString()) || []);
+	const existingVariableIds = new Set((existingTask?.variableIds || []).map(v => v.toString()));
 	const newVariableIds = new Set(variableIds);
 
 	const updatePromises = [...existingVariableIds, ...newVariableIds].map(async (id: string) => {
