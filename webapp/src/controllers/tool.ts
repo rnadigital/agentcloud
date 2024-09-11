@@ -468,8 +468,11 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-
-	let attachedIconToTool: IconAttachment = { id: toObjectId(existingTool?.icon.id), filename: existingTool?.icon.filename, linkedId: toObjectId(existingTool?.icon.linkedId)};
+	let attachedIconToTool: IconAttachment = {
+		id: toObjectId(existingTool?.icon.id),
+		filename: existingTool?.icon.filename,
+		linkedId: toObjectId(existingTool?.icon.linkedId)
+	};
 	if (existingTool?.icon.id !== iconId) {
 		const collectionType = CollectionName.Agents;
 		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
@@ -491,9 +494,7 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
-		icon: attachedIconToTool
-			? iconId ? attachedIconToTool : null
-			: null,
+		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});

@@ -271,11 +271,15 @@ export async function editAgentApi(req, res, next) {
 	}
 
 	const agent = await getAgentById(req.params.resourceSlug, req.params.agentId);
-	if(!agent){
+	if (!agent) {
 		return dynamicResponse(req, res, 400, { error: 'AgentId not valid' });
 	}
 
-	let attachedIconToApp: IconAttachment = { id: toObjectId(agent?.icon.id), filename: agent?.icon.filename, linkedId: toObjectId(agent?.icon.linkedId)};
+	let attachedIconToApp: IconAttachment = {
+		id: toObjectId(agent?.icon.id),
+		filename: agent?.icon.filename,
+		linkedId: toObjectId(agent?.icon.linkedId)
+	};
 	if (agent?.icon.id !== iconId) {
 		const collectionType = CollectionName.Agents;
 		const newAttachment = await attachAssetToObject(iconId, req.params.agentId, collectionType);
