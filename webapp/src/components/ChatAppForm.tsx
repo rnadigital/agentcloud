@@ -148,7 +148,8 @@ export default function ChatAppForm({
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
-			iconId: icon?.id
+			iconId: icon?.id,
+			cloning: app && !editing
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {

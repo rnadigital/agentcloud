@@ -21,6 +21,13 @@ export default class StorageProvider {
 		throw new Error('uploadBuffer method not implemented');
 	}
 
+	async cloneFile(
+		sourceFilename: string,
+		destinationFilename: string
+	): Promise<any> {
+		throw new Error('cloneFile method not implemented')
+	}
+
 	async deleteFile(filename: string, isPublic = false): Promise<any> {
 		throw new Error('deleteFile method not implemented');
 	}

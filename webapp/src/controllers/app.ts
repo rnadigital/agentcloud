@@ -2,6 +2,7 @@
 
 import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
+import { cloneAssetInStorageProvider } from 'controllers/asset';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
@@ -12,17 +13,20 @@ import {
 	updateApp,
 	updateAppGetOldApp
 } from 'db/app';
-import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import path from 'path';
 import { AppType } from 'struct/app';
+import { Asset } from 'struct/asset';
 import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
@@ -159,7 +163,8 @@ export async function addAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		recursionLimit,
+		cloning
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -244,7 +249,7 @@ export async function addAppApi(req, res, next) {
 
 	const newAppId = new ObjectId();
 	const collectionType = CollectionName.Apps;
-	const attachedIconToApp = await attachAssetToObject(iconId, newAppId, collectionType);
+	let attachedIconToApp = await cloneAssetInStorageProvider(toObjectId(iconId), cloning, toObjectId(newAppId), collectionType, req.params.resourceSlug);;
 
 	let addedCrew, chatAgent;
 	if ((type as AppType) === AppType.CREW) {
@@ -631,7 +636,7 @@ export async function deleteAppApi(req, res, next) {
 
 	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
 
-	if (oldApp?.icon.id) {
+	if (oldApp?.icon) {
 		await deleteAssetById(oldApp.icon.id);
 	}
 

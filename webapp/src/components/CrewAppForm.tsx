@@ -146,7 +146,8 @@ export default function CrewAppForm({
 			sharingMode,
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
-			fullOutput
+			fullOutput,
+			cloning: app&&!editing
 		};
 		if (editing === true) {
 			await API.editApp(

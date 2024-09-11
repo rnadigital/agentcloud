@@ -5,7 +5,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import { removeAgentsTool } from 'db/agent';
-import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import {
@@ -40,6 +40,10 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import { Asset } from 'struct/asset';
+import StorageProviderFactory from 'lib/storage';
+import { cloneAssetInStorageProvider } from './asset';
 
 const log = debug('webapp:controllers:tool');
 
@@ -186,7 +190,8 @@ export async function addToolApi(req, res, next) {
 		iconId,
 		retriever,
 		retriever_config,
-		linkedToolId
+		linkedToolId,
+		cloning
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -241,7 +246,7 @@ export async function addToolApi(req, res, next) {
 
 	const newToolId = new ObjectId();
 	const collectionType = CollectionName.Tools;
-	const attachedIconToTool = await attachAssetToObject(iconId, newToolId, collectionType);
+	let attachedIconToTool = await cloneAssetInStorageProvider(iconId, cloning, newToolId, collectionType, req.params.resourceSlug);
 
 	const addedTool = await addTool({
 		_id: newToolId,

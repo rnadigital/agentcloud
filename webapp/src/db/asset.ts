@@ -19,9 +19,10 @@ export async function addAsset(asset: Asset): Promise<InsertOneResult<Asset>> {
 }
 
 // Function to retrieve an asset by its ID
-export async function getAssetById(assetId: db.IdOrStr): Promise<Asset | null> {
+export async function getAssetById(assetId: db.IdOrStr, teamId: db.IdOrStr): Promise<Asset | null> {
 	return assetCollection().findOne({
-		_id: toObjectId(assetId)
+		_id: toObjectId(assetId),
+		teamId: toObjectId(teamId)
 	});
 }
 
@@ -33,7 +34,9 @@ export async function attachAssetToObject(
 ): Promise<Asset> {
 	return assetCollection().findOneAndUpdate(
 		{
-			_id: toObjectId(assetId)
+			_id: toObjectId(assetId),
+			linkedToId: null,
+			linkedCollection: null
 		},
 		{
 			$set: {

@@ -10,15 +10,19 @@ import {
 	updateAgent,
 	updateAgentGetOldAgent
 } from 'db/agent';
-import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { removeAgentFromCrews } from 'db/crew';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById, getToolsByTeam } from 'db/tool';
 import toObjectId from 'lib/misc/toobjectid';
+import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import { ObjectId } from 'mongodb';
+import { Asset } from 'struct/asset';
 import { CollectionName } from 'struct/db';
+import path from "path";
+import { cloneAssetInStorageProvider } from './asset';
 
 export async function agentsData(req, res, _next) {
 	const [agents, models, tools] = await Promise.all([
@@ -118,7 +122,8 @@ export async function addAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-		iconId
+		iconId,
+		cloning
 	} = req.body;
 
 	let validationError = chainValidations(
@@ -171,7 +176,7 @@ export async function addAgentApi(req, res, next) {
 
 	const newAgentId = new ObjectId();
 	const collectionType = CollectionName.Agents;
-	const attachedIconToAgent = await attachAssetToObject(iconId, newAgentId, collectionType);
+	let attachedIconToAgent = await cloneAssetInStorageProvider(iconId, cloning, newAgentId, collectionType, req.params.resourceSlug);
 
 	const addedAgent = await addAgent({
 		_id: newAgentId,
@@ -190,7 +195,7 @@ export async function addAgentApi(req, res, next) {
 		toolIds: foundTools.map(t => t._id),
 		icon: attachedIconToAgent
 			? {
-					id: iconId,
+					id: attachedIconToAgent._id,
 					filename: attachedIconToAgent.filename,
 					linkedId: newAgentId
 				}

@@ -68,6 +68,37 @@ class GoogleStorageProvider extends StorageProvider {
 		}
 	}
 
+	async cloneFile(
+		sourceFilename: string,
+		destinationFilename: string,
+		isPublic = false
+	): Promise<any> {
+		log('Cloning file from %s to %s', sourceFilename, destinationFilename);
+		const bucket = this.#storageClient.bucket(
+			isPublic === true
+				? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
+				: process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE
+		);
+		const sourceFile = bucket.file(sourceFilename);
+		const destinationFile = bucket.file(destinationFilename);
+	
+		try {
+			await sourceFile.copy(destinationFile);
+			log('File cloned successfully from %s to %s', sourceFilename, destinationFilename);
+	
+			// Optionally make the cloned file public if needed
+			if (isPublic) {
+				await destinationFile.makePublic();
+			}
+	
+			return destinationFile;
+		} catch (err) {
+			log('File clone error:', err);
+			throw err;
+		}
+	}
+	
+
 	async uploadBuffer(
 		filename: string,
 		content: Buffer,
@@ -118,5 +149,5 @@ class GoogleStorageProvider extends StorageProvider {
 		}`;
 	}
 }
-
+ 
 export default new GoogleStorageProvider();

@@ -210,7 +210,8 @@ export default function ToolForm({
 					k: topK
 				},
 				linkedToolId: null,
-				iconId: icon?.id
+				iconId: icon?.id,
+				cloning: tool && !editing
 			};
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
