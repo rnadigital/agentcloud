@@ -74,10 +74,6 @@ app
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
 		});
-		server.use((req, res, next) => {
-			console.log('req.url', req.originalUrl);
-			next();
-		});
 		const router = (await import('./router')).default;
 
 		router(server, app);

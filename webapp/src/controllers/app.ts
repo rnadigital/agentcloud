@@ -647,7 +647,6 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	console.log('iconId', iconId, '\noldApp.icon.id', oldApp?.icon.id);
 	if (iconId !== oldApp?.icon.id) {
 		deleteAssetById(oldApp?.icon.id);
 	}
@@ -728,10 +727,6 @@ export async function getSharePermissions(req, res) {
 			const alreadyInTeam =
 				alreadyInOrg &&
 				alreadyInOrg.teams.find(t => t.id.toString() === invitingTeam.id.toString());
-			console.log('foundAccount', foundAccount);
-			console.log('res.locals.matchingOrg', res.locals.matchingOrg);
-			console.log('alreadyInOrg', alreadyInOrg);
-			console.log('alreadyInTeam', alreadyInTeam);
 			if (!alreadyInOrg) {
 				//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
 				await pushAccountOrg(foundAccount._id, {
@@ -745,6 +740,5 @@ export async function getSharePermissions(req, res) {
 			}
 		})
 	);
-	console.log('sharePermissions', sharePermissions);
 	return sharePermissions;
 }

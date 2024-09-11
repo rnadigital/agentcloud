@@ -271,7 +271,6 @@ export default function ChatAppForm({
 	}
 
 	async function emailCallback(newEmail) {
-		console.log('addedEmail', newEmail);
 		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
 		setModalOpen(false);
 	}
