@@ -734,7 +734,6 @@ export async function getSharePermissions(req, res) {
 					teams: [invitingTeam]
 				});
 			} else if (alreadyInOrg && !alreadyInTeam) {
-				//TODO: does this need an elseif for team similar to the previous condition
 				//otherwise theyre already in the org, just push the single team to the matching org
 				await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 			}
