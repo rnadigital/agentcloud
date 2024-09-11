@@ -148,6 +148,7 @@ class BaseChatAgent:
                         case "on_parser_stream":
                             self.logger.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
 
+                        # tool chat message finished
                         case "on_chain_end":
                             # input_messages = event['data']['input']['messages'] \
                             #     if ('input' in event['data'] and 'messages' in event['data']['input']) \
