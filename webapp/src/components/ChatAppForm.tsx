@@ -52,7 +52,7 @@ export default function ChatAppForm({
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
-	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId: null);
+	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);

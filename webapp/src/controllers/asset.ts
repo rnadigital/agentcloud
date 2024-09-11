@@ -41,32 +41,38 @@ export async function uploadAssetApi(req, res) {
 	return dynamicResponse(req, res, 200, assetBody);
 }
 
-export async function cloneAssetInStorageProvider( iconId : ObjectId, cloning : boolean, newObjectId : ObjectId, collectionType : CollectionName, resourceSlug) {
-	if(!iconId){
+export async function cloneAssetInStorageProvider(
+	iconId: ObjectId,
+	cloning: boolean,
+	newObjectId: ObjectId,
+	collectionType: CollectionName,
+	resourceSlug
+) {
+	if (!iconId) {
 		return null; //null return when no iconId
 	}
 	let attachedIconToAgent = await attachAssetToObject(iconId, newObjectId, collectionType);
-	if(attachedIconToAgent && cloning){
+	if (attachedIconToAgent && cloning) {
 		return attachedIconToAgent; //this is the case where you're not actually cloning, just adding a new agent
 	}
-	
+
 	const foundAsset = await getAssetById(iconId, resourceSlug);
 
-	if (!foundAsset){
+	if (!foundAsset) {
 		return null; //handle case when there isn't a found assetId for the given iconId
 	}
 
 	//if we get to here then all the checks are passed
-	const fileExtension = path.extname(foundAsset.filename)
+	const fileExtension = path.extname(foundAsset.filename);
 
 	const newAssetId = new ObjectId();
 	const newFileName = `${newAssetId.toString()}${fileExtension}`;
 	const assetBody: Asset = {
-		... foundAsset,
+		...foundAsset,
 		_id: newAssetId,
 		filename: newFileName,
 		linkedCollection: CollectionName.Agents,
-		linkedToId: newObjectId,
+		linkedToId: newObjectId
 	};
 	const storageProvider = StorageProviderFactory.getStorageProvider();
 	await storageProvider.cloneFile(foundAsset.filename, newFileName, true);

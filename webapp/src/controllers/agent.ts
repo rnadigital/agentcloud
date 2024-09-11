@@ -19,9 +19,10 @@ import toObjectId from 'lib/misc/toobjectid';
 import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import { ObjectId } from 'mongodb';
+import path from 'path';
 import { Asset } from 'struct/asset';
 import { CollectionName } from 'struct/db';
-import path from "path";
+
 import { cloneAssetInStorageProvider } from './asset';
 
 export async function agentsData(req, res, _next) {
@@ -176,7 +177,13 @@ export async function addAgentApi(req, res, next) {
 
 	const newAgentId = new ObjectId();
 	const collectionType = CollectionName.Agents;
-	let attachedIconToAgent = await cloneAssetInStorageProvider(iconId, cloning, newAgentId, collectionType, req.params.resourceSlug);
+	let attachedIconToAgent = await cloneAssetInStorageProvider(
+		iconId,
+		cloning,
+		newAgentId,
+		collectionType,
+		req.params.resourceSlug
+	);
 
 	const addedAgent = await addAgent({
 		_id: newAgentId,

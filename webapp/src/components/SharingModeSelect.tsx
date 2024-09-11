@@ -60,10 +60,10 @@ const SharingModeSelect = ({
 	}
 
 	useEffect(() => {
-		if(shareLinkShareId === null){
+		if (shareLinkShareId === null) {
 			createShareLink();
 		}
-	}, [])
+	}, []);
 	return (
 		<>
 			<SubscriptionModal

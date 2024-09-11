@@ -67,7 +67,6 @@ export default function AgentForm({
 		return acc;
 	};
 
-
 	useEffect(() => {
 		setAgent(agent);
 		setIcon(agent?.icon);

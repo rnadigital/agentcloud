@@ -249,7 +249,13 @@ export async function addAppApi(req, res, next) {
 
 	const newAppId = new ObjectId();
 	const collectionType = CollectionName.Apps;
-	let attachedIconToApp = await cloneAssetInStorageProvider(toObjectId(iconId), cloning, toObjectId(newAppId), collectionType, req.params.resourceSlug);;
+	let attachedIconToApp = await cloneAssetInStorageProvider(
+		toObjectId(iconId),
+		cloning,
+		toObjectId(newAppId),
+		collectionType,
+		req.params.resourceSlug
+	);
 
 	let addedCrew, chatAgent;
 	if ((type as AppType) === AppType.CREW) {

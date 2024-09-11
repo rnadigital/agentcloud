@@ -29,9 +29,12 @@ import {
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
+import StorageProviderFactory from 'lib/storage';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
 import { ObjectId } from 'mongodb';
+import path from 'path';
+import { Asset } from 'struct/asset';
 import { PlanLimitsKeys } from 'struct/billing';
 import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
@@ -40,9 +43,7 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import { Asset } from 'struct/asset';
-import StorageProviderFactory from 'lib/storage';
+
 import { cloneAssetInStorageProvider } from './asset';
 
 const log = debug('webapp:controllers:tool');
@@ -246,7 +247,13 @@ export async function addToolApi(req, res, next) {
 
 	const newToolId = new ObjectId();
 	const collectionType = CollectionName.Tools;
-	let attachedIconToTool = await cloneAssetInStorageProvider(iconId, cloning, newToolId, collectionType, req.params.resourceSlug);
+	let attachedIconToTool = await cloneAssetInStorageProvider(
+		iconId,
+		cloning,
+		newToolId,
+		collectionType,
+		req.params.resourceSlug
+	);
 
 	const addedTool = await addTool({
 		_id: newToolId,

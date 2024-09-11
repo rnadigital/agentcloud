@@ -81,23 +81,22 @@ class GoogleStorageProvider extends StorageProvider {
 		);
 		const sourceFile = bucket.file(sourceFilename);
 		const destinationFile = bucket.file(destinationFilename);
-	
+
 		try {
 			await sourceFile.copy(destinationFile);
 			log('File cloned successfully from %s to %s', sourceFilename, destinationFilename);
-	
+
 			// Optionally make the cloned file public if needed
 			if (isPublic) {
 				await destinationFile.makePublic();
 			}
-	
+
 			return destinationFile;
 		} catch (err) {
 			log('File clone error:', err);
 			throw err;
 		}
 	}
-	
 
 	async uploadBuffer(
 		filename: string,
@@ -149,5 +148,5 @@ class GoogleStorageProvider extends StorageProvider {
 		}`;
 	}
 }
- 
+
 export default new GoogleStorageProvider();
