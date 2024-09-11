@@ -149,7 +149,6 @@ export function changeAccountPassword(userId: db.IdOrStr, passwordHash: string):
 }
 
 export function pushAccountOrg(userId: db.IdOrStr, org: AccountOrg): Promise<any> {
-	console.log('pushAccountOrg, arguments', userId, org);
 	return AccountCollection().updateOne(
 		{
 			_id: toObjectId(userId)
@@ -167,7 +166,6 @@ export function pushAccountTeam(
 	orgId: db.IdOrStr,
 	team: AccountTeam
 ): Promise<any> {
-	console.log('pushAccountTeam, arguments', userId, orgId, team);
 	return AccountCollection().updateOne(
 		{
 			_id: toObjectId(userId)
