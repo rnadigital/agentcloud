@@ -5,7 +5,7 @@ import { Binary } from 'mongodb';
 export enum SharingMode {
 	TEAM = 'team',
 	PUBLIC = 'public',
-	OWNER = 'owner',
+	PRIVATE = 'owner',
 	WHITELIST = 'whitelist'
 }
 

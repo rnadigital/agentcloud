@@ -14,20 +14,20 @@ import SelectClassNames from 'styles/SelectClassNames';
 
 const sharingModeOptions = [
 	{
-		label: 'Team Only (Default)',
-		value: SharingMode.TEAM
-	},
-	{
 		label: 'Public',
 		value: SharingMode.PUBLIC
+	},
+	{
+		label: 'My Team (Default)',
+		value: SharingMode.TEAM
 	},
 	{
 		label: 'Whitelist',
 		value: SharingMode.WHITELIST
 	},
 	{
-		label: 'Owner & Admins Only',
-		value: SharingMode.OWNER
+		label: 'Private',
+		value: SharingMode.PRIVATE
 	}
 ];
 
@@ -141,7 +141,7 @@ const SharingModeSelect = ({
 					/>
 				</div>
 			)}
-			{sharingMode == SharingMode.OWNER && (
+			{sharingMode == SharingMode.PRIVATE && (
 				<div className='col-span-12'>
 					<SharingModeInfoAlert
 						shareLinkShareId={shareLinkShareId}

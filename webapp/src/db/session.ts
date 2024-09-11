@@ -171,7 +171,7 @@ export async function checkCanAccessApp(
 		case SharingMode.WHITELIST:
 			const hasPermissionEntry = foundApp?.sharingConfig?.permissions[account?._id];
 			return hasPermissionEntry;
-		case SharingMode.OWNER:
+		case SharingMode.PRIVATE:
 			const isAppOwner = foundApp?.sharingConfig?.permissions[account?._id];
 			const hasTeamAdminPerm = account?._permissions?.hasAny(
 				Permissions.ROOT,
