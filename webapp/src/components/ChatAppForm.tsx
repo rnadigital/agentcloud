@@ -135,6 +135,12 @@ export default function ChatAppForm({
 		setIcon(app?.icon);
 	}, [app?._id]);
 
+	useEffect(() => {
+		if (sharingMode !== SharingMode.WHITELIST) {
+			setSharingEmailState([]);
+		}
+	}, [sharingMode]);
+
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
