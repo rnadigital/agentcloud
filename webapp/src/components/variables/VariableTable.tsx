@@ -106,12 +106,6 @@ export default function VariableTable({
 								scope='col'
 								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
 							>
-								Type
-							</th>
-							<th
-								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
 								Created By
 							</th>
 							<th
@@ -150,9 +144,6 @@ export default function VariableTable({
 									<div className='text-sm text-gray-900 dark:text-white'>
 										{variable.defaultValue}
 									</div>
-								</td>
-								<td className='px-6 py-4 whitespace-nowrap'>
-									<div className='text-sm text-gray-900 dark:text-white'>{variable.type}</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap'>
 									<div className='text-sm text-gray-900 dark:text-white'>{variable.createdBy}</div>
