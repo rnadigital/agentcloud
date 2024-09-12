@@ -22,7 +22,6 @@ import { App, AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
-
 import ConfirmModal from './ConfirmModal';
 
 export default function ChatAppForm({
@@ -49,9 +48,9 @@ export default function ChatAppForm({
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
-	const [outsideOrg, setOutsideOrg] = useState(false);
-	const [shareEmail, setShareEmail] = useState(false);
-	const [saveButtonType, setSaveButtonType] = useState('button');
+	const [ outsideOrg, setOutsideOrg ] = useState(false);
+	const [ shareEmail, setShareEmail ]= useState(false);
+	const [ saveButtonType, setSaveButtonType ] = useState('button')
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [icon, setIcon]: any = useState(app?.icon);
@@ -336,29 +335,24 @@ export default function ChatAppForm({
 			break;
 		case 'confirmOutsideOrg':
 			modal = (
-				<ConfirmModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					confirmFunction={() => {
-						setOutsideOrg(false);
-						setModalOpen(false);
-					}}
-					cancelFunction={() => {
-						setModalOpen(false);
-					}}
-					title={'Sharing Outside Team'}
-					message={
-						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
-					}
-				/>
+				<ConfirmModal 
+				open={modalOpen !==false } 
+				setOpen={setModalOpen} 
+				confirmFunction={() => {
+					setOutsideOrg(false);
+					setModalOpen(false);
+				}} 
+				cancelFunction={() => {
+					setModalOpen(false);
+				}} 
+				title={"Sharing Outside Team"}
+				message={"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."}/>
 			);
 			break;
 		default:
 			modal = null;
 			break;
 	}
-
-	console.log('shareEmailState', shareEmail);
 
 	return (
 		<>
@@ -648,9 +642,9 @@ export default function ChatAppForm({
 					</button>
 					<div className='flex gap-x-4'>
 						<button
-							type={outsideOrg ? 'button' : 'submit'}
+							type={outsideOrg? 'button' : 'submit'}
 							onClick={() => {
-								if (outsideOrg) {
+								if(outsideOrg){
 									setModalOpen('confirmOutsideOrg');
 								}
 								setRun(false);
