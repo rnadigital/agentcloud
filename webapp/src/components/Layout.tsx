@@ -191,7 +191,6 @@ export default withRouter(function Layout(props) {
 			API.getApp({ resourceSlug, appId: chatContext?.app?._id }, setCurrentApp, null, router);
 		}
 	}, [chatContext?.app?._id]);
-	console.log('currentApp', currentApp);
 
 	return (
 		<>
