@@ -434,6 +434,19 @@ export default function Session(props: SessionProps) {
 				variables={paramsArray}
 				onSubmit={async variables => {
 					setSessionVariablesSubmitted(true);
+					console.log(session, 'session');
+					await API.publicUpdateSession(
+						{ sessionId, resourceSlug, ...session, variables },
+						null,
+						null,
+						router
+					);
+					await API.publicStartSession(
+						{ sessionId, resourceSlug, appType: app.type },
+						null,
+						null,
+						router
+					);
 					console.log('variables', variables);
 				}}
 			/>

@@ -373,7 +373,17 @@ export async function editSessionApi(req, res, next) {
 
 	const sessionId = req.params.sessionId;
 
-	const updatedSession = await updateSession(req.params.resourceSlug, sessionId, req.body);
+	const payload = {
+		orgId: req.body?.orgId,
+		teamId: req.body?.teamId,
+		name: req.body?.name,
+		status: req.body?.status,
+		appId: req.body?.appId,
+		sharingConfig: req.body?.sharingConfig,
+		variables: req.body?.variables
+	};
+
+	const updatedSession = await updateSession(req.params.resourceSlug, sessionId, payload);
 
 	if (!updatedSession) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -382,5 +392,20 @@ export async function editSessionApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		message: 'Session updated successfully',
 		session: updatedSession
+	});
+}
+
+export async function startSession(req, res, next) {
+	sessionTaskQueue.add(
+		'execute_rag',
+		{
+			type: req.body.appType,
+			sessionId: req.body.sessionId
+		},
+		{ removeOnComplete: true, removeOnFail: true }
+	);
+
+	return dynamicResponse(req, res, 200, {
+		message: 'Session started successfully'
 	});
 }

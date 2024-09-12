@@ -193,6 +193,30 @@ export function getSessions(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+
+export function publicUpdateSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function publicStartSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/start`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+
 export function getMessages(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		...(body?.messageId ? { messageId: body.messageId } : {})
