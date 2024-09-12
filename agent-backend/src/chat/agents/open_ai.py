@@ -1,4 +1,6 @@
-from langchain_core.messages import HumanMessage
+import uuid
+
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.constants import END
 from langgraph.graph import StateGraph, MessagesState, START
@@ -15,7 +17,30 @@ class OpenAIChatAgent(BaseChatAgent):
 
     async def call_model(self, state, config):
         messages = state["messages"]
+
         response = await self.chat_model.ainvoke(messages, config)
+
+        # If llm returns AIMessage with a tool_call to human_input and content as tool args (in response to a prior
+        # human_input ToolMessage) then set it as AIMessage content and invalidate the tool_call.
+        # This behaviour is seen in Gemini and sometimes with gpt-4o-mini.
+
+        # If this is not handled, message flow will continuously loop between ToolMessage and AIMessage
+        # and not exit the graph until recursion_limit is reached.
+        if ((isinstance(messages[-1], ToolMessage)
+             and messages[-1].name == 'human_input')
+                and (isinstance(response, AIMessage)
+                     and response.tool_calls
+                     and response.tool_calls[0]['name'] == 'human_input')):
+            response.content = response.tool_calls[0]['args']['text']
+            response.tool_calls = []
+            response.additional_kwargs = {}
+
+            # also send to socket because content being appended as a tool arg prevents
+            # it from being streamed until tool is invoked which is the case here.
+            self.send_to_socket(text=response.content, chunk_id=str(uuid.uuid4()),
+                                author_name=self.agent_name.capitalize(),
+                                display_type="bubble")
+
         return {"messages": response}
 
     async def invoke_human_input(self, state, config):
