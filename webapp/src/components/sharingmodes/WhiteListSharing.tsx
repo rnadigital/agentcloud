@@ -13,6 +13,8 @@ export default function WhiteListSharing({
 	emailOptions = [],
 	emailState = [],
 	onChange,
+	shareEmail,
+	setShareEmail,
 	addNewTitle = '+ New Email'
 }) {
 	const origin = typeof location !== 'undefined' ? location.origin : '';
@@ -77,6 +79,22 @@ export default function WhiteListSharing({
 							);
 						}}
 					/>
+					<div className='pt-3'>
+						<label
+							htmlFor='sendNotification'
+							className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
+							<input
+								type='checkbox'
+								id='sendNotificaiton'
+								name='sendNotificaiton'
+								checked={shareEmail}
+								onChange={e => setShareEmail(e.target.checked)}
+								className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+							/>
+							Notify Recipients
+						</label>
+					</div>
 					<CopyToClipboardInput dataToCopy={`${origin}/s/${resourceSlug}/${shareLinkShareId}`} />
 				</div>
 			</InfoAlert>

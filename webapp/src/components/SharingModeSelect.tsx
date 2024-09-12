@@ -40,6 +40,8 @@ const SharingModeSelect = ({
 	showInfoAlert = false,
 	emailOptions,
 	emailState,
+	shareEmail,
+	setShareEmail,
 	onChange = undefined,
 	setModalOpen = undefined
 }) => {
@@ -139,6 +141,8 @@ const SharingModeSelect = ({
 						emailState={emailState}
 						emailOptions={emailOptions}
 						onChange={onChange}
+						shareEmail={shareEmail}
+						setShareEmail={setShareEmail}
 					/>
 				</div>
 			)}

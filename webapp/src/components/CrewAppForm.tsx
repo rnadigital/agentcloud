@@ -5,6 +5,7 @@ import { InformationCircleIcon, PlayIcon } from '@heroicons/react/20/solid';
 import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
+import ConfirmModal from 'components/ConfirmModal';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
@@ -54,6 +55,9 @@ export default function CrewAppForm({
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const { step, setStep }: any = useStepContext();
+	const [outsideOrg, setOutsideOrg] = useState(false);
+	const [shareEmail, setShareEmail] = useState(false);
+	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -251,6 +255,7 @@ export default function CrewAppForm({
 
 	async function emailCallback(newEmail) {
 		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
+		setOutsideOrg(true);
 		setModalOpen(false);
 	}
 
@@ -317,6 +322,25 @@ export default function CrewAppForm({
 				/>
 			);
 			// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
+			break;
+		case 'confirmOutsideOrg':
+			modal = (
+				<ConfirmModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={() => {
+						setOutsideOrg(false);
+						setModalOpen(false);
+					}}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title={'Sharing Outside Team'}
+					message={
+						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
+					}
+				/>
+			);
 			break;
 		default:
 			modal = null;
@@ -399,6 +423,8 @@ export default function CrewAppForm({
 								setModalOpen={x => {
 									setModalOpen('whitelist');
 								}}
+								shareEmail={shareEmail}
+								setShareEmail={setShareEmail}
 							/>
 
 							<div className='sm:col-span-12'>
@@ -636,8 +662,13 @@ export default function CrewAppForm({
 					)}
 					<div className='flex gap-x-4'>
 						<button
-							type='submit'
-							onClick={() => setRun(false)}
+							type={outsideOrg ? 'button' : 'submit'}
+							onClick={() => {
+								if (outsideOrg) {
+									setModalOpen('confirmOutsideOrg');
+								}
+								setRun(false);
+							}}
 							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 						>
 							Save
