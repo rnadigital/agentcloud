@@ -7,13 +7,15 @@ interface AutocompleteDropdownProps {
 	highlightedIndex: number;
 	dropdownPosition: { top: number; left: number };
 	handleOptionSelect: (option: { label: string; value: string }) => void;
+	closeDropdown: () => void;
 }
 
 const AutocompleteDropdown = ({
 	options,
 	highlightedIndex,
 	dropdownPosition,
-	handleOptionSelect
+	handleOptionSelect,
+	closeDropdown
 }: AutocompleteDropdownProps) => {
 	const listRef = useRef<HTMLUListElement>(null);
 
@@ -26,6 +28,19 @@ const AutocompleteDropdown = ({
 			}
 		}
 	}, [highlightedIndex]);
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (listRef.current && !listRef.current.contains(event.target as Node)) {
+				closeDropdown();
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, []);
 
 	return (
 		<ul

@@ -410,6 +410,7 @@ export default function AgentForm({
 
 							{autocompleteRole.showDropdown && autocompleteRole.filteredOptions.length > 0 && (
 								<AutocompleteDropdown
+									closeDropdown={autocompleteRole.closeDropdown}
 									options={autocompleteRole.filteredOptions}
 									highlightedIndex={autocompleteRole.highlightedIndex}
 									dropdownPosition={autocompleteRole.dropdownPosition}
@@ -443,6 +444,7 @@ export default function AgentForm({
 									highlightedIndex={autocompleteGoal.highlightedIndex}
 									dropdownPosition={autocompleteGoal.dropdownPosition}
 									handleOptionSelect={autocompleteGoal.handleOptionSelect}
+									closeDropdown={autocompleteGoal.closeDropdown}
 								/>
 							)}
 						</div>
@@ -469,6 +471,7 @@ export default function AgentForm({
 							{autocompleteBackstory.showDropdown &&
 								autocompleteBackstory.filteredOptions.length > 0 && (
 									<AutocompleteDropdown
+										closeDropdown={autocompleteBackstory.closeDropdown}
 										options={autocompleteBackstory.filteredOptions}
 										highlightedIndex={autocompleteBackstory.highlightedIndex}
 										dropdownPosition={autocompleteBackstory.dropdownPosition}

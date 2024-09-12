@@ -34,6 +34,10 @@ const useAutocompleteDropdown = ({
 
 	const inputRef = useRef(null);
 
+	const closeDropdown = () => {
+		setShowDropdown(false);
+	};
+
 	const filteredOptions = [
 		...options.filter(option => option.label.toLowerCase().startsWith(filterText.toLowerCase())),
 		{ label: 'Create new variable', value: 'create_new' }
@@ -67,9 +71,17 @@ const useAutocompleteDropdown = ({
 	}, [initialState, value, setSelectedVariables]);
 
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
-		setValue(prevValue => `${prevValue}${newVariable.label}}`);
 		setSelectedVariables(prev => [...prev, newVariable]);
 		fetchFormData();
+
+		const cursorPosition = inputRef.current?.selectionStart;
+		const textAfterCursor = value.slice(cursorPosition);
+		const openBracketIndex = value.lastIndexOf('{');
+		const newText =
+			openBracketIndex !== -1
+				? value.slice(0, openBracketIndex + 1) + newVariable.label + '}' + textAfterCursor // Append text after cursor
+				: `${newVariable.label}}${textAfterCursor}`;
+		setValue(newText);
 		setShowDropdown(false);
 		setFilterText('');
 		setModalOpen(null);
@@ -199,7 +211,8 @@ const useAutocompleteDropdown = ({
 		handleKeyDown,
 		handleOptionSelect,
 		inputRef,
-		handleNewVariableCreation
+		handleNewVariableCreation,
+		closeDropdown
 	};
 };
 
