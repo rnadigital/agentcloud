@@ -183,14 +183,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=keyfile.json
       - PROJECT_ID=agentcloud-dev
       - STORAGE_PROVIDER=local
-<<<<<<< HEAD
       - WEBAPP_URL=http://localhost:3000/
-=======
-      - MINIO_INTERNAL_ENDPOINT=minio:9000  
-      - MINIO_EXTERNAL_ENDPOINT=localhost:9000 
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
->>>>>>> master
 
   vector_db_proxy:
     restart: always
@@ -242,17 +235,17 @@ services:
     volumes:
       - qdrant_data:/qdrant_data
 
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9000:9000"
-    environment:
-      MINIO_ROOT_USER: "minioadmin"
-      MINIO_ROOT_PASSWORD: "minioadmin"
-    volumes:
-      - minio_data:/data
-    command: server /data
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9000:9000"
+  #   environment:
+  #     MINIO_ROOT_USER: "minioadmin"
+  #     MINIO_ROOT_PASSWORD: "minioadmin"
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server /data
 
 volumes:
   mongodb_data_container:
