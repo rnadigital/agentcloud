@@ -1,9 +1,11 @@
+use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
 use prost_types::{ListValue, Struct as Metadata, Struct};
+use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
@@ -84,6 +86,18 @@ impl Default for FilterConditions {
             must: None,
             must_not: None,
             should: None,
+        }
+    }
+}
+
+impl From<FilterConditions> for Filter {
+    fn from(value: FilterConditions) -> Self {
+        let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&Some(value));
+        Filter {
+            must,
+            must_not,
+            should,
+            min_should: None,
         }
     }
 }
