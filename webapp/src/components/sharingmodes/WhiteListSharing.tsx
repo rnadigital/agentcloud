@@ -79,7 +79,7 @@ export default function WhiteListSharing({
 							);
 						}}
 					/>
-					<div className='pt-3'>
+					{/* <div className='pt-3'>
 						<label
 							htmlFor='sendNotification'
 							className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
@@ -94,7 +94,7 @@ export default function WhiteListSharing({
 							/>
 							Notify Recipients
 						</label>
-					</div>
+					</div> */}
 					<CopyToClipboardInput dataToCopy={`${origin}/s/${resourceSlug}/${shareLinkShareId}`} />
 				</div>
 			</InfoAlert>
