@@ -3,7 +3,7 @@
 import * as API from '@api';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -21,7 +21,8 @@ export default function VariableForm({
 	const {
 		register,
 		handleSubmit,
-		formState: { errors }
+		formState: { errors },
+		setFocus
 	} = useForm({
 		defaultValues: variable || { name: '', defaultValue: '', type: '' }
 	});
@@ -61,6 +62,10 @@ export default function VariableForm({
 			router.push(`/${resourceSlug}/variables`);
 		}
 	};
+
+	useEffect(() => {
+		setFocus('name');
+	}, []);
 
 	return (
 		<>
