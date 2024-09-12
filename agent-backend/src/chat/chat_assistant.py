@@ -24,7 +24,7 @@ class ChatAssistant:
     chat_agent: BaseChatAgent
     system_message: str
     agent_name: str
-    recursion_limit: int
+    max_messages: int
 
     def __init__(self, session_id: str):
         self.session_id = session_id
@@ -32,8 +32,7 @@ class ChatAssistant:
         self.mongo_client = start_mongo_session()
         self.init_socket()
         self.init_app_state()
-        self.chat_agent = chat_agent_factory(chat_model=self.chat_model, tools=self.tools, agent_name=self.agent_name,
-                                             session_id=session_id, socket=self.socket)
+        self.chat_agent = chat_agent_factory(chat_assistant_obj=self)
 
     def init_socket(self):
         try:
@@ -67,7 +66,7 @@ class ChatAssistant:
 
         self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
 
-        self.recursion_limit = app_config.recursionLimit
+        self.max_messages = app_config.maxMessages
 
     @staticmethod
     def _transform_tool_name(tool_name: str) -> str:
@@ -102,11 +101,12 @@ class ChatAssistant:
                 if linked_tool:
                     tool_class = BuiltinTools.get_tool_class(linked_tool.data.name)
                 else:
-                    logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
+                    logging.warning(
+                        f"linked tool ID {agentcloud_tool.linkedToolId} not found for installed tool {agentcloud_tool.id}")
+            else:
+                tool_class = BuiltinTools.get_tool_class(tool_name)
 
         return tool_class.factory(agentcloud_tool)
 
     def run(self):
-        config = {"configurable": {"thread_id": self.session_id}, "recursion_limit": self.recursion_limit}
-        system_message = SystemMessage(content=self.system_message)
-        asyncio.run(self.chat_agent.stream_execute([system_message], config))
+        asyncio.run(self.chat_agent.stream_execute())

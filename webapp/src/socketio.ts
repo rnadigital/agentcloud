@@ -103,6 +103,10 @@ export function initSocket(rawHttpServer) {
 				socketRequest.locals.account
 			);
 
+			if (canJoinRoom) {
+				socket.join(room);
+			}
+
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
@@ -143,9 +147,15 @@ export function initSocket(rawHttpServer) {
 
 			if (message?.chunkId && message?.text?.length > 0) {
 				try {
-					message.text = JSON.parse(message.text);
-					message.language = 'json';
-					message.type = 'code';
+					if (
+						typeof message.text === 'string' &&
+						(message.text.startsWith('{') || message.text.startsWith('['))
+					) {
+						//Note: only tries to JSON stringify objects/arrays because otherwise any number or quoted string is a valid JSON and shows up in a code block, looks weird.
+						message.text = JSON.parse(message.text);
+						message.language = 'json';
+						message.type = 'code';
+					}
 				} catch (error) {}
 			}
 
