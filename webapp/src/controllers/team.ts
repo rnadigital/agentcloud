@@ -104,7 +104,6 @@ export async function inviteTeamMemberApi(req, res) {
 			invitingTeamId: invitingTeam.id,
 			invitingOrgId: res.locals.matchingOrg.id
 		});
-
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
 	} else {
@@ -115,13 +114,18 @@ export async function inviteTeamMemberApi(req, res) {
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
 	}
-	if (!foundAccount.orgs.find(f => f.id === res.locals.matchingOrg.id)) {
+	const alreadyInOrg = foundAccount.orgs.find(
+		f => f.id.toString() === res.locals.matchingOrg.id.toString()
+	);
+	const alreadyInTeam =
+		alreadyInOrg && alreadyInOrg.teams.find(t => t.id.toString() === invitingTeam.id.toString());
+	if (!alreadyInOrg) {
 		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
 		await pushAccountOrg(foundAccount._id, {
 			...res.locals.matchingOrg,
 			teams: [invitingTeam]
 		});
-	} else {
+	} else if (alreadyInOrg && !alreadyInTeam) {
 		//otherwise theyre already in the org, just push the single team to the matching org
 		await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 	}

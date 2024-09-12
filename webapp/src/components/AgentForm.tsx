@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { CollectionName } from 'struct/db';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
@@ -69,7 +70,7 @@ export default function AgentForm({
 	useEffect(() => {
 		setAgent(agent);
 		setIcon(agent?.icon);
-
+		//if there's an icon and editing is false then we need to create a new icon
 		const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
 			initialTools: [],
 			initialDatasources: []
@@ -128,7 +129,8 @@ export default function AgentForm({
 			toolIds: (toolState || [])
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
-			iconId: icon?.id
+			iconId: icon?.id,
+			cloning: agent && !editing
 		};
 		if (editing) {
 			await API.editAgent(

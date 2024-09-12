@@ -51,6 +51,7 @@ services:
         - NEXT_PUBLIC_POSTHOG_KEY=
         - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
         - NEXT_PUBLIC_STORAGE_PROVIDER=local
+        - NEXT_PUBLIC_LOCAL_UNSTRUCTURED=1
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -112,6 +113,7 @@ services:
       - NEXT_PUBLIC_SECRET_PROVIDER=local
       - MESSAGE_QUEUE_PROVIDER=rabbitmq
       - UPLOADS_BASE_PATH=/tmp
+      - NEXT_PUBLIC_LOCAL_UNSTRUCTURED=1
       # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
       - FUNCTION_PROVIDER=google
       - GOOGLE_FUNCTION_LOCATION=us-central1
@@ -217,7 +219,8 @@ services:
       - WEBAPP_HOST=webapp_next
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
-      - LOGGING_LEVEL=debug
+      - LOGGING_LEVEL=warn
+      - UNSTRUCTURED_API_URL=http://unstructured-api:9500/general/v0/general
 
     volumes:
       - datasource_files:/tmp
@@ -232,11 +235,24 @@ services:
     volumes:
       - qdrant_data:/qdrant_data
 
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9000:9000"
+  #   environment:
+  #     MINIO_ROOT_USER: "minioadmin"
+  #     MINIO_ROOT_PASSWORD: "minioadmin"
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server /data
+
 volumes:
   mongodb_data_container:
   redis_data:
   datasource_files:
   qdrant_data:
+  minio_data:
 
 networks:
   default:
