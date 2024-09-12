@@ -113,7 +113,10 @@ async fn handle_embedding(
     let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
     let vector_database_client_connection = vector_database_clone.read().await;
-    let search_request = SearchRequest::new(SearchType::Collection, datasource_id_clone_2.clone());
+    let search_type = chunking_strategy
+        .clone()
+        .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
+    let search_request = SearchRequest::new(search_type, datasource_id_clone_2.clone());
     match embed_text_construct_point(
         mongo_connection.clone(),
         vector_database_client.clone(),

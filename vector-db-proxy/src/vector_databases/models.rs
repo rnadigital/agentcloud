@@ -102,6 +102,13 @@ pub enum SearchType {
     Collection,
     Point,
     Similarity,
+    ChunkedRow,
+}
+
+impl Default for SearchType {
+    fn default() -> Self {
+        SearchType::Collection
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -315,6 +322,23 @@ impl From<qdrant_client::qdrant::CollectionInfo> for VectorDatabaseStatus {
     }
 }
 
+impl From<FilterConditions> for Metadata {
+    fn from(value: FilterConditions) -> Self {
+        let mut btree_map = BTreeMap::new();
+        for pattern in value.must.unwrap() {
+            for (k, v) in pattern {
+                btree_map.insert(
+                    k,
+                    prost_types::Value {
+                        kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                    },
+                );
+            }
+        }
+
+        Self { fields: btree_map }
+    }
+}
 impl From<Point> for BTreeMap<String, String> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))

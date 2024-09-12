@@ -192,6 +192,13 @@ impl VectorDatabase for QdrantClient {
         Ok(VectorDatabaseStatus::from(VectorDatabaseStatus::from(true)))
     }
 
+    async fn delete_point(
+        &self,
+        search_request: SearchRequest,
+    ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        todo!()
+    }
+
     async fn bulk_insert_points(
         &self,
         search_request: SearchRequest,
