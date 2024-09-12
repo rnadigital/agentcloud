@@ -103,6 +103,10 @@ export function initSocket(rawHttpServer) {
 				socketRequest.locals.account
 			);
 
+			if (canJoinRoom) {
+				socket.join(room);
+			}
+
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
