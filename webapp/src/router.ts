@@ -634,6 +634,8 @@ export default function router(server, app) {
 		'/variables.json',
 		variableController.variablesJson
 	);
+
+	teamRouter.get('/variable/:variableId([a-f0-9]{24}).json', variableController.variableJson);
 	
 	teamRouter.get(
 		'/variable/:variableId/edit',

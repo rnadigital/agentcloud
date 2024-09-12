@@ -127,6 +127,7 @@ export default function VariableTable({
 						{variables.map(variable => (
 							<tr
 								key={variable._id}
+								onClick={() => router.push(`/${resourceSlug}/variable/${variable._id}/edit`)}
 								className={cn(
 									'transition-all opacity-1 duration-700',
 									deletingMap[variable._id]
