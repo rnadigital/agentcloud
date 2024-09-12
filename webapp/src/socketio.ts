@@ -143,9 +143,15 @@ export function initSocket(rawHttpServer) {
 
 			if (message?.chunkId && message?.text?.length > 0) {
 				try {
-					message.text = JSON.parse(message.text);
-					message.language = 'json';
-					message.type = 'code';
+					if (
+						typeof message.text === 'string' &&
+						(message.text.startsWith('{') || message.text.startsWith('['))
+					) {
+						//Note: only tries to JSON stringify objects/arrays because otherwise any number or quoted string is a valid JSON and shows up in a code block, looks weird.
+						message.text = JSON.parse(message.text);
+						message.language = 'json';
+						message.type = 'code';
+					}
 				} catch (error) {}
 			}
 

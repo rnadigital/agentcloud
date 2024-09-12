@@ -303,7 +303,7 @@ class AppType(str, Enum):
 class ChatAppConfig(BaseModel):
     agentId: PyObjectId
     conversationStarters: list[str] = Field(default_factory=list)
-    recursionLimit: int = Field(default=30)
+    maxMessages: int = Field(default=30)
 
 
 class App(BaseModel):

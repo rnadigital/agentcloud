@@ -77,8 +77,12 @@ export default function DatasourceChunkingForm({
 				>
 					<option value='basic'>Basic</option>
 					<option value='by_title'>By Title</option>
-					<option value='by_page'>By Page</option>
-					<option value='by_similarity'>By Similarity</option>
+					{!process.env.NEXT_PUBLIC_LOCAL_UNSTRUCTURED && (
+						<>
+							<option value='by_page'>By Page</option>
+							<option value='by_similarity'>By Similarity</option>
+						</>
+					)}
 				</select>
 			</div>
 

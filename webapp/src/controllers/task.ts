@@ -139,8 +139,8 @@ export async function addTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-			{ field: 'expectedOutput', validation: { ofType: 'string' } },
+			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
+			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
 				field: 'toolIds',
 				validation: {
