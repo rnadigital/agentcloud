@@ -25,6 +25,7 @@ import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+import { StructuredOutputSchema } from '../lib/struct/editorschemas';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -393,6 +394,7 @@ export default function TaskForm({
 											scrollBeyondLastLine: false
 										}}
 										onInitializePane={onInitializePane}
+										editorJsonSchema={StructuredOutputSchema}
 										language='json'
 									/>
 									<a

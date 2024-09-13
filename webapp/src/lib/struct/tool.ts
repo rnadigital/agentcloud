@@ -75,6 +75,7 @@ export type Tool = {
 		properties: Record<string, FunctionProperty>;
 	};
 	parameters?: Record<string, string>;
+	vectorFilters: any; //TODO: type
 	icon?: IconAttachment;
 	hidden?: boolean;
 	functionId?: string;

@@ -22,6 +22,8 @@ import { toast } from 'react-toastify';
 import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
+import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
+import { QdrantFilterSchema } from '../../lib/struct/editorschemas';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
@@ -81,6 +83,11 @@ export default function ToolForm({
 	const [toolTimeWeightField, setToolTimeWeightField] = useState(
 		tool?.retriever_config?.timeWeightField || null
 	);
+
+	const [vectorFilters, setVectorFilters] = useState(tool?.vectorFilters || '');
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
+		/* noop */
+	};
 
 	const [, notificationTrigger]: any = useSocketContext();
 
@@ -501,28 +508,59 @@ export default function ToolForm({
 										</>
 									)}
 
-								{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && (
+								{currentTab?.name === 'Parameters' && (
 									<>
-										<ParameterForm
-											parameters={functionParameters}
-											setParameters={setFunctionParameters}
-											title='Parameters'
-											disableTypes={false}
-											hideRequired={false}
-											namePlaceholder='Name'
-											descriptionPlaceholder='Description'
-										/>
+										{toolType === ToolType.RAG_TOOL ? (
+											<>
+												<ScriptEditor
+													height='30em'
+													code={vectorFilters}
+													setCode={setVectorFilters}
+													editorOptions={{
+														stopRenderingLineAfter: 1000,
+														fontSize: '12pt',
+														//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+														minimap: { enabled: false },
+														scrollBeyondLastLine: false
+													}}
+													onInitializePane={onInitializePane}
+													editorJsonSchema={QdrantFilterSchema}
+													language='json'
+												/>
+												<a
+													className='text-sm text-blue-500 dark:text-blue-400 underline'
+													href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
+													target='_blank'
+													rel='noreferrer'
+												>
+													Instructions on how to format qdrant filters
+													//TODO: add a simplified version to our docs?
+												</a>
+											</>
+										) : (
+											<>
+												<ParameterForm
+													parameters={functionParameters}
+													setParameters={setFunctionParameters}
+													title='Parameters'
+													disableTypes={false}
+													hideRequired={false}
+													namePlaceholder='Name'
+													descriptionPlaceholder='Description'
+												/>
 
-										<ParameterForm
-											parameters={environmentVariables}
-											setParameters={setEnvironmentVariables}
-											title='Environment Variables'
-											disableTypes={true}
-											hideRequired={true}
-											namePattern='[A-Z][A-Z0-9_]*'
-											namePlaceholder='Key must be uppercase seperated by underscores'
-											descriptionPlaceholder='Value'
-										/>
+												<ParameterForm
+													parameters={environmentVariables}
+													setParameters={setEnvironmentVariables}
+													title='Environment Variables'
+													disableTypes={true}
+													hideRequired={true}
+													namePattern='[A-Z][A-Z0-9_]*'
+													namePlaceholder='Key must be uppercase seperated by underscores'
+													descriptionPlaceholder='Value'
+												/>
+											</>
+										)}
 									</>
 								)}
 							</>

@@ -34,6 +34,7 @@ export type ScriptEditorProps = {
 	onInitializePane: MonacoOnInitializePane;
 	height?: any;
 	language?: string;
+	editorJsonSchema?: any
 };
 
 //
@@ -41,7 +42,7 @@ export type ScriptEditorProps = {
 //
 
 const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
-	const { code, setCode, editorOptions, onInitializePane, height, language } = props;
+	const { code, setCode, editorOptions, onInitializePane, height, language, editorJsonSchema } = props;
 
 	const monacoEditorRef = useRef<typeof monaco.editor>(null);
 	const editorRef = useRef<any | null>(null);
@@ -69,83 +70,14 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 			onMount={(editor, monaco) => {
 				monacoEditorRef.current = monaco.editor;
 				editorRef.current = editor;
-
-				monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-					validate: true,
-					schemas: [
-						{
-							uri: 'https://agent-cloud/schemas/output-schema.json',
-							fileMatch: ['*'],
-							schema: {
-								type: 'object',
-								properties: {
-									schema: {
-										type: 'object',
-										additionalProperties: {
-											oneOf: [
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'object' },
-														schema: {
-															type: 'object',
-															additionalProperties: {
-																$ref: '#/properties/schema/additionalProperties'
-															}
-														}
-													},
-													required: ['type', 'schema']
-												},
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'array' },
-														items: {
-															$ref: '#/properties/schema/additionalProperties'
-														}
-													},
-													required: ['type', 'items']
-												},
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'enum' },
-														enum: {
-															type: 'array',
-															items: { type: 'string' }
-														}
-													},
-													required: ['type']
-												},
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'null' }
-													},
-													required: ['type']
-												},
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'string' }
-													},
-													required: ['type']
-												},
-												{
-													type: 'object',
-													properties: {
-														type: { const: 'number' }
-													},
-													required: ['type']
-												}
-											]
-										}
-									}
-								}
-							}
-						}
-					]
-				});
+				if (editorJsonSchema) {
+					monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+						validate: true,
+						schemas: [
+							editorJsonSchema
+						]
+					});
+				}
 			}}
 			//@ts-ignore
 			options={editorOptions}
