@@ -37,6 +37,11 @@ export default function VariableForm({
 				{ _csrf: csrf, resourceSlug, variableId: variable._id, ...data },
 				() => {
 					toast.success('Variable Updated');
+
+					if (!callback) {
+						fetchVariableFormData?.();
+						router.push(`/${resourceSlug}/variables`);
+					}
 				},
 				res => {
 					toast.error(res);
@@ -49,17 +54,16 @@ export default function VariableForm({
 				res => {
 					callback?.({ label: data.name, value: res._id });
 					toast.success('Variable Added');
+					if (!callback) {
+						fetchVariableFormData?.();
+						router.push(`/${resourceSlug}/variables`);
+					}
 				},
 				res => {
 					toast.error(res);
 				},
 				null
 			);
-		}
-
-		if (!callback) {
-			fetchVariableFormData?.();
-			router.push(`/${resourceSlug}/variables`);
 		}
 	};
 

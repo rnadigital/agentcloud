@@ -69,3 +69,14 @@ export function deleteVariableById(teamId: db.IdOrStr, variableId: db.IdOrStr): 
 		teamId: toObjectId(teamId)
 	});
 }
+
+export async function getVariableByName(
+	teamId: db.IdOrStr,
+	name: string
+): Promise<Variable | null> {
+	const variable = await VariableCollection().findOne({
+		teamId: toObjectId(teamId),
+		name: name
+	});
+	return variable;
+}

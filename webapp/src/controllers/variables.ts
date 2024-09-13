@@ -5,6 +5,7 @@ import {
 	addVariable,
 	deleteVariableById,
 	getVariableById,
+	getVariableByName,
 	getVariablesByTeam,
 	updateVariable
 } from 'db/variable';
@@ -79,6 +80,12 @@ export async function addVariableApi(req, res, next) {
 
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const existingVariable = await getVariableByName(req.params.resourceSlug, req.body.name);
+
+	if (existingVariable) {
+		return dynamicResponse(req, res, 400, { error: 'Variable already exists' });
 	}
 
 	const newVariable = {
