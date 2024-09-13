@@ -2,6 +2,7 @@ import * as API from '@api';
 import { Dialog, Transition } from '@headlessui/react';
 import AgentForm from 'components/AgentForm';
 import { useAccountContext } from 'context/account';
+import { AgentsDataReturnType } from 'controllers/agent';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
@@ -10,9 +11,9 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState({});
+	const [state, dispatch] = useState<AgentsDataReturnType>();
 	const [error, setError] = useState();
-	const { agents, models, tools, datasources } = state as any;
+	const { models, tools, variables } = state;
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -65,6 +66,7 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 									compact={true}
 									callback={callback}
 									fetchAgentFormData={fetchAgentFormData}
+									variables={variables}
 								/>
 							</Dialog.Panel>
 						</Transition.Child>
