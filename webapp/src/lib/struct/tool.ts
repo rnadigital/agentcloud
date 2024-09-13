@@ -2,6 +2,7 @@
 
 import { ObjectId } from 'mongodb';
 import { IconAttachment } from 'struct/asset';
+import { QdrantFilter } from 'struct/qdrantfilter';
 
 export enum Retriever {
 	RAW = 'raw',
@@ -75,7 +76,7 @@ export type Tool = {
 		properties: Record<string, FunctionProperty>;
 	};
 	parameters?: Record<string, string>;
-	vectorFilters: any; //TODO: type
+	vectorFilters: QdrantFilter; //TODO: OR pinecone type
 	icon?: IconAttachment;
 	hidden?: boolean;
 	functionId?: string;

@@ -28,7 +28,7 @@ import { QdrantFilterSchema } from '../../lib/struct/editorschemas';
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
-	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL, ToolType.RAG_TOOL] },
 	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] }
 ];
 
@@ -514,7 +514,7 @@ export default function ToolForm({
 											<>
 												<ScriptEditor
 													height='30em'
-													code={vectorFilters}
+													code={JSON.stringify(vectorFilters)}
 													setCode={setVectorFilters}
 													editorOptions={{
 														stopRenderingLineAfter: 1000,
