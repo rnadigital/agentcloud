@@ -234,4 +234,11 @@ class BaseChatAgent:
     ```
                     """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
                                     timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
+
+                if 'Error code: 400' in str(chunk_error):
+                    # Terminate on some 400's (from openAI) such as not being on a high enough tier for a model, to prevent an infinite loop of error
+                    self.send_to_socket(
+                        event=SocketEvents.STOP_GENERATING,
+                        chunk_id=str(uuid.uuid4()),
+                    )
                 pass
