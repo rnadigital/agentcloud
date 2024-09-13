@@ -17,7 +17,7 @@ export default function EditApp(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { app, tools, agents, tasks, models, datasources } = state;
+	const { app, tools, agents, tasks, models, datasources, variables } = state;
 
 	async function fetchAppFormData() {
 		API.getApp(
@@ -70,6 +70,7 @@ export default function EditApp(props) {
 					modelChoices={models}
 					taskChoices={tasks}
 					// toolChoices={tools}
+					variableChoices={variables}
 				/>
 			)}
 		</>
