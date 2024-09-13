@@ -433,6 +433,7 @@ export default function TaskForm({
 										highlightedIndex={autocompleteDescription.highlightedIndex}
 										dropdownPosition={autocompleteDescription.dropdownPosition}
 										handleOptionSelect={autocompleteDescription.handleOptionSelect}
+										closeDropdown={autocompleteDescription.closeDropdown}
 									/>
 								)}
 						</div>
@@ -504,6 +505,7 @@ export default function TaskForm({
 										highlightedIndex={autocompleteExpectedOutput.highlightedIndex}
 										dropdownPosition={autocompleteExpectedOutput.dropdownPosition}
 										handleOptionSelect={autocompleteExpectedOutput.handleOptionSelect}
+										closeDropdown={autocompleteExpectedOutput.closeDropdown}
 									/>
 								)}
 						</div>
