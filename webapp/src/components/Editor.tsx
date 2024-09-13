@@ -34,7 +34,7 @@ export type ScriptEditorProps = {
 	onInitializePane: MonacoOnInitializePane;
 	height?: any;
 	language?: string;
-	editorJsonSchema?: any
+	editorJsonSchema?: any;
 };
 
 //
@@ -42,7 +42,8 @@ export type ScriptEditorProps = {
 //
 
 const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
-	const { code, setCode, editorOptions, onInitializePane, height, language, editorJsonSchema } = props;
+	const { code, setCode, editorOptions, onInitializePane, height, language, editorJsonSchema } =
+		props;
 
 	const monacoEditorRef = useRef<typeof monaco.editor>(null);
 	const editorRef = useRef<any | null>(null);
@@ -73,9 +74,7 @@ const ScriptEditor = (props: ScriptEditorProps): JSX.Element => {
 				if (editorJsonSchema) {
 					monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
 						validate: true,
-						schemas: [
-							editorJsonSchema
-						]
+						schemas: [editorJsonSchema]
 					});
 				}
 			}}

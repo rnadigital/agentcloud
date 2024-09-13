@@ -4,6 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
+import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
 import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
@@ -22,13 +23,17 @@ import { toast } from 'react-toastify';
 import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
-import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
+
 import { QdrantFilterSchema } from '../../lib/struct/editorschemas';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
-	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL, ToolType.RAG_TOOL] },
+	{
+		name: 'Parameters',
+		href: '#parameters',
+		toolTypes: [ToolType.FUNCTION_TOOL, ToolType.RAG_TOOL]
+	},
 	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] }
 ];
 
@@ -533,8 +538,8 @@ export default function ToolForm({
 													target='_blank'
 													rel='noreferrer'
 												>
-													Instructions on how to format qdrant filters
-													//TODO: add a simplified version to our docs?
+													Instructions on how to format qdrant filters //TODO: add a simplified
+													version to our docs?
 												</a>
 											</>
 										) : (

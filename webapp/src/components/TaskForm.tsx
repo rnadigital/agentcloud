@@ -19,13 +19,13 @@ import { NotificationType } from 'struct/notification';
 import { FormFieldConfig, Task } from 'struct/task';
 import { ToolType } from 'struct/tool';
 
+import { StructuredOutputSchema } from '../lib/struct/editorschemas';
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
 import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
-import { StructuredOutputSchema } from '../lib/struct/editorschemas';
 
 const jsonPlaceholder = `{
 	"schema": {
