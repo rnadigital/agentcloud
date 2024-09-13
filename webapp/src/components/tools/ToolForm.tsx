@@ -41,6 +41,17 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
+const jsonPlaceholder = `{
+	"must": [
+		{
+			"key": "example",
+			"match": {
+				"value": "test123"
+			}
+		}
+	]
+}`;
+
 export default function ToolForm({
 	tool = {},
 	revisions = [],
@@ -95,6 +106,12 @@ export default function ToolForm({
 	};
 
 	const [, notificationTrigger]: any = useSocketContext();
+
+	useEffect(() => {
+		if (!vectorFilters) {
+			setVectorFilters(jsonPlaceholder);
+		}
+	}, [vectorFilters]);
 
 	useEffect(() => {
 		if (notificationTrigger && notificationTrigger?.type === NotificationType.Tool) {
@@ -519,7 +536,7 @@ export default function ToolForm({
 											<>
 												<ScriptEditor
 													height='30em'
-													code={JSON.stringify(vectorFilters)}
+													code={vectorFilters.toString()}
 													setCode={setVectorFilters}
 													editorOptions={{
 														stopRenderingLineAfter: 1000,
