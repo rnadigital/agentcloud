@@ -299,7 +299,10 @@ export default function Session(props) {
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
-							if (m?.isFeedback && app?.type === AppType.CREW) {
+							if (
+								m?.isFeedback &&
+								(app?.type === AppType.CREW || (app?.type === AppType.CHAT && mi > 2))
+							) {
 								return null;
 							}
 							const authorName = m?.authorName || m?.message?.authorName;
