@@ -8,6 +8,7 @@ import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function VariableTable({
 	variables,
@@ -37,17 +38,9 @@ export default function VariableTable({
 					variableId: deletingVariable._id,
 					resourceSlug
 				},
-				async () => {
-					setDeletingMap(oldMap => {
-						delete oldMap[deletingVariable._id];
-						return oldMap;
-					});
-				},
+				() => {},
 				err => {
-					setDeletingMap(oldMap => {
-						delete oldMap[deletingVariable._id];
-						return oldMap;
-					});
+					toast.error(err);
 				},
 				router
 			);
@@ -55,6 +48,10 @@ export default function VariableTable({
 			console.error(e);
 			setError(e);
 		} finally {
+			setDeletingMap(oldMap => {
+				delete oldMap[deletingVariable._id];
+				return oldMap;
+			});
 			fetchVariables();
 			setOpen(false);
 		}

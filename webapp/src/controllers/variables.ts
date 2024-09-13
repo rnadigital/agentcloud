@@ -137,6 +137,16 @@ export async function editVariableApi(req, res, next) {
  */
 export async function deleteVariableApi(req, res, next) {
 	const { variableId } = req.params;
+
+	const existingVariable = await getVariableById(req.params.resourceSlug, variableId);
+
+	if (existingVariable.usedInAgents?.length > 0 || existingVariable.usedInTasks?.length > 0) {
+		return dynamicResponse(req, res, 400, {
+			error:
+				'Variable is used in agents or tasks. Remove references first before deleting variable.'
+		});
+	}
+
 	await deleteVariableById(req.params.resourceSlug, variableId);
 	return dynamicResponse(req, res, 204, {});
 }
