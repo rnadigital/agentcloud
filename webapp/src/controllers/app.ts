@@ -612,7 +612,7 @@ export async function editAppApi(req, res, next) {
 	const sharePermissions = await getSharePermissions(req, res);
 
 	let attachedIconToApp: IconAttachment = app?.icon;
-	if (app?.icon?.id !== iconId) {
+	if (app?.icon?.id?.toString() !== iconId) {
 		const collectionType = CollectionName.Apps;
 		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
 		if (newAttachment) {
@@ -648,7 +648,7 @@ export async function editAppApi(req, res, next) {
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
-	if (oldApp?.icon?.id && oldApp?.icon?.id !== iconId) {
+	if (oldApp?.icon?.id && oldApp?.icon?.id?.toString() !== iconId) {
 		deleteAssetById(oldApp?.icon.id);
 	}
 

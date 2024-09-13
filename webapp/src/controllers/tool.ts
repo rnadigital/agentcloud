@@ -468,12 +468,8 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	let attachedIconToTool: IconAttachment = {
-		id: toObjectId(existingTool?.icon.id),
-		filename: existingTool?.icon.filename,
-		linkedId: toObjectId(existingTool?.icon.linkedId)
-	};
-	if (existingTool?.icon?.id !== iconId) {
+	let attachedIconToTool = existingTool?.icon;
+	if (existingTool?.icon?.id?.toString() !== iconId) {
 		const collectionType = CollectionName.Agents;
 		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
 		if (newAttachment) {
@@ -499,7 +495,7 @@ export async function editToolApi(req, res, next) {
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
-	if (oldTool?.icon?.id && oldTool?.icon?.id !== iconId) {
+	if (oldTool?.icon?.id && oldTool?.icon?.id?.toString() !== iconId) {
 		deleteAssetById(oldTool?.icon?.id);
 	}
 	let functionProvider;
