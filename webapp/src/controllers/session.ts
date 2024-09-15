@@ -263,7 +263,7 @@ export async function addSessionApi(req, res, next) {
 		variables
 	});
 
-	if (!skipRun) {
+	if (!skipRun && !variables) {
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
@@ -275,7 +275,7 @@ export async function addSessionApi(req, res, next) {
 	}
 
 	return dynamicResponse(req, res, 302, {
-		redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}`
+		redirect: redirectUrl
 	});
 }
 
