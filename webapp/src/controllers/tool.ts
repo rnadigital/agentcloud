@@ -4,6 +4,8 @@ import { isDeepStrictEqual } from 'node:util';
 
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import { removeAgentsTool } from 'db/agent';
 import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
@@ -44,8 +46,10 @@ import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
 
+import { QdrantFilterSchema } from '../lib/struct/editorschemas';
 import { cloneAssetInStorageProvider } from './asset';
-
+const ajv = new Ajv({ strict: 'log' });
+addFormats(ajv);
 const log = debug('webapp:controllers:tool');
 
 export async function toolsData(req, res, _next) {
@@ -192,7 +196,8 @@ export async function addToolApi(req, res, next) {
 		retriever,
 		retriever_config,
 		linkedToolId,
-		cloning
+		cloning,
+		ragFilters
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -211,10 +216,12 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (datasourceId && (typeof datasourceId !== 'string' || datasourceId.length !== 24)) {
-		const foundDatasource = await getDatasourceById(req.params.resourceSlug, datasourceId);
-		if (!foundDatasource) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid datasource IDs' });
+	if (ragFilters) {
+		const validate = ajv.compile(QdrantFilterSchema);
+		log('validate', validate);
+		const validated = validate(ragFilters);
+		if (!validated) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid Filters' });
 		}
 	}
 
@@ -278,7 +285,8 @@ export async function addToolApi(req, res, next) {
 		parameters,
 		requiredParameters: linkedTool?.requiredParameters,
 		functionId,
-		linkedToolId: toObjectId(linkedToolId)
+		linkedToolId: toObjectId(linkedToolId),
+		...(ragFilters ? { ragFilters } : {})
 	});
 
 	if (!addedTool?.insertedId) {
@@ -397,7 +405,8 @@ export async function editToolApi(req, res, next) {
 		retriever,
 		retriever_config,
 		parameters,
-		iconId
+		iconId,
+		ragFilters
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -492,7 +501,8 @@ export async function editToolApi(req, res, next) {
 		data: toolData,
 		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
 		parameters,
-		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
+		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {}),
+		...(ragFilters ? { ragFilters } : {})
 	});
 
 	if (oldTool?.icon?.id && oldTool?.icon?.id?.toString() !== iconId) {

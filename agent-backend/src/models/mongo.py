@@ -148,6 +148,7 @@ class Tool(BaseModel):
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
     linkedToolId: Optional[PyObjectId] = None
     parameters: Optional[Dict[str, str]] = {}
+    ragFilters: Optional[Dict] = None
 
 
 class ApiCredentials(BaseModel):

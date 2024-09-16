@@ -105,7 +105,9 @@ export default function ToolForm({
 		tool?.retriever_config?.timeWeightField || null
 	);
 
-	const [ragFilters, setRagFilters] = useState(tool?.ragFilters || '');
+	const [ragFilters, setRagFilters] = useState(
+		JSON.stringify(tool?.ragFilters || jsonPlaceholder, null, '\t')
+	);
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
 	};
@@ -246,8 +248,9 @@ export default function ToolForm({
 				linkedToolId: null,
 				iconId: icon?.id,
 				cloning: tool && !editing,
-				ragFilters
+				ragFilters: JSON.parse(ragFilters)
 			};
+			console.log('body', body);
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
 					//todo: actually validate

@@ -35,6 +35,8 @@ import FormContext from 'context/connectorform';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import submittingReducer from 'utils/submittingreducer';
+
+import { QdrantFilterSchema } from '../lib/struct/editorschemas';
 // import InfoAlert from 'components/InfoAlert';
 
 const stepList = [

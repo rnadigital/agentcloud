@@ -39,19 +39,28 @@ export const QdrantFilterSchema = {
 							value: {},
 							any: {
 								type: 'array',
-								items: {}
+								items: { oneOf: [{ type: 'string' }, { type: 'number' }] }
 							},
 							except: {
 								type: 'array',
-								items: {}
+								items: { oneOf: [{ type: 'string' }, { type: 'number' }] }
 							}
 						},
-						additionalProperties: {
-							oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }]
-						}
+						additionalProperties: false
+					},
+					range: {
+						type: 'object',
+						properties: {
+							gt: { oneOf: [{ type: 'number' }, { type: 'string', format: 'date-time' }] },
+							gte: { oneOf: [{ type: 'number' }, { type: 'string', format: 'date-time' }] },
+							lt: { oneOf: [{ type: 'number' }, { type: 'string', format: 'date-time' }] },
+							lte: { oneOf: [{ type: 'number' }, { type: 'string', format: 'date-time' }] }
+						},
+						additionalProperties: false
 					}
 				},
-				required: ['key', 'match'],
+				required: ['key'],
+				oneOf: [{ required: ['match'] }, { required: ['range'] }],
 				additionalProperties: false
 			}
 		},
