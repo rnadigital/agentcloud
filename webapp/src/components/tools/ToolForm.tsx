@@ -106,7 +106,7 @@ export default function ToolForm({
 	);
 
 	const [ragFilters, setRagFilters] = useState(
-		JSON.stringify(tool?.ragFilters || jsonPlaceholder, null, '\t')
+		JSON.stringify(tool?.ragFilters || {}, null, '\t')
 	);
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
@@ -250,7 +250,6 @@ export default function ToolForm({
 				cloning: tool && !editing,
 				ragFilters: JSON.parse(ragFilters)
 			};
-			console.log('body', body);
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
 					//todo: actually validate
