@@ -42,7 +42,7 @@ export default function ToolDetailsForm({
 				</div>
 			</div>
 
-			{!isBuiltin && initialType === null && (
+			{!isBuiltin && !initialType && (
 				<div>
 					<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>
 						Tool Type
