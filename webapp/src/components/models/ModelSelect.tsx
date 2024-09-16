@@ -28,6 +28,9 @@ export default function ModelSelect({
 		})
 		.filter(m => {
 			//filter by type
+			if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public-dev') {
+				return !ModelEmbeddingLength[m.name] || ModelEmbeddingLength[m.name] === 1536
+			}
 			return modelTypeFilters.length === 0 || modelTypeFilters.includes(m.type);
 		});
 	return (

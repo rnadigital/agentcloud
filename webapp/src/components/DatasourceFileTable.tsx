@@ -12,12 +12,12 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Fragment, useReducer, useState } from 'react';
+import { useReducer } from 'react';
 import { toast } from 'react-toastify';
 import { DatasourceStatus, datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
+import DevBadge from 'components/DevBadge';
 
 export default function DatasourceFileTable({
 	datasources,
@@ -128,11 +128,12 @@ export default function DatasourceFileTable({
 										className='px-6 py-3 whitespace-nowrap flex items-center'
 										// onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
 									>
-										<div className='flex items-cente'>
+										<div className='flex items-center me-2'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
 												{datasource.name}
 											</div>
 										</div>
+										<DevBadge text={`ID: ${datasource?._id}`} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
