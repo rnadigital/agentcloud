@@ -5,7 +5,7 @@ from langchain_core.retrievers import BaseRetriever
 
 from models.mongo import Tool
 from tools.retrievers.callback_handler import RetrieverCallbackHandler
-
+from tools.retrievers.filters import create_qdrant_filters
 
 class BaseToolRetriever(ABC):
     logger: logging.Logger
@@ -34,7 +34,7 @@ class BaseToolRetriever(ABC):
             f"{self.__class__.__name__} in tool: '{self.tool.name}', retriever_config: {self.tool.retriever_config}")
         return self.retriever.invoke(query, config={
             'callbacks': [RetrieverCallbackHandler()],
-            'tags': ['rag_retrieval']
+            'tags': ['rag_retrieval'],
         })
 
     def format_results(self, results):
