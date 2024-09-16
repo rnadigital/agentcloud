@@ -216,7 +216,7 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (ragFilters) {
+	if (ragFilters && (type as ToolType) === ToolType.FUNCTION_TOOL) {
 		const validate = ajv.compile(QdrantFilterSchema);
 		log('validate', validate);
 		const validated = validate(ragFilters);
