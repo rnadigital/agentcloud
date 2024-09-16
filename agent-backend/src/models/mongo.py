@@ -81,7 +81,6 @@ class FunctionProperty(BaseModel):
 
 class ToolParameters(BaseModel):
     model_config = ConfigDict(extra='ignore')
-    type: str
     properties: Dict[str, FunctionProperty]
     required: List[str]
 
