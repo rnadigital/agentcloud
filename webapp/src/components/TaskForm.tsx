@@ -364,7 +364,7 @@ export default function TaskForm({
 									htmlFor='expectedOutput'
 									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 								>
-									Expected Output
+									Expected Output<span className='text-red-700'> *</span>
 								</label>
 
 								<div className='ml-auto text-gray-900 dark:text-gray-50 text-sm mr-2'>

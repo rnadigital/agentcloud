@@ -3,9 +3,10 @@
 import { Binary } from 'mongodb';
 
 export enum SharingMode {
-	RESTRICTED = 'restricted',
 	TEAM = 'team',
-	PUBLIC = 'public'
+	PUBLIC = 'public',
+	PRIVATE = 'owner',
+	WHITELIST = 'whitelist'
 }
 
 /* Note: While the permissions object is intended to hold permissions presence

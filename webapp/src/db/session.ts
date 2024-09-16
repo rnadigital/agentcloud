@@ -1,11 +1,16 @@
 'use strict';
 
 import * as db from 'db/index';
+import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { SessionStatus } from 'struct/session';
-import { SharingConfig } from 'struct/sharing';
+import { SharingConfig, SharingMode } from 'struct/sharing';
+const log = debug('webapp:db:session');
+import { unsafeGetAppById } from 'db/app';
+
+import Permissions from '../lib/permissions/permissions';
 
 export type Session = {
 	_id?: ObjectId;
@@ -140,4 +145,38 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 		_id: toObjectId(sessionId),
 		teamId: toObjectId(teamId)
 	});
+}
+
+export async function checkCanAccessApp(
+	appId: string,
+	isAgentBackend: boolean,
+	account: any
+): Promise<boolean> {
+	if (
+		isAgentBackend === true ||
+		account?._permissions?.hasAny(Permissions.ROOT, Permissions.TEAM_ADMIN, Permissions.ORG_ADMIN)
+	) {
+		return true;
+	}
+	const foundApp = await unsafeGetAppById(appId);
+	if (!foundApp) {
+		log('checkCanAccessApp app id "%s" not found', appId);
+		return false;
+	}
+	switch (foundApp?.sharingConfig?.mode as SharingMode) {
+		case SharingMode.PUBLIC:
+			return true;
+		case SharingMode.TEAM:
+			const sessionTeamMatch = account?.orgs?.some(o =>
+				o?.teams?.some(t => t.id.toString() === foundApp.teamId.toString())
+			);
+			return sessionTeamMatch;
+		case SharingMode.WHITELIST:
+			const hasPermissionEntry = foundApp?.sharingConfig?.permissions[account?._id];
+			return hasPermissionEntry;
+		case SharingMode.PRIVATE:
+			return foundApp.createdBy.toString() === account?._id.toString();
+		default:
+			return false;
+	}
 }

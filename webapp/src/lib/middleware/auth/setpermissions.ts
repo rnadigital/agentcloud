@@ -11,7 +11,12 @@ const log = debug('webapp:middleware:auth:setpermissions');
 export default function setPermissions(req, res, next) {
 	const { account, matchingOrg, matchingTeam } = res.locals;
 	res.locals.permissions = calcPerms(account, matchingOrg, matchingTeam);
+	if (!res.locals.account) {
+		//TODO: make sure no issue w/ checkSession
+		res.locals.account = {};
+	}
 	res.locals.account.permissions = res.locals.permissions.base64;
+	res.locals.account._permissions = res.locals.permissions;
 	next();
 }
 

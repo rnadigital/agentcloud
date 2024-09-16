@@ -1,9 +1,10 @@
 import * as API from '@api';
 import SharingModeInfoAlert from 'components/SharingModeInfoAlert';
+import WhiteListSharing from 'components/sharingmodes/WhiteListSharing';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
@@ -13,12 +14,20 @@ import SelectClassNames from 'styles/SelectClassNames';
 
 const sharingModeOptions = [
 	{
-		label: 'Team Only',
+		label: 'Public',
+		value: SharingMode.PUBLIC
+	},
+	{
+		label: 'My Team (Default)',
 		value: SharingMode.TEAM
 	},
 	{
-		label: 'Public',
-		value: SharingMode.PUBLIC
+		label: 'Whitelist',
+		value: SharingMode.WHITELIST
+	},
+	{
+		label: 'Private',
+		value: SharingMode.PRIVATE
 	}
 ];
 
@@ -28,7 +37,13 @@ const SharingModeSelect = ({
 	setSharingMode,
 	shareLinkShareId,
 	setShareLinkShareId,
-	showInfoAlert = false
+	showInfoAlert = false,
+	emailOptions,
+	emailState,
+	shareEmail,
+	setShareEmail,
+	onChange = undefined,
+	setModalOpen = undefined
 }) => {
 	const [loading, setLoading] = useState(false);
 	const [accountContext]: any = useAccountContext();
@@ -58,6 +73,13 @@ const SharingModeSelect = ({
 			setLoading(false);
 		}
 	}
+
+	useEffect(() => {
+		if (shareLinkShareId === null && sharingMode !== SharingMode.TEAM) {
+			//for cloning, sharingMode may not be team but the ID will be null in initial state, recreate the share link
+			createShareLink();
+		}
+	}, []);
 	return (
 		<>
 			<SubscriptionModal
@@ -81,7 +103,7 @@ const SharingModeSelect = ({
 						classNames={SelectClassNames}
 						value={sharingModeOptions.find(o => o.value === sharingMode)}
 						onChange={(v: any) => {
-							if (v?.value === SharingMode.PUBLIC) {
+							if (v?.value !== SharingMode.TEAM) {
 								if (!pricingMatrix[stripePlan]?.allowFunctionTools) {
 									return setSubscriptionModalOpen(true);
 								}
@@ -109,6 +131,28 @@ const SharingModeSelect = ({
 			{showInfoAlert && sharingMode === SharingMode.PUBLIC && (
 				<div className='col-span-12'>
 					<SharingModeInfoAlert shareLinkShareId={shareLinkShareId} />
+				</div>
+			)}
+			{sharingMode == SharingMode.WHITELIST && (
+				<div className='col-span-12'>
+					<WhiteListSharing
+						shareLinkShareId={shareLinkShareId}
+						setModalOpen={setModalOpen}
+						emailState={emailState}
+						emailOptions={emailOptions}
+						onChange={onChange}
+						shareEmail={shareEmail}
+						setShareEmail={setShareEmail}
+					/>
+				</div>
+			)}
+			{sharingMode == SharingMode.PRIVATE && (
+				<div className='col-span-12'>
+					<SharingModeInfoAlert
+						shareLinkShareId={shareLinkShareId}
+						message='Accessible by the creator of the app and team/org owners only.'
+						classNames='rounded bg-blue-200 p-4 -mt-3 sm:col-span-12'
+					/>
 				</div>
 			)}
 		</>
