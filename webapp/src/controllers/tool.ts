@@ -5,17 +5,19 @@ import { isDeepStrictEqual } from 'node:util';
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import { removeAgentsTool } from 'db/agent';
-import { getAssetById } from 'db/asset';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { getDatasourceById, getDatasourcesByTeam } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import {
 	addTool,
 	deleteToolById,
+	deleteToolByIdReturnTool,
 	editTool,
 	editToolUnsafe,
 	getToolById,
 	getToolsByTeam,
-	getToolsForDatasource
+	getToolsForDatasource,
+	updateToolGetOldTool
 } from 'db/tool';
 import {
 	addToolRevision,
@@ -27,8 +29,12 @@ import {
 import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
+import StorageProviderFactory from 'lib/storage';
 import toObjectId from 'misc/toobjectid';
 import toSnakeCase from 'misc/tosnakecase';
+import { ObjectId } from 'mongodb';
+import path from 'path';
+import { Asset, IconAttachment } from 'struct/asset';
 import { PlanLimitsKeys } from 'struct/billing';
 import { getMetadataFieldInfo } from 'struct/datasource';
 import { CollectionName } from 'struct/db';
@@ -37,6 +43,8 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
+
+import { cloneAssetInStorageProvider } from './asset';
 
 const log = debug('webapp:controllers:tool');
 
@@ -183,7 +191,8 @@ export async function addToolApi(req, res, next) {
 		iconId,
 		retriever,
 		retriever_config,
-		linkedToolId
+		linkedToolId,
+		cloning
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -217,7 +226,6 @@ export async function addToolApi(req, res, next) {
 	}
 
 	const isFunctionTool = (type as ToolType) === ToolType.FUNCTION_TOOL;
-	const foundIcon = await getAssetById(iconId);
 
 	const toolData = {
 		...data,
@@ -236,7 +244,19 @@ export async function addToolApi(req, res, next) {
 	}
 
 	const functionId = isFunctionTool ? uuidv4() : null;
+
+	const newToolId = new ObjectId();
+	const collectionType = CollectionName.Tools;
+	let attachedIconToTool = await cloneAssetInStorageProvider(
+		iconId,
+		cloning,
+		newToolId,
+		collectionType,
+		req.params.resourceSlug
+	);
+
 	const addedTool = await addTool({
+		_id: newToolId,
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
@@ -247,10 +267,11 @@ export async function addToolApi(req, res, next) {
 		retriever_config: retriever_config || {}, //TODO: validation
 		schema: schema,
 		data: toolData,
-		icon: foundIcon
+		icon: attachedIconToTool
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToTool._id,
+					filename: attachedIconToTool.filename,
+					linkedId: newToolId
 				}
 			: null,
 		state: linkedTool ? null : isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
@@ -375,7 +396,8 @@ export async function editToolApi(req, res, next) {
 		datasourceId,
 		retriever,
 		retriever_config,
-		parameters
+		parameters,
+		iconId
 	} = req.body;
 
 	const validationError = validateTool(req.body); //TODO: reject if function tool type
@@ -446,7 +468,20 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	await editTool(req.params.resourceSlug, toolId, {
+	let attachedIconToTool = existingTool?.icon;
+	if (existingTool?.icon?.id?.toString() !== iconId) {
+		const collectionType = CollectionName.Agents;
+		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
+		if (newAttachment) {
+			attachedIconToTool = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
+
+	const oldTool = await updateToolGetOldTool(req.params.resourceSlug, toolId, {
 		name,
 		type: type as ToolType,
 		description,
@@ -455,10 +490,14 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
 		data: toolData,
+		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
+	if (oldTool?.icon?.id && oldTool?.icon?.id?.toString() !== iconId) {
+		deleteAssetById(oldTool?.icon?.id);
+	}
 	let functionProvider;
 	if (
 		(existingTool.type as ToolType) === ToolType.FUNCTION_TOOL &&
@@ -761,8 +800,11 @@ export async function deleteToolApi(req, res, next) {
 		}
 	}
 
+	const oldTool = await deleteToolByIdReturnTool(req.params.resourceSlug, toolId);
+	if (oldTool?.icon?.id) {
+		deleteAssetById(oldTool.icon.id);
+	}
 	await Promise.all([
-		deleteToolById(req.params.resourceSlug, toolId),
 		removeAgentsTool(req.params.resourceSlug, toolId),
 		deleteRevisionsForTool(req.params.resourceSlug, toolId)
 	]);
@@ -792,4 +834,22 @@ export async function deleteToolRevisionApi(req, res, next) {
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/agents`*/
 	});
+}
+function editTupdateToolGetOldToolool(
+	resourceSlug: any,
+	toolId: any,
+	arg2: {
+		state?: ToolState;
+		name: any;
+		type: ToolType;
+		description: any;
+		schema: any;
+		datasourceId: ObjectId;
+		retriever_type: any;
+		retriever_config: any; //TODO: validation
+		data: any;
+		parameters: any;
+	}
+) {
+	throw new Error('Function not implemented.');
 }

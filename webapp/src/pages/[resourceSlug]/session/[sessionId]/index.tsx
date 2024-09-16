@@ -71,8 +71,8 @@ export default function Session(props) {
 		console.log('joinSessionRoom', sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
-	async function leaveSessionRoom() {
-		socketContext.emit('leave_room', sessionId);
+	async function leaveSessionRoom(room) {
+		socketContext.emit('leave_room', room);
 	}
 	function handleSocketMessage(message) {
 		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
@@ -181,7 +181,7 @@ export default function Session(props) {
 		socketContext.off('message', handleSocketMessage);
 		socketContext.off('terminate', handleSocketTerminate);
 		socketContext.off('joined', handleSocketJoined);
-		leaveSessionRoom();
+		leaveSessionRoom(sessionId);
 	}
 	async function updateChat() {
 		API.getSession(
@@ -237,7 +237,7 @@ export default function Session(props) {
 		);
 	}
 	useEffect(() => {
-		leaveSessionRoom();
+		leaveSessionRoom(resourceSlug);
 		handleSocketStart();
 		return () => {
 			handleSocketStop();
@@ -274,19 +274,6 @@ export default function Session(props) {
 		if (!message || message.trim().length === 0) {
 			return null;
 		}
-		if (isShared && showConversationStarters) {
-			const res = await API.publicStartApp(
-				{
-					resourceSlug: app?.teamId,
-					id: app?._id
-				},
-				null,
-				toast.error,
-				null
-			);
-			res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
-			return;
-		}
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account?.name,
@@ -298,12 +285,6 @@ export default function Session(props) {
 		reset && reset();
 		return true;
 	}
-
-	useEffect(() => {
-		if (hasAppSegment && isShared) {
-			sendMessage('!', null);
-		}
-	}, [hasAppSegment, isShared]);
 
 	return (
 		<>
@@ -318,7 +299,10 @@ export default function Session(props) {
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
-							if (m?.isFeedback && app?.type === AppType.CREW) {
+							if (
+								m?.isFeedback &&
+								(app?.type === AppType.CREW || (app?.type === AppType.CHAT && mi > 2))
+							) {
 								return null;
 							}
 							const authorName = m?.authorName || m?.message?.authorName;

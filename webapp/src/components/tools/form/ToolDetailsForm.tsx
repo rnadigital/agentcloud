@@ -1,3 +1,4 @@
+import AvatarUploader from 'components/AvatarUploader';
 import React from 'react';
 import { ToolType } from 'struct/tool';
 
@@ -9,10 +10,23 @@ export default function ToolDetailsForm({
 	toolDescription,
 	setToolDescription,
 	isBuiltin,
-	initialType
+	initialType,
+	icon,
+	iconCallback
 }) {
 	return (
 		<>
+			<div className='sm:col-span-12'>
+				<label
+					htmlFor='name'
+					className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-50'
+				>
+					Avatar
+				</label>
+				<div className='mt-2'>
+					<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+				</div>
+			</div>
 			<div>
 				<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>Name</label>
 				<div>

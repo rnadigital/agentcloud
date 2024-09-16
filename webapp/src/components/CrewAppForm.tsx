@@ -2,8 +2,10 @@
 
 import * as API from '@api';
 import { InformationCircleIcon, PlayIcon } from '@heroicons/react/20/solid';
+import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
+import ConfirmModal from 'components/ConfirmModal';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
@@ -28,6 +30,7 @@ export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
 	/*toolChoices = [], */ modelChoices = [],
+	whiteListSharingChoices = [],
 	crew = {},
 	app = {},
 	editing,
@@ -40,6 +43,7 @@ export default function CrewAppForm({
 	/*toolChoices?: any[],*/
 	crew?: any;
 	modelChoices: any;
+	whiteListSharingChoices?: any[];
 	app?: any;
 	editing?: boolean;
 	compact?: boolean;
@@ -51,6 +55,9 @@ export default function CrewAppForm({
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const { step, setStep }: any = useStepContext();
+	const [outsideOrg, setOutsideOrg] = useState(false);
+	const [shareEmail, setShareEmail] = useState(false);
+	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -61,7 +68,7 @@ export default function CrewAppForm({
 		initialModel ? { label: initialModel.name, value: initialModel._id } : null
 	);
 	const [sharingMode, setSharingMode] = useState(appState?.sharingConfig?.mode || SharingMode.TEAM);
-	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
+	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const [appMemory, setAppMemory] = useState(app.memory === true);
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
@@ -92,6 +99,16 @@ export default function CrewAppForm({
 				.filter(n => n);
 		return { initialAgents, initialTasks };
 	}
+
+	const initialEmails = whiteListSharingChoices
+		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
+		: null;
+	const [sharingEmailState, setSharingEmailState] = useState(
+		Object.values(app?.sharingConfig?.permissions || {}).map(x => ({
+			label: x as string,
+			value: x as string
+		}))
+	);
 
 	const { initialAgents, initialTasks } = getInitialData({ agents, tasks });
 	const [agentsState, setAgentsState] = useState(initialAgents || []);
@@ -126,6 +143,12 @@ export default function CrewAppForm({
 		setTasksState(initialTasks);
 	}, [app?._id]);
 
+	useEffect(() => {
+		if (sharingMode !== SharingMode.WHITELIST) {
+			setSharingEmailState([]);
+		}
+	}, [sharingMode]);
+
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
@@ -144,9 +167,11 @@ export default function CrewAppForm({
 			type: AppType.CREW,
 			run,
 			sharingMode,
+			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
-			fullOutput
+			fullOutput,
+			cloning: app && !editing
 		};
 		if (editing === true) {
 			await API.editApp(
@@ -228,6 +253,12 @@ export default function CrewAppForm({
 		setManagerModel({ value: addedModelId, name: body?.name });
 	};
 
+	async function emailCallback(newEmail) {
+		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
+		setOutsideOrg(true);
+		setModalOpen(false);
+	}
+
 	let modal;
 	switch (modalOpen) {
 		case 'agent':
@@ -268,6 +299,20 @@ export default function CrewAppForm({
 				/>
 			);
 			break;
+		case 'whitelist':
+			modal = (
+				<AddEmailModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={emailCallback}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title='Share with new email'
+					callback={emailCallback}
+				/>
+			);
+			break;
 		case 'tool':
 			modal = (
 				<InfoAlert
@@ -277,6 +322,25 @@ export default function CrewAppForm({
 				/>
 			);
 			// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
+			break;
+		case 'confirmOutsideOrg':
+			modal = (
+				<ConfirmModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={() => {
+						setOutsideOrg(false);
+						setModalOpen(false);
+					}}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title={'Sharing Outside Team'}
+					message={
+						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
+					}
+				/>
+			);
 			break;
 		default:
 			modal = null;
@@ -353,6 +417,14 @@ export default function CrewAppForm({
 								showInfoAlert={true}
 								setShareLinkShareId={setShareLinkShareId}
 								shareLinkShareId={shareLinkShareId}
+								emailState={sharingEmailState}
+								emailOptions={initialEmails}
+								onChange={setSharingEmailState}
+								setModalOpen={x => {
+									setModalOpen('whitelist');
+								}}
+								shareEmail={shareEmail}
+								setShareEmail={setShareEmail}
 							/>
 
 							<div className='sm:col-span-12'>
@@ -590,8 +662,13 @@ export default function CrewAppForm({
 					)}
 					<div className='flex gap-x-4'>
 						<button
-							type='submit'
-							onClick={() => setRun(false)}
+							type={outsideOrg ? 'button' : 'submit'}
+							onClick={() => {
+								if (outsideOrg) {
+									setModalOpen('confirmOutsideOrg');
+								}
+								setRun(false);
+							}}
 							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 						>
 							Save
