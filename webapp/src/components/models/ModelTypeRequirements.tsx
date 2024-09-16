@@ -70,7 +70,7 @@ const ModelTypeRequirementsComponent = ({
 				return modelFilter == 'embedding' ? ModelEmbeddingLength[m] : !ModelEmbeddingLength[m];
 			})
 			.filter(m => {
-				if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-bucket') {
+				if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
 					return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
 				}
 				return true;
