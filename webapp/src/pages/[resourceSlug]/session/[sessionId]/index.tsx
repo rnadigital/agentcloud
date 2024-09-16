@@ -17,7 +17,7 @@ import { toast } from 'react-toastify';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
-import SessionVariableModal from 'components/modal/SessionVariableModal';
+import SessionVariableForm from 'components/session/SessionVariableForm';
 import { SessionDataReturnType } from 'controllers/session';
 
 interface SessionProps extends SessionDataReturnType {
@@ -35,11 +35,7 @@ export default function Session(props: SessionProps) {
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
-	const hasAppSegment = path.includes('/app');
-	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
-	const [error, setError] = useState();
 
-	// const [currentSessionId, setCurrentSessionId] = useState(sessionId);
 	const [session, setSession] = useState(props.session);
 	const [app, setApp]: [App, Function] = useState(props.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
@@ -49,7 +45,6 @@ export default function Session(props: SessionProps) {
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
-	const [isAtBottom, setIsAtBottom] = useState(true);
 	const activeTask = useActiveTask(messages);
 	const requiredHumanInput = activeTask?.requiresHumanInput;
 
@@ -62,12 +57,12 @@ export default function Session(props: SessionProps) {
 		defaultValue: value
 	}));
 
-	const [sessionVariableModalOpen, setSessionVariableModalOpen] = useState(false);
+	const [sessionVariableFormOpen, setSessionVariableFormClose] = useState(false);
 	const [sessionVariablesSubmitted, setSessionVariablesSubmitted] = useState(false);
 
 	useEffect(() => {
 		if (paramsArray.length > 0 && !sessionVariablesSubmitted) {
-			setSessionVariableModalOpen(true);
+			setSessionVariableFormClose(true);
 		}
 	}, [paramsArray]);
 
@@ -99,9 +94,7 @@ export default function Session(props: SessionProps) {
 		if (!message) {
 			return;
 		}
-		if (isAtBottom && message?._id) {
-			setLastSeenMessageId(message._id);
-		}
+
 		if (isShared && showConversationStarters) {
 			setShowConversationStarters(false);
 		}
@@ -150,7 +143,7 @@ export default function Session(props: SessionProps) {
 
 	function scrollToBottom(behavior: string = 'instant') {
 		//scroll to bottom when messages added (if currently at bottom)
-		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
+		if (scrollContainerRef && scrollContainerRef.current) {
 			scrollContainerRef.current.scrollTo({
 				left: 0,
 				top: scrollContainerRef.current.scrollHeight,
@@ -215,7 +208,7 @@ export default function Session(props: SessionProps) {
 				setChatContext(res);
 				setTerminated(res?.session?.status === SessionStatus.TERMINATED);
 			},
-			setError,
+			() => {},
 			router
 		);
 		API.getMessages(
@@ -239,9 +232,9 @@ export default function Session(props: SessionProps) {
 						return _m;
 					})
 					.sort((ma, mb) => ma.ts - mb.ts);
-				if (sortedMessages && sortedMessages.length > 0) {
-					setLastSeenMessageId(sortedMessages[sortedMessages.length - 1]._id);
-				}
+				// if (sortedMessages && sortedMessages.length > 0) {
+				// 	setLastSeenMessageId(sortedMessages[sortedMessages.length - 1]._id);
+				// }
 				if (!sortedMessages.slice(0, 4).some(message => message.incoming === true)) {
 					setShowConversationStarters(true);
 				}
@@ -251,7 +244,7 @@ export default function Session(props: SessionProps) {
 					scrollToBottom('smooth');
 				}, 200);
 			},
-			setError,
+			() => {},
 			router
 		);
 	}
@@ -262,14 +255,6 @@ export default function Session(props: SessionProps) {
 			handleSocketStop();
 		};
 	}, [resourceSlug, router?.query?.sessionId, router.asPath]);
-
-	// useEffect(() => {
-	// 	if (currentSessionId !== router?.query?.sessionId) {
-	// 		setMessages([]);
-	// 		setLoading(true);
-	// 		setCurrentSessionId(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
-	// 	}
-	// }, [router?.query?.sessionId]);
 
 	function stopGenerating() {
 		API.cancelSession(
@@ -282,7 +267,7 @@ export default function Session(props: SessionProps) {
 				setTerminated(true);
 				//generating stopped
 			},
-			setError,
+			() => {},
 			router
 		);
 	}
@@ -306,6 +291,49 @@ export default function Session(props: SessionProps) {
 		return true;
 	}
 
+	const handleSessionVariableSubmit = async variables => {
+		setSessionVariablesSubmitted(true);
+		if (isShared) {
+			await API.publicUpdateSession(
+				{ sessionId, resourceSlug, ...session, variables },
+				null,
+				null,
+				router
+			);
+			await API.publicStartSession(
+				{ sessionId, resourceSlug, appType: app.type },
+				null,
+				null,
+				router
+			);
+		} else {
+			await API.updateSession(
+				{
+					_csrf: csrf,
+					resourceSlug,
+					sessionId,
+					...session,
+					variables
+				},
+				null,
+				toast.error,
+				router
+			);
+			await API.startSession(
+				{
+					_csrf: csrf,
+					resourceSlug,
+					sessionId,
+					appType: app.type
+				},
+				null,
+				toast.error,
+				router
+			);
+		}
+		setSessionVariableFormClose(false);
+	};
+
 	return (
 		<>
 			<Head>
@@ -315,6 +343,9 @@ export default function Session(props: SessionProps) {
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
+				{sessionVariableFormOpen && (
+					<SessionVariableForm variables={paramsArray} onSubmit={handleSessionVariableSubmit} />
+				)}
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
@@ -353,13 +384,15 @@ export default function Session(props: SessionProps) {
 								/>
 							);
 						})}
-					{(chatBusyState || loading) && !terminated && (
+
+					{(chatBusyState || loading) && !terminated && !sessionVariableFormOpen && (
 						<div className='text-center pb-6 pt-8 '>
 							<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						</div>
 					)}
+
 					{requiredHumanInput &&
 						!chatBusyState &&
 						!loading &&
@@ -369,110 +402,64 @@ export default function Session(props: SessionProps) {
 
 					<div ref={bottomRef} />
 				</div>
-				{!(requiredHumanInput && activeTask?.formFields?.length > 0) && (
-					<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
-						<div className='flex flex-row justify-center'>
-							<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
-								{showConversationStarters &&
-									(!chatBusyState || !session) &&
-									app?.chatAppConfig?.conversationStarters && (
-										<div className='w-full flex items-center gap-2 py-1'>
-											<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
-											<ConversationStarters
-												session={session}
-												app={app}
-												sendMessage={message => sendMessage(message, null)}
-												conversationStarters={app?.chatAppConfig?.conversationStarters}
-											/>
-										</div>
-									)}
+				{!requiredHumanInput &&
+					activeTask?.formFields?.length === 0 &&
+					!sessionVariableFormOpen && (
+						<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
+							<div className='flex flex-row justify-center'>
+								<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
+									{showConversationStarters &&
+										(!chatBusyState || !session) &&
+										app?.chatAppConfig?.conversationStarters && (
+											<div className='w-full flex items-center gap-2 py-1'>
+												<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
+												<ConversationStarters
+													session={session}
+													app={app}
+													sendMessage={message => sendMessage(message, null)}
+													conversationStarters={app?.chatAppConfig?.conversationStarters}
+												/>
+											</div>
+										)}
 
-								<div className='min-w-0 flex-1 h-full'>
-									{messages ? (
-										terminated ? (
-											<p
-												id='session-terminated'
-												className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
-											>
-												This session was terminated.
-											</p>
+									<div className='min-w-0 flex-1 h-full'>
+										{messages ? (
+											terminated ? (
+												<p
+													id='session-terminated'
+													className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
+												>
+													This session was terminated.
+												</p>
+											) : (
+												<SessionChatbox
+													app={app}
+													scrollToBottom={scrollToBottom}
+													lastMessageFeedback={lastMessageFeedback}
+													chatBusyState={chatBusyState}
+													stopGenerating={stopGenerating}
+													onSubmit={sendMessage}
+													showConversationStarters={showConversationStarters}
+												/>
+											)
 										) : (
-											<SessionChatbox
-												app={app}
-												scrollToBottom={scrollToBottom}
-												lastMessageFeedback={lastMessageFeedback}
-												chatBusyState={chatBusyState}
-												stopGenerating={stopGenerating}
-												onSubmit={sendMessage}
-												showConversationStarters={showConversationStarters}
-											/>
-										)
-									) : (
-										<ContentLoader
-											speed={2}
-											width={'100%'}
-											height={30}
-											viewBox='0 0 100% 10'
-											backgroundColor='#e5e5e5'
-											foregroundColor='#ffffff'
-										>
-											<rect x='0' y='10' rx='5' width='100%' height='10' />
-										</ContentLoader>
-									)}
+											<ContentLoader
+												speed={2}
+												width={'100%'}
+												height={30}
+												viewBox='0 0 100% 10'
+												backgroundColor='#e5e5e5'
+												foregroundColor='#ffffff'
+											>
+												<rect x='0' y='10' rx='5' width='100%' height='10' />
+											</ContentLoader>
+										)}
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				)}
+					)}
 			</div>
-			<SessionVariableModal
-				open={sessionVariableModalOpen}
-				setOpen={setSessionVariableModalOpen}
-				variables={paramsArray}
-				onSubmit={async variables => {
-					setSessionVariablesSubmitted(true);
-					if (isShared) {
-						await API.publicUpdateSession(
-							{ sessionId, resourceSlug, ...session, variables },
-							null,
-							null,
-							router
-						);
-						await API.publicStartSession(
-							{ sessionId, resourceSlug, appType: app.type },
-							null,
-							null,
-							router
-						);
-					}
-
-					if (!isShared) {
-						await API.updateSession(
-							{
-								_csrf: csrf,
-								resourceSlug,
-								sessionId,
-								...session,
-								variables
-							},
-							null,
-							toast.error,
-							router
-						);
-						await API.startSession(
-							{
-								_csrf: csrf,
-								resourceSlug,
-								sessionId,
-								appType: app.type
-							},
-							null,
-							toast.error,
-							router
-						);
-					}
-				}}
-			/>
 		</>
 	);
 }

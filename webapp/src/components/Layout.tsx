@@ -27,7 +27,6 @@ import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
-import { AppDataReturnType } from 'controllers/app';
 import cn from 'lib/cn';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -35,12 +34,10 @@ import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
-import { Fragment, useContext, useEffect, useRef, useState } from 'react';
+import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { App } from 'struct/app';
 
 import packageJson from '../../package.json';
-import SessionVariableModal from './modal/SessionVariableModal';
 
 const noNavPages = [
 	'/login',
@@ -152,22 +149,12 @@ export default withRouter(function Layout(props) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 	const scrollRef = useRef(null);
-	const [currentApp, setCurrentApp] = useState<AppDataReturnType>();
-	const [sessionVariableOpen, setSessionVariableOpen] = useState(false);
 
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
 	}
 
-	const handleRestartSession = async () => {
-		if (currentApp.app.variables && currentApp.app.variables.length > 0) {
-			setSessionVariableOpen(true);
-		} else {
-			await restartSession();
-		}
-	};
-
-	const restartSession = (variables?: { [key: string]: string }) => {
+	const restartSession = () => {
 		posthog.capture('restartSession', {
 			appId: chatContext?.app._id,
 			appType: chatContext?.app.type,
@@ -177,20 +164,13 @@ export default withRouter(function Layout(props) {
 			{
 				_csrf: csrf,
 				resourceSlug,
-				id: chatContext?.app?._id,
-				variables
+				id: chatContext?.app?._id
 			},
 			null,
 			toast.error,
 			router
 		);
 	};
-
-	useEffect(() => {
-		if (chatContext?.app?._id) {
-			API.getApp({ resourceSlug, appId: chatContext?.app?._id }, setCurrentApp, null, router);
-		}
-	}, [chatContext?.app?._id]);
 
 	return (
 		<>
@@ -393,7 +373,7 @@ export default withRouter(function Layout(props) {
 
 																<li key='logout'>
 																	<button
-																		className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																		className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
 																		onClick={() => {
 																			posthog.capture('logout', {
 																				email: account?.email
@@ -487,7 +467,7 @@ export default withRouter(function Layout(props) {
 										</li>
 									</ul>
 
-									<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
+									<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-slate-600 ps-6'>
 										{teamNavigation.length > 0 && (
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>
 										)}
@@ -632,7 +612,7 @@ export default withRouter(function Layout(props) {
 							{chatContext?.app?.name && (
 								<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
 									<button
-										onClick={handleRestartSession}
+										onClick={restartSession}
 										className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded dark:text-white'
 									>
 										<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
@@ -692,13 +672,6 @@ export default withRouter(function Layout(props) {
 										<Menu as='div' className='relative'>
 											<Menu.Button className='flex items-center'>
 												<span className='sr-only'>Open user menu</span>
-												{/*<ResolvedImage
-											className='h-8 w-8 rounded-full bg-gray-50'
-											src='https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-											alt=''
-											width={64}
-											height={64}
-										/>*/}
 												<AgentAvatar
 													agent={{
 														name: account.email,
@@ -976,18 +949,6 @@ export default withRouter(function Layout(props) {
 					</div>
 				</footer>
 			</div>
-
-			{sessionVariableOpen && (
-				<SessionVariableModal
-					open={sessionVariableOpen}
-					setOpen={setSessionVariableOpen}
-					variables={currentApp.app?.variables || []}
-					onSubmit={async variables => {
-						await restartSession(variables);
-						setSessionVariableOpen(false);
-					}}
-				/>
-			)}
 		</>
 	);
 });

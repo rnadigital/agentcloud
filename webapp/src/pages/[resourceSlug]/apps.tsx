@@ -2,7 +2,6 @@ import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
-import SessionVariableModal from 'components/modal/SessionVariableModal';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
@@ -23,7 +22,6 @@ export default function Apps(props) {
 	const [error, setError] = useState();
 	const { apps } = state;
 	const filteredApps = apps?.filter(x => !x.hidden);
-	const [selectedApp, setSelectedApp] = useState<App>(null);
 
 	async function startSession(appId: ObjectId) {
 		await API.addSession(
