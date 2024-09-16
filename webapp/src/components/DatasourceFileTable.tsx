@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
 import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; // Update this path as necessary
+import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
 import { useRouter } from 'next/router';
@@ -17,7 +18,6 @@ import { useReducer } from 'react';
 import { toast } from 'react-toastify';
 import { DatasourceStatus, datasourceStatusColors } from 'struct/datasource';
 import submittingReducer from 'utils/submittingreducer';
-import DevBadge from 'components/DevBadge';
 
 export default function DatasourceFileTable({
 	datasources,

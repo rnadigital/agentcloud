@@ -71,7 +71,7 @@ const ModelTypeRequirementsComponent = ({
 			})
 			.filter(m => {
 				if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-bucket') {
-					return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536
+					return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
 				}
 				return true;
 			})
