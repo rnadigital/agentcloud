@@ -23,27 +23,14 @@ export default function Apps(props) {
 	const [error, setError] = useState();
 	const { apps } = state;
 	const filteredApps = apps?.filter(x => !x.hidden);
-	const [sessionVariableOpen, setSessionVariableOpen] = useState(false);
 	const [selectedApp, setSelectedApp] = useState<App>(null);
 
-	const handleStartSession = async appId => {
-		const app = apps.find(app => app._id === appId);
-		setSelectedApp(app);
-
-		if (app?.variables?.length > 0) {
-			setSessionVariableOpen(true);
-		} else {
-			startSession(appId);
-		}
-	};
-
-	async function startSession(appId: ObjectId, variables?: { [key: string]: string }) {
+	async function startSession(appId: ObjectId) {
 		await API.addSession(
 			{
 				_csrf: csrf,
 				resourceSlug,
-				id: appId,
-				variables
+				id: appId
 			},
 			null,
 			setError,
@@ -115,21 +102,9 @@ export default function Apps(props) {
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 py-2'>
 				{filteredApps.map((a, ai) => (
-					<AppCard key={ai} app={a} startSession={handleStartSession} fetchFormData={fetchApps} />
+					<AppCard key={ai} app={a} startSession={startSession} fetchFormData={fetchApps} />
 				))}
 			</div>
-
-			{sessionVariableOpen && (
-				<SessionVariableModal
-					open={sessionVariableOpen}
-					setOpen={setSessionVariableOpen}
-					variables={selectedApp?.variables || []}
-					onSubmit={async variables => {
-						await startSession(selectedApp?._id, variables);
-						setSessionVariableOpen(false);
-					}}
-				/>
-			)}
 		</>
 	);
 }

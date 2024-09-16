@@ -24,7 +24,6 @@ import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
 import { Variable } from 'struct/variable';
 
-import SessionVariableModal from './modal/SessionVariableModal';
 import ToolTip from './shared/ToolTip';
 
 export default function CrewAppForm({
@@ -141,16 +140,8 @@ export default function CrewAppForm({
 		setTasksState(initialTasks);
 	}, [app?._id]);
 
-	const handleSubmit = async e => {
-		e.preventDefault();
-		if (appVariables.length > 0 && run === true) {
-			setModalOpen('variable');
-		} else {
-			await appPost(e);
-		}
-	};
-
 	async function appPost(e, variables?: { [key: string]: string }) {
+		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -298,19 +289,6 @@ export default function CrewAppForm({
 			);
 			// 	modal = <CreateToolModal open={modalOpen !== false} setOpen={setModalOpen} callback={createToolCallback} />;
 			break;
-		case 'variable':
-			modal = (
-				<SessionVariableModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					variables={appVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }))}
-					onSubmit={async variables => {
-						const form = document.forms[0];
-						await appPost({ target: form }, variables);
-					}}
-				/>
-			);
-			break;
 		default:
 			modal = null;
 			break;
@@ -320,7 +298,7 @@ export default function CrewAppForm({
 		<>
 			{modal}
 			{!editing && <h2 className='text-xl font-bold mb-6 dark:text-white'>Process App</h2>}
-			<form onSubmit={handleSubmit}>
+			<form onSubmit={appPost}>
 				<input type='hidden' name='_csrf' value={csrf} />
 
 				<div className='space-y-4'>

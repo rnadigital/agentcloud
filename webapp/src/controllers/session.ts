@@ -206,7 +206,7 @@ export async function publicSessionMessagesJson(req, res, next) {
  * @apiParam {String} type team | task Type of session
  */
 export async function addSessionApi(req, res, next) {
-	let { id: appId, skipRun, variables } = req.body;
+	let { id: appId, skipRun } = req.body;
 
 	let validationError = chainValidations(
 		req.body,
@@ -259,11 +259,11 @@ export async function addSessionApi(req, res, next) {
 		sharingConfig: {
 			permissions: {},
 			mode: app?.sharingConfig?.mode
-		},
-		variables
+		}
+		// variables
 	});
 
-	if (!skipRun && !variables) {
+	if (!skipRun && app.variables.length === 0) {
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
@@ -277,7 +277,7 @@ export async function addSessionApi(req, res, next) {
 	let redirectUrl = `/${req.params.resourceSlug}/session/${addedSession.insertedId}`;
 	const searchParams = new URLSearchParams();
 
-	if (variables) {
+	if (app.variables) {
 		app.variables.forEach(variable => {
 			searchParams.set(variable.name, variable.defaultValue);
 		});
