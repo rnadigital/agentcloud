@@ -90,14 +90,12 @@ export default function Session(props: SessionProps) {
 	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
 
 	async function joinSessionRoom() {
-		console.log('joinSessionRoom', sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom() {
 		socketContext.emit('leave_room', sessionId);
 	}
 	function handleSocketMessage(message) {
-		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) {
 			return;
 		}
@@ -189,7 +187,6 @@ export default function Session(props: SessionProps) {
 	}
 
 	function handleSocketStart() {
-		console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
@@ -434,20 +431,46 @@ export default function Session(props: SessionProps) {
 				variables={paramsArray}
 				onSubmit={async variables => {
 					setSessionVariablesSubmitted(true);
-					console.log(session, 'session');
-					await API.publicUpdateSession(
-						{ sessionId, resourceSlug, ...session, variables },
-						null,
-						null,
-						router
-					);
-					await API.publicStartSession(
-						{ sessionId, resourceSlug, appType: app.type },
-						null,
-						null,
-						router
-					);
-					console.log('variables', variables);
+					if (isShared) {
+						await API.publicUpdateSession(
+							{ sessionId, resourceSlug, ...session, variables },
+							null,
+							null,
+							router
+						);
+						await API.publicStartSession(
+							{ sessionId, resourceSlug, appType: app.type },
+							null,
+							null,
+							router
+						);
+					}
+
+					if (!isShared) {
+						await API.updateSession(
+							{
+								_csrf: csrf,
+								resourceSlug,
+								sessionId,
+								...session,
+								variables
+							},
+							null,
+							toast.error,
+							router
+						);
+						await API.startSession(
+							{
+								_csrf: csrf,
+								resourceSlug,
+								sessionId,
+								appType: app.type
+							},
+							null,
+							toast.error,
+							router
+						);
+					}
 				}}
 			/>
 		</>

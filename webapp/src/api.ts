@@ -216,6 +216,28 @@ export function publicStartSession(body, dispatch, errorCallback, router) {
 	);
 }
 
+export function updateSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function startSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/start`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 
 export function getMessages(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
