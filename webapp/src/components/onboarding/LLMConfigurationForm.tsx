@@ -82,7 +82,7 @@ export default function LLMConfigurationForm() {
 			...ModelList[LLMType.value]
 				.filter(model => !ModelEmbeddingLength[model])
 				.filter(m => {
-					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-bucket') {
+					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
 						return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
 					}
 					return true;
@@ -99,7 +99,7 @@ export default function LLMConfigurationForm() {
 			...ModelList[embeddingType?.value]
 				.filter(model => ModelEmbeddingLength[model])
 				.filter(m => {
-					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-bucket') {
+					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
 						return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
 					}
 					return true;
