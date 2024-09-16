@@ -293,7 +293,7 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
 	}
 
-	if (isFunctionTool && !parameters) {
+	if (isFunctionTool) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			functionProvider
@@ -515,7 +515,7 @@ export async function editToolApi(req, res, next) {
 	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (functionNeedsUpdate && !parameters) {
+	} else if (functionNeedsUpdate) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
