@@ -51,20 +51,17 @@ export default function Session(props: SessionProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
 	const searchParams = useSearchParams();
-
 	const paramsArray = Array.from(searchParams.entries()).map(([key, value]) => ({
 		name: key,
 		defaultValue: value
 	}));
-
-	const [sessionVariableFormOpen, setSessionVariableFormClose] = useState(false);
-	const [sessionVariablesSubmitted, setSessionVariablesSubmitted] = useState(false);
+	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
 	useEffect(() => {
-		if (paramsArray.length > 0 && !sessionVariablesSubmitted) {
-			setSessionVariableFormClose(true);
+		if (paramsArray.length > 0) {
+			setSessionVariableFormOpen(true);
 		}
-	}, [paramsArray]);
+	}, [searchParams]);
 
 	useEffect(() => {
 		const scrollToBottom = () => {
@@ -292,7 +289,6 @@ export default function Session(props: SessionProps) {
 	}
 
 	const handleSessionVariableSubmit = async variables => {
-		setSessionVariablesSubmitted(true);
 		if (isShared) {
 			await API.publicUpdateSession(
 				{ sessionId, resourceSlug, ...session, variables },
@@ -331,7 +327,7 @@ export default function Session(props: SessionProps) {
 				router
 			);
 		}
-		setSessionVariableFormClose(false);
+		setSessionVariableFormOpen(false);
 	};
 
 	return (
