@@ -76,7 +76,7 @@ export type Tool = {
 		properties: Record<string, FunctionProperty>;
 	};
 	parameters?: Record<string, string>;
-	vectorFilters?: QdrantFilter; //TODO: OR pinecone type
+	ragFilters?: QdrantFilter; //TODO: OR pinecone type
 	icon?: IconAttachment;
 	hidden?: boolean;
 	functionId?: string;

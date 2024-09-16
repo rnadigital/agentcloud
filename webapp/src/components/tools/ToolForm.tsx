@@ -32,7 +32,12 @@ const tabs = [
 	{
 		name: 'Parameters',
 		href: '#parameters',
-		toolTypes: [ToolType.FUNCTION_TOOL, ToolType.RAG_TOOL]
+		toolTypes: [ToolType.FUNCTION_TOOL]
+	},
+	{
+		name: 'Filters',
+		href: '#filters',
+		toolTypes: [ToolType.RAG_TOOL]
 	},
 	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] }
 ];
@@ -100,7 +105,7 @@ export default function ToolForm({
 		tool?.retriever_config?.timeWeightField || null
 	);
 
-	const [vectorFilters, setVectorFilters] = useState(tool?.vectorFilters || '');
+	const [ragFilters, setRagFilters] = useState(tool?.ragFilters || '');
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
 	};
@@ -108,10 +113,10 @@ export default function ToolForm({
 	const [, notificationTrigger]: any = useSocketContext();
 
 	useEffect(() => {
-		if (!vectorFilters) {
-			setVectorFilters(jsonPlaceholder);
+		if (!ragFilters) {
+			setRagFilters(jsonPlaceholder);
 		}
-	}, [vectorFilters]);
+	}, [ragFilters]);
 
 	useEffect(() => {
 		if (notificationTrigger && notificationTrigger?.type === NotificationType.Tool) {
@@ -240,7 +245,8 @@ export default function ToolForm({
 				},
 				linkedToolId: null,
 				iconId: icon?.id,
-				cloning: tool && !editing
+				cloning: tool && !editing,
+				ragFilters
 			};
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
@@ -397,7 +403,7 @@ export default function ToolForm({
 	return (
 		<>
 			{modal}
-			<form onSubmit={toolPost} className='flex flex-1 flex-col space-between'>
+			<form onSubmit={e => toolPost(e)} className='flex flex-1 flex-col space-between'>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='space-y-12'>
 					<div className='space-y-6'>
@@ -532,57 +538,54 @@ export default function ToolForm({
 
 								{currentTab?.name === 'Parameters' && (
 									<>
-										{toolType === ToolType.RAG_TOOL ? (
-											<>
-												<ScriptEditor
-													height='30em'
-													code={vectorFilters.toString()}
-													setCode={setVectorFilters}
-													editorOptions={{
-														stopRenderingLineAfter: 1000,
-														fontSize: '12pt',
-														//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
-														minimap: { enabled: false },
-														scrollBeyondLastLine: false
-													}}
-													onInitializePane={onInitializePane}
-													editorJsonSchema={QdrantFilterSchema}
-													language='json'
-												/>
-												<a
-													className='text-sm text-blue-500 dark:text-blue-400 underline'
-													href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
-													target='_blank'
-													rel='noreferrer'
-												>
-													Instructions on how to format qdrant filters //TODO: add a simplified
-													version to our docs?
-												</a>
-											</>
-										) : (
-											<>
-												<ParameterForm
-													parameters={functionParameters}
-													setParameters={setFunctionParameters}
-													title='Parameters'
-													disableTypes={false}
-													hideRequired={false}
-													namePlaceholder='Name'
-													descriptionPlaceholder='Description'
-												/>
+										<ParameterForm
+											parameters={functionParameters}
+											setParameters={setFunctionParameters}
+											title='Parameters'
+											disableTypes={false}
+											hideRequired={false}
+											namePlaceholder='Name'
+											descriptionPlaceholder='Description'
+										/>
 
-												<ParameterForm
-													parameters={environmentVariables}
-													setParameters={setEnvironmentVariables}
-													title='Environment Variables'
-													disableTypes={true}
-													hideRequired={true}
-													namePattern='[A-Z][A-Z0-9_]*'
-													namePlaceholder='Key must be uppercase seperated by underscores'
-													descriptionPlaceholder='Value'
-												/>
-											</>
-										)}
+										<ParameterForm
+											parameters={environmentVariables}
+											setParameters={setEnvironmentVariables}
+											title='Environment Variables'
+											disableTypes={true}
+											hideRequired={true}
+											namePattern='[A-Z][A-Z0-9_]*'
+											namePlaceholder='Key must be uppercase seperated by underscores'
+											descriptionPlaceholder='Value'
+										/>
+									</>
+								)}
+
+								{currentTab?.name === 'Filters' && (
+									<>
+										<ScriptEditor
+											height='30em'
+											code={ragFilters.toString()}
+											setCode={setRagFilters}
+											editorOptions={{
+												stopRenderingLineAfter: 1000,
+												fontSize: '12pt',
+												//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+												minimap: { enabled: false },
+												scrollBeyondLastLine: false
+											}}
+											onInitializePane={onInitializePane}
+											editorJsonSchema={QdrantFilterSchema}
+											language='json'
+										/>
+										<a
+											className='text-sm text-blue-500 dark:text-blue-400 underline'
+											href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
+											target='_blank'
+											rel='noreferrer'
+										>
+											Instructions on how to format qdrant filters
+										</a>
 									</>
 								)}
 							</>
