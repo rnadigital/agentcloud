@@ -7,6 +7,7 @@ use ort::{
     CUDAExecutionProvider, CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch,
     ROCmExecutionProvider,
 };
+use serde_json::to_string;
 use std::collections::HashMap;
 use std::sync::Arc as arc;
 use std::sync::Arc;
@@ -263,13 +264,20 @@ pub async fn embed_bulk_insert_unstructured_response(
                 if let Some(existing_metadata) = metadata.clone() {
                     metadata_map.extend(existing_metadata)
                 }
+                let string_values = to_string(&metadata_map).unwrap();
+                let mut point_metadata = HashMap::new();
+                point_metadata.insert("metadata".to_string(), string_values);
+                point_metadata.insert(
+                    "content".to_string(),
+                    metadata_map.get("content").unwrap().to_string(),
+                );
                 // Embed text and return vector
                 let embedding_vector = embeddings.get(i);
                 if let Some(vector) = embedding_vector {
                     let point = Point::new(
                         Some(Uuid::new_v4().to_string()),
                         vector.to_vec(),
-                        Some(metadata_map),
+                        Some(point_metadata),
                     );
                     points_to_upload.push(point)
                 }

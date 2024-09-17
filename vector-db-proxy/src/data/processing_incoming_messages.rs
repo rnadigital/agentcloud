@@ -13,7 +13,7 @@ use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
 use crossbeam::channel::Receiver;
 use mongodb::Database;
-use serde_json::Value;
+use serde_json::{to_string, Value};
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -72,9 +72,10 @@ pub async fn embed_text_construct_point(
                         }
                     }
                 } else {
-                    payload.insert("page_content".to_string(), value.clone());
+                    let string_values = to_string(&payload)?;
+                    payload.insert("metadata".to_string(), string_values);
+                    payload.insert("content".to_string(), value.clone());
                 }
-                //Renaming the embedding field to page_content
                 // Embedding data
                 let embedding_vec =
                     embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
