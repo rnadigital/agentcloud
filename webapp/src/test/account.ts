@@ -19,7 +19,7 @@ afterAll(async () => {
 	await db.client().close();
 });
 
-describe('Register and login', () => {
+describe('account tests', () => {
 
 	test('register new account', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
