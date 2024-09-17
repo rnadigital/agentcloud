@@ -95,7 +95,7 @@ class BaseChatAgent:
         config = {"configurable": {"thread_id": self.session_id}}
 
         while True:
-            past_messages = self.graph.get_state(config).values.get("messages")
+            past_messages = (await self.graph.aget_state(config)).values.get("messages")
 
             if past_messages:
                 if self._max_messages_limit_reached(past_messages):
@@ -148,6 +148,7 @@ class BaseChatAgent:
                         case "on_parser_stream":
                             self.logger.debug(f"Parser chunk ({kind}): {event['data']['chunk']}")
 
+                        # tool chat message finished
                         case "on_chain_end":
                             # input_messages = event['data']['input']['messages'] \
                             #     if ('input' in event['data'] and 'messages' in event['data']['input']) \
