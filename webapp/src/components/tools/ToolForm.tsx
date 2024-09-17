@@ -105,9 +105,7 @@ export default function ToolForm({
 		tool?.retriever_config?.timeWeightField || null
 	);
 
-	const [ragFilters, setRagFilters] = useState(
-		JSON.stringify(tool?.ragFilters || {}, null, '\t')
-	);
+	const [ragFilters, setRagFilters] = useState(JSON.stringify(tool?.ragFilters || {}, null, '\t'));
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
 	};
