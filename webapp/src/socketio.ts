@@ -29,6 +29,13 @@ import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
 
+export function getAllActiveSessionRooms() {
+	return [...io.sockets.adapter.rooms]
+		.filter(re => !re[1].has(re[0]))
+		.map(re => re[0])
+		.filter(room => room.startsWith('_'));
+}
+
 export function initSocket(rawHttpServer) {
 	io.attach(rawHttpServer);
 	const pubClient = client.duplicate();

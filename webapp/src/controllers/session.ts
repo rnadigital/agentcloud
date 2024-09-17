@@ -1,6 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { getAllActiveSessionRooms } from '@socketio';
 import {
 	getAgentById,
 	getAgentNameMap,
@@ -29,7 +30,6 @@ import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
-import { SharingMode } from 'struct/sharing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function sessionsData(req, res, _next) {
@@ -78,7 +78,7 @@ export async function sessionData(req, res, _next) {
 	return {
 		csrf: req.csrfToken(),
 		session,
-		app,
+		app: app as App,
 		avatarMap
 	};
 }
@@ -188,6 +188,24 @@ export async function sessionMessagesJson(req, res, next) {
 		return res.json(messages);
 	}
 	const data = await sessionMessagesData(req, res, next);
+
+	//TODO: a cleaner way to do this, but it only works for Chat apps anyway. This is OK for now.
+	if (data.length > 0) {
+		const sessionId = req.params.sessionId.toString();
+		const session = await unsafeGetSessionById(sessionId);
+		const app = await unsafeGetAppById(session?.appId);
+		if (app.type === AppType.CHAT && !getAllActiveSessionRooms().includes(`_${sessionId}`)) {
+			sessionTaskQueue.add(
+				'execute_rag',
+				{
+					type: 'chat',
+					sessionId
+				},
+				{ removeOnComplete: true, removeOnFail: true }
+			);
+		}
+	}
+
 	return res.json(data);
 }
 
