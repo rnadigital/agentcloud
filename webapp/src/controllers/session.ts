@@ -1,7 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { getAllActiveSessionRooms } from '@socketio';
+import { activeSessionRooms } from '@socketio';
 import {
 	getAgentById,
 	getAgentNameMap,
@@ -25,9 +25,11 @@ import {
 	setSessionStatus,
 	unsafeGetSessionById
 } from 'db/session';
+import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
+const log = debug('webapp:controllers:session');
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { chainValidations } from 'utils/validationutils';
@@ -190,11 +192,14 @@ export async function sessionMessagesJson(req, res, next) {
 	const data = await sessionMessagesData(req, res, next);
 
 	//TODO: a cleaner way to do this, but it only works for Chat apps anyway. This is OK for now.
-	if (data.length > 0) {
-		const sessionId = req.params.sessionId.toString();
-		const session = await unsafeGetSessionById(sessionId);
-		const app = await unsafeGetAppById(session?.appId);
-		if (app.type === AppType.CHAT && !getAllActiveSessionRooms().includes(`_${sessionId}`)) {
+	const sessionId = req.params.sessionId.toString();
+	const session = await unsafeGetSessionById(sessionId);
+	const app = await unsafeGetAppById(session?.appId);
+	if (app.type === AppType.CHAT) {
+		log('activeSessionRooms', activeSessionRooms);
+		if (!activeSessionRooms.includes(`_${sessionId}`)) {
+			log('Resuming session', sessionId);
+			activeSessionRooms.push(`_${sessionId}`);
 			sessionTaskQueue.add(
 				'execute_rag',
 				{
@@ -286,19 +291,22 @@ export async function addSessionApi(req, res, next) {
 		}
 	});
 
+	const newSessionId = addedSession.insertedId.toString();
+
 	if (!skipRun) {
+		activeSessionRooms.push(`_${newSessionId}`);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
 				type: app?.type,
-				sessionId: addedSession.insertedId.toString()
+				sessionId: newSessionId
 			},
 			{ removeOnComplete: true, removeOnFail: true }
 		);
 	}
 
 	return dynamicResponse(req, res, 302, {
-		redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}`
+		redirect: `/${req.params.resourceSlug}/session/${newSessionId}`
 	});
 }
 
