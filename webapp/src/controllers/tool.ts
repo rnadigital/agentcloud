@@ -285,7 +285,7 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
 	}
 
-	if (isFunctionTool && !parameters) {
+	if (isFunctionTool) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			functionProvider
@@ -468,12 +468,8 @@ export async function editToolApi(req, res, next) {
 		}
 	}
 
-	let attachedIconToTool: IconAttachment = {
-		id: toObjectId(existingTool?.icon.id),
-		filename: existingTool?.icon.filename,
-		linkedId: toObjectId(existingTool?.icon.linkedId)
-	};
-	if (existingTool?.icon?.id !== iconId) {
+	let attachedIconToTool = existingTool?.icon;
+	if (existingTool?.icon?.id?.toString() !== iconId) {
 		const collectionType = CollectionName.Agents;
 		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
 		if (newAttachment) {
@@ -499,7 +495,7 @@ export async function editToolApi(req, res, next) {
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {})
 	});
 
-	if (oldTool?.icon?.id && oldTool?.icon?.id !== iconId) {
+	if (oldTool?.icon?.id && oldTool?.icon?.id?.toString() !== iconId) {
 		deleteAssetById(oldTool?.icon?.id);
 	}
 	let functionProvider;
@@ -509,7 +505,7 @@ export async function editToolApi(req, res, next) {
 	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
 		await functionProvider.deleteFunction(existingTool.functionId);
-	} else if (functionNeedsUpdate && !parameters) {
+	} else if (functionNeedsUpdate) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
 		const functionId = uuidv4();
 		try {
