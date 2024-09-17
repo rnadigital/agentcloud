@@ -62,6 +62,7 @@ Options:
     --kill-webapp-next               Kill webapp after startup (for developers)
     --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
     --kill-agent-backend             Kill agent-backend after startup (for developers)
+    --minimal                        Don't run the agent-backend, vector-db-proxy, webapp or webapp-syncserver in docker (for developers)
 """
 }
 
@@ -123,6 +124,7 @@ while [[ "$#" -gt 0 ]]; do
         --kill-webapp-next) KILL_WEBAPP_NEXT=1 ;;
         --kill-vector-db-proxy) KILL_VECTOR_DB_PROXY=1 ;;
         --kill-agent-backend) KILL_AGENT_BACKEND=1 ;;
+        --minimal) MINIMAL=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown parameter passed: $1"; usage; exit 1 ;;
     esac
@@ -186,9 +188,26 @@ echo $AIRBYTE_USERNAME
 
 echo "=> Starting agentcloud backend..."
 
-docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest
-docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api
-docker compose up --build -d
+
+docker pull downloads.unstructured.io/unstructured-io/unstructured-api:latest || {
+	clear
+	echo "⚠️  Warning: Failed to pull the 'unstructured-api' image from the remote repository."
+	echo "    Proceeding without the latest 'unstructured-api' image. Please check your network or the repository URL."
+	sleep 1
+}
+
+docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest localhost:5000/unstructured-api || {
+	clear
+	echo "⚠️  Warning: Failed to tag the 'unstructured-api' image for local use."
+	echo "    Proceeding without updating the image tag. Please ensure the image was pulled correctly."
+	sleep 1
+}
+
+if [ "$MINIMAL" -eq 1 ]; then
+	docker compose -f docker-compose.minimal.yml up --build -d
+else
+	docker compose up --build -d
+fi
 
 # At the end of the script, check the variables and kill containers if requested
 if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then

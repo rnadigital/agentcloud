@@ -29,7 +29,7 @@ interface CreateAccountArgs {
 	email: string;
 	name: string;
 	password?: string;
-	roleTemplate: RoleKey;
+	roleTemplate?: RoleKey;
 	invite?: boolean;
 	provider?: OAUTH_PROVIDER;
 	profileId?: string | number;
@@ -195,7 +195,7 @@ export default async function createAccount({
 				)
 			: render(
 					VerificationEmail({
-						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}${checkoutSessionId ? '&newpassword=true&stripe=1' : ''}`
+						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}${checkoutSessionId ? '&newpassword=true&stripe=1' : !password ? '&newpassword=true' : ''}`
 					})
 				);
 

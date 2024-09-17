@@ -17,6 +17,7 @@ import {
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
 	addSession,
+	checkCanAccessApp,
 	deleteSessionById,
 	getSessionById,
 	getSessionsByTeam,
@@ -99,8 +100,9 @@ export async function publicSessionData(req, res, _next) {
 			}
 			break;
 	}
-	if (app?.sharingConfig?.mode !== SharingMode.PUBLIC) {
-		return; // TODO: make this actually
+	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return null;
 	}
 	return {
 		csrf: req.csrfToken(),
@@ -130,7 +132,7 @@ export async function sessionPage(app, req, res, next) {
 export async function publicSessionPage(app, req, res, next) {
 	const data = await publicSessionData(req, res, next);
 	if (!data) {
-		return next(); //404
+		return next();
 	}
 	res.locals.data = {
 		...data,
@@ -154,6 +156,11 @@ export async function sessionMessagesData(req, res, _next) {
 }
 
 export async function publicSessionMessagesData(req, res, _next) {
+	const session = await unsafeGetSessionById(req.params.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return null;
+	}
 	const messages = await unsafeGetChatMessagesBySession(req.params.sessionId);
 	return messages;
 }
@@ -173,7 +180,6 @@ export async function sessionMessagesJson(req, res, next) {
 		if (validationError) {
 			return dynamicResponse(req, res, 400, { error: validationError });
 		}
-
 		const messages = await getChatMessageAfterId(
 			req.params.resourceSlug,
 			req.params.sessionId,
@@ -191,6 +197,9 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function publicSessionMessagesJson(req, res, next) {
 	const data = await publicSessionMessagesData(req, res, next);
+	if (!data) {
+		return next();
+	}
 	return res.json(data);
 }
 

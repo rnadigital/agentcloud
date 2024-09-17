@@ -94,7 +94,8 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 }
 
 const customMessages = {
-	'⛔ MAX_RECURSION_LIMIT REACHED': ChatRestartMessage
+	'MAX_RECURSION_LIMIT REACHED': ChatRestartMessage,
+	'MAX_MESSAGES_LIMIT REACHED': ChatRestartMessage
 };
 
 function MessageBody({ message, messageType, messageLanguage, style, chunking }) {

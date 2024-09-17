@@ -4,7 +4,7 @@ import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsById } from 'db/agent';
 import { getAppById } from 'db/app';
 import { getCrewById } from 'db/crew';
-import { addSession } from 'db/session';
+import { addSession, checkCanAccessApp } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationutils';
@@ -84,6 +84,11 @@ export async function handleRedirect(req, res, next) {
 		}
 	}
 
+	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return next();
+	}
+
 	const addedSession = await addSession({
 		orgId: toObjectId(app.orgId),
 		teamId: toObjectId(resourceSlug),
@@ -94,8 +99,8 @@ export async function handleRedirect(req, res, next) {
 		status: SessionStatus.STARTED,
 		appId: toObjectId(app?._id),
 		sharingConfig: {
-			permissions: {},
-			mode: SharingMode.PUBLIC
+			permissions: app?.sharingConfig?.permissions,
+			mode: app?.sharingConfig?.mode as SharingMode
 		}
 	});
 	const sessionId = addedSession.insertedId;

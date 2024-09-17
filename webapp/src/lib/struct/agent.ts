@@ -27,6 +27,7 @@ export type Agent = {
 		| {
 				id: string;
 				filename: string;
+				linkedId?: ObjectId;
 		  };
 	hidden?: boolean;
 	group?: any[];

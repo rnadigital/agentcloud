@@ -1,30 +1,56 @@
 'use strict';
 
+import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
+import { cloneAssetInStorageProvider } from 'controllers/asset';
+import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
-import { addApp, deleteAppById, getAppById, getAppsByTeam, updateApp } from 'db/app';
-import { getAssetById } from 'db/asset';
+import {
+	addApp,
+	deleteAppById,
+	deleteAppByIdReturnApp,
+	getAppById,
+	getAppsByTeam,
+	updateApp,
+	updateAppGetOldApp
+} from 'db/app';
+import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import createAccount from 'lib/account/create';
+import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
+import path from 'path';
 import { AppType } from 'struct/app';
+import { Asset, IconAttachment } from 'struct/asset';
+import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
+import { addTeamMember } from '../db/team';
+import Roles from '../lib/permissions/roles';
+
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models, datasources] = await Promise.all([
+	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
 		getAppsByTeam(req.params.resourceSlug),
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug)
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getAccountsById(res.locals.matchingTeam.members)
 	]);
+	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
+		acc.push(curr.email);
+		return acc;
+	}, []);
 	return {
 		csrf: req.csrfToken(),
 		apps,
@@ -32,19 +58,26 @@ export async function appsData(req, res, _next) {
 		tools,
 		agents,
 		models,
-		datasources
+		datasources,
+		teamMembers: teamMemberemails
 	};
 }
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models, datasources] = await Promise.all([
+	const [app, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
 		getAppById(req.params.resourceSlug, req.params.appId),
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug)
+		getDatasourcesByTeam(req.params.resourceSlug),
+		getAccountsById(res.locals.matchingTeam.members)
 	]);
+	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
+		acc.push(curr.email);
+		return acc;
+	}, []);
 	return {
 		csrf: req.csrfToken(),
 		app,
@@ -52,7 +85,8 @@ export async function appData(req, res, _next) {
 		tools,
 		agents,
 		models,
-		datasources
+		datasources,
+		teamMembers: teamMemberemails
 	};
 }
 
@@ -145,10 +179,12 @@ export async function addAppApi(req, res, next) {
 		type,
 		run,
 		sharingMode,
+		sharingEmails,
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		cloning,
+		maxMessages
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -161,7 +197,16 @@ export async function addAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode !== SharingMode.TEAM, ofType: 'string' }
+			},
+			{
+				field: 'sharingEmails',
+				validation: {
+					notEmpty: true,
+					asArray: true,
+					ofType: 'string'
+				},
+				validateIf: { field: 'sharingMode', condition: value => value === SharingMode.WHITELIST }
 			},
 			{
 				field: 'type',
@@ -231,7 +276,15 @@ export async function addAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const newAppId = new ObjectId();
+	const collectionType = CollectionName.Apps;
+	let attachedIconToApp = await cloneAssetInStorageProvider(
+		toObjectId(iconId),
+		cloning,
+		toObjectId(newAppId),
+		collectionType,
+		req.params.resourceSlug
+	);
 
 	let addedCrew, chatAgent;
 	if ((type as AppType) === AppType.CREW) {
@@ -302,17 +355,22 @@ export async function addAppApi(req, res, next) {
 		}
 	}
 
+	const sharePermissions = await getSharePermissions(req, res);
+
 	const addedApp = await addApp({
+		_id: newAppId,
+		createdBy: res.locals.account._id,
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
 		author: res.locals.matchingTeam.name,
-		icon: foundIcon
+		icon: attachedIconToApp
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToApp._id,
+					filename: attachedIconToApp.filename,
+					linkedId: newAppId
 				}
 			: null,
 		type,
@@ -326,11 +384,11 @@ export async function addAppApi(req, res, next) {
 					chatAppConfig: {
 						agentId: agentId ? toObjectId(agentId) : toObjectId(chatAgent.insertedId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
-						recursionLimit
+						maxMessages
 					}
 				}),
 		sharingConfig: {
-			permissions: {}, //TODO once we have per-user, team, org perms
+			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
@@ -385,10 +443,11 @@ export async function editAppApi(req, res, next) {
 		modelId,
 		run,
 		sharingMode,
+		sharingEmails,
 		shareLinkShareId,
 		verbose,
 		fullOutput,
-		recursionLimit
+		maxMessages
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -406,7 +465,16 @@ export async function editAppApi(req, res, next) {
 			},
 			{
 				field: 'shareLinkShareId',
-				validation: { notEmpty: sharingMode === SharingMode.PUBLIC, ofType: 'string' }
+				validation: { notEmpty: sharingMode !== SharingMode.TEAM, ofType: 'string' }
+			},
+			{
+				field: 'sharingEmails',
+				validation: {
+					notEmpty: true,
+					asArray: true,
+					ofType: 'string'
+				},
+				validateIf: { field: 'sharingMode', condition: value => value === SharingMode.WHITELIST }
 			},
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
@@ -541,18 +609,26 @@ export async function editAppApi(req, res, next) {
 		}
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const sharePermissions = await getSharePermissions(req, res);
 
-	await updateApp(req.params.resourceSlug, req.params.appId, {
+	let attachedIconToApp: IconAttachment = app?.icon;
+	if (app?.icon?.id?.toString() !== iconId) {
+		const collectionType = CollectionName.Apps;
+		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
+		if (newAttachment) {
+			attachedIconToApp = {
+				id: newAttachment._id,
+				filename: newAttachment.filename,
+				linkedId: newAttachment.linkedToId
+			};
+		}
+	}
+
+	const oldApp = await updateAppGetOldApp(req.params.resourceSlug, req.params.appId, {
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: foundIcon
-			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
-				}
-			: null,
+		icon: iconId ? attachedIconToApp : null,
 		...(app.type === AppType.CREW
 			? {
 					memory: memory === true,
@@ -562,15 +638,19 @@ export async function editAppApi(req, res, next) {
 					chatAppConfig: {
 						agentId: toObjectId(agentId),
 						conversationStarters: (conversationStarters || []).map(x => x.trim()).filter(x => x),
-						recursionLimit
+						maxMessages
 					}
 				}),
 		sharingConfig: {
-			permissions: {}, //TODO once we have per-user, team, org perms
+			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
+
+	if (oldApp?.icon?.id && oldApp?.icon?.id?.toString() !== iconId) {
+		deleteAssetById(oldApp?.icon.id);
+	}
 
 	if (shareLinkShareId) {
 		await updateShareLinkPayload({
@@ -608,7 +688,34 @@ export async function deleteAppApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	await deleteAppById(req.params.resourceSlug, appId);
+	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
+
+	if (oldApp?.icon) {
+		await deleteAssetById(oldApp.icon.id);
+	}
 
 	return dynamicResponse(req, res, 302, {});
+}
+
+//TODO: move
+export async function getSharePermissions(req, res) {
+	const { sharingEmails } = req.body;
+	const sharePermissions = {};
+	await Promise.all(
+		(sharingEmails || []).map(async em => {
+			let foundAccount = await getAccountByEmail(em);
+			const invitingTeam = res.locals.matchingOrg.teams.find(
+				t => t.id.toString() === req.params.resourceSlug
+			);
+			if (!foundAccount) {
+				const { addedAccount } = await createAccount({
+					email: em,
+					name: em //TODO: some way to let them set their name on login
+				});
+				foundAccount = await getAccountByEmail(em);
+			}
+			sharePermissions[foundAccount?._id.toString()] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
+		})
+	);
+	return sharePermissions;
 }

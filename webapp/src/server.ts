@@ -75,7 +75,6 @@ app
 		server.all('/_next/*', (req, res) => {
 			return handle(req, res);
 		});
-
 		const router = (await import('./router')).default;
 
 		router(server, app);

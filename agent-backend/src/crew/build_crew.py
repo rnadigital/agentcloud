@@ -1,9 +1,8 @@
 import json
 import logging
 from io import BytesIO
-import os
-from pathlib import Path
 import uuid
+from pprint import pprint
 from typing import Any, List, Set, Type
 from datetime import datetime
 
@@ -286,7 +285,10 @@ class CrewAIBuilder:
                 agentcloud_socket=self.socket,
                 agentcloud_session_id=self.session_id
             )
-            print(f"CrewAI Crew(): {self.crew}")
+            print('---')
+            print('Crew attributes:')
+            pprint(self.crew.__dict__)
+            print('---')
         except ValidationError as ve:
             self.send_to_sockets(text=f"""Validation Error:
             ``` 
