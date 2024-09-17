@@ -53,7 +53,6 @@ export async function addShareLinkApi(req, res, next) {
 //Note: dont really need other CRUD endpoints for these. They have an index and auto expire
 
 export async function handleRedirect(req, res, next) {
-	console.log('handleRedirect');
 	const { resourceSlug, shareLinkShareId } = req.params;
 	const foundShareLink = await getShareLinkByShareId(resourceSlug, shareLinkShareId);
 
@@ -112,23 +111,10 @@ export async function handleRedirect(req, res, next) {
 			{ removeOnComplete: true, removeOnFail: true }
 		);
 	}
-	// const redirectUrl = new URL(`/s/${resourceSlug}/session/${addedSession.insertedId}`);
-	// console.log('redirectUrl', redirectUrl);
-
-	// if (hasVariables) {
-	// 	app.variables.forEach(variable => {
-	// 		redirectUrl.searchParams.set(variable.name, variable.defaultValue);
-	// 	});
-	// }
-	// console.log('redirectUrl', redirectUrl);
 
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
-			// //There are no other sharinglinktypes yet
-			// return dynamicResponse(req, res, 302, {
-			// 	redirect: redirectUrl
-			// });
 			let redirectUrl = `/s/${resourceSlug}/session/${addedSession.insertedId}`;
 			const searchParams = new URLSearchParams();
 
@@ -144,7 +130,4 @@ export async function handleRedirect(req, res, next) {
 				redirect: redirectUrl
 			});
 	}
-
-	// const sessionId = addedSession.insertedId;
-	// if*=(!variables). sesion task
 }

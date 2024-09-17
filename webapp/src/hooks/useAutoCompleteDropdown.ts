@@ -79,7 +79,7 @@ const useAutocompleteDropdown = ({
 		const openBracketIndex = value.lastIndexOf('{');
 		const newText =
 			openBracketIndex !== -1
-				? value.slice(0, openBracketIndex + 1) + newVariable.label + '}' + textAfterCursor // Append text after cursor
+				? value.slice(0, openBracketIndex + 1) + newVariable.label + '}' + textAfterCursor
 				: `${newVariable.label}}${textAfterCursor}`;
 		setValue(newText);
 		setShowDropdown(false);
@@ -177,7 +177,7 @@ const useAutocompleteDropdown = ({
 
 		setTimeout(() => {
 			input.focus();
-			input.selectionEnd = lastOpenBraceIndex + 1 + option.label.length + 1; // Position cursor after the closing '}'
+			input.selectionEnd = lastOpenBraceIndex + 1 + option.label.length + 1;
 		}, 0);
 	};
 

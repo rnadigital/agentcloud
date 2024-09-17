@@ -4,7 +4,7 @@ import * as db from 'db/index';
 import toObjectId from 'misc/toobjectid';
 import { UpdateResult } from 'mongodb';
 import { InsertResult } from 'struct/db';
-import { Variable } from 'struct/variable'; // Adjust the import path as necessary
+import { Variable } from 'struct/variable';
 
 export function VariableCollection(): any {
 	return db.db().collection('variables');
