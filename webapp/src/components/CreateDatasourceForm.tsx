@@ -296,7 +296,8 @@ export default function CreateDatasourceForm({
 					retriever: toolRetriever,
 					retriever_config: {
 						timeWeightField: toolTimeWeightField,
-						decay_rate: toolDecayRate
+						decay_rate: toolDecayRate,
+						k: topK
 					},
 					chunkingConfig,
 					enableConnectorChunking
