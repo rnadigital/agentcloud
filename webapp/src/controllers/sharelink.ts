@@ -120,19 +120,8 @@ export async function handleRedirect(req, res, next) {
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
-			let redirectUrl = `/s/${resourceSlug}/session/${addedSession.insertedId}`;
-			const searchParams = new URLSearchParams();
-
-			if (hasVariables) {
-				app.variables.forEach(variable => {
-					searchParams.set(variable.name, variable.defaultValue);
-				});
-			}
-
-			redirectUrl += `?${searchParams.toString()}`;
-
 			return dynamicResponse(req, res, 302, {
-				redirect: redirectUrl
+				redirect: `/s/${resourceSlug}/session/${addedSession.insertedId}`
 			});
 	}
 }

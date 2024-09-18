@@ -260,7 +260,6 @@ export async function addSessionApi(req, res, next) {
 
 	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
-	let agentId;
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
 		if (crew) {
@@ -307,19 +306,8 @@ export async function addSessionApi(req, res, next) {
 		);
 	}
 
-	let redirectUrl = `/${req.params.resourceSlug}/session/${addedSession.insertedId}`;
-	const searchParams = new URLSearchParams();
-
-	if (app.variables) {
-		app.variables.forEach(variable => {
-			searchParams.set(variable.name, variable.defaultValue);
-		});
-	}
-
-	redirectUrl += `?${searchParams.toString()}`;
-
 	return dynamicResponse(req, res, 302, {
-		redirect: redirectUrl
+		redirect: `/${req.params.resourceSlug}/session/${addedSession.insertedId}`
 	});
 }
 

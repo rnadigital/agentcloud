@@ -14,7 +14,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
-import { App, AppType } from 'struct/app';
+import { AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import SessionVariableForm from 'components/session/SessionVariableForm';
@@ -37,7 +37,7 @@ export default function Session(props: SessionProps) {
 	const isShared = path.startsWith('/s/');
 
 	const [session, setSession] = useState(props.session);
-	const [app, setApp]: [App, Function] = useState(props.app);
+	const [app, setApp] = useState(props.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
@@ -51,14 +51,14 @@ export default function Session(props: SessionProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
 	const searchParams = useSearchParams();
-	const paramsArray = Array.from(searchParams.entries()).map(([key, value]) => ({
-		name: key,
-		defaultValue: value
-	}));
+
+	const paramsArray =
+		app?.variables && app.variables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
 	useEffect(() => {
-		if (paramsArray.length > 0) {
+		if (app?.variables && app.variables.length > 0) {
 			setSessionVariableFormOpen(true);
 		}
 	}, [searchParams]);
