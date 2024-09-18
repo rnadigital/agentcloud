@@ -18,7 +18,7 @@ import { AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
 import SessionVariableForm from 'components/session/SessionVariableForm';
-import { SessionDataReturnType } from 'controllers/session';
+import { SessionDataReturnType, SessionJsonReturnType } from 'controllers/session';
 
 interface SessionProps extends SessionDataReturnType {
 	sessionId: string;
@@ -36,8 +36,8 @@ export default function Session(props: SessionProps) {
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
 
-	const [session, setSession] = useState(props.session);
-	const [app, setApp] = useState(props.app);
+	const [session, setSession] = useState<SessionJsonReturnType>();
+	const [app, setApp] = useState(session?.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
@@ -50,8 +50,6 @@ export default function Session(props: SessionProps) {
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
-	const searchParams = useSearchParams();
-
 	const paramsArray =
 		app?.variables && app.variables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
 
@@ -61,7 +59,7 @@ export default function Session(props: SessionProps) {
 		if (app?.variables && app.variables.length > 0) {
 			setSessionVariableFormOpen(true);
 		}
-	}, [searchParams]);
+	}, [app]);
 
 	useEffect(() => {
 		const scrollToBottom = () => {
@@ -329,6 +327,14 @@ export default function Session(props: SessionProps) {
 		}
 		setSessionVariableFormOpen(false);
 	};
+
+	async function fetchSession() {
+		await API.getSession({ resourceSlug, sessionId }, setSession, () => {}, router);
+	}
+
+	useEffect(() => {
+		fetchSession();
+	}, [resourceSlug, sessionId]);
 
 	return (
 		<>

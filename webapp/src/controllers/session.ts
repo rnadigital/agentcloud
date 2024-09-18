@@ -146,6 +146,7 @@ export async function publicSessionPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
+export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionJson>>;
 /**
  * GET /[resourceSlug]/session/[sessionId].json
  * get session json
