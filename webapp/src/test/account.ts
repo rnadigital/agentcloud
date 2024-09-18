@@ -61,7 +61,8 @@ describe('account tests', () => {
 		});
 		const accountJson = await response.json();
 		csrfToken = accountJson.csrf;
-		resourceSlug = accountJson.team;
+		resourceSlug = accountJson.account.currentTeam;
+		console.log("get Account resourceSlug:", resourceSlug);
 		expect(response.status).toBe(200);
 	});
 
@@ -74,7 +75,6 @@ describe('account tests', () => {
 			},
 			body: JSON.stringify({
 				email: 'testuser@example.com',
-				resourceSlug
 			}),
 			redirect: 'manual',
 		});
@@ -104,18 +104,22 @@ describe('account tests', () => {
 	//set onboarded in the database
 
 	test('setting role', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role`, {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${resourceSlug}`, {
 			method: 'POST',
 			headers: {
 				cookie: sessionCookie,
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({
-				role: "developer"
+				role: 'data_engineer',
+				_csrf: csrfToken,
+				resourceSlug
 			}),
 			redirect: 'manual'
 		});
-		console.log("SettingRoleTest: ", await response.text());
+		const responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
 	})
 	test('get welcome data', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/welcome.json`, {
@@ -125,7 +129,6 @@ describe('account tests', () => {
 			},
 			redirect: 'manual'
 		});
-		console.log("welcomeTest", await response.text());
 		const responseJson = await response.json();
 		expect(responseJson?.team).toBeDefined();
 		expect(responseJson?.teamMembers).toBeDefined();
