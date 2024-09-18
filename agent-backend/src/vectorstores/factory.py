@@ -151,6 +151,7 @@ def vectorstore_factory(embedding_model, collection_name, tool):
             # from init.env_variables import PINECONE_API_KEY
             from langchain_community.vectorstores.pinecone import Pinecone
 
+            # Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
             return Pinecone.from_existing_index(
                 index_name="us-central1", #TODO: make customisable
                 embedding=embedding_model,

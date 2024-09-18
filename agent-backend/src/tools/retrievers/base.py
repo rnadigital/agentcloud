@@ -5,7 +5,7 @@ from langchain_core.retrievers import BaseRetriever
 
 from models.mongo import Tool
 from tools.retrievers.callback_handler import RetrieverCallbackHandler
-from tools.retrievers.filters import create_qdrant_filters
+from tools.retrievers.filters import create_qdrant_filters, create_pinecone_filters
 
 class BaseToolRetriever(ABC):
     logger: logging.Logger
