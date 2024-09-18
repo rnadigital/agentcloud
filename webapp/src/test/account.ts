@@ -1,6 +1,5 @@
-import {describe, expect, test} from '@jest/globals';
-import * as db from 'db/index';
-import { deleteAccountByEmail } from 'db/account';
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
+import * as db from '../db/index';
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 
@@ -15,9 +14,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-	await db.db().collection('accounts').deleteOne({ email: 'testuser@example.com' });
+	await db.db().collection('account').deleteOne({email: 'testuser@example.com'});
 	await db.client().close();
-});
+})
 
 describe('account tests', () => {
 
@@ -62,8 +61,76 @@ describe('account tests', () => {
 		});
 		const accountJson = await response.json();
 		csrfToken = accountJson.csrf;
+		resourceSlug = accountJson.team;
 		expect(response.status).toBe(200);
 	});
+
+	test('request change password', async () => {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/requestchangepassword`,{
+			method: 'POST',
+			headers: {
+				cookie: sessionCookie,
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				email: 'testuser@example.com',
+				resourceSlug
+			}),
+			redirect: 'manual',
+		});
+		const responseJson = await response.json();
+		expect(responseJson?.redirect).toBeDefined();
+		expect(response.status).toBe(200);
+	});
+
+	test('cant change password without valid token', async () => {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/changepassword`, {
+			method: 'POST',
+			headers: {
+				cookie: sessionCookie,
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				token: "abcd",
+				password: "attemptedPasswordChange"
+			}),
+			redirect: 'manual'
+		});
+		const responseJson = await response.json();
+		expect(responseJson?.error).toBeDefined();
+		expect(response.status).toBe(400);
+	});
+
+	//set onboarded in the database
+
+	test('setting role', async () => {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role`, {
+			method: 'POST',
+			headers: {
+				cookie: sessionCookie,
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				role: "developer"
+			}),
+			redirect: 'manual'
+		});
+		console.log("SettingRoleTest: ", await response.text());
+	})
+	test('get welcome data', async () => {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/welcome.json`, {
+			method:'GET',
+			headers: {
+				cookie: sessionCookie
+			},
+			redirect: 'manual'
+		});
+		console.log("welcomeTest", await response.text());
+		const responseJson = await response.json();
+		expect(responseJson?.team).toBeDefined();
+		expect(responseJson?.teamMembers).toBeDefined();
+	})
+	//test with valid token??
 
 	test('log out', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/logout`, {
