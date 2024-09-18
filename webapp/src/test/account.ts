@@ -62,7 +62,6 @@ describe('account tests', () => {
 		const accountJson = await response.json();
 		csrfToken = accountJson.csrf;
 		resourceSlug = accountJson.account.currentTeam;
-		console.log("get Account resourceSlug:", resourceSlug);
 		expect(response.status).toBe(200);
 	});
 
