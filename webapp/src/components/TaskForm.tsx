@@ -188,6 +188,7 @@ export default function TaskForm({
 	}
 	async function taskPost(e) {
 		e.preventDefault();
+		console.log('taskPost', taskState);
 		const toolIds = toolState ? toolState.map(x => x?.value) : [];
 		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
 		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
@@ -777,7 +778,12 @@ export default function TaskForm({
 						{/* Form builder for human input */}
 						{requiredHumanInput && formFields?.length > 0 && (
 							<div className='col-span-full'>
-								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+								<FormConfig
+									formFields={formFields}
+									setFormFields={setFormFields}
+									variables={variables}
+									fetchTaskFormData={fetchTaskFormData}
+								/>
 							</div>
 						)}
 

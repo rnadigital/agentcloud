@@ -12,6 +12,7 @@ export interface FormFieldConfig {
 	required?: boolean;
 	options?: string[];
 	tooltip?: string;
+	variable?: string;
 }
 
 export interface Task {
