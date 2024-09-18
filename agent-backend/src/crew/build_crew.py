@@ -214,12 +214,20 @@ class CrewAIBuilder:
                 try:
                     task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
                     output_pydantic = task_model
+
+                    # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
+                    # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
+                    task.expected_output = (task.expectedOutput
+                                            .replace('{', '&lcub;')
+                                            .replace('}', '&rcub;'))
                 except Exception:
                     output_pydantic = None
 
             self.crew_tasks[key] = Task(
-                **task.model_dump(exclude_none=True, exclude_unset=True,
-                                exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"}),
+                **task.model_dump(exclude_none=True, exclude_unset=True, exclude={
+                    "id", "context", "requiresHumanInput", "displayOnlyFinalOutput",
+                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"
+                }),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
