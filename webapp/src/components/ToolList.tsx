@@ -9,6 +9,8 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Tool, ToolState, ToolType } from 'struct/tool';
 
+import AgentAvatar from './AgentAvatar';
+
 export default function ToolList({ tools, fetchTools }: { tools: Tool[]; fetchTools: Function }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
@@ -67,8 +69,14 @@ export default function ToolList({ tools, fetchTools }: { tools: Tool[]; fetchTo
 									<ToolStateBadge state={tool.state} />
 								)}
 							</div>
-							<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold pt-1'>
-								<span>{tool.name.charAt(0).toUpperCase()}</span>
+							<div className='h-10 w-10 flex-shrink-0 rounded-full bg-gray-300 dark:bg-slate-700 text-center text-xl font-bold overflow-hidden'>
+								{tool?.icon?.id ? (
+									<AgentAvatar agent={tool} fill={true} />
+								) : (
+									<span className='flex justify-center pt-1'>
+										{tool.name.charAt(0).toUpperCase()}
+									</span>
+								)}
 							</div>
 						</div>
 						{!tool?.data?.builtin && (

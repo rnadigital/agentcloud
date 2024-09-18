@@ -12,6 +12,5 @@ in tool calling or chat response. This node has following edges:
   - An edge from the `chat_model` to `human_input` to allow for a 
   [human-in-the-loop](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/#human-in-the-loop) 
   flow.
-  - Finally, once the LLM signals an **END**, go back to the `human_input_invoker`
-  to ask for further user input
+  - Finally, once the LLM signals an **END**, end the session
 - An edge from `tools` node to `chat_model` allows for tools to invoke the LLM.

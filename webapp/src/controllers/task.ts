@@ -2,7 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
-import { getAssetById } from 'db/asset';
+import { attachAssetToObject, getAssetById } from 'db/asset';
 import {
 	addTask,
 	deleteTaskById,
@@ -15,9 +15,10 @@ import { getReadyToolsById, getToolsByTeam } from 'db/tool';
 import { getVariableById, getVariablesByTeam, updateVariable } from 'db/variable';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
-import { SharingMode } from 'struct/sharing';
+import { ObjectId } from 'mongodb';
+import { CollectionName } from 'struct/db';
 
-import { Session, unsafeGetSessionById } from '../db/session';
+import { checkCanAccessApp, unsafeGetSessionById } from '../db/session';
 
 export type TasksDataReturnType = Awaited<ReturnType<typeof tasksData>>;
 
@@ -100,8 +101,13 @@ export async function publicGetTaskJson(req, res, next) {
 	const { name, sessionId } = req?.query || {};
 	try {
 		const session = await unsafeGetSessionById(sessionId);
-		if (session?.sharingConfig?.mode !== SharingMode.PUBLIC) {
-			return res.status(404).json({ error: 'No permission' });
+		const canAccess = await checkCanAccessApp(
+			session?.appId?.toString(),
+			false,
+			res.locals.account
+		);
+		if (!canAccess) {
+			return next();
 		}
 		const task = await getTaskByName(session?.teamId, name);
 		if (!task) {
@@ -139,8 +145,8 @@ export async function addTaskApi(req, res, next) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'description', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'requiresHumanInput', validation: { notEmpty: true, ofType: 'boolean' } },
-			{ field: 'expectedOutput', validation: { ofType: 'string' } },
+			{ field: 'requiresHumanInput', validation: { ofType: 'boolean' } },
+			{ field: 'expectedOutput', validation: { notEmpty: true, ofType: 'string' } },
 			{
 				field: 'toolIds',
 				validation: {
@@ -237,7 +243,9 @@ export async function addTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const foundIcon = await getAssetById(iconId);
+	const newTaskId = new ObjectId();
+	const collectionType = CollectionName.Tasks;
+	const attachedIconToTask = await attachAssetToObject(iconId, newTaskId, collectionType);
 
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
@@ -253,10 +261,11 @@ export async function addTaskApi(req, res, next) {
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
-		icon: foundIcon
+		icon: attachedIconToTask
 			? {
-					id: foundIcon._id,
-					filename: foundIcon.filename
+					id: attachedIconToTask._id,
+					filename: attachedIconToTask.filename,
+					linkedId: newTaskId
 				}
 			: null,
 		formFields: formFields,

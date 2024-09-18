@@ -8,6 +8,7 @@ import {
 	changeAccountPassword,
 	getAccountByEmail,
 	getAccountById,
+	getAccountsById,
 	setCurrentTeam,
 	updateRoleAndMarkOnboarded,
 	verifyAccount
@@ -48,6 +49,21 @@ export async function welcomeData(req, res, _next) {
 
 	return {
 		team: res.locals.matchingTeam,
+		csrf: req.csrfToken(),
+		teamMembers
+	};
+}
+
+//returns the email of every account in every team and org the user has access to
+export async function sharingData(req, res, next) {
+	const accounts = await getAccountsById(res.locals.matchingTeam.members);
+
+	const teamMembers = accounts.reduce((acc, curr) => {
+		acc.push(curr.email);
+		return acc;
+	}, []);
+
+	return {
 		csrf: req.csrfToken(),
 		teamMembers
 	};
@@ -104,6 +120,10 @@ export async function welcomeJson(req, res, next) {
 	return res.json({ ...data, teams: res.locals.teams });
 }
 
+export async function sharingDataJson(req, res, next) {
+	const data = await sharingData(req, res, next);
+	return res.json({ ...data, teams: res.locals.teams });
+}
 /**
  * @api {post} /forms/account/login Login
  * @apiName login
@@ -142,7 +162,9 @@ export async function login(req, res) {
 
 		if (passwordMatch === true) {
 			const token = await jwt.sign({ accountId: account._id }, process.env.JWT_SECRET); //jwt
-			req.session.token = token; //jwt (cookie)
+			if (req.session) {
+				req.session['token'] = token; //jwt (cookie)
+			}
 
 			if (account.onboarded === false) {
 				return dynamicResponse(req, res, 302, {

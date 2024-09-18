@@ -166,7 +166,7 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.welcomeJson,
-	)
+	);
 
 	//TODO: move and rename all these
 	server.post(
@@ -272,17 +272,21 @@ export default function router(server, app) {
 		'/session/:sessionId([a-f0-9]{24})',
 		csrfMiddleware,
 		setParamOrgAndTeam,
+		setPermissions,
 		sessionController.publicSessionPage.bind(null, app)
 	);
 	publicAppRouter.get(
 		'/session/:sessionId([a-f0-9]{24})/messages.json',
 		csrfMiddleware,
 		setParamOrgAndTeam,
+		setPermissions,
 		sessionController.sessionMessagesJson
 	);
+	//TODO: csrf?
 	publicAppRouter.post(
 		'/forms/app/:appId([a-f0-9]{24})/start',
 		setParamOrgAndTeam,
+		setPermissions,
 		sessionController.addSessionApi
 	);
 	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit', setParamOrgAndTeam, sessionController.editSessionApi);
@@ -290,10 +294,16 @@ export default function router(server, app) {
 
 	publicAppRouter.get(
 		'/:shareLinkShareId(app_[a-f0-9]{64,})', //Note: app_prefix to be removed once we handle other sharinglinktypes
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		setPermissions,
 		sharelinkController.handleRedirect
 	);
 	publicAppRouter.get(
 		'/task',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		setPermissions,
 		taskController.publicGetTaskJson
 	);
 	server.use('/s/:resourceSlug([a-f0-9]{24})', unauthedMiddlewareChain, publicAppRouter);

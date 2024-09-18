@@ -12,7 +12,7 @@ export enum AppType {
 export type ChatAppConfig = {
 	agentId: ObjectId;
 	conversationStarters: string[];
-	recursionLimit?: number;
+	maxMessages?: number;
 };
 
 export type VariableConfig = {
@@ -39,4 +39,5 @@ export type App = {
 	crewId?: ObjectId;
 	shareLinkShareId?: string;
 	variables?: VariableConfig[];
+	createdBy: ObjectId;
 };

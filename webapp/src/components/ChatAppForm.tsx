@@ -2,6 +2,7 @@
 
 import * as API from '@api';
 import { PlayIcon } from '@heroicons/react/20/solid';
+import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
@@ -22,11 +23,14 @@ import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 
+import ConfirmModal from './ConfirmModal';
+
 export default function ChatAppForm({
 	app,
 	toolChoices = [],
 	modelChoices = [],
 	agentChoices = [],
+	whiteListSharingChoices = [],
 	callback,
 	fetchFormData,
 	editing
@@ -34,6 +38,7 @@ export default function ChatAppForm({
 	app?: App;
 	toolChoices?: any[];
 	modelChoices?: any[];
+	whiteListSharingChoices?: any[];
 	agentChoices?: any;
 	callback?: Function;
 	fetchFormData?: Function;
@@ -44,6 +49,9 @@ export default function ChatAppForm({
 	const { step, setStep }: any = useStepContext();
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
+	const [outsideOrg, setOutsideOrg] = useState(false);
+	const [shareEmail, setShareEmail] = useState(false);
+	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [icon, setIcon]: any = useState(app?.icon);
@@ -52,7 +60,7 @@ export default function ChatAppForm({
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
-	const [shareLinkShareId, setShareLinkShareId] = useState(app?.shareLinkShareId);
+	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
@@ -68,7 +76,7 @@ export default function ChatAppForm({
 	const [goal, setGoal] = useState(initialAgent?.goal || '');
 	const [backstory, setBackstory] = useState(initialAgent?.backstory || '');
 	const [modelId, setModelId] = useState(initialAgent?.modelId || null);
-	const [recursionLimit, setRecursionLimit] = useState(app?.chatAppConfig.recursionLimit || 30);
+	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig.maxMessages || 30);
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = toolChoices.find(t => t._id === tid);
@@ -86,6 +94,15 @@ export default function ChatAppForm({
 	const { initialTools, initialDatasources } = (initialAgent?.toolIds || []).reduce(
 		getInitialTools,
 		{ initialTools: [], initialDatasources: [] }
+	);
+	const initialEmails = whiteListSharingChoices
+		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
+		: null;
+	const [sharingEmailState, setSharingEmailState] = useState(
+		Object.values(app?.sharingConfig?.permissions || {}).map(x => ({
+			label: x as string,
+			value: x as string
+		}))
 	);
 	const [agentsState, setAgentsState] = useState(
 		initialAgent ? { label: initialAgent.name, value: initialAgent._id } : null
@@ -123,6 +140,12 @@ export default function ChatAppForm({
 		setIcon(app?.icon);
 	}, [app?._id]);
 
+	useEffect(() => {
+		if (sharingMode !== SharingMode.WHITELIST) {
+			setSharingEmailState([]);
+		}
+	}, [sharingMode]);
+
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
@@ -132,10 +155,11 @@ export default function ChatAppForm({
 			name: appName,
 			description,
 			conversationStarters: conversationStarters.map(x => x?.name.trim()).filter(x => x),
+			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			sharingMode,
 			shareLinkShareId,
 			run,
-			recursionLimit,
+			maxMessages,
 			//existing agent
 			agentId: agentsState ? agentsState.value : null,
 			//new agent
@@ -148,7 +172,8 @@ export default function ChatAppForm({
 				.map(x => x.value)
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
-			iconId: icon?.id
+			iconId: icon?.id,
+			cloning: app && !editing
 		};
 		// console.log(JSON.stringify(body, null, '\t'));
 		if (editing === true) {
@@ -256,6 +281,12 @@ export default function ChatAppForm({
 		setModalOpen(false);
 	}
 
+	async function emailCallback(newEmail) {
+		setSharingEmailState(() => [...sharingEmailState, { label: newEmail, value: newEmail }]);
+		setOutsideOrg(true);
+		setModalOpen(false);
+	}
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -286,6 +317,39 @@ export default function ChatAppForm({
 					setOpen={setModalOpen}
 					callback={toolCallback}
 					initialType={ToolType.FUNCTION_TOOL}
+				/>
+			);
+			break;
+		case 'whitelist':
+			modal = (
+				<AddEmailModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={emailCallback}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title='Share with new email'
+					callback={emailCallback}
+				/>
+			);
+			break;
+		case 'confirmOutsideOrg':
+			modal = (
+				<ConfirmModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					confirmFunction={() => {
+						setOutsideOrg(false);
+						setModalOpen(false);
+					}}
+					cancelFunction={() => {
+						setModalOpen(false);
+					}}
+					title={'Sharing Outside Team'}
+					message={
+						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
+					}
 				/>
 			);
 			break;
@@ -365,6 +429,14 @@ export default function ChatAppForm({
 								showInfoAlert={true}
 								setShareLinkShareId={setShareLinkShareId}
 								shareLinkShareId={shareLinkShareId}
+								emailState={sharingEmailState}
+								emailOptions={initialEmails}
+								onChange={setSharingEmailState}
+								setModalOpen={x => {
+									setModalOpen('whitelist');
+								}}
+								shareEmail={shareEmail}
+								setShareEmail={setShareEmail}
 							/>
 							<div className='sm:col-span-12'>
 								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
@@ -385,7 +457,7 @@ export default function ChatAppForm({
 
 							<div className='sm:col-span-'>
 								<label
-									htmlFor='recursionLimit'
+									htmlFor='maxMessages'
 									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 								>
 									Max Messages
@@ -393,11 +465,11 @@ export default function ChatAppForm({
 								<input
 									required
 									type='number'
-									name='recursionLimit'
-									id='recursionLimit'
-									value={recursionLimit}
+									name='maxMessages'
+									id='maxMessages'
+									value={maxMessages}
 									onChange={e => {
-										setRecursionLimit(parseInt(e.target.value, 10));
+										setMaxMessages(parseInt(e.target.value, 10));
 									}}
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
@@ -574,8 +646,13 @@ export default function ChatAppForm({
 					</button>
 					<div className='flex gap-x-4'>
 						<button
-							type='submit'
-							onClick={() => setRun(false)}
+							type={outsideOrg ? 'button' : 'submit'}
+							onClick={() => {
+								if (outsideOrg) {
+									setModalOpen('confirmOutsideOrg');
+								}
+								setRun(false);
+							}}
 							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 						>
 							Save

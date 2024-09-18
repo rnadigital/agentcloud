@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from init.env_variables import UPLOADS_BASE_PATH
 from storage.provider import StorageProvider
+from minio import Minio
+from minio.error import S3Error
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger("storage.local")

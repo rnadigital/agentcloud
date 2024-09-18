@@ -50,13 +50,13 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 					>
 						{app.type === AppType.CHAT ? 'Chat' : 'Process'}
 					</span>
-					{app?.sharingConfig?.mode === SharingMode.PUBLIC && (
+					{app?.sharingConfig?.mode !== SharingMode.TEAM && (
 						<span className='tooltip z-100'>
 							<span className='tooltiptext text-sm capitalize !w-[80px] !-ml-[40px] whitespace-pre'>
 								Copy Link
 							</span>
 							<span
-								className='cursor-pointer h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-yellow-100 text-yellow-800 border-yellow-300'
+								className='cursor-pointer h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-yellow-100 text-yellow-800 border-yellow-300 capitalize'
 								onClick={async () => {
 									try {
 										//TODO: refactor the construction of this public app URL to some unified place
@@ -69,7 +69,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 									}
 								}}
 							>
-								Public <LinkIcon className='h-3 w-3 inline' />
+								{app?.sharingConfig?.mode} <LinkIcon className='h-3 w-3 inline' />
 							</span>
 						</span>
 					)}

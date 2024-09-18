@@ -443,6 +443,7 @@ export async function addDatasourceApi(req, res, next) {
 		modelId: toObjectId(modelId),
 		embeddingField,
 		streamConfig, //TODO: validation
+		lastSyncedDate: new Date(),
 		chunkingConfig: enableConnectorChunking
 			? {
 					partitioning,

@@ -41,11 +41,13 @@ langchain-anthropic = "^0.1.20"
 google-cloud-logging = "^3.10.0"
 langchain-groq = "^0.1.4"
 apify-client = "^1.7.0"
-langgraph = "^0.0.51"
+langgraph = "^0.2.16"
 
 langchain-ollama = "^0.1.1"
 pinecone-client = "^5.0.1"
 langchain-google-genai = "^1.0.10"
+motor = "^3.5.1"
+minio = "^7.2.8"
 
 
 [build-system]

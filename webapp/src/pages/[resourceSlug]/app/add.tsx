@@ -38,7 +38,7 @@ export default function AddApp(props: AppsDataReturnType) {
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
 	const [loading, setLoading] = useState(true);
-	const { apps, tools, agents, tasks, models, datasources, variables } = state;
+	const { apps, tools, agents, tasks, models, datasources, teamMembers, variables } = state;
 
 	const { theme } = useThemeContext();
 
@@ -187,6 +187,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						modelChoices={models}
 						toolChoices={tools}
 						app={cloneState?.app}
+						whiteListSharingChoices={teamMembers}
 					/>
 				);
 			case 2:
@@ -199,6 +200,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						app={cloneState?.app}
 						crew={cloneState?.crew}
 						variableChoices={variables}
+						whiteListSharingChoices={teamMembers}
 					/>
 				);
 			default:

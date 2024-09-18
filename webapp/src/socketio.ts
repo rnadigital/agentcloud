@@ -16,6 +16,7 @@ import { timingSafeEqual } from 'crypto';
 import { unsafeGetAppById } from 'db/app';
 import { ChatChunk, upsertOrUpdateChatMessage } from 'db/chat';
 import {
+	checkCanAccessApp,
 	getSessionById,
 	setSessionStatus,
 	unsafeGetSessionById,
@@ -27,6 +28,15 @@ import { SessionStatus } from 'struct/session';
 import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
+
+//TODO: move this state into redis once we expand webapp beyond 1 pod
+export let activeSessionRooms = [];
+export function updateActiveSessionRooms() {
+	activeSessionRooms = [...io.sockets.adapter.rooms]
+		.filter(re => !re[1].has(re[0]))
+		.map(re => re[0])
+		.filter(room => room.startsWith('_'));
+}
 
 export function initSocket(rawHttpServer) {
 	io.attach(rawHttpServer);
@@ -92,41 +102,25 @@ export function initSocket(rawHttpServer) {
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
+
 			const session = await unsafeGetSessionById(
 				socketRequest.locals.isAgentBackend ? room.substring(1) : room
-			); // removing _
-			if (!session) {
-				log('socket.id "%s" invalid session %s', socket.id, room);
-				return;
+			);
+			const canJoinRoom = await checkCanAccessApp(
+				session?.appId?.toString(),
+				socketRequest.locals.isAgentBackend,
+				socketRequest.locals.account
+			);
+
+			if (canJoinRoom) {
+				socket.join(room);
 			}
-			const foundApp = await unsafeGetAppById(session?.appId);
-			if (!foundApp) {
-				log('socket.id "%s" app id "%s" not found %s', socket.id, session?.appId, room);
-				return;
-			}
-			log('socket.id "%s" sent join_room %s', socket.id, room);
-			// log('foundApp', foundApp);
-			switch (foundApp?.sharingConfig?.mode as SharingMode) {
-				case SharingMode.PUBLIC:
-					socket.join(room);
-					break;
-				case SharingMode.TEAM:
-					const sessionTeamMatch = socketRequest?.locals?.account?.orgs?.some(o =>
-						o?.teams?.some(t => t.id.toString() === session.teamId.toString())
-					);
-					if (!sessionTeamMatch && !socketRequest.locals.isAgentBackend) {
-						return;
-					}
-					socket.join(room);
-					break;
-				//case SharingMode.RESTRICTED:
-				default:
-					return; //TODO
-			}
+
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
 			}
+			updateActiveSessionRooms();
 		});
 
 		socket.on('stop_generating', async data => {
@@ -163,9 +157,15 @@ export function initSocket(rawHttpServer) {
 
 			if (message?.chunkId && message?.text?.length > 0) {
 				try {
-					message.text = JSON.parse(message.text);
-					message.language = 'json';
-					message.type = 'code';
+					if (
+						typeof message.text === 'string' &&
+						(message.text.startsWith('{') || message.text.startsWith('['))
+					) {
+						//Note: only tries to JSON stringify objects/arrays because otherwise any number or quoted string is a valid JSON and shows up in a code block, looks weird.
+						message.text = JSON.parse(message.text);
+						message.language = 'json';
+						message.type = 'code';
+					}
 				} catch (error) {}
 			}
 

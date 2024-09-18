@@ -1,6 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { activeSessionRooms } from '@socketio';
 import {
 	getAgentById,
 	getAgentNameMap,
@@ -17,6 +18,7 @@ import {
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
 	addSession,
+	checkCanAccessApp,
 	deleteSessionById,
 	getSessionById,
 	getSessionsByTeam,
@@ -24,12 +26,13 @@ import {
 	unsafeGetSessionById,
 	updateSession
 } from 'db/session';
+import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
+const log = debug('webapp:controllers:session');
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
-import { SharingMode } from 'struct/sharing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function sessionsData(req, res, _next) {
@@ -80,7 +83,7 @@ export async function sessionData(req, res, _next) {
 	return {
 		csrf: req.csrfToken(),
 		session,
-		app,
+		app: app as App,
 		avatarMap
 	};
 }
@@ -102,8 +105,9 @@ export async function publicSessionData(req, res, _next) {
 			}
 			break;
 	}
-	if (app?.sharingConfig?.mode !== SharingMode.PUBLIC) {
-		return; // TODO: make this actually
+	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return null;
 	}
 	return {
 		csrf: req.csrfToken(),
@@ -133,7 +137,7 @@ export async function sessionPage(app, req, res, next) {
 export async function publicSessionPage(app, req, res, next) {
 	const data = await publicSessionData(req, res, next);
 	if (!data) {
-		return next(); //404
+		return next();
 	}
 	res.locals.data = {
 		...data,
@@ -157,6 +161,11 @@ export async function sessionMessagesData(req, res, _next) {
 }
 
 export async function publicSessionMessagesData(req, res, _next) {
+	const session = await unsafeGetSessionById(req.params.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return null;
+	}
 	const messages = await unsafeGetChatMessagesBySession(req.params.sessionId);
 	return messages;
 }
@@ -176,7 +185,6 @@ export async function sessionMessagesJson(req, res, next) {
 		if (validationError) {
 			return dynamicResponse(req, res, 400, { error: validationError });
 		}
-
 		const messages = await getChatMessageAfterId(
 			req.params.resourceSlug,
 			req.params.sessionId,
@@ -185,6 +193,27 @@ export async function sessionMessagesJson(req, res, next) {
 		return res.json(messages);
 	}
 	const data = await sessionMessagesData(req, res, next);
+
+	//TODO: a cleaner way to do this, but it only works for Chat apps anyway. This is OK for now.
+	const sessionId = req.params.sessionId.toString();
+	const session = await unsafeGetSessionById(sessionId);
+	const app = await unsafeGetAppById(session?.appId);
+	if (app.type === AppType.CHAT) {
+		log('activeSessionRooms', activeSessionRooms);
+		if (!activeSessionRooms.includes(`_${sessionId}`)) {
+			log('Resuming session', sessionId);
+			activeSessionRooms.push(`_${sessionId}`);
+			sessionTaskQueue.add(
+				'execute_rag',
+				{
+					type: 'chat',
+					sessionId
+				},
+				{ removeOnComplete: true, removeOnFail: true }
+			);
+		}
+	}
+
 	return res.json(data);
 }
 
@@ -194,6 +223,9 @@ export async function sessionMessagesJson(req, res, next) {
  */
 export async function publicSessionMessagesJson(req, res, next) {
 	const data = await publicSessionMessagesData(req, res, next);
+	if (!data) {
+		return next();
+	}
 	return res.json(data);
 }
 
@@ -260,15 +292,16 @@ export async function addSessionApi(req, res, next) {
 			permissions: {},
 			mode: app?.sharingConfig?.mode
 		}
-		// variables
 	});
 
 	if (!skipRun && app.variables.length === 0) {
+		const newSessionId = addedSession.insertedId.toString();
+		activeSessionRooms.push(`_${newSessionId}`);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
 				type: app?.type,
-				sessionId: addedSession.insertedId.toString()
+				sessionId: newSessionId
 			},
 			{ removeOnComplete: true, removeOnFail: true }
 		);

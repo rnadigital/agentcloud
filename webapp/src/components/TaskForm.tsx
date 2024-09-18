@@ -191,6 +191,12 @@ export default function TaskForm({
 		const toolIds = toolState ? toolState.map(x => x?.value) : [];
 		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
 		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
+
+		const displayOnlyFinalOutput =
+			taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
+				? false
+				: taskState.displayOnlyFinalOutput;
+
 		const body: any = {
 			_csrf: e.target._csrf.value,
 			resourceSlug,
@@ -200,10 +206,10 @@ export default function TaskForm({
 			toolIds: dedupedCombinedToolIds || [],
 			agentId: taskState?.agentId || null,
 			asyncExecution: false, //e.target.asyncExecution.checked,
-			requiresHumanInput: e.target.requiresHumanInput.checked,
+			requiresHumanInput: taskState?.requiresHumanInput || null,
 			context: taskState?.context || [],
 			formFields: formFields || [],
-			displayOnlyFinalOutput: e.target.displayOnlyFinalOutput.checked,
+			displayOnlyFinalOutput,
 			storeTaskOutput: e.target.storeTaskOutput.checked,
 			taskOutputFileName: e.target.taskOutputFileName?.value,
 			isStructuredOutput,
@@ -444,7 +450,7 @@ export default function TaskForm({
 									htmlFor='expectedOutput'
 									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 								>
-									Expected Output
+									Expected Output<span className='text-red-700'> *</span>
 								</label>
 
 								<div className='ml-auto text-gray-900 dark:text-gray-50 text-sm mr-2'>
@@ -710,7 +716,6 @@ export default function TaskForm({
 							</div>
 						</div>*/}
 
-						{/* human_input tool checkbox */}
 						<div className='col-span-full'>
 							<ToolTip
 								content='Use human input when the task description and expected output require a human response instead of an AI response. This input will be used for the next task in a process app.'
@@ -721,32 +726,56 @@ export default function TaskForm({
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='requiresHumanInput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 										>
-											<input
-												type='checkbox'
-												id='requiresHumanInput'
-												name='requiresHumanInput'
-												checked={taskState?.requiresHumanInput === true}
-												onChange={e => {
-													setTask(oldTask => {
-														return {
-															...oldTask,
-															requiresHumanInput: e.target.checked
-														};
-													});
-												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-											/>
-											Allow Human Input
+											Human Input
 										</label>
+										<Select
+											primaryColor='indigo'
+											value={
+												requiredHumanInput
+													? formFields?.length > 0
+														? { label: 'Human Input - Form input', value: 'form' }
+														: { label: 'Human Input - Free text feedback to AI', value: 'freeText' }
+													: { label: 'Human Input - OFF', value: 'off' }
+											}
+											onChange={(v: any) => {
+												setTask(oldTask => ({
+													...oldTask,
+													requiresHumanInput: v.value !== 'off'
+												}));
+												if (v.value === 'form') {
+													setFormFields(
+														task?.formFields?.length > 0
+															? task.formFields
+															: [{ position: '1', type: 'string' }]
+													);
+												} else {
+													setFormFields(null);
+												}
+											}}
+											options={[
+												{ label: 'Human Input - OFF', value: 'off' },
+												{ label: 'Human Input - Free text feedback to AI', value: 'freeText' },
+												{ label: 'Human Input - Form input', value: 'form' }
+											]}
+											classNames={{
+												menuButton: () =>
+													'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+												menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+												list: 'dark:bg-slate-700',
+												listGroupLabel: 'dark:bg-slate-700',
+												listItem: (value?: { isSelected?: boolean }) =>
+													`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
+											}}
+										/>
 									</div>
 								</div>
 							</ToolTip>
 						</div>
 
 						{/* Form builder for human input */}
-						{requiredHumanInput && (
+						{requiredHumanInput && formFields?.length > 0 && (
 							<div className='col-span-full'>
 								<FormConfig formFields={formFields} setFormFields={setFormFields} />
 							</div>
@@ -769,7 +798,14 @@ export default function TaskForm({
 												type='checkbox'
 												id='displayOnlyFinalOutput'
 												name='displayOnlyFinalOutput'
-												checked={taskState?.displayOnlyFinalOutput === true}
+												disabled={
+													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
+												}
+												checked={
+													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
+														? false
+														: taskState?.displayOnlyFinalOutput === true
+												}
 												onChange={e => {
 													setTask(oldTask => {
 														return {
@@ -778,7 +814,7 @@ export default function TaskForm({
 														};
 													});
 												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
 											/>
 											Display Only Final Output
 										</label>
