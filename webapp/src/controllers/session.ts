@@ -199,7 +199,7 @@ export async function sessionMessagesJson(req, res, next) {
 	const sessionId = req.params.sessionId.toString();
 	const session = await unsafeGetSessionById(sessionId);
 	const app = await unsafeGetAppById(session?.appId);
-	if (app.type === AppType.CHAT) {
+	if (app.type === AppType.CHAT && app.variables?.length === 0) {
 		log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 		if (!activeSessionRooms.includes(`_${sessionId}`)) {
 			log('Resuming session', sessionId);
