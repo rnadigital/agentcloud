@@ -216,7 +216,9 @@ export async function addToolApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (Object.keys(ragFilters || {}).length > 0 && (type as ToolType) === ToolType.FUNCTION_TOOL) {
+	const isFunctionTool = (type as ToolType) === ToolType.FUNCTION_TOOL;
+
+	if (Object.keys(ragFilters || {}).length > 0 && !isFunctionTool) {
 		const validate = ajv.compile(RagFilterSchema);
 		log('validate', validate);
 		const validated = validate(ragFilters);
@@ -231,8 +233,6 @@ export async function addToolApi(req, res, next) {
 	) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid runtime' });
 	}
-
-	const isFunctionTool = (type as ToolType) === ToolType.FUNCTION_TOOL;
 
 	const toolData = {
 		...data,
@@ -286,7 +286,7 @@ export async function addToolApi(req, res, next) {
 		requiredParameters: linkedTool?.requiredParameters,
 		functionId,
 		linkedToolId: toObjectId(linkedToolId),
-		...(ragFilters ? { ragFilters } : {})
+		...(ragFilters && !isFunctionTool ? { ragFilters } : {})
 	});
 
 	if (!addedTool?.insertedId) {
