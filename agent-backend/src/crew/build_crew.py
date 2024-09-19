@@ -1,6 +1,4 @@
-import json
 import logging
-from io import BytesIO
 import uuid
 from typing import Any, List, Set, Type, Optional
 from pprint import pprint
@@ -11,20 +9,21 @@ from pydantic import ValidationError
 from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
+from crew.build_task_helpers import (
+    get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model, escape_curly_braces
+)
 from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
 import models.mongo
 from models.mongo import AppType, ToolType
 from init.mongo_session import start_mongo_session
-from storage import storage_provider 
-from utils.json_schema_to_pydantic import json_schema_to_pydantic
-from utils.model_helper import  keyset, match_key, search_subordinate_keys 
-from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN , SOCKET_URL
+from utils.model_helper import keyset, match_key, search_subordinate_keys
+from init.env_variables import AGENT_BACKEND_SOCKET_TOKEN, SOCKET_URL
 from typing import Dict
 from models.sockets import SocketMessage, SocketEvents, Message
-from tools import  RagTool, GoogleCloudFunctionTool
+from tools import RagTool, GoogleCloudFunctionTool
 from messaging.send_message_to_socket import send
-from tools.global_tools import  GlobalBaseTool
+from tools.global_tools import GlobalBaseTool
 from tools.builtin_tools import BuiltinTools
 from redisClient.utilities import RedisClass
 
@@ -86,7 +85,7 @@ class CrewAIBuilder:
 
     def build_models(self):
         for key, model in self.models_models.items():
-            self.crew_models[key] = language_model_factory(model) #, credential)
+            self.crew_models[key] = language_model_factory(model)  # , credential)
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -156,72 +155,28 @@ class CrewAIBuilder:
         except:
             return False
 
-    # Factory to create the callback function so we dont overwrite it with the one from the last task
-    def make_task_callback(self, task, session_id):
-        def callback(output):
-            # Convert the output to bytes and create an in-memory buffer
-            buffer = BytesIO()
-            buffer.write(str(output).encode())
-            buffer.seek(0)  # Rewind the buffer to the beginning
-
-            # Upload the in-memory buffer directly to the storage provider
-            storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, session_id, is_public=False)
-
-            # Insert the output metadata into MongoDB
-            mongo_client.insert_model("taskoutputs", {
-                "session_id": session_id,
-                "task_id": task.id,
-                "task_output_file_name": task.taskOutputFileName,
-            })
-
-            # Get the signed URL for downloading the file
-            signed_url = storage_provider.get_signed_url(task.taskOutputFileName, session_id, is_public=False)
-
-            # Send the notification to the sockets
-            self.send_to_sockets(
-                text=f"Task output file uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
-                event=SocketEvents.MESSAGE,
-                chunk_id=str(uuid.uuid4())
-            )
-        return callback
-
     def build_tasks(self):
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
-            task_tools_objs = dict()
 
-            for task_tool_id in task.toolIds:
-                task_tool_set = search_subordinate_keys(self.crew_tools, keyset(task_tool_id))
-                if len(list(task_tool_set.values())) > 0:
-                    task_tool = list(task_tool_set.values())[0]  # Note: this dict/list always holds 1 item
-                    task_tools_objs[task_tool.name] = task_tool
+            task_tools_objs = get_task_tools(task, self.crew_tools)
 
-            context_task_objs = []
-            if task.context:
-                for context_task_id in task.context:
-                    context_task = self.crew_tasks.get(keyset(context_task_id))
-                    if not context_task:
-                        raise CrewAIBuilderException(
-                            f"Task with ID '{context_task_id}' not found in '{task.name}' context. "
-                            f"(Is it ordered later in Crew tasks list?)")
-                    context_task_objs.append(context_task)
+            context_task_objs = get_context_tasks(task, self.crew_tasks)
 
             # Create the callback function for this specific task
-            callback = self.make_task_callback(task, self.session_id) if task.storeTaskOutput else None
+            task_callback = make_task_callback(
+                task=task,
+                session_id=self.session_id,
+                mongo_client=mongo_client,
+                send_to_socket_fn=self.send_to_sockets
+            )
 
-            output_pydantic = None
+            output_pydantic_model = None
             if task.isStructuredOutput:
-                try:
-                    task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
-                    output_pydantic = task_model
-
-                    # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
-                    # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
-                    task.expected_output = (task.expectedOutput
-                                            .replace('{', '&lcub;')
-                                            .replace('}', '&rcub;'))
-                except Exception:
-                    output_pydantic = None
+                output_pydantic_model = get_output_pydantic_model(task)
+                # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
+                # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
+                task.expected_output = escape_curly_braces(task.expectedOutput)
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude={
@@ -229,12 +184,12 @@ class CrewAIBuilder:
                     "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"
                 }),
                 agent=agent_obj,
-                tools=task_tools_objs.values(),
+                tools=task_tools_objs.values() if task_tools_objs else None,
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
                 stream_only_final_output=task.displayOnlyFinalOutput,
-                callback=callback,
-                output_pydantic=output_pydantic
+                callback=task_callback,
+                output_pydantic=output_pydantic_model
             )
 
     def make_user_question(self):
@@ -311,7 +266,7 @@ class CrewAIBuilder:
             {str(ve)}
             ```
             """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
-                             timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
+                                 timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
     def send_to_sockets(self, text='', event=SocketEvents.MESSAGE, first=True, chunk_id=None,
                         timestamp=None, display_type='bubble', author_name='System', overwrite=False):
@@ -346,7 +301,7 @@ class CrewAIBuilder:
     def run_crew(self):
         crew_output = self.crew.kickoff(inputs=self.input_variables if self.input_variables else None)
 
-        if self.crew_model.fullOutput: # Note: do we need/want this check?
+        if self.crew_model.fullOutput:  # Note: do we need/want this check?
             self.send_to_sockets(
                 text=crew_output.raw,
                 event=SocketEvents.MESSAGE,
