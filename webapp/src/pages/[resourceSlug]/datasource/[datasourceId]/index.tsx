@@ -178,7 +178,6 @@ export default function Datasource(props) {
 				timeUnit,
 				cronExpression
 			};
-			// console.log(body);
 			await API.updateDatasourceSchedule(
 				body,
 				() => {

@@ -15,7 +15,6 @@ export default function EditVariable(props) {
 	const [variable, setVariable] = useState<Variable>(props.variable);
 	const [error, setError] = useState();
 
-	console.log(variable);
 	async function fetchVariableData() {
 		await API.getVariable(
 			{
