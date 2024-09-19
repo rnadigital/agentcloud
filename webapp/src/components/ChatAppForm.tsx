@@ -145,6 +145,19 @@ export default function ChatAppForm({
 		.map(v => ({ label: v.name, value: v._id.toString() }))
 		.filter(v => !roleSelectedVariables.some(sv => sv.value === v.value));
 
+	const combinedVariables =
+		Array.from(
+			new Set(
+				[...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables].map(
+					variable => variable.value
+				)
+			)
+		) || [];
+
+	const selectedVariables = variableChoices.filter(v =>
+		combinedVariables.includes(v._id.toString())
+	);
+
 	const autocompleteBackstory = useAutocompleteDropdown({
 		value: backstory,
 		options: backstoryVariableOptions,
@@ -240,16 +253,9 @@ export default function ChatAppForm({
 			type: AppType.CHAT,
 			iconId: icon?.id,
 			cloning: app && !editing,
-			variables:
-				Array.from(
-					new Set(
-						[...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables].map(
-							variable => variable.value
-						)
-					)
-				) || []
+			variables: selectedVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }))
 		};
-		// console.log(JSON.stringify(body, null, '\t'));
+
 		if (editing === true) {
 			posthog.capture('updateApp', {
 				appId: app._id,
