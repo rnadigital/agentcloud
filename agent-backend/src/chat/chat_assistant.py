@@ -48,7 +48,7 @@ class ChatAssistant:
     def init_app_state(self):
         session = self.mongo_conn.get_session(self.session_id)
 
-        app = self.mongo_client.get_single_model_by_id("apps", App, session.appId)
+        app = self.mongo_conn.get_single_model_by_id("apps", App, session.appId)
 
         app_config = app.chatAppConfig
         if not app_config:
@@ -64,7 +64,7 @@ class ChatAssistant:
         if session.variables:
             self.system_message = self.system_message.format(**session.variables)
 
-        model = self.mongo_client.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
+        model = self.mongo_conn.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         self.chat_model = language_model_factory(model)
 
         self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
