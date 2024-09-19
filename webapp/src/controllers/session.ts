@@ -146,6 +146,7 @@ export async function publicSessionPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
+export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionJson>>;
 /**
  * GET /[resourceSlug]/session/[sessionId].json
  * get session json
@@ -198,8 +199,8 @@ export async function sessionMessagesJson(req, res, next) {
 	const sessionId = req.params.sessionId.toString();
 	const session = await unsafeGetSessionById(sessionId);
 	const app = await unsafeGetAppById(session?.appId);
-	if (app.type === AppType.CHAT) {
-		log('activeSessionRooms', activeSessionRooms);
+	if (app.type === AppType.CHAT && app.variables?.length === 0) {
+		log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 		if (!activeSessionRooms.includes(`_${sessionId}`)) {
 			log('Resuming session', sessionId);
 			activeSessionRooms.push(`_${sessionId}`);
@@ -296,6 +297,7 @@ export async function addSessionApi(req, res, next) {
 	if (!skipRun && app.variables.length === 0) {
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
+		console.log('activeSessionRooms after push', activeSessionRooms);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{

@@ -40,7 +40,7 @@ export default function AppCard({ app, startSession, fetchFormData }) {
 		<div className='w-full max-w-sm rounded-xl bg-white border dark:border-slate-700 dark:bg-slate-800 px-6 py-4 flex flex-col space-between min-h-50'>
 			<span className='flex justify-between'>
 				<span className='space-x-2'>
-					<DevBadge text={`App ID: ${app?._id}`} />
+					<DevBadge label='App ID' value={app?._id} />
 					<span
 						className={`h-6 px-2 py-[0.5px] border text-sm rounded-lg ${
 							app.type === AppType.CHAT

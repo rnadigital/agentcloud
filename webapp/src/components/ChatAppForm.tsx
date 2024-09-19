@@ -14,16 +14,22 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+import { AgentsDataReturnType } from 'controllers/agent';
+import { Model } from 'db/model';
+import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { Agent } from 'struct/agent';
 import { App, AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
+import { Variable } from 'struct/variable';
 
 import ConfirmModal from './ConfirmModal';
+import AutocompleteDropdown from './variables/VariableDropdown';
 
 export default function ChatAppForm({
 	app,
@@ -33,16 +39,18 @@ export default function ChatAppForm({
 	whiteListSharingChoices = [],
 	callback,
 	fetchFormData,
-	editing
+	editing,
+	variableChoices = []
 }: {
 	app?: App;
 	toolChoices?: any[];
-	modelChoices?: any[];
+	modelChoices?: Model[];
 	whiteListSharingChoices?: any[];
-	agentChoices?: any;
+	agentChoices?: Agent[];
 	callback?: Function;
 	fetchFormData?: Function;
 	editing?: boolean;
+	variableChoices?: AgentsDataReturnType['variables'];
 }) {
 	//TODO: fix any types
 
@@ -77,6 +85,7 @@ export default function ChatAppForm({
 	const [backstory, setBackstory] = useState(initialAgent?.backstory || '');
 	const [modelId, setModelId] = useState(initialAgent?.modelId || null);
 	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig.maxMessages || 30);
+	const [currentInput, setCurrentInput] = useState<string>();
 
 	const getInitialTools = (acc, tid) => {
 		const foundTool = toolChoices.find(t => t._id === tid);
@@ -112,6 +121,66 @@ export default function ChatAppForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
+	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<string[]>([]);
+
+	const [goalSelectedVariables, setGoalSelectedVariables] = useState<string[]>([]);
+
+	const [roleSelectedVariables, setRoleSelectedVariables] = useState<string[]>([]);
+
+	const backstoryVariableOptions = variableChoices
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !backstorySelectedVariables.some(sv => sv === v.value));
+
+	const goalVariableOptions = variableChoices
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !goalSelectedVariables.some(sv => sv === v.value));
+
+	const roleVariableOptions = variableChoices
+		.map(v => ({ label: v.name, value: v._id.toString() }))
+		.filter(v => !roleSelectedVariables.some(sv => sv === v.value));
+
+	const combinedVariables =
+		Array.from(
+			new Set([...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables])
+		) || [];
+
+	const selectedVariables = variableChoices.filter(v =>
+		combinedVariables.includes(v._id.toString())
+	);
+
+	const autocompleteBackstory = useAutocompleteDropdown({
+		value: backstory,
+		options: backstoryVariableOptions,
+		setValue: setBackstory,
+		setSelectedVariables: setBackstorySelectedVariables,
+		setModalOpen,
+		initialState: variableChoices,
+		setCurrentInput,
+		fetchFormData
+	});
+
+	const autocompleteGoal = useAutocompleteDropdown({
+		value: goal,
+		options: goalVariableOptions,
+		setValue: setGoal,
+		setSelectedVariables: setGoalSelectedVariables,
+		setModalOpen,
+		initialState: variableChoices,
+		setCurrentInput,
+		fetchFormData
+	});
+
+	const autocompleteRole = useAutocompleteDropdown({
+		value: role,
+		options: roleVariableOptions,
+		setValue: setRole,
+		setSelectedVariables: setRoleSelectedVariables,
+		setModalOpen,
+		initialState: variableChoices,
+		setCurrentInput,
+		fetchFormData
+	});
+
 	useEffect(() => {
 		const agentId = agentsState?.value;
 		// !editing && setShowAgentForm(agentId !== app?.chatAppConfig?.agentId);
@@ -146,7 +215,7 @@ export default function ChatAppForm({
 		}
 	}, [sharingMode]);
 
-	async function appPost(e) {
+	async function appPost(e, variables?: { [key: string]: string }) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
@@ -173,9 +242,10 @@ export default function ChatAppForm({
 				.concat((datasourceState || []).map(x => x.value)),
 			type: AppType.CHAT,
 			iconId: icon?.id,
-			cloning: app && !editing
+			cloning: app && !editing,
+			variables: selectedVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }))
 		};
-		// console.log(JSON.stringify(body, null, '\t'));
+
 		if (editing === true) {
 			posthog.capture('updateApp', {
 				appId: app._id,
@@ -192,13 +262,15 @@ export default function ChatAppForm({
 						posthog.capture('startSession', {
 							appId: app._id,
 							appType: AppType.CHAT,
-							appName
+							appName,
+							variables
 						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: app._id
+								id: app._id,
+								variables
 							},
 							null,
 							toast.error,
@@ -229,7 +301,8 @@ export default function ChatAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: res._id
+								id: res._id,
+								variables
 							},
 							null,
 							toast.error,
@@ -515,13 +588,14 @@ export default function ChatAppForm({
 									</div>
 
 									<div className='sm:col-span-12 flex flex-row gap-4'>
-										<div className='isolate space-y-px rounded-md shadow-sm w-full'>
+										<div className='space-y-px rounded-md shadow-sm w-full'>
 											<label
 												htmlFor='systemMessage'
 												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mb-2'
 											>
 												System Message
 											</label>
+
 											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='role'
@@ -530,19 +604,30 @@ export default function ChatAppForm({
 													Role
 												</label>
 												<textarea
+													ref={autocompleteRole.inputRef}
 													required
 													id='role'
 													name='role'
 													placeholder="Defines the agent's function within the crew. It determines the kind of tasks the agent is best suited for."
 													className='relative block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 													rows={3}
-													value={role}
-													onChange={e => {
-														setRole(e.target.value);
-													}}
+													value={autocompleteRole.text}
+													onChange={autocompleteRole.handleChange}
+													onKeyDown={autocompleteRole.handleKeyDown}
 												/>
+
+												{autocompleteRole.showDropdown &&
+													autocompleteRole.filteredOptions.length > 0 && (
+														<AutocompleteDropdown
+															closeDropdown={autocompleteRole.closeDropdown}
+															options={autocompleteRole.filteredOptions}
+															highlightedIndex={autocompleteRole.highlightedIndex}
+															dropdownPosition={autocompleteRole.dropdownPosition}
+															handleOptionSelect={autocompleteRole.handleOptionSelect}
+														/>
+													)}
 											</div>
-											<div className='bg-white dark:bg-slate-800  relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+											<div className='bg-white dark:bg-slate-800 relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='goal'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
@@ -550,37 +635,57 @@ export default function ChatAppForm({
 													Goal
 												</label>
 												<textarea
+													ref={autocompleteGoal.inputRef}
 													required
 													id='goal'
 													name='goal'
 													placeholder="The individual objective that the agent aims to achieve. It guides the agent's decision-making process."
 													className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 													rows={2}
-													value={goal}
-													onChange={e => {
-														setGoal(e.target.value);
-													}}
+													value={autocompleteGoal.text}
+													onChange={autocompleteGoal.handleChange}
+													onKeyDown={autocompleteGoal.handleKeyDown}
 												/>
+												{autocompleteGoal.showDropdown && (
+													<AutocompleteDropdown
+														closeDropdown={autocompleteGoal.closeDropdown}
+														options={autocompleteGoal.filteredOptions}
+														highlightedIndex={autocompleteGoal.highlightedIndex}
+														dropdownPosition={autocompleteGoal.dropdownPosition}
+														handleOptionSelect={autocompleteGoal.handleOptionSelect}
+													/>
+												)}
 											</div>
-											<div className='bg-white dark:bg-slate-800  overflow-hidden rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
+
+											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='backstory'
 													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
 												>
 													Backstory
 												</label>
+												r
 												<textarea
+													ref={autocompleteBackstory.inputRef}
 													required
 													id='backstory'
 													name='backstory'
 													placeholder="Provides context to the agent's role and goal, enriching the interaction and collaboration dynamics."
 													className='block w-full border-0 p-2 pt-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 													rows={2}
-													value={backstory}
-													onChange={e => {
-														setBackstory(e.target.value);
-													}}
+													value={autocompleteBackstory.text}
+													onChange={autocompleteBackstory.handleChange}
+													onKeyDown={autocompleteBackstory.handleKeyDown}
 												/>
+												{autocompleteBackstory.showDropdown && (
+													<AutocompleteDropdown
+														closeDropdown={autocompleteBackstory.closeDropdown}
+														options={autocompleteBackstory.filteredOptions}
+														highlightedIndex={autocompleteBackstory.highlightedIndex}
+														dropdownPosition={autocompleteBackstory.dropdownPosition}
+														handleOptionSelect={autocompleteBackstory.handleOptionSelect}
+													/>
+												)}
 											</div>
 										</div>
 									</div>

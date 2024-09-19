@@ -188,6 +188,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						toolChoices={tools}
 						app={cloneState?.app}
 						whiteListSharingChoices={teamMembers}
+						variableChoices={variables}
 					/>
 				);
 			case 2:

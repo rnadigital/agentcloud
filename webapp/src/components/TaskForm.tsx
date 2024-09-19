@@ -129,20 +129,17 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<
-		{ label: string; value: string }[]
-	>([]);
-	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] = useState<
-		{ label: string; value: string }[]
-	>([]);
+	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<string[]>([]);
+	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
+		useState<string[]>();
 
 	const descriptionVariableOptions = variables
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !descriptionSelectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !descriptionSelectedVariables?.some(sv => sv === v.value));
 
 	const expectedOutputVariableOptions = variables
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !expectedOutputSelectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !expectedOutputSelectedVariables?.some(sv => sv === v.value));
 
 	const [description, setDescription] = useState(task?.description || '');
 
@@ -216,11 +213,7 @@ export default function TaskForm({
 			isStructuredOutput,
 			variableIds:
 				Array.from(
-					new Set(
-						[...descriptionSelectedVariables, ...expectedOutputSelectedVariables].map(
-							variable => variable.value
-						)
-					)
+					new Set([...descriptionSelectedVariables, ...expectedOutputSelectedVariables])
 				) || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
