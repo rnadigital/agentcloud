@@ -563,29 +563,31 @@ export default function ToolForm({
 
 								{currentTab?.name === 'Filters' && (
 									<>
-										<ScriptEditor
-											height='30em'
-											code={ragFilters.toString()}
-											setCode={setRagFilters}
-											editorOptions={{
-												stopRenderingLineAfter: 1000,
-												fontSize: '12pt',
-												//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
-												minimap: { enabled: false },
-												scrollBeyondLastLine: false
-											}}
-											onInitializePane={onInitializePane}
-											editorJsonSchema={RagFilterSchema}
-											language='json'
-										/>
-										<a
-											className='text-sm text-blue-500 dark:text-blue-400 underline'
-											href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
-											target='_blank'
-											rel='noreferrer'
-										>
-											Instructions on how to format qdrant filters
-										</a>
+										<span>
+											<a
+												className='text-sm text-blue-500 dark:text-blue-400 underline'
+												href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
+												target='_blank'
+												rel='noreferrer'
+											>
+												Instructions on how to format filters
+											</a>
+											<ScriptEditor
+												height='30em'
+												code={ragFilters.toString()}
+												setCode={setRagFilters}
+												editorOptions={{
+													stopRenderingLineAfter: 1000,
+													fontSize: '12pt',
+													//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+													minimap: { enabled: false },
+													scrollBeyondLastLine: false
+												}}
+												onInitializePane={onInitializePane}
+												editorJsonSchema={RagFilterSchema}
+												language='json'
+											/>
+										</span>
 									</>
 								)}
 							</>
