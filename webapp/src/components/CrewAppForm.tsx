@@ -157,7 +157,7 @@ export default function CrewAppForm({
 		setTasksState(initialTasks);
 	}, [app?._id]);
 
-	async function appPost(e, variables?: { [key: string]: string }) {
+	async function appPost(e) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
@@ -193,8 +193,7 @@ export default function CrewAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: app._id,
-								variables
+								id: app._id
 							},
 							null,
 							toast.error,
@@ -214,8 +213,7 @@ export default function CrewAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: res._id,
-								variables
+								id: res._id
 							},
 							null,
 							toast.error,

@@ -5,7 +5,7 @@ interface UseAutocompleteDropdownProps {
 	options: { label: string; value: string }[];
 	value?: string;
 	setValue: Dispatch<SetStateAction<string>>;
-	setSelectedVariables: Dispatch<SetStateAction<Record<string, string>[]>>;
+	setSelectedVariables: React.Dispatch<React.SetStateAction<string[]>>;
 	setModalOpen: Dispatch<SetStateAction<string>>;
 	initialState?: TasksDataReturnType['variables'];
 	setCurrentInput: Dispatch<SetStateAction<string>>;
@@ -56,22 +56,17 @@ const useAutocompleteDropdown = ({
 			);
 			setSelectedVariables(prev => {
 				const merged = [
-					...prev,
-					...selectedFromInitialState.map(variable => ({
-						label: variable.name,
-						value: variable._id.toString()
-					}))
+					...(prev?.length > 0 ? prev : []),
+					...selectedFromInitialState.map(variable => variable._id.toString())
 				];
-				const unique = Array.from(new Set(merged.map(v => v.value))).map(value =>
-					merged.find(v => v.value === value)
-				);
+				const unique = Array.from(new Set(merged));
 				return unique;
 			});
 		}
 	}, [initialState, value, setSelectedVariables]);
 
 	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
-		setSelectedVariables(prev => [...prev, newVariable]);
+		setSelectedVariables(prev => [...prev, newVariable.value]);
 		fetchFormData();
 
 		const cursorPosition = inputRef.current?.selectionStart;
@@ -114,7 +109,7 @@ const useAutocompleteDropdown = ({
 		}
 
 		setSelectedVariables(prevSelectedVariables =>
-			prevSelectedVariables.filter(variable => newText.includes(variable.label))
+			prevSelectedVariables.filter(variable => newText.includes(variable))
 		);
 	};
 
@@ -171,7 +166,7 @@ const useAutocompleteDropdown = ({
 			value.slice(cursorPosition);
 
 		setValue(newText);
-		setSelectedVariables(prev => [...prev, option]);
+		setSelectedVariables(prev => [...prev, option.value]);
 		setShowDropdown(false);
 		setFilterText('');
 

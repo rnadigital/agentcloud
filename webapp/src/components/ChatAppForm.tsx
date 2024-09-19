@@ -121,37 +121,27 @@ export default function ChatAppForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<
-		{ label: string; value: string }[]
-	>([]);
+	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<string[]>([]);
 
-	const [goalSelectedVariables, setGoalSelectedVariables] = useState<
-		{ label: string; value: string }[]
-	>([]);
+	const [goalSelectedVariables, setGoalSelectedVariables] = useState<string[]>([]);
 
-	const [roleSelectedVariables, setRoleSelectedVariables] = useState<
-		{ label: string; value: string }[]
-	>([]);
+	const [roleSelectedVariables, setRoleSelectedVariables] = useState<string[]>([]);
 
 	const backstoryVariableOptions = variableChoices
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !backstorySelectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !backstorySelectedVariables.some(sv => sv === v.value));
 
 	const goalVariableOptions = variableChoices
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !goalSelectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !goalSelectedVariables.some(sv => sv === v.value));
 
 	const roleVariableOptions = variableChoices
 		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !roleSelectedVariables.some(sv => sv.value === v.value));
+		.filter(v => !roleSelectedVariables.some(sv => sv === v.value));
 
 	const combinedVariables =
 		Array.from(
-			new Set(
-				[...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables].map(
-					variable => variable.value
-				)
-			)
+			new Set([...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables])
 		) || [];
 
 	const selectedVariables = variableChoices.filter(v =>
