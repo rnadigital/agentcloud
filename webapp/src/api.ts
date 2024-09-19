@@ -8,7 +8,7 @@ export function getAccount(body, dispatch, errorCallback, router) {
 		...(body?.resourceSlug ? { resourceSlug: body.resourceSlug } : {})
 	}).toString();
 	return ApiCall(`/account.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
-}
+} 
 export function login(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/login', 'POST', body, dispatch, errorCallback, router);
 }
@@ -24,7 +24,7 @@ export function requestChangePassword(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} 
 export function logout(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/logout', 'POST', body, dispatch, errorCallback, router);
 }
@@ -36,7 +36,7 @@ export function verifyToken(body, dispatch, errorCallback, router) {
 }
 export function switchTeam(body, dispatch, errorCallback, router) {
 	return ApiCall('/forms/account/switch', 'POST', body, dispatch, errorCallback, router);
-}
+}//@TEST
 export function getPortalLink(body, dispatch, errorCallback, router) {
 	return ApiCall('/stripe-portallink', 'POST', body, dispatch, errorCallback, router);
 }
@@ -84,12 +84,12 @@ export function createShareLink(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 
 // Apps
 export function getApps(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/apps.json`, 'GET', null, dispatch, errorCallback, router);
-}
+} //@TEST
 export function getApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/app/${body.appId}.json`,
@@ -99,7 +99,7 @@ export function getApp(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function editApp(appId, body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/app/${appId}/edit`,
@@ -109,7 +109,7 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function publicStartApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/s/${body.resourceSlug}/forms/app/${body.id}/start`,
@@ -119,7 +119,7 @@ export function publicStartApp(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -130,7 +130,7 @@ export function addApp(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function deleteApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/app/${body.appId}`,
@@ -140,7 +140,7 @@ export function deleteApp(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 
 // Sessions
 export function getSession(body, dispatch, errorCallback, router) {
@@ -152,7 +152,7 @@ export function getSession(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function deleteSession(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/session/${body.sessionId}`,
@@ -162,7 +162,7 @@ export function deleteSession(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function cancelSession(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/session/${body.sessionId}/cancel`,
@@ -172,7 +172,7 @@ export function cancelSession(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function addSession(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/session/add`,
@@ -182,7 +182,7 @@ export function addSession(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function getSessions(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({ before: body?.before });
 	return ApiCall(
@@ -193,13 +193,13 @@ export function getSessions(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function getMessages(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		...(body?.messageId ? { messageId: body.messageId } : {})
 	}).toString();
 	return ApiCall(`/${body.resourceSlug}/session/${body.sessionId}/messages.json?${queryString}`, 'GET', null, dispatch, errorCallback, router);
-}
+} //@TEST
 
 
 // Agents
@@ -212,7 +212,7 @@ export function addAgent(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+} //@TEST
 export function editAgent(agentId, body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/agent/${agentId}/edit`,
@@ -222,7 +222,7 @@ export function editAgent(agentId, body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/agent/${body.agentId}.json`,
@@ -232,10 +232,10 @@ export function getAgent(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getAgents(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/agents.json`, 'GET', null, dispatch, errorCallback, router);
-}
+}//@TEST
 export function deleteAgent(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/agent/${body.agentId}`,
@@ -245,7 +245,7 @@ export function deleteAgent(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 //APIKeys
 
@@ -258,7 +258,7 @@ export function addKey(body, dispatch, errorCallback, router){
 		errorCallback,
 		router
 	)
-}
+}//@TEST
 
 export function getKeys(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -269,7 +269,7 @@ export function getKeys(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getKey(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/apikey/${body.keyId}.json`,
@@ -279,7 +279,7 @@ export function getKey(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router	
 	);
-}
+}//@TEST
 
 export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -290,7 +290,7 @@ export function incrementKeyVersion(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 export function deleteKey(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -301,7 +301,7 @@ export function deleteKey(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Tasks
 export function getTasks(body, dispatch, errorCallback, router) {
@@ -316,7 +316,7 @@ export function getTaskById(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getTask(body, dispatch: GetTaskByNameDispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		...(body.name ? { name: body.name } : {}),
@@ -330,7 +330,7 @@ export function getTask(body, dispatch: GetTaskByNameDispatch, errorCallback, ro
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 export function addTask(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -341,7 +341,7 @@ export function addTask(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteTask(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/task/${body.taskId}`,
@@ -351,7 +351,7 @@ export function deleteTask(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editTask(taskId, body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/task/${taskId}/edit`,
@@ -361,12 +361,12 @@ export function editTask(taskId, body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Tools
 export function getTools(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/tools.json`, 'GET', null, dispatch, errorCallback, router);
-}
+}//@TEST
 export function getTool(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/tool/${body.toolId}.json`,
@@ -376,7 +376,7 @@ export function getTool(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function addTool(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/tool/add`,
@@ -386,7 +386,7 @@ export function addTool(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteTool(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/tool/${body.toolId}`,
@@ -396,7 +396,7 @@ export function deleteTool(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editTool(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/tool/${body.toolId}/edit`,
@@ -406,7 +406,7 @@ export function editTool(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function applyToolRevision(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/revision/${body.revisionId}/apply`,
@@ -416,7 +416,7 @@ export function applyToolRevision(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteToolRevision(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/revision/${body.revisionId}`,
@@ -426,12 +426,12 @@ export function deleteToolRevision(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Models
 export function getModels(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/models.json`, 'GET', null, dispatch, errorCallback, router);
-}
+}//@TEST
 export function getModel(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/model/${body.modelId}.json`,
@@ -441,7 +441,7 @@ export function getModel(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function addModel(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/model/add`,
@@ -451,7 +451,7 @@ export function addModel(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editModel(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/model/${body.modelId}/edit`,
@@ -461,7 +461,7 @@ export function editModel(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteModel(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/model/${body.modelId}`,
@@ -471,7 +471,7 @@ export function deleteModel(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Asset
 export function addAsset(body, dispatch, errorCallback, router) {
@@ -483,7 +483,7 @@ export function addAsset(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getAsset(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/asset/${body.assetId}.json`,
@@ -493,7 +493,7 @@ export function getAsset(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editAsset(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/asset/${body.assetId}/edit`,
@@ -503,7 +503,7 @@ export function editAsset(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteAsset(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/asset/${body.assetId}`,
@@ -513,7 +513,7 @@ export function deleteAsset(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Datasources
 export function getDatasources(body, dispatch, errorCallback, router) {
@@ -525,7 +525,7 @@ export function getDatasources(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/datasource/${body.datasourceId}.json`,
@@ -535,7 +535,7 @@ export function getDatasource(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function testDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/test`,
@@ -545,7 +545,7 @@ export function testDatasource(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function addDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/add`,
@@ -555,7 +555,7 @@ export function addDatasource(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function updateDatasourceStreams(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/streams`,
@@ -565,7 +565,7 @@ export function updateDatasourceStreams(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function updateDatasourceSchedule(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/schedule`,
@@ -575,7 +575,7 @@ export function updateDatasourceSchedule(body, dispatch, errorCallback, router) 
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/${body.datasourceId}`,
@@ -585,7 +585,7 @@ export function deleteDatasource(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editDatasource(datasourceId, body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/${datasourceId}/edit`,
@@ -595,7 +595,7 @@ export function editDatasource(datasourceId, body, dispatch, errorCallback, rout
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function syncDatasource(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/datasource/${body.datasourceId}/sync`,
@@ -605,7 +605,7 @@ export function syncDatasource(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 // Airbyte
 export function getSpecification(body, dispatch, errorCallback, router) {
@@ -620,7 +620,7 @@ export function getSpecification(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getJobsList(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		datasourceId: body.datasourceId
@@ -633,7 +633,7 @@ export function getJobsList(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getDatasourceSchema(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		datasourceId: body.datasourceId
@@ -646,7 +646,7 @@ export function getDatasourceSchema(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 //Temp datasource stuff
 export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) {
@@ -658,7 +658,7 @@ export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) 
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 //Team (invites/members/etc)
 export function getNotifications(body, dispatch, errorCallback, router) {
@@ -670,7 +670,7 @@ export function getNotifications(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function markNotificationsSeen(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/notification/seen`,
@@ -680,10 +680,10 @@ export function markNotificationsSeen(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/team.json`, 'GET', null, dispatch, errorCallback, router);
-}
+}//@TEST
 export function getTeamMember(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/team/${body.memberId}.json`,
@@ -693,7 +693,7 @@ export function getTeamMember(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function inviteToTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/invite`,
@@ -703,7 +703,7 @@ export function inviteToTeam(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function deleteFromTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/invite`,
@@ -713,7 +713,7 @@ export function deleteFromTeam(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function addTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/add`,
@@ -723,7 +723,7 @@ export function addTeam(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function editTeamMember(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.get('resourceSlug')}/forms/team/${body.get('memberId')}/edit`,
@@ -733,7 +733,7 @@ export function editTeamMember(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function transferTeamOwnership(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/transfer-ownership`,
@@ -743,7 +743,7 @@ export function transferTeamOwnership(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function setDefaultModel(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/set-default-model`,
@@ -753,7 +753,7 @@ export function setDefaultModel(body, dispatch, errorCallback, router) {
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/team/models.json`,
@@ -763,7 +763,7 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 		errorCallback,
 		router
 	);
-}
+}//@TEST
 
 function buildOptions(_route, method, body) {
 	// Convert method uppercase

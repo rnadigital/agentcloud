@@ -8,15 +8,17 @@ let sessionCookie;
 let csrfToken: string;
 let resourceSlug: string;
 
+let accountData;
+
 beforeAll(async () => {
 	await db.connect();
 	await db.db().collection('accounts').deleteOne({ email: 'testuser@example.com' });
 });
 
-afterAll(async () => {
-	await db.db().collection('account').deleteOne({email: 'testuser@example.com'});
-	await db.client().close();
-})
+
+export const getSessionData = () => {
+	return {accountData, sessionCookie};
+}
 
 describe('account tests', () => {
 
@@ -62,6 +64,7 @@ describe('account tests', () => {
 		const accountJson = await response.json();
 		csrfToken = accountJson.csrf;
 		resourceSlug = accountJson.account.currentTeam;
+		accountData = accountJson;
 		expect(response.status).toBe(200);
 	});
 
@@ -99,10 +102,10 @@ describe('account tests', () => {
 		expect(responseJson?.error).toBeDefined();
 		expect(response.status).toBe(400);
 	});
+	
+	//test with valid token??
 
-	//set onboarded in the database
-
-	test('setting role', async () => {
+	test('set role', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${resourceSlug}`, {
 			method: 'POST',
 			headers: {
@@ -120,6 +123,7 @@ describe('account tests', () => {
 		expect(responseJson?.redirect).toBe(`/${resourceSlug}/onboarding/configuremodels`);
 		expect(response.status).toBe(200);
 	})
+
 	test('get welcome data', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/welcome.json`, {
 			method:'GET',
@@ -132,33 +136,5 @@ describe('account tests', () => {
 		expect(responseJson?.team).toBeDefined();
 		expect(responseJson?.teamMembers).toBeDefined();
 	})
-	//test with valid token??
-
-	test('log out', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/logout`, {
-			method: 'POST',
-			headers: {
-				cookie: sessionCookie,
-				'content-type': 'application/json'
-			},
-			body: JSON.stringify({
-				_csrf: csrfToken,
-			}),
-			redirect: 'manual',
-		});
-		const responseJson = await response.json()
-		expect(responseJson?.redirect).toBeDefined();
-		expect(response.status).toBe(200);
-	});
-
-	test('cant get account with invalidated session cookie', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/account.json`, {
-			headers: {
-				cookie: sessionCookie
-			},
-			redirect: 'manual',
-		});
-		expect(response.status).toBe(302); //302 redirect to login
-	});
 
 });
