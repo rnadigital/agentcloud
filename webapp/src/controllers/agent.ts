@@ -248,6 +248,7 @@ export async function addAgentApi(req, res, next) {
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
  */
 export async function editAgentApi(req, res, next) {
+	console.log('Trigger edit');
 	const {
 		toolIds,
 		name,
@@ -332,31 +333,31 @@ export async function editAgentApi(req, res, next) {
 				linkedId: newAttachment.linkedToId
 			};
 		}
-
-		const oldAgent = await updateAgentGetOldAgent(req.params.resourceSlug, req.params.agentId, {
-			name,
-			role,
-			goal,
-			backstory,
-			modelId: toObjectId(modelId),
-			functionModelId: toObjectId(functionModelId),
-			maxIter,
-			maxRPM,
-			verbose: verbose === true,
-			allowDelegation: allowDelegation === true,
-			toolIds: foundTools.map(t => t._id),
-			icon: iconId ? attachedIconToApp : null,
-			variableIds: variableIds.map(toObjectId)
-		});
-
-		if (oldAgent?.icon?.id && oldAgent?.icon?.id?.toString() !== iconId) {
-			await deleteAssetById(oldAgent.icon.id);
-		}
-
-		return dynamicResponse(req, res, 302, {
-			/*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/
-		});
 	}
+
+	const oldAgent = await updateAgentGetOldAgent(req.params.resourceSlug, req.params.agentId, {
+		name,
+		role,
+		goal,
+		backstory,
+		modelId: toObjectId(modelId),
+		functionModelId: toObjectId(functionModelId),
+		maxIter,
+		maxRPM,
+		verbose: verbose === true,
+		allowDelegation: allowDelegation === true,
+		toolIds: foundTools.map(t => t._id),
+		icon: iconId ? attachedIconToApp : null,
+		variableIds: variableIds.map(toObjectId)
+	});
+
+	if (oldAgent?.icon?.id && oldAgent?.icon?.id?.toString() !== iconId) {
+		await deleteAssetById(oldAgent.icon.id);
+	}
+
+	return dynamicResponse(req, res, 302, {
+		/*redirect: `/${req.params.resourceSlug}/agent/${req.params.agentId}/edit`*/
+	});
 }
 
 /**
