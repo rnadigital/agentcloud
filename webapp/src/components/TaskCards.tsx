@@ -46,7 +46,7 @@ export default function TaskCards({ tasks, fetchTasks }: { tasks: any[]; fetchTa
 					className='relative rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm dark:text-white'
 				>
 					<div className='flex flex-col'>
-						<DevBadge text={`Task ID: ${task?._id}`} />
+						<DevBadge label='Task ID' value={task?._id} />
 						<h3 className='text-sm font-semibold truncate'>
 							<Link href={`/${resourceSlug}/task/${task._id}/edit`}>{task.name}</Link>
 						</h3>

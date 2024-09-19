@@ -200,7 +200,7 @@ export async function sessionMessagesJson(req, res, next) {
 	const session = await unsafeGetSessionById(sessionId);
 	const app = await unsafeGetAppById(session?.appId);
 	if (app.type === AppType.CHAT) {
-		log('activeSessionRooms', activeSessionRooms);
+		log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 		if (!activeSessionRooms.includes(`_${sessionId}`)) {
 			log('Resuming session', sessionId);
 			activeSessionRooms.push(`_${sessionId}`);
@@ -297,6 +297,7 @@ export async function addSessionApi(req, res, next) {
 	if (!skipRun && app.variables.length === 0) {
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
+		console.log('activeSessionRooms after push', activeSessionRooms);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
