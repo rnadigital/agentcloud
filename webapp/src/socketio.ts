@@ -119,8 +119,9 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
+			} else {
+				updateActiveSessionRooms();
 			}
-			updateActiveSessionRooms();
 		});
 
 		socket.on('stop_generating', async data => {
