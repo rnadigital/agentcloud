@@ -2,7 +2,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { VariableConfig } from 'struct/app';
 
 interface SessionVariableFormProps {
-	variables: VariableConfig[];
+	variables?: VariableConfig[];
 	onSubmit: (variableValues: { [key: string]: string }) => void;
 }
 
@@ -33,7 +33,7 @@ export default function SessionVariableForm({ variables, onSubmit }: SessionVari
 					Enter Session Values
 				</h3>
 				<div>
-					{variables.map(variable => (
+					{variables?.map(variable => (
 						<div key={variable.name} className='mt-4'>
 							<label
 								htmlFor={variable.name}
