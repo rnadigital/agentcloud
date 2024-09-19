@@ -4,6 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import DatasourcesSelect from 'components/datasources/DatasourcesSelect';
+import ScriptEditor, { MonacoOnInitializePane } from 'components/Editor';
 import InfoAlert from 'components/InfoAlert';
 import ParameterForm from 'components/ParameterForm';
 import RetrievalStrategyComponent from 'components/RetrievalStrategyComponent';
@@ -23,16 +24,38 @@ import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
 
+import { RagFilterSchema } from '../../lib/struct/editorschemas';
+
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
 	{ name: 'Source', href: '#source', toolTypes: [ToolType.FUNCTION_TOOL] },
-	{ name: 'Parameters', href: '#parameters', toolTypes: [ToolType.FUNCTION_TOOL] },
+	{
+		name: 'Parameters',
+		href: '#parameters',
+		toolTypes: [ToolType.FUNCTION_TOOL]
+	},
+	{
+		name: 'Filters',
+		href: '#filters',
+		toolTypes: [ToolType.RAG_TOOL]
+	},
 	{ name: 'Version History', href: '#version-history', toolTypes: [ToolType.FUNCTION_TOOL] }
 ];
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
+
+const jsonPlaceholder = `{
+	"must": [
+		{
+			"key": "example",
+			"match": {
+				"value": "test123"
+			}
+		}
+	]
+}`;
 
 export default function ToolForm({
 	tool = {},
@@ -82,7 +105,18 @@ export default function ToolForm({
 		tool?.retriever_config?.timeWeightField || null
 	);
 
+	const [ragFilters, setRagFilters] = useState(JSON.stringify(tool?.ragFilters || {}, null, '\t'));
+	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
+		/* noop */
+	};
+
 	const [, notificationTrigger]: any = useSocketContext();
+
+	useEffect(() => {
+		if (!ragFilters) {
+			setRagFilters(jsonPlaceholder);
+		}
+	}, [ragFilters]);
 
 	useEffect(() => {
 		if (notificationTrigger && notificationTrigger?.type === NotificationType.Tool) {
@@ -185,6 +219,13 @@ export default function ToolForm({
 
 		const posthogEvent = editing ? 'updateTool' : 'createTool';
 		try {
+			let parsedRagFilters;
+			try {
+				//In case they are invalid formatted or they switch to another tool type
+				parsedRagFilters = JSON.parse(ragFilters);
+			} catch (e) {
+				parsedRagFilters = null;
+			}
 			const body = {
 				_csrf: e.target._csrf.value,
 				resourceSlug,
@@ -211,7 +252,8 @@ export default function ToolForm({
 				},
 				linkedToolId: null,
 				iconId: icon?.id,
-				cloning: tool && !editing
+				cloning: tool && !editing,
+				ragFilters: parsedRagFilters
 			};
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
@@ -368,7 +410,7 @@ export default function ToolForm({
 	return (
 		<>
 			{modal}
-			<form onSubmit={toolPost} className='flex flex-1 flex-col space-between'>
+			<form onSubmit={e => toolPost(e)} className='flex flex-1 flex-col space-between'>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='space-y-12'>
 					<div className='space-y-6'>
@@ -501,7 +543,7 @@ export default function ToolForm({
 										</>
 									)}
 
-								{toolType === ToolType.FUNCTION_TOOL && currentTab?.name === 'Parameters' && (
+								{currentTab?.name === 'Parameters' && (
 									<>
 										<ParameterForm
 											parameters={functionParameters}
@@ -523,6 +565,36 @@ export default function ToolForm({
 											namePlaceholder='Key must be uppercase seperated by underscores'
 											descriptionPlaceholder='Value'
 										/>
+									</>
+								)}
+
+								{currentTab?.name === 'Filters' && (
+									<>
+										<span>
+											<a
+												className='text-sm text-blue-500 dark:text-blue-400 underline'
+												href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
+												target='_blank'
+												rel='noreferrer'
+											>
+												Instructions on how to format filters
+											</a>
+											<ScriptEditor
+												height='30em'
+												code={ragFilters.toString()}
+												setCode={setRagFilters}
+												editorOptions={{
+													stopRenderingLineAfter: 1000,
+													fontSize: '12pt',
+													//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+													minimap: { enabled: false },
+													scrollBeyondLastLine: false
+												}}
+												onInitializePane={onInitializePane}
+												editorJsonSchema={RagFilterSchema}
+												language='json'
+											/>
+										</span>
 									</>
 								)}
 							</>
