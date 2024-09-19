@@ -60,9 +60,9 @@ export default function AgentForm({
 	const functionModelId = agentState?.functionModelId;
 	const posthog = usePostHog();
 
-	const [backstory, setBackstory] = useState(agent?.backstory || '');
-	const [goal, setGoal] = useState(agent?.goal || '');
-	const [role, setRole] = useState(agent?.role || '');
+	const [backstory, setBackstory] = useState<string>();
+	const [goal, setGoal] = useState<string>();
+	const [role, setRole] = useState<string>();
 
 	const [currentInput, setCurrentInput] = useState<string>();
 
@@ -140,6 +140,9 @@ export default function AgentForm({
 	useEffect(() => {
 		setAgent(agent);
 		setIcon(agent?.icon);
+		setBackstory(agent?.backstory);
+		setGoal(agent?.goal);
+		setRole(agent?.role);
 		//if there's an icon and editing is false then we need to create a new icon
 		const { initialTools, initialDatasources } = (agent?.toolIds || []).reduce(getInitialTools, {
 			initialTools: [],
