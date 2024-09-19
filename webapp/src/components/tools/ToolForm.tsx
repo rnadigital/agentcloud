@@ -219,6 +219,13 @@ export default function ToolForm({
 
 		const posthogEvent = editing ? 'updateTool' : 'createTool';
 		try {
+			let parsedRagFilters;
+			try {
+				//In case they are invalid formatted or they switch to another tool type
+				parsedRagFilters = JSON.parse(ragFilters);
+			} catch (e) {
+				parsedRagFilters = null;
+			}
 			const body = {
 				_csrf: e.target._csrf.value,
 				resourceSlug,
@@ -246,7 +253,7 @@ export default function ToolForm({
 				linkedToolId: null,
 				iconId: icon?.id,
 				cloning: tool && !editing,
-				ragFilters: JSON.parse(ragFilters)
+				ragFilters: parsedRagFilters
 			};
 			switch (true) {
 				case toolType === ToolType.BUILTIN_TOOL:
