@@ -1,4 +1,4 @@
-export const QdrantFilterSchema = {
+export const RagFilterSchema = {
 	uri: 'https://agent-cloud/schemas/qdrant-filter-schema.json',
 	fileMatch: ['*'],
 	type: 'object',

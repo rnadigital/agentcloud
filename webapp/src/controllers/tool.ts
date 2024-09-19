@@ -46,7 +46,7 @@ import { Retriever, Tool, ToolState, ToolType, ToolTypes } from 'struct/tool';
 import { chainValidations } from 'utils/validationutils';
 import { v4 as uuidv4 } from 'uuid';
 
-import { QdrantFilterSchema } from '../lib/struct/editorschemas';
+import { RagFilterSchema } from '../lib/struct/editorschemas';
 import { cloneAssetInStorageProvider } from './asset';
 const ajv = new Ajv({ strict: 'log' });
 addFormats(ajv);
@@ -217,7 +217,7 @@ export async function addToolApi(req, res, next) {
 	}
 
 	if (Object.keys(ragFilters || {}).length > 0 && (type as ToolType) === ToolType.FUNCTION_TOOL) {
-		const validate = ajv.compile(QdrantFilterSchema);
+		const validate = ajv.compile(RagFilterSchema);
 		log('validate', validate);
 		const validated = validate(ragFilters);
 		if (!validated) {

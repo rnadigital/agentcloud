@@ -24,7 +24,7 @@ import { runtimeOptions } from 'struct/function';
 import { NotificationType } from 'struct/notification';
 import { Retriever, Tool, ToolType } from 'struct/tool';
 
-import { QdrantFilterSchema } from '../../lib/struct/editorschemas';
+import { RagFilterSchema } from '../../lib/struct/editorschemas';
 
 const tabs = [
 	{ name: 'Datasource', href: '#datasource', toolTypes: [ToolType.RAG_TOOL] },
@@ -575,7 +575,7 @@ export default function ToolForm({
 												scrollBeyondLastLine: false
 											}}
 											onInitializePane={onInitializePane}
-											editorJsonSchema={QdrantFilterSchema}
+											editorJsonSchema={RagFilterSchema}
 											language='json'
 										/>
 										<a
