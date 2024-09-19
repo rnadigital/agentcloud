@@ -148,10 +148,45 @@ def vectorstore_factory(embedding_model, collection_name, tool):
                 url=QDRANT_HOST
             )
         case VectorDatabase.Pinecone:
-            # from init.env_variables import PINECONE_API_KEY
-            from langchain_community.vectorstores.pinecone import Pinecone
 
-            # Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
+            from langchain_community.vectorstores.pinecone import Pinecone
+            from typing import List, Optional, Tuple, Dict, Union
+            from langchain_community.docstore.document import Document
+            from tools.retrievers.filters import create_pinecone_filters
+            my_filters = create_pinecone_filters(tool.ragFilters)
+            def similarity_search_by_vector_with_score_with_filter(
+                self,
+                embedding: List[float],
+                *,
+                k: int = 4,
+                filter: Optional[dict] = None,
+                namespace: Optional[str] = None,
+            ) -> List[Tuple[Document, float]]:
+                """Return pinecone documents most similar to embedding, along with scores."""
+
+                if namespace is None:
+                    namespace = self._namespace
+                docs = []
+                results = self._index.query(
+                    vector=[embedding],
+                    top_k=k,
+                    include_metadata=True,
+                    namespace=namespace,
+                    filter=my_filters,
+                )
+                for res in results["matches"]:
+                    metadata = res["metadata"]
+                    if self._text_key in metadata:
+                        text = metadata.pop(self._text_key)
+                        score = res["score"]
+                        docs.append((Document(page_content=text, metadata=metadata), score))
+                    else:
+                        logger.warning(
+                            f"Found document with no `{self._text_key}` key. Skipping."
+                        )
+                return docs
+
+            Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
             return Pinecone.from_existing_index(
                 index_name="us-central1", #TODO: make customisable
                 embedding=embedding_model,
