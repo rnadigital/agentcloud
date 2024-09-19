@@ -56,7 +56,7 @@ class BaseChatAgent:
         if timestamp is None:
             timestamp = int(datetime.now().timestamp() * 1000)
 
-        if len(text.rstrip()) == 0 and event == SocketEvents.MESSAGE:
+        if len(text) == 0 and event == SocketEvents.MESSAGE:
             return  # Don't send empty first messages
 
         # send the message
