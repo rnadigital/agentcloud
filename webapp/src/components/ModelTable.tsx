@@ -151,7 +151,7 @@ export default function ModelTable({ models, fetchModels }: { models: any[]; fet
 										onClick={() => router.push(`/${resourceSlug}/model/${model._id}/edit`)}
 									>
 										<div className='text-sm text-gray-900 dark:text-white'>{model.name}</div>
-										<DevBadge text={`ID: ${model?._id}`} />
+										<DevBadge value={model?._id} />
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'

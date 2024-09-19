@@ -166,7 +166,7 @@ export default function DatasourceTable({
 										<span className='px-2 inline-flex text-sm leading-6 rounded-full capitalize'>
 											{datasource.sourceType}
 										</span>
-										<DevBadge text={`ID: ${datasource?._id}`} />
+										<DevBadge value={datasource?._id} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
