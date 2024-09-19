@@ -1,4 +1,4 @@
-export type QdrantFilter = {
+export type RagFilter = {
 	must?: Condition[];
 	should?: Condition[];
 	must_not?: Condition[];
