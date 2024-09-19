@@ -212,7 +212,7 @@ export default function ChatAppForm({
 		}
 	}, [sharingMode]);
 
-	async function appPost(e) {
+	async function appPost(e, variables?: { [key: string]: string }) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
@@ -240,7 +240,7 @@ export default function ChatAppForm({
 			type: AppType.CHAT,
 			iconId: icon?.id,
 			cloning: app && !editing,
-			variableIds:
+			variables:
 				Array.from(
 					new Set(
 						[...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables].map(
@@ -266,13 +266,15 @@ export default function ChatAppForm({
 						posthog.capture('startSession', {
 							appId: app._id,
 							appType: AppType.CHAT,
-							appName
+							appName,
+							variables
 						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: app._id
+								id: app._id,
+								variables
 							},
 							null,
 							toast.error,
@@ -303,7 +305,8 @@ export default function ChatAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: res._id
+								id: res._id,
+								variables
 							},
 							null,
 							toast.error,
