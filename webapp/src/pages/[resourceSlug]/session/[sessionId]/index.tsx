@@ -406,7 +406,7 @@ export default function Session(props: SessionProps) {
 					<div ref={bottomRef} />
 				</div>
 				{!requiredHumanInput &&
-					activeTask?.formFields?.length === 0 &&
+					(activeTask?.formFields?.length === 0 || !activeTask) &&
 					!sessionVariableFormOpen && (
 						<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
 							<div className='flex flex-row justify-center'>
