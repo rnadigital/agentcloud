@@ -445,6 +445,15 @@ export async function editToolApi(req, res, next) {
 
 	const isFunctionTool = (type as ToolType) === ToolType.FUNCTION_TOOL;
 
+	if (Object.keys(ragFilters || {}).length > 0 && !isFunctionTool) {
+		const validate = ajv.compile(RagFilterSchema);
+		log('validate', validate);
+		const validated = validate(ragFilters);
+		if (!validated) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid Filters' });
+		}
+	}
+
 	//Check if any keys that are used by the cloud function have changed
 	const functionNeedsUpdate =
 		isFunctionTool &&
@@ -502,7 +511,7 @@ export async function editToolApi(req, res, next) {
 		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {}),
-		...(ragFilters ? { ragFilters } : {})
+		...(ragFilters && !isFunctionTool ? { ragFilters } : {})
 	});
 
 	if (oldTool?.icon?.id && oldTool?.icon?.id?.toString() !== iconId) {
