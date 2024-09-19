@@ -57,7 +57,6 @@ export default function ToolDetailsForm({
 						>
 							<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
 							<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-							{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
 						</select>
 					</div>
 				</div>
