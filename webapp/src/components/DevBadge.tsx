@@ -21,7 +21,7 @@ export default function DevBadge({ label = 'ID', value }: DevBadgeProps) {
 				toast.success('Copied to clipboard');
 				return false;
 			}}
-			className='hover:bg-blue-200 transition-all whitespace-nowrap h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-blue-100 text-blue-800 border-blue-300'
+			className='hover:bg-blue-200 transition-all cursor-pointer whitespace-nowrap h-6 px-2 py-[0.5px] border text-sm rounded-lg bg-blue-100 text-blue-800 border-blue-300'
 		>
 			{label}: {value}
 			<ClipboardDocumentIcon aria-hidden='true' className='inline ms-1 -mt-1 h-4 w-4' />
