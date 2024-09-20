@@ -197,6 +197,14 @@ export async function sessionJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
+export async function publicSessionJson(req, res, next) {
+	const data = await publicSessionData(req, res, next);
+	if (!data) {
+		return next();
+	}
+	return res.json({ ...data, account: res.locals.account });
+}
+
 export async function sessionMessagesData(req, res, _next) {
 	const messages = await getChatMessagesBySession(req.params.resourceSlug, req.params.sessionId);
 	return messages;

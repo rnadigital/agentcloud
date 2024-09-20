@@ -288,6 +288,12 @@ export default function router(server, app) {
 		setPermissions,
 		sessionController.editSessionApi
 	);
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24}).json',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		setPermissions,
+		sessionController.sessionJson
+	);
 	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',
 		setParamOrgAndTeam,
 		setPermissions,
