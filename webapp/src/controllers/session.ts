@@ -26,6 +26,8 @@ import {
 	unsafeGetSessionById,
 	updateSession
 } from 'db/session';
+import { getTaskById } from 'db/task';
+import { getVariableById } from 'db/variable';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { sessionTaskQueue } from 'queue/bull';
@@ -33,6 +35,7 @@ import { client } from 'redis/redis';
 const log = debug('webapp:controllers:session');
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
+import { Variable } from 'struct/variable';
 import { chainValidations } from 'utils/validationutils';
 
 export async function sessionsData(req, res, _next) {
@@ -70,6 +73,39 @@ export async function sessionData(req, res, _next) {
 	switch (app?.type) {
 		case AppType.CREW:
 			const foundCrew = await getCrewById(req.params.resourceSlug, app?.crewId);
+
+			const taskPromises = foundCrew.tasks.map(t =>
+				getTaskById(req.params.resourceSlug, t.toString())
+			);
+
+			const tasks = await Promise.all(taskPromises);
+
+			const crewAppVariables: Variable[] = [];
+			for (const task of tasks) {
+				const variablePromise = task.variableIds.map(v =>
+					getVariableById(req.params.resourceSlug, v)
+				);
+				const variables = await Promise.all(variablePromise);
+				crewAppVariables.push(...variables);
+			}
+
+			const agentPromises = foundCrew.agents.map(a =>
+				getAgentById(req.params.resourceSlug, a.toString())
+			);
+
+			const agents = await Promise.all(agentPromises);
+
+			for (const agent of agents) {
+				const variablePromise = agent.variableIds.map(v =>
+					getVariableById(req.params.resourceSlug, v)
+				);
+				const variables = await Promise.all(variablePromise);
+				crewAppVariables.push(...variables);
+			}
+			if (crewAppVariables.length > 0) {
+				app.variables = crewAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+			}
+
 			avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
 			break;
 		case AppType.CHAT:
@@ -77,6 +113,12 @@ export async function sessionData(req, res, _next) {
 			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
 			if (foundAgent) {
 				avatarMap = { [foundAgent.name.toLowerCase()]: foundAgent?.icon?.filename };
+
+				const variablePromise = foundAgent.variableIds.map(v =>
+					getVariableById(req.params.resourceSlug, v)
+				);
+				const chatAppVariables = await Promise.all(variablePromise);
+				app.variables = chatAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
 			}
 			break;
 	}
@@ -199,19 +241,24 @@ export async function sessionMessagesJson(req, res, next) {
 	const sessionId = req.params.sessionId.toString();
 	const session = await unsafeGetSessionById(sessionId);
 	const app = await unsafeGetAppById(session?.appId);
-	if (app.type === AppType.CHAT && app.variables?.length === 0) {
-		log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
-		if (!activeSessionRooms.includes(`_${sessionId}`)) {
-			log('Resuming session', sessionId);
-			activeSessionRooms.push(`_${sessionId}`);
-			sessionTaskQueue.add(
-				'execute_rag',
-				{
-					type: 'chat',
-					sessionId
-				},
-				{ removeOnComplete: true, removeOnFail: true }
-			);
+
+	if (app.type === AppType.CHAT) {
+		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
+
+		if (agent.variableIds.length === 0) {
+			log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
+			if (!activeSessionRooms.includes(`_${sessionId}`)) {
+				log('Resuming session', sessionId);
+				activeSessionRooms.push(`_${sessionId}`);
+				sessionTaskQueue.add(
+					'execute_rag',
+					{
+						type: 'chat',
+						sessionId
+					},
+					{ removeOnComplete: true, removeOnFail: true }
+				);
+			}
 		}
 	}
 
@@ -261,6 +308,7 @@ export async function addSessionApi(req, res, next) {
 
 	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
+	let hasVariables = false;
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
 		if (crew) {
@@ -269,6 +317,16 @@ export async function addSessionApi(req, res, next) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 			}
 			crewId = crew._id;
+
+			hasVariables = agents.some(agent => agent.variableIds.length > 0);
+
+			if (!hasVariables) {
+				const taskPromises = crew.tasks.map(t =>
+					getTaskById(req.params.resourceSlug, t.toString())
+				);
+				const tasks = await Promise.all(taskPromises);
+				hasVariables = tasks.some(task => task.variableIds.length > 0);
+			}
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -294,7 +352,7 @@ export async function addSessionApi(req, res, next) {
 		}
 	});
 
-	if (!skipRun && app.variables.length === 0) {
+	if (!skipRun && !hasVariables) {
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
 		console.log('activeSessionRooms after push', activeSessionRooms);

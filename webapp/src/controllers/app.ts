@@ -61,8 +61,8 @@ export async function appsData(req, res, _next) {
 		agents,
 		models,
 		datasources,
-		variables,
-		teamMembers: teamMemberemails
+		teamMembers: teamMemberemails,
+		variables
 	};
 }
 
@@ -192,9 +192,9 @@ export async function addAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		variables,
 		cloning,
-		maxMessages
+		maxMessages,
+		variableIds
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -317,7 +317,8 @@ export async function addAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId).filter(x => x)
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+				variableIds: variableIds?.map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -358,7 +359,8 @@ export async function addAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false
+				allowDelegation: false,
+				variableIds: variableIds?.map(toObjectId)
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -401,8 +403,7 @@ export async function addAppApi(req, res, next) {
 			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
-		...(shareLinkShareId ? { shareLinkShareId } : {}),
-		variables
+		...(shareLinkShareId ? { shareLinkShareId } : {})
 	});
 
 	if (shareLinkShareId) {
@@ -459,7 +460,6 @@ export async function editAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		variables,
 		maxMessages
 	} = req.body;
 
