@@ -664,7 +664,6 @@ export default function ChatAppForm({
 												>
 													Backstory
 												</label>
-												r
 												<textarea
 													ref={autocompleteBackstory.inputRef}
 													required
