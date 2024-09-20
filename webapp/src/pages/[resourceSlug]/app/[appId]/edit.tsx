@@ -60,6 +60,7 @@ export default function EditApp(props) {
 					// taskChoices={tasks}
 					toolChoices={tools}
 					whiteListSharingChoices={teamMembers}
+					variableChoices={variables}
 				/>
 			) : (
 				<CrewAppForm
