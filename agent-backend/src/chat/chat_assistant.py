@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+from datetime import datetime
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.tools import BaseTool
@@ -15,6 +16,8 @@ from lang_models import model_factory as language_model_factory
 from models.mongo import App, Tool, Datasource, Model, ToolType, Agent
 from tools import RagTool, GoogleCloudFunctionTool
 from tools.builtin_tools import BuiltinTools
+from messaging.send_message_to_socket import send
+from models.sockets import SocketMessage, SocketEvents, Message
 
 
 logger = logging.getLogger(__name__)
@@ -62,9 +65,29 @@ class ChatAssistant:
         self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
 
         model = self.mongo_conn.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
-        self.chat_model = language_model_factory(model)
-
-        self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
+        try:
+            self.chat_model = language_model_factory(model)
+            self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
+        except Exception as ce:
+            # TODO: a shared function/static class method for send_to_sockets
+            send(
+                self.socket,
+                SocketEvents("message"),
+                SocketMessage(
+                    room=self.session_id,
+                    authorName="System",
+                    message=Message(
+                        chunkId=None,
+                        text="An error occurred during tool instantiation",
+                        first=True,
+                        tokens=1,
+                        timestamp=int(datetime.now().timestamp() * 1000),
+                        displayType="bubble",
+                        overwrite=False,
+                    )
+                ),
+                "both"
+            )
 
         self.max_messages = app_config.maxMessages
 
