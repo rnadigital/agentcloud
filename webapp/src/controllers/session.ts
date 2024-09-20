@@ -316,14 +316,14 @@ export async function addSessionApi(req, res, next) {
 			}
 			crewId = crew._id;
 
-			hasVariables = agents.some(agent => agent.variableIds.length > 0);
+			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
 
 			if (!hasVariables) {
 				const taskPromises = crew.tasks.map(t =>
 					getTaskById(req.params.resourceSlug, t.toString())
 				);
 				const tasks = await Promise.all(taskPromises);
-				hasVariables = tasks.some(task => task.variableIds.length > 0);
+				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
 			}
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
