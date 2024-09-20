@@ -200,7 +200,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						fetchFormData={fetchAppFormData}
 						app={cloneState?.app}
 						crew={cloneState?.crew}
-						variableChoices={variables}
+						// variableChoices={variables}
 						whiteListSharingChoices={teamMembers}
 					/>
 				);

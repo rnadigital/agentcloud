@@ -438,7 +438,6 @@ export async function cancelSessionApi(req, res, next) {
 }
 
 export async function editSessionApi(req, res, next) {
-
 	const session = await unsafeGetSessionById(req.body.sessionId);
 	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
 	if (!canAccess) {
@@ -494,7 +493,6 @@ export async function editSessionApi(req, res, next) {
 }
 
 export async function startSession(req, res, next) {
-
 	const session = await unsafeGetSessionById(req.body.sessionId);
 	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
 	if (!canAccess) {
