@@ -46,6 +46,7 @@ langgraph = "^0.2.16"
 langchain-ollama = "^0.1.1"
 pinecone-client = "^5.0.1"
 langchain-google-genai = "^1.0.10"
+motor = "^3.5.1"
 minio = "^7.2.8"
 
 

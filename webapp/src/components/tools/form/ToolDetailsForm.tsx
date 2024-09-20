@@ -42,7 +42,7 @@ export default function ToolDetailsForm({
 				</div>
 			</div>
 
-			{!isBuiltin && initialType === null && (
+			{!isBuiltin && !initialType && (
 				<div>
 					<label className='text-base font-semibold text-gray-900 dark:text-gray-50'>
 						Tool Type
@@ -57,7 +57,6 @@ export default function ToolDetailsForm({
 						>
 							<option value={ToolType.RAG_TOOL}>Datasource RAG</option>
 							<option value={ToolType.FUNCTION_TOOL}>Custom code</option>
-							{/*<option value={ToolType.API_TOOL}>OpenAPI endpoint</option>*/}
 						</select>
 					</div>
 				</div>

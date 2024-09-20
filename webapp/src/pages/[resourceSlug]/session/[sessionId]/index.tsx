@@ -299,6 +299,7 @@ export default function Session(props) {
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
+							const prevMessage = mi > 0 ? marr[mi - 1] : null;
 							if (m?.isFeedback && app?.type === AppType.CREW) {
 								return null;
 							}
@@ -306,7 +307,7 @@ export default function Session(props) {
 							return (
 								<Message
 									key={`message_${mi}`}
-									prevMessage={mi > 0 ? marr[mi - 1] : null}
+									prevMessage={prevMessage}
 									message={m?.message?.text}
 									messageType={m?.message?.type}
 									messageLanguage={m?.message?.language}

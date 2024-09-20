@@ -7,7 +7,7 @@ import { URLSearchParams } from 'url';
 dotenv.config({ path: '.env' });
 let sessionCookie: string;
 let csrfToken: string;
-
+let resourceSlug: string;
 
 beforeAll(async () => {
 	await db.connect();
@@ -47,6 +47,17 @@ describe('Register and login', () => {
 		sessionCookie = response.headers.get('set-cookie');
 		expect(response.headers.get('set-cookie')).toBeDefined();
 		expect(response.headers.get('set-cookie')).toMatch(/^connect\.sid/);
+	});
+
+	test('get account', async () => {
+		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/account.json`, {
+			headers: {
+				cookie: sessionCookie
+			}
+		});
+		const accountJson = await response.json();
+		csrfToken = accountJson.csrf;
+		expect(response.status).toBe(200);
 	});
 
 });

@@ -29,6 +29,15 @@ import { SharingMode } from './lib/struct/sharing';
 
 export const io = new Server();
 
+//TODO: move this state into redis once we expand webapp beyond 1 pod
+export let activeSessionRooms = [];
+export function updateActiveSessionRooms() {
+	activeSessionRooms = [...io.sockets.adapter.rooms]
+		.filter(re => !re[1].has(re[0]))
+		.map(re => re[0])
+		.filter(room => room.startsWith('_'));
+}
+
 export function initSocket(rawHttpServer) {
 	io.attach(rawHttpServer);
 	const pubClient = client.duplicate();
@@ -110,6 +119,8 @@ export function initSocket(rawHttpServer) {
 			if (socketRequest.locals.isAgentBackend === false) {
 				log('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
+			} else {
+				updateActiveSessionRooms();
 			}
 		});
 

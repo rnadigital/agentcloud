@@ -63,6 +63,7 @@ Options:
     --kill-webapp-next               Kill webapp after startup (for developers)
     --kill-vector-db-proxy           Kill vector-db-proxy after startup (for developers)
     --kill-agent-backend             Kill agent-backend after startup (for developers)
+    --minimal                        Don't run the agent-backend, vector-db-proxy, webapp or webapp-syncserver in docker (for developers)
 
     --project-id ID                  (OPTIONAL) Specify a GCP project ID (for Secret Manager, GCS, etc)
     --service-account-json PATH      (OPTIONAL) Specify the file path of your GCP service account json.
@@ -130,6 +131,7 @@ while [[ "$#" -gt 0 ]]; do
         --kill-webapp-next) KILL_WEBAPP_NEXT=1 ;;
         --kill-vector-db-proxy) KILL_VECTOR_DB_PROXY=1 ;;
         --kill-agent-backend) KILL_AGENT_BACKEND=1 ;;
+        --minimal) MINIMAL=1 ;;
         --project-id) PROJECT_ID="$2"; shift ;;
         --service-account-json) SERVICE_ACCOUNT_JSON_PATH="$2"; shift ;;
         --gcs-bucket-name) GCS_BUCKET_NAME="$2"; shift ;;
@@ -227,7 +229,11 @@ docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest loc
 	sleep 1
 }
 
-docker compose up --build -d
+if [ "$MINIMAL" -eq 1 ]; then
+	docker compose -f docker-compose.minimal.yml up --build -d
+else
+	docker compose up --build -d
+fi
 
 # At the end of the script, check the variables and kill containers if requested
 if [ "$KILL_WEBAPP_NEXT" -eq 1 ]; then

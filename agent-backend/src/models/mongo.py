@@ -81,7 +81,6 @@ class FunctionProperty(BaseModel):
 
 class ToolParameters(BaseModel):
     model_config = ConfigDict(extra='ignore')
-    type: str
     properties: Dict[str, FunctionProperty]
     required: List[str]
 
@@ -148,6 +147,7 @@ class Tool(BaseModel):
     retriever_config: Optional[Union[CombinedRetrieverConfig]] = None
     linkedToolId: Optional[PyObjectId] = None
     parameters: Optional[Dict[str, str]] = {}
+    ragFilters: Optional[Dict] = None
 
 
 class ApiCredentials(BaseModel):

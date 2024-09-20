@@ -98,11 +98,18 @@ export default function DropZone({
 		[files]
 	);
 
-	const onDropRejected = useCallback(fileRejection => {
-		if ([SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
-			toast.error(`Maximum file size exceeded (${formatSize(maxSize)}).`);
+	const onDropRejected = useCallback(fileRejections => {
+		console.log(fileRejections);
+		if (fileRejections[0]?.errors?.[0]?.code === 'file-too-large') {
+			if ([SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
+				return toast.error(`Maximum file size exceeded (${formatSize(maxSize)}).`);
+			} else {
+				setSubscriptionModalOpen(true);
+			}
+		} else if (fileRejections[0]?.errors?.[0]?.code === 'file-invalid-type') {
+			toast.error('File type not supported');
 		} else {
-			setSubscriptionModalOpen(true);
+			toast.error(fileRejections[0]?.errors?.[0]?.message || 'An error occurred');
 		}
 	}, []);
 
