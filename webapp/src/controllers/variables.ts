@@ -94,7 +94,9 @@ export async function addVariableApi(req, res, next) {
 		name: req.body.name,
 		defaultValue: req.body.defaultValue,
 		createdBy: toObjectId(res.locals.account._id),
-		createDate: new Date()
+		createDate: new Date(),
+		usedInTasks: [],
+		usedInAgents: []
 	};
 
 	const result = await addVariable(newVariable);
