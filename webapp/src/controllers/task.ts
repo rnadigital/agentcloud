@@ -402,7 +402,7 @@ export async function editTaskApi(req, res, next) {
 	if (newVariableIdsArray.length > 0) {
 		const updatePromises = newVariableIdsArray.map(async (id: string) => {
 			const variable = await getVariableById(req.params.resourceSlug, id);
-			const usedInTasks = variable.usedInTasks
+			const usedInTasks = variable?.usedInTasks
 				? new Set(variable.usedInTasks?.map(v => v.toString()))
 				: new Set([]);
 
