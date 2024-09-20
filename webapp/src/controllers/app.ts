@@ -69,15 +69,17 @@ export async function appsData(req, res, _next) {
 export type AppDataReturnType = Awaited<ReturnType<typeof appData>>;
 
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
-		getAppById(req.params.resourceSlug, req.params.appId),
-		getTasksByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
-		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
-		getAccountsById(res.locals.matchingTeam.members)
-	]);
+	const [app, tasks, tools, agents, models, datasources, teamMembers, variables] =
+		await Promise.all([
+			getAppById(req.params.resourceSlug, req.params.appId),
+			getTasksByTeam(req.params.resourceSlug),
+			getToolsByTeam(req.params.resourceSlug),
+			getAgentsByTeam(req.params.resourceSlug),
+			getModelsByTeam(req.params.resourceSlug),
+			getDatasourcesByTeam(req.params.resourceSlug),
+			getAccountsById(res.locals.matchingTeam.members),
+			getVariablesByTeam(req.params.resourceSlug)
+		]);
 	const teamMemberemails = teamMembers.reduce((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
@@ -91,7 +93,8 @@ export async function appData(req, res, _next) {
 		agents,
 		models,
 		datasources,
-		teamMembers: teamMemberemails
+		teamMembers: teamMemberemails,
+		variables
 	};
 }
 
