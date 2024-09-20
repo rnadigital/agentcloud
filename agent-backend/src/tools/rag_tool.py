@@ -61,9 +61,10 @@ class RagTool(GlobalBaseTool):
 
         datasource = datasources[0]
 
-        assert len(models) == 1
-        assert isinstance(models[0][0], Embeddings)
-        assert isinstance(models[0][1], Model)
+        assertion_message = f"The model for the datasource \"{datasource.name}\" used by RAG tool \"{tool.name}\" has an invalid or missing model."
+        assert len(models) == 1, assertion_message
+        assert isinstance(models[0][0], Embeddings), assertion_message
+        assert isinstance(models[0][1], Model), assertion_message
 
         embedding_model = models[0][0]
         model_data = models[0][1]
