@@ -144,10 +144,6 @@ export default function ChatAppForm({
 			new Set([...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables])
 		) || [];
 
-	const selectedVariables = variableChoices.filter(v =>
-		combinedVariables.includes(v._id.toString())
-	);
-
 	const autocompleteBackstory = useAutocompleteDropdown({
 		value: backstory,
 		options: backstoryVariableOptions,
@@ -215,7 +211,7 @@ export default function ChatAppForm({
 		}
 	}, [sharingMode]);
 
-	async function appPost(e, variables?: { [key: string]: string }) {
+	async function appPost(e) {
 		e.preventDefault();
 		const body = {
 			_csrf: e.target._csrf.value,
@@ -243,7 +239,7 @@ export default function ChatAppForm({
 			type: AppType.CHAT,
 			iconId: icon?.id,
 			cloning: app && !editing,
-			variables: selectedVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }))
+			variableIds: combinedVariables
 		};
 
 		if (editing === true) {
@@ -262,15 +258,13 @@ export default function ChatAppForm({
 						posthog.capture('startSession', {
 							appId: app._id,
 							appType: AppType.CHAT,
-							appName,
-							variables
+							appName
 						});
 						API.addSession(
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: app._id,
-								variables
+								id: app._id
 							},
 							null,
 							toast.error,
@@ -301,8 +295,7 @@ export default function ChatAppForm({
 							{
 								_csrf: e.target._csrf.value,
 								resourceSlug,
-								id: res._id,
-								variables
+								id: res._id
 							},
 							null,
 							toast.error,

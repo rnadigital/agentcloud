@@ -24,7 +24,6 @@ import { ProcessImpl } from 'struct/crew';
 import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
-import { Variable } from 'struct/variable';
 
 import ToolTip from './shared/ToolTip';
 
@@ -32,7 +31,6 @@ export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
 	modelChoices = [],
-	variableChoices = [],
 	whiteListSharingChoices = [],
 	crew = {},
 	app = {},
@@ -45,7 +43,6 @@ export default function CrewAppForm({
 	taskChoices?: Task[];
 	crew?: any;
 	modelChoices: Model[];
-	variableChoices: Variable[];
 	whiteListSharingChoices?: any[];
 	app?: any;
 	editing?: boolean;
@@ -60,7 +57,6 @@ export default function CrewAppForm({
 	const { step, setStep }: any = useStepContext();
 	const [outsideOrg, setOutsideOrg] = useState(false);
 	const [shareEmail, setShareEmail] = useState(false);
-	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -117,19 +113,6 @@ export default function CrewAppForm({
 	const [tasksState, setTasksState] = useState<{ label: string; value: string }[]>(
 		initialTasks || []
 	);
-	const agentVariables = agentChoices
-		.filter(a => agentsState.some(v => v.value === a._id.toString()))
-		.flatMap(a => a.variableIds)
-		.filter(Boolean);
-
-	const taskVariables = taskChoices
-		.filter(t => tasksState.some(v => v.value === t._id.toString()))
-		.flatMap(t => t.variableIds)
-		.filter(Boolean);
-
-	const combinedVariables = Array.from(new Set([...agentVariables, ...taskVariables])).sort();
-
-	const appVariables = variableChoices.filter(v => combinedVariables.includes(v._id.toString()));
 
 	const missingAgents: Agent[] = tasksState?.reduce((acc, t) => {
 		const task = taskChoices.find(tc => tc._id === t.value);
@@ -179,7 +162,6 @@ export default function CrewAppForm({
 			shareLinkShareId,
 			verbose: Number(e.target.verbose.value) || 0,
 			fullOutput,
-			variables: appVariables?.map(v => ({ name: v.name, defaultValue: v.defaultValue })),
 			cloning: app && !editing
 		};
 		if (editing === true) {
