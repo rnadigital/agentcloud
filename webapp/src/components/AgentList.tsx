@@ -48,7 +48,7 @@ export default function AgentList({ agents, fetchAgents }) {
 								<h3 className='truncate text-sm font-medium text-gray-900 dark:text-white'>
 									{agent.name}
 								</h3>
-								<DevBadge text={`Agent ID: ${agent?._id}`} />
+								<DevBadge label='Agent ID' value={agent?._id} />
 							</div>
 							<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>
 								{agent.model}
