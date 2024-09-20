@@ -72,17 +72,11 @@ export default function AgentForm({
 
 	const [roleSelectedVariables, setRoleSelectedVariables] = useState<string[]>([]);
 
-	const backstoryVariableOptions = variables
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !backstorySelectedVariables.some(sv => sv === v.value));
+	const backstoryVariableOptions = variables.map(v => ({ label: v.name, value: v._id.toString() }));
 
-	const goalVariableOptions = variables
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !goalSelectedVariables.some(sv => sv === v.value));
+	const goalVariableOptions = variables.map(v => ({ label: v.name, value: v._id.toString() }));
 
-	const roleVariableOptions = variables
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !roleSelectedVariables.some(sv => sv === v.value));
+	const roleVariableOptions = variables.map(v => ({ label: v.name, value: v._id.toString() }));
 
 	const autocompleteBackstory = useAutocompleteDropdown({
 		value: backstory,
