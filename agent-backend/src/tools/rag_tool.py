@@ -70,7 +70,7 @@ class RagTool(GlobalBaseTool):
 
         collection = str(datasource.id)
 
-        vector_store = vectorstore_factory(embedding_model, collection)
+        vector_store = vectorstore_factory(embedding_model, collection, tool)
 
         return RagTool(name=tool.name,
                        description=tool.description,

@@ -133,7 +133,7 @@ export default function DatasourceFileTable({
 												{datasource.name}
 											</div>
 										</div>
-										<DevBadge text={`ID: ${datasource?._id}`} />
+										<DevBadge value={datasource?._id} />
 									</td>
 									<td
 										className='px-6 py-3 whitespace-nowrap'
