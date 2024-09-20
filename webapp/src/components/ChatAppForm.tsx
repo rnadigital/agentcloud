@@ -27,9 +27,9 @@ import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
 import { Variable } from 'struct/variable';
-
-import ConfirmModal from './ConfirmModal';
-import AutocompleteDropdown from './variables/VariableDropdown';
+import ConfirmModal from 'components/ConfirmModal';
+import AutocompleteDropdown from 'components/variables/VariableDropdown';
+import CreateVariableModal from 'components/variables/CreateVariableModal';
 
 export default function ChatAppForm({
 	app,
@@ -353,6 +353,22 @@ export default function ChatAppForm({
 		setModalOpen(false);
 	}
 
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		switch (currentInput) {
+			case 'backstory':
+				autocompleteBackstory.handleNewVariableCreation(newVariable);
+				break;
+			case 'goal':
+				autocompleteGoal.handleNewVariableCreation(newVariable);
+				break;
+			case 'role':
+				autocompleteRole.handleNewVariableCreation(newVariable);
+				break;
+			default:
+				break;
+		}
+	};
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -416,6 +432,15 @@ export default function ChatAppForm({
 					message={
 						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
 					}
+				/>
+			);
+			break;
+		case 'variable':
+			modal = (
+				<CreateVariableModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={handleNewVariableCreation}
 				/>
 			);
 			break;

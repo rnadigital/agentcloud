@@ -113,8 +113,7 @@ export async function sessionData(req, res, _next) {
 			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
 			if (foundAgent) {
 				avatarMap = { [foundAgent.name.toLowerCase()]: foundAgent?.icon?.filename };
-
-				const variablePromise = foundAgent.variableIds.map(v =>
+				const variablePromise = (foundAgent?.variableIds || []).map(v =>
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const chatAppVariables = await Promise.all(variablePromise);
@@ -244,7 +243,6 @@ export async function sessionMessagesJson(req, res, next) {
 
 	if (app.type === AppType.CHAT) {
 		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
-
 		if (agent.variableIds.length === 0) {
 			log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 			if (!activeSessionRooms.includes(`_${sessionId}`)) {
@@ -332,6 +330,7 @@ export async function addSessionApi(req, res, next) {
 		}
 	} else {
 		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		hasVariables = agent?.variableIds?.length > 0;
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
