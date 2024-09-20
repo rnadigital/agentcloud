@@ -110,16 +110,6 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 		router
 	);
 }
-export function publicStartApp(body, dispatch, errorCallback, router) {
-	return ApiCall(
-		`/s/${body.resourceSlug}/forms/app/${body.id}/start`,
-		'POST',
-		body,
-		dispatch,
-		errorCallback,
-		router
-	);
-}
 
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(

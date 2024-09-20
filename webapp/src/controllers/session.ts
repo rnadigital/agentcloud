@@ -337,7 +337,7 @@ export async function addSessionApi(req, res, next) {
 	}
 
 	const addedSession = await addSession({
-		orgId: res.locals.matchingOrg.id,
+		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 		name: app.name,
 		startDate: new Date(),
@@ -438,14 +438,23 @@ export async function cancelSessionApi(req, res, next) {
 }
 
 export async function editSessionApi(req, res, next) {
+
+	const session = await unsafeGetSessionById(req.body.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return dynamicResponse(req, res, 400, {
+			error: 'No permission'
+		});
+	}
+
 	let validationError = chainValidations(
 		req.body,
 		[
-			{ field: 'name', validation: { ofType: 'string' } },
-			{ field: 'status', validation: { ofType: 'string' } },
-			{ field: 'appId', validation: { ofType: 'string' } },
-			{ field: 'previewLabel', validation: { ofType: 'string' } },
-			{ field: 'sharingConfig', validation: { ofType: 'object' } },
+			// { field: 'name', validation: { ofType: 'string' } },
+			// { field: 'status', validation: { ofType: 'string' } },
+			// { field: 'appId', validation: { ofType: 'string' } },
+			// { field: 'previewLabel', validation: { ofType: 'string' } },
+			// { field: 'sharingConfig', validation: { ofType: 'object' } },
 			{ field: 'variables', validation: { ofType: 'object' } }
 		],
 		{
@@ -465,12 +474,10 @@ export async function editSessionApi(req, res, next) {
 	const sessionId = req.params.sessionId;
 
 	const payload = {
-		orgId: req.body?.orgId,
-		teamId: req.body?.teamId,
-		name: req.body?.name,
-		status: req.body?.status,
-		appId: req.body?.appId,
-		sharingConfig: req.body?.sharingConfig,
+		// name: req.body?.name,
+		// status: req.body?.status,
+		// appId: req.body?.appId,
+		// sharingConfig: req.body?.sharingConfig,
 		variables: req.body?.variables
 	};
 
@@ -487,6 +494,15 @@ export async function editSessionApi(req, res, next) {
 }
 
 export async function startSession(req, res, next) {
+
+	const session = await unsafeGetSessionById(req.body.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return dynamicResponse(req, res, 400, {
+			error: 'No permission'
+		});
+	}
+
 	sessionTaskQueue.add(
 		'execute_rag',
 		{

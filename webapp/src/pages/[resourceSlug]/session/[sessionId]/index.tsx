@@ -56,10 +56,9 @@ export default function Session(props: SessionProps) {
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
 	useEffect(() => {
-		if (app?.variables && app.variables.length > 0) {
-			setSessionVariableFormOpen(true);
-		}
-	}, [app]);
+		const appHasVariables = app?.variables && app.variables.length > 0;
+		setSessionVariableFormOpen(appHasVariables);
+	}, [app, sessionId]);
 
 	useEffect(() => {
 		const scrollToBottom = () => {
