@@ -56,7 +56,7 @@ export default function Session(props: SessionProps) {
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
 	useEffect(() => {
-		const appHasVariables = app?.variables && app.variables.length > 0;
+		const appHasVariables = app?.variables && app.variables.length > 0 && messages.length === 0;
 		setSessionVariableFormOpen(appHasVariables);
 	}, [app, sessionId]);
 
