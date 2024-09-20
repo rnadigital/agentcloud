@@ -2,6 +2,8 @@ from typing import Any, AsyncIterator, Dict, Optional, Sequence, Tuple
 
 from langchain_core.runnables import RunnableConfig
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from init.env_variables import DB_URL, MONGO_DB_NAME
+
 from pymongo import UpdateOne
 
 from langgraph.checkpoint.base import (
@@ -15,18 +17,15 @@ from langgraph.checkpoint.base import (
 
 from init.env_variables import MONGO_DB_NAME
 
-
 class AsyncMongoDBSaver(BaseCheckpointSaver):
     """A checkpoint saver that stores checkpoints in a MongoDB database asynchronously."""
 
     client: AsyncIOMotorClient
     db: AsyncIOMotorDatabase
 
-    def __init__(
-            self
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.client = AsyncIOMotorClient()
+        self.client = AsyncIOMotorClient(DB_URL)
         self.db = self.client[MONGO_DB_NAME]
 
     async def aget_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
