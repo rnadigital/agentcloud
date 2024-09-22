@@ -389,10 +389,12 @@ export async function deleteAgentApi(req, res, next) {
 	if (oldAgent.variableIds?.length > 0) {
 		const updatePromises = oldAgent.variableIds.map(async (id: string) => {
 			const variable = await getVariableById(req.params.resourceSlug, id);
-			const usedInAgents = variable?.usedInAgents;
+			const usedInAgents = variable?.usedInAgents.map(a => a.toString());
 			if (usedInAgents?.length > 0) {
 				const newUsedInAgents = usedInAgents.filter(a => a !== agentId);
-				return updateVariable(req.params.resourceSlug, id, { usedInAgents: newUsedInAgents });
+				return updateVariable(req.params.resourceSlug, id, {
+					usedInAgents: newUsedInAgents.map(a => toObjectId(a))
+				});
 			}
 			return null;
 		});
