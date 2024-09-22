@@ -472,11 +472,11 @@ export async function deleteTaskApi(req, res, next) {
 
 	const updateVariablePromises = task.variableIds.map(async (id: string) => {
 		const variable = await getVariableById(req.params.resourceSlug, id);
-		const usedInAgents = variable?.usedInAgents.map(a => a.toString());
-		if (usedInAgents?.length > 0) {
-			const newUsedInAgents = usedInAgents.filter(a => a !== taskId);
+		const usedInTasks = variable?.usedInTasks.map(a => a.toString());
+		if (usedInTasks?.length > 0) {
+			const newUsedInTasks = usedInTasks.filter(a => a !== taskId);
 			return updateVariable(req.params.resourceSlug, id, {
-				usedInAgents: newUsedInAgents.map(a => toObjectId(a))
+				usedInTasks: newUsedInTasks.map(a => toObjectId(a))
 			});
 		}
 		return null;
@@ -484,7 +484,7 @@ export async function deleteTaskApi(req, res, next) {
 
 	await Promise.all([
 		deleteTaskById(req.params.resourceSlug, taskId),
-		updateVariablePromises
+		...updateVariablePromises
 		//TODO: reference handling?
 	]);
 
