@@ -412,7 +412,10 @@ export async function editTaskApi(req, res, next) {
 				usedInTasks.add(req.params.taskId);
 			}
 
-			const updatedVariable = { ...variable, usedInTasks: Array.from(usedInTasks) };
+			const updatedVariable = {
+				...variable,
+				usedInTasks: Array.from(usedInTasks, id => toObjectId(id))
+			};
 			return updateVariable(req.params.resourceSlug, id, updatedVariable);
 		});
 
