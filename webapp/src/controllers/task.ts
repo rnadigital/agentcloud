@@ -468,8 +468,21 @@ export async function deleteTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const task = await getTaskById(req.params.resourceSlug, taskId);
+
+	const updateVariablePromises = task.variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		const usedInAgents = variable?.usedInAgents;
+		if (usedInAgents?.length > 0) {
+			const newUsedInAgents = usedInAgents.filter(a => a !== taskId);
+			return updateVariable(req.params.resourceSlug, id, { usedInAgents: newUsedInAgents });
+		}
+		return null;
+	});
+
 	await Promise.all([
-		deleteTaskById(req.params.resourceSlug, taskId)
+		deleteTaskById(req.params.resourceSlug, taskId),
+		updateVariablePromises
 		//TODO: reference handling?
 	]);
 

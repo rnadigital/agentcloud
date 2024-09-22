@@ -395,6 +395,10 @@ export async function deleteAgentApi(req, res, next) {
 				return updateVariable(req.params.resourceSlug, id, { usedInAgents: newUsedInAgents });
 			}
 			return null;
+		});
+		await Promise.all(updatePromises);
+	}
+
 	if (oldAgent?.icon) {
 		await deleteAssetById(oldAgent.icon.id);
 	}
