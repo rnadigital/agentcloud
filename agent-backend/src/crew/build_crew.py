@@ -264,7 +264,15 @@ class CrewAIBuilder:
         self.build_models()
 
         # 2. Build Crew-Tool from Tool + llm/embedding (#1) + Model (TBD) + Datasource (optional)
-        self.build_tools_and_their_datasources()
+        try:
+            self.build_tools_and_their_datasources()
+        except AssertionError as te:
+            self.send_to_sockets(text=f"""Error:
+            ```
+            {str(te)}
+            ```
+            """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),
+                                 timestamp=datetime.now().timestamp() * 1000, display_type="bubble")
 
         # 3. Build Crew-Agent from Agent + llm/embedding (#1) + Crew-Tool (#2)
         self.build_agents()
@@ -274,7 +282,7 @@ class CrewAIBuilder:
             self.build_tasks()
         except CrewAIBuilderException as ce:
             self.send_to_sockets(text=f"""Error:
-            ``` 
+            ```
             {str(ce)}
             ```
             """, event=SocketEvents.MESSAGE, first=True, chunk_id=str(uuid.uuid4()),

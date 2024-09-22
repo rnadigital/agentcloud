@@ -316,7 +316,10 @@ export async function editAgentApi(req, res, next) {
 			usedInAgents.add(req.params.agentId);
 		}
 
-		const updatedVariable = { ...variable, usedInAgents: Array.from(usedInAgents) };
+		const updatedVariable = {
+			...variable,
+			usedInAgents: Array.from(usedInAgents, id => toObjectId(id))
+		};
 		return updateVariable(req.params.resourceSlug, id, updatedVariable);
 	});
 
@@ -382,6 +385,21 @@ export async function deleteAgentApi(req, res, next) {
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	const oldAgent = await deleteAgentByIdReturnAgent(req.params.resourceSlug, agentId);
+
+	if (oldAgent.variableIds?.length > 0) {
+		const updatePromises = oldAgent.variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const usedInAgents = variable?.usedInAgents.map(a => a.toString());
+			if (usedInAgents?.length > 0) {
+				const newUsedInAgents = usedInAgents.filter(a => a !== agentId);
+				return updateVariable(req.params.resourceSlug, id, {
+					usedInAgents: newUsedInAgents.map(a => toObjectId(a))
+				});
+			}
+			return null;
+		});
+		await Promise.all(updatePromises);
+	}
 
 	if (oldAgent?.icon) {
 		await deleteAssetById(oldAgent.icon.id);

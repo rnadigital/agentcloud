@@ -13,7 +13,7 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState<AgentsDataReturnType>();
 	const [error, setError] = useState();
-	const { models, tools, variables } = state;
+	const { models, tools, variables } = state || {};
 
 	async function fetchAgentFormData() {
 		await API.getAgents({ resourceSlug }, dispatch, setError, router);

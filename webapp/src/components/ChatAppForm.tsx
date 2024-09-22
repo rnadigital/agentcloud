@@ -5,6 +5,7 @@ import { PlayIcon } from '@heroicons/react/20/solid';
 import AddEmailModal from 'components/AddEmailModal';
 import AgentsSelect from 'components/agents/AgentsSelect';
 import AvatarUploader from 'components/AvatarUploader';
+import ConfirmModal from 'components/ConfirmModal';
 import CreateDatasourceModal from 'components/CreateDatasourceModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
@@ -12,6 +13,8 @@ import ModelSelect from 'components/models/ModelSelect';
 import ParameterForm from 'components/ParameterForm';
 import SharingModeSelect from 'components/SharingModeSelect';
 import ToolsSelect from 'components/tools/ToolsSelect';
+import CreateVariableModal from 'components/variables/CreateVariableModal';
+import AutocompleteDropdown from 'components/variables/VariableDropdown';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { AgentsDataReturnType } from 'controllers/agent';
@@ -26,10 +29,6 @@ import { App, AppType } from 'struct/app';
 import { ChatAppAllowedModels, ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { ToolType } from 'struct/tool';
-import { Variable } from 'struct/variable';
-
-import ConfirmModal from './ConfirmModal';
-import AutocompleteDropdown from './variables/VariableDropdown';
 
 export default function ChatAppForm({
 	app,
@@ -63,13 +62,11 @@ export default function ChatAppForm({
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [icon, setIcon]: any = useState(app?.icon);
-	const [error, setError] = useState();
 	const [run, setRun] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const [showAgentForm, setShowAgentForm]: any = useState(editing || agentChoices?.length === 0);
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
 	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
-	const origin = typeof location !== 'undefined' ? location.origin : '';
 	const posthog = usePostHog();
 	const initialAgent = agentChoices.find(a => a?._id === app?.chatAppConfig?.agentId);
 	const [appName, setAppName] = useState(app?.name || '');
@@ -127,17 +124,20 @@ export default function ChatAppForm({
 
 	const [roleSelectedVariables, setRoleSelectedVariables] = useState<string[]>([]);
 
-	const backstoryVariableOptions = variableChoices
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !backstorySelectedVariables.some(sv => sv === v.value));
+	const backstoryVariableOptions = variableChoices.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
 
-	const goalVariableOptions = variableChoices
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !goalSelectedVariables.some(sv => sv === v.value));
+	const goalVariableOptions = variableChoices.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
 
-	const roleVariableOptions = variableChoices
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !roleSelectedVariables.some(sv => sv === v.value));
+	const roleVariableOptions = variableChoices.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
 
 	const combinedVariables =
 		Array.from(
@@ -353,6 +353,22 @@ export default function ChatAppForm({
 		setModalOpen(false);
 	}
 
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		switch (currentInput) {
+			case 'backstory':
+				autocompleteBackstory.handleNewVariableCreation(newVariable);
+				break;
+			case 'goal':
+				autocompleteGoal.handleNewVariableCreation(newVariable);
+				break;
+			case 'role':
+				autocompleteRole.handleNewVariableCreation(newVariable);
+				break;
+			default:
+				break;
+		}
+	};
+
 	let modal;
 	switch (modalOpen) {
 		case 'datasource':
@@ -416,6 +432,15 @@ export default function ChatAppForm({
 					message={
 						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
 					}
+				/>
+			);
+			break;
+		case 'variable':
+			modal = (
+				<CreateVariableModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={handleNewVariableCreation}
 				/>
 			);
 			break;
@@ -657,7 +682,6 @@ export default function ChatAppForm({
 												>
 													Backstory
 												</label>
-												r
 												<textarea
 													ref={autocompleteBackstory.inputRef}
 													required

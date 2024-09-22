@@ -280,17 +280,25 @@ export default function router(server, app) {
 		csrfMiddleware,
 		setParamOrgAndTeam,
 		setPermissions,
-		sessionController.sessionMessagesJson
+		sessionController.publicSessionMessagesJson
 	);
 	//TODO: csrf?
-	publicAppRouter.post(
-		'/forms/app/:appId([a-f0-9]{24})/start',
+	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit',
 		setParamOrgAndTeam,
 		setPermissions,
-		sessionController.addSessionApi
+		sessionController.editSessionApi
 	);
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit', setParamOrgAndTeam, sessionController.editSessionApi);
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start', setParamOrgAndTeam, sessionController.startSession);
+	publicAppRouter.get('/session/:sessionId([a-f0-9]{24}).json',
+		csrfMiddleware,
+		setParamOrgAndTeam,
+		setPermissions,
+		sessionController.sessionJson
+	);
+	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',
+		setParamOrgAndTeam,
+		setPermissions,
+		sessionController.startSession
+	);
 
 	publicAppRouter.get(
 		'/:shareLinkShareId(app_[a-f0-9]{64,})', //Note: app_prefix to be removed once we handle other sharinglinktypes

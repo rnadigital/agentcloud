@@ -74,7 +74,7 @@ export default function EditApp(props) {
 					taskChoices={tasks}
 					whiteListSharingChoices={teamMembers}
 					// toolChoices={tools}
-					variableChoices={variables}
+					// variableChoices={variables}
 				/>
 			)}
 		</>

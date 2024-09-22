@@ -21,6 +21,7 @@ import { NotificationType } from 'struct/notification';
 import { FormFieldConfig, Task } from 'struct/task';
 import { ToolType } from 'struct/tool';
 
+import { StructuredOutputSchema } from '../lib/struct/editorschemas';
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateTaskModal from './CreateTaskModal';
 import ScriptEditor, { MonacoOnInitializePane } from './Editor';
@@ -133,13 +134,17 @@ export default function TaskForm({
 	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
 		useState<string[]>();
 
-	const descriptionVariableOptions = variables
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !descriptionSelectedVariables?.some(sv => sv === v.value));
+	const descriptionVariableOptions = variables.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
 
-	const expectedOutputVariableOptions = variables
-		.map(v => ({ label: v.name, value: v._id.toString() }))
-		.filter(v => !expectedOutputSelectedVariables?.some(sv => sv === v.value));
+	const expectedOutputVariableOptions = variables.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
+
+	console.log(expectedOutputSelectedVariables);
 
 	const [description, setDescription] = useState(task?.description || '');
 
@@ -473,6 +478,7 @@ export default function TaskForm({
 											scrollBeyondLastLine: false
 										}}
 										onInitializePane={onInitializePane}
+										editorJsonSchema={StructuredOutputSchema}
 										language='json'
 									/>
 									<a

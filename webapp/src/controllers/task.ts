@@ -402,7 +402,7 @@ export async function editTaskApi(req, res, next) {
 	if (newVariableIdsArray.length > 0) {
 		const updatePromises = newVariableIdsArray.map(async (id: string) => {
 			const variable = await getVariableById(req.params.resourceSlug, id);
-			const usedInTasks = variable.usedInTasks
+			const usedInTasks = variable?.usedInTasks
 				? new Set(variable.usedInTasks?.map(v => v.toString()))
 				: new Set([]);
 
@@ -412,7 +412,10 @@ export async function editTaskApi(req, res, next) {
 				usedInTasks.add(req.params.taskId);
 			}
 
-			const updatedVariable = { ...variable, usedInTasks: Array.from(usedInTasks) };
+			const updatedVariable = {
+				...variable,
+				usedInTasks: Array.from(usedInTasks, id => toObjectId(id))
+			};
 			return updateVariable(req.params.resourceSlug, id, updatedVariable);
 		});
 
@@ -465,8 +468,23 @@ export async function deleteTaskApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	const task = await getTaskById(req.params.resourceSlug, taskId);
+
+	const updateVariablePromises = task.variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		const usedInTasks = variable?.usedInTasks.map(a => a.toString());
+		if (usedInTasks?.length > 0) {
+			const newUsedInTasks = usedInTasks.filter(a => a !== taskId);
+			return updateVariable(req.params.resourceSlug, id, {
+				usedInTasks: newUsedInTasks.map(a => toObjectId(a))
+			});
+		}
+		return null;
+	});
+
 	await Promise.all([
-		deleteTaskById(req.params.resourceSlug, taskId)
+		deleteTaskById(req.params.resourceSlug, taskId),
+		...updateVariablePromises
 		//TODO: reference handling?
 	]);
 

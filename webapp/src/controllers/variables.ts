@@ -142,6 +142,12 @@ export async function deleteVariableApi(req, res, next) {
 
 	const existingVariable = await getVariableById(req.params.resourceSlug, variableId);
 
+	if (!existingVariable) {
+		return dynamicResponse(req, res, 400, {
+			error: 'Variable does not exist'
+		});
+	}
+
 	if (existingVariable.usedInAgents?.length > 0 || existingVariable.usedInTasks?.length > 0) {
 		return dynamicResponse(req, res, 400, {
 			error:

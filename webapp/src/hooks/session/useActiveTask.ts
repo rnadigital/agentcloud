@@ -8,14 +8,13 @@ const useActiveTask = (messages: any[]) => {
 	const [activeTask, setActiveTask] = useState<Task>();
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
+	const router = useRouter();
 	const lastRunningTaskName = messages.findLast(
 		m =>
 			typeof m.message?.text === 'string' &&
 			m?.message?.displayType === 'inline' && //optimization: task running messages are always an inline
 			m.message?.text?.startsWith('**Running task**:')
 	);
-	const router = useRouter();
-
 	const { resourceSlug, sessionId } = router.query;
 
 	useEffect(() => {
@@ -36,8 +35,10 @@ const useActiveTask = (messages: any[]) => {
 				null,
 				null
 			);
+		} else {
+			setActiveTask(null);
 		}
-	}, [lastRunningTaskName]);
+	}, [lastRunningTaskName, resourceSlug, sessionId]);
 
 	return activeTask;
 };

@@ -113,8 +113,7 @@ export async function sessionData(req, res, _next) {
 			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
 			if (foundAgent) {
 				avatarMap = { [foundAgent.name.toLowerCase()]: foundAgent?.icon?.filename };
-
-				const variablePromise = foundAgent.variableIds.map(v =>
+				const variablePromise = (foundAgent?.variableIds || []).map(v =>
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const chatAppVariables = await Promise.all(variablePromise);
@@ -198,6 +197,14 @@ export async function sessionJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
+export async function publicSessionJson(req, res, next) {
+	const data = await publicSessionData(req, res, next);
+	if (!data) {
+		return next();
+	}
+	return res.json({ ...data, account: res.locals.account });
+}
+
 export async function sessionMessagesData(req, res, _next) {
 	const messages = await getChatMessagesBySession(req.params.resourceSlug, req.params.sessionId);
 	return messages;
@@ -244,7 +251,6 @@ export async function sessionMessagesJson(req, res, next) {
 
 	if (app.type === AppType.CHAT) {
 		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
-
 		if (agent.variableIds.length === 0) {
 			log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 			if (!activeSessionRooms.includes(`_${sessionId}`)) {
@@ -318,27 +324,28 @@ export async function addSessionApi(req, res, next) {
 			}
 			crewId = crew._id;
 
-			hasVariables = agents.some(agent => agent.variableIds.length > 0);
+			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
 
 			if (!hasVariables) {
 				const taskPromises = crew.tasks.map(t =>
 					getTaskById(req.params.resourceSlug, t.toString())
 				);
 				const tasks = await Promise.all(taskPromises);
-				hasVariables = tasks.some(task => task.variableIds.length > 0);
+				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
 			}
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	} else {
 		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		hasVariables = agent?.variableIds?.length > 0;
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 	}
 
 	const addedSession = await addSession({
-		orgId: res.locals.matchingOrg.id,
+		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 		name: app.name,
 		startDate: new Date(),
@@ -439,14 +446,22 @@ export async function cancelSessionApi(req, res, next) {
 }
 
 export async function editSessionApi(req, res, next) {
+	const session = await unsafeGetSessionById(req.body.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return dynamicResponse(req, res, 400, {
+			error: 'No permission'
+		});
+	}
+
 	let validationError = chainValidations(
 		req.body,
 		[
-			{ field: 'name', validation: { ofType: 'string' } },
-			{ field: 'status', validation: { ofType: 'string' } },
-			{ field: 'appId', validation: { ofType: 'string' } },
-			{ field: 'previewLabel', validation: { ofType: 'string' } },
-			{ field: 'sharingConfig', validation: { ofType: 'object' } },
+			// { field: 'name', validation: { ofType: 'string' } },
+			// { field: 'status', validation: { ofType: 'string' } },
+			// { field: 'appId', validation: { ofType: 'string' } },
+			// { field: 'previewLabel', validation: { ofType: 'string' } },
+			// { field: 'sharingConfig', validation: { ofType: 'object' } },
 			{ field: 'variables', validation: { ofType: 'object' } }
 		],
 		{
@@ -466,12 +481,10 @@ export async function editSessionApi(req, res, next) {
 	const sessionId = req.params.sessionId;
 
 	const payload = {
-		orgId: req.body?.orgId,
-		teamId: req.body?.teamId,
-		name: req.body?.name,
-		status: req.body?.status,
-		appId: req.body?.appId,
-		sharingConfig: req.body?.sharingConfig,
+		// name: req.body?.name,
+		// status: req.body?.status,
+		// appId: req.body?.appId,
+		// sharingConfig: req.body?.sharingConfig,
 		variables: req.body?.variables
 	};
 
@@ -488,6 +501,14 @@ export async function editSessionApi(req, res, next) {
 }
 
 export async function startSession(req, res, next) {
+	const session = await unsafeGetSessionById(req.body.sessionId);
+	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!canAccess) {
+		return dynamicResponse(req, res, 400, {
+			error: 'No permission'
+		});
+	}
+
 	sessionTaskQueue.add(
 		'execute_rag',
 		{
