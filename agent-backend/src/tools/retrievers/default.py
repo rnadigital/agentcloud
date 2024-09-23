@@ -13,6 +13,7 @@ class DefaultRetriever(BaseToolRetriever):
         self.retriever = SimilaritySearchRetriever(
             embedding=embedding,
             vector_store=vector_store,
-            k=tool.retriever_config.k
+            k=tool.retriever_config.k,
+            rag_filters=tool.ragFilters
         )
         super().__init__()

@@ -74,12 +74,15 @@ export async function getAccountTeamMember(
 	userId: db.IdOrStr,
 	teamId: db.IdOrStr
 ): Promise<Account> {
-	return AccountCollection()
-		.findOne({
+	return AccountCollection().findOne(
+		{
 			_id: toObjectId(userId),
 			'orgs.teams.id': toObjectId(teamId)
-		})
-		.project({ passwordHash: 0 });
+		},
+		{
+			projection: { passwordHash: 0 }
+		}
+	);
 }
 
 export function getAccountByEmail(email: string): Promise<Account> {
