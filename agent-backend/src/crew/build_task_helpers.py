@@ -1,11 +1,12 @@
 import json
+import re
 import uuid
 from io import BytesIO
 from typing import Dict, Set, Callable
 
 from crewai.tasks import TaskOutput
 
-from models.mongo import PyObjectId, Task, Tool
+from models.mongo import PyObjectId, Task, Tool, Session
 from crew.exceptions import CrewAIBuilderException
 from models.sockets import SocketEvents
 from mongo.queries import MongoClientConnection
@@ -37,7 +38,13 @@ def get_context_tasks(task: Task, crew_tasks: Dict[Set[PyObjectId], Task]):
     return context_task_objs
 
 
-def _upload_task_output(task, session_id, mongo_client, send_to_socket_fn, task_output):
+def _upload_task_output(
+        task: Task,
+        session_id: str,
+        mongo_client: MongoClientConnection,
+        send_to_socket_fn: Callable,
+        task_output: TaskOutput
+):
     # Convert the output to bytes and create an in-memory buffer
     buffer = BytesIO()
     buffer.write(str(task_output).encode())
@@ -64,12 +71,42 @@ def _upload_task_output(task, session_id, mongo_client, send_to_socket_fn, task_
     )
 
 
-# Factory to create the callback function so we dont overwrite it with the one from the last task
-def make_task_callback(task: Task, session_id: str, mongo_client: MongoClientConnection, send_to_socket_fn: Callable):
-    def callback(task_output: TaskOutput):
-        _upload_task_output(task, session_id, mongo_client, send_to_socket_fn, task_output)
+def _assign_structured_output_fields_to_variables(task: Task, task_output: TaskOutput,
+                                                  session: Session, mongo_client: MongoClientConnection):
+    if task.isStructuredOutput:
+        schema = json.loads(task.expectedOutput)
+        pass
 
-    return callback if task.storeTaskOutput else None
+
+def _assign_output_to_variable_if_single_variable(
+        task: Task, task_output: TaskOutput, session: Session, mongo_client: MongoClientConnection
+):
+    if not task.isStructuredOutput:
+        match = re.search(r'^{([\w_]+)}$', task.expected_output)
+        if match:
+            var_name = match.group(1)
+            session_variables = session.variables.copy()
+            session_variables[var_name] = str(task_output)
+            mongo_client.update_session_variables(session_id=session.id, variables=session_variables)
+
+
+def _update_variables_from_output(
+        task: Task, task_output: TaskOutput, session: Session, mongo_client: MongoClientConnection
+):
+    if task.isStructuredOutput:
+        _assign_structured_output_fields_to_variables(task, task_output, session, mongo_client)
+    else:
+        _assign_output_to_variable_if_single_variable(task, task_output, session, mongo_client)
+
+
+# Factory to create the callback function so we dont overwrite it with the one from the last task
+def make_task_callback(task: Task, session: Session, mongo_client: MongoClientConnection, send_to_socket_fn: Callable):
+    def callback(task_output: TaskOutput):
+        _update_variables_from_output(task, task_output, session, mongo_client)
+        if task.storeTaskOutput:
+            _upload_task_output(task, session.id, mongo_client, send_to_socket_fn, task_output)
+
+    return callback
 
 
 def get_output_pydantic_model(task: Task):

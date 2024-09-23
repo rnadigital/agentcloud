@@ -38,6 +38,7 @@ class CrewAIBuilder:
     def __init__(
             self,
             session_id: str,
+            session: models.mongo.Session,
             crew: Crew,
             app_type: AppType,
             agents: Dict[Set[models.mongo.PyObjectId], models.mongo.Agent],
@@ -50,6 +51,7 @@ class CrewAIBuilder:
             socket: Any = None
     ):
         self.session_id = session_id
+        self.session = session
         self.crew_app_type = app_type
         self.crew_model = crew
         self.agents_models = agents
@@ -166,7 +168,7 @@ class CrewAIBuilder:
             # Create the callback function for this specific task
             task_callback = make_task_callback(
                 task=task,
-                session_id=self.session_id,
+                session=self.session,
                 mongo_client=mongo_client,
                 send_to_socket_fn=self.send_to_sockets
             )

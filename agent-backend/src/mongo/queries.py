@@ -1,3 +1,4 @@
+import json
 import logging
 
 from mongo.client import MongoConnection
@@ -159,7 +160,7 @@ class MongoClientConnection(MongoConnection):
                 return messages
 
         return []
-    
+
     def insert_model(self, db_collection: str, model_instance: BaseModel) -> Optional[ObjectId]:
         collection = self._get_collection(db_collection)
         try:
@@ -171,7 +172,10 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.exception(f"Failed to insert model into {db_collection}: {e}")
             return None
-    
+
+    def update_session_variables(self, session_id: str, variables: dict) -> None:
+        self._get_collection("sessions").update_one({"_id": ObjectId(session_id)},
+                                                    {"$set": {"variables": variables}})
 
 
 def convert_id_to_ObjectId(id):
