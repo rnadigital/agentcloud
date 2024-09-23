@@ -249,6 +249,11 @@ export async function addTaskApi(req, res, next) {
 	const collectionType = CollectionName.Tasks;
 	const attachedIconToTask = await attachAssetToObject(iconId, newTaskId, collectionType);
 
+	const formFieldsWithObjectIdVariables = formFields.map(field => ({
+		...field,
+		variable: toObjectId(field.variable)
+	}));
+
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -270,7 +275,7 @@ export async function addTaskApi(req, res, next) {
 					linkedId: newTaskId
 				}
 			: null,
-		formFields: formFields,
+		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
 		variableIds: variableIds.map(toObjectId)
 	});
@@ -422,6 +427,11 @@ export async function editTaskApi(req, res, next) {
 		await Promise.all(updatePromises);
 	}
 
+	const formFieldsWithObjectIdVariables = formFields.map(field => ({
+		...field,
+		variable: toObjectId(field.variable)
+	}));
+
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -434,7 +444,7 @@ export async function editTaskApi(req, res, next) {
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
-		formFields,
+		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
 		variableIds: variableIds ? variableIds.map(toObjectId) : []
 	});
