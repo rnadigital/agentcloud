@@ -177,21 +177,39 @@ impl VectorDatabase for PineconeClient {
             match search_request.search_type {
                 SearchType::ChunkedRow => {
                     // Collect indices into a Vec<&str>
-                    let ids: Vec<&str> = points.iter().filter_map(|p| p.index.as_deref()).collect();
-                    println!("Ids to delete {:?}", ids);
-                    println!("namespace to delete from {:?}", namespace);
-                    for id in ids {
+                    let indices: Vec<&str> =
+                        points.iter().filter_map(|p| p.index.as_deref()).collect();
+                    println!("Ids to delete {:?}", indices);
+                    //println!("namespace to delete from {:?}", &namespace.clone());
+                    for idx in indices {
                         // Use the collected ids directly in the delete_by_id method
                         let mut fields = BTreeMap::new();
                         fields.insert(
                             "index".to_string(),
                             Value {
-                                kind: Some(Kind::StringValue(id.to_string())),
+                                kind: Some(Kind::StringValue(idx.to_string())),
                             },
                         );
-                        let _ = index
-                            .delete_by_filter(Metadata { fields }, &namespace.clone().into())
+
+                        let query_response = index
+                            .query_by_value(
+                                vec![],
+                                None,
+                                2 ^ 32,
+                                &namespace.clone().into(),
+                                None,
+                                None,
+                                None,
+                            )
                             .await;
+                        if let Ok(points) = query_response {
+                            let ids: Vec<&str> =
+                                points.matches.iter().map(|j| j.id.as_str()).collect();
+                            let _ = index
+                                .delete_by_id(&ids, &namespace.clone().into())
+                                .await
+                                .unwrap();
+                        };
                     }
                 }
                 _ => {}

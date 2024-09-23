@@ -13,7 +13,6 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
-use uuid::Uuid;
 
 use crate::adaptors::mongo::queries::{get_model, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
