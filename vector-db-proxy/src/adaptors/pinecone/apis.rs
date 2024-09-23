@@ -10,6 +10,9 @@ use async_trait::async_trait;
 use pinecone_sdk::models::{Cloud as PineconeCloud, Metadata};
 use pinecone_sdk::models::{DeletionProtection, Metric, Namespace, Vector, WaitPolicy};
 use pinecone_sdk::pinecone::PineconeClient;
+use prost_types::value::Kind;
+use prost_types::Value;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 #[async_trait]
@@ -178,8 +181,17 @@ impl VectorDatabase for PineconeClient {
                     println!("Ids to delete {:?}", ids);
                     println!("namespace to delete from {:?}", namespace);
                     // Use the collected ids directly in the delete_by_id method
+                    let mut fields = BTreeMap::new();
+                    let _ = ids.iter().map(|id| {
+                        fields.insert(
+                            "index".to_string(),
+                            Value {
+                                kind: Some(Kind::StringValue(id.to_string())),
+                            },
+                        )
+                    });
                     let _ = index
-                        .delete_by_id(&ids, &namespace.clone().into())
+                        .delete_by_filter(Metadata { fields }, &namespace.clone().into())
                         .await
                         .unwrap();
                 }
