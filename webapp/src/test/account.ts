@@ -1,5 +1,6 @@
 import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
 import * as db from '../db/index';
+import { makeFetch, fetchTypes } from './helpers';
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 
@@ -55,12 +56,8 @@ describe('account tests', () => {
 	});
 
 	test('get account', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/account.json`, {
-			headers: {
-				cookie: sessionCookie
-			},
-			redirect: 'manual',
-		});
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
+		const response = await makeFetch(url, fetchTypes.GET);
 		const accountJson = await response.json();
 		csrfToken = accountJson.csrf;
 		resourceSlug = accountJson.account.currentTeam;
@@ -69,35 +66,24 @@ describe('account tests', () => {
 	});
 
 	test('request change password', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/requestchangepassword`,{
-			method: 'POST',
-			headers: {
-				cookie: sessionCookie,
-				'content-type': 'application/json'
-			},
-			body: JSON.stringify({
-				email: 'testuser@example.com',
-			}),
-			redirect: 'manual',
-		});
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/requestchangepassword`;
+		const body = {
+			email: 'testuser@example.com'
+		}
+		const response = await makeFetch(url, fetchTypes.POST, body);
 		const responseJson = await response.json();
 		expect(responseJson?.redirect).toBeDefined();
 		expect(response.status).toBe(200);
 	});
 
 	test('cant change password without valid token', async () => {
-		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/changepassword`, {
-			method: 'POST',
-			headers: {
-				cookie: sessionCookie,
-				'content-type': 'application/json'
-			},
-			body: JSON.stringify({
-				token: "abcd",
-				password: "attemptedPasswordChange"
-			}),
-			redirect: 'manual'
-		});
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/changepassword`;
+		const body = {
+			token: "abcd",
+			password: "attemptedPasswordChange"
+		};
+		const response = await makeFetch(url, fetchTypes.POST, body);
+
 		const responseJson = await response.json();
 		expect(responseJson?.error).toBeDefined();
 		expect(response.status).toBe(400);
@@ -106,6 +92,11 @@ describe('account tests', () => {
 	//test with valid token??
 
 	test('set role', async () => {
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${resourceSlug}`;
+		const body = {
+			role: 'data_engineer',
+			resourceSlug
+		}
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${resourceSlug}`, {
 			method: 'POST',
 			headers: {
@@ -114,7 +105,6 @@ describe('account tests', () => {
 			},
 			body: JSON.stringify({
 				role: 'data_engineer',
-				_csrf: csrfToken,
 				resourceSlug
 			}),
 			redirect: 'manual'
