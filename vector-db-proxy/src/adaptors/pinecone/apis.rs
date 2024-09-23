@@ -2,14 +2,17 @@ use crate::adaptors::pinecone::helpers::{get_index_model, get_indexes, upsert};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, Region,
-    ScrollResults, SearchRequest, SearchResult, StorageSize, VectorDatabaseStatus,
+    ScrollResults, SearchRequest, SearchResult, SearchType, StorageSize, VectorDatabaseStatus,
 };
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
 use async_trait::async_trait;
-use pinecone_sdk::models::Cloud as PineconeCloud;
+use pinecone_sdk::models::{Cloud as PineconeCloud, Metadata};
 use pinecone_sdk::models::{DeletionProtection, Metric, Namespace, Vector, WaitPolicy};
 use pinecone_sdk::pinecone::PineconeClient;
+use prost_types::value::Kind;
+use prost_types::Value;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 #[async_trait]
@@ -111,18 +114,52 @@ impl VectorDatabase for PineconeClient {
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
         let vector = Vector::from(point);
-        let namespace = search_request.collection;
-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
-            // Need to figure out the the default index name here
-            let index = self.index(index_model.host.as_str()).await.unwrap();
-            return match upsert(index, &[vector], &namespace.into()).await {
-                Ok(_) => Ok(VectorDatabaseStatus::Ok),
-                Err(e) => Err(e),
-            };
+        let namespace = search_request.clone().collection;
+        match get_index_model(&self, Region::to_str(region).to_string()).await {
+            Ok(index_model) => {
+                let index = self.index(index_model.host.as_str()).await.unwrap();
+                match search_request.search_type {
+                    SearchType::ChunkedRow => match &self.delete_point(search_request).await {
+                        Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
+                            Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                            Err(e) => Err(e),
+                        },
+                        Err(e) => Err(e.to_owned()),
+                    },
+                    _ => match upsert(index, &[vector], &namespace.into()).await {
+                        Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                        Err(e) => Err(e),
+                    },
+                }
+            }
+            Err(e) => Err(e),
         }
-        Err(VectorDatabaseError::NotFound(
-            format!("Index {namespace} was not found").to_string(),
-        ))
+    }
+
+    async fn delete_point(
+        &self,
+        search_request: SearchRequest,
+    ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        let region = search_request.region.unwrap_or(Region::US);
+        let pinecone_filters = search_request.filters.map_or(None, |filter_conditions| {
+            Some(Metadata::from(filter_conditions))
+        });
+        let namespace = search_request.collection;
+        match get_index_model(&self, Region::to_str(region).to_string()).await {
+            Ok(index_model) => match self.index(index_model.host.as_str()).await {
+                Ok(mut index) => {
+                    match index
+                        .delete_by_filter(pinecone_filters.unwrap(), &namespace.into())
+                        .await
+                    {
+                        Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                        Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
+                    }
+                }
+                Err(e) => Err(VectorDatabaseError::PineconeError(Arc::new(e))),
+            },
+            Err(e) => Err(e),
+        }
     }
 
     async fn bulk_insert_points(
@@ -133,9 +170,50 @@ impl VectorDatabase for PineconeClient {
         let region = search_request.clone().region.unwrap_or(Region::US);
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
         let namespace = search_request.collection;
+
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
             // Need to figure out the the default index name here
-            let index = self.index(index_model.host.as_str()).await.unwrap();
+            let mut index = self.index(index_model.host.as_str()).await.unwrap();
+            match search_request.search_type {
+                SearchType::ChunkedRow => {
+                    // Collect indices into a Vec<&str>
+                    let indices: Vec<&str> =
+                        points.iter().filter_map(|p| p.index.as_deref()).collect();
+                    println!("Ids to delete {:?}", indices);
+                    //println!("namespace to delete from {:?}", &namespace.clone());
+                    for idx in indices {
+                        // Use the collected ids directly in the delete_by_id method
+                        let mut fields = BTreeMap::new();
+                        fields.insert(
+                            "index".to_string(),
+                            Value {
+                                kind: Some(Kind::StringValue(idx.to_string())),
+                            },
+                        );
+
+                        let query_response = index
+                            .query_by_value(
+                                vec![],
+                                None,
+                                2 ^ 32,
+                                &namespace.clone().into(),
+                                None,
+                                None,
+                                None,
+                            )
+                            .await;
+                        if let Ok(points) = query_response {
+                            let ids: Vec<&str> =
+                                points.matches.iter().map(|j| j.id.as_str()).collect();
+                            let _ = index
+                                .delete_by_id(&ids, &namespace.clone().into())
+                                .await
+                                .unwrap();
+                        };
+                    }
+                }
+                _ => {}
+            }
             return match upsert(index, &vectors, &namespace.into()).await {
                 Ok(_) => Ok(VectorDatabaseStatus::Ok),
                 Err(e) => Err(e),
