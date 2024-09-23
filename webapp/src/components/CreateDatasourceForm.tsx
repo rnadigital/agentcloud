@@ -34,6 +34,8 @@ import FormContext from 'context/connectorform';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import submittingReducer from 'utils/submittingreducer';
+
+import { RagFilterSchema } from '../lib/struct/editorschemas';
 // import InfoAlert from 'components/InfoAlert';
 
 const stepList = [
@@ -298,7 +300,8 @@ export default function CreateDatasourceForm({
 					retriever: toolRetriever,
 					retriever_config: {
 						timeWeightField: toolTimeWeightField,
-						decay_rate: toolDecayRate
+						decay_rate: toolDecayRate,
+						k: topK
 					},
 					chunkingConfig,
 					enableConnectorChunking

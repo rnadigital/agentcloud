@@ -3,7 +3,7 @@ use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
     CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, ScrollResults,
-    SearchRequest, SearchResult, StorageSize, VectorDatabaseStatus,
+    SearchRequest, SearchResult, SearchType, StorageSize, VectorDatabaseStatus,
 };
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -13,11 +13,12 @@ use backoff::backoff::Backoff;
 use backoff::{exponential, ExponentialBackoff, SystemClock};
 use qdrant_client::prelude::point_id::PointIdOptions;
 use qdrant_client::prelude::{CreateCollection, PointStruct, QdrantClient, SearchPoints};
+use qdrant_client::qdrant::points_selector::PointsSelectorOneOf;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use qdrant_client::qdrant::{
-    Filter, PointId, ScrollPoints, VectorParams, VectorParamsMap, VectorsConfig,
-    WithVectorsSelector,
+    Condition, Filter, PointId, PointsSelector, ScrollPoints, VectorParams, VectorParamsMap,
+    VectorsConfig, WithVectorsSelector,
 };
 use std::time::Duration;
 
@@ -150,6 +151,13 @@ impl VectorDatabase for QdrantClient {
                 randomization_factor: 0.5,
                 ..ExponentialBackoff::default()
             };
+        match search_request.search_type {
+            SearchType::ChunkedRow => match self.delete_point(search_request).await {
+                Ok(_) => {}
+                Err(e) => return Err(e),
+            },
+            _ => {}
+        }
         if let Some(point_struct) =
             construct_point_struct(&point.vector, point.payload.unwrap(), None, point.index).await
         {
@@ -192,12 +200,30 @@ impl VectorDatabase for QdrantClient {
         Ok(VectorDatabaseStatus::from(VectorDatabaseStatus::from(true)))
     }
 
+    async fn delete_point(
+        &self,
+        search_request: SearchRequest,
+    ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        let collection_id = search_request.clone().collection;
+        let qdrant_filters = qdrant_client::qdrant::Filter::from(search_request.filters.unwrap());
+        let point_selector = PointsSelector {
+            points_selector_one_of: Some(PointsSelectorOneOf::Filter(qdrant_filters)),
+        };
+        match self
+            .delete_points_blocking(collection_id, None, &point_selector, None)
+            .await
+        {
+            Ok(_) => Ok(VectorDatabaseStatus::Ok),
+            Err(e) => Err(VectorDatabaseError::AnyhowError(e)),
+        }
+    }
+
     async fn bulk_insert_points(
         &self,
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let collection_id = search_request.collection;
+        let collection_id = search_request.collection.clone();
         let mut backoff = ExponentialBackoff {
             current_interval: Duration::from_millis(50),
             initial_interval: Duration::from_millis(50),
@@ -207,6 +233,29 @@ impl VectorDatabase for QdrantClient {
             randomization_factor: 0.5,
             ..ExponentialBackoff::default()
         };
+
+        match search_request.search_type {
+            SearchType::ChunkedRow => {
+                let ids: Vec<String> = points.iter().map(|p| p.index.clone().unwrap()).collect();
+                let filter_conditions: Vec<Condition> = ids
+                    .iter()
+                    .map(|id| Condition::matches("index", id.clone()))
+                    .collect();
+                let qdrant_points = PointsSelector {
+                    points_selector_one_of: Option::from(PointsSelectorOneOf::Filter(Filter {
+                        should: filter_conditions,
+                        must: vec![],
+                        must_not: vec![],
+                        min_should: None,
+                    })),
+                };
+                let _ = self
+                    .delete_points_blocking(collection_id.clone(), None, &qdrant_points, None)
+                    .await;
+            }
+            _ => {}
+        }
+
         let mut list_of_points: Vec<PointStruct> = vec![];
         for point in points {
             if let Some(point_struct) =
