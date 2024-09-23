@@ -268,7 +268,7 @@ pub async fn embed_bulk_insert_unstructured_response(
                 let embedding_vector = embeddings.get(i);
                 if let Some(vector) = embedding_vector {
                     let point = Point::new(
-                        Some(Uuid::new_v4().to_string()),
+                        Some(metadata_map.get("index").unwrap().to_owned()),
                         vector.to_vec(),
                         Some(metadata_map),
                     );

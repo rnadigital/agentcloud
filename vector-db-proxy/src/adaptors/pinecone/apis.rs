@@ -176,6 +176,7 @@ impl VectorDatabase for PineconeClient {
                     // Collect indices into a Vec<&str>
                     let ids: Vec<&str> = points.iter().filter_map(|p| p.index.as_deref()).collect();
                     println!("Ids to delete {:?}", ids);
+                    println!("namespace to delete from {:?}", namespace);
                     // Use the collected ids directly in the delete_by_id method
                     let _ = index
                         .delete_by_id(&ids, &namespace.clone().into())
