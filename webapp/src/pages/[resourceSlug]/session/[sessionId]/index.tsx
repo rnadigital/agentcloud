@@ -273,6 +273,7 @@ export default function Session(props: SessionProps) {
 		if (!message || message.trim().length === 0) {
 			return null;
 		}
+
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account?.name,
@@ -399,7 +400,13 @@ export default function Session(props: SessionProps) {
 						!chatBusyState &&
 						!loading &&
 						activeTask?.formFields?.length > 0 && (
-							<StructuredInputForm formFields={activeTask?.formFields} sendMessage={sendMessage} />
+							<StructuredInputForm
+								formFields={activeTask?.formFields}
+								sendMessage={sendMessage}
+								isShared={isShared}
+								resourceSlug={resourceSlug}
+								sessionId={sessionId}
+							/>
 						)}
 
 					<div ref={bottomRef} />
