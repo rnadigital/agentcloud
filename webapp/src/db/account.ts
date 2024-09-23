@@ -78,8 +78,9 @@ export async function getAccountTeamMember(
 		.findOne({
 			_id: toObjectId(userId),
 			'orgs.teams.id': toObjectId(teamId)
-		})
-		.project({ passwordHash: 0 });
+		}, {
+			projection: { passwordHash: 0 }
+		});
 }
 
 export function getAccountByEmail(email: string): Promise<Account> {
