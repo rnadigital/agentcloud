@@ -11,6 +11,7 @@ use crate::messages::task_handoff::send_task;
 use crate::utils::file_operations;
 use crate::utils::file_operations::determine_file_type;
 use crate::utils::webhook::send_webapp_embed_ready;
+use crate::vector_databases::models::SearchType;
 use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use mongodb::Database;
@@ -106,6 +107,7 @@ pub async fn process_message(
                                                 mongo_client.clone(),
                                                 model_name,
                                                 None,
+                                                SearchType::default(),
                                             )
                                             .await;
                                         }

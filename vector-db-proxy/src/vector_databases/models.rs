@@ -1,4 +1,4 @@
-use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
+use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::Cloud as PineconeCloud;
@@ -101,6 +101,56 @@ impl From<FilterConditions> for Filter {
         }
     }
 }
+
+impl From<Filter> for FilterConditions {
+    fn from(value: Filter) -> Self {
+        Self {
+            must: if value.must.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .must
+                        .into_iter()
+                        .map(|condition| {
+                            // Assuming `Condition` has a method `to_hash_map` or similar
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+            must_not: if value.must_not.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .must_not
+                        .into_iter()
+                        .map(|condition| {
+                            // Convert each condition to a HashMap<String, String>
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+            should: if value.should.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .should
+                        .into_iter()
+                        .map(|condition| {
+                            // Convert each condition to a HashMap<String, String>
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+        }
+    }
+}
+
 // This will dictate what is included in the response
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchResponseParams {

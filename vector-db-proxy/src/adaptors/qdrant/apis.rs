@@ -2,8 +2,8 @@ use crate::adaptors::qdrant::helpers::{construct_point_struct, get_next_page, ge
 use crate::utils::conversions::convert_hashmap_to_qdrant_filters;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::{
-    CollectionCreate, CollectionMetadata, CollectionsResult, Distance, Point, ScrollResults,
-    SearchRequest, SearchResult, SearchType, StorageSize, VectorDatabaseStatus,
+    CollectionCreate, CollectionMetadata, CollectionsResult, Distance, FilterConditions, Point,
+    ScrollResults, SearchRequest, SearchResult, SearchType, StorageSize, VectorDatabaseStatus,
 };
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
@@ -17,8 +17,8 @@ use qdrant_client::qdrant::points_selector::PointsSelectorOneOf;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use qdrant_client::qdrant::{
-    Filter, PointId, PointsSelector, ScrollPoints, VectorParams, VectorParamsMap, VectorsConfig,
-    WithVectorsSelector,
+    Condition, Filter, PointId, PointsSelector, ScrollPoints, VectorParams, VectorParamsMap,
+    VectorsConfig, WithVectorsSelector,
 };
 use std::time::Duration;
 
@@ -223,7 +223,7 @@ impl VectorDatabase for QdrantClient {
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let collection_id = search_request.collection;
+        let collection_id = search_request.collection.clone();
         let mut backoff = ExponentialBackoff {
             current_interval: Duration::from_millis(50),
             initial_interval: Duration::from_millis(50),
@@ -233,6 +233,28 @@ impl VectorDatabase for QdrantClient {
             randomization_factor: 0.5,
             ..ExponentialBackoff::default()
         };
+
+        match search_request.search_type {
+            SearchType::ChunkedRow => {
+                let ids: Option<String> = points.iter().map(|p| p.index.clone()).collect();
+                let point_ids: Vec<PointId> =
+                    ids.iter().map(|id| PointId::from(id.to_owned())).collect();
+                let filter = Filter {
+                    must: vec![Condition::has_id(point_ids.clone())],
+                    should: vec![],
+                    must_not: vec![],
+                    min_should: None,
+                };
+                let mut new_search_request = search_request.clone();
+                new_search_request.filters = Some(FilterConditions::from(filter));
+                match self.delete_point(new_search_request).await {
+                    Ok(_) => {}
+                    Err(e) => return Err(e),
+                }
+            }
+            _ => {}
+        }
+
         let mut list_of_points: Vec<PointStruct> = vec![];
         for point in points {
             if let Some(point_struct) =

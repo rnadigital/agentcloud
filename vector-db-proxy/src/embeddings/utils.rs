@@ -237,6 +237,7 @@ pub async fn embed_bulk_insert_unstructured_response(
     mongo_client: Arc<RwLock<Database>>,
     embedding_model: EmbeddingModels,
     metadata: Option<HashMap<String, String>>,
+    search_type: SearchType,
 ) {
     let mongo_connection = mongo_client.read().await;
     // Construct a collection of the texts from the
@@ -274,7 +275,7 @@ pub async fn embed_bulk_insert_unstructured_response(
                     points_to_upload.push(point)
                 }
                 let search_request =
-                    SearchRequest::new(SearchType::Point, datasource_id.to_string());
+                    SearchRequest::new(search_type.clone(), datasource_id.to_string());
 
                 //Attempt vector database insert
                 if let Ok(bulk_insert_status) = vector_database_client
