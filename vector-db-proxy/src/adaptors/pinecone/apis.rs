@@ -180,20 +180,19 @@ impl VectorDatabase for PineconeClient {
                     let ids: Vec<&str> = points.iter().filter_map(|p| p.index.as_deref()).collect();
                     println!("Ids to delete {:?}", ids);
                     println!("namespace to delete from {:?}", namespace);
-                    // Use the collected ids directly in the delete_by_id method
-                    let mut fields = BTreeMap::new();
-                    let _ = ids.iter().map(|id| {
+                    for id in ids {
+                        // Use the collected ids directly in the delete_by_id method
+                        let mut fields = BTreeMap::new();
                         fields.insert(
                             "index".to_string(),
                             Value {
                                 kind: Some(Kind::StringValue(id.to_string())),
                             },
-                        )
-                    });
-                    let _ = index
-                        .delete_by_filter(Metadata { fields }, &namespace.clone().into())
-                        .await
-                        .unwrap();
+                        );
+                        let _ = index
+                            .delete_by_filter(Metadata { fields }, &namespace.clone().into())
+                            .await;
+                    }
                 }
                 _ => {}
             }
