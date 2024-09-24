@@ -7,13 +7,15 @@ import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData }
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 import toObjectId from '../lib/misc/toobjectid';
-import { ModelList, ModelType } from '../lib/struct/model'
+import { ModelList, ModelType } from '../lib/struct/model';
+import { ShareLinkTypes } from '../lib/struct/sharelink';
 
 dotenv.config({ path: '.env' });
 
 afterAll(async () => {
 	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
 	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email });
 	await db.client().close();
 });
 
@@ -65,18 +67,6 @@ describe('team tests', () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
-		const newAccount = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/json'
-			},
-			body: JSON.stringify({
-				name: accountDetails.account2_name,
-				email: accountDetails.account2_email,
-				password: accountDetails.account2_password
-			}),
-			redirect: 'manual'
-		});
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
 		const body = {
@@ -127,25 +117,6 @@ describe('team tests', () => {
 		let url;
 		let body;
 		
-		//login to the new account that was created earlier, get it's InitialData then store that in setInitialData
-		const loginResponse = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/login`, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/json'
-			},
-			body: JSON.stringify({
-				email: accountDetails.account2_email,
-				password: accountDetails.account2_password
-			}),
-			redirect: 'manual'
-		})
-
-		const acc2Cookie = loginResponse.headers.get('set-cookie')
-		setInitialData(accountDetails.account2_email, { sessionCookie: acc2Cookie });
-
-		const jsonResponse = await makeFetch(`${process.env.WEBAPP_TEST_BASE_URL}/account.json`, fetchTypes.GET, accountDetails.account2_email);
-		const accountJson = await jsonResponse.json();
-		setInitialData(accountDetails.account2_email, { accountData: accountJson, sessionCookie: acc2Cookie });
 
 		const account2Object = await getInitialData( accountDetails.account2_email );
 
@@ -192,8 +163,7 @@ describe('team tests', () => {
 		const account2Object = await getInitialData(
 			accountDetails.account2_email
 		);
-		let url;
-		let body;
+		let url, body, response;
 
 
 		//make account2 a TEAM_ADMIN
@@ -205,7 +175,7 @@ describe('team tests', () => {
 		const addAdminResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
 		expect(addAdminResponse.status).toBe(200); //ability for ORG_ADMIN to change a TEAM_MEMBER to TEAM_ADMIN
 
-		//can create new team as TEAM_ADMIN
+		//can't create new team as TEAM_ADMIN
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/add`;
 		body = {
 			teamName: "testTEAMADMIN"
@@ -216,11 +186,19 @@ describe('team tests', () => {
 		const addTeamResponseJson = await addTeamResponse.json();
 		expect(addTeamResponse.status).toBe(400);
 
-		//can create new shareLink as TEAM_ADMIN
+		//can create new shareLink as TEAM_ADMIN or TEAM_MEMBER, possible stripe error here
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/sharelink/add`;
 		body = {
-			type: ""
+			type: ShareLinkTypes.APP
 		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
+
+		expect(response.status).toBe(200);
+
+		//can't remove team member as TEAM_ADMIN
+
+
 	});
 
 	//test same stripe permissions issue with creating a shareLink
@@ -283,7 +261,6 @@ describe('team tests', () => {
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
 
-		console.log(response);
 		expect(response.status).toBe(302); //302 redirect to login
 	});
 });
