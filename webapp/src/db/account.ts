@@ -208,6 +208,22 @@ export function editAccountsTeam(
 	);
 }
 
+export function editAccountsOrg(orgId: db.IdOrStr, update: Partial<AccountTeam>) {
+	return AccountCollection().updateMany(
+		{
+			'orgs.id': toObjectId(orgId)
+		},
+		{
+			$set: {
+				'orgs.$[org].name': update.name
+			}
+		},
+		{
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }]
+		}
+	);
+}
+
 //NOTE: will leave dangling orgs if removed from all teams in an org, but we filter these on the FE.
 export function pullAccountTeam(
 	userId: db.IdOrStr,

@@ -219,7 +219,8 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 				}
 			}
 		])
-		.toArray();
+		.toArray()
+		.then(res => res[0]);
 }
 
 export async function updateTeamOwner(teamId: db.IdOrStr, newOwnerId: db.IdOrStr): Promise<any> {

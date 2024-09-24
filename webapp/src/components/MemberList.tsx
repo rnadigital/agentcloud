@@ -7,31 +7,26 @@ import { useReducer } from 'react';
 import { toast } from 'react-toastify';
 import submittingReducer from 'utils/submittingreducer';
 
-export default function TeamMemberList({ team, fetchTeam }: { team: any; fetchTeam?: any }) {
+export default function MemberList({
+	members,
+	fetchTeam,
+	deleteCallback
+}: {
+	members: any[];
+	fetchTeam?: any;
+	deleteCallback?: Function;
+}) {
+	console.log('members', members);
 	const [accountContext]: any = useAccountContext();
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
 
-	async function removeTeamMember(memberId) {
+	async function deleteMember(memberId) {
 		setDeleting({ [memberId]: true });
 		try {
-			await API.deleteTeamMember(
-				{
-					_csrf: csrf,
-					resourceSlug,
-					memberId
-				},
-				() => {
-					toast.success('Team member removed successfully');
-					fetchTeam();
-				},
-				err => {
-					toast.error(err);
-				},
-				router
-			);
+			await deleteCallback(memberId);
 		} finally {
 			setDeleting({ [memberId]: false });
 		}
@@ -39,38 +34,38 @@ export default function TeamMemberList({ team, fetchTeam }: { team: any; fetchTe
 
 	return (
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
-			{team?.length > 0 && (
-				<table className='min-w-full divide-y divide-gray-200'>
-					<thead className='bg-white dark:bg-slate-800 dark:!border-slate-700'>
-						<tr>
-							<th
-								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
-							>
-								Name
-							</th>
-							<th
-								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
-							>
-								Email
-							</th>
-							<th
-								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
-							>
-								Email Verified
-							</th>
-							<th
-								scope='col'
-								className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase dark:text-white'
-							>
-								Actions
-							</th>
-						</tr>
-					</thead>
-					<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
-						{team[0]?.members.map(member => (
+			<table className='min-w-full divide-y divide-gray-200'>
+				<thead className='bg-white dark:bg-slate-800 dark:!border-slate-700'>
+					<tr>
+						<th
+							scope='col'
+							className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
+						>
+							Name
+						</th>
+						<th
+							scope='col'
+							className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
+						>
+							Email
+						</th>
+						<th
+							scope='col'
+							className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-white'
+						>
+							Email Verified
+						</th>
+						<th
+							scope='col'
+							className='px-6 py-3 w-20 text-right text-xs font-medium text-gray-500 uppercase dark:text-white'
+						>
+							Actions
+						</th>
+					</tr>
+				</thead>
+				<tbody className='bg-white divide-y divide-gray-200 dark:bg-slate-800'>
+					{members &&
+						members.map(member => (
 							<tr
 								key={member._id}
 								className='hover:bg-gray-50 dark:hover:bg-slate-700 dark:!border-slate-700 dark:text-white'
@@ -99,7 +94,7 @@ export default function TeamMemberList({ team, fetchTeam }: { team: any; fetchTe
 										<PencilIcon className='h-5 w-5' aria-hidden='true' />
 									</a>
 									<button
-										onClick={() => removeTeamMember(member._id)}
+										onClick={() => deleteMember(member._id)}
 										className='text-red-500 hover:text-red-700'
 										disabled={deleting[member._id]}
 									>
@@ -112,9 +107,8 @@ export default function TeamMemberList({ team, fetchTeam }: { team: any; fetchTe
 								</td>
 							</tr>
 						))}
-					</tbody>
-				</table>
-			)}
+				</tbody>
+			</table>
 		</div>
 	);
 }

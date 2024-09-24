@@ -1,18 +1,19 @@
 import * as API from '@api';
 import InviteFormModal from 'components/InviteFormModal';
+import MemberList from 'components/MemberList';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
-import TeamMemberList from 'components/TeamMemberList';
 import TeamSettingsForm from 'components/TeamSettingsForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function Team(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, teamName, permissions } = accountContext as any;
+	const { csrf, teamName, permissions } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
@@ -32,6 +33,24 @@ export default function Team(props) {
 	useEffect(() => {
 		fetchTeam();
 	}, [resourceSlug]);
+
+	async function deleteCallback(memberId) {
+		await API.deleteTeamMember(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				memberId
+			},
+			() => {
+				toast.success('Team member removed successfully');
+				fetchTeam();
+			},
+			err => {
+				toast.error(err);
+			},
+			router
+		);
+	}
 
 	if (!team) {
 		return <Spinner />;
@@ -56,7 +75,7 @@ export default function Team(props) {
 				<title>{`Team - ${teamName}`}</title>
 			</Head>
 
-			{permissions.get(Permissions.ADD_TEAM_MEMBER) && (
+			{permissions.get(Permissions.EDIT_TEAM) && (
 				<>
 					<div className='border-b pb-2 my-2'>
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
@@ -66,14 +85,14 @@ export default function Team(props) {
 			)}
 
 			<PageTitleWithNewButton
-				list={team[0]?.members}
+				list={team?.members}
 				title='Team Members'
 				buttonText='Invite Member'
 				onClick={() => setModalOpen('member')}
 				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
 			/>
 
-			{team && team.length > 0 && <TeamMemberList team={team} fetchTeam={fetchTeam} />}
+			<MemberList members={team?.members} fetchTeam={fetchTeam} deleteCallback={deleteCallback} />
 		</>
 	);
 }

@@ -785,6 +785,20 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 	);
 }//@TEST
 
+export function getOrg(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/org.json`, 'GET', null, dispatch, errorCallback, router);
+}//@TEST
+export function editOrg(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/org/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+
 function buildOptions(_route, method, body) {
 	// Convert method uppercase
 	method = method.toUpperCase();
