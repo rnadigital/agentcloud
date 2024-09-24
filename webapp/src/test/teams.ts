@@ -17,6 +17,14 @@ afterAll(async () => {
 	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
 	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
 	await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account4_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account5_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account6_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account7_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account8_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account9_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account10_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account11_email });
 	await db.client().close();
 });
 
@@ -172,10 +180,9 @@ describe('team tests', () => {
 			body
 		);
 
-		console.log(addModelResponse);
+
 
 		const addModelResponseJson = await addModelResponse.json();
-		console.log(addModelResponseJson);
 		expect(addModelResponse.status).toBe(200);
 		expect(addModelResponseJson?._id).toBeDefined();
 		expect(addModelResponseJson?.redirect).toBeDefined();
@@ -298,22 +305,37 @@ describe('team tests', () => {
 			body
 		);
 
-		expect(addModelResponse.status).toBe(403);
+		expect(addModelResponse.status).toBe(403); //should hit invalid resourceSlug in middleware before it hits the create api
 
-		// const response = await makeFetch("", fetchTypes.GET);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
+		body = {
+			name: accountDetails.account2_name,
+			email: accountDetails.account2_email,
+			template: "TEAM_MEMBER"
+		}
 
-		// const responseJson = await response.json();
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+
+		expect(response.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
+		body = {
+			name: accountDetails.account3_name,
+			email: accountDetails.account3_email,
+			template: "TEAM_MEMBER"
+		}
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
+
+		expect(response.status).toBe(400); //should have invalid permissions
+		
+		let responseJson = await response.json();
+
+		expect(responseJson?.error).toBe("Missing permission ADD_TEAM_MEMBER");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	//shouldn't be possible
-	test('cant remove', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
+	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 
-		// const response = await makeFetch("", fetchTypes.GET);
-
-		// const responseJson = await response.json();
 	});
 
 	test.only('log out', async () => {
