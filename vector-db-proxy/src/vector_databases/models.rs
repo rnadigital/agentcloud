@@ -1,9 +1,11 @@
+use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
 use prost_types::{ListValue, Struct as Metadata, Struct};
+use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
@@ -87,6 +89,68 @@ impl Default for FilterConditions {
         }
     }
 }
+
+impl From<FilterConditions> for Filter {
+    fn from(value: FilterConditions) -> Self {
+        let (must, must_not, should) = convert_hashmap_to_qdrant_filters(&Some(value));
+        Filter {
+            must,
+            must_not,
+            should,
+            min_should: None,
+        }
+    }
+}
+
+impl From<Filter> for FilterConditions {
+    fn from(value: Filter) -> Self {
+        Self {
+            must: if value.must.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .must
+                        .into_iter()
+                        .map(|condition| {
+                            // Assuming `Condition` has a method `to_hash_map` or similar
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+            must_not: if value.must_not.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .must_not
+                        .into_iter()
+                        .map(|condition| {
+                            // Convert each condition to a HashMap<String, String>
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+            should: if value.should.is_empty() {
+                None
+            } else {
+                Some(
+                    value
+                        .should
+                        .into_iter()
+                        .map(|condition| {
+                            // Convert each condition to a HashMap<String, String>
+                            condition_to_hash_map(condition)
+                        })
+                        .collect(),
+                )
+            },
+        }
+    }
+}
+
 // This will dictate what is included in the response
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SearchResponseParams {
@@ -102,6 +166,13 @@ pub enum SearchType {
     Collection,
     Point,
     Similarity,
+    ChunkedRow,
+}
+
+impl Default for SearchType {
+    fn default() -> Self {
+        SearchType::Collection
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -315,6 +386,23 @@ impl From<qdrant_client::qdrant::CollectionInfo> for VectorDatabaseStatus {
     }
 }
 
+impl From<FilterConditions> for Metadata {
+    fn from(value: FilterConditions) -> Self {
+        let mut btree_map = BTreeMap::new();
+        for pattern in value.must.unwrap() {
+            for (k, v) in pattern {
+                btree_map.insert(
+                    k,
+                    prost_types::Value {
+                        kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                    },
+                );
+            }
+        }
+
+        Self { fields: btree_map }
+    }
+}
 impl From<Point> for BTreeMap<String, String> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
