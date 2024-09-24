@@ -734,6 +734,16 @@ export function editTeamMember(body, dispatch, errorCallback, router) {
 		router
 	);
 }//@TEST
+export function deleteTeamMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/team/invite`,
+		'DELETE',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
 export function editTeam(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/edit`,

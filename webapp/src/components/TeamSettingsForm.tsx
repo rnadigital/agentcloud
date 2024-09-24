@@ -45,8 +45,8 @@ export default function TeamSettingsForm({ callback }: { callback?: Function }) 
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
-			<div className='space-y-4'>
+		<form onSubmit={handleSubmit} className='w-full'>
+			<div className='space-y-4 mb-4'>
 				<div>
 					<label
 						htmlFor='teamName'
@@ -62,8 +62,9 @@ export default function TeamSettingsForm({ callback }: { callback?: Function }) 
 							id='teamName'
 							value={name}
 							onChange={e => setName(e.target.value)}
+							maxLength={100}
 							className={cn(
-								'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
+								'bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
 							)}
 						/>
 					</div>

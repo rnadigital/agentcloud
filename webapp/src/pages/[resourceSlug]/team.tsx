@@ -1,18 +1,14 @@
 import * as API from '@api';
-import { TrashIcon } from '@heroicons/react/20/solid';
-import InviteForm from 'components/InviteForm';
+import InviteFormModal from 'components/InviteFormModal';
+import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
-import TeamMemberCard from 'components/TeamMemberCard';
+import TeamMemberList from 'components/TeamMemberList';
+import TeamSettingsForm from 'components/TeamSettingsForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-
-import InviteFormModal from '../../components/InviteFormModal';
-import PageTitleWithNewButton from '../../components/PageTitleWithNewButton';
-import TeamSettingsForm from '../../components/TeamSettingsForm';
 
 export default function Team(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -77,14 +73,7 @@ export default function Team(props) {
 				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
 			/>
 
-			{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
-			{team && team.length > 0 && (
-				<div className='flex flex-wrap gap-4 my-4'>
-					{team[0].members.map(member => (
-						<TeamMemberCard team={team} key={member._id} member={member} callback={fetchTeam} />
-					))}
-				</div>
-			)}
+			{team && team.length > 0 && <TeamMemberList team={team} fetchTeam={fetchTeam} />}
 		</>
 	);
 }
