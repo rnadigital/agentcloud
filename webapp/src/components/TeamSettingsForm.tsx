@@ -25,7 +25,7 @@ export default function TeamSettingsForm({ callback }: { callback?: Function }) 
 				{
 					_csrf: csrf,
 					teamName: name,
-					resourceSlug,
+					resourceSlug
 				},
 				() => {
 					toast.success('Team name updated successfully');
@@ -37,7 +37,7 @@ export default function TeamSettingsForm({ callback }: { callback?: Function }) 
 				null
 			);
 		} catch (err) {
-            console.error(err);
+			console.error(err);
 			toast.error('Error updating team');
 		} finally {
 			setSaving(false);

@@ -83,7 +83,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 				text='You must be on the Teams plan to invite team members.'
 				buttonText='Upgrade'
 			/>
-			<form onSubmit={handleSubmit} className='w-full sm:w-1/2'>
+			<form onSubmit={handleSubmit} className='w-full'>
 				<div className='space-y-4'>
 					<div>
 						<label
@@ -162,7 +162,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 					<div>
 						<button
 							type='submit'
-							className='rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500'
+							className='rounded-md bg-indigo-600 px-4 py-2 mt-2 text-sm font-semibold text-white hover:bg-indigo-500'
 						>
 							{inviting && <ButtonSpinner className='mt-1 me-1' />}
 							Invite

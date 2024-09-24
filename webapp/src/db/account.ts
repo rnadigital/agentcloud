@@ -188,7 +188,11 @@ export function pushAccountTeam(
 	);
 }
 
-export function editAccountsTeam(teamId: db.IdOrStr, orgId: db.IdOrStr, update: Partial<AccountTeam>) {
+export function editAccountsTeam(
+	teamId: db.IdOrStr,
+	orgId: db.IdOrStr,
+	update: Partial<AccountTeam>
+) {
 	return AccountCollection().updateMany(
 		{
 			'orgs.teams.id': toObjectId(teamId)
@@ -199,10 +203,7 @@ export function editAccountsTeam(teamId: db.IdOrStr, orgId: db.IdOrStr, update: 
 			}
 		},
 		{
-			arrayFilters: [
-				{ 'org.id': toObjectId(orgId) },
-				{ 'team.id': toObjectId(teamId) }
-			]
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }, { 'team.id': toObjectId(teamId) }]
 		}
 	);
 }

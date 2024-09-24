@@ -5,6 +5,7 @@ import {
 	ArrowPathIcon,
 	ArrowRightOnRectangleIcon,
 	Bars3Icon,
+	BuildingOfficeIcon,
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
@@ -34,6 +35,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
+import Permissions from 'permissions/permissions';
 import { usePostHog } from 'posthog-js/react';
 import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -112,10 +114,25 @@ const agentNavigation: any[] = [
 
 const teamNavigation = [
 	{
+		name: 'Organisation',
+		href: '/org',
+		base: '/org',
+		icon: <BuildingOfficeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
+		permissions: [Permissions.ORG_OWNER, Permissions.ORG_ADMIN, Permissions.EDIT_ORG]
+	},
+	{
 		name: 'Team',
 		href: '/team',
 		base: '/team',
-		icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+		icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
+		permissions: [
+			Permissions.TEAM_OWNER,
+			Permissions.TEAM_ADMIN,
+			Permissions.EDIT_TEAM,
+			Permissions.EDIT_TEAM_MEMBER,
+			Permissions.ADD_TEAM_MEMBER,
+			Permissions.REMOVE_TEAM_MEMBER
+		]
 	}
 ];
 
@@ -257,7 +274,7 @@ export default withRouter(function Layout(props) {
 														<li className='bg-gray-900 w-full mt-auto absolute bottom-0 left-0 p-4 ps-6'>
 															{teamNavigation.length > 0 && (
 																<div className='text-xs font-semibold leading-6 text-indigo-200'>
-																	Admin{' '}
+																	Account{' '}
 																</div>
 															)}
 															<ul role='list' className='-mx-2 mt-2 space-y-1'>

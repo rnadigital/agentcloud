@@ -9,6 +9,9 @@ import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+
+import InviteFormModal from '../../components/InviteFormModal';
+import PageTitleWithNewButton from '../../components/PageTitleWithNewButton';
 import TeamSettingsForm from '../../components/TeamSettingsForm';
 
 export default function Team(props) {
@@ -18,10 +21,16 @@ export default function Team(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
+	const [modalOpen, setModalOpen]: any = useState(false);
 	const { team, invites } = state;
 
 	async function fetchTeam() {
 		await API.getTeam({ resourceSlug }, dispatch, setError, router);
+	}
+
+	async function refreshTeam() {
+		fetchTeam();
+		refreshAccountContext();
 	}
 
 	useEffect(() => {
@@ -32,8 +41,21 @@ export default function Team(props) {
 		return <Spinner />;
 	}
 
+	let modal;
+	switch (modalOpen) {
+		case 'member':
+			modal = (
+				<InviteFormModal open={modalOpen !== false} setOpen={setModalOpen} callback={refreshTeam} />
+			);
+			break;
+		default:
+			modal = null;
+			break;
+	}
+
 	return (
 		<>
+			{modal}
 			<Head>
 				<title>{`Team - ${teamName}`}</title>
 			</Head>
@@ -43,18 +65,17 @@ export default function Team(props) {
 					<div className='border-b pb-2 my-2'>
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
 					</div>
-					<TeamSettingsForm
-						callback={() => {
-							fetchTeam();
-							refreshAccountContext();
-						}}
-					/>
+					<TeamSettingsForm callback={refreshTeam} />
 				</>
 			)}
 
-			<div className='border-b py-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Team Members</h3>
-			</div>
+			<PageTitleWithNewButton
+				list={team[0]?.members}
+				title='Team Members'
+				buttonText='Invite Member'
+				onClick={() => setModalOpen('member')}
+				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
+			/>
 
 			{/* TODO: a section to show team members properly, and ability to remove from team if emailVerified: false  */}
 			{team && team.length > 0 && (
@@ -63,15 +84,6 @@ export default function Team(props) {
 						<TeamMemberCard team={team} key={member._id} member={member} callback={fetchTeam} />
 					))}
 				</div>
-			)}
-
-			{permissions.get(Permissions.ADD_TEAM_MEMBER) && (
-				<>
-					<div className='border-b pb-2 my-2'>
-						<h3 className='pl-2 font-semibold text-gray-900'>Invite Members:</h3>
-					</div>
-					<InviteForm callback={fetchTeam} />
-				</>
 			)}
 		</>
 	);
