@@ -122,7 +122,7 @@ export default async function createAccount({
 			permissions: new Binary(Roles.REGISTERED_USER.array),
 			stripe: {
 				stripeCustomerId: null,
-				stripePlan: STRIPE_ACCOUNT_SECRET ? SubscriptionPlan.FREE : SubscriptionPlan.ENTERPRISE,
+				stripePlan: process.env.SKIP_STRIPE ? SubscriptionPlan.ENTERPRISE : SubscriptionPlan.FREE,
 				stripeAddons: {
 					users: 0,
 					storage: 0

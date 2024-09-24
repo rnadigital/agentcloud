@@ -110,7 +110,7 @@ export default function TeamMemberCard({ team, member, callback }) {
 						</span>
 					</button>
 				)}
-				{team &&
+				{/*team &&
 					!isOwner && //dont show for team owner
 					(!me || permissions.get(Permissions.ORG_OWNER)) && //dont show for own account if we aren't org owner
 					(account._id.toString() === team[0].ownerId.toString() ||
@@ -127,16 +127,16 @@ export default function TeamMemberCard({ team, member, callback }) {
 								</span>
 							</span>
 						</button>
-					)}
+					)*/}
 			</div>
-			<ConfirmModal
+			{/* <ConfirmModal
 				open={confirmOpen}
 				setOpen={setConfirmOpen}
 				confirmFunction={transferOwnership}
 				cancelFunction={() => setConfirmOpen(false)}
 				title='Confirm Ownership Transfer'
 				message={`Are you sure you want to transfer ownership to ${selectedMember?.name}? This action cannot be undone.`}
-			/>
+			/> */}
 		</div>
 	);
 }

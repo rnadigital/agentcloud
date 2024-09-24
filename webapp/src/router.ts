@@ -34,7 +34,6 @@ const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMidd
 const authedMiddlewareChain = [
 	...unauthedMiddlewareChain,
 	checkSession,
-	setSubscriptionLocals,
 	csrfMiddleware
 ];
 
@@ -598,18 +597,18 @@ export default function router(server, app) {
 	);
 	teamRouter.delete(
 		'/forms/team/invite',
-		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
+		hasPerms.one(Permissions.REMOVE_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.deleteTeamMemberApi
 	);
-	teamRouter.post(
-		'/forms/team/transfer-ownership',
-		hasPerms.any(Permissions.ORG_OWNER, Permissions.TEAM_OWNER),
-		teamController.transferTeamOwnershipApi
-	);
+	// teamRouter.post(
+	// 	'/forms/team/transfer-ownership',
+	// 	hasPerms.any(Permissions.ORG_OWNER, Permissions.TEAM_OWNER),
+	// 	teamController.transferTeamOwnershipApi
+	// );
 	teamRouter.post(
 		'/forms/team/add',
-		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
+		hasPerms.one(Permissions.CREATE_TEAM),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.addTeamApi
 	);
@@ -640,6 +639,7 @@ export default function router(server, app) {
 		'/:resourceSlug([a-f0-9]{24})',
 		authedMiddlewareChain,
 		checkResourceSlug,
+		setSubscriptionLocals,
 		setPermissions,
 		teamRouter
 	);
