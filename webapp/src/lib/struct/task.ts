@@ -44,4 +44,5 @@ export interface Task {
 	isStructuredOutput?: boolean;
 	displayOnlyFinalOutput?: boolean;
 	variableIds?: (ObjectId | string)[];
+	taskOutputVariableName?: string;
 }

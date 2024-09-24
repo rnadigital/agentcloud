@@ -224,7 +224,8 @@ export async function addTaskApi(req, res, next) {
 		formFields,
 		isStructuredOutput,
 		displayOnlyFinalOutput,
-		variableIds
+		variableIds,
+		taskOutputVariableName
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -277,7 +278,8 @@ export async function addTaskApi(req, res, next) {
 			: null,
 		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
-		variableIds: variableIds.map(toObjectId)
+		variableIds: variableIds.map(toObjectId),
+		taskOutputVariableName
 	});
 
 	if (variableIds && variableIds.length > 0) {
@@ -378,7 +380,8 @@ export async function editTaskApi(req, res, next) {
 		formFields,
 		isStructuredOutput,
 		displayOnlyFinalOutput,
-		variableIds
+		variableIds,
+		taskOutputVariableName
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -446,7 +449,8 @@ export async function editTaskApi(req, res, next) {
 		agentId: toObjectId(agentId),
 		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
-		variableIds: variableIds ? variableIds.map(toObjectId) : []
+		variableIds: variableIds ? variableIds.map(toObjectId) : [],
+		taskOutputVariableName
 	});
 
 	return dynamicResponse(req, res, 302, {
