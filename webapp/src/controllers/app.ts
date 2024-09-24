@@ -359,8 +359,7 @@ export async function addAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false,
-				variableIds: variableIds?.map(toObjectId)
+				allowDelegation: false
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
