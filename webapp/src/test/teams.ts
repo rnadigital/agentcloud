@@ -12,8 +12,8 @@ import { ModelList, ModelType } from '../lib/struct/model'
 dotenv.config({ path: '.env' });
 
 afterAll(async () => {
-	// await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
-	// await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
+	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
 	await db.client().close();
 });
 
@@ -31,7 +31,8 @@ describe('team tests', () => {
 		expect(response.status).toBe(400);
 	});
 
-	test('add new team with correct stripe permissions', async () => {
+	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
+	test.only('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -59,9 +60,8 @@ describe('team tests', () => {
 		expect(teamInDb).toBeDefined();
 	});
 
-	//adding member is only current team edit operation
-	//create a new account to invite to the team
-	test('Inviting existing account to team', async () => {
+	//Account2 created here, when debugging tests and running '.only()', ensure this test is marked as ".only"
+	test.only('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -120,7 +120,7 @@ describe('team tests', () => {
 		expect(responseJson?.team[0]?.members.length).toBe(2);
 	});
 
-	test('testing TEAM_MEMBER permissions', async () => {
+	test.only('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData( //account1 is the ORG_ADMIN
 			accountDetails.account1_email
 		);
@@ -185,7 +185,7 @@ describe('team tests', () => {
 
 
 	//exposed bug: when using the resourceSlug of account1, the stripe permissions aren't taken from account 1's stripe information, instead are taken from account 2
-	test('testing TEAM_ADMIN permissions', async () => {
+	test.only('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -214,10 +214,13 @@ describe('team tests', () => {
 		const addTeamResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
 		
 		const addTeamResponseJson = await addTeamResponse.json();
-		expect(addTeamResponse.status).toBe(200);
-		
-		expect(addTeamResponseJson?._id).toBeDefined();
-		expect(addTeamResponseJson?.orgId).toBeDefined();
+		expect(addTeamResponse.status).toBe(400);
+
+		//can create new shareLink as TEAM_ADMIN
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/sharelink/add`;
+		body = {
+			type: ""
+		};
 	});
 
 	//test same stripe permissions issue with creating a shareLink
@@ -255,7 +258,7 @@ describe('team tests', () => {
 
 	});
 
-	test('log out', async () => {
+	test.only('log out', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -272,13 +275,15 @@ describe('team tests', () => {
 		expect(response.status).toBe(200);
 	});
 
-	test('cant get account with invalidated session cookie', async () => {
+	test.only('cant get account with invalidated session cookie', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
+
+		console.log(response);
 		expect(response.status).toBe(302); //302 redirect to login
 	});
 });

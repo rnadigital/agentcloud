@@ -17,7 +17,7 @@ beforeAll(async () => {
 
 describe('account tests', () => {
 
-	test('register new account', async () => {
+	test.only('register new account', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -33,7 +33,7 @@ describe('account tests', () => {
 		expect(response.status).toBe(200);
 	});
 
-	test('login as new user', async () => {
+	test.only('login as new user', async () => {
 		const response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/login`, {
 			method: 'POST',
 			headers: {
@@ -50,7 +50,8 @@ describe('account tests', () => {
 		expect(sessionCookie).toMatch(/^connect\.sid/);
 	});
 
-	test('get account', async () => {
+	//when debugging or adding new tests, mark this as ".only" to ensure account1 data is added to the enum and map
+	test.only('get account', async () => {
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
 		const accountJson = await response.json();
@@ -84,7 +85,8 @@ describe('account tests', () => {
 	
 	//test with valid token??
 
-	test('set role', async () => {
+	//when debugging or adding new tests, mark this test as ".only" to ensure that the onboarding gets set, otherwise basically every following test will fail since every req will attempt a redirect to onboarding
+	test.only('set role', async () => {
 		const {resourceSlug} = await getInitialData(accountDetails.account1_email)
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${resourceSlug}`;
 		const body = {

@@ -8,7 +8,7 @@ ROOT.setAll(Permission.allPermissions);
 const NOT_LOGGED_IN = new Permission();
 
 const REGISTERED_USER = new Permission();
-REGISTERED_USER.setAll([]);
+
 
 const ORG_ADMIN = new Permission();
 ORG_ADMIN.setAll([Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
