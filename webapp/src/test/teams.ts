@@ -9,6 +9,7 @@ import { URLSearchParams } from 'url';
 import toObjectId from '../lib/misc/toobjectid';
 import { ModelList, ModelType } from '../lib/struct/model';
 import { ShareLinkTypes } from '../lib/struct/sharelink';
+import { getToolsByTeam } from "../db/tool";
 
 dotenv.config({ path: '.env' });
 
@@ -62,20 +63,28 @@ describe('team tests', () => {
 		expect(teamInDb).toBeDefined();
 	});
 
-	//Account2 created here, when debugging tests and running '.only()', ensure this test is marked as ".only"
+
 	test.only('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
-		const body = {
+		let body = {
 			name: accountDetails.account2_name,
 			email: accountDetails.account2_email,
 			template: 'TEAM_MEMBER'
 		};
 
-		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		let response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+
+		body = {
+			name: accountDetails.account3_name,
+			email: accountDetails.account3_email,
+			template: 'TEAM_MEMBER'
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
 		expect(response.status).toBe(200);
 	});
 
@@ -107,18 +116,18 @@ describe('team tests', () => {
 		const responseJson = await response.json();
 
 		//the 'team' object returned by this call is an array of teams, uses teh same teamData for all .json calls
-		expect(responseJson?.team[0]?.members.length).toBe(2);
+		expect(responseJson?.team[0]?.members.length).toBe(3);
 	});
 
 	test.only('testing TEAM_MEMBER permissions', async () => {
-		const account1Object = await getInitialData( //account1 is the ORG_ADMIN
+		const account1Object = await getInitialData(
+			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
 		);
 		let url;
 		let body;
-		
 
-		const account2Object = await getInitialData( accountDetails.account2_email );
+		const account2Object = await getInitialData(accountDetails.account2_email);
 
 		//attempt to do something with account2 that they can't do
 		//attempt to add a team with account2
@@ -129,60 +138,99 @@ describe('team tests', () => {
 			resourceSlug: account2Object.resourceSlug
 		};
 
-		const makeTeamResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
+		const makeTeamResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account2_email,
+			body
+		);
 
 		//shouldn't be able to create a team with default TEAM_MEMBER permissions
 		expect(makeTeamResponse.status).toBe(400);
 
-		//should be able to create model with default TEAM_MEMBER permissions
-		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account2Object.resourceSlug}/forms/model/add`;
+		//get all tools to create agent with
+		const allTools = await getToolsByTeam(toObjectId(account1Object.resourceSlug));
+		expect(allTools).toBeDefined();
+		
+		const allToolIds = allTools.map((value) => value._id)
+
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
 		body = {
-			name: "testModel1",
+			name: 'testModel1',
 			model: 'gpt-4o',
 			config: {
 				model: 'gpt-4o',
-				api_key: "abcdefg"
+				api_key: 'abcdefg'
 			},
 			type: ModelType.OPENAI
 		};
 
-		const addModelResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
+
+		console.log(addModelResponse);
 
 		const addModelResponseJson = await addModelResponse.json();
+		console.log(addModelResponseJson);
 		expect(addModelResponse.status).toBe(200);
 		expect(addModelResponseJson?._id).toBeDefined();
 		expect(addModelResponseJson?.redirect).toBeDefined();
+
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+		body = {
+			toolIds: allToolIds,
+			name: "Test Agent 1",
+			role: "Test Agent 1",
+			goal: "Test Agent 1",
+			backstory: "Test Agent 1",
+			modelId: addModelResponseJson?._id,
+			functionModelId: addModelResponseJson?._id
+		}
+
+		let response = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
+		expect(response.status).toBe(200);
+		const addAgentResponse = await response.json();
+		expect(addAgentResponse?.redirect).toBeDefined();
+		expect(addAgentResponse?._id).toBeDefined();
 	});
 
-
-	//exposed bug: when using the resourceSlug of account1, the stripe permissions aren't taken from account 1's stripe information, instead are taken from account 2
 	test.only('testing TEAM_ADMIN permissions', async () => {
-		const account1Object = await getInitialData(
-			accountDetails.account1_email
-		);
-		const account2Object = await getInitialData(
-			accountDetails.account2_email
-		);
+		const account1Object = await getInitialData(accountDetails.account1_email);
+		const account2Object = await getInitialData(accountDetails.account2_email);
+		const account3Object = await getInitialData(accountDetails.account3_email);
 		let url, body, response;
-
 
 		//make account2 a TEAM_ADMIN
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/${account2Object?.initialData?.accountData?.account?._id}/edit`;
 		body = {
-			template : "TEAM_ADMIN"
+			template: 'TEAM_ADMIN'
 		};
 
-		const addAdminResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		const addAdminResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
 		expect(addAdminResponse.status).toBe(200); //ability for ORG_ADMIN to change a TEAM_MEMBER to TEAM_ADMIN
 
 		//can't create new team as TEAM_ADMIN
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/add`;
 		body = {
-			teamName: "testTEAMADMIN"
+			teamName: 'testTEAMADMIN'
 		};
 
-		const addTeamResponse = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
-		
+		const addTeamResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account2_email,
+			body
+		);
+
 		const addTeamResponseJson = await addTeamResponse.json();
 		expect(addTeamResponse.status).toBe(400);
 
@@ -197,13 +245,15 @@ describe('team tests', () => {
 		expect(response.status).toBe(200);
 
 		//can't remove team member as TEAM_ADMIN
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
+		body = {
+			memberId: account3Object?.initialData?.accountData?.account?._id
+		};
 
+		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account2_email, body);
 
+		expect(response.status).toBe(400);
 	});
-
-	//test same stripe permissions issue with creating a shareLink
-
-	//test same stripe permissions issue with deleting team
 
 	//isn't implemented currently, not tested
 	test('transferring ownership', async () => {
@@ -214,9 +264,41 @@ describe('team tests', () => {
 	});
 
 	test('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
+		const account1Object = await getInitialData(accountDetails.account1_email);
+		const account2Object = await getInitialData(accountDetails.account2_email);
+		const account3Object = await getInitialData(accountDetails.account3_email);
+
+		let url, body, response;
+
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
+		body = {
+			memberId: account2Object?.initialData?.accountData?.account?._id
+		}
+
+		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+
+		expect(response.status).toBe(200);
+
+		//attempt to create a model with the removed member
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+		body = {
+			name: 'testModel2',
+			model: 'gpt-4o',
+			config: {
+				model: 'gpt-4o',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.OPENAI
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account2_email,
+			body
 		);
+
+		expect(addModelResponse.status).toBe(403);
 
 		// const response = await makeFetch("", fetchTypes.GET);
 
@@ -232,8 +314,6 @@ describe('team tests', () => {
 		// const response = await makeFetch("", fetchTypes.GET);
 
 		// const responseJson = await response.json();
-
-
 	});
 
 	test.only('log out', async () => {

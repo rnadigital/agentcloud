@@ -6,6 +6,7 @@ export enum fetchTypes {
 	DELETE = 'DELETE'
 }
 
+
 export enum accountDetails {
     account1_email = 'testuser+1@example.com',
     account1_name = 'Test User1',
@@ -14,7 +15,7 @@ export enum accountDetails {
     account2_email = "testuser+2@example.com",
     account2_name = "Test User2",
     account2_password = "Test.Password.1234",
-
+    
     account3_email = "testuser+3@example.com",
     account3_name = "Test User3",
     account3_password = "Test.Password.1234",
