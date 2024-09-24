@@ -9,9 +9,10 @@ import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import TeamSettingsForm from '../../components/TeamSettingsForm';
 
 export default function Team(props) {
-	const [accountContext]: any = useAccountContext();
+	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, teamName, permissions } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
@@ -34,10 +35,24 @@ export default function Team(props) {
 	return (
 		<>
 			<Head>
-				<title>{`Team Members - ${teamName}`}</title>
+				<title>{`Team - ${teamName}`}</title>
 			</Head>
 
-			<div className='border-b pb-2 my-2'>
+			{permissions.get(Permissions.ADD_TEAM_MEMBER) && (
+				<>
+					<div className='border-b pb-2 my-2'>
+						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
+					</div>
+					<TeamSettingsForm
+						callback={() => {
+							fetchTeam();
+							refreshAccountContext();
+						}}
+					/>
+				</>
+			)}
+
+			<div className='border-b py-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Team Members</h3>
 			</div>
 

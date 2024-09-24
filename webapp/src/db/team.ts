@@ -50,15 +50,13 @@ export async function addTeam(team: Team): Promise<InsertResult> {
 	return insertedTeam;
 }
 
-export function renameTeam(teamId: db.IdOrStr, newName: string): Promise<any> {
+export function editTeam(teamId: db.IdOrStr, update: Partial<Team>): Promise<any> {
 	return TeamCollection().updateOne(
 		{
 			_id: toObjectId(teamId)
 		},
 		{
-			$set: {
-				name: newName
-			}
+			$set: update
 		}
 	);
 }

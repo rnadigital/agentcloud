@@ -588,6 +588,11 @@ export default function router(server, app) {
 		teamController.editTeamMemberApi
 	);
 	teamRouter.post(
+		'/forms/team/edit',
+		hasPerms.one(Permissions.EDIT_TEAM),
+		teamController.editTeamApi
+	);
+	teamRouter.post(
 		'/forms/team/invite',
 		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),

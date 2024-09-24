@@ -3,6 +3,7 @@
 import { dynamicResponse } from '@dr';
 import Permission from '@permission';
 import {
+	editAccountsTeam,
 	getAccountByEmail,
 	getAccountById,
 	getAccountTeamMember,
@@ -14,6 +15,7 @@ import {
 import {
 	addTeam,
 	addTeamMember,
+	editTeam,
 	getTeamById,
 	getTeamWithMembers,
 	getTeamWithModels,
@@ -254,6 +256,38 @@ export async function editTeamMemberApi(req, res) {
 
 	//For the bits that are org level, set those in the org map
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
+
+	return dynamicResponse(req, res, 200, {});
+}
+
+/**
+ * @api {post} /forms/team/[memberId]/edit
+ * @apiName edit
+ * @apiGroup Team
+ *
+ * @apiParam {String} teamName Name of new team
+ */
+export async function editTeamApi(req, res) {
+	const { teamName } = req.body;
+
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'teamName', validation: { notEmpty: true, ofType: 'string' } }],
+		{ teamName: 'Team Name' }
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	await Promise.all([
+		editTeam(req.params.resourceSlug, {
+			name: teamName
+		}),
+		editAccountsTeam(req.params.resourceSlug, res.locals.matchingOrg.id, {
+			name: teamName
+		})
+	]);
 
 	return dynamicResponse(req, res, 200, {});
 }
