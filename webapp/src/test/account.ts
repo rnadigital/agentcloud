@@ -516,6 +516,7 @@ describe('account tests', () => {
 	//test with valid token??
 
 	//sets the role to prevent redirects to onboarding in further tests
+	//TODO: refactor this to do it with a
 	test.only('set role', async () => {
 		let accountObject = await getInitialData(accountDetails.account1_email)
 		let url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
@@ -551,6 +552,88 @@ describe('account tests', () => {
 		responseJson = await response.json();
 		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
 		expect(response.status).toBe(200);
+		
+		accountObject = await getInitialData(accountDetails.account4_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account4_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account5_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account5_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account6_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account6_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account7_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account7_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account8_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account8_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account9_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account9_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account10_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account10_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+		accountObject = await getInitialData(accountDetails.account11_email);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
+		body = {
+			role: 'data_engineer',
+			resourceSlug: accountObject.resourceSlug
+		};
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account11_email, body);
+		responseJson = await response.json();
+		expect(responseJson?.redirect).toBe(`/${accountObject.resourceSlug}/onboarding/configuremodels`);
+		expect(response.status).toBe(200);
+
 	})
 
 	test('get welcome data', async () => {

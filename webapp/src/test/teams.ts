@@ -334,8 +334,82 @@ describe('team tests', () => {
 		expect(responseJson?.error).toBe("Missing permission ADD_TEAM_MEMBER");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
+		let body = {
+			name: accountDetails.account3_name,
+			email: accountDetails.account3_email,
+			template: 'TEAM_MEMBER'
+		};
+		let response;
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account4_name,
+			email: accountDetails.account4_email,
+			template: 'TEAM_MEMBER'
+		};
 
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account5_name,
+			email: accountDetails.account5_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account6_name,
+			email: accountDetails.account6_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account7_name,
+			email: accountDetails.account7_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account8_name,
+			email: accountDetails.account8_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account9_name,
+			email: accountDetails.account9_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account10_name,
+			email: accountDetails.account10_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		//this should be the 11th member in the team, this should be rejected
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		body = {
+			name: accountDetails.account11_name,
+			email: accountDetails.account11_email,
+			template: 'TEAM_MEMBER'
+		};
+
+		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		expect(response.status).toBe(400);
 	});
 
 	test.only('log out', async () => {
