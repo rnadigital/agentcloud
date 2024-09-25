@@ -159,7 +159,6 @@ export async function addTaskApi(req, res, next) {
 				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'iconId', validation: { ofType: 'string' } },
 			{
 				field: 'context',
@@ -256,7 +255,7 @@ export async function addTaskApi(req, res, next) {
 		description,
 		expectedOutput,
 		toolIds: toolIds.map(toObjectId),
-		agentId: toObjectId(agentId),
+		agentId: agentId ? toObjectId(agentId) : null,
 		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
@@ -311,7 +310,6 @@ export async function editTaskApi(req, res, next) {
 				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
 			{
 				field: 'context',
 				validation: {
@@ -433,7 +431,7 @@ export async function editTaskApi(req, res, next) {
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
-		agentId: toObjectId(agentId),
+		agentId: agentId ? toObjectId(agentId) : null,
 		formFields,
 		isStructuredOutput,
 		variableIds: variableIds ? variableIds.map(toObjectId) : []
