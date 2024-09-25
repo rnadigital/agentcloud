@@ -80,9 +80,9 @@ def construct_crew(session_id: str, socket: Any):
     # Crew > Manager LLM
     crew_manager_llm = dict()
     if the_crew.process == Process.Hierarchical:
-        if not the_crew.managerLLM:
+        if not the_crew.managerModelId:
             raise CrewAIBuilderException("Using hierarchical process but `manager_llm` not set")
-        crew_manager_llm = construct_manager_model(the_crew.managerLLM)
+        crew_manager_llm = construct_manager_model(the_crew.managerModelId)
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 

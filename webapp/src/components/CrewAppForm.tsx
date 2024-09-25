@@ -10,6 +10,8 @@ import CreateAgentModal from 'components/CreateAgentModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
+import ModelSelect from 'components/models/ModelSelect';
+import ToolTip from 'components/shared/ToolTip';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -24,8 +26,6 @@ import { ProcessImpl } from 'struct/crew';
 import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
-
-import ToolTip from './shared/ToolTip';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -522,46 +522,58 @@ export default function CrewAppForm({
 								/>
 							</div>
 
-							{/*<div className='sm:col-span-12'>
-							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Process
-							</label>
-							<div className='mt-2'>
-								<label className='inline-flex items-center mr-6 text-sm'>
-									<input
-										type='radio'
-										name='process'
-										value={ProcessImpl.SEQUENTIAL}
-										defaultChecked={crewState.process === ProcessImpl.SEQUENTIAL}
-										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.SEQUENTIAL }; }); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Sequential</span>
+							<div className='sm:col-span-12'>
+								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Process
 								</label>
-								<label className='inline-flex items-center text-sm'>
-									<input
-										type='radio'
-										name='process'
-										value={ProcessImpl.HIERARCHICAL}
-										defaultChecked={crewState.process === ProcessImpl.HIERARCHICAL}
-										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.HIERARCHICAL }; }); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Flexible</span>
-								</label>
+								<div className='mt-2'>
+									<label className='inline-flex items-center mr-6 text-sm'>
+										<input
+											type='radio'
+											name='process'
+											value={ProcessImpl.SEQUENTIAL}
+											defaultChecked={crewState.process === ProcessImpl.SEQUENTIAL}
+											onChange={e => {
+												e.target.checked &&
+													setCrew(previousCrew => {
+														return { ...previousCrew, process: ProcessImpl.SEQUENTIAL };
+													});
+											}}
+											className='form-radio'
+										/>
+										<span className='ml-2'>Sequential</span>
+									</label>
+									<label className='inline-flex items-center text-sm'>
+										<input
+											type='radio'
+											name='process'
+											value={ProcessImpl.HIERARCHICAL}
+											defaultChecked={crewState.process === ProcessImpl.HIERARCHICAL}
+											onChange={e => {
+												e.target.checked &&
+													setCrew(previousCrew => {
+														return { ...previousCrew, process: ProcessImpl.HIERARCHICAL };
+													});
+											}}
+											className='form-radio'
+										/>
+										<span className='ml-2'>Flexible</span>
+									</label>
+								</div>
 							</div>
-						</div>*/}
 
-							{/*<ModelSelect
-								models={modelChoices}
-								modelId={managerModel?.value}
-								label='Chat Manager Model'
-								onChange={model => setManagerModel(model)}
-								setModalOpen={setModalOpen}
-								callbackKey=''
-								setCallbackKey={() => {}}
-								modelFilter='llm'
-							/>*/}
+							{crewState?.process === ProcessImpl.HIERARCHICAL && (
+								<ModelSelect
+									models={modelChoices}
+									modelId={managerModel?.value}
+									label='Chat Manager Model'
+									onChange={model => setManagerModel(model)}
+									setModalOpen={setModalOpen}
+									callbackKey=''
+									setCallbackKey={() => {}}
+									modelFilter='llm'
+								/>
+							)}
 
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>

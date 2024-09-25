@@ -295,7 +295,7 @@ class CrewAIBuilder:
                 tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
                 **self.crew_model.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "tasks", "agents", "managerLLM"}
+                    exclude={"id", "tasks", "agents", "managerModelId"}
                 ),
                 manager_llm=self.crew_models.get('manager_llm'),
                 agentcloud_socket=self.socket,
