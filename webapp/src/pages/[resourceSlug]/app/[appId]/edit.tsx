@@ -18,7 +18,7 @@ export default function EditApp(props) {
 	const [state, dispatch] = useState(props);
 	const [emailState, setEmailState] = useState(null);
 	const [error, setError] = useState();
-	const { app, tools, agents, tasks, models, datasources, teamMembers } = state;
+	const { app, tools, agents, tasks, models, datasources, teamMembers, variables } = state;
 
 	async function fetchAppFormData() {
 		API.getApp(
@@ -60,6 +60,7 @@ export default function EditApp(props) {
 					// taskChoices={tasks}
 					toolChoices={tools}
 					whiteListSharingChoices={teamMembers}
+					variableChoices={variables}
 				/>
 			) : (
 				<CrewAppForm
@@ -73,6 +74,7 @@ export default function EditApp(props) {
 					taskChoices={tasks}
 					whiteListSharingChoices={teamMembers}
 					// toolChoices={tools}
+					// variableChoices={variables}
 				/>
 			)}
 		</>

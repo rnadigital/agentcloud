@@ -14,17 +14,6 @@ const ConversationStarters = ({ session, app, sendMessage, conversationStarters 
 					onClick={async () => {
 						if (session != null) {
 							sendMessage(starter);
-						} else {
-							const res = await API.publicStartApp(
-								{
-									resourceSlug: app?.teamId,
-									id: app?._id
-								},
-								null,
-								toast.error,
-								null
-							);
-							res.redirect && router.push(`/s${res.redirect}`, null, { shallow: true });
 						}
 					}}
 				>

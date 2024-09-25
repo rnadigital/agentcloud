@@ -15,7 +15,7 @@ export default function AddTask(props) {
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const [loading, setLoading] = useState(true);
-	const { tasks, tools, agents } = state;
+	const { tasks, tools, agents, variables } = state;
 
 	async function fetchTaskFormData() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
@@ -64,6 +64,7 @@ export default function AddTask(props) {
 					task={cloneState?.task}
 					taskChoices={tasks}
 					editing={false}
+					variables={variables}
 				/>
 			</span>
 		</>

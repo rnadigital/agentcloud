@@ -1,5 +1,5 @@
 import NProgress from 'nprogress';
-import { GetTaskByNameDispatch, GetTeamModelsDispatch } from 'struct/dispatchtypes';
+import { GetTaskByNameDispatch, GetTeamModelsDispatch, GetVariableDispatch } from 'struct/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -110,16 +110,6 @@ export function editApp(appId, body, dispatch, errorCallback, router) {
 		router
 	);
 }
-export function publicStartApp(body, dispatch, errorCallback, router) {
-	return ApiCall(
-		`/s/${body.resourceSlug}/forms/app/${body.id}/start`,
-		'POST',
-		body,
-		dispatch,
-		errorCallback,
-		router
-	);
-}
 
 export function addApp(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -194,6 +184,52 @@ export function getSessions(body, dispatch, errorCallback, router) {
 		router
 	);
 }
+
+export function publicUpdateSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function publicStartSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/start`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function updateSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function startSession(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/session/${body.sessionId}/start`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+
 export function getMessages(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		...(body?.messageId ? { messageId: body.messageId } : {})
@@ -763,6 +799,26 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 		errorCallback,
 		router
 	);
+}
+
+export function getVariables(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/variables.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function getVariable(body, dispatch:GetVariableDispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/variable/${body.variableId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function addVariable(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/add`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function updateVariable(body, dispatch , errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/${body.variableId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function deleteVariable(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/variable/${body.variableId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {

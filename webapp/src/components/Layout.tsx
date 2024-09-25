@@ -8,11 +8,10 @@ import {
 	CircleStackIcon,
 	CpuChipIcon,
 	CreditCardIcon,
+	CubeIcon,
 	KeyIcon,
-	MoonIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
-	SunIcon,
 	UserGroupIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon
@@ -106,6 +105,12 @@ const agentNavigation: any[] = [
 		href: '/models',
 		base: '/model',
 		icon: <CpuChipIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+	},
+	{
+		name: 'Variables',
+		href: '/variables',
+		base: '/variable',
+		icon: <CubeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
 	}
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
@@ -148,6 +153,24 @@ export default withRouter(function Layout(props) {
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
 	}
+
+	const restartSession = () => {
+		posthog.capture('restartSession', {
+			appId: chatContext?.app._id,
+			appType: chatContext?.app.type,
+			appName: chatContext?.app.name
+		});
+		API.addSession(
+			{
+				_csrf: csrf,
+				resourceSlug,
+				id: chatContext?.app?._id
+			},
+			null,
+			toast.error,
+			router
+		);
+	};
 
 	return (
 		<>
@@ -350,7 +373,7 @@ export default withRouter(function Layout(props) {
 
 																<li key='logout'>
 																	<button
-																		className='w-full group flex flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
+																		className='w-full group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-400 hover:bg-gray-800 hover:text-white'
 																		onClick={() => {
 																			posthog.capture('logout', {
 																				email: account?.email
@@ -444,7 +467,7 @@ export default withRouter(function Layout(props) {
 										</li>
 									</ul>
 
-									<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-r dark:border-slate-600 ps-6'>
+									<span className='flex flex-col bg-gray-900 w-full absolute bottom-0 left-0 p-4 dark:border-r dark:border-slate-600 ps-6'>
 										{teamNavigation.length > 0 && (
 											<div className='text-xs font-semibold leading-6 text-indigo-200'>Admin</div>
 										)}
@@ -589,23 +612,7 @@ export default withRouter(function Layout(props) {
 							{chatContext?.app?.name && (
 								<h5 className='text-xl text-ellipsis overflow-hidden whitespace-nowrap flex items-center space-x-3'>
 									<button
-										onClick={() => {
-											posthog.capture('restartSession', {
-												appId: chatContext?.app._id,
-												appType: chatContext?.app.type,
-												appName: chatContext?.app.name
-											});
-											API.addSession(
-												{
-													_csrf: csrf,
-													resourceSlug,
-													id: chatContext?.app?._id
-												},
-												null,
-												toast.error,
-												router
-											);
-										}}
+										onClick={restartSession}
 										className='flex items-center p-2 space-x-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded dark:text-white'
 									>
 										<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
@@ -665,13 +672,6 @@ export default withRouter(function Layout(props) {
 										<Menu as='div' className='relative'>
 											<Menu.Button className='flex items-center'>
 												<span className='sr-only'>Open user menu</span>
-												{/*<ResolvedImage
-											className='h-8 w-8 rounded-full bg-gray-50'
-											src='https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-											alt=''
-											width={64}
-											height={64}
-										/>*/}
 												<AgentAvatar
 													agent={{
 														name: account.email,

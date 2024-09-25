@@ -1,59 +1,55 @@
 import * as API from '@api';
-import AgentForm from 'components/AgentForm';
 import Spinner from 'components/Spinner';
+import VariableForm from 'components/variables/VariableForm';
 import { useAccountContext } from 'context/account';
-import { AgentDataReturnType } from 'controllers/agent';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { Variable } from 'struct/variable';
 
-export default function EditAgent(props) {
+export default function EditVariable(props) {
 	const [accountContext]: any = useAccountContext();
 	const { teamName } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState<AgentDataReturnType>(props);
-	const [_, setError] = useState();
-	const { agent, models, tools, variables } = state;
+	const { resourceSlug, variableId } = router.query;
+	const [variable, setVariable] = useState<Variable>(props.variable);
+	const [error, setError] = useState();
 
-	async function fetchAgentData() {
-		await API.getAgent(
+	async function fetchVariableData() {
+		await API.getVariable(
 			{
 				resourceSlug,
-				agentId: router.query.agentId
+				variableId
 			},
-			dispatch,
+			setVariable,
 			setError,
 			router
 		);
 	}
 
 	useEffect(() => {
-		fetchAgentData();
+		fetchVariableData();
 	}, [resourceSlug]);
 
-	if (agent == null) {
+	if (!variable) {
 		return <Spinner />;
 	}
 
 	return (
 		<>
 			<Head>
-				<title>{`Edit Agent - ${teamName}`}</title>
+				<title>{`Edit Variable - ${teamName}`}</title>
 			</Head>
 
 			<div className='border-b pb-2 my-2 mb-6'>
-				<h3 className='font-semibold text-gray-900'>Edit Agent</h3>
+				<h3 className='font-semibold text-gray-900'>Edit Variable</h3>
 			</div>
 
-			<span className='sm: w-full md:w-1/2 xl:w-1/3'>
-				<AgentForm
+			<span className='sm:w-full md:w-1/2'>
+				<VariableForm
+					variable={variable}
+					fetchVariableFormData={fetchVariableData}
 					editing={true}
-					agent={agent}
-					models={models}
-					tools={tools}
-					fetchAgentFormData={fetchAgentData}
-					variables={variables}
 				/>
 			</span>
 		</>

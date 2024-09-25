@@ -3,13 +3,12 @@ import Spinner from 'components/Spinner';
 import ToolForm from 'components/tools/ToolForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function AddTool(props) {
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
@@ -18,8 +17,6 @@ export default function AddTool(props) {
 	const [loading, setLoading] = useState(true);
 	const { tools, datasources } = state;
 
-	console.log(cloneState, 'cloneState');
-	console.log('loading', loading);
 	function fetchTools() {
 		API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
