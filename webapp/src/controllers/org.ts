@@ -1,13 +1,13 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { editAccountsOrg, getAccountOrgMember, getAccountById } from 'db/account';
-import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/org';
-import { chainValidations } from 'utils/validationutils';
 import { calcPerms } from '@mw/auth/setpermissions';
-import { OrgRoles } from 'lib/permissions/roles';
-import Permission from 'lib/permissions/Permission';
+import { editAccountsOrg, getAccountById, getAccountOrgMember } from 'db/account';
+import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/org';
 import { ORG_BITS } from 'lib/permissions/bits';
+import Permission from 'lib/permissions/Permission';
+import { OrgRoles } from 'lib/permissions/roles';
+import { chainValidations } from 'utils/validationutils';
 
 export async function orgData(req, res, _next) {
 	const [members, org] = await Promise.all([
@@ -60,7 +60,7 @@ export async function orgMemberJson(req, res, next) {
 
 export async function memberEditPage(app, req, res, next) {
 	const data = await orgMemberData(req, res, next);
-	console.log('data', data)
+	console.log('data', data);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/org/${req.params.memberId}/edit`);
 }
@@ -105,7 +105,7 @@ export async function editOrgMemberApi(req, res) {
 		return dynamicResponse(req, res, 400, { error: "Org owner permissions can't be edited" });
 	}
 
-	console.log(template, OrgRoles)
+	console.log(template, OrgRoles);
 
 	if (template && !OrgRoles[template]) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid template' });
@@ -113,8 +113,8 @@ export async function editOrgMemberApi(req, res) {
 
 	const editingMember = await getAccountById(req.params.memberId);
 
-	console.log('template', template)
-	console.log('OrgRoles[template]', OrgRoles[template])
+	console.log('template', template);
+	console.log('OrgRoles[template]', OrgRoles[template]);
 
 	let updatingPermissions;
 	if (template) {

@@ -1,9 +1,9 @@
 import * as API from '@api';
 import InviteFormModal from 'components/InviteFormModal';
 import MemberList from 'components/MemberList';
+import OrgSettingsForm from 'components/OrgSettingsForm';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
-import OrgSettingsForm from 'components/OrgSettingsForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -65,7 +65,12 @@ export default function Org(props) {
 				showButton={permissions.get(Permissions.ADD_ORG_MEMBER)}
 			/>
 
-			<MemberList permissions={org?.permissions} members={members} fetchTeam={fetchOrg} deleteCallback={deleteCallback} />
+			<MemberList
+				permissions={org?.permissions}
+				members={members}
+				fetchTeam={fetchOrg}
+				deleteCallback={deleteCallback}
+			/>
 		</>
 	);
 }

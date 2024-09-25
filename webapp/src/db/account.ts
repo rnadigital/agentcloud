@@ -85,10 +85,7 @@ export async function getAccountTeamMember(
 	);
 }
 
-export async function getAccountOrgMember(
-	userId: db.IdOrStr,
-	orgId: db.IdOrStr
-): Promise<Account> {
+export async function getAccountOrgMember(userId: db.IdOrStr, orgId: db.IdOrStr): Promise<Account> {
 	return AccountCollection().findOne(
 		{
 			_id: toObjectId(userId),

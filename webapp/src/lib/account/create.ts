@@ -16,7 +16,7 @@ import StripeClient from 'lib/stripe';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
-import { OrgRoles, TeamRoles, TeamRoleKey, OrgRoleKey, REGISTERED_USER } from 'permissions/roles';
+import { OrgRoleKey, OrgRoles, REGISTERED_USER, TeamRoleKey, TeamRoles } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';

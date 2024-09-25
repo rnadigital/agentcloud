@@ -4,9 +4,10 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import { TeamRoles, OrgRoles, TeamRoleOptions, OrgRoleOptions } from 'permissions/roles';
+import { OrgRoleOptions, OrgRoles, TeamRoleOptions, TeamRoles } from 'permissions/roles';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+
 import classNames from './ClassNames';
 
 // Helper function to check if a permission is allowed
@@ -30,7 +31,7 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 	const isOrg = router.asPath.includes('/org');
 	const Roles = isOrg ? OrgRoles : TeamRoles;
 	const RoleOptions = isOrg ? OrgRoleOptions : TeamRoleOptions;
-	const EditMemberFunction = isOrg ? API.editOrgMember : API.editTeamMember
+	const EditMemberFunction = isOrg ? API.editOrgMember : API.editTeamMember;
 	const { resourceSlug, memberId } = router.query;
 	const [_state, _updateState] = useState(Date.now());
 	const [selectedRole, setSelectedRole] = useState('');
@@ -65,7 +66,7 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 	async function updateRole(e) {
 		e.preventDefault();
 		const rolePermissions = Roles[selectedRole];
-		console.log(rolePermissions, selectedRole)
+		console.log(rolePermissions, selectedRole);
 		if (rolePermissions) {
 			const body = new FormData();
 			body.set('resourceSlug', resourceSlug as string);

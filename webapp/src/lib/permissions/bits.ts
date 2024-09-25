@@ -14,7 +14,6 @@ export const ACCOUNT_BITS = Object.seal(
 export const ORG_BITS = Object.seal(
 	Object.freeze(
 		Object.preventExtensions([
-
 			Permissions.ORG_ADMIN,
 
 			Permissions.CREATE_TEAM,
@@ -23,8 +22,7 @@ export const ORG_BITS = Object.seal(
 
 			Permissions.ADD_ORG_MEMBER,
 			Permissions.EDIT_ORG_MEMBER,
-			Permissions.REMOVE_ORG_MEMBER,
-
+			Permissions.REMOVE_ORG_MEMBER
 		])
 	)
 );

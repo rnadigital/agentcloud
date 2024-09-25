@@ -114,7 +114,7 @@ export async function inviteTeamMemberApi(req, res) {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
 		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
-			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
+			return dynamicResponse(req, res, 409, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
 	}
@@ -179,7 +179,7 @@ export async function deleteTeamMemberApi(req, res) {
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}
-	return dynamicResponse(req, res, 302, {});
+	return dynamicResponse(req, res, 403, {});
 }
 
 /**
@@ -211,7 +211,9 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary(new Permission(TeamRoles.TEAM_ADMIN.base64).array)
+			[res.locals.account._id.toString()]: new Binary(
+				new Permission(TeamRoles.TEAM_ADMIN.base64).array
+			)
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
@@ -352,7 +354,7 @@ export async function transferTeamOwnershipApi(req, res) {
 	const { newOwnerId } = req.body;
 
 	if (newOwnerId === res.locals.matchingTeam.ownerId.toString()) {
-		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
+		return dynamicResponse(req, res, 409, { error: 'User is already team owner' });
 	}
 	if (
 		res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString() &&

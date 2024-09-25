@@ -1,13 +1,13 @@
 import { CheckIcon, MinusIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import ButtonSpinner from 'components/ButtonSpinner';
+import classNames from 'components/ClassNames';
+import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
+import Permissions from 'lib/permissions/permissions';
+import { roleNameMap } from 'lib/permissions/roles';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
 import submittingReducer from 'utils/submittingreducer';
-import { roleNameMap } from 'lib/permissions/roles';
-import Permissions from 'lib/permissions/permissions';
-import classNames from 'components/ClassNames';
-import DevBadge from 'components/DevBadge';
 
 export default function MemberList({
 	members,
@@ -36,7 +36,7 @@ export default function MemberList({
 		}
 	}
 
-	console.log('permissions', permissions)
+	console.log('permissions', permissions);
 
 	return (
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
