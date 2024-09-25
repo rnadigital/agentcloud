@@ -253,7 +253,7 @@ export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
 		orgs: 1,
-		teams: 1000,
+		teams: 3,
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],

@@ -10,6 +10,7 @@ import toObjectId from '../lib/misc/toobjectid';
 import { ModelList, ModelType } from '../lib/struct/model';
 import { ShareLinkTypes } from '../lib/struct/sharelink';
 import { getToolsByTeam } from "../db/tool";
+import { TeamRoles } from "../lib/permissions/roles"
 
 dotenv.config({ path: '.env' });
 
@@ -96,6 +97,7 @@ describe('team tests', () => {
 			template: 'TEAM_MEMBER'
 		};
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		console.log("team after inviting account 2 to the team", await(db.db().collection('teams').findOne({_id: toObjectId(resourceSlug)})))
 		expect(response.status).toBe(200);
 	});
 
@@ -127,7 +129,7 @@ describe('team tests', () => {
 		const responseJson = await response.json();
 
 		//the 'team' object returned by this call is an array of teams, uses teh same teamData for all .json calls
-		expect(responseJson?.team[0]?.members.length).toBe(3);
+		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
 	test('testing TEAM_MEMBER permissions', async () => {
@@ -216,7 +218,7 @@ describe('team tests', () => {
 		//make account2 a TEAM_ADMIN
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/${account2Object?.initialData?.accountData?.account?._id}/edit`;
 		body = {
-			template: 'TEAM_ADMIN'
+			template: "TEAM_ADMIN"
 		};
 
 		const addAdminResponse = await makeFetch(
@@ -269,13 +271,18 @@ describe('team tests', () => {
 
 		let url, body, response;
 
-		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
+		console.log("team BEFORE delete operation: ", await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})));
+
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;//delete operation, check line down
 		body = {
 			memberId: account2Object?.initialData?.accountData?.account?._id
 		}
 
 		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
 
+		console.log("account2 ID: ", account2Object?.initialData?.accountData?.account?._id);
+		console.log(await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})))
+		console.log(await(response.text()));
 		expect(response.status).toBe(200);
 
 		//attempt to create a model with the removed member

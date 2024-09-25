@@ -734,6 +734,26 @@ export function editTeamMember(body, dispatch, errorCallback, router) {
 		router
 	);
 }//@TEST
+export function deleteTeamMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/team/invite`,
+		'DELETE',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+export function editTeam(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/team/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
 export function transferTeamOwnership(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/team/transfer-ownership`,
@@ -759,6 +779,40 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 		`/${body.resourceSlug}/team/models.json`,
 		'GET',
 		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+
+export function getOrg(body, dispatch, errorCallback, router) {
+	return ApiCall(`/${body.resourceSlug}/org.json`, 'GET', null, dispatch, errorCallback, router);
+}//@TEST
+export function editOrg(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/org/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+export function getOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/org/${body.memberId}.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+export function editOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.get('resourceSlug')}/forms/org/${body.get('memberId')}/edit`,
+		'POST',
+		body,
 		dispatch,
 		errorCallback,
 		router

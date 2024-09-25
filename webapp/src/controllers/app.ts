@@ -7,14 +7,12 @@ import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } f
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
-	deleteAppById,
 	deleteAppByIdReturnApp,
 	getAppById,
 	getAppsByTeam,
-	updateApp,
 	updateAppGetOldApp
 } from 'db/app';
-import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
+import { attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
@@ -22,19 +20,14 @@ import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
 import createAccount from 'lib/account/create';
-import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import path from 'path';
 import { AppType } from 'struct/app';
-import { Asset, IconAttachment } from 'struct/asset';
+import { IconAttachment } from 'struct/asset';
 import { CollectionName } from 'struct/db';
-import { ChatAppAllowedModels, ModelType } from 'struct/model';
+import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
-
-import { addTeamMember } from '../db/team';
-import Roles from '../lib/permissions/roles';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([

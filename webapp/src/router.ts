@@ -47,6 +47,7 @@ import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
+import * as orgController from 'controllers/org';
 import * as sessionController from 'controllers/session';
 import * as sharelinkController from 'controllers/sharelink';
 import * as stripeController from 'controllers/stripe';
@@ -588,6 +589,11 @@ export default function router(server, app) {
 		teamController.editTeamMemberApi
 	);
 	teamRouter.post(
+		'/forms/team/edit',
+		hasPerms.one(Permissions.EDIT_TEAM),
+		teamController.editTeamApi
+	);
+	teamRouter.post(
 		'/forms/team/invite',
 		hasPerms.one(Permissions.ADD_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
@@ -612,11 +618,34 @@ export default function router(server, app) {
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.addTeamApi
 	);
-
 	teamRouter.post(
 		'/forms/team/set-default-model',
 		hasPerms.one(Permissions.CREATE_MODEL),
 		teamController.setDefaultModelApi
+	);
+
+	//org
+	teamRouter.get('/org', orgController.orgPage.bind(null, app));
+	teamRouter.get('/org.json', orgController.orgJson);
+	teamRouter.post(
+		'/forms/org/edit',
+		hasPerms.one(Permissions.EDIT_ORG),
+		orgController.editOrgApi
+	);
+	teamRouter.get(
+		'/org/:memberId([a-f0-9]{24}).json',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.orgMemberJson
+	);
+	teamRouter.get(
+		'/org/:memberId([a-f0-9]{24})/edit',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.memberEditPage.bind(null, app)
+	);
+	teamRouter.post(
+		'/forms/org/:memberId([a-f0-9]{24})/edit',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.editOrgMemberApi
 	);
 
 	//assets
