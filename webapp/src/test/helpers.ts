@@ -73,9 +73,21 @@ export async function makeFetch(URL: string, type: fetchTypes, accountEmail: str
 		method: type,
 		headers: {
 			cookie: sessionCookie,
-			...(type === fetchTypes.POST ? { 'content-type': 'application/json' } : {})
+			...(type === fetchTypes.POST|| type === fetchTypes.DELETE ? { 'content-type': 'application/json' } : {})
 		},
-		...(body ? { body: JSON.stringify({ ...body, _csrf: csrfToken }) } : {}),
+		...(body|| type === fetchTypes.DELETE  ? { body: JSON.stringify({ ...body, _csrf: csrfToken }) } : {}),
 		redirect: 'manual'
 	});
+}
+
+export async function updateAllAccountCsrf() {
+    let url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
+	
+    for(let i=1; i>=11; i++) {
+        const accountStr = `account${(i).toString()}_email`;
+        let response = await makeFetch(url, fetchTypes.GET, accountDetails[accountStr]);
+        let accountJson = await response.json();
+        const { sessionCookie } = await getInitialData(accountDetails[accountStr]);
+        setInitialData(accountDetails[accountStr], { accountData: accountJson, sessionCookie });
+    };
 }

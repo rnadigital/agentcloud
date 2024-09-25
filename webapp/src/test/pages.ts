@@ -7,6 +7,8 @@ import { URLSearchParams } from 'url';
 dotenv.config({ path: '.env' });
 let sessionCookie;
 
+const SECONDS = 1000;
+
 describe('page tests', () => {
 
     //need to store IDs in a new map or object to retrieve them here for the session pages and the edit pages
@@ -31,7 +33,7 @@ describe('page tests', () => {
         expect(response.status).toBe(200);
 
 
-    });
+    }, 60 * SECONDS);
 
     test('apikeys pages', async () => {
         const { resourceSlug } = await getInitialData(accountDetails.account1_email);

@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
 
+import checkSession from '@mw/auth/checksession';
 import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
@@ -26,7 +27,6 @@ import {
 import { SessionStatus } from 'struct/session';
 
 import { SharingMode } from './lib/struct/sharing';
-import checkSession from '@mw/auth/checksession';
 
 export const io = new Server();
 

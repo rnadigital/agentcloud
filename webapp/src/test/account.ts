@@ -36,7 +36,7 @@ beforeAll(async () => {
 
 describe('account tests', () => {
 
-	test.only('register new accounts', async () => {
+	test('register new accounts', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -88,7 +88,7 @@ describe('account tests', () => {
 	}, 60 * SECONDS); //extended timeout due to multiple account creations
 
 	//TODO: refactor this to do it with a loop
-	test.only('stress test registration with many accounts', async () => {
+	test('stress test registration with many accounts', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -248,7 +248,7 @@ describe('account tests', () => {
 	
 
 	//TODO: refactor this to do it with a loop
-	test.only('login as new users - 11 logins', async () => {
+	test('login as new users - 11 logins', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/login`, {
 			method: 'POST',
 			headers: {
@@ -418,7 +418,7 @@ describe('account tests', () => {
 	
 
 	//TODO: refactor this to do it with a loop
-	test.only('get account', async () => {
+	test('get account', async () => {
 		let url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 	
 		// Account 1
@@ -517,7 +517,7 @@ describe('account tests', () => {
 
 	//sets the role to prevent redirects to onboarding in further tests
 	//TODO: refactor this to do it with a loop
-	test.only('set role', async () => {
+	test('set role - onboarding', async () => {
 		let accountObject = await getInitialData(accountDetails.account1_email)
 		let url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/role?resourceSlug=${accountObject.resourceSlug}`;
 		let body = {

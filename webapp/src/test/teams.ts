@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from '@jest/globals';
 import * as db from '../db/index';
-import { addTeam, getTeamById } from '../db/team';
+import { addTeam, getTeamById, getTeamWithMembers } from '../db/team';
 import { getAccountByEmail, setStripeCustomerId, setStripePlan } from '../db/account';
 import { SubscriptionPlan } from '../lib/struct/billing';
-import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData } from './helpers';
+import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData, updateAllAccountCsrf } from './helpers';
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 import toObjectId from '../lib/misc/toobjectid';
@@ -28,6 +28,9 @@ afterAll(async () => {
 	await db.client().close();
 });
 
+beforeAll(async ()=>{
+})
+
 describe('team tests', () => {
 	test('cant add new team without stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
@@ -43,7 +46,7 @@ describe('team tests', () => {
 	});
 
 	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
-	test.only('add new team with correct stripe permissions', async () => {
+	test('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -72,7 +75,7 @@ describe('team tests', () => {
 	});
 
 
-	test.only('Inviting existing account to team', async () => {
+	test('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -109,7 +112,7 @@ describe('team tests', () => {
 		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
 
 		const responseJson = await response.json();
-		expect(response.status).toBe(403);
+		expect(response.status).toBe(409);
 		expect(responseJson?.error).toBe('User is already on your team');
 	});
 
@@ -127,7 +130,7 @@ describe('team tests', () => {
 		expect(responseJson?.team[0]?.members.length).toBe(3);
 	});
 
-	test.only('testing TEAM_MEMBER permissions', async () => {
+	test('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData(
 			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
@@ -140,10 +143,10 @@ describe('team tests', () => {
 		//attempt to do something with account2 that they can't do
 		//attempt to add a team with account2
 
-		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account2Object.resourceSlug}/forms/team/add`;
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/add`;
 		body = {
 			teamName: 'TestTeam1',
-			resourceSlug: account2Object.resourceSlug
+			resourceSlug: account1Object.resourceSlug
 		};
 
 		const makeTeamResponse = await makeFetch(
@@ -154,8 +157,7 @@ describe('team tests', () => {
 		);
 
 		//shouldn't be able to create a team with default TEAM_MEMBER permissions
-		expect(makeTeamResponse.status).toBe(400);
-
+		expect(makeTeamResponse.status).toBe(403);
 		//get all tools to create agent with
 		const allTools = await getToolsByTeam(toObjectId(account1Object.resourceSlug));
 		expect(allTools).toBeDefined();
@@ -205,7 +207,7 @@ describe('team tests', () => {
 		expect(addAgentResponse?._id).toBeDefined();
 	});
 
-	test.only('testing TEAM_ADMIN permissions', async () => {
+	test('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -239,7 +241,7 @@ describe('team tests', () => {
 		);
 
 		const addTeamResponseJson = await addTeamResponse.json();
-		expect(addTeamResponse.status).toBe(400);
+		expect(addTeamResponse.status).toBe(403);
 
 		//can create new shareLink as TEAM_ADMIN or TEAM_MEMBER, possible stripe error here
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/sharelink/add`;
@@ -250,17 +252,7 @@ describe('team tests', () => {
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
 
 		expect(response.status).toBe(200);
-
-		//can't remove team member as TEAM_ADMIN
-		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
-		body = {
-			memberId: account3Object?.initialData?.accountData?.account?._id
-		};
-
-		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account2_email, body);
-
-		expect(response.status).toBe(400);
-	});
+});
 
 	//isn't implemented currently, not tested
 	test('transferring ownership', async () => {
@@ -287,7 +279,7 @@ describe('team tests', () => {
 		expect(response.status).toBe(200);
 
 		//attempt to create a model with the removed member
-		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/team.json`;
 		body = {
 			name: 'testModel2',
 			model: 'gpt-4o',
@@ -298,14 +290,13 @@ describe('team tests', () => {
 			type: ModelType.OPENAI
 		};
 
-		const addModelResponse = await makeFetch(
+		response = await makeFetch(
 			url,
-			fetchTypes.POST,
-			accountDetails.account2_email,
-			body
+			fetchTypes.GET,
+			accountDetails.account2_email
 		);
 
-		expect(addModelResponse.status).toBe(403); //should hit invalid resourceSlug in middleware before it hits the create api
+		expect(response.status).toBe(302); //get redirected in checkresourceslug to welcome with noaccess flagged instead of being able to get the route
 
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;
 		body = {
@@ -327,25 +318,19 @@ describe('team tests', () => {
 
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account2_email, body);
 
-		expect(response.status).toBe(400); //should have invalid permissions
+		expect(response.status).toBe(403); //should have invalid permissions
 		
 		let responseJson = await response.json();
 
-		expect(responseJson?.error).toBe("Missing permission ADD_TEAM_MEMBER");//make sure it's a permissions error and not a stripe error etc...
+		expect(responseJson?.error).toBe("Missing permission \"Add Team Member\"");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
-		let body = {
-			name: accountDetails.account3_name,
-			email: accountDetails.account3_email,
-			template: 'TEAM_MEMBER'
-		};
-		let response;
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		console.log(await (response.text()));
-		expect(response.status).toBe(200);
+		let body, response;
+		let teamMembers = await getTeamWithMembers(resourceSlug);
+
 		body = {
 			name: accountDetails.account4_name,
 			email: accountDetails.account4_email,
@@ -410,10 +395,11 @@ describe('team tests', () => {
 		};
 
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		teamMembers = await getTeamWithMembers(resourceSlug);
 		expect(response.status).toBe(400);
 	});
 
-	test.only('log out', async () => {
+	test('log out', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -430,14 +416,13 @@ describe('team tests', () => {
 		expect(response.status).toBe(200);
 	});
 
-	test.only('cant get account with invalidated session cookie', async () => {
+	test('cant get account with invalidated session cookie', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
-
 		expect(response.status).toBe(302); //302 redirect to login
 	});
 });

@@ -175,7 +175,7 @@ export async function deleteTeamMemberApi(req, res) {
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}
-	return dynamicResponse(req, res, 302, {});
+	return dynamicResponse(req, res, 403, {});
 }
 
 /**
