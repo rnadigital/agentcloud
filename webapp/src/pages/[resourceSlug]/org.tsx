@@ -3,7 +3,7 @@ import InviteFormModal from 'components/InviteFormModal';
 import MemberList from 'components/MemberList';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
-import TeamSettingsForm from 'components/TeamSettingsForm';
+import OrgSettingsForm from 'components/OrgSettingsForm';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -13,16 +13,13 @@ import { toast } from 'react-toastify';
 
 export default function Org(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { orgName } = accountContext as any;
+	const { orgName, permissions } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
 	const { members, org } = state;
-
-	console.log('members', members);
-	console.log('org', org);
 
 	async function fetchOrg() {
 		await API.getOrg({ resourceSlug }, dispatch, setError, router);
@@ -41,9 +38,9 @@ export default function Org(props) {
 		fetchOrg();
 	}, [resourceSlug]);
 
-	// if (!org) {
-	// 	return <Spinner />;
-	// }
+	if (!org) {
+		return <Spinner />;
+	}
 
 	return (
 		<>
@@ -51,15 +48,24 @@ export default function Org(props) {
 				<title>{`Organisation - ${orgName}`}</title>
 			</Head>
 
+			{permissions.get(Permissions.EDIT_TEAM) && (
+				<>
+					<div className='border-b pb-2 my-2'>
+						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
+					</div>
+					<OrgSettingsForm callback={refreshOrg} />
+				</>
+			)}
+
 			<PageTitleWithNewButton
 				list={members}
 				title='Org Members'
 				buttonText='Invite Member'
 				onClick={() => setModalOpen('member')}
-				showButton={false} //TODO: show once we have "add org member" concept?
+				showButton={permissions.get(Permissions.ADD_ORG_MEMBER)}
 			/>
 
-			<MemberList members={members} fetchTeam={fetchOrg} deleteCallback={deleteCallback} />
+			<MemberList permissions={org?.permissions} members={members} fetchTeam={fetchOrg} deleteCallback={deleteCallback} />
 		</>
 	);
 }

@@ -51,6 +51,7 @@ export default function Team(props) {
 			router
 		);
 	}
+	console.log('team', team)
 
 	if (!team) {
 		return <Spinner />;
@@ -92,7 +93,12 @@ export default function Team(props) {
 				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
 			/>
 
-			<MemberList members={team?.members} fetchTeam={fetchTeam} deleteCallback={deleteCallback} />
+			<MemberList
+				permissions={team?.permissions}
+				members={team?.members}
+				fetchTeam={fetchTeam}
+				deleteCallback={deleteCallback}
+			/>
 		</>
 	);
 }

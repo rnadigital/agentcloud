@@ -798,6 +798,26 @@ export function editOrg(body, dispatch, errorCallback, router) {
 		router
 	);
 }//@TEST
+export function getOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/org/${body.memberId}.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+export function editOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.get('resourceSlug')}/forms/org/${body.get('memberId')}/edit`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
 
 function buildOptions(_route, method, body) {
 	// Convert method uppercase

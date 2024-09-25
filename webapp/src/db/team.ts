@@ -4,7 +4,7 @@ import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
-import Roles, { RoleKey } from 'permissions/roles';
+import { TeamRoles, TeamRoleKey } from 'permissions/roles';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -64,7 +64,7 @@ export function editTeam(teamId: db.IdOrStr, update: Partial<Team>): Promise<any
 export function addTeamMember(
 	teamId: db.IdOrStr,
 	accountId: db.IdOrStr,
-	role: RoleKey = 'TEAM_MEMBER'
+	role: TeamRoleKey = 'TEAM_MEMBER'
 ): Promise<any> {
 	return TeamCollection().updateOne(
 		{
@@ -75,7 +75,7 @@ export function addTeamMember(
 				members: toObjectId(accountId) //Note: is the members array now redeundant that we have memberIds in the permissions map?
 			},
 			$set: {
-				[`permissions.${accountId}`]: new Binary(Roles[role].array)
+				[`permissions.${accountId}`]: new Binary(TeamRoles[role].array)
 			}
 		}
 	);
@@ -200,7 +200,7 @@ export async function getTeamWithMembers(teamId: db.IdOrStr): Promise<any> {
 					orgId: 1,
 					name: 1,
 					ownerId: 1,
-					permission: 1, //TODO: later project away for lower perms users
+					permissions: 1, //TODO: later project away for lower perms users
 					members: {
 						$map: {
 							input: '$members',

@@ -627,6 +627,26 @@ export default function router(server, app) {
 	//org
 	teamRouter.get('/org', orgController.orgPage.bind(null, app));
 	teamRouter.get('/org.json', orgController.orgJson);
+	teamRouter.post(
+		'/forms/org/edit',
+		hasPerms.one(Permissions.EDIT_ORG),
+		orgController.editOrgApi
+	);
+	teamRouter.get(
+		'/org/:memberId([a-f0-9]{24}).json',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.orgMemberJson
+	);
+	teamRouter.get(
+		'/org/:memberId([a-f0-9]{24})/edit',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.memberEditPage.bind(null, app)
+	);
+	teamRouter.post(
+		'/forms/org/:memberId([a-f0-9]{24})/edit',
+		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		orgController.editOrgMemberApi
+	);
 
 	//assets
 	// teamRouter.get('/assets', hasPerms.one(Permissions.UPLOAD_ASSET), assetController.assetPage.bind(null, app));

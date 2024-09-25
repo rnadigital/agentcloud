@@ -31,11 +31,12 @@ import toObjectId from 'misc/toobjectid';
 import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
+import { TeamRoles } from 'permissions/roles';
 import { chainValidations } from 'utils/validationutils';
 
 export async function teamData(req, res, _next) {
-	const [team] = await Promise.all([getTeamWithMembers(req.params.resourceSlug)]);
+	const team = await getTeamWithMembers(req.params.resourceSlug);
+	console.log('team', team);
 	return {
 		team,
 		csrf: req.csrfToken()
@@ -81,7 +82,7 @@ export async function inviteTeamMemberApi(req, res) {
 		[
 			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'email', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(Roles)) } }
+			{ field: 'template', validation: { notEmpty: true, inSet: new Set(Object.keys(TeamRoles)) } }
 		],
 		{ name: 'Name', email: 'Email', template: 'Template' }
 	);
@@ -210,7 +211,7 @@ export async function addTeamApi(req, res) {
 		members: [toObjectId(res.locals.account._id)],
 		dateCreated: new Date(),
 		permissions: {
-			[res.locals.account._id.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array)
+			[res.locals.account._id.toString()]: new Binary(new Permission(TeamRoles.TEAM_ADMIN.base64).array)
 		}
 	});
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
@@ -240,7 +241,7 @@ export async function editTeamMemberApi(req, res) {
 		return dynamicResponse(req, res, 400, { error: "Team owner permissions can't be edited" });
 	}
 
-	if (template && !Roles[template]) {
+	if (template && !TeamRoles[template]) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid template' });
 	}
 
@@ -248,7 +249,7 @@ export async function editTeamMemberApi(req, res) {
 
 	let updatingPermissions;
 	if (template) {
-		updatingPermissions = new Permission(Roles[template].base64);
+		updatingPermissions = new Permission(TeamRoles[template].base64);
 	} else {
 		updatingPermissions = new Permission(editingMember.permissions.toString('base64'));
 		updatingPermissions.handleBody(req.body, res.locals.permissions, TEAM_BITS);
@@ -261,13 +262,6 @@ export async function editTeamMemberApi(req, res) {
 	return dynamicResponse(req, res, 200, {});
 }
 
-/**
- * @api {post} /forms/team/[memberId]/edit
- * @apiName edit
- * @apiGroup Team
- *
- * @apiParam {String} teamName Name of new team
- */
 export async function editTeamApi(req, res) {
 	const { teamName } = req.body;
 

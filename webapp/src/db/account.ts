@@ -85,6 +85,21 @@ export async function getAccountTeamMember(
 	);
 }
 
+export async function getAccountOrgMember(
+	userId: db.IdOrStr,
+	orgId: db.IdOrStr
+): Promise<Account> {
+	return AccountCollection().findOne(
+		{
+			_id: toObjectId(userId),
+			'orgs.id': toObjectId(orgId)
+		},
+		{
+			projection: { passwordHash: 0 }
+		}
+	);
+}
+
 export function getAccountByEmail(email: string): Promise<Account> {
 	return AccountCollection().findOne({
 		email: email

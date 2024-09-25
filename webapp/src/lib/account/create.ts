@@ -16,7 +16,7 @@ import StripeClient from 'lib/stripe';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
 import Permissions from 'permissions/permissions';
-import Roles, { RoleKey } from 'permissions/roles';
+import { OrgRoles, TeamRoles, TeamRoleKey, OrgRoleKey, REGISTERED_USER } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
@@ -29,7 +29,7 @@ interface CreateAccountArgs {
 	email: string;
 	name: string;
 	password?: string;
-	roleTemplate?: RoleKey;
+	roleTemplate?: TeamRoleKey | OrgRoleKey;
 	invite?: boolean;
 	provider?: OAUTH_PROVIDER;
 	profileId?: string | number;
@@ -66,7 +66,7 @@ export default async function createAccount({
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			[newAccountId.toString()]: new Binary(new Permission(Roles.ORG_ADMIN.base64).array)
+			[newAccountId.toString()]: new Binary(new Permission(OrgRoles.ORG_ADMIN.base64).array)
 		}
 	});
 	const addedTeam = await addTeam({
@@ -77,7 +77,7 @@ export default async function createAccount({
 		dateCreated: new Date(),
 		permissions: {
 			// [newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
-			[newAccountId.toString()]: new Binary(new Permission(Roles.TEAM_ADMIN.base64).array)
+			[newAccountId.toString()]: new Binary(new Permission(TeamRoles.TEAM_ADMIN.base64).array)
 		}
 	});
 	const orgId = addedOrg.insertedId;
@@ -119,7 +119,7 @@ export default async function createAccount({
 			currentTeam: toObjectId(invitingTeamId) || teamId,
 			emailVerified,
 			oauth,
-			permissions: new Binary(Roles.REGISTERED_USER.array),
+			permissions: new Binary(REGISTERED_USER.array),
 			stripe: {
 				stripeCustomerId: null,
 				stripePlan: process.env.SKIP_STRIPE ? SubscriptionPlan.ENTERPRISE : SubscriptionPlan.FREE,

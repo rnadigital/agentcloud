@@ -6,7 +6,7 @@ import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
 import { useRouter } from 'next/router';
-import { RoleOptions } from 'permissions/roles';
+import { TeamRoleOptions } from 'permissions/roles';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';
 import Select from 'react-tailwindcss-select';
@@ -22,10 +22,10 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 	const [email, setEmail] = useState('');
 	const [name, setName] = useState('');
 	const [inviting, setInviting] = useState(false);
-	const [role, setRole] = useState(RoleOptions[0]);
+	const [role, setRole] = useState(TeamRoleOptions[0]);
 	const [error, setError] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-	const [selectedRole, setSelectedRole] = useState(RoleOptions[0].value);
+	const [selectedRole, setSelectedRole] = useState(TeamRoleOptions[0].value);
 	const posthog = usePostHog();
 
 	async function handleSubmit(e) {
@@ -149,7 +149,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 							<option value='' disabled>
 								Select Role
 							</option>
-							{RoleOptions.map(role => (
+							{TeamRoleOptions.map(role => (
 								<option key={role.value} value={role.value}>
 									{role.label}
 								</option>
