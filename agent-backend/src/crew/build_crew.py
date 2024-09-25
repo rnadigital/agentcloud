@@ -10,7 +10,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 from crew.build_task_helpers import (
-    get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model, escape_curly_braces
+    get_output_variables, get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model, escape_curly_braces
 )
 from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
@@ -70,6 +70,7 @@ class CrewAIBuilder:
         self.crew_chat_tasks = list()
         self.crew_chat_agents = list()
         self.num_tasks = len(tasks)
+        self.output_variables = list()
         if socket is None:
             self.socket = SimpleClient()
             self.init_socket()
@@ -165,20 +166,25 @@ class CrewAIBuilder:
 
             context_task_objs = get_context_tasks(task, self.crew_tasks)
 
+            self.output_variables.extend(get_output_variables(task))
+
             # Create the callback function for this specific task
             task_callback = make_task_callback(
                 task=task,
                 session=self.session,
                 mongo_client=mongo_client,
-                send_to_socket_fn=self.send_to_sockets
+                send_to_socket_fn=self.send_to_sockets,
+                output_variables=self.output_variables
             )
 
             output_pydantic_model = None
             if task.isStructuredOutput:
                 output_pydantic_model = get_output_pydantic_model(task)
+
                 # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
                 # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
                 task.expected_output = escape_curly_braces(task.expectedOutput)
+
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude={

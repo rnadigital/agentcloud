@@ -5,6 +5,7 @@ from io import BytesIO
 from typing import Dict, Set, Callable
 
 from crewai.tasks import TaskOutput
+from pydantic import BaseModel
 
 from models.mongo import PyObjectId, Task, Tool, Session
 from crew.exceptions import CrewAIBuilderException
@@ -100,21 +101,56 @@ def _update_variables_from_output(
 
 
 # Factory to create the callback function so we dont overwrite it with the one from the last task
-def make_task_callback(task: Task, session: Session, mongo_client: MongoClientConnection, send_to_socket_fn: Callable):
+def make_task_callback(task: Task, session: Session, mongo_client: MongoClientConnection, send_to_socket_fn: Callable, output_variables: list):
     def callback(task_output: TaskOutput):
         _update_variables_from_output(task, task_output, session, mongo_client)
         if task.storeTaskOutput:
             _upload_task_output(task, session.id, mongo_client, send_to_socket_fn, task_output)
+            
+        if len(output_variables) > 0 and task_output.pydantic:
+            matching_values = extract_matching_values(task_output.pydantic.model_dump(), output_variables)
+            if not hasattr(session, 'variables') or session.variables is None:
+                session.variables = {}
+            session.variables.update(matching_values)
+            mongo_client.update_session_variables(session_id=session.id, variables=session.variables)
 
     return callback
 
 
 def get_output_pydantic_model(task: Task):
     try:
-        return json_schema_to_pydantic(json.loads(task.expectedOutput))
+        expected_output = json.loads(task.expectedOutput)
+        if "variables" in expected_output:
+            del expected_output["variables"]
+        return json_schema_to_pydantic(expected_output)
+    except Exception:
+        pass
+
+def get_output_variables(task: Task):
+    try:
+        schema = json.loads(task.expectedOutput)
+        return schema.get("variables", [])
     except Exception:
         pass
 
 
 def escape_curly_braces(text: str):
-    return text.replace('{', '&lcub;').replace('}', '&rcub;')
+    expected_output = json.loads(text)
+    if "variables" in expected_output:
+        del expected_output["variables"]
+    expected_output = json.dumps(expected_output)
+
+    return expected_output.replace('{', '&lcub;').replace('}', '&rcub;')
+
+def extract_matching_values(data: dict, output_vars: list) -> dict:
+    matching_values = {}
+
+    def extract(data: dict, output_vars: list):
+        for key, value in data.items():
+            if key in output_vars:
+                matching_values[key] = value
+            if isinstance(value, dict):
+                extract(value, output_vars)
+
+    extract(data, output_vars)
+    return matching_values
