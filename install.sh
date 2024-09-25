@@ -135,8 +135,6 @@ echo "=> Starting airbyte"
 
 # env to disable airbyte telemetry
 DO_NOT_TRACK=1
-# Define the target version
-AIRBYTE_TARGET_VERSION="v0.63.9"
 
 if ! command -v abctl &> /dev/null; then
 	echo "'abctl' command not found. Installing Airbyte..."
@@ -145,11 +143,8 @@ else
 	echo "'abctl' command is already installed."
 fi
 
-#Note: unused
-#AIRBYTE_TARGET_VERSION="v0.63.17"
-
 # Define the chart version to use
-ABCTL_CHART_VERSION="0.445.3"
+ABCTL_CHART_VERSION=
 
 # Process the output: remove color codes, remove first 10 characters, and parse with jq to get password
 ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null | tail -n 5 | sed -r 's/\x1B\[[0-9;]*[mK]//g' | sed 's/^.\{10\}//')
@@ -161,7 +156,11 @@ echo $AIRBYTE_PASSWORD
 # Check if the 'password' field is present
 if [[ -z "$AIRBYTE_PASSWORD" || "$AIRBYTE_PASSWORD" == "null" ]]; then
 	echo "'password' field is missing. Running 'abctl local install'..."
-	abctl local install --chart-version $ABCTL_CHART_VERSION
+	if [[ -z "$ABCTL_CHART_VERSION" || "$ABCTL_CHART_VERSION" == "" ]]; then
+		abctl local install
+	else
+		abctl local install --chart-version $ABCTL_CHART_VERSION
+	fi
 else
 	echo "'password' field found. Running 'abctl local status'..."
 	abctl local status
