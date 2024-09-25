@@ -14,7 +14,7 @@ export function one(requiredPermission) {
 		cache.one[requiredPermission] ||
 		(cache.one[requiredPermission] = function (req, res, next) {
 			if (!res.locals.permissions.get(requiredPermission)) {
-				return dynamicResponse(req, res, 400, {
+				return dynamicResponse(req, res, 403, {
 					error: `Missing permission "${Metadata[requiredPermission].title}"`
 				});
 			}
@@ -29,7 +29,7 @@ export function all(...requiredPermissions) {
 		cache.all[cacheKey] ||
 		(cache.all[cacheKey] = function (req, res, next) {
 			if (!res.locals.permissions.hasAll(...requiredPermissions)) {
-				return dynamicResponse(req, res, 400, { error: 'No permission' });
+				return dynamicResponse(req, res, 403, { error: 'No permission' });
 			}
 			next();
 		})
@@ -42,7 +42,7 @@ export function any(...requiredPermissions) {
 		cache.any[cacheKey] ||
 		(cache.any[cacheKey] = function (req, res, next) {
 			if (!res.locals.permissions.hasAny(...requiredPermissions)) {
-				return dynamicResponse(req, res, 400, { error: 'No permission' });
+				return dynamicResponse(req, res, 403, { error: 'No permission' });
 			}
 			next();
 		})

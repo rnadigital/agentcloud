@@ -344,6 +344,7 @@ describe('team tests', () => {
 		};
 		let response;
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+		console.log(await (response.text()));
 		expect(response.status).toBe(200);
 		body = {
 			name: accountDetails.account4_name,

@@ -110,7 +110,7 @@ export async function inviteTeamMemberApi(req, res) {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
 		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
-			return dynamicResponse(req, res, 403, { error: 'User is already on your team' });
+			return dynamicResponse(req, res, 409, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
 	}
@@ -323,7 +323,7 @@ export async function transferTeamOwnershipApi(req, res) {
 	const { newOwnerId } = req.body;
 
 	if (newOwnerId === res.locals.matchingTeam.ownerId.toString()) {
-		return dynamicResponse(req, res, 403, { error: 'User is already team owner' });
+		return dynamicResponse(req, res, 409, { error: 'User is already team owner' });
 	}
 	if (
 		res.locals.account._id.toString() !== res.locals.matchingTeam.ownerId.toString() &&
