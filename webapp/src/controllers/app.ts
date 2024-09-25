@@ -29,9 +29,6 @@ import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
-import { addTeamMember } from '../db/team';
-import Roles from '../lib/permissions/roles';
-
 export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
 
 export async function appsData(req, res, _next) {

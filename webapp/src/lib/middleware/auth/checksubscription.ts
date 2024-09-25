@@ -44,31 +44,26 @@ export async function fetchUsage(req, res, next) {
 }
 
 export async function setSubscriptionLocals(req, res, next) {
-	let ownerId = res.locals?.matchingOrg?.ownerId;
-
-	if (!ownerId) {
-		const currentOrgId = res.locals?.matchingOrg?.id || res.locals?.account?.currentOrg;
-		if (!currentOrgId) {
-			// return dynamicResponse(req, res, 400, { error: 'Missing org in subscription check context' });
-			return dynamicResponse(req, res, 302, {
-				redirect: `/login?goto=${encodeURIComponent(req.originalUrl)}`
-			});
-		}
-		const parentOrg = await getOrgById(currentOrgId);
-		if (!parentOrg) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid org in subscription check context' });
-		}
-		const parentOrgOwner = await getAccountById(parentOrg.ownerId);
-		if (!parentOrgOwner) {
-			return dynamicResponse(req, res, 400, { error: 'Account error' });
-		}
-		res.locals.subscription = parentOrgOwner.stripe;
-		if (res.locals?.account?.stripe) {
-			res.locals.account._stripe = res.locals.account.stripe;
-			res.locals.account.stripe = parentOrgOwner.stripe; //TODO: think about this some more
-		}
+	const currentOrgId = res.locals?.matchingOrg?.id || res.locals?.account?.currentOrg;
+	if (!currentOrgId) {
+		// return dynamicResponse(req, res, 400, { error: 'Missing org in subscription check context' });
+		return dynamicResponse(req, res, 302, {
+			redirect: `/login?goto=${encodeURIComponent(req.originalUrl)}`
+		});
 	}
-
+	const parentOrg = await getOrgById(currentOrgId);
+	if (!parentOrg) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid org in subscription check context' });
+	}
+	const parentOrgOwner = await getAccountById(parentOrg.ownerId);
+	if (!parentOrgOwner) {
+		return dynamicResponse(req, res, 400, { error: 'Account error' });
+	}
+	res.locals.subscription = parentOrgOwner.stripe;
+	if (res.locals?.account?.stripe) {
+		res.locals.account._stripe = res.locals.account.stripe;
+		res.locals.account.stripe = parentOrgOwner.stripe; //TODO: think about this some more
+	}
 	next();
 }
 

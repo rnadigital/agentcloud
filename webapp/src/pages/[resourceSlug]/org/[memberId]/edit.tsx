@@ -6,24 +6,24 @@ import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { TEAM_BITS } from 'permissions/bits';
+import { ORG_BITS } from 'permissions/bits';
 import React, { useEffect, useState } from 'react';
 
-export default function EditTeamMember(props) {
+export default function EditOrgMember(props) {
 	const [accountContext]: any = useAccountContext();
 	const { account } = accountContext as any;
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { resourceSlug, memberId } = router.query;
-	const { teamMember } = state;
+	const { orgMember } = state;
 
-	async function fetchTeamMember() {
-		API.getTeamMember({ resourceSlug, memberId }, dispatch, setError, router);
+	async function fetchOrgMember() {
+		API.getOrgMember({ resourceSlug, memberId }, dispatch, setError, router);
 	}
 
 	useEffect(() => {
-		fetchTeamMember();
+		fetchOrgMember();
 	}, [resourceSlug]);
 
 	if (!account) {
@@ -33,18 +33,18 @@ export default function EditTeamMember(props) {
 	return (
 		<>
 			<Head>
-				<title>Edit Team Member</title>
+				<title>Edit Org Member</title>
 			</Head>
 
 			{error && <ErrorAlert error={error} />}
 
 			<div className='border-b dark:border-slate-400 pb-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
+				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Org Member</h3>
 			</div>
 
 			<PermissionsEditor
-				editingPermission={new Permission(teamMember?.permissions)}
-				filterBits={TEAM_BITS}
+				editingPermission={new Permission(orgMember?.permissions)}
+				filterBits={ORG_BITS}
 			/>
 		</>
 	);

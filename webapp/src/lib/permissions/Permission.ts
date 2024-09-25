@@ -2,9 +2,9 @@ import BigBitfield from 'big-bitfield';
 import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
 
 export default class Permission extends BigBitfield {
+	declare base64?: string;
 	declare array?: Uint8Array;
 	public get?(bit: Permissions | string | number): boolean;
 	public set?(bit: Permissions | string | number, value: boolean);

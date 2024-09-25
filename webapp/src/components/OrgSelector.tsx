@@ -23,7 +23,7 @@ export default function OrgSelector({ orgs }) {
 		const matchingOrg = account?.orgs?.find(o => o.teams.some(t => t.id === resourceSlug));
 		const team = matchingOrg?.teams?.find(t => t.id === resourceSlug);
 		setTeamName(team?.name || _teamName);
-	}, [router?.query?.resourceSlug, account?.currentTeam]);
+	}, [router?.query?.resourceSlug, account?.currentTeam, _teamName]);
 	const [_state, dispatch] = useState();
 	const [_error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
