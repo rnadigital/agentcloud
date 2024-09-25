@@ -42,4 +42,5 @@ export interface Task {
 	formFields?: FormFieldConfig[];
 	isStructuredOutput?: boolean;
 	displayOnlyFinalOutput?: boolean;
+	variableIds?: (ObjectId | string)[];
 }

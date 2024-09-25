@@ -4,7 +4,7 @@ from mongo.client import MongoConnection
 from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool
+from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, Variable
 from typing import List, Dict, Union, Any, Optional
 from pydantic import BaseModel
 
@@ -25,10 +25,11 @@ class MongoClientConnection(MongoConnection):
             session_query_results: Optional[Session] = self._get_collection(
                 "sessions"
             ).find_one(
-                {"_id": ObjectId(session_id)}, {"crewId": 1, "status": 1, "appId": 1}
+                {"_id": ObjectId(session_id)},
+                {"_id": 1, "appId": 1, "variables": 1}
             )
             assert session_query_results
-            return session_query_results
+            return Session(**session_query_results)
         except AssertionError as ae:
             logging.exception(f"Query returned NO sessions: {ae}")
         except Exception as e:
@@ -36,7 +37,7 @@ class MongoClientConnection(MongoConnection):
 
     def get_crew(self, session: Session) -> tuple[App, Crew, list, list]:
         try:
-            app_id = session.get("appId")
+            app_id = session.appId
             print(f"App ID: {app_id}")
             apps_collection: collection.Collection = self._get_collection("apps")
             the_app: Dict = apps_collection.find_one({"_id": ObjectId(app_id)})
@@ -45,7 +46,7 @@ class MongoClientConnection(MongoConnection):
             try:
                 assert crew_id is not None
             except AssertionError:
-                raise AssertionError(f"no Crew ID found for Session Id {session.get('id')}")
+                raise AssertionError(f"no Crew ID found for Session Id {session.id}")
             crews_collection: collection.Collection = self._get_collection("crews")
             tasks_collection: collection.Collection = self._get_collection("tasks")
             agents_collection: collection.Collection = self._get_collection("agents")
@@ -91,6 +92,9 @@ class MongoClientConnection(MongoConnection):
 
     def get_agent_datasources(self, agent: Dict):
         pass
+
+    def get_app_variables(self, variable_ids: List[Union[str, PyObjectId]]):
+        return self.get_models_by_ids("variables", Variable, variable_ids)
 
     def get_app_by_crew_id(self, crewId: PyObjectId):
         return self.get_single_model_by_query("apps", App, {"crewId": crewId})

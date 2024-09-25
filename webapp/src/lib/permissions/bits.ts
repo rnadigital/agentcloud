@@ -18,7 +18,11 @@ export const ORG_BITS = Object.seal(
 
 			Permissions.CREATE_TEAM,
 			Permissions.EDIT_TEAM,
-			Permissions.DELETE_TEAM
+			Permissions.DELETE_TEAM,
+
+			Permissions.ADD_ORG_MEMBER,
+			Permissions.EDIT_ORG_MEMBER,
+			Permissions.REMOVE_ORG_MEMBER
 		])
 	)
 );
@@ -62,7 +66,11 @@ export const TEAM_BITS = Object.seal(
 
 			Permissions.DELETE_DATASOURCE,
 			Permissions.UPLOAD_ASSET,
-			Permissions.DELETE_ASSET
+			Permissions.DELETE_ASSET,
+
+			Permissions.CREATE_VARIABLE,
+			Permissions.EDIT_VARIABLE,
+			Permissions.DELETE_VARIABLE
 		])
 	)
 );

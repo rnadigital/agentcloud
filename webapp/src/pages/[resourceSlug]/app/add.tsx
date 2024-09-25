@@ -6,20 +6,12 @@ import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useThemeContext } from 'context/themecontext';
+import { AppsDataReturnType } from 'controllers/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { ReactSVG } from 'react-svg';
 
-interface AddAppProps {
-	apps: any[];
-	tools: any[];
-	agents: any[];
-	tasks: any[];
-	models: any[];
-	datasources: any[];
-	teamMembers: any[];
-}
 const chatAppTaglines = [
 	'Build single agent chat bots (like GPTS)',
 	'Integrate RAG datasources',
@@ -36,17 +28,17 @@ const processAppTaglines = [
 	'Embed your process app via IFrame'
 ];
 
-export default function AddApp(props: AddAppProps) {
+export default function AddApp(props: AppsDataReturnType) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
+	const [state, dispatch] = useState<AppsDataReturnType>(props);
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const { step, setStep }: any = useStepContext();
 	const [loading, setLoading] = useState(true);
-	const { apps, tools, agents, tasks, models, datasources, teamMembers } = state;
+	const { apps, tools, agents, tasks, models, datasources, teamMembers, variables } = state;
 
 	const { theme } = useThemeContext();
 
@@ -196,6 +188,7 @@ export default function AddApp(props: AddAppProps) {
 						toolChoices={tools}
 						app={cloneState?.app}
 						whiteListSharingChoices={teamMembers}
+						variableChoices={variables}
 					/>
 				);
 			case 2:
@@ -207,6 +200,7 @@ export default function AddApp(props: AddAppProps) {
 						fetchFormData={fetchAppFormData}
 						app={cloneState?.app}
 						crew={cloneState?.crew}
+						// variableChoices={variables}
 						whiteListSharingChoices={teamMembers}
 					/>
 				);

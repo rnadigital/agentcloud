@@ -6,6 +6,7 @@ import { getAppById } from 'db/app';
 import { getCrewById } from 'db/crew';
 import { addSession, checkCanAccessApp } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
+import { getTaskById } from 'db/task';
 import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
@@ -66,10 +67,19 @@ export async function handleRedirect(req, res, next) {
 
 	let crewId;
 	let agentId;
+	let hasVariables = false;
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
 		if (crew) {
 			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
+			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
+			if (!hasVariables) {
+				const taskPromises = crew.tasks.map(t =>
+					getTaskById(req.params.resourceSlug, t.toString())
+				);
+				const tasks = await Promise.all(taskPromises);
+				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
+			}
 			if (!agents) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 			}
@@ -79,6 +89,7 @@ export async function handleRedirect(req, res, next) {
 		}
 	} else {
 		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		hasVariables = agent?.variableIds?.length > 0;
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -103,23 +114,23 @@ export async function handleRedirect(req, res, next) {
 			mode: app?.sharingConfig?.mode as SharingMode
 		}
 	});
-	const sessionId = addedSession.insertedId;
 
-	sessionTaskQueue.add(
-		'execute_rag',
-		{
-			type: app?.type,
-			sessionId: addedSession.insertedId.toString()
-		},
-		{ removeOnComplete: true, removeOnFail: true }
-	);
+	if (!hasVariables) {
+		sessionTaskQueue.add(
+			'execute_rag',
+			{
+				type: app?.type,
+				sessionId: addedSession.insertedId.toString()
+			},
+			{ removeOnComplete: true, removeOnFail: true }
+		);
+	}
 
 	switch (foundShareLink.type) {
 		case ShareLinkTypes.APP:
 		default:
-			//There are no other sharinglinktypes yet
 			return dynamicResponse(req, res, 302, {
-				redirect: `/s/${resourceSlug}/session/${sessionId}`
+				redirect: `/s/${resourceSlug}/session/${addedSession.insertedId}`
 			});
 	}
 }

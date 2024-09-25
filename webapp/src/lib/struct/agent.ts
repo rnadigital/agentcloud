@@ -31,6 +31,7 @@ export type Agent = {
 		  };
 	hidden?: boolean;
 	group?: any[];
+	variableIds?: (ObjectId | string)[];
 };
 
 // export type Agent = {
