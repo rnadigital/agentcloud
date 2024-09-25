@@ -14,7 +14,7 @@ export default function EditTask(props) {
 	const { resourceSlug, taskId } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { task, tools, agents, tasks } = state; // Assuming tasks need tools
+	const { task, tools, agents, tasks, variables } = state; // Assuming tasks need tools
 
 	const taskChoices = tasks?.filter(x => x._id.toString() !== task._id.toString()) || [];
 
@@ -56,6 +56,7 @@ export default function EditTask(props) {
 					fetchTaskFormData={fetchTaskFormData}
 					editing={true}
 					taskChoices={taskChoices}
+					variables={variables}
 				/>
 			</span>
 		</>

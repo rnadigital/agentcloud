@@ -85,6 +85,18 @@ export async function getAccountTeamMember(
 	);
 }
 
+export async function getAccountOrgMember(userId: db.IdOrStr, orgId: db.IdOrStr): Promise<Account> {
+	return AccountCollection().findOne(
+		{
+			_id: toObjectId(userId),
+			'orgs.id': toObjectId(orgId)
+		},
+		{
+			projection: { passwordHash: 0 }
+		}
+	);
+}
+
 export function getAccountByEmail(email: string): Promise<Account> {
 	return AccountCollection().findOne({
 		email: email
@@ -184,6 +196,42 @@ export function pushAccountTeam(
 					'org.id': toObjectId(orgId)
 				}
 			]
+		}
+	);
+}
+
+export function editAccountsTeam(
+	teamId: db.IdOrStr,
+	orgId: db.IdOrStr,
+	update: Partial<AccountTeam>
+) {
+	return AccountCollection().updateMany(
+		{
+			'orgs.teams.id': toObjectId(teamId)
+		},
+		{
+			$set: {
+				'orgs.$[org].teams.$[team].name': update.name
+			}
+		},
+		{
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }, { 'team.id': toObjectId(teamId) }]
+		}
+	);
+}
+
+export function editAccountsOrg(orgId: db.IdOrStr, update: Partial<AccountTeam>) {
+	return AccountCollection().updateMany(
+		{
+			'orgs.id': toObjectId(orgId)
+		},
+		{
+			$set: {
+				'orgs.$[org].name': update.name
+			}
+		},
+		{
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }]
 		}
 	);
 }

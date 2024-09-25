@@ -9,6 +9,8 @@ import ToolsSelect from 'components/tools/ToolsSelect';
 import { log } from 'console';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
+import { TasksDataReturnType } from 'controllers/task';
+import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -26,6 +28,8 @@ import ScriptEditor, { MonacoOnInitializePane } from './Editor';
 import FormConfig from './FormConfig';
 import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
+import CreateVariableModal from './variables/CreateVariableModal';
+import AutocompleteDropdown from './variables/VariableDropdown';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -56,15 +60,17 @@ export default function TaskForm({
 	task,
 	tools = [],
 	agents = [],
+	variables = [],
 	editing,
 	compact = false,
 	callback,
 	fetchTaskFormData,
 	taskChoices = []
 }: {
-	task?: Task;
-	tools?: any[];
-	agents?: any[];
+	task?: TasksDataReturnType['tasks']['0'];
+	tools?: TasksDataReturnType['tools'];
+	agents?: TasksDataReturnType['agents'];
+	variables?: TasksDataReturnType['variables'];
 	editing?: boolean;
 	compact?: boolean;
 	callback?: Function;
@@ -77,8 +83,9 @@ export default function TaskForm({
 	const { resourceSlug } = router.query;
 	const [taskState, setTask] = useState<Task | undefined>(task);
 	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
-
 	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
+	const [modalOpen, setModalOpen] = useState<string>();
+	const [currentInput, setCurrentInput] = useState<string>();
 
 	const [formFields, setFormFields] = useState<Partial<FormFieldConfig>[]>(
 		task?.formFields || [
@@ -123,12 +130,64 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
+	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<string[]>([]);
+	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
+		useState<string[]>();
+
+	const descriptionVariableOptions = variables.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
+
+	const expectedOutputVariableOptions = variables.map(v => ({
+		label: v.name,
+		value: v._id.toString()
+	}));
+
+	console.log(expectedOutputSelectedVariables);
+
+	const [description, setDescription] = useState(task?.description || '');
+
+	const autocompleteDescription = useAutocompleteDropdown({
+		value: description,
+		options: descriptionVariableOptions,
+		setValue: setDescription,
+		setSelectedVariables: setDescriptionSelectedVariables,
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput,
+		fetchFormData: fetchTaskFormData
+	});
+
+	const autocompleteExpectedOutput = useAutocompleteDropdown({
+		value: expectedOutput,
+		options: expectedOutputVariableOptions,
+		setValue: setExpectedOutput,
+		setSelectedVariables: setExpectedOutputSelectedVariables,
+		setModalOpen,
+		initialState: variables,
+		setCurrentInput,
+		fetchFormData: fetchTaskFormData
+	});
+
+	const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+		switch (currentInput) {
+			case 'task_description':
+				autocompleteDescription.handleNewVariableCreation(newVariable);
+				break;
+			case 'expectedOutput':
+				autocompleteExpectedOutput.handleNewVariableCreation(newVariable);
+				break;
+			default:
+				break;
+		}
+	};
+
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchTaskFormData) && fetchTaskFormData();
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
-		setModalOpen(false);
+		setModalOpen(null);
 	}
-	const [modalOpen, setModalOpen]: any = useState(false);
 	async function taskPost(e) {
 		e.preventDefault();
 		const toolIds = toolState ? toolState.map(x => x?.value) : [];
@@ -155,7 +214,11 @@ export default function TaskForm({
 			displayOnlyFinalOutput,
 			storeTaskOutput: e.target.storeTaskOutput.checked,
 			taskOutputFileName: e.target.taskOutputFileName?.value,
-			isStructuredOutput
+			isStructuredOutput,
+			variableIds:
+				Array.from(
+					new Set([...descriptionSelectedVariables, ...expectedOutputSelectedVariables])
+				) || []
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
@@ -217,7 +280,7 @@ export default function TaskForm({
 
 	const toolCallback = async (addedToolId, body) => {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 		setTask(oldTask => {
 			return {
 				...oldTask,
@@ -227,7 +290,7 @@ export default function TaskForm({
 	};
 	const agentCallback = async addedAgentId => {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 		setTask(oldTask => {
 			return {
 				...oldTask,
@@ -238,7 +301,7 @@ export default function TaskForm({
 
 	async function createTaskCallback() {
 		(await fetchTaskFormData) && fetchTaskFormData();
-		setModalOpen(false);
+		setModalOpen(null);
 	}
 
 	useEffect(() => {
@@ -279,7 +342,7 @@ export default function TaskForm({
 		case 'datasource':
 			modal = (
 				<CreateDatasourceModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={createDatasourceCallback}
 					initialStep={0}
@@ -289,7 +352,7 @@ export default function TaskForm({
 		case 'task':
 			modal = (
 				<CreateTaskModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={createTaskCallback}
 				/>
@@ -299,20 +362,26 @@ export default function TaskForm({
 		case 'agent':
 			modal = (
 				<CreateAgentModal
-					open={modalOpen !== false}
+					open={Boolean(modalOpen)}
 					setOpen={setModalOpen}
 					callback={agentCallback}
 				/>
 			);
 			break;
 
+		case 'variable':
+			modal = (
+				<CreateVariableModal
+					open={Boolean(modalOpen)}
+					setOpen={setModalOpen}
+					callback={handleNewVariableCreation}
+				/>
+			);
+			break;
+
 		default:
 			modal = (
-				<CreateToolModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					callback={toolCallback}
-				/>
+				<CreateToolModal open={Boolean(modalOpen)} setOpen={setModalOpen} callback={toolCallback} />
 			);
 			break;
 	}
@@ -349,6 +418,10 @@ export default function TaskForm({
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<textarea
+								ref={autocompleteDescription.inputRef}
+								value={description}
+								onChange={autocompleteDescription.handleChange}
+								onKeyDown={autocompleteDescription.handleKeyDown}
 								required
 								id='task_description'
 								name='task_description'
@@ -357,6 +430,16 @@ export default function TaskForm({
 								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.description}
 							/>
+							{autocompleteDescription.showDropdown &&
+								autocompleteDescription.filteredOptions.length > 0 && (
+									<AutocompleteDropdown
+										options={autocompleteDescription.filteredOptions}
+										highlightedIndex={autocompleteDescription.highlightedIndex}
+										dropdownPosition={autocompleteDescription.dropdownPosition}
+										handleOptionSelect={autocompleteDescription.handleOptionSelect}
+										closeDropdown={autocompleteDescription.closeDropdown}
+									/>
+								)}
 						</div>
 
 						<div className='col-span-full'>
@@ -408,16 +491,28 @@ export default function TaskForm({
 								</>
 							) : (
 								<textarea
+									ref={autocompleteExpectedOutput.inputRef}
 									id='expectedOutput'
 									name='expectedOutput'
 									placeholder='Clear and detailed definition of expected output for the task.'
 									rows={4}
 									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									defaultValue={taskState?.expectedOutput}
-									value={expectedOutput}
-									onChange={e => setExpectedOutput(e.target.value)}
+									value={autocompleteExpectedOutput.text}
+									onChange={autocompleteExpectedOutput.handleChange}
+									onKeyDown={autocompleteExpectedOutput.handleKeyDown}
 								/>
 							)}
+							{autocompleteExpectedOutput.showDropdown &&
+								autocompleteExpectedOutput.filteredOptions.length > 0 && (
+									<AutocompleteDropdown
+										options={autocompleteExpectedOutput.filteredOptions}
+										highlightedIndex={autocompleteExpectedOutput.highlightedIndex}
+										dropdownPosition={autocompleteExpectedOutput.dropdownPosition}
+										handleOptionSelect={autocompleteExpectedOutput.handleOptionSelect}
+										closeDropdown={autocompleteExpectedOutput.closeDropdown}
+									/>
+								)}
 						</div>
 
 						<div className='sm:col-span-full'>
@@ -541,7 +636,7 @@ export default function TaskForm({
 									}}
 									value={
 										preferredAgent
-											? { label: preferredAgent.name, value: preferredAgent._id }
+											? { label: preferredAgent.name, value: preferredAgent._id.toString() }
 											: null
 									}
 									onChange={(v: any) => {
@@ -562,8 +657,8 @@ export default function TaskForm({
 										{ label: '+ Create new agent', value: 'new', allowDelegation: false }
 									].concat(
 										agents.map(a => ({
-											label: a.name,
-											value: a._id,
+											label: a.name.toString(),
+											value: a._id.toString(),
 											allowDelegation: a.allowDelegation
 										}))
 									)}

@@ -221,6 +221,21 @@ const Metadata = Object.seal(
 				title: 'Delete Asset',
 				label: 'Delete Asset',
 				desc: 'Ability to delete an asset'
+			},
+			[Permissions.CREATE_VARIABLE]: {
+				title: 'Create Variable',
+				label: 'Create Variable',
+				desc: 'Ability to create a variable'
+			},
+			[Permissions.EDIT_VARIABLE]: {
+				title: 'Edit Variable',
+				label: 'Edit Variable',
+				desc: 'Ability to edit a variable'
+			},
+			[Permissions.DELETE_VARIABLE]: {
+				title: 'Delete Variable',
+				label: 'Delete Variable',
+				desc: 'Ability to delete a variable'
 			}
 		})
 	)

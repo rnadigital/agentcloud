@@ -51,7 +51,7 @@ class ChatAssistant:
     def init_app_state(self):
         session = self.mongo_conn.get_session(self.session_id)
 
-        app = self.mongo_conn.get_single_model_by_id("apps", App, session.get('appId'))
+        app = self.mongo_conn.get_single_model_by_id("apps", App, session.appId)
 
         app_config = app.chatAppConfig
         if not app_config:
@@ -63,6 +63,9 @@ class ChatAssistant:
         agentcloud_tools = self.mongo_conn.get_models_by_ids("tools", Tool, agentcloud_agent.toolIds)
 
         self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
+
+        if session.variables:
+            self.system_message = self.system_message.format(**session.variables)
 
         model = self.mongo_conn.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         try:

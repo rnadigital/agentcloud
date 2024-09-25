@@ -12,7 +12,7 @@ export default function NewButtonSection({
 }: {
 	link: string;
 	emptyMessage: string;
-	icon: any;
+	icon?: any;
 	message: string;
 	buttonIcon: any;
 	buttonMessage: string;

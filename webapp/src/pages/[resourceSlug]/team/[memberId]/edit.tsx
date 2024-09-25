@@ -7,14 +7,11 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { TEAM_BITS } from 'permissions/bits';
-import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 
 export default function EditTeamMember(props) {
-	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, team, csrf, teamName } = accountContext as any;
+	const [accountContext]: any = useAccountContext();
+	const { account } = accountContext as any;
 	const router = useRouter();
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
@@ -32,8 +29,6 @@ export default function EditTeamMember(props) {
 	if (!account) {
 		return <Spinner />;
 	}
-
-	const { stripeCustomerId, stripeEndsAt, stripeCancelled } = account?.stripe || {};
 
 	return (
 		<>

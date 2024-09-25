@@ -1,56 +1,55 @@
 'use strict';
 
-import { deleteAsset } from '@api';
 import { dynamicResponse } from '@dr';
 import { cloneAssetInStorageProvider } from 'controllers/asset';
-import { getAccountByEmail, getAccountsById, pushAccountOrg, pushAccountTeam } from 'db/account';
+import { getAccountByEmail, getAccountsById } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
-	deleteAppById,
 	deleteAppByIdReturnApp,
 	getAppById,
 	getAppsByTeam,
-	updateApp,
 	updateAppGetOldApp
 } from 'db/app';
-import { addAsset, attachAssetToObject, deleteAssetById, getAssetById } from 'db/asset';
+import { attachAssetToObject, deleteAssetById } from 'db/asset';
 import { addCrew, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
 import { getTasksByTeam } from 'db/task';
 import { getToolsByTeam } from 'db/tool';
+import { getVariablesByTeam } from 'db/variable';
 import createAccount from 'lib/account/create';
-import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
-import path from 'path';
 import { AppType } from 'struct/app';
-import { Asset, IconAttachment } from 'struct/asset';
+import { IconAttachment } from 'struct/asset';
 import { CollectionName } from 'struct/db';
-import { ChatAppAllowedModels, ModelType } from 'struct/model';
+import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
-import { addTeamMember } from '../db/team';
-import Roles from '../lib/permissions/roles';
+export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
 
 export async function appsData(req, res, _next) {
-	const [apps, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
-		getAppsByTeam(req.params.resourceSlug),
-		getTasksByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
-		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
-		getAccountsById(res.locals.matchingTeam.members)
-	]);
+	const [apps, tasks, tools, agents, models, datasources, variables, teamMembers] =
+		await Promise.all([
+			getAppsByTeam(req.params.resourceSlug),
+			getTasksByTeam(req.params.resourceSlug),
+			getToolsByTeam(req.params.resourceSlug),
+			getAgentsByTeam(req.params.resourceSlug),
+			getModelsByTeam(req.params.resourceSlug),
+			getDatasourcesByTeam(req.params.resourceSlug),
+			getVariablesByTeam(req.params.resourceSlug),
+			getAccountsById(res.locals.matchingTeam.members)
+		]);
+
 	const teamMemberemails = teamMembers.reduce((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
 		return acc;
 	}, []);
+
 	return {
 		csrf: req.csrfToken(),
 		apps,
@@ -59,20 +58,25 @@ export async function appsData(req, res, _next) {
 		agents,
 		models,
 		datasources,
-		teamMembers: teamMemberemails
+		teamMembers: teamMemberemails,
+		variables
 	};
 }
 
+export type AppDataReturnType = Awaited<ReturnType<typeof appData>>;
+
 export async function appData(req, res, _next) {
-	const [app, tasks, tools, agents, models, datasources, teamMembers] = await Promise.all([
-		getAppById(req.params.resourceSlug, req.params.appId),
-		getTasksByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug),
-		getModelsByTeam(req.params.resourceSlug),
-		getDatasourcesByTeam(req.params.resourceSlug),
-		getAccountsById(res.locals.matchingTeam.members)
-	]);
+	const [app, tasks, tools, agents, models, datasources, teamMembers, variables] =
+		await Promise.all([
+			getAppById(req.params.resourceSlug, req.params.appId),
+			getTasksByTeam(req.params.resourceSlug),
+			getToolsByTeam(req.params.resourceSlug),
+			getAgentsByTeam(req.params.resourceSlug),
+			getModelsByTeam(req.params.resourceSlug),
+			getDatasourcesByTeam(req.params.resourceSlug),
+			getAccountsById(res.locals.matchingTeam.members),
+			getVariablesByTeam(req.params.resourceSlug)
+		]);
 	const teamMemberemails = teamMembers.reduce((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
@@ -86,7 +90,8 @@ export async function appData(req, res, _next) {
 		agents,
 		models,
 		datasources,
-		teamMembers: teamMemberemails
+		teamMembers: teamMemberemails,
+		variables
 	};
 }
 
@@ -183,8 +188,10 @@ export async function addAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
+		recursionLimit,
 		cloning,
-		maxMessages
+		maxMessages,
+		variableIds
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -307,7 +314,8 @@ export async function addAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId).filter(x => x)
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+				variableIds: variableIds?.map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -447,6 +455,7 @@ export async function editAppApi(req, res, next) {
 		shareLinkShareId,
 		verbose,
 		fullOutput,
+		recursionLimit,
 		maxMessages
 	} = req.body;
 
