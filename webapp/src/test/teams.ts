@@ -14,26 +14,7 @@ import { TeamRoles } from "../lib/permissions/roles"
 
 dotenv.config({ path: '.env' });
 
-afterAll(async () => {
-	await db.db().collection('accounts').deleteMany({ 
-		email: { 
-			$in: [
-				accountDetails.account1_email,
-				accountDetails.account2_email,
-				accountDetails.account3_email,
-				accountDetails.account4_email,
-				accountDetails.account5_email,
-				accountDetails.account6_email,
-				accountDetails.account7_email,
-				accountDetails.account8_email,
-				accountDetails.account9_email,
-				accountDetails.account10_email,
-				accountDetails.account11_email
-			] 
-		}
-	});
-	await db.client().close();
-});
+
 
 beforeAll(async ()=>{
 })
@@ -103,7 +84,6 @@ describe('team tests', () => {
 			template: 'TEAM_MEMBER'
 		};
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		console.log("team after inviting account 2 to the team", await(db.db().collection('teams').findOne({_id: toObjectId(resourceSlug)})))
 		expect(response.status).toBe(200);
 	});
 
@@ -276,18 +256,12 @@ describe('team tests', () => {
 
 		let url, body, response;
 
-		console.log("team BEFORE delete operation: ", await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})));
-
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;//delete operation, check line down
 		body = {
 			memberId: account2Object?.initialData?.accountData?.account?._id
 		}
 
 		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
-
-		console.log("account2 ID: ", account2Object?.initialData?.accountData?.account?._id);
-		console.log(await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})))
-		console.log(await(response.text()));
 		expect(response.status).toBe(200);
 
 		//attempt to create a model with the removed member
