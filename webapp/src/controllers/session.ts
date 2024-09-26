@@ -103,7 +103,11 @@ export async function sessionData(req, res, _next) {
 				crewAppVariables.push(...variables);
 			}
 			if (crewAppVariables.length > 0) {
-				app.variables = crewAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+				app.variables = crewAppVariables.map(v => ({
+					name: v.name,
+					defaultValue: v.defaultValue,
+					id: toObjectId(v._id)
+				}));
 			}
 
 			avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
@@ -117,7 +121,11 @@ export async function sessionData(req, res, _next) {
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const chatAppVariables = await Promise.all(variablePromise);
-				app.variables = chatAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+				app.variables = chatAppVariables.map(v => ({
+					name: v.name,
+					defaultValue: v.defaultValue,
+					id: toObjectId(v._id)
+				}));
 			}
 			break;
 	}

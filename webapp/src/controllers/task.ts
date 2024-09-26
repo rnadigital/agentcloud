@@ -224,7 +224,8 @@ export async function addTaskApi(req, res, next) {
 		formFields,
 		isStructuredOutput,
 		displayOnlyFinalOutput,
-		variableIds
+		variableIds,
+		taskOutputVariableName
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -249,6 +250,11 @@ export async function addTaskApi(req, res, next) {
 	const collectionType = CollectionName.Tasks;
 	const attachedIconToTask = await attachAssetToObject(iconId, newTaskId, collectionType);
 
+	const formFieldsWithObjectIdVariables = formFields.map(field => ({
+		...field,
+		variable: toObjectId(field.variable)
+	}));
+
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -270,9 +276,10 @@ export async function addTaskApi(req, res, next) {
 					linkedId: newTaskId
 				}
 			: null,
-		formFields: formFields,
+		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
-		variableIds: variableIds.map(toObjectId)
+		variableIds: variableIds.map(toObjectId),
+		taskOutputVariableName
 	});
 
 	if (variableIds && variableIds.length > 0) {
@@ -373,7 +380,8 @@ export async function editTaskApi(req, res, next) {
 		formFields,
 		isStructuredOutput,
 		displayOnlyFinalOutput,
-		variableIds
+		variableIds,
+		taskOutputVariableName
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
@@ -422,6 +430,11 @@ export async function editTaskApi(req, res, next) {
 		await Promise.all(updatePromises);
 	}
 
+	const formFieldsWithObjectIdVariables = formFields.map(field => ({
+		...field,
+		variable: toObjectId(field.variable)
+	}));
+
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
 		name,
 		description,
@@ -434,9 +447,10 @@ export async function editTaskApi(req, res, next) {
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
 		agentId: toObjectId(agentId),
-		formFields,
+		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
-		variableIds: variableIds ? variableIds.map(toObjectId) : []
+		variableIds: variableIds ? variableIds.map(toObjectId) : [],
+		taskOutputVariableName
 	});
 
 	return dynamicResponse(req, res, 302, {

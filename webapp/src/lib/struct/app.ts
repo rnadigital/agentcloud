@@ -16,6 +16,7 @@ export type ChatAppConfig = {
 };
 
 export type VariableConfig = {
+	id: ObjectId;
 	name: string;
 	defaultValue: string;
 };
