@@ -12,7 +12,7 @@ import {
 	updateAppGetOldApp
 } from 'db/app';
 import { attachAssetToObject, deleteAssetById } from 'db/asset';
-import { addCrew, updateCrew } from 'db/crew';
+import { addCrew, updateCrew, deleteCrewById } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
@@ -698,7 +698,9 @@ export async function deleteAppApi(req, res, next) {
 	}
 
 	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
-
+	if (oldApp?.crewId) {
+		await deleteCrewById(req.params.resourceSlug, oldApp?.crewId);
+	}
 	if (oldApp?.icon) {
 		await deleteAssetById(oldApp.icon.id);
 	}
