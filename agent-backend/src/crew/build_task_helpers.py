@@ -126,7 +126,7 @@ def get_output_variables(task: Task):
         schema = json.loads(task.expectedOutput)
         return schema.get("variables", [])
     except Exception:
-        pass
+        return []
 
 
 def escape_curly_braces(text: str):
