@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Type, Union
 from pydantic import BaseModel, create_model
 
 TYPE_MAPPING = {
@@ -11,7 +11,7 @@ TYPE_MAPPING = {
 }
 
 
-def json_schema_to_pydantic(schema: Dict[str, Any], model_name: str = "Model") -> Any:
+def json_schema_to_pydantic(schema: Dict[str, Any], model_name: str = "Model") -> Type[BaseModel]:
     fields = {}
 
     for property_name, property_schema in schema.get("schema", {}).items():
