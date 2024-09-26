@@ -29,6 +29,12 @@ function classNames(...classes) {
 	return classes.filter(Boolean).join(' ');
 }
 
+export type teamUsageData = {
+	totalAvailableVectorGb: string|number;
+	totalUsedVectorGb: string|number;
+	totalMembers: number;
+}
+
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -50,6 +56,14 @@ export default function Billing(props) {
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
 
+	//usage information
+	const [usedVectorGb, setUsedVectorGb] = useState({ //on a team level, each team has xGB of storage available (make this modular so that it can be easily interchanged with differnt api calls to the vector db proxy).
+		totalAvailable: 0,
+		totalUsed: 0
+	});
+	//all teams with corresponding user limit data
+	//custom functions (code tools), on a team level
+
 	function getPayload() {
 		return {
 			_csrf: csrf,
@@ -57,6 +71,10 @@ export default function Billing(props) {
 			...(stagedChange?.users ? { users: stagedChange.users } : {}),
 			...(stagedChange?.storage ? { storage: stagedChange.storage } : {})
 		};
+	}
+
+	function getUsageData() {
+
 	}
 
 	// TODO: move this to a lib (IF its useful in other files)
@@ -313,6 +331,20 @@ ${missingEnvs.join('\n')}`}
 							});
 						}}
 					/>
+				</>
+			)}
+
+
+			{currentTab?.name === 'Usage' && (
+				<>
+					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
+						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>
+							View Usage
+						</h3>
+					</div>
+					<div>
+
+					</div>
 				</>
 			)}
 		</>
