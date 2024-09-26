@@ -174,8 +174,10 @@ class MongoClientConnection(MongoConnection):
             return None
 
     def update_session_variables(self, session_id: str, variables: dict) -> None:
-        self._get_collection("sessions").update_one({"_id": ObjectId(session_id)},
-                                                    {"$set": {"variables": variables}})
+        self._get_collection("sessions").update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": {f"variables.{key}": value for key, value in variables.items()}}  
+        )
 
 
 def convert_id_to_ObjectId(id):
