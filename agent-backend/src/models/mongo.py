@@ -155,13 +155,6 @@ class ApiCredentials(BaseModel):
     base_url: Optional[str] = Field(alias="endpointURL")
 
 
-class Credentials(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    type: Optional[Platforms] = Field(default=Platforms.ChatOpenAI)
-    credentials: Optional[ApiCredentials] = None
-
-
 class ModelType(str, Enum):
     llm = 'llm'
     embedding = 'embedding'
@@ -274,10 +267,9 @@ class Crew(BaseModel):
 
 
 class Session(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    crewId: Crew
-    appId: Optional[PyObjectId] = None
+    id: PyObjectId = Field(alias="_id", default=None)
+    appId: PyObjectId = None
+    variables: Optional[Dict[str, str]] = None
 
 
 class Datasource(BaseModel):
@@ -304,6 +296,12 @@ class ChatAppConfig(BaseModel):
     agentId: PyObjectId
     conversationStarters: list[str] = Field(default_factory=list)
     maxMessages: int = Field(default=30)
+
+
+class Variable(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    name: str
+    value: str
 
 
 class App(BaseModel):

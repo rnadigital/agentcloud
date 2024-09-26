@@ -13,8 +13,9 @@ import InfoAlert from 'components/InfoAlert';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+import { Model } from 'db/model';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { Agent } from 'struct/agent';
@@ -29,7 +30,7 @@ import ToolTip from './shared/ToolTip';
 export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
-	/*toolChoices = [], */ modelChoices = [],
+	modelChoices = [],
 	whiteListSharingChoices = [],
 	crew = {},
 	app = {},
@@ -40,9 +41,8 @@ export default function CrewAppForm({
 }: {
 	agentChoices?: Agent[];
 	taskChoices?: Task[];
-	/*toolChoices?: any[],*/
 	crew?: any;
-	modelChoices: any;
+	modelChoices: Model[];
 	whiteListSharingChoices?: any[];
 	app?: any;
 	editing?: boolean;
@@ -53,11 +53,10 @@ export default function CrewAppForm({
 	//TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const { step, setStep }: any = useStepContext();
 	const [outsideOrg, setOutsideOrg] = useState(false);
 	const [shareEmail, setShareEmail] = useState(false);
-	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -73,10 +72,8 @@ export default function CrewAppForm({
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
-	const [error, setError] = useState();
 	const { name, agents, tasks, verbose } = crewState || {};
 	const [verboseInt, setVerboseInt] = useState(verbose);
-	const { tags } = appState; //TODO: make it take correct stuff from appstate
 	const [run, setRun] = useState(false);
 
 	function getInitialData(initData) {
@@ -142,12 +139,6 @@ export default function CrewAppForm({
 		setAgentsState(initialAgents || []);
 		setTasksState(initialTasks);
 	}, [app?._id]);
-
-	useEffect(() => {
-		if (sharingMode !== SharingMode.WHITELIST) {
-			setSharingEmailState([]);
-		}
-	}, [sharingMode]);
 
 	async function appPost(e) {
 		e.preventDefault();
@@ -220,18 +211,12 @@ export default function CrewAppForm({
 	}
 
 	async function createAgentCallback(addedAgentId, body) {
-		console.log('createAgentCallback addedAgentId', addedAgentId);
 		(await fetchFormData) && fetchFormData();
 		setAgentsState(oldAgentsState => {
 			return oldAgentsState.concat({ label: body.name, value: addedAgentId });
 		});
 		setModalOpen(false);
 	}
-
-	// async function createToolCallback() { // TODO:
-	// 	await fetchFormData && fetchFormData();
-	// 	setModalOpen(false);
-	// }
 
 	async function createTaskCallback(addedTaskId, body) {
 		(await fetchFormData) && fetchFormData();
@@ -346,6 +331,12 @@ export default function CrewAppForm({
 			modal = null;
 			break;
 	}
+
+	useEffect(() => {
+		if (sharingMode !== SharingMode.WHITELIST) {
+			setSharingEmailState([]);
+		}
+	}, [sharingMode]);
 
 	return (
 		<>
@@ -463,7 +454,7 @@ export default function CrewAppForm({
 											const optionTask = taskChoices.find(tc => tc._id === data.value);
 											return (
 												<li
-													className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+													className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 														data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 													}`}
 												>

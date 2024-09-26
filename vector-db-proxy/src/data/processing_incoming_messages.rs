@@ -27,6 +27,7 @@ pub async fn embed_text_construct_point(
     datasource_id: Option<String>,
     embedding_model: EmbeddingModels,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
+    search_type: SearchType,
 ) -> anyhow::Result<Option<Point>, anyhow::Error> {
     if !data.is_empty() {
         if let Some(_id) = datasource_id.clone() {
@@ -60,6 +61,7 @@ pub async fn embed_text_construct_point(
                                 mongo_conn.clone(),
                                 embedding_model,
                                 Some(payload),
+                                search_type,
                             )
                             .await;
                             return Ok(None);
@@ -117,7 +119,7 @@ async fn handle_embedding(
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
-    let search_request = SearchRequest::new(search_type, datasource_id_clone_2.clone());
+    let search_request = SearchRequest::new(search_type.clone(), datasource_id_clone_2.clone());
     match embed_text_construct_point(
         mongo_connection.clone(),
         vector_database_client.clone(),
@@ -126,6 +128,7 @@ async fn handle_embedding(
         Some(datasource_id_clone),
         EmbeddingModels::from(embedding_model_name),
         chunking_strategy,
+        search_type,
     )
     .await
     {
