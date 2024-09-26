@@ -72,11 +72,14 @@ def _upload_task_output(
     )
 
 
-def _assign_structured_output_fields_to_variables(task: Task, task_output: TaskOutput,
-                                                  session: Session, mongo_client: MongoClientConnection):
-    if task.isStructuredOutput:
-        schema = json.loads(task.expectedOutput)
-        pass
+def _assign_structured_output_fields_to_variables(task_output: TaskOutput,
+                                                  session: Session, mongo_client: MongoClientConnection, output_variables: list):
+    
+    matching_values = extract_matching_values(task_output.pydantic.model_dump(), output_variables)
+    if not hasattr(session, 'variables') or session.variables is None:
+        session.variables = {}
+    session.variables.update(matching_values)
+    mongo_client.update_session_variables(session_id=session.id, variables=session.variables)
 
 
 def _assign_output_to_variable_if_single_variable(
@@ -92,10 +95,10 @@ def _assign_output_to_variable_if_single_variable(
 
 
 def _update_variables_from_output(
-        task: Task, task_output: TaskOutput, session: Session, mongo_client: MongoClientConnection
+        task: Task, task_output: TaskOutput, session: Session, mongo_client: MongoClientConnection, output_variables: list
 ):
     if task.isStructuredOutput:
-        _assign_structured_output_fields_to_variables(task, task_output, session, mongo_client)
+        _assign_structured_output_fields_to_variables(task_output, session, mongo_client, output_variables)
     else:
         _assign_output_to_variable_if_single_variable(task, task_output, session, mongo_client)
 
@@ -103,16 +106,9 @@ def _update_variables_from_output(
 # Factory to create the callback function so we dont overwrite it with the one from the last task
 def make_task_callback(task: Task, session: Session, mongo_client: MongoClientConnection, send_to_socket_fn: Callable, output_variables: list):
     def callback(task_output: TaskOutput):
-        _update_variables_from_output(task, task_output, session, mongo_client)
+        _update_variables_from_output(task, task_output, session, mongo_client, output_variables)
         if task.storeTaskOutput:
             _upload_task_output(task, session.id, mongo_client, send_to_socket_fn, task_output)
-            
-        if len(output_variables) > 0 and task_output.pydantic:
-            matching_values = extract_matching_values(task_output.pydantic.model_dump(), output_variables)
-            if not hasattr(session, 'variables') or session.variables is None:
-                session.variables = {}
-            session.variables.update(matching_values)
-            mongo_client.update_session_variables(session_id=session.id, variables=session.variables)
 
     return callback
 
