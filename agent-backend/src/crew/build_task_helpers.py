@@ -85,13 +85,12 @@ def _assign_structured_output_fields_to_variables(task_output: TaskOutput,
 def _assign_output_to_variable_if_single_variable(
         task: Task, task_output: TaskOutput, session: Session, mongo_client: MongoClientConnection
 ):
-    if not task.isStructuredOutput:
-        match = re.search(r'^{([\w_]+)}$', task.expected_output)
-        if match:
-            var_name = match.group(1)
-            session_variables = session.variables.copy()
-            session_variables[var_name] = str(task_output)
-            mongo_client.update_session_variables(session_id=session.id, variables=session_variables)
+    if task.taskOutputVariableName:
+        if not hasattr(session, 'variables') or session.variables is None:
+            session.variables = {}
+        session_variables = session.variables.copy()
+        session_variables[task.taskOutputVariableName] = str(task_output)
+        mongo_client.update_session_variables(session_id=session.id, variables=session_variables)
 
 
 def _update_variables_from_output(

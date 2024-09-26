@@ -222,6 +222,7 @@ class Task(BaseModel):
     storeTaskOutput: bool = False
     taskOutputFileName: Optional[str] = ''
     isStructuredOutput: Optional[bool] = False
+    taskOutputVariableName: Optional[str] = None
 
 
 class Agent(BaseModel):
