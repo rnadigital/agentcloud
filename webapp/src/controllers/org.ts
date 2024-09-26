@@ -7,6 +7,7 @@ import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/
 import { ORG_BITS } from 'lib/permissions/bits';
 import Permission from 'lib/permissions/Permission';
 import { OrgRoles } from 'lib/permissions/roles';
+import { SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function orgData(req, res, _next) {
@@ -100,21 +101,22 @@ export async function editOrgApi(req, res) {
 export async function editOrgMemberApi(req, res) {
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
+	let { stripePlan } = res.locals.account?.stripe || {};
 
 	if (memberId === res.locals.matchingOrg.ownerId.toString()) {
 		return dynamicResponse(req, res, 400, { error: "Org owner permissions can't be edited" });
 	}
 
-	console.log(template, OrgRoles);
+	if (!template && stripePlan !== SubscriptionPlan.ENTERPRISE) {
+		//Only enterprise can NOT includea template which means it goes to Permission.handleBody V
+		return dynamicResponse(req, res, 400, { error: 'Missing role' });
+	}
 
 	if (template && !OrgRoles[template]) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid template' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid role' });
 	}
 
 	const editingMember = await getAccountById(req.params.memberId);
-
-	console.log('template', template);
-	console.log('OrgRoles[template]', OrgRoles[template]);
 
 	let updatingPermissions;
 	if (template) {

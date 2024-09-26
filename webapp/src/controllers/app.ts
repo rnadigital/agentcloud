@@ -12,7 +12,7 @@ import {
 	updateAppGetOldApp
 } from 'db/app';
 import { attachAssetToObject, deleteAssetById } from 'db/asset';
-import { addCrew, updateCrew, deleteCrewById } from 'db/crew';
+import { addCrew, deleteCrewById, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';

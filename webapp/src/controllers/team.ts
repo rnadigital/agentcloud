@@ -12,7 +12,6 @@ import {
 	pushAccountTeam,
 	updateTeamOwnerInAccounts
 } from 'db/account';
-import { getAllOrgMembers } from 'db/org';
 import {
 	addTeam,
 	addTeamMember,
@@ -32,6 +31,7 @@ import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import { TeamRoles } from 'permissions/roles';
+import { SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function teamData(req, res, _next) {
@@ -238,9 +238,15 @@ export async function addTeamApi(req, res) {
 export async function editTeamMemberApi(req, res) {
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
+	let { stripePlan } = res.locals.account?.stripe || {};
 
 	if (memberId === res.locals.matchingTeam.ownerId.toString()) {
 		return dynamicResponse(req, res, 400, { error: "Team owner permissions can't be edited" });
+	}
+
+	if (!template && stripePlan !== SubscriptionPlan.ENTERPRISE) {
+		//Only enterprise can NOT includea template which means it goes to Permission.handleBody V
+		return dynamicResponse(req, res, 400, { error: 'Missing role' });
 	}
 
 	if (template && !TeamRoles[template]) {

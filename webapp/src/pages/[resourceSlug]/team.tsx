@@ -28,6 +28,7 @@ export default function Team(props) {
 	async function refreshTeam() {
 		fetchTeam();
 		refreshAccountContext();
+		setModalOpen(false);
 	}
 
 	useEffect(() => {
