@@ -61,7 +61,7 @@ export default function ToolList({ tools, fetchTools }: { tools: Tool[]; fetchTo
 										</span>
 									)}
 								</div>
-								<DevBadge text={`Tool ID: ${tool?._id}`} />
+								<DevBadge label='Tool ID' value={tool?._id?.toString()} />
 								<p className='my-1 truncate text-sm text-gray-500 dark:text-slate-400'>
 									{tool.type} - {tool?.data?.description || tool?.description}
 								</p>

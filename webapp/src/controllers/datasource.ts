@@ -247,7 +247,8 @@ export async function testDatasourceApi(req, res, next) {
 	let discoveredSchema;
 	try {
 		const discoverSchemaBody = {
-			sourceId: createdSource.sourceId
+			sourceId: createdSource.sourceId,
+			disable_cache: true
 		};
 		log('discoverSchemaBody', discoverSchemaBody);
 		discoveredSchema = await internalApi
