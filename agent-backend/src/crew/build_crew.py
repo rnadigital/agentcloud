@@ -189,7 +189,7 @@ class CrewAIBuilder:
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude={
                     "id", "context", "requiresHumanInput", "displayOnlyFinalOutput",
-                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"
+                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput", "taskOutputVariableName"
                 }),
                 agent=agent_obj,
                 tools=task_tools_objs.values() if task_tools_objs else None,
