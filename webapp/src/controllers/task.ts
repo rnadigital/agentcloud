@@ -230,7 +230,7 @@ export async function addTaskApi(req, res, next) {
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input' });
 		}
 		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
 		// const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
@@ -239,9 +239,12 @@ export async function addTaskApi(req, res, next) {
 		// }
 	}
 
-	const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
-	if (!foundAgent) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let foundAgent;
+	if (agentId) {
+		foundAgent = await getAgentById(req.params.resourceSlug, agentId);
+		if (!foundAgent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid agent, agent not found' });
+		}
 	}
 
 	const newTaskId = new ObjectId();
@@ -378,17 +381,24 @@ export async function editTaskApi(req, res, next) {
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid task ID, task does not exist' });
+	}
+
+	if (agentId) {
+		const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
+		if (!foundAgent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid agent, agent not found' });
+		}
 	}
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input' });
 		}
 		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
 		const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
 		if (!foundReadyTools || foundReadyTools?.length !== toolIds.length) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input, tool not found' });
 		}
 	}
 
@@ -463,7 +473,7 @@ export async function deleteTaskApi(req, res, next) {
 	const { taskId } = req.body;
 
 	if (!taskId || typeof taskId !== 'string' || taskId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid task ID' });
 	}
 
 	const task = await getTaskById(req.params.resourceSlug, taskId);
