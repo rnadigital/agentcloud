@@ -2,8 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import { calcPerms } from '@mw/auth/setpermissions';
-import { editAccountsOrg, getAccountById, getAccountOrgMember } from 'db/account';
+import { editAccountsOrg, getAccountById, getAccountOrgMember, pullAccountTeams } from 'db/account';
 import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/org';
+import { removeTeamsMember } from 'db/team';
 import { ORG_BITS } from 'lib/permissions/bits';
 import Permission from 'lib/permissions/Permission';
 import { OrgRoles } from 'lib/permissions/roles';
@@ -129,6 +130,37 @@ export async function editOrgMemberApi(req, res) {
 
 	//For the bits that are org level, set those in the org map
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
+
+	return dynamicResponse(req, res, 200, {});
+}
+
+export async function deleteOrgMemberApi(req, res) {
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'memberId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ memberId: 'Member ID' }
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { memberId } = req.body;
+	//account with that memberId
+	const memberAccount = await getAccountById(memberId);
+	if (memberAccount) {
+		const org = res.locals.matchingOrg;
+		const orgTeamIds = org.teams.map(t => t.id.toString());
+		const [teamsRes, accountRes] = await Promise.all([
+			removeTeamsMember(orgTeamIds, res.locals.matchingOrg.id, memberId.toString()),
+			pullAccountTeams(memberId, res.locals.matchingOrg.id, orgTeamIds)
+		]);
+		if (teamsRes?.modifiedCount < 1 && accountRes?.modifiedCount < 1) {
+			return dynamicResponse(req, res, 403, { error: 'User not found in your org' });
+		}
+	} else {
+		return dynamicResponse(req, res, 403, { error: 'User not found' });
+	}
 
 	return dynamicResponse(req, res, 200, {});
 }

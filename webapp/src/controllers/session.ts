@@ -96,14 +96,14 @@ export async function sessionData(req, res, _next) {
 			const agents = await Promise.all(agentPromises);
 
 			for (const agent of agents) {
-				if(agent?.variableIds){
+				if (agent?.variableIds) {
 					const variablePromise = agent?.variableIds.map(v =>
 						getVariableById(req.params.resourceSlug, v)
 					);
 					const variables = await Promise.all(variablePromise);
 					crewAppVariables.push(...variables);
 				}
-				}
+			}
 			if (crewAppVariables.length > 0) {
 				app.variables = crewAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
 			}
@@ -253,7 +253,7 @@ export async function sessionMessagesJson(req, res, next) {
 
 	if (app.type === AppType.CHAT) {
 		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
-		if(agent?.variableIds){
+		if (agent?.variableIds) {
 			if (agent?.variableIds.length === 0) {
 				log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 				if (!activeSessionRooms.includes(`_${sessionId}`)) {
@@ -269,8 +269,7 @@ export async function sessionMessagesJson(req, res, next) {
 					);
 				}
 			}
-		}
-		else{
+		} else {
 			log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 			if (!activeSessionRooms.includes(`_${sessionId}`)) {
 				log('Resuming session', sessionId);

@@ -156,21 +156,8 @@ export async function deleteTeamMemberApi(req, res) {
 	}
 
 	const { memberId } = req.body;
-	//account with that memberId
 	const memberAccount = await getAccountById(memberId);
 	if (memberAccount) {
-		const foundTeam = await getTeamById(req.params.resourceSlug);
-		const org = res.locals.matchingOrg; //await getOrgById(foundTeam.orgId);
-		if (!org) {
-			return dynamicResponse(req, res, 403, { error: 'User org not found' });
-		} else {
-			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
-				return dynamicResponse(req, res, 403, { error: 'Cannot remove org user' });
-			}
-		}
-		// if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
-		// 	return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
-		// }
 		const removeRes = await removeTeamMember(req.params.resourceSlug, memberId.toString());
 		if (removeRes?.modifiedCount < 1) {
 			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
@@ -179,6 +166,7 @@ export async function deleteTeamMemberApi(req, res) {
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}
+
 	return dynamicResponse(req, res, 200, {});
 }
 

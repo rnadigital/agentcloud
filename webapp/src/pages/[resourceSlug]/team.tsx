@@ -52,7 +52,6 @@ export default function Team(props) {
 			router
 		);
 	}
-	console.log('team', team);
 
 	if (!team) {
 		return <Spinner />;
