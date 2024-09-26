@@ -388,9 +388,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.81"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
+checksum = "4e1496f8fb1fbf272686b8d37f523dab3e4a7443300055e74cdaa449f3114356"
 
 [[package]]
 name = "arc-swap"
@@ -1520,6 +1520,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "google-cloud-auth"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e96d3b699329c6547d0fb357d7b09be6a9b9eba27186308fa41836baac4cfda"
+dependencies = [
+ "async-trait",
+ "base64 0.21.7",
+ "google-cloud-metadata",
+ "google-cloud-token",
+ "home",
+ "jsonwebtoken",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+ "urlencoding",
+]
+
+[[package]]
 name = "google-cloud-gax"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1559,13 +1581,13 @@ dependencies = [
 
 [[package]]
 name = "google-cloud-pubsub"
-version = "0.28.0"
+version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "834f472d7973f9ce14139416507dd08bb6b1d17d43e524deaa8f7f56626899eb"
+checksum = "e3d2d4a82a8699b8ed9e5849410820d91ce51bcb6572386bbd3ac1336325e191"
 dependencies = [
  "async-channel",
  "async-stream",
- "google-cloud-auth",
+ "google-cloud-auth 0.17.0",
  "google-cloud-gax",
  "google-cloud-googleapis",
  "google-cloud-token",
@@ -1588,7 +1610,7 @@ dependencies = [
  "base64 0.21.7",
  "bytes",
  "futures-util",
- "google-cloud-auth",
+ "google-cloud-auth 0.16.0",
  "google-cloud-metadata",
  "google-cloud-token",
  "hex",
@@ -2672,10 +2694,11 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pinecone-sdk"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bc340715dc6544330810e3f15051ca2cf330f5506db65f7c1e9da6856837a09"
+checksum = "f571fcb86d81e70a5de2817a029fa9e52160f66f10d662584b56607ae6c5dab9"
 dependencies = [
+ "anyhow",
  "once_cell",
  "prost 0.12.3",
  "prost-types 0.12.3",
@@ -2685,6 +2708,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snafu",
+ "thiserror",
  "tokio",
  "tonic 0.11.0",
  "tonic-build",
@@ -4380,7 +4404,7 @@ dependencies = [
  "fastembed",
  "futures",
  "futures-util",
- "google-cloud-auth",
+ "google-cloud-auth 0.16.0",
  "google-cloud-gax",
  "google-cloud-pubsub",
  "google-cloud-storage",
