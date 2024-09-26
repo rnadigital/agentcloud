@@ -72,9 +72,9 @@ export function initSocket(rawHttpServer) {
 	io.use((socket, next) => {
 		fetchSession(socket.request, socket.request, next);
 	});
-	io.use((socket, next) => {
-		checkSession(socket.request, socket.request, next);
-	});
+	// io.use((socket, next) => {
+	// 	checkSession(socket.request, socket.request, next);
+	// });
 
 	io.on('connection', async socket => {
 		log('socket.id "%s" connected', socket.id);

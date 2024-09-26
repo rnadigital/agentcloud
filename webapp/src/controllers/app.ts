@@ -269,6 +269,15 @@ export async function addAppApi(req, res, next) {
 					ofType: 'string',
 					customError: 'Invalid Conversation Starters'
 				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 			//TODO:validation
 		],
@@ -315,7 +324,7 @@ export async function addAppApi(req, res, next) {
 				backstory,
 				modelId: toObjectId(modelId),
 				toolIds: toolIds.map(toObjectId).filter(x => x),
-				variableIds: variableIds?.map(toObjectId)
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -356,7 +365,8 @@ export async function addAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false
+				allowDelegation: false,
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -456,7 +466,8 @@ export async function editAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		maxMessages
+		maxMessages,
+		variableIds
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -535,6 +546,15 @@ export async function editAppApi(req, res, next) {
 					ofType: 'string',
 					customError: 'Invalid Conversation Starters'
 				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 			//TODO:validation
 		],
@@ -571,7 +591,8 @@ export async function editAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId).filter(x => x)
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -611,7 +632,8 @@ export async function editAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false
+				allowDelegation: false,
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

@@ -158,6 +158,15 @@ export async function addTaskApi(req, res, next) {
 					customError: 'Invalid Tools'
 				}
 			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
+			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
 			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'iconId', validation: { ofType: 'string' } },
@@ -272,7 +281,7 @@ export async function addTaskApi(req, res, next) {
 			: null,
 		formFields: formFields,
 		isStructuredOutput,
-		variableIds: variableIds.map(toObjectId)
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	if (variableIds && variableIds.length > 0) {
@@ -308,6 +317,15 @@ export async function editTaskApi(req, res, next) {
 					asArray: true,
 					ofType: 'string',
 					customError: 'Invalid Tools'
+				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
 				}
 			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
@@ -436,7 +454,7 @@ export async function editTaskApi(req, res, next) {
 		agentId: toObjectId(agentId),
 		formFields,
 		isStructuredOutput,
-		variableIds: variableIds ? variableIds.map(toObjectId) : []
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	return dynamicResponse(req, res, 302, {
