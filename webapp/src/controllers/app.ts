@@ -29,9 +29,6 @@ import { CollectionName } from 'struct/db';
 import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
-import { addTeamMember } from '../db/team';
-import Roles from '../lib/permissions/roles';
-
 export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
 
 export async function appsData(req, res, _next) {
@@ -359,8 +356,7 @@ export async function addAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false,
-				variableIds: variableIds?.map(toObjectId)
+				allowDelegation: false
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

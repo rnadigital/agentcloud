@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
 
+import checkSession from '@mw/auth/checksession';
 import fetchSession from '@mw/auth/fetchsession';
 import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
@@ -58,6 +59,7 @@ export function initSocket(rawHttpServer) {
 				Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
 			);
 		socket.request['locals'].isSocket = true;
+		socket.request['locals'].socket = socket;
 		log('socket locals %O', socket.request['locals']);
 		next();
 	});
@@ -70,9 +72,9 @@ export function initSocket(rawHttpServer) {
 	io.use((socket, next) => {
 		fetchSession(socket.request, socket.request, next);
 	});
-	// io.use((socket, next) => {
-	// 	checkSession(socket.request, socket.request, next, socket);
-	// });
+	io.use((socket, next) => {
+		checkSession(socket.request, socket.request, next);
+	});
 
 	io.on('connection', async socket => {
 		log('socket.id "%s" connected', socket.id);

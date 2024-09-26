@@ -117,6 +117,7 @@ services:
       # Note: Only google cloud functions supported currently, so agent-backend doesn't need a provider env (YET)
       - FUNCTION_PROVIDER=google
       - GOOGLE_FUNCTION_LOCATION=us-central1
+      - SKIP_STRIPE=
     volumes:
       - datasource_files:/tmp
 

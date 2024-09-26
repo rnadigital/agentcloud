@@ -4,9 +4,11 @@ import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions'; // Adjust the import path as necessary
-import Roles, { RoleOptions } from 'permissions/roles';
+import { OrgRoleOptions, OrgRoles, TeamRoleOptions, TeamRoles } from 'permissions/roles';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+
+import classNames from './ClassNames';
 
 // Helper function to check if a permission is allowed
 const isPermissionAllowed = (currentPermission, permissionKey) => {
@@ -25,6 +27,11 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, permissions: currentPermission } = accountContext as any;
 	const router = useRouter();
+	//Lol
+	const isOrg = router.asPath.includes('/org');
+	const Roles = isOrg ? OrgRoles : TeamRoles;
+	const RoleOptions = isOrg ? OrgRoleOptions : TeamRoleOptions;
+	const EditMemberFunction = isOrg ? API.editOrgMember : API.editTeamMember;
 	const { resourceSlug, memberId } = router.query;
 	const [_state, _updateState] = useState(Date.now());
 	const [selectedRole, setSelectedRole] = useState('');
@@ -39,11 +46,12 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 		for (let elem of Array.from(e.target.elements).filter((z: any) =>
 			z.name.startsWith('permission_bit')
 		)) {
+			isOrg;
 			if (elem['checked']) {
 				body.set(elem['name'], 'true'); // Note: value doesn't matter. Any value = true
 			}
 		}
-		await API.editTeamMember(
+		await EditMemberFunction(
 			body,
 			() => {
 				toast.success('Permissions Updated');
@@ -58,14 +66,14 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 	async function updateRole(e) {
 		e.preventDefault();
 		const rolePermissions = Roles[selectedRole];
-
+		console.log(rolePermissions, selectedRole);
 		if (rolePermissions) {
 			const body = new FormData();
 			body.set('resourceSlug', resourceSlug as string);
 			body.set('memberId', memberId as string);
 			body.set('_csrf', csrf as string);
 			body.set('template', selectedRole as string);
-			await API.editTeamMember(
+			await EditMemberFunction(
 				body,
 				() => {
 					toast.success('Role Updated');
@@ -112,7 +120,7 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 
 			<hr className='my-4 dark:border-slate-700' />
 
-			<div className='grid gap-4 grid-cols-3 dark:text-white'>
+			<div className='md:grid md:grid-cols-3 dark:text-white'>
 				{Object.entries(Metadata)
 					.filter(e => !filterBits || filterBits.includes(parseInt(e[0])))
 					.map(([key, { title, label, desc, heading }], index) => {
@@ -122,7 +130,10 @@ function PermissionsEditor({ editingPermission, filterBits }) {
 								{heading && <h2 className='font-semibold mt-4 col-span-3'>{heading}</h2>}
 								<div
 									key={`perm_${title}_${key}`}
-									className={`${heading && index % 3 === 0 ? 'col-span-3' : ''}`}
+									className={classNames(
+										heading && index % 3 === 0 && 'col-span-3',
+										'py-4 border-b px-2 flex'
+									)}
 								>
 									<div className='flex'>
 										<label>

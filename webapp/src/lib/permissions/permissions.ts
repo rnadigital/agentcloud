@@ -18,6 +18,9 @@ const Permissions = Object.seal(
 			CREATE_TEAM: 40,
 			EDIT_TEAM: 45,
 			DELETE_TEAM: 50,
+			ADD_ORG_MEMBER: 51,
+			EDIT_ORG_MEMBER: 52,
+			REMOVE_ORG_MEMBER: 53,
 
 			// Team level perms
 			ADD_TEAM_MEMBER: 55,
