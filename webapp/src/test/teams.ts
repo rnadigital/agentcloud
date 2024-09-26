@@ -15,17 +15,23 @@ import { TeamRoles } from "../lib/permissions/roles"
 dotenv.config({ path: '.env' });
 
 afterAll(async () => {
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account4_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account5_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account6_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account7_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account8_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account9_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account10_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account11_email });
+	await db.db().collection('accounts').deleteMany({ 
+		email: { 
+			$in: [
+				accountDetails.account1_email,
+				accountDetails.account2_email,
+				accountDetails.account3_email,
+				accountDetails.account4_email,
+				accountDetails.account5_email,
+				accountDetails.account6_email,
+				accountDetails.account7_email,
+				accountDetails.account8_email,
+				accountDetails.account9_email,
+				accountDetails.account10_email,
+				accountDetails.account11_email
+			] 
+		}
+	});
 	await db.client().close();
 });
 
@@ -47,7 +53,7 @@ describe('team tests', () => {
 	});
 
 	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
-	test('add new team with correct stripe permissions', async () => {
+	test.only('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -76,7 +82,7 @@ describe('team tests', () => {
 	});
 
 
-	test('Inviting existing account to team', async () => {
+	test.only('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -128,11 +134,10 @@ describe('team tests', () => {
 
 		const responseJson = await response.json();
 
-		//the 'team' object returned by this call is an array of teams, uses teh same teamData for all .json calls
 		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
-	test('testing TEAM_MEMBER permissions', async () => {
+	test.only('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData(
 			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
@@ -209,7 +214,7 @@ describe('team tests', () => {
 		expect(addAgentResponse?._id).toBeDefined();
 	});
 
-	test('testing TEAM_ADMIN permissions', async () => {
+	test.only('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -264,7 +269,7 @@ describe('team tests', () => {
 		// const responseJson = await response.json();
 	});
 
-	test('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
+	test.only('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -332,7 +337,7 @@ describe('team tests', () => {
 		expect(responseJson?.error).toBe("Missing permission \"Add Team Member\"");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
 		let body, response;
@@ -406,7 +411,7 @@ describe('team tests', () => {
 		expect(response.status).toBe(400);
 	});
 
-	test('log out', async () => {
+	test.only('log out', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -423,7 +428,7 @@ describe('team tests', () => {
 		expect(response.status).toBe(200);
 	});
 
-	test('cant get account with invalidated session cookie', async () => {
+	test.only('cant get account with invalidated session cookie', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
