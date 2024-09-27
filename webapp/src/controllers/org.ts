@@ -2,11 +2,13 @@
 
 import { dynamicResponse } from '@dr';
 import { calcPerms } from '@mw/auth/setpermissions';
-import { editAccountsOrg, getAccountById, getAccountOrgMember } from 'db/account';
+import { editAccountsOrg, getAccountById, getAccountOrgMember, pullAccountTeams } from 'db/account';
 import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/org';
+import { removeTeamsMember } from 'db/team';
 import { ORG_BITS } from 'lib/permissions/bits';
 import Permission from 'lib/permissions/Permission';
 import { OrgRoles } from 'lib/permissions/roles';
+import { SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function orgData(req, res, _next) {
@@ -100,21 +102,22 @@ export async function editOrgApi(req, res) {
 export async function editOrgMemberApi(req, res) {
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
+	let { stripePlan } = res.locals.account?.stripe || {};
 
 	if (memberId === res.locals.matchingOrg.ownerId.toString()) {
 		return dynamicResponse(req, res, 400, { error: "Org owner permissions can't be edited" });
 	}
 
-	console.log(template, OrgRoles);
+	if (!template && stripePlan !== SubscriptionPlan.ENTERPRISE) {
+		//Only enterprise can NOT includea template which means it goes to Permission.handleBody V
+		return dynamicResponse(req, res, 400, { error: 'Missing role' });
+	}
 
 	if (template && !OrgRoles[template]) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid template' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid role' });
 	}
 
 	const editingMember = await getAccountById(req.params.memberId);
-
-	console.log('template', template);
-	console.log('OrgRoles[template]', OrgRoles[template]);
 
 	let updatingPermissions;
 	if (template) {
@@ -127,6 +130,37 @@ export async function editOrgMemberApi(req, res) {
 
 	//For the bits that are org level, set those in the org map
 	// await setOrgPermissions(resourceSlug, memberId, updatingPermissions);
+
+	return dynamicResponse(req, res, 200, {});
+}
+
+export async function deleteOrgMemberApi(req, res) {
+	let validationError = chainValidations(
+		req.body,
+		[{ field: 'memberId', validation: { notEmpty: true, hasLength: 24, ofType: 'string' } }],
+		{ memberId: 'Member ID' }
+	);
+
+	if (validationError) {
+		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const { memberId } = req.body;
+	//account with that memberId
+	const memberAccount = await getAccountById(memberId);
+	if (memberAccount) {
+		const org = res.locals.matchingOrg;
+		const orgTeamIds = org.teams.map(t => t.id.toString());
+		const [teamsRes, accountRes] = await Promise.all([
+			removeTeamsMember(orgTeamIds, res.locals.matchingOrg.id, memberId.toString()),
+			pullAccountTeams(memberId, res.locals.matchingOrg.id, orgTeamIds)
+		]);
+		if (teamsRes?.modifiedCount < 1 && accountRes?.modifiedCount < 1) {
+			return dynamicResponse(req, res, 403, { error: 'User not found in your org' });
+		}
+	} else {
+		return dynamicResponse(req, res, 403, { error: 'User not found' });
+	}
 
 	return dynamicResponse(req, res, 200, {});
 }

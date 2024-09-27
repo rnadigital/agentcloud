@@ -864,6 +864,16 @@ export function editOrgMember(body, dispatch, errorCallback, router) {
 		router
 	);
 }//@TEST
+export function deleteOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/org/invite`,
+		'DELETE',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
 
 export function getVariables(body, dispatch, errorCallback, router) {
     return ApiCall(`/${body.resourceSlug}/variables.json`, 'GET', null, dispatch, errorCallback, router);

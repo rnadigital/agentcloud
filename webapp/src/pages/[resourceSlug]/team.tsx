@@ -28,6 +28,7 @@ export default function Team(props) {
 	async function refreshTeam() {
 		fetchTeam();
 		refreshAccountContext();
+		setModalOpen(false);
 	}
 
 	useEffect(() => {
@@ -51,7 +52,6 @@ export default function Team(props) {
 			router
 		);
 	}
-	console.log('team', team);
 
 	if (!team) {
 		return <Spinner />;
