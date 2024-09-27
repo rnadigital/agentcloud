@@ -17,26 +17,7 @@ dotenv.config({ path: '.env' });
 beforeAll(async ()=>{
     updateAllAccountCsrf(); //update csrf token to make sure an expired token isn't used in the tests
 })
-afterAll(async () => {
-	await db.db().collection('accounts').deleteMany({ 
-		email: { 
-			$in: [
-				accountDetails.account1_email,
-				accountDetails.account2_email,
-				accountDetails.account3_email,
-				accountDetails.account4_email,
-				accountDetails.account5_email,
-				accountDetails.account6_email,
-				accountDetails.account7_email,
-				accountDetails.account8_email,
-				accountDetails.account9_email,
-				accountDetails.account10_email,
-				accountDetails.account11_email
-			] 
-		}
-	});
-	await db.client().close();
-});
+
 
 describe('Model Tests', () => {
 

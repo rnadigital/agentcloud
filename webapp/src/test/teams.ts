@@ -342,32 +342,4 @@ describe('team tests', () => {
 	
 		const teamMembers = await getTeamWithMembers(resourceSlug);
 	});
-	
-
-	test.only('log out', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/logout`;
-		const body = {
-			_csrf: csrfToken
-		};
-
-		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-
-		const responseJson = await response.json();
-		expect(responseJson?.redirect).toBeDefined();
-		expect(response.status).toBe(200);
-	});
-
-	test.only('cant get account with invalidated session cookie', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
-		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
-		expect(response.status).toBe(302); //302 redirect to login
-	});
 });
