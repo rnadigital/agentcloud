@@ -13,12 +13,11 @@ import { getToolsByTeam } from "../db/tool";
 import { TeamRoles } from "../lib/permissions/roles"
 
 dotenv.config({ path: '.env' });
-
-
-
 beforeAll(async ()=>{
+    updateAllAccountCsrf(); //update csrf token to make sure an expired token isn't used in the tests
 })
 
+//TODO: test new org level permissions
 describe('team tests', () => {
 	test('cant add new team without stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
@@ -172,6 +171,7 @@ describe('team tests', () => {
 
 
 		const addModelResponseJson = await addModelResponse.json();
+		console.log(addModelResponseJson);
 		expect(addModelResponse.status).toBe(200);
 		expect(addModelResponseJson?._id).toBeDefined();
 		expect(addModelResponseJson?.redirect).toBeDefined();
