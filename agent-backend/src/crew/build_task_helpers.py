@@ -105,7 +105,6 @@ def _update_variables_from_output(
 # Factory to create the callback function so we dont overwrite it with the one from the last task
 def make_task_callback(task: Task, session: Session, mongo_client: MongoClientConnection, send_to_socket_fn: Callable, output_variables: list):
     def callback(task_output: TaskOutput):
-        print("task output", task_output)
         _update_variables_from_output(task, task_output, session, mongo_client, output_variables)
         if task.storeTaskOutput:
             _upload_task_output(task, session.id, mongo_client, send_to_socket_fn, task_output)
