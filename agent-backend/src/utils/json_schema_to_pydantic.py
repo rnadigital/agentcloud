@@ -36,5 +36,5 @@ def json_schema_to_pydantic(schema: Dict[str, Any], model_name: str = "Model") -
             fields[property_name] = (field_type, ...)
         else:
             fields[property_name] = (Union[field_type, None], None)
-
+    print(fields)
     return create_model(model_name, **fields, __base__=BaseModel)

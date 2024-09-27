@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from typing import Any, List, Set, Type, Optional
@@ -181,15 +182,23 @@ class CrewAIBuilder:
             if task.isStructuredOutput:
                 output_pydantic_model = get_output_pydantic_model(task)
 
+                expected_output = json.loads(task.expectedOutput)
+                if "variables" in expected_output:
+                    del expected_output["variables"]
+
                 # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
                 # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
-                task.expected_output = escape_curly_braces(task.expectedOutput)
+                task.expected_output = escape_curly_braces(task.expected_output)
+                # task.expected_output = json.dumps(expected_output)
+
+                print("expected output")
+                print(task.expected_output)
 
 
             self.crew_tasks[key] = Task(
                 **task.model_dump(exclude_none=True, exclude_unset=True, exclude={
                     "id", "context", "requiresHumanInput", "displayOnlyFinalOutput",
-                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput", "taskOutputVariableName"
+                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput", "taskOutputVariableName" 
                 }),
                 agent=agent_obj,
                 tools=task_tools_objs.values() if task_tools_objs else None,
@@ -197,7 +206,7 @@ class CrewAIBuilder:
                 human_input=task.requiresHumanInput,
                 stream_only_final_output=task.displayOnlyFinalOutput,
                 callback=task_callback,
-                output_pydantic=output_pydantic_model
+                output_pydantic=output_pydantic_model,
             )
 
     def make_user_question(self):
