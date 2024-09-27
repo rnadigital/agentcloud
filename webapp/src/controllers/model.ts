@@ -88,9 +88,9 @@ export async function modelAddApi(req, res, next) {
 	}
 
 	const configValidations = Object.entries(ModelTypeRequirements[type])
-	.filter((en: any) => en[1].optional !== true)
-	.map(en => ({ field: en[0], validation: { notEmpty: true } }));
-	
+		.filter((en: any) => en[1].optional !== true)
+		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
+
 	if (configValidations.length > 0) {
 		let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
 		if (validationErrorConfig) {
@@ -98,12 +98,10 @@ export async function modelAddApi(req, res, next) {
 		}
 	}
 
-
-
 	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
 		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
-	
+
 	// Insert model to db
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
