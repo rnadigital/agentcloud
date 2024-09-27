@@ -22,6 +22,65 @@ beforeAll(async ()=>{
 describe('Model Tests', () => {
 
     //switch the plan back down to FREE, test adding invalid models for the FREE plan
+    test.only("Test invalid models with FREE plan", async () => {
+		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
+			accountDetails.account3_email
+		); //account3's default org and team is on the free plan, should have "CREATE_MODEL" permissions
+
+
+        const stripeCustomerId = 'sk_12345'; //testing flags set stripe customer ID to null, need to set it to set the plan
+		const plan = SubscriptionPlan.TEAMS;
+		setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
+		setStripePlan(stripeCustomerId, plan);
+        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+		let body = {
+			name: 'testModel1',
+			model: 'claude-3-5-sonnet-20240620',
+			config: {
+				model: 'claude-3-5-sonnet-20240620',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.ANTHROPIC
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account3_email,
+			body
+		);
+        const addModelResponseJson = await addModelResponse.json();
+        console.log(addModelResponseJson);
+
+        expect(addModelResponse.status).toBe(403);
+        expect(addModelResponseJson?.error).toBeDefined();
+    });
+
+    test.only("Test valid models with the FREE plan", async () => {
+        const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
+			accountDetails.account3_email
+		); //account3's default org and team is on the free plan, should have "CREATE_MODEL" permissions
+
+        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+		let body = {
+			name: 'testModel1',
+			model: 'gpt-4o',
+			config: {
+				model: 'gpt-4o',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.OPENAI
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account3_email,
+			body
+		);
+
+        expect(addModelResponse.status).toBe(200);
+    });
 
     //test the same thing with embedding models and FREE plan
 
@@ -32,7 +91,5 @@ describe('Model Tests', () => {
     //switch the plan to TEAMS, test adding valid models that are off limits for FREE and for PRO and add custom models
 
     //test the same thing with embedding models too
-
-    //test
 
 });
