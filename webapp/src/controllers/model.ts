@@ -84,7 +84,7 @@ export async function modelAddApi(req, res, next) {
 	}
 
 	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
-		return dynamicResponse(req, res, 403, {error: 'This model is not avialable on this plan'})
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 
 	const configValidations = Object.entries(ModelTypeRequirements[type])
@@ -134,7 +134,7 @@ export async function editModelApi(req, res, next) {
 	}
 
 	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
-		return dynamicResponse(req, res, 403, {error: 'This model is not avialable on this plan'})
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 
 	const configValidations = Object.entries(ModelTypeRequirements[type])
