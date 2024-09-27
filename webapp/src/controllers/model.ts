@@ -66,7 +66,7 @@ export async function modelAddPage(app, req, res, next) {
 //need to add checks for stripe plan
 export async function modelAddApi(req, res, next) {
 	let { name, model, config, type } = req.body;
-	let stripePlan = res?.locals?.account?.stripe || {};
+	let { stripePlan } = res?.locals?.account?.stripe || {};
 
 	let validationError = chainValidations(
 		req.body,
@@ -82,15 +82,11 @@ export async function modelAddApi(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-
-	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
-		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
-	}
-
+	
 	const configValidations = Object.entries(ModelTypeRequirements[type])
-		.filter((en: any) => en[1].optional !== true)
-		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
-
+	.filter((en: any) => en[1].optional !== true)
+	.map(en => ({ field: en[0], validation: { notEmpty: true } }));
+	
 	if (configValidations.length > 0) {
 		let validationErrorConfig = chainValidations(req.body?.config, configValidations, {});
 		if (validationErrorConfig) {
@@ -98,6 +94,12 @@ export async function modelAddApi(req, res, next) {
 		}
 	}
 
+
+
+	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
+	}
+	
 	// Insert model to db
 	const addedModel = await addModel({
 		orgId: res.locals.matchingOrg.id,
@@ -118,7 +120,7 @@ export async function modelAddApi(req, res, next) {
 
 export async function editModelApi(req, res, next) {
 	let { name, model, config, type } = req.body;
-	let stripePlan = res?.locals?.account?.stripe || {};
+	let { stripePlan } = res?.locals?.account?.stripe || {};
 
 	let validationError = chainValidations(
 		req.body,
@@ -133,7 +135,8 @@ export async function editModelApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+
+	if (!stripePlan || !pricingMatrix[stripePlan]?.llmModels.includes(type)) {
 		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 

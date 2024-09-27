@@ -14,6 +14,9 @@ import { TeamRoles } from "../lib/permissions/roles"
 
 dotenv.config({ path: '.env' });
 
+beforeAll(async ()=>{
+    updateAllAccountCsrf(); //update csrf token to make sure an expired token isn't used in the tests
+})
 afterAll(async () => {
 	await db.db().collection('accounts').deleteMany({ 
 		email: { 
