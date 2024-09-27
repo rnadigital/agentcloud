@@ -27,10 +27,6 @@ const definitions: Record<AirbyteApiType, string> = {
 
 const apiCache: Partial<Record<AirbyteApiType, any>> = {};
 
-const base64Credentials = Buffer.from(
-	`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
-).toString('base64');
-
 export async function getAirbyteAuthToken() {
 	// Check if the token is already cached
 	let token = await get(CACHE_KEY);

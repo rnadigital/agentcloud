@@ -3,15 +3,12 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
+import { getAirbyteAuthToken } from './api';
 
 // Read the YAML file synchronously and load it into configYaml
 const configYaml = fs.readFileSync(__dirname + '/definition-internal.yaml', 'utf8');
 // Load the YAML content into a definition object
 const definition = yaml.load(configYaml) as Document;
-
-const base64Credentials = Buffer.from(
-	`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
-).toString('base64');
 
 let client;
 async function getAirbyteInternalApi() {
@@ -22,7 +19,7 @@ async function getAirbyteInternalApi() {
 		definition,
 		axiosConfigDefaults: {
 			headers: {
-				authorization: `Basic ${base64Credentials}`
+				authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
 	});

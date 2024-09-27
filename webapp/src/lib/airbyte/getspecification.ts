@@ -1,12 +1,10 @@
 'use strict';
 
 import debug from 'debug';
+import { getAirbyteAuthToken } from 'airbyte/api';
 const log = debug('webapp:airbyte:getSpecification');
 
 export default async function getSpecification(req, res, _next) {
-	const base64Credentials = Buffer.from(
-		`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`
-	).toString('base64');
 	let schema;
 	try {
 		const body = {
@@ -20,14 +18,18 @@ export default async function getSpecification(req, res, _next) {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Basic ${base64Credentials}`
+					authorization: `Bearer ${await getAirbyteAuthToken()}`
 				},
 				body: JSON.stringify(body)
 			}
 		);
 		schema = await res.json();
-		schema.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
-		// log(JSON.stringify(schema, null, 2));
+		if (schema.connectionSpecification) {
+			schema.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
+		} else {
+			log('getSpecification', JSON.stringify(schema, null, 2));
+			throw Error('Failed to fetch connector specification');
+		}
 	} catch (e) {
 		console.error(e);
 		schema = null;

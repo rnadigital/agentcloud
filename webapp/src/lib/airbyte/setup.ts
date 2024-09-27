@@ -80,7 +80,6 @@ async function fetchApplications() {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
-		// headers: { Authorization: authorizationHeader }
 	});
 	return response.json();
 }
@@ -219,7 +218,7 @@ async function updateWebhookUrls(workspaceId: string) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			Authorization: authorizationHeader
+			Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		},
 		body: JSON.stringify({
 			workspaceId,
@@ -310,6 +309,7 @@ export async function init() {
 		if (airbyteAdminDestination) {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
 			const newConfig = await getDestinationConfiguration(provider);
+			console.log('newConfig', newConfig);
 			const configMismatch = Object.keys(newConfig).some(key => {
 				if (currentConfig && currentConfig[key] === '**********') {
 					//hidden fields
@@ -317,6 +317,7 @@ export async function init() {
 				}
 				return currentConfig && currentConfig[key] !== newConfig[key];
 			});
+			console.log('configMismatch', configMismatch);
 			if (configMismatch) {
 				log('Destination configuration mismatch detected, attempting to delete and re-create...');
 				await deleteDestination(airbyteAdminDestination.destinationId);
