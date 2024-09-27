@@ -22,7 +22,7 @@ beforeAll(async ()=>{
 describe('Model Tests', () => {
 
     //switch the plan back down to FREE, test adding invalid models for the FREE plan
-    test.only("Test invalid models with FREE plan", async () => {
+    test("Test invalid models with FREE plan", async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -58,7 +58,7 @@ describe('Model Tests', () => {
         expect(addModelResponseJson?.error).toBeDefined();
     });
 
-    test.only("Test valid models with the FREE plan", async () => {
+    test("Test valid models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -86,7 +86,7 @@ describe('Model Tests', () => {
 
     
 
-    test.only("Test valid embedding models with the FREE plan", async () => {
+    test("Test valid embedding models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -150,7 +150,7 @@ describe('Model Tests', () => {
 
 
     //switch the plan to PRO, test adding invalid models for the PRO plan but should be able to add models that were off limits to the FREE plan
-    test.only("Test invalid models with PRO plan", async ()=> {
+    test("Test invalid models with PRO plan", async ()=> {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -186,7 +186,7 @@ describe('Model Tests', () => {
         expect(addModelResponseJson?.error).toBeDefined();
     })
 
-    test.only("Test valid models with PRO plan", async () => {
+    test("Test valid models with PRO plan", async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -216,7 +216,7 @@ describe('Model Tests', () => {
 
 
     //switch the plan to TEAMS, test adding valid models that are off limits for FREE and for PRO and add custom models
-    test.only("Test all models with TEAMS plan", async ()=> {
+    test("Test all models with TEAMS plan", async ()=> {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -390,6 +390,5 @@ describe('Model Tests', () => {
         expect(addModelResponse.status).toBe(200);
     })
 
-    //test the same thing with embedding models too
 
 });

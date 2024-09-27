@@ -33,7 +33,7 @@ describe('team tests', () => {
 	});
 
 	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
-	test.only('add new team with correct stripe permissions', async () => {
+	test('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -62,7 +62,7 @@ describe('team tests', () => {
 	});
 
 
-	test.only('Inviting existing account to team', async () => {
+	test('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -116,7 +116,7 @@ describe('team tests', () => {
 		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
-	test.only('testing TEAM_MEMBER permissions', async () => {
+	test('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData(
 			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
@@ -193,7 +193,7 @@ describe('team tests', () => {
 		expect(addAgentResponse?._id).toBeDefined();
 	});
 
-	test.only('testing TEAM_ADMIN permissions', async () => {
+	test('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -248,7 +248,7 @@ describe('team tests', () => {
 		// const responseJson = await response.json();
 	});
 
-	test.only('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
+	test('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -310,7 +310,7 @@ describe('team tests', () => {
 		expect(responseJson?.error).toBe("Missing permission \"Add Team Member\"");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
 		const accounts = [
