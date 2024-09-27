@@ -129,8 +129,8 @@ export async function discoverSchemaApi(req, res, next) {
 	// Discover the schema
 	const internalApi = await getAirbyteInternalApi();
 	const discoverSchemaBody = {
-		sourceId: datasource.sourceId
-		// disable_cache: true, //Note: should this always be true?
+		sourceId: datasource.sourceId,
+		disable_cache: true //Note: should this always be true? For now, yes
 	};
 	log('discoverSchemaBody %O', discoverSchemaBody);
 	const discoveredSchema = await internalApi

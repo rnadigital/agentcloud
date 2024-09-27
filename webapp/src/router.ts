@@ -618,7 +618,7 @@ export default function router(server, app) {
 		teamController.inviteTeamMemberApi
 	);
 	teamRouter.delete(
-		'/forms/team/invite',
+		'/forms/team/invite', //TODO: change to be a :memberId route for delete, duh
 		hasPerms.one(Permissions.REMOVE_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.deleteTeamMemberApi
@@ -650,18 +650,24 @@ export default function router(server, app) {
 	);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
-		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		hasPerms.one(Permissions.EDIT_ORG_MEMBER),
 		orgController.orgMemberJson
 	);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24})/edit',
-		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		hasPerms.one(Permissions.EDIT_ORG_MEMBER),
 		orgController.memberEditPage.bind(null, app)
 	);
 	teamRouter.post(
 		'/forms/org/:memberId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
 		orgController.editOrgMemberApi
+	);
+	teamRouter.delete(
+		'/forms/org/invite', //TODO: change to be a :memberId route for delete, duh
+		hasPerms.one(Permissions.REMOVE_ORG_MEMBER),
+		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
+		orgController.deleteOrgMemberApi
 	);
 
 	//assets

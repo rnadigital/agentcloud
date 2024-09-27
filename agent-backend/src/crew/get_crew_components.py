@@ -2,7 +2,7 @@ from typing import Any, Optional, List, Dict, Set, Tuple, Union
 
 from crew.exceptions import CrewAIBuilderException
 from init.mongo_session import start_mongo_session
-from models.mongo import Agent, AppType, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, App
+from models.mongo import Agent, AppType, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, App, Process
 from crew.build_crew import CrewAIBuilder
 from utils.model_helper import keyset
 
@@ -12,10 +12,15 @@ mongo_client = start_mongo_session()
 def construct_models(parents: List[Tuple[Set[str], Agent | Datasource | Crew]]):
     models: Dict[Set[PyObjectId], Model] = dict()
     for parent_id_set, parent in parents:
-        model = mongo_client.get_agent_model(parent.modelId)
+        model = mongo_client.get_model(parent.modelId)
         if model is not None:
             models[keyset(parent_id_set, model.id)] = model
     return models
+
+
+def construct_manager_model(model_id: PyObjectId) -> Dict:
+    model = mongo_client.get_model(model_id)
+    return {'manager_llm': model}
 
 
 def construct_tools(parents: List[Tuple[Set[str], Agent | Tool]]):
@@ -72,8 +77,12 @@ def construct_crew(session_id: str, socket: Any):
     # Inputs to pass to crew > kickoff()
     crew_input_variables = session.variables
 
-    # Crew > chat Model
-    crew_chat_models: Dict[Set[PyObjectId], Model] = construct_models([(the_crew.id, the_crew)])
+    # Crew > Manager LLM
+    crew_manager_llm = dict()
+    if the_crew.process == Process.Hierarchical:
+        if not the_crew.managerModelId:
+            raise CrewAIBuilderException("Using hierarchical process but `manager_llm` not set")
+        crew_manager_llm = construct_manager_model(the_crew.managerModelId)
 
     chat_history: List[Dict] = mongo_client.get_chat_history(session_id)
 
@@ -86,19 +95,23 @@ def construct_crew(session_id: str, socket: Any):
         tasks=crew_tasks_dict,  # | crew_agents_tasks_dict,
         tools=agents_tasks_tools,
         datasources=agents_tools_datasources,  # | tasks_tools_datasources,
-        models=agent_models | agents_tools_datasources_models | crew_chat_models,
+        models=agent_models | agents_tools_datasources_models | crew_manager_llm,
         input_variables=crew_input_variables,
         chat_history=chat_history
     )
     return crew_builder, app
 
+
 def looping_app(app: App):
     return app.appType == AppType.CHAT
+
 
 def session_terminated(session_id: str):
     session = mongo_client.get_session(session_id)
     if session:
         return "status" in session and session["status"] == "terminated"
     return False
+
+
 if __name__ == "__main__":
     print("Running file")

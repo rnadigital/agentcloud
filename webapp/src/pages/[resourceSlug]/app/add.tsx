@@ -57,7 +57,9 @@ export default function AddApp(props: AppsDataReturnType) {
 	useEffect(() => {
 		if (typeof location != undefined) {
 			const appId = new URLSearchParams(location.search).get('appId');
-			fetchEditData(appId);
+			if (appId) {
+				fetchEditData(appId);
+			}
 		}
 	}, []);
 
@@ -81,8 +83,16 @@ export default function AddApp(props: AppsDataReturnType) {
 	};
 
 	useEffect(() => {
-		setLoading(false);
-	}, [state?.apps, cloneState?.apps]);
+		if (typeof location != undefined) {
+			const appId = new URLSearchParams(location.search).get('appId');
+			if (
+				(appId && state?.apps && (cloneState?.app?.crew || cloneState?.app?.type === 'chat')) ||
+				(!appId && state?.apps)
+			) {
+				setLoading(false);
+			}
+		}
+	}, [state?.apps, cloneState?.app]);
 
 	if (loading) {
 		return <Spinner />;
@@ -199,7 +209,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						modelChoices={models}
 						fetchFormData={fetchAppFormData}
 						app={cloneState?.app}
-						crew={cloneState?.crew}
+						crew={cloneState?.app?.crew}
 						// variableChoices={variables}
 						whiteListSharingChoices={teamMembers}
 					/>

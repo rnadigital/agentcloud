@@ -295,17 +295,19 @@ class CrewAIBuilder:
                 tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
                 **self.crew_model.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "tasks", "agents"}
+                    exclude={"id", "tasks", "agents", "managerModelId"}
                 ),
-                manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
+                manager_llm=self.crew_models.get('manager_llm'),
                 agentcloud_socket=self.socket,
-                agentcloud_session_id=self.session_id
+                agentcloud_session_id=self.session_id,
+                stop_generating_check=self.stop_generating_check
             )
             print('---')
             print('Crew attributes:')
             pprint(self.crew.__dict__)
             print('---')
         except ValidationError as ve:
+            logging.error(ve)
             self.send_to_sockets(text=f"""Validation Error:
             ``` 
             {str(ve)}

@@ -36,8 +36,6 @@ export default function MemberList({
 		}
 	}
 
-	console.log('permissions', permissions);
-
 	return (
 		<div className='rounded-lg overflow-hidden shadow overflow-x-auto'>
 			<table className='min-w-full divide-y divide-gray-200'>
