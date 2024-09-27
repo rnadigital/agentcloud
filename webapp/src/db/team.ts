@@ -97,6 +97,29 @@ export function removeTeamMember(teamId: db.IdOrStr, accountId: db.IdOrStr): Pro
 	);
 }
 
+export function removeTeamsMember(
+	teamIds: db.IdOrStr[],
+	orgId: db.IdOrStr,
+	accountId: db.IdOrStr
+): Promise<any> {
+	return TeamCollection().updateOne(
+		{
+			_id: {
+				$in: teamIds.map(toObjectId)
+			},
+			orgId: orgId
+		},
+		{
+			$pullAll: {
+				members: [toObjectId(accountId)]
+			},
+			$unset: {
+				[`permissions.${accountId}`]: ''
+			}
+		}
+	);
+}
+
 export function setMemberPermissions(
 	teamId: db.IdOrStr,
 	accountId: db.IdOrStr,

@@ -4,7 +4,7 @@ import { Account, getAccountById } from 'db/account';
 import { getKeyById } from 'db/apikey';
 import debug from 'debug';
 import jwt from 'jsonwebtoken';
-const log = debug('webapp:middleware');
+const log = debug('webapp:middleware:auth:usejwt');
 
 export type JWTData = {
 	accountId: string;
@@ -14,8 +14,6 @@ export type JWTData = {
 export function verifyJwt(token): Promise<JWTData> {
 	return new Promise((res, rej) => {
 		jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
-			console.log('decoded', decoded);
-			console.log('token', token);
 			if (err != null) {
 				res(null);
 			} else if (decoded != null) {

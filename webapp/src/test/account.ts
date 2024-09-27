@@ -19,24 +19,31 @@ let sessionCookie11;
 const SECONDS = 1000;
 beforeAll(async () => {
 	await db.connect();
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account4_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account5_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account6_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account7_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account8_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account9_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account10_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account11_email });
+	await db.db().collection('accounts').deleteMany({ 
+		email: { 
+			$in: [
+				accountDetails.account1_email,
+				accountDetails.account2_email,
+				accountDetails.account3_email,
+				accountDetails.account4_email,
+				accountDetails.account5_email,
+				accountDetails.account6_email,
+				accountDetails.account7_email,
+				accountDetails.account8_email,
+				accountDetails.account9_email,
+				accountDetails.account10_email,
+				accountDetails.account11_email
+			] 
+		}
+	});
+	
 });
 
 
 
 describe('account tests', () => {
 
-	test('register new accounts', async () => {
+	test.only('register new accounts', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -88,7 +95,7 @@ describe('account tests', () => {
 	}, 60 * SECONDS); //extended timeout due to multiple account creations
 
 	//TODO: refactor this to do it with a loop
-	test('stress test registration with many accounts', async () => {
+	test.only('stress test registration with many accounts', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -248,7 +255,7 @@ describe('account tests', () => {
 	
 
 	//TODO: refactor this to do it with a loop
-	test('login as new users - 11 logins', async () => {
+	test.only('login as new users - 11 logins', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/login`, {
 			method: 'POST',
 			headers: {
@@ -417,76 +424,30 @@ describe('account tests', () => {
 	}, 60 * SECONDS); // extended timeout due to multiple account logins
 	
 
-	//TODO: refactor this to do it with a loop
-	test('get account', async () => {
-		let url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
+	test.only('get account', async () => {
+		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
+		const accounts = [
+			{ email: accountDetails.account1_email, sessionCookie: sessionCookie1 },
+			{ email: accountDetails.account2_email, sessionCookie: sessionCookie2 },
+			{ email: accountDetails.account3_email, sessionCookie: sessionCookie3 },
+			{ email: accountDetails.account4_email, sessionCookie: sessionCookie4 },
+			{ email: accountDetails.account5_email, sessionCookie: sessionCookie5 },
+			{ email: accountDetails.account6_email, sessionCookie: sessionCookie6 },
+			{ email: accountDetails.account7_email, sessionCookie: sessionCookie7 },
+			{ email: accountDetails.account8_email, sessionCookie: sessionCookie8 },
+			{ email: accountDetails.account9_email, sessionCookie: sessionCookie9 },
+			{ email: accountDetails.account10_email, sessionCookie: sessionCookie10 },
+			{ email: accountDetails.account11_email, sessionCookie: sessionCookie11 }
+		];
 	
-		// Account 1
-		let response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
-		let accountJson = await response.json();
-		setInitialData(accountDetails.account1_email, { accountData: accountJson, sessionCookie: sessionCookie1 });
-		expect(response.status).toBe(200);
-	
-		// Account 2
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account2_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account2_email, { accountData: accountJson, sessionCookie: sessionCookie2 });
-		expect(response.status).toBe(200);
-	
-		// Account 3
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account3_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account3_email, { accountData: accountJson, sessionCookie: sessionCookie3 });
-		expect(response.status).toBe(200);
-	
-		// Account 4
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account4_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account4_email, { accountData: accountJson, sessionCookie: sessionCookie4 });
-		expect(response.status).toBe(200);
-	
-		// Account 5
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account5_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account5_email, { accountData: accountJson, sessionCookie: sessionCookie5 });
-		expect(response.status).toBe(200);
-	
-		// Account 6
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account6_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account6_email, { accountData: accountJson, sessionCookie: sessionCookie6 });
-		expect(response.status).toBe(200);
-	
-		// Account 7
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account7_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account7_email, { accountData: accountJson, sessionCookie: sessionCookie7 });
-		expect(response.status).toBe(200);
-	
-		// Account 8
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account8_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account8_email, { accountData: accountJson, sessionCookie: sessionCookie8 });
-		expect(response.status).toBe(200);
-	
-		// Account 9
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account9_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account9_email, { accountData: accountJson, sessionCookie: sessionCookie9 });
-		expect(response.status).toBe(200);
-	
-		// Account 10
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account10_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account10_email, { accountData: accountJson, sessionCookie: sessionCookie10 });
-		expect(response.status).toBe(200);
-	
-		// Account 11
-		response = await makeFetch(url, fetchTypes.GET, accountDetails.account11_email);
-		accountJson = await response.json();
-		setInitialData(accountDetails.account11_email, { accountData: accountJson, sessionCookie: sessionCookie11 });
-		expect(response.status).toBe(200);
+		for (const account of accounts) {
+			const response = await makeFetch(url, fetchTypes.GET, account.email);
+			const accountJson = await response.json();
+			setInitialData(account.email, { accountData: accountJson, sessionCookie: account.sessionCookie });
+			expect(response.status).toBe(200);
+		}
 	}, 60 * SECONDS); // extended timeout for multiple account data retrievals
+	
 	
 
 	test('request change password', async () => {

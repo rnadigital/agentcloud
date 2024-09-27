@@ -10,7 +10,12 @@ const ORG_OWNER = new Permission();
 ORG_OWNER.setAll(ORG_BITS);
 
 const ORG_ADMIN = new Permission();
-ORG_ADMIN.setAll([Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
+ORG_ADMIN.setAll([
+	Permissions.ORG_ADMIN,
+	Permissions.CREATE_TEAM,
+	Permissions.EDIT_TEAM,
+	Permissions.DELETE_TEAM
+]);
 
 const ORG_MEMBER = new Permission();
 // Org member doesn't have any permission, if this is ever set, its just to remove the admin perms

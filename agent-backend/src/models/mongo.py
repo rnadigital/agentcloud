@@ -252,7 +252,7 @@ class Crew(BaseModel):
     tasks: Optional[List[PyObjectId]] = None
     agents: Optional[List[PyObjectId]] = None
     process: Optional[Process] = Process.Sequential
-    managerLLM: Optional[Model] = None
+    managerModelId: Optional[PyObjectId] = None
     functionCallingLLM: Optional[Callable] = None
     verbose: Optional[Union[int, bool]] = False
     memory: Optional[bool] = False
@@ -261,7 +261,7 @@ class Crew(BaseModel):
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
     fullOutput: Optional[bool] = False
-    full_output: Optional[bool] = Field(alias="fullOutput", defalut=False)
+    full_output: Optional[bool] = Field(alias="fullOutput", default=False)
     stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
     modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)

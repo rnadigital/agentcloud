@@ -13,25 +13,21 @@ export default function SubscriptionModal({
 	setOpen,
 	title = 'Upgrade Required',
 	text,
-	buttonText = 'Upgrade'
+	buttonText = 'Upgrade',
+	enterprise = false
+}: {
+	open: boolean;
+	setOpen: Function;
+	title: string;
+	text: string;
+	buttonText?: string;
+	enterprise?: boolean;
 }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { name, email, stripePlan } = account || {};
 	const router = useRouter();
 	const posthog = usePostHog();
-
-	async function getPaymentLink(e) {
-		e.preventDefault();
-		API.getPortalLink(
-			{
-				_csrf: csrf
-			},
-			null,
-			toast.error,
-			router
-		);
-	}
 
 	useEffect(() => {
 		if (open !== false) {
@@ -47,7 +43,7 @@ export default function SubscriptionModal({
 
 	return (
 		<Transition show={open !== false} as={Fragment}>
-			<Dialog as='div' className='relative z-50' onClose={setOpen}>
+			<Dialog as='div' className='relative z-50' onClose={() => setOpen(false)}>
 				<TransitionChild
 					as={Fragment}
 					enter='ease-out duration-300'
@@ -88,15 +84,40 @@ export default function SubscriptionModal({
 										</div>
 									</div>
 								</div>
-								<div className='mt-5 sm:mt-6'>
-									<Link
-										type='button'
-										className='inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-										href='/billing'
-									>
-										{buttonText}
-									</Link>
-								</div>
+								{enterprise ? (
+									<div className='flex gap-3'>
+										<div className='mt-5 sm:mt-6 w-full'>
+											<Link
+												target='_blank'
+												type='button'
+												className='inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+												href='https://www.agentcloud.dev/contact'
+											>
+												Contact us
+											</Link>
+										</div>
+										<div className='mt-5 sm:mt-6 w-full'>
+											<Link
+												target='_blank'
+												type='button'
+												className='inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+												href={process.env.NEXT_PUBLIC_HUBSPOT_MEETING_LINK}
+											>
+												Book a meeting
+											</Link>
+										</div>
+									</div>
+								) : (
+									<div className='mt-5 sm:mt-6'>
+										<Link
+											type='button'
+											className='inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+											href='/billing'
+										>
+											{buttonText}
+										</Link>
+									</div>
+								)}
 							</DialogPanel>
 						</TransitionChild>
 					</div>

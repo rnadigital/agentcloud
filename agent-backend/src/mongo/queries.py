@@ -88,7 +88,7 @@ class MongoClientConnection(MongoConnection):
     def get_agent_tasks(self, taskIds: List[str]):
         return self.get_models_by_ids("tasks", Task, taskIds)
 
-    def get_agent_model(self, modelId: str):
+    def get_model(self, modelId: str):
         return self.get_single_model_by_id("models", Model, modelId)
 
     def get_agent_datasources(self, agent: Dict):
