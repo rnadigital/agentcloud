@@ -130,14 +130,6 @@ def get_output_variables(task: Task):
         return []
 
 
-def escape_curly_braces(text: str):
-    expected_output = json.loads(text)
-    if "variables" in expected_output:
-        del expected_output["variables"]
-    expected_output = json.dumps(expected_output)
-
-    return expected_output.replace('{', '&lcub;').replace('}', '&rcub;')
-
 def extract_matching_values(data: dict, output_vars: list) -> dict:
     matching_values = {}
 
