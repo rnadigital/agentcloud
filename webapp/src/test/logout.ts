@@ -40,7 +40,7 @@ afterAll(async () => {
 
 describe("log out and wrap up tests", ()=>{
     
-    test.only('log out', async () => {
+    test('log out', async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
             accountDetails.account1_email
         );
@@ -57,7 +57,7 @@ describe("log out and wrap up tests", ()=>{
         expect(response.status).toBe(200);
     });
     
-    test.only('cant get account with invalidated session cookie', async () => {
+    test('cant get account with invalidated session cookie', async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
             accountDetails.account1_email
         );
