@@ -39,20 +39,20 @@ export async function getAirbyteAuthToken() {
 		return token;
 	}
 	log('Token not found in cache, fetching new token...');
-	return fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications/token`, {
+	return fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/applications/token`, {
 		method: 'POST',
 		headers: {
-			authorization: `Basic ${base64Credentials}`,
 			'content-type': 'application/json'
 		},
 		body: JSON.stringify({
 			client_id: process.env.AIRBYTE_CLIENT_ID,
-			client_secret: process.env.AIRBYTE_CLIENT_SECRET
+			client_secret: process.env.AIRBYTE_CLIENT_SECRET,
+			grant: 'client_credentials'
 		})
 	})
 		.then(res => res.json())
 		.then(async json => {
-			log('getAirbyteAuthToken json:', json);
+			log('getAirbyteAuthToken json:', JSON.stringify(json, null, 2));
 			const token = json?.access_token || '';
 			if (token) {
 				await set(CACHE_KEY, token, 60);

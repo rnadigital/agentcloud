@@ -79,7 +79,8 @@ async function fetchWorkspaces() {
 async function fetchApplications() {
 	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications`, {
 		method: 'GET',
-		headers: { Authorization: authorizationHeader }
+		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
+		// headers: { Authorization: authorizationHeader }
 	});
 	return response.json();
 }
@@ -125,9 +126,9 @@ async function createDestination(workspaceId: string, provider: string) {
 		},
 		body: JSON.stringify({
 			name: provider === 'rabbitmq' ? 'RabbitMQ' : 'Google Pub/Sub',
-			destinationDefinitionId,
+			definitionId: destinationDefinitionId,
 			workspaceId,
-			connectionConfiguration: destinationConfiguration
+			configuration: destinationConfiguration
 		})
 	});
 	return response.json();
@@ -184,7 +185,6 @@ async function getDestinationConfiguration(provider: string) {
 				);
 				process.exit(1);
 			}
-			log('credentialsContent %s', credentialsPath);
 			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
 			if (!credentialsContent) {
 				log(
@@ -194,10 +194,6 @@ async function getDestinationConfiguration(provider: string) {
 				process.exit(1);
 			}
 		} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-			log(
-				'process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON %s',
-				process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
-			);
 			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 		} else {
 			log('google application credentials missing private_key, fetching from secret store');
@@ -207,8 +203,6 @@ async function getDestinationConfiguration(provider: string) {
 			credentialsContent = googleCreds;
 		}
 
-		log('credentialsContent %O', credentialsContent);
-		console.log('=== credentialsContent %O', credentialsContent);
 		return {
 			project_id: process.env.PROJECT_ID,
 			topic_id: process.env.QUEUE_NAME,
@@ -265,7 +259,6 @@ export async function init() {
 	try {
 		if (!process.env.AIRBYTE_CLIENT_ID || !process.env.AIRBYTE_CLIENT_SERET) {
 			const existingApplications = await fetchApplications();
-			log('existingApplications', existingApplications);
 			const defaultApplication = existingApplications.applications.find(
 				app => app?.name === 'Default User Application'
 			);
@@ -278,12 +271,6 @@ export async function init() {
 			process.env.AIRBYTE_CLIENT_ID = defaultApplication.clientId;
 			process.env.AIRBYTE_CLIENT_SECRET = defaultApplication.clientSecret;
 		}
-
-		log(
-			'airbyte creds, %s, %s',
-			process.env.AIRBYTE_USERNAME.trim(),
-			process.env.AIRBYTE_PASSWORD.trim()
-		);
 
 		// Get instance configuration
 		const instanceConfiguration = await fetchInstanceConfiguration();

@@ -14,7 +14,6 @@ command -v git >/dev/null 2>&1 || { echo >&2 "git is required but it's not insta
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl is required but it's not installed. Aborting."; exit 1; }
 command -v sed >/dev/null 2>&1 || { echo >&2 "sed is required but it's not installed. Aborting."; exit 1; }
-command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is required but it's not installed. Aborting."; exit 1; }
 
 if ! docker info &> /dev/null; then
     echo "Docker daemon is not running. Aborting."
@@ -146,44 +145,50 @@ fi
 # Define the chart version to use
 ABCTL_CHART_VERSION=
 
-# Process the output: remove color codes, remove first 10 characters, and parse with jq to get password
-ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null | tail -n 5 | sed -r 's/\x1B\[[0-9;]*[mK]//g' | sed 's/^.\{10\}//')
-export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | jq -r '.password')
-export AIRBYTE_CLIENT_ID=$(echo "$ABCTL_CREDENTIALS" | jq -r '.["client-id"]')
-export AIRBYTE_CLIENT_SECRET=$(echo "$ABCTL_CREDENTIALS" | jq -r '.["client-secret"]')
-echo $AIRBYTE_PASSWORD
+get_airbyte_creds() {
+	# Process the output: remove color codes and use grep/awk to extract values
+	ABCTL_CREDENTIALS=$(sudo abctl local credentials 2>/dev/null | sed -r 's/\x1B\[[0-9;]*[mK]//g')
+	# Extract password, client-id, and client-secret using grep and awk
+	export AIRBYTE_USERNAME=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Email:' | awk '{print $2}')
+	export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Password:' | awk '{print $2}')
+	export AIRBYTE_CLIENT_ID=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Client-Id:' | awk '{print $2}')
+	export AIRBYTE_CLIENT_SECRET=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Client-Secret:' | awk '{print $2}')
+	# Output for verification
+	echo "Airbyte Email: $AIRBYTE_USERNAME"
+	echo "Airbyte Password: $AIRBYTE_PASSWORD"
+	echo "Airbyte Client ID: $AIRBYTE_CLIENT_ID"
+	echo "Airbyte Client Secret: $AIRBYTE_CLIENT_SECRET"
+}
+
+get_airbyte_creds
 
 # Check if the 'password' field is present
 if [[ -z "$AIRBYTE_PASSWORD" || "$AIRBYTE_PASSWORD" == "null" ]]; then
 	echo "'password' field is missing. Running 'abctl local install'..."
 	if [[ -z "$ABCTL_CHART_VERSION" || "$ABCTL_CHART_VERSION" == "" ]]; then
-		abctl local install
+		sudo abctl local install
 	else
-		abctl local install --chart-version $ABCTL_CHART_VERSION
+		sudo abctl local install --chart-version $ABCTL_CHART_VERSION
 	fi
 else
 	echo "'password' field found. Running 'abctl local status'..."
-	abctl local status
+	sudo abctl local status
 fi
 
+
 retry_curl() {
-	local url=$1
-	local data=$2
-	while true; do
-		curl "$url" -X POST -H 'content-type: application/json' --data-raw "$data" && break
-		echo "Curl request failed. Retrying in 3 seconds..."
-		sleep 3
-	done
+        local url=$1
+        local data=$2
+        while true; do
+                curl "$url" -X POST -H 'content-type: application/json' --data-raw "$data" && break
+                echo "Curl request failed. Retrying in 3 seconds..."
+                sleep 3
+        done
 }
 
 retry_curl 'http://localhost:8000/api/v1/instance_configuration/setup' '{"email":"example@example.org","anonymousDataCollection":true,"securityCheck":"skipped","organizationName":"example-org","initialSetupComplete":true,"displaySetupWizard":false}'
 
-export AIRBYTE_USERNAME=`kubectl exec --kubeconfig ~/.airbyte/abctl/abctl.kubeconfig --namespace airbyte-abctl -it airbyte-db-0 -- psql -U airbyte -d db-airbyte -t -A -c 'SELECT "email" FROM "user"'`
-echo $AIRBYTE_USERNAME
-
-# sleep 0.1
-# print_logo
-# wait
+get_airbyte_creds
 
 echo "=> Starting agentcloud backend..."
 

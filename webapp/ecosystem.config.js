@@ -17,7 +17,7 @@ module.exports = {
 				'src/test'
 			],
 			env: {
-				DEBUG: 'webapp*,-webapp:middleware:auth:*'
+				DEBUG: 'webapp*,-webapp:middleware:auth:*,airbyte:*'
 			}
 		}
 	]
