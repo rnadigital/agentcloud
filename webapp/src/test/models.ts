@@ -37,7 +37,18 @@ afterAll(async () => {
 
 describe('Model Tests', () => {
 
-    //test model creation with invalid models on TEAMS plan
+    //switch the plan back down to FREE, test adding invalid models for the FREE plan
 
-    //test 
+    //test the same thing with embedding models and FREE plan
+
+    //switch the plan to PRO, test adding invalid models for the PRO plan but should be able to add models that were off limits to the FREE plan
+
+    //test the same thing with embedding models and the PRO plan
+
+    //switch the plan to TEAMS, test adding valid models that are off limits for FREE and for PRO and add custom models
+
+    //test the same thing with embedding models too
+
+    //test
+
 });
