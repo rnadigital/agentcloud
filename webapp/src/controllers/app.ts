@@ -6,9 +6,11 @@ import { getAccountByEmail, getAccountsById } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
+	deleteAppById,
 	deleteAppByIdReturnApp,
 	getAppById,
 	getAppsByTeam,
+	updateApp,
 	updateAppGetOldApp
 } from 'db/app';
 import { attachAssetToObject, deleteAssetById } from 'db/asset';
@@ -30,6 +32,7 @@ import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
 export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
+import { ProcessImpl } from '../lib/struct/crew';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources, variables, teamMembers] =
@@ -62,8 +65,6 @@ export async function appsData(req, res, _next) {
 		variables
 	};
 }
-
-export type AppDataReturnType = Awaited<ReturnType<typeof appData>>;
 
 export async function appData(req, res, _next) {
 	const [app, tasks, tools, agents, models, datasources, teamMembers, variables] =
@@ -169,7 +170,7 @@ export async function addAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		// managerModelId,
+		managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -247,10 +248,16 @@ export async function addAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			// {
-			// 	field: 'managerModelId',
-			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			// },
+			{
+				field: 'managerModelId',
+				validation: { notEmpty: true, hasLength: 24, ofType: 'string' },
+				validateIf: {
+					field: 'sharingMode',
+					condition: () => {
+						return !isChatApp && process === ProcessImpl.HIERARCHICAL;
+					}
+				}
+			},
 			{
 				field: 'toolIds',
 				validation: {
@@ -284,8 +291,8 @@ export async function addAppApi(req, res, next) {
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model'
-			// managerModelId: 'Chat Manager Model'
+			modelId: 'Model',
+			managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -312,8 +319,8 @@ export async function addAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			verbose,
-			fullOutput: fullOutput === true
-			// managerModelId: toObjectId(managerModelId)
+			fullOutput: fullOutput === true,
+			managerModelId: managerModelId ? toObjectId(managerModelId) : null
 		});
 	} else {
 		if (agentId) {
@@ -447,7 +454,7 @@ export async function editAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		// managerModelId,
+		managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -524,10 +531,16 @@ export async function editAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			// {
-			// 	field: 'managerModelId',
-			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			// },
+			{
+				field: 'managerModelId',
+				validation: { notEmpty: true, hasLength: 24, ofType: 'string' },
+				validateIf: {
+					field: 'sharingMode',
+					condition: () => {
+						return !isChatApp && process === ProcessImpl.HIERARCHICAL;
+					}
+				}
+			},
 			{
 				field: 'toolIds',
 				validation: {
@@ -561,8 +574,8 @@ export async function editAppApi(req, res, next) {
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model'
-			// managerModelId: 'Chat Manager Model'
+			modelId: 'Model',
+			managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -580,8 +593,8 @@ export async function editAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			verbose,
-			fullOutput: fullOutput === true
-			// managerModelId: toObjectId(managerModelId)
+			fullOutput: fullOutput === true,
+			managerModelId: managerModelId ? toObjectId(managerModelId) : null
 		});
 	} else {
 		if (agentId) {

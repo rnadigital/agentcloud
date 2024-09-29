@@ -137,7 +137,7 @@ export async function editModelApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+	if (!stripePlan || !pricingMatrix[stripePlan]?.llmModels.includes(type)) {
 		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 
