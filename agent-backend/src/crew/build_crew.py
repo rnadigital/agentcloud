@@ -265,9 +265,8 @@ class CrewAIBuilder:
             
             def interplote_inputs_with_session_variables():
                 current_session = mongo_client.get_session(self.session_id)
-                variables = current_session.variables
-                if variables:
-                    self.crew._interpolate_inputs(variables)
+                if current_session is not None and current_session.variables:
+                    self.crew._interpolate_inputs(current_session.variables)
 
             self.crew.task_callback = interplote_inputs_with_session_variables 
                 
