@@ -78,6 +78,7 @@ export async function appData(req, res, _next) {
 			getAccountsById(res.locals.matchingTeam.members),
 			getVariablesByTeam(req.params.resourceSlug)
 		]);
+
 	const teamMemberemails = teamMembers.reduce((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
 		acc.push(curr.email);
@@ -192,7 +193,8 @@ export async function addAppApi(req, res, next) {
 		recursionLimit,
 		cloning,
 		maxMessages,
-		variableIds
+		variableIds,
+		kickOffVariablesIds
 	} = req.body;
 
 	const isChatApp = (type as AppType) === AppType.CHAT;
@@ -416,7 +418,8 @@ export async function addAppApi(req, res, next) {
 			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
-		...(shareLinkShareId ? { shareLinkShareId } : {})
+		...(shareLinkShareId ? { shareLinkShareId } : {}),
+		kickOffVariablesIds: kickOffVariablesIds.map(v => toObjectId(v))
 	});
 
 	if (shareLinkShareId) {
@@ -474,7 +477,8 @@ export async function editAppApi(req, res, next) {
 		fullOutput,
 		recursionLimit,
 		maxMessages,
-		variableIds
+		variableIds,
+		kickOffVariablesIds
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -689,7 +693,8 @@ export async function editAppApi(req, res, next) {
 			permissions: sharePermissions,
 			mode: sharingMode as SharingMode
 		},
-		...(shareLinkShareId ? { shareLinkShareId } : {})
+		...(shareLinkShareId ? { shareLinkShareId } : {}),
+		kickOffVariablesIds: kickOffVariablesIds.map(v => toObjectId(v))
 	});
 
 	if (oldApp?.icon?.id && oldApp?.icon?.id?.toString() !== iconId) {
