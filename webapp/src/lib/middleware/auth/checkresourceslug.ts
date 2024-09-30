@@ -9,6 +9,15 @@ import debug from 'debug';
 
 const log = debug('webapp:middleware:auth:checkresourceslug');
 
+function getAllowedSlugs(orgs) {
+	return orgs.reduce((acc, org) => {
+		if (org?.teams?.length > 0) {
+			acc = acc.concat(org.teams.map(t => t.id.toString()));
+		}
+		return acc;
+	}, []);
+}
+
 export async function checkResourceSlug(req, res, next) {
 	if (
 		!req.params?.resourceSlug ||
@@ -17,12 +26,7 @@ export async function checkResourceSlug(req, res, next) {
 	) {
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
-	const allowedSlugs = res.locals.account.orgs.reduce((acc, org) => {
-		if (org?.teams?.length > 0) {
-			acc = acc.concat(org.teams.map(t => t.id.toString()));
-		}
-		return acc;
-	}, []);
+	const allowedSlugs = getAllowedSlugs(res.locals.account.orgs);
 	if (!allowedSlugs.includes(req.params.resourceSlug.toString())) {
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
@@ -59,12 +63,7 @@ export async function checkResourceSlugQuery(req, res, next) {
 		return next();
 	}
 
-	const allowedSlugs = res.locals.account.orgs.reduce((acc, org) => {
-		if (org?.teams?.length > 0) {
-			acc = acc.concat(org.teams.map(t => t.id.toString()));
-		}
-		return acc;
-	}, []);
+	const allowedSlugs = getAllowedSlugs(res.locals.account.orgs);
 	if (req.query?.resourceSlug && !allowedSlugs.includes(req.query.resourceSlug.toString())) {
 		return res.status(403).send({ error: 'No permission' });
 	}
@@ -100,7 +99,6 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 
 	const { currentOrg, currentTeam } = res?.locals?.account || {};
 	if (!currentOrg) {
-		// return res.status(403).send({ error: 'No current organization available' });
 		log('No current organization available');
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, {
@@ -110,9 +108,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 	//TODO: cache in redis
 	const foundOrg = await getOrgById(currentOrg);
 	if (!foundOrg) {
-		// return res.status(403).send({ error: 'No permission' });
 		log('No permission, sending to welcome');
-		// req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
 	foundOrg['id'] = foundOrg._id;
