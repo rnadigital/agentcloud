@@ -11,7 +11,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 from crew.build_task_helpers import (
-    get_output_variables, get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model, escape_curly_braces
+    get_output_variables, get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model 
 )
 from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
@@ -260,8 +260,18 @@ class CrewAIBuilder:
                 manager_llm=self.crew_models.get('manager_llm'),
                 agentcloud_socket=self.socket,
                 agentcloud_session_id=self.session_id,
-                stop_generating_check=self.stop_generating_check
+                stop_generating_check=self.stop_generating_check,
             )
+            
+            def interplote_inputs_with_session_variables():
+                current_session = mongo_client.get_session(self.session_id)
+                variables = current_session.variables
+                if variables:
+                    self.crew._interpolate_inputs(variables)
+
+            self.crew.task_callback = interplote_inputs_with_session_variables 
+                
+            
             print('---')
             print('Crew attributes:')
             pprint(self.crew.__dict__)
