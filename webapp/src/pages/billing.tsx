@@ -30,10 +30,10 @@ function classNames(...classes) {
 }
 
 export type teamUsageData = {
-	totalAvailableVectorGb: string|number;
-	totalUsedVectorGb: string|number;
+	totalAvailableVectorGb: string | number;
+	totalUsedVectorGb: string | number;
 	totalMembers: number;
-}
+};
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
@@ -57,7 +57,8 @@ export default function Billing(props) {
 	const posthog = usePostHog();
 
 	//usage information
-	const [usedVectorGb, setUsedVectorGb] = useState({ //on a team level, each team has xGB of storage available (make this modular so that it can be easily interchanged with differnt api calls to the vector db proxy).
+	const [usedVectorGb, setUsedVectorGb] = useState({
+		//on a team level, each team has xGB of storage available (make this modular so that it can be easily interchanged with differnt api calls to the vector db proxy).
 		totalAvailable: 0,
 		totalUsed: 0
 	});
@@ -73,9 +74,7 @@ export default function Billing(props) {
 		};
 	}
 
-	function getUsageData() {
-
-	}
+	function getUsageData() {}
 
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
@@ -334,17 +333,12 @@ ${missingEnvs.join('\n')}`}
 				</>
 			)}
 
-
 			{currentTab?.name === 'Usage' && (
 				<>
 					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>
-							View Usage
-						</h3>
+						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
 					</div>
-					<div>
-
-					</div>
+					<div></div>
 				</>
 			)}
 		</>
