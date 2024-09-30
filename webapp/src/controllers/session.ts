@@ -30,6 +30,7 @@ import { getTaskById } from 'db/task';
 import { getVariableById } from 'db/variable';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 const log = debug('webapp:controllers:session');
@@ -86,7 +87,12 @@ export async function sessionData(req, res, _next) {
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const variables = await Promise.all(variablePromise);
-				crewAppVariables.push(...variables);
+
+				variables.forEach(variable => {
+					if (!crewAppVariables.some(v => (v._id as ObjectId).equals(variable._id))) {
+						crewAppVariables.push(variable);
+					}
+				});
 			}
 
 			const agentPromises = foundCrew.agents.map(a =>
