@@ -6,13 +6,15 @@ import { getAccountByEmail, getAccountsById } from 'db/account';
 import { addAgent, getAgentById, getAgentsByTeam, updateAgent } from 'db/agent';
 import {
 	addApp,
+	deleteAppById,
 	deleteAppByIdReturnApp,
 	getAppById,
 	getAppsByTeam,
+	updateApp,
 	updateAppGetOldApp
 } from 'db/app';
 import { attachAssetToObject, deleteAssetById } from 'db/asset';
-import { addCrew, updateCrew } from 'db/crew';
+import { addCrew, deleteCrewById, updateCrew } from 'db/crew';
 import { getDatasourcesByTeam } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { updateShareLinkPayload } from 'db/sharelink';
@@ -30,6 +32,7 @@ import { ChatAppAllowedModels } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 
 export type AppsDataReturnType = Awaited<ReturnType<typeof appsData>>;
+import { ProcessImpl } from '../lib/struct/crew';
 
 export async function appsData(req, res, _next) {
 	const [apps, tasks, tools, agents, models, datasources, variables, teamMembers] =
@@ -62,8 +65,6 @@ export async function appsData(req, res, _next) {
 		variables
 	};
 }
-
-export type AppDataReturnType = Awaited<ReturnType<typeof appData>>;
 
 export async function appData(req, res, _next) {
 	const [app, tasks, tools, agents, models, datasources, teamMembers, variables] =
@@ -169,7 +170,7 @@ export async function addAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		// managerModelId,
+		managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -247,10 +248,16 @@ export async function addAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			// {
-			// 	field: 'managerModelId',
-			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			// },
+			{
+				field: 'managerModelId',
+				validation: { notEmpty: true, hasLength: 24, ofType: 'string' },
+				validateIf: {
+					field: 'sharingMode',
+					condition: () => {
+						return !isChatApp && process === ProcessImpl.HIERARCHICAL;
+					}
+				}
+			},
 			{
 				field: 'toolIds',
 				validation: {
@@ -269,14 +276,23 @@ export async function addAppApi(req, res, next) {
 					ofType: 'string',
 					customError: 'Invalid Conversation Starters'
 				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 			//TODO:validation
 		],
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model'
-			// managerModelId: 'Chat Manager Model'
+			modelId: 'Model',
+			managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -303,8 +319,8 @@ export async function addAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			verbose,
-			fullOutput: fullOutput === true
-			// managerModelId: toObjectId(managerModelId)
+			fullOutput: fullOutput === true,
+			managerModelId: managerModelId ? toObjectId(managerModelId) : null
 		});
 	} else {
 		if (agentId) {
@@ -315,7 +331,7 @@ export async function addAppApi(req, res, next) {
 				backstory,
 				modelId: toObjectId(modelId),
 				toolIds: toolIds.map(toObjectId).filter(x => x),
-				variableIds: variableIds?.map(toObjectId)
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -356,7 +372,8 @@ export async function addAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false
+				allowDelegation: false,
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -437,7 +454,7 @@ export async function editAppApi(req, res, next) {
 		agents,
 		memory,
 		cache,
-		// managerModelId,
+		managerModelId,
 		tasks,
 		iconId,
 		tags,
@@ -456,7 +473,8 @@ export async function editAppApi(req, res, next) {
 		verbose,
 		fullOutput,
 		recursionLimit,
-		maxMessages
+		maxMessages,
+		variableIds
 	} = req.body;
 
 	const app = await getAppById(req.params.resourceSlug, req.params.appId); //Note: params dont need validation, theyre checked by the pattern in router
@@ -513,10 +531,16 @@ export async function editAppApi(req, res, next) {
 					customError: 'Invalid Agents'
 				}
 			},
-			// {
-			// 	field: 'managerModelId',
-			// 	validation: { notEmpty: !isChatApp, hasLength: 24, ofType: 'string' }
-			// },
+			{
+				field: 'managerModelId',
+				validation: { notEmpty: true, hasLength: 24, ofType: 'string' },
+				validateIf: {
+					field: 'sharingMode',
+					condition: () => {
+						return !isChatApp && process === ProcessImpl.HIERARCHICAL;
+					}
+				}
+			},
 			{
 				field: 'toolIds',
 				validation: {
@@ -535,14 +559,23 @@ export async function editAppApi(req, res, next) {
 					ofType: 'string',
 					customError: 'Invalid Conversation Starters'
 				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 			//TODO:validation
 		],
 		{
 			name: 'App Name',
 			agentName: 'Agent Name',
-			modelId: 'Model'
-			// managerModelId: 'Chat Manager Model'
+			modelId: 'Model',
+			managerModelId: 'Chat Manager Model'
 		}
 	);
 	if (validationError) {
@@ -560,8 +593,8 @@ export async function editAppApi(req, res, next) {
 			agents: agents.map(toObjectId),
 			process,
 			verbose,
-			fullOutput: fullOutput === true
-			// managerModelId: toObjectId(managerModelId)
+			fullOutput: fullOutput === true,
+			managerModelId: managerModelId ? toObjectId(managerModelId) : null
 		});
 	} else {
 		if (agentId) {
@@ -571,7 +604,8 @@ export async function editAppApi(req, res, next) {
 				goal,
 				backstory,
 				modelId: toObjectId(modelId),
-				toolIds: toolIds.map(toObjectId).filter(x => x)
+				toolIds: toolIds.map(toObjectId).filter(x => x),
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 			chatAgent = await getAgentById(req.params.resourceSlug, agentId);
 			if (!chatAgent) {
@@ -611,7 +645,8 @@ export async function editAppApi(req, res, next) {
 				maxIter: null,
 				maxRPM: null,
 				verbose: false,
-				allowDelegation: false
+				allowDelegation: false,
+				variableIds: (variableIds || []).map(toObjectId)
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -698,7 +733,9 @@ export async function deleteAppApi(req, res, next) {
 	}
 
 	const oldApp = await deleteAppByIdReturnApp(req.params.resourceSlug, appId);
-
+	if (oldApp?.crewId) {
+		await deleteCrewById(req.params.resourceSlug, oldApp?.crewId);
+	}
 	if (oldApp?.icon) {
 		await deleteAssetById(oldApp.icon.id);
 	}

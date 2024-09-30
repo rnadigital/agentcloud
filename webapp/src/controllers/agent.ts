@@ -155,6 +155,15 @@ export async function addAgentApi(req, res, next) {
 					ofType: 'string',
 					customError: 'Invalid Tools'
 				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 		],
 		{ name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' }
@@ -217,7 +226,7 @@ export async function addAgentApi(req, res, next) {
 					linkedId: newAgentId
 				}
 			: null,
-		variableIds: variableIds.map(toObjectId)
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	if (variableIds && variableIds.length > 0) {
@@ -277,6 +286,15 @@ export async function editAgentApi(req, res, next) {
 			{
 				field: 'toolIds',
 				validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 		],
 		{ name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' }
@@ -351,7 +369,7 @@ export async function editAgentApi(req, res, next) {
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
 		icon: iconId ? attachedIconToApp : null,
-		variableIds: variableIds.map(toObjectId)
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	if (oldAgent?.icon?.id && oldAgent?.icon?.id?.toString() !== iconId) {

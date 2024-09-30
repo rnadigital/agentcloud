@@ -40,6 +40,7 @@ export default class Permission extends BigBitfield {
 		}
 	}
 
+	//TODO: move the data for these inheritances to the metadata structure, make the logic here dynamic
 	applyInheritance() {
 		if (this.get(Permissions.ROOT)) {
 			this.setAll(Permission.allPermissions);

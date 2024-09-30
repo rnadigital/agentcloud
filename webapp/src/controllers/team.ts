@@ -12,7 +12,6 @@ import {
 	pushAccountTeam,
 	updateTeamOwnerInAccounts
 } from 'db/account';
-import { getAllOrgMembers } from 'db/org';
 import {
 	addTeam,
 	addTeamMember,
@@ -32,6 +31,7 @@ import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
 import { TeamRoles } from 'permissions/roles';
+import { SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationutils';
 
 export async function teamData(req, res, _next) {
@@ -156,21 +156,8 @@ export async function deleteTeamMemberApi(req, res) {
 	}
 
 	const { memberId } = req.body;
-	//account with that memberId
 	const memberAccount = await getAccountById(memberId);
 	if (memberAccount) {
-		const foundTeam = await getTeamById(req.params.resourceSlug);
-		const org = res.locals.matchingOrg; //await getOrgById(foundTeam.orgId);
-		if (!org) {
-			return dynamicResponse(req, res, 403, { error: 'User org not found' });
-		} else {
-			if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
-				return dynamicResponse(req, res, 403, { error: 'Cannot remove org user' });
-			}
-		}
-		// if (!foundTeam.members.some(m => m.equals(memberAccount._id))) {
-		// 	return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
-		// }
 		const removeRes = await removeTeamMember(req.params.resourceSlug, memberId.toString());
 		if (removeRes?.modifiedCount < 1) {
 			return dynamicResponse(req, res, 403, { error: 'User not found in your team' });
@@ -179,6 +166,7 @@ export async function deleteTeamMemberApi(req, res) {
 	} else {
 		return dynamicResponse(req, res, 403, { error: 'User not found' });
 	}
+
 	return dynamicResponse(req, res, 200, {});
 }
 
@@ -238,9 +226,15 @@ export async function addTeamApi(req, res) {
 export async function editTeamMemberApi(req, res) {
 	const { resourceSlug, memberId } = req.params;
 	const { template } = req.body;
+	let { stripePlan } = res.locals.account?.stripe || {};
 
 	if (memberId === res.locals.matchingTeam.ownerId.toString()) {
 		return dynamicResponse(req, res, 400, { error: "Team owner permissions can't be edited" });
+	}
+
+	if (!template && stripePlan !== SubscriptionPlan.ENTERPRISE) {
+		//Only enterprise can NOT includea template which means it goes to Permission.handleBody V
+		return dynamicResponse(req, res, 400, { error: 'Missing role' });
 	}
 
 	if (template && !TeamRoles[template]) {
