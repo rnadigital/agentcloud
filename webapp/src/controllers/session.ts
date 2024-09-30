@@ -203,7 +203,7 @@ export async function publicSessionPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
-export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionJson>>;
+export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionData>>;
 /**
  * GET /[resourceSlug]/session/[sessionId].json
  * get session json
@@ -350,20 +350,37 @@ export async function addSessionApi(req, res, next) {
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
 		if (crew) {
+			const kickOffVariablesIds = app.kickOffVariablesIds.map(v => v.toString());
 			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 			if (!agents) {
 				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 			}
 			crewId = crew._id;
 
-			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
+			const agentVariableIds = agents
+				.map(a => a.variableIds)
+				.flat()
+				.map(v => v.toString());
+			const filteredAgentVariableIds = agentVariableIds.filter(v =>
+				kickOffVariablesIds.includes(v)
+			);
+
+			hasVariables = filteredAgentVariableIds.length > 0;
 
 			if (!hasVariables) {
 				const taskPromises = crew.tasks.map(t =>
 					getTaskById(req.params.resourceSlug, t.toString())
 				);
 				const tasks = await Promise.all(taskPromises);
-				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
+
+				const taskVariableIds = tasks
+					.map(t => t.variableIds)
+					.flat()
+					.map(v => v.toString());
+				const filteredTaskVariableIds = taskVariableIds.filter(v =>
+					kickOffVariablesIds.includes(v)
+				);
+				hasVariables = filteredTaskVariableIds.length > 0;
 			}
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

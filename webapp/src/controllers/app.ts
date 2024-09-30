@@ -694,7 +694,7 @@ export async function editAppApi(req, res, next) {
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {}),
-		kickOffVariablesIds: kickOffVariablesIds.map(v => toObjectId(v))
+		kickOffVariablesIds: kickOffVariablesIds?.map(v => toObjectId(v))
 	});
 
 	if (oldApp?.icon?.id && oldApp?.icon?.id?.toString() !== iconId) {
