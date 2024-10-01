@@ -30,10 +30,14 @@ function classNames(...classes) {
 }
 
 export type teamUsageData = {
-	totalAvailableVectorGb: string | number;
-	totalUsedVectorGb: string | number;
+	totalCodeFunctions: number;
 	totalMembers: number;
 };
+
+export type orgUsageData = {
+	usedVectorDbStorage: number | string | null;
+	totalAvailableVectorDbStorage: number | string | null
+}
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
@@ -52,6 +56,7 @@ export default function Billing(props) {
 	const [currentTab, setCurrentTab] = useState(tabs[0]);
 	const [continued, setContinued] = useState(false);
 	const [last4, setLast4] = useState(null);
+	const [usageState, setUsageState] = useState(null);
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
@@ -64,6 +69,10 @@ export default function Billing(props) {
 	});
 	//all teams with corresponding user limit data
 	//custom functions (code tools), on a team level
+	//note you can only see the billing screen when on your own org (can use your own stripe permissions to get the addons)
+	//get plan using the account and use the matrix to get the total vectorGB available, then add the addons
+	//get plan using the account and use the matrix to get total amount of users in the org, add the addons
+	//need to create progressbar component
 
 	function getPayload() {
 		return {
@@ -74,8 +83,11 @@ export default function Billing(props) {
 		};
 	}
 
-	function getUsageData() {}
+	//get each user in the org to determine the usage of members
+	//get each team in the org to determine the 
 
+	console.log("usageState: ", usageState);
+	console.log("accountContext", accountContext);
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
@@ -100,12 +112,13 @@ export default function Billing(props) {
 		};
 	}
 	const [getPortalLink] = stripeMethods.map(createApiCallHandler);
-
+	
 	function fetchAccount() {
 		if (resourceSlug) {
 			API.getAccount({ resourceSlug }, dispatch, setError, router);
 		}
 	}
+	
 
 	useEffect(() => {
 		API.checkStripeReady(
@@ -125,6 +138,7 @@ export default function Billing(props) {
 			toast.error,
 			router
 		);
+
 	}, [resourceSlug]);
 
 	useEffect(() => {
@@ -338,7 +352,9 @@ ${missingEnvs.join('\n')}`}
 					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
 					</div>
-					<div></div>
+					<div className='flex flex-col w-full'>
+						<progress value={0.55} className='rounded-full'/>
+					</div>
 				</>
 			)}
 		</>

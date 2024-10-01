@@ -1,14 +1,14 @@
 import ButtonSpinner from 'components/ButtonSpinner';
 import React from 'react';
 
-interface ProgressBarProps {
+interface LoadingBarProps {
 	total?: number;
 	success?: number;
 	failure?: number;
 	text?: string;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = function ({
+const LoadingBar: React.FC<LoadingBarProps> = function ({
 	total = null,
 	success = 0,
 	failure = 0,
@@ -33,4 +33,4 @@ const ProgressBar: React.FC<ProgressBarProps> = function ({
 	);
 };
 
-export default ProgressBar;
+export default LoadingBar;
