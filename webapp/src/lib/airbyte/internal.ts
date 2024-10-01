@@ -3,6 +3,7 @@
 import fs from 'fs';
 import yaml from 'js-yaml';
 import { Document, OpenAPIClientAxios } from 'openapi-client-axios';
+
 import { getAirbyteAuthToken } from './api';
 
 // Read the YAML file synchronously and load it into configYaml

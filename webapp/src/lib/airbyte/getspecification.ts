@@ -1,7 +1,7 @@
 'use strict';
 
-import debug from 'debug';
 import { getAirbyteAuthToken } from 'airbyte/api';
+import debug from 'debug';
 const log = debug('webapp:airbyte:getSpecification');
 
 export default async function getSpecification(req, res, _next) {

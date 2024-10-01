@@ -1,6 +1,6 @@
 'use strict';
 
-import { getAirbyteAuthToken } from "airbyte/api";
+import { getAirbyteAuthToken } from 'airbyte/api';
 
 //TODO: can we download this json or will it change? Will it break things?
 export default async function getConnectors() {
@@ -16,7 +16,6 @@ export async function getConnectorSpecification(sourceDefinitionId: string) {
 			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 			sourceDefinitionId: sourceDefinitionId
 		};
-		console.log('body', body)
 		const res = await fetch(
 			`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definition_specifications/get`,
 			{
