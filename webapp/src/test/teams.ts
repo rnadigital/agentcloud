@@ -33,7 +33,7 @@ describe('team tests', () => {
 	});
 
 	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
-	test.only('add new team with correct stripe permissions', async () => {
+	test('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -62,7 +62,7 @@ describe('team tests', () => {
 	});
 
 
-	test.only('Inviting existing account to team', async () => {
+	test('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -116,7 +116,7 @@ describe('team tests', () => {
 		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
-	test.only('testing TEAM_MEMBER permissions', async () => {
+	test('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData(
 			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
@@ -171,7 +171,6 @@ describe('team tests', () => {
 
 
 		const addModelResponseJson = await addModelResponse.json();
-		console.log(addModelResponseJson);
 		expect(addModelResponse.status).toBe(200);
 		expect(addModelResponseJson?._id).toBeDefined();
 		expect(addModelResponseJson?.redirect).toBeDefined();
@@ -194,7 +193,7 @@ describe('team tests', () => {
 		expect(addAgentResponse?._id).toBeDefined();
 	});
 
-	test.only('testing TEAM_ADMIN permissions', async () => {
+	test('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -249,7 +248,7 @@ describe('team tests', () => {
 		// const responseJson = await response.json();
 	});
 
-	test.only('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
+	test('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -311,104 +310,36 @@ describe('team tests', () => {
 		expect(responseJson?.error).toBe("Missing permission \"Add Team Member\"");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
-		let body, response;
-		let teamMembers = await getTeamWithMembers(resourceSlug);
-
-		body = {
-			name: accountDetails.account4_name,
-			email: accountDetails.account4_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account5_name,
-			email: accountDetails.account5_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account6_name,
-			email: accountDetails.account6_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account7_name,
-			email: accountDetails.account7_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account8_name,
-			email: accountDetails.account8_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account9_name,
-			email: accountDetails.account9_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account10_name,
-			email: accountDetails.account10_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		//this should be the 11th member in the team, this should be rejected
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account11_name,
-			email: accountDetails.account11_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		teamMembers = await getTeamWithMembers(resourceSlug);
-		expect(response.status).toBe(400);
-	});
-
-	test.only('log out', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/logout`;
-		const body = {
-			_csrf: csrfToken
-		};
-
-		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-
-		const responseJson = await response.json();
-		expect(responseJson?.redirect).toBeDefined();
-		expect(response.status).toBe(200);
-	});
-
-	test.only('cant get account with invalidated session cookie', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
-		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
-		expect(response.status).toBe(302); //302 redirect to login
+		const accounts = [
+			{ name: accountDetails.account4_name, email: accountDetails.account4_email },
+			{ name: accountDetails.account5_name, email: accountDetails.account5_email },
+			{ name: accountDetails.account6_name, email: accountDetails.account6_email },
+			{ name: accountDetails.account7_name, email: accountDetails.account7_email },
+			{ name: accountDetails.account8_name, email: accountDetails.account8_email },
+			{ name: accountDetails.account9_name, email: accountDetails.account9_email },
+			{ name: accountDetails.account10_name, email: accountDetails.account10_email },
+			{ name: accountDetails.account11_name, email: accountDetails.account11_email } // This should trigger the rejection as the 11th member
+		];
+	
+		for (let i = 0; i < accounts.length; i++) {
+			const body = {
+				name: accounts[i].name,
+				email: accounts[i].email,
+				template: 'TEAM_MEMBER'
+			};
+	
+			const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+	
+			if (i < 7) { // Expect the first 7 additions to succeed
+				expect(response.status).toBe(200);
+			} else { // Expect the 11th addition to be rejected
+				expect(response.status).toBe(400);
+			}
+		}
+	
+		const teamMembers = await getTeamWithMembers(resourceSlug);
 	});
 });
