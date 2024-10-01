@@ -522,7 +522,7 @@ export default function TaskForm({
 								)}
 						</div>
 
-						<div className='col-span-full'>
+						{!isStructuredOutput && <div className='col-span-full'>
 							<ToolTip
 								content='Save task ouput to a variable. This variable will be available in next tasks as well as arguments for tools.'
 								placement='top-start'
@@ -579,7 +579,7 @@ export default function TaskForm({
 									</div>
 								</div>
 							</ToolTip>
-						</div>
+						</div>}
 
 						<div className='sm:col-span-full'>
 							<label
