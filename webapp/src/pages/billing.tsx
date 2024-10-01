@@ -1,6 +1,5 @@
 import * as API from '@api';
 import { loadStripe } from '@stripe/stripe-js';
-import ButtonSpinner from 'components/ButtonSpinner';
 import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
 import InfoAlert from 'components/InfoAlert';
@@ -10,15 +9,14 @@ import StripeCheckoutModal from 'components/StripeCheckoutModal';
 import SubscriptionCard from 'components/SubscriptionCard';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+import { SubscriptionPlan, subscriptionPlans as plans, pricingMatrix } from 'struct/billing';
+import ProgressBar from 'components/ProgressBar';
 
 //DEVNOTE: see "src/lib/vectorproxy/client.ts" and "getVectorStorageForTeam", create an API route for this to get the used vector storage for this team. Once that's been retrieved use the stripe object to get the total avaiable storage and calculate the percentage
-import stripe from '../lib/stripe';
 
 const tabs = [
 	{ name: 'Billing', href: '#billing' },
@@ -67,12 +65,15 @@ export default function Billing(props) {
 		totalAvailable: 0,
 		totalUsed: 0
 	});
-	//all teams with corresponding user limit data
-	//custom functions (code tools), on a team level
-	//note you can only see the billing screen when on your own org (can use your own stripe permissions to get the addons)
-	//get plan using the account and use the matrix to get the total vectorGB available, then add the addons
-	//get plan using the account and use the matrix to get total amount of users in the org, add the addons
-	//need to create progressbar component
+	const [users, setUsers] = useState({
+		totalAvailable: 0,
+		totalUsed: 0
+	})
+	const [ codeTools, setCodeTools ] = useState({
+		totalAvailable: 0,
+		totalUsed: 0
+	}); //getTools
+	
 
 	function getPayload() {
 		return {
@@ -83,11 +84,6 @@ export default function Billing(props) {
 		};
 	}
 
-	//get each user in the org to determine the usage of members
-	//get each team in the org to determine the 
-
-	console.log("usageState: ", usageState);
-	console.log("accountContext", accountContext);
 	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
@@ -118,7 +114,19 @@ export default function Billing(props) {
 			API.getAccount({ resourceSlug }, dispatch, setError, router);
 		}
 	}
+
+	async function fetchOrg(slug) {
+		await API.getOrg({ resourceSlug: slug }, setUsageState, setError, router);
+	}
+
+	async function refreshOrg(slug) {
+		fetchOrg(slug);
+		refreshAccountContext();
+	}
 	
+	useEffect(() => {
+		refreshOrg(accountContext?.account?.currentTeam);
+	}, []);
 
 	useEffect(() => {
 		API.checkStripeReady(
@@ -140,6 +148,9 @@ export default function Billing(props) {
 		);
 
 	}, [resourceSlug]);
+
+
+	console.log("UsageState", usageState);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
@@ -173,6 +184,16 @@ ${missingEnvs.join('\n')}`}
 	}
 
 	const payload = getPayload();
+
+	//set the state of all the usage variable
+	if(usageState){
+		const { members, org } = usageState;
+		let totalAvailable = pricingMatrix[stripePlan]?.users + stripeAddons?.users
+		const newState = {
+			totalAvailable: totalAvailable,
+			totalUsed: members?.length
+		}
+	}
 
 	return (
 		<>
@@ -353,7 +374,12 @@ ${missingEnvs.join('\n')}`}
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
 					</div>
 					<div className='flex flex-col w-full'>
-						<progress value={0.55} className='rounded-full'/>
+						<ProgressBar 
+							max={pricingMatrix[stripePlan]?.users + stripeAddons?.users} 
+							filled={usageState?.members?.length}
+							text = {"Users"}
+							numberText='users'
+						/>
 					</div>
 				</>
 			)}

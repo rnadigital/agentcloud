@@ -1,36 +1,40 @@
-import ButtonSpinner from 'components/ButtonSpinner';
 import React from 'react';
 
-interface LoadingBarProps {
-	total?: number;
-	success?: number;
-	failure?: number;
-	text?: string;
+interface ProgressBarProps {
+    max: number;
+    filled: number;
+    text: string;
+    numberText?: string;
 }
 
-const LoadingBar: React.FC<LoadingBarProps> = function ({
-	total = null,
-	success = 0,
-	failure = 0,
-	text = 'Embedding'
+const ProgressBar: React.FC<ProgressBarProps> = function ({
+    max,
+    filled,
+    text,
+    numberText = text
 }) {
-	const successPercentage = (total != null ? (success / total) * 100 : 0) || 0;
-	const failurePercentage = (total != null ? (failure / total) * 100 : 0) || 0;
-	return (
-		<div className='mb-6 h-6 max-w-[300px]'>
-			<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white px-2'>
-				{text} ({successPercentage.toFixed(1)}%)
-				<ButtonSpinner size={14} className='ms-2 -me-1' />
-			</div>
-			<div className='flex flex-row overflow-hidden rounded-full bg-gray-400 dark:bg-neutral-600'>
-				<span className={'h-6 bg-green-500'} style={{ width: `${successPercentage}%` }} />
-				<span
-					className={'h-6 line bg-red-500'}
-					style={{ left: `${failurePercentage}%`, width: `${failurePercentage}%` }}
-				/>
-			</div>
-		</div>
-	);
-};
+    const percentage = filled/max * 100
 
-export default LoadingBar;
+
+    return (
+      <div className='border-2 rounded-lg shadow-md'>
+        <div className='mx-4 my-6'>
+          <h4 className="sr-only">Status</h4>
+          <p className="text-lg font-bold text-gray-900">{text}</p>
+          <div aria-hidden="true" className="mt-6">
+            <div className="overflow-hidden rounded-full bg-gray-200">
+              <div style={{ width: percentage.toString() + "%" }} className="h-2 rounded-full bg-indigo-600" />
+            </div>
+            <div className="mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid">
+              <div className="text-indigo-600">{'Currently Used: ' + filled.toString() + " " + numberText}</div>
+              <div className="text-center text-indigo-600"></div>
+              <div className="text-center"></div>
+              <div className="text-right">{'Maximum Available: ' + max.toString() + " " + numberText}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+}
+
+export default ProgressBar;
