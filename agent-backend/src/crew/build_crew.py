@@ -11,7 +11,7 @@ from socketio.exceptions import ConnectionError as ConnError
 from socketio import SimpleClient
 
 from crew.build_task_helpers import (
-    get_output_variables, get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model, escape_curly_braces
+    get_output_variables, get_task_tools, get_context_tasks, make_task_callback, get_output_pydantic_model
 )
 from crew.exceptions import CrewAIBuilderException
 from lang_models import model_factory as language_model_factory
