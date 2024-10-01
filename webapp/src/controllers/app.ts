@@ -419,7 +419,7 @@ export async function addAppApi(req, res, next) {
 			mode: sharingMode as SharingMode
 		},
 		...(shareLinkShareId ? { shareLinkShareId } : {}),
-		kickOffVariablesIds: kickOffVariablesIds.map(v => toObjectId(v))
+		kickOffVariablesIds: kickOffVariablesIds?.map(v => toObjectId(v))
 	});
 
 	if (shareLinkShareId) {

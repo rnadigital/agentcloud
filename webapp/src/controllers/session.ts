@@ -354,7 +354,7 @@ export async function addSessionApi(req, res, next) {
 		}
 		crewId = crew._id;
 
-		const kickOffVariablesIds = app.kickOffVariablesIds.map(v => v.toString());
+		const kickOffVariablesIds = app.kickOffVariablesIds?.map(v => v.toString()) || [];
 		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
 		if (!agents) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
