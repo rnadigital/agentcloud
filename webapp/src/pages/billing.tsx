@@ -15,6 +15,7 @@ import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix, SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
+import { Tool, ToolType } from 'struct/tool';
 
 //DEVNOTE: see "src/lib/vectorproxy/client.ts" and "getVectorStorageForTeam", create an API route for this to get the used vector storage for this team. Once that's been retrieved use the stripe object to get the total avaiable storage and calculate the percentage
 
@@ -55,6 +56,8 @@ export default function Billing(props) {
 	const [continued, setContinued] = useState(false);
 	const [last4, setLast4] = useState(null);
 	const [usageState, setUsageState] = useState(null);
+	const [toolsState, setToolsState] = useState(null);
+	const [vectorDbState, setVectorDbState] = useState(null);
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
@@ -118,13 +121,34 @@ export default function Billing(props) {
 		await API.getOrg({ resourceSlug: slug }, setUsageState, setError, router);
 	}
 
+	async function fetchTools(slug) {
+		await API.getTools({ resourceSlug: slug }, setToolsState, setError, router);
+	}
+
+	async function fetchVectorUsage(slug) {
+		await API.getVectorStorageTeam({ resourceSlug: slug }, setVectorDbState, setError, router);
+	}
+
 	async function refreshOrg(slug) {
 		fetchOrg(slug);
+		fetchTools(slug);
+		fetchVectorUsage(slug);
 		refreshAccountContext();
 	}
 
+	console.log('vectorUsage: ', vectorDbState);
+
 	useEffect(() => {
 		refreshOrg(accountContext?.account?.currentTeam);
+		if (typeof window !== 'undefined') {
+			const hashTab = window.location.hash;
+			const foundTab = tabs.find(t => t.href === hashTab);
+			if (foundTab) {
+				setCurrentTab(foundTab);
+			} else {
+				setCurrentTab(tabs[0]);
+			}
+		}
 	}, []);
 
 	useEffect(() => {
@@ -183,13 +207,21 @@ ${missingEnvs.join('\n')}`}
 	const payload = getPayload();
 
 	//set the state of all the usage variable
-	if (usageState) {
+	let tools: Tool[];
+	let numOfFnTools = 0;
+	if (usageState && toolsState) {
 		const { members, org } = usageState;
+		tools = toolsState?.tools;
 		let totalAvailable = pricingMatrix[stripePlan]?.users + stripeAddons?.users;
 		const newState = {
 			totalAvailable: totalAvailable,
 			totalUsed: members?.length
 		};
+		tools.forEach(tool => {
+			if (tool.type === ToolType.FUNCTION_TOOL) {
+				numOfFnTools += 1;
+			}
+		});
 	}
 
 	return (
@@ -370,12 +402,24 @@ ${missingEnvs.join('\n')}`}
 					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
 					</div>
-					<div className='flex flex-col w-full'>
+					<div className='flex flex-col w-full gap-3'>
 						<ProgressBar
 							max={pricingMatrix[stripePlan]?.users + stripeAddons?.users}
 							filled={usageState?.members?.length}
 							text={'Users'}
 							numberText='users'
+						/>
+						<ProgressBar
+							max={pricingMatrix[stripePlan]?.maxFunctionTools}
+							filled={numOfFnTools}
+							text='Custom Functions'
+							numberText='functions'
+						/>
+						<ProgressBar
+							max={pricingMatrix[stripePlan]?.teams}
+							filled={usageState?.org?.teamIds.length}
+							text='Teams'
+							numberText='teams'
 						/>
 					</div>
 				</>

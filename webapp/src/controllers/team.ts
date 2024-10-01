@@ -26,6 +26,7 @@ import {
 } from 'db/team';
 import createAccount from 'lib/account/create';
 import { calcPerms } from 'lib/middleware/auth/setpermissions';
+import VectorDBProxyClient from 'lib/vectorproxy/client';
 import toObjectId from 'misc/toobjectid';
 import { Binary } from 'mongodb';
 import { TEAM_BITS } from 'permissions/bits';
@@ -64,6 +65,13 @@ export async function teamJson(req, res, next) {
 
 export async function teamModelsJson(req, res, next) {
 	const data = await getTeamWithModels(req.params.resourceSlug);
+	const csrf = req.csrfToken();
+
+	return res.json({ data, csrf, account: res.locals.account });
+}
+
+export async function vectorStorageJson(req, res, next) {
+	const data = await VectorDBProxyClient.getVectorStorageForTeam(req.params.resourceSlug);
 	const csrf = req.csrfToken();
 
 	return res.json({ data, csrf, account: res.locals.account });

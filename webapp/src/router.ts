@@ -587,6 +587,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/vectorstorage.json', teamController.vectorStorageJson);
 	teamRouter.get('/team/models.json', teamController.teamModelsJson);
 	teamRouter.get(
 		'/team/:memberId([a-f0-9]{24}).json',

@@ -831,6 +831,18 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 	);
 }//@TEST
 
+//get the vector storage usage on a team basis
+export function getVectorStorageTeam(body, dispatch, errorCallback, router){
+	return ApiCall(
+		`/${body.resourceSlug}/team/vectorstorage.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
+
 export function getOrg(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/org.json`, 'GET', null, dispatch, errorCallback, router);
 }//@TEST
