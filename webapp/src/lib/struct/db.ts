@@ -26,5 +26,6 @@ export enum CollectionName {
 	Toolrevisions = 'toolrevisions',
 	Verifications = 'verifications',
 	ShareLinks = 'sharelinks',
-	APIKeys = 'apikeys'
+	APIKeys = 'apikeys',
+	Checkpoints = 'checkpoints'
 }
