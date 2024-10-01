@@ -4,6 +4,7 @@ import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
 import InfoAlert from 'components/InfoAlert';
 import Invoice from 'components/Invoice';
+import ProgressBar from 'components/ProgressBar';
 import Spinner from 'components/Spinner';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 import SubscriptionCard from 'components/SubscriptionCard';
@@ -13,8 +14,7 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { SubscriptionPlan, subscriptionPlans as plans, pricingMatrix } from 'struct/billing';
-import ProgressBar from 'components/ProgressBar';
+import { pricingMatrix, SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 
 //DEVNOTE: see "src/lib/vectorproxy/client.ts" and "getVectorStorageForTeam", create an API route for this to get the used vector storage for this team. Once that's been retrieved use the stripe object to get the total avaiable storage and calculate the percentage
 
@@ -34,8 +34,8 @@ export type teamUsageData = {
 
 export type orgUsageData = {
 	usedVectorDbStorage: number | string | null;
-	totalAvailableVectorDbStorage: number | string | null
-}
+	totalAvailableVectorDbStorage: number | string | null;
+};
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
@@ -68,12 +68,11 @@ export default function Billing(props) {
 	const [users, setUsers] = useState({
 		totalAvailable: 0,
 		totalUsed: 0
-	})
-	const [ codeTools, setCodeTools ] = useState({
+	});
+	const [codeTools, setCodeTools] = useState({
 		totalAvailable: 0,
 		totalUsed: 0
 	}); //getTools
-	
 
 	function getPayload() {
 		return {
@@ -108,7 +107,7 @@ export default function Billing(props) {
 		};
 	}
 	const [getPortalLink] = stripeMethods.map(createApiCallHandler);
-	
+
 	function fetchAccount() {
 		if (resourceSlug) {
 			API.getAccount({ resourceSlug }, dispatch, setError, router);
@@ -123,7 +122,7 @@ export default function Billing(props) {
 		fetchOrg(slug);
 		refreshAccountContext();
 	}
-	
+
 	useEffect(() => {
 		refreshOrg(accountContext?.account?.currentTeam);
 	}, []);
@@ -146,11 +145,9 @@ export default function Billing(props) {
 			toast.error,
 			router
 		);
-
 	}, [resourceSlug]);
 
-
-	console.log("UsageState", usageState);
+	console.log('UsageState', usageState);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
@@ -186,13 +183,13 @@ ${missingEnvs.join('\n')}`}
 	const payload = getPayload();
 
 	//set the state of all the usage variable
-	if(usageState){
+	if (usageState) {
 		const { members, org } = usageState;
-		let totalAvailable = pricingMatrix[stripePlan]?.users + stripeAddons?.users
+		let totalAvailable = pricingMatrix[stripePlan]?.users + stripeAddons?.users;
 		const newState = {
 			totalAvailable: totalAvailable,
 			totalUsed: members?.length
-		}
+		};
 	}
 
 	return (
@@ -374,10 +371,10 @@ ${missingEnvs.join('\n')}`}
 						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
 					</div>
 					<div className='flex flex-col w-full'>
-						<ProgressBar 
-							max={pricingMatrix[stripePlan]?.users + stripeAddons?.users} 
+						<ProgressBar
+							max={pricingMatrix[stripePlan]?.users + stripeAddons?.users}
 							filled={usageState?.members?.length}
-							text = {"Users"}
+							text={'Users'}
 							numberText='users'
 						/>
 					</div>
