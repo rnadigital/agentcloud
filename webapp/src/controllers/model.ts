@@ -83,6 +83,10 @@ export async function modelAddApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
+	}
+
 	const configValidations = Object.entries(ModelTypeRequirements[type])
 		.filter((en: any) => en[1].optional !== true)
 		.map(en => ({ field: en[0], validation: { notEmpty: true } }));

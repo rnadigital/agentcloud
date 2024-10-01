@@ -920,8 +920,8 @@ tools = ["crewai-tools (>=0.4.26,<0.5.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/rnadigital/crewAI.git"
-reference = "hierarchical-process"
-resolved_reference = "bf4cc70f7368194dc7677c3acef46f7912e44e01"
+reference = "96f86755a739803807b47d5eca308f6fd23d952c"
+resolved_reference = "96f86755a739803807b47d5eca308f6fd23d952c"
 
 [[package]]
 name = "curl-cffi"
@@ -6176,4 +6176,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "64a33d9b3065acd8325e2ea78c6067ab79c481d4930b00d3c9d4f894bef05070"
+content-hash = "f35fde8ab3efdf5adb77bced1f6362a325d447ff995577711f459e58e6d65bcd"
