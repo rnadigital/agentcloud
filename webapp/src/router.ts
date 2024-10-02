@@ -587,6 +587,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/vectorstorage.json', teamController.vectorStorageJson);
 	teamRouter.get('/team/models.json', teamController.teamModelsJson);
 	teamRouter.get(
 		'/team/:memberId([a-f0-9]{24}).json',
@@ -647,6 +648,7 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.EDIT_ORG),
 		orgController.editOrgApi
 	);
+	teamRouter.get('/org/teamvectorusage.json', orgController.vectorStorageAllTeams);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
 		hasPerms.one(Permissions.EDIT_ORG_MEMBER),
