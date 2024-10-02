@@ -3,11 +3,18 @@
 import { dynamicResponse } from '@dr';
 import { calcPerms } from '@mw/auth/setpermissions';
 import { editAccountsOrg, getAccountById, getAccountOrgMember, pullAccountTeams } from 'db/account';
-import { editOrg, getAllOrgMembers, getOrgById, setMemberPermissions } from 'db/org';
+import {
+	editOrg,
+	getAllOrgMembers,
+	getAllOrgTeams,
+	getOrgById,
+	setMemberPermissions
+} from 'db/org';
 import { removeTeamsMember } from 'db/team';
 import { ORG_BITS } from 'lib/permissions/bits';
 import Permission from 'lib/permissions/Permission';
 import { OrgRoles } from 'lib/permissions/roles';
+import VectorDBProxyClient from 'lib/vectorproxy/client';
 import { SubscriptionPlan } from 'struct/billing';
 import { chainValidations } from 'utils/validationutils';
 
@@ -58,6 +65,21 @@ export async function orgMemberData(req, res, _next) {
 export async function orgMemberJson(req, res, next) {
 	const data = await orgMemberData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
+}
+
+//get vector storage usage for every team in the org
+export async function vectorStorageAllTeams(req, res, next) {
+	const data = await getAllOrgTeams(res.locals.matchingOrg.id); //should be all teamIds
+	let teamObject = {};
+	await Promise.all(
+		data.teamIds.map(async teamId => {
+			const usageData = await VectorDBProxyClient.getVectorStorageForTeam(teamId);
+			console.log('orgController usageData: ', usageData);
+			teamObject[teamId.toString()] = usageData;
+		})
+	);
+
+	return res.json({ ...teamObject });
 }
 
 export async function memberEditPage(app, req, res, next) {
