@@ -58,7 +58,7 @@ describe('Model Tests', () => {
         expect(addModelResponseJson?.error).toBeDefined();
     });
 
-    test("Test valid models with the FREE plan", async () => {
+    test.only("Test valid models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -86,7 +86,7 @@ describe('Model Tests', () => {
 
     
 
-    test("Test valid embedding models with the FREE plan", async () => {
+    test.only("Test valid embedding models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -186,7 +186,7 @@ describe('Model Tests', () => {
         expect(addModelResponseJson?.error).toBeDefined();
     })
 
-    test("Test valid models with PRO plan", async () => {
+    test.only("Test valid models with PRO plan", async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
@@ -216,7 +216,7 @@ describe('Model Tests', () => {
 
 
     //switch the plan to TEAMS, test adding valid models that are off limits for FREE and for PRO and add custom models
-    test("Test all models with TEAMS plan", async ()=> {
+    test.only("Test all models with TEAMS plan", async ()=> {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
