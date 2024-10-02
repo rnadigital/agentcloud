@@ -16,6 +16,7 @@ import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { Model } from 'db/model';
+import { ObjectId } from 'mongodb';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
@@ -139,7 +140,14 @@ export default function CrewAppForm({
 		new Set([...(variablesOfSelectedTasks || []), ...(variablesOfSelectedAgents || [])])
 	);
 
-	const [kickOffVariables, setKickOffVariables] = useState<{ label: string; value: string }[]>();
+	const [kickOffVariables, setKickOffVariables] = useState<{ label: string; value: string }[]>(
+		variableChoices
+			.filter(v => app.kickOffVariablesIds?.includes(v._id as ObjectId))
+			.map(v => ({
+				label: v.name,
+				value: v._id.toString()
+			}))
+	);
 
 	const missingAgents: Agent[] = tasksState?.reduce((acc, t) => {
 		const task = taskChoices.find(tc => tc._id === t.value);
