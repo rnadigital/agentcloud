@@ -76,6 +76,9 @@ def _assign_structured_output_fields_to_variables(task_output: TaskOutput,
                                                   session: Session, mongo_client: MongoClientConnection, output_variables: list):
     
     matching_values = extract_matching_values(task_output.pydantic.model_dump(), output_variables)
+    for key, value in matching_values.items():
+        matching_values[key] = str(value) if not isinstance(value, str) else value
+
     if not hasattr(session, 'variables') or session.variables is None:
         session.variables = {}
     session.variables.update(matching_values)
