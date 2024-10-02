@@ -160,6 +160,7 @@ class CrewAIBuilder:
             return False
 
     def build_tasks(self):
+        print(self.tasks_models.items())
         for key, task in self.tasks_models.items():
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
 
@@ -169,13 +170,15 @@ class CrewAIBuilder:
 
             self.output_variables.extend(get_output_variables(task))
 
+            print(task.name)
             # Create the callback function for this specific task
             task_callback = make_task_callback(
                 task=task,
                 session=self.session,
                 mongo_client=mongo_client,
                 send_to_socket_fn=self.send_to_sockets,
-                output_variables=self.output_variables
+                output_variables=self.output_variables,
+                task_name=task.name
             )
 
             output_pydantic_model = None
@@ -196,6 +199,10 @@ class CrewAIBuilder:
                 callback=task_callback,
                 output_pydantic=output_pydantic_model,
             )
+            # Print the task callback for each task in self.crew_tasks
+        for task_key, task in self.crew_tasks.items():
+            print(f"Task Callback for {task_key}: {task.callback}")
+    
 
     def make_user_question(self):
         if self.chat_history and len(self.chat_history) > 0:
