@@ -35,7 +35,7 @@ export async function getAirbyteAuthToken() {
 		return token;
 	}
 	log('Token not found in cache, fetching new token...');
-	return fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/applications/token`, {
+	return fetch(`${process.env.AIRBYTE_WEB_URL}/v1/applications/token`, {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json'

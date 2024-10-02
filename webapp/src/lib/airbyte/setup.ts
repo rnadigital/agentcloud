@@ -32,7 +32,7 @@ export const destinationDefinitionId =
 
 // Function to fetch instance configuration
 async function fetchInstanceConfiguration() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/instance_configuration`, {
 		headers: { Authorization: authorizationHeader }
 	});
 	if (!response || response.status !== 200) {
@@ -46,7 +46,7 @@ async function fetchInstanceConfiguration() {
 // Function to skip the setup screen
 async function skipSetupScreen() {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration/setup`,
+		`${process.env.AIRBYTE_WEB_URL}/v1/instance_configuration/setup`,
 		{
 			method: 'POST',
 			headers: {
@@ -68,7 +68,7 @@ async function skipSetupScreen() {
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/workspaces`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/workspaces`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
 	});
@@ -77,7 +77,7 @@ async function fetchWorkspaces() {
 
 // Function to fetch applications
 async function fetchApplications() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/public/v1/applications`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
 	});
@@ -87,7 +87,7 @@ async function fetchApplications() {
 // Function to fetch applications
 export async function listLatestSourceDefinitions() {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definitions/list_latest`,
+		`${process.env.AIRBYTE_WEB_URL}/v1/source_definitions/list_latest`,
 		{
 			method: 'POST',
 			headers: {
@@ -102,7 +102,7 @@ export async function listLatestSourceDefinitions() {
 // Function to fetch the destination list
 async function fetchDestinationList(workspaceId: string) {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations?workspaceId=${encodeURIComponent(workspaceId)}`,
+		`${process.env.AIRBYTE_WEB_URL}/v1/destinations?workspaceId=${encodeURIComponent(workspaceId)}`,
 		{
 			method: 'GET',
 			headers: {
@@ -117,7 +117,7 @@ async function fetchDestinationList(workspaceId: string) {
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: string) {
 	const destinationConfiguration = await getDestinationConfiguration(provider);
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/destinations`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ async function createDestination(workspaceId: string, provider: string) {
 // Function to deletea destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations/${destinationId}`,
+		`${process.env.AIRBYTE_WEB_URL}/v1/destinations/${destinationId}`,
 		{
 			method: 'DELETE',
 			headers: {
@@ -214,7 +214,7 @@ async function getDestinationConfiguration(provider: string) {
 
 // Function to update webhook URLs
 async function updateWebhookUrls(workspaceId: string) {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/update`, {
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/workspaces/update`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -256,33 +256,33 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
-		if (!process.env.AIRBYTE_CLIENT_ID || !process.env.AIRBYTE_CLIENT_SERET) {
-			const existingApplications = await fetchApplications();
-			const defaultApplication = existingApplications.applications.find(
-				app => app?.name === 'Default User Application'
-			);
-			if (!defaultApplication) {
-				log(
-					'AIRBYTE_CLIENT_ID or AIRBYTE_CLIENT_SECRET not set and default application not found in airbyte api'
-				);
-				process.exit(1);
-			}
-			process.env.AIRBYTE_CLIENT_ID = defaultApplication.clientId;
-			process.env.AIRBYTE_CLIENT_SECRET = defaultApplication.clientSecret;
-		}
+		// if (!process.env.AIRBYTE_CLIENT_ID || !process.env.AIRBYTE_CLIENT_SERET) {
+		// 	const existingApplications = await fetchApplications();
+		// 	const defaultApplication = existingApplications.applications.find(
+		// 		app => app?.name === 'Default User Application'
+		// 	);
+		// 	if (!defaultApplication) {
+		// 		log(
+		// 			'AIRBYTE_CLIENT_ID or AIRBYTE_CLIENT_SECRET not set and default application not found in airbyte api'
+		// 		);
+		// 		process.exit(1);
+		// 	}
+		// 	process.env.AIRBYTE_CLIENT_ID = defaultApplication.clientId;
+		// 	process.env.AIRBYTE_CLIENT_SECRET = defaultApplication.clientSecret;
+		// }
 
-		// Get instance configuration
-		const instanceConfiguration = await fetchInstanceConfiguration();
-		log('instanceConfiguration', instanceConfiguration);
+		// // Get instance configuration
+		// const instanceConfiguration = await fetchInstanceConfiguration();
+		// log('instanceConfiguration', instanceConfiguration);
 
-		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
+		// const initialSetupComplete = instanceConfiguration.initialSetupComplete;
 
-		log('INITIAL_SETUP_COMPLETE', initialSetupComplete);
+		// log('INITIAL_SETUP_COMPLETE', initialSetupComplete);
 
-		if (!initialSetupComplete) {
-			log('Skipping airbyte setup screen...');
-			await skipSetupScreen();
-		}
+		// if (!initialSetupComplete) {
+		// 	log('Skipping airbyte setup screen...');
+		// 	await skipSetupScreen();
+		// }
 
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
@@ -351,8 +351,8 @@ export async function init() {
 		process.env.AIRBYTE_ADMIN_DESTINATION_ID = airbyteAdminDestination.destinationId;
 
 		// Update webhook URLs
-		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
-		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
+		// const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
+		// log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}
