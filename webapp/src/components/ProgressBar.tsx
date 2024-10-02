@@ -47,8 +47,8 @@ const ProgressBar: React.FC<ProgressBarProps> = function ({
 								filled.toFixed(3) +
 								' ' +
 								numberText +
-								'/ ' +
-								percentage.toFixed(2) +
+								' / ' +
+								percentage.toFixed(3) +
 								'% used'}
 						</div>
 						<div className='text-center text-indigo-600'></div>

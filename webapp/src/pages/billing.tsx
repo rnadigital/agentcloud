@@ -134,18 +134,10 @@ export default function Billing(props) {
 		fetchOrg(slug);
 		fetchTools(slug);
 		fetchVectorUsage(slug);
-		calculateTotalVectorDbUsage();
 		refreshAccountContext();
 	}
 
 	function calculateTotalVectorDbUsage() {
-		const teamIds = usageState?.org?.teamIds;
-
-		// let totalBytes=0;
-		// teamIds.map((teamId) => {
-		// 	totalBytes =+ vectorDbState[teamId]?.data?.total_size
-		// });
-
 		const totalBytes = usageState?.org?.teamIds?.reduce((acc, teamId) => {
 			return acc + (vectorDbState[teamId]?.data?.total_size || 0);
 		}, 0);
@@ -157,6 +149,7 @@ export default function Billing(props) {
 
 	useEffect(() => {
 		fetchAllUsage(accountContext?.account?.currentTeam);
+		calculateTotalVectorDbUsage();
 		if (typeof window !== 'undefined') {
 			const hashTab = window.location.hash;
 			const foundTab = tabs.find(t => t.href === hashTab);
@@ -167,6 +160,10 @@ export default function Billing(props) {
 			}
 		}
 	}, []);
+
+	useEffect(() => {
+		calculateTotalVectorDbUsage();
+	}, [vectorDbState]);
 
 	useEffect(() => {
 		API.checkStripeReady(
@@ -439,13 +436,17 @@ ${missingEnvs.join('\n')}`}
 							numberText='teams'
 							cta='Add More Teams?'
 						/>
-						<ProgressBar
-							max={pricingMatrix[stripePlan]?.maxVectorStorageBytes / 1024 / 1024 / 1024} //convert to GB for visibility
-							filled={totalBytes / 1024 / 1024 / 1024}
-							text='Vector Database Storage'
-							numberText='GB'
-							cta='Need More Storage?'
-						/>
+						{vectorDbState !== null ? (
+							<ProgressBar
+								max={pricingMatrix[stripePlan]?.maxVectorStorageBytes / 1024 / 1024 / 1024} //convert to GB for visibility
+								filled={totalBytes / 1024 / 1024 / 1024}
+								text='Vector Database Storage'
+								numberText='GB'
+								cta='Need More Storage?'
+							/>
+						) : (
+							<Spinner />
+						)}
 					</div>
 				</>
 			)}
