@@ -142,7 +142,7 @@ export default function CrewAppForm({
 
 	const [kickOffVariables, setKickOffVariables] = useState<{ label: string; value: string }[]>(
 		variableChoices
-			.filter(v => app.kickOffVariablesIds?.includes(v._id as ObjectId))
+			.filter(v => app?.kickOffVariablesIds?.includes(v._id as ObjectId))
 			.map(v => ({
 				label: v.name,
 				value: v._id.toString()
