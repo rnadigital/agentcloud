@@ -58,6 +58,7 @@ export default function Billing(props) {
 	const [usageState, setUsageState] = useState(null);
 	const [toolsState, setToolsState] = useState(null);
 	const [vectorDbState, setVectorDbState] = useState(null);
+	const [totalBytes, setTotalBytes] = useState(0);
 	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
@@ -126,20 +127,36 @@ export default function Billing(props) {
 	}
 
 	async function fetchVectorUsage(slug) {
-		await API.getVectorStorageTeam({ resourceSlug: slug }, setVectorDbState, setError, router);
+		await API.getAllTeamVectorStorage({ resourceSlug: slug }, setVectorDbState, setError, router);
 	}
 
-	async function refreshOrg(slug) {
+	async function fetchAllUsage(slug) {
 		fetchOrg(slug);
 		fetchTools(slug);
 		fetchVectorUsage(slug);
+		calculateTotalVectorDbUsage();
 		refreshAccountContext();
+	}
+
+	function calculateTotalVectorDbUsage() {
+		const teamIds = usageState?.org?.teamIds;
+
+		// let totalBytes=0;
+		// teamIds.map((teamId) => {
+		// 	totalBytes =+ vectorDbState[teamId]?.data?.total_size
+		// });
+
+		const totalBytes = usageState?.org?.teamIds?.reduce((acc, teamId) => {
+			return acc + (vectorDbState[teamId]?.data?.total_size || 0);
+		}, 0);
+
+		setTotalBytes(totalBytes);
 	}
 
 	console.log('vectorUsage: ', vectorDbState);
 
 	useEffect(() => {
-		refreshOrg(accountContext?.account?.currentTeam);
+		fetchAllUsage(accountContext?.account?.currentTeam);
 		if (typeof window !== 'undefined') {
 			const hashTab = window.location.hash;
 			const foundTab = tabs.find(t => t.href === hashTab);
@@ -420,6 +437,14 @@ ${missingEnvs.join('\n')}`}
 							filled={usageState?.org?.teamIds.length}
 							text='Teams'
 							numberText='teams'
+							cta='Add More Teams?'
+						/>
+						<ProgressBar
+							max={pricingMatrix[stripePlan]?.maxVectorStorageBytes / 1024 / 1024 / 1024} //convert to GB for visibility
+							filled={totalBytes / 1024 / 1024 / 1024}
+							text='Vector Database Storage'
+							numberText='GB'
+							cta='Need More Storage?'
 						/>
 					</div>
 				</>

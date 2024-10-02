@@ -74,7 +74,7 @@ export async function vectorStorageJson(req, res, next) {
 	const data = await VectorDBProxyClient.getVectorStorageForTeam(req.params.resourceSlug);
 	const csrf = req.csrfToken();
 
-	return res.json({ data, csrf, account: res.locals.account });
+	return res.json({ data, csrf, account: res.locals.account, team: req.params.resourceSlug });
 }
 
 /**

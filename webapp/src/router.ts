@@ -648,6 +648,7 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.EDIT_ORG),
 		orgController.editOrgApi
 	);
+	teamRouter.get('/org/teamvectorusage.json', orgController.vectorStorageAllTeams);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
 		hasPerms.one(Permissions.EDIT_ORG_MEMBER),

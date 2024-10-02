@@ -846,6 +846,17 @@ export function getVectorStorageTeam(body, dispatch, errorCallback, router){
 export function getOrg(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/org.json`, 'GET', null, dispatch, errorCallback, router);
 }//@TEST
+
+export function getAllTeamVectorStorage(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/org/teamvectorusage.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
 export function editOrg(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/org/edit`,
