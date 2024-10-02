@@ -51,12 +51,15 @@ export default function Session(props: SessionProps) {
 	const bottomRef = useRef<HTMLDivElement>(null);
 
 	const paramsArray =
-		app?.variables && app.variables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+		app?.variables &&
+		app.variables
+			.filter(v => app.kickOffVariablesIds?.map(id => id.toString()).includes(v.id.toString()))
+			.map(v => ({ name: v.name, defaultValue: v.defaultValue, id: v.id }));
 
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
 	useEffect(() => {
-		const appHasVariables = app?.variables && app.variables.length > 0 && messages.length === 0;
+		const appHasVariables = app?.kickOffVariablesIds?.length > 0 && messages.length === 0;
 		setSessionVariableFormOpen(appHasVariables);
 	}, [app, sessionId]);
 
@@ -411,7 +414,7 @@ export default function Session(props: SessionProps) {
 
 					<div ref={bottomRef} />
 				</div>
-				{!requiredHumanInput &&
+				{requiredHumanInput &&
 					(activeTask?.formFields?.length === 0 || !activeTask) &&
 					!sessionVariableFormOpen && (
 						<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>

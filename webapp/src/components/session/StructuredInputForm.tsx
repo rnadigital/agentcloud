@@ -44,10 +44,10 @@ const StructuredInputForm = ({
 		);
 
 		if (matchingFields.length > 0) {
-			const variables = matchingFields.map(field => ({
-				name: field.name,
-				value: data[field.name]
-			}));
+			const variables: Record<string, string> = {};
+			matchingFields.forEach(field => {
+				variables[field.name] = data[field.name];
+			});
 			if (isShared) {
 				await API.publicUpdateSession({ sessionId, resourceSlug, variables }, null, null, router);
 			} else {

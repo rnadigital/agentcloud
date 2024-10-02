@@ -260,8 +260,17 @@ class CrewAIBuilder:
                 manager_llm=self.crew_models.get('manager_llm'),
                 agentcloud_socket=self.socket,
                 agentcloud_session_id=self.session_id,
-                stop_generating_check=self.stop_generating_check
+                stop_generating_check=self.stop_generating_check,
             )
+            
+            def interplote_inputs_with_session_variables():
+                current_session = mongo_client.get_session(self.session_id)
+                if current_session is not None and current_session.variables:
+                    self.crew._interpolate_inputs(current_session.variables)
+
+            self.crew.task_callback = interplote_inputs_with_session_variables 
+                
+            
             print('---')
             print('Crew attributes:')
             pprint(self.crew.__dict__)

@@ -41,4 +41,5 @@ export type App = {
 	shareLinkShareId?: string;
 	variables?: VariableConfig[];
 	createdBy: ObjectId;
+	kickOffVariablesIds?: ObjectId[];
 };
