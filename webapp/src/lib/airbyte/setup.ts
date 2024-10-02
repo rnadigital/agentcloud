@@ -45,24 +45,21 @@ async function fetchInstanceConfiguration() {
 
 // Function to skip the setup screen
 async function skipSetupScreen() {
-	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/v1/instance_configuration/setup`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: authorizationHeader
-			},
-			body: JSON.stringify({
-				email: 'example@example.org',
-				anonymousDataCollection: false,
-				securityCheck: 'ignored',
-				organizationName: 'example',
-				initialSetupComplete: true,
-				displaySetupWizard: false
-			})
-		}
-	);
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/instance_configuration/setup`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: authorizationHeader
+		},
+		body: JSON.stringify({
+			email: 'example@example.org',
+			anonymousDataCollection: false,
+			securityCheck: 'ignored',
+			organizationName: 'example',
+			initialSetupComplete: true,
+			displaySetupWizard: false
+		})
+	});
 	return response.json();
 }
 
@@ -86,16 +83,13 @@ async function fetchApplications() {
 
 // Function to fetch applications
 export async function listLatestSourceDefinitions() {
-	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/v1/source_definitions/list_latest`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
-			}
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/source_definitions/list_latest`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		}
-	);
+	});
 	return response.json();
 }
 
@@ -135,15 +129,12 @@ async function createDestination(workspaceId: string, provider: string) {
 
 // Function to deletea destination
 async function deleteDestination(destinationId: string) {
-	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/v1/destinations/${destinationId}`,
-		{
-			method: 'DELETE',
-			headers: {
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
-			}
+	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/v1/destinations/${destinationId}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		}
-	);
+	});
 }
 
 async function getDestinationConfiguration(provider: string) {
