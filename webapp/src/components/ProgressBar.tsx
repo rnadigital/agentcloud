@@ -17,6 +17,9 @@ const ProgressBar: React.FC<ProgressBarProps> = function ({
 	cta
 }) {
 	const percentage = (filled / max) * 100;
+	const maxFixed = max % 1 == 0 ? 0 : 3;
+	const filledFixed = filled % 1 === 0 ? 0 : 3;
+	const percentageFixed = percentage % 1 === 0 ? 0 : 2;
 
 	return (
 		<div className='border-2 rounded-lg shadow-md'>
@@ -44,17 +47,17 @@ const ProgressBar: React.FC<ProgressBarProps> = function ({
 					<div className='mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid'>
 						<div className='text-indigo-600'>
 							{'Currently Used: ' +
-								filled.toFixed(3) +
+								filled.toFixed(filledFixed) +
 								' ' +
 								numberText +
 								' / ' +
-								percentage.toFixed(3) +
+								percentage.toFixed(percentageFixed) +
 								'% used'}
 						</div>
 						<div className='text-center text-indigo-600'></div>
 						<div className='text-center'></div>
 						<div className='text-right'>
-							{'Maximum Available: ' + max.toFixed(3) + ' ' + numberText}
+							{'Maximum Available: ' + max.toFixed(maxFixed) + ' ' + numberText}
 						</div>
 					</div>
 				</div>

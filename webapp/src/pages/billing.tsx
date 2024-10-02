@@ -134,6 +134,7 @@ export default function Billing(props) {
 		fetchOrg(slug);
 		fetchTools(slug);
 		fetchVectorUsage(slug);
+		calculateTotalVectorDbUsage();
 		refreshAccountContext();
 	}
 
@@ -149,7 +150,6 @@ export default function Billing(props) {
 
 	useEffect(() => {
 		fetchAllUsage(accountContext?.account?.currentTeam);
-		calculateTotalVectorDbUsage();
 		if (typeof window !== 'undefined') {
 			const hashTab = window.location.hash;
 			const foundTab = tabs.find(t => t.href === hashTab);
