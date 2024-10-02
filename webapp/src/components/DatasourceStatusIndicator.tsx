@@ -1,5 +1,5 @@
 import ButtonSpinner from 'components/ButtonSpinner';
-import ProgressBar from 'components/ProgressBar';
+import LoadingBar from 'components/LoadingBar';
 import { DatasourceStatus, datasourceStatusColors } from 'struct/datasource';
 
 function DatasourceStatusIndicator({ datasource }) {
@@ -15,7 +15,7 @@ function DatasourceStatusIndicator({ datasource }) {
 				</span>
 			)}
 			{DatasourceStatus.EMBEDDING === datasource.status && lastUpdatedAgo < 30000 ? (
-				<ProgressBar total={total} success={success} failure={failure} />
+				<LoadingBar total={total} success={success} failure={failure} />
 			) : (
 				<div
 					className={`max-w-[300px] px-3 py-[2px] text-sm text-white text-center rounded-full capitalize ${datasource?.status === DatasourceStatus.READY ? datasourceStatusColors[datasource.status] : 'barberpole'}`}

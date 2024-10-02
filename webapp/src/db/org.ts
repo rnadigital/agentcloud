@@ -102,6 +102,10 @@ export function getAllOrgMembers(teamId: db.IdOrStr, orgId: db.IdOrStr): Promise
 		.toArray();
 }
 
+export function getAllOrgTeams(orgId: db.IdOrStr): Promise<Org> {
+	return OrgCollection().findOne({ _id: toObjectId(orgId) }, { teamIds: 1, _id: 0 });
+}
+
 export function addTeamToOrg(orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any> {
 	return OrgCollection().updateOne(
 		{
