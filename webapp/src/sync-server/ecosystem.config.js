@@ -18,7 +18,7 @@ module.exports = {
 				DEBUG: 'sync-server:main',
 				DEBUG_COLORS: true
 			}
-		},
+		}
 		// {
 		// 	script: 'npm run dev:sync-worker',
 		// 	watch: true,
