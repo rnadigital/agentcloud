@@ -3,9 +3,7 @@
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
-import getSpecification from 'airbyte/getspecification';
 import getAirbyteInternalApi from 'airbyte/internal';
-import { listLatestSourceDefinitions } from 'airbyte/setup';
 import {
 	getDatasourceById,
 	incrementDatasourceTotalRecordCount,
@@ -56,21 +54,20 @@ export async function specificationJson(req, res, next) {
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
-
-	let data;
-	try {
-		data = await getSpecification(req, res, next);
-	} catch (e) {
-		return dynamicResponse(req, res, 400, {
-			error: `Falied to fetch connector specification: ${e}`
-		});
-	}
-	if (!data) {
+	const internalApi = await getAirbyteInternalApi();
+	const getSourceDefinitionSpecificationBody = {
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		sourceDefinitionId: req.query.sourceDefinitionId
+	};
+	const sourceDefinitionRes = await internalApi
+		.getSourceDefinitionSpecification(null, getSourceDefinitionSpecificationBody)
+		.then(res => res.data);
+	if (!sourceDefinitionRes) {
 		return dynamicResponse(req, res, 400, {
 			error: `No connector found for specification ID: ${req.query.sourceDefinitionId}`
 		});
 	}
-	return res.json({ ...data, account: res.locals.account });
+	return res.json({ schema: sourceDefinitionRes, account: res.locals.account });
 }
 
 /**
