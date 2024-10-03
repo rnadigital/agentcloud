@@ -83,6 +83,7 @@ describe("Datasource Tests", () => {
             body: formData
         })
 
+        console.log(response);
         expect(response.status).toBe(200);
 
         responseJson = await response.json();

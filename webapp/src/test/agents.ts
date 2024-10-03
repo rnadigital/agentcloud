@@ -22,7 +22,12 @@ beforeAll(()=>{
 
 describe("Agents Tests", () => {
     test.only("Add an agent", async ()=>{
-        
+        const account1Object = await getInitialData(accountDetails.account1_email);
+
+        const teamTools = await getToolsByTeam(account1Object.resourceSlug);
+        const toolIds = teamTools.map(tool => (tool._id))
+
+        console.log(toolIds);
     });
 
     test.only("Update an agent", async ()=>{
@@ -52,5 +57,5 @@ describe("Agents Tests", () => {
     test.only("Get agents (agents.json)", async ()=>{
 
     });
-    
+
 })
