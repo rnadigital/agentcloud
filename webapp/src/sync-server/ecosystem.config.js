@@ -15,7 +15,8 @@ module.exports = {
 				'src/test'
 			],
 			env: {
-				DEBUG: 'webapp:*,sync-server:*'
+				DEBUG: 'webapp:*,sync-server:*',
+				DEBUG_COLORS: true
 			}
 		}
 		// {
@@ -33,7 +34,8 @@ module.exports = {
 		// 		'src/test'
 		// 	],
 		// 	env: {
-		// 		DEBUG: 'sync-server:main'
+		// 		DEBUG: 'sync-server:main',
+		// 		DEBUG_COLORS: true
 		// 	}
 		// }
 	]

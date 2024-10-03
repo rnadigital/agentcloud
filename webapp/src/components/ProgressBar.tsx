@@ -1,33 +1,66 @@
-import ButtonSpinner from 'components/ButtonSpinner';
+import { PlusIcon } from '@heroicons/react/20/solid';
 import React from 'react';
 
 interface ProgressBarProps {
-	total?: number;
-	success?: number;
-	failure?: number;
-	text?: string;
+	max: number;
+	filled: number;
+	text: string;
+	numberText?: string;
+	cta?: null | string;
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = function ({
-	total = null,
-	success = 0,
-	failure = 0,
-	text = 'Embedding'
+	max,
+	filled,
+	text,
+	numberText = text,
+	cta
 }) {
-	const successPercentage = (total != null ? (success / total) * 100 : 0) || 0;
-	const failurePercentage = (total != null ? (failure / total) * 100 : 0) || 0;
+	const percentage = (filled / max) * 100;
+	const maxFixed = max % 1 == 0 ? 0 : 3;
+	const filledFixed = filled % 1 === 0 ? 0 : 3;
+	const percentageFixed = percentage % 1 === 0 ? 0 : 2;
+
 	return (
-		<div className='mb-6 h-6 max-w-[300px]'>
-			<div className='max-w-[300px] relative top-[22px] -mt-6 text-center text-sm text-white px-2'>
-				{text} ({successPercentage.toFixed(1)}%)
-				<ButtonSpinner size={14} className='ms-2 -me-1' />
-			</div>
-			<div className='flex flex-row overflow-hidden rounded-full bg-gray-400 dark:bg-neutral-600'>
-				<span className={'h-6 bg-green-500'} style={{ width: `${successPercentage}%` }} />
-				<span
-					className={'h-6 line bg-red-500'}
-					style={{ left: `${failurePercentage}%`, width: `${failurePercentage}%` }}
-				/>
+		<div className='border-2 rounded-lg shadow-md'>
+			<div className='mx-4 my-6'>
+				<h4 className='sr-only'>Status</h4>
+				<div className='flex flex-row justify-between'>
+					<p className='text-lg font-bold text-gray-900'>{text}</p>
+					{cta && (
+						<button
+							type='reset'
+							className='inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
+							onClick={() => {}}
+						>
+							{cta}
+						</button>
+					)}
+				</div>
+				<div aria-hidden='true' className='mt-6'>
+					<div className='overflow-hidden rounded-full bg-gray-200'>
+						<div
+							style={{ width: percentage.toString() + '%' }}
+							className='h-2 rounded-full bg-indigo-600'
+						/>
+					</div>
+					<div className='mt-6 hidden grid-cols-4 text-sm font-medium text-gray-600 sm:grid'>
+						<div className='text-indigo-600'>
+							{'Currently Used: ' +
+								filled.toFixed(filledFixed) +
+								' ' +
+								numberText +
+								' / ' +
+								percentage.toFixed(percentageFixed) +
+								'% used'}
+						</div>
+						<div className='text-center text-indigo-600'></div>
+						<div className='text-center'></div>
+						<div className='text-right'>
+							{'Maximum Available: ' + max.toFixed(maxFixed) + ' ' + numberText}
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
