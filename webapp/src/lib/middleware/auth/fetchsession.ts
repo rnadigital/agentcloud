@@ -7,7 +7,7 @@ const log = debug('webapp:session');
 export default async function fetchSession(req, res, next) {
 	// log('req.session:', req.session);
 	if (req.session && (req.session.accountId || req.session.passport?.user)) {
-		log("req.session.account", req.session.accountId);
+		log('req.session.account', req.session.accountId);
 		let account: Account;
 		if (req.session.accountId) {
 			account = await getAccountById(req.session.accountId);
