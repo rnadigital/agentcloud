@@ -18,18 +18,47 @@ import { defaultChunkingOptions } from '../lib/misc/defaultchunkingoptions';
 //use Fast Embed to reduce token usage for us and to also 
 //use a self hosted runner in git to automate the tests into the PR process
 beforeAll(()=>{
+    updateAllAccountCsrf();
 })
 
 describe("Datasource Tests", () => {
 
     test.only("Upload a file", async ()=>{
         const account1Object = await getInitialData(accountDetails.account1_email);
+        //create model to be used for embedding
+        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+        let config = {
+            model: 'fast-bge-small-en',
+            api_key: 'abcdefg'
+        }
+	    let body = {
+			name: 'testModel1',
+			model: 'fast-bge-small-en',
+			config: config,
+			type: ModelType.FASTEMBED
+		};
+
+		let response = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
+
+        expect(response.status).toBe(200);
+
+        let responseJson = await response.json();
+
+        expect(responseJson?._id).toBeDefined();
+
+        const modelId = responseJson?._id;
+
         const formData = new FormData();
         const fs = require('fs');
         const chunkingConfig = defaultChunkingOptions
 
         formData.set('resourceSlug', account1Object.resourceSlug as string);
-        // formData.set('modelId', ) need to create a valid embedding model and get that modelId
+        formData.set('modelId', modelId as string);
         formData.set('datasourceDescription', "File Upload Test Datasource");
         formData.set('name', "TestSource");
         formData.set('retriever', Retriever.RAW as string);
@@ -44,6 +73,27 @@ describe("Datasource Tests", () => {
             }
         });
         
-        let url = `${process.env.WEBAPP_TEST_URL}/${account1Object.resourceSlug}/forms/datasource/upload`
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/datasource/upload`;
+        
+        response = await fetch(url, {
+            headers: {
+                cookie : account1Object.sessionCookie
+            },
+            method: 'POST',
+            body: formData
+        })
+
+        expect(response.status).toBe(200);
+
+        responseJson = await response.json();
+
+        console.log(responseJson);
+
+        expect(responseJson?.datasourceId).toBeDefined();
+    });
+
+
+    test.only("Make Connection", async () => {//make a connection with airbyte
+
     })
 });
