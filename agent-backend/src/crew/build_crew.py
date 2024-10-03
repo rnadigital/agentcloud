@@ -162,38 +162,6 @@ class CrewAIBuilder:
     
             return False
 
-    def make_task_callback(self, task, session_id):
-        def callback(output):
-            print(task.name)
-            _update_variables_from_output(task, output, self.session,mongo_client, self.output_variables)
-
-            if task.isStructuredOutput:
-            # Convert the output to bytes and create an in-memory buffer
-                buffer = BytesIO()
-                buffer.write(str(output).encode())
-                buffer.seek(0)  # Rewind the buffer to the beginning
-
-                # Upload the in-memory buffer directly to the storage provider
-                storage_provider.upload_file_buffer(buffer, task.taskOutputFileName, session_id, is_public=False)
-
-                # Insert the output metadata into MongoDB
-                mongo_client.insert_model("taskoutputs", {
-                    "session_id": session_id,
-                    "task_id": task.id,
-                    "task_output_file_name": task.taskOutputFileName,
-                })
-
-                # Get the signed URL for downloading the file
-                signed_url = storage_provider.get_signed_url(task.taskOutputFileName, session_id, is_public=False)
-
-                # Send the notification to the sockets
-                self.send_to_sockets(
-                    text=f"Task output file uploaded successfully. Click this link to download your file [{task.taskOutputFileName}]({signed_url})",
-                    event=SocketEvents.MESSAGE,
-                    chunk_id=str(uuid.uuid4())
-                )
-        return callback
-
     def build_tasks(self):
         print(self.tasks_models.items())
         for key, task in self.tasks_models.items():
@@ -205,18 +173,14 @@ class CrewAIBuilder:
 
             self.output_variables.extend(get_output_variables(task))
 
-            # print(task.name)
-            # # Create the callback function for this specific task
-            # # task_callback = make_task_callback(
-            # #     task=task,
-            # #     session=self.session,
-            # #     mongo_client=mongo_client,
-            # #     send_to_socket_fn=self.send_to_sockets,
-            # #     output_variables=self.output_variables,
-            # #     task_name=task.name
-            # # )
+            task_callback = make_task_callback(
+                task=task,
+                session=self.session,
+                mongo_client=mongo_client,
+                send_to_socket_fn=self.send_to_sockets,
+                output_variables=self.output_variables,
+            )
 
-            task_callback = self.make_task_callback(task, self.session_id)
 
             output_pydantic_model = None
             if task.isStructuredOutput:
