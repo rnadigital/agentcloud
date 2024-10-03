@@ -419,12 +419,9 @@ export async function switchTeam(req, res, _next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	const canCreateModel = res.locals.permissions.get(Permissions.CREATE_MODEL);
-	const teamData = await getTeamWithModels(teamId);
-
 	await setCurrentTeam(res.locals.account._id, orgId, teamId);
 
-	return res.json({ canCreateModel, teamData });
+	return res.json({});
 }
 
 export async function updateRole(req, res) {
