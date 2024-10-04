@@ -5,6 +5,7 @@ import { io } from '@socketio';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getAirbyteInternalApi from 'airbyte/internal';
 import {
+	getDatasourceByConnectionId,
 	getDatasourceById,
 	incrementDatasourceTotalRecordCount,
 	setDatasourceLastSynced,
@@ -171,9 +172,10 @@ export async function discoverSchemaApi(req, res, next) {
 	});
 }
 
-function extractWebhookDetails(responseData) {
+async function extractWebhookDetails(responseData) {
 	const jobId = responseData?.data?.jobId || '';
-	const datasourceId = responseData?.data?.connection?.id || '';
+	const connectionId = responseData?.data?.connection?.id || '';
+	const datasourceId = (await getDatasourceByConnectionId(connectionId))?._id?.toString() || '';
 	const recordsLoaded = responseData?.data?.recordsCommitted || 0;
 	const logUrl = responseData?.data?.connection?.url || '';
 	return { jobId, datasourceId, recordsLoaded, logUrl };
@@ -184,7 +186,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 	//TODO: validate some kind of webhook key
 
-	const { jobId, datasourceId, recordsLoaded } = extractWebhookDetails(req.body?.blocks || []);
+	const { jobId, datasourceId, recordsLoaded } = await extractWebhookDetails(req.body?.blocks || []);
 	const noDataToSync = recordsLoaded === 0;
 	if (jobId && datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
@@ -261,7 +263,7 @@ export async function handleProblemWebhook(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const { jobId, datasourceId, logUrl } = extractWebhookDetails(req.body || {});
+	const { jobId, datasourceId, logUrl } = await extractWebhookDetails(req.body || {});
 
 	log('extractWebhookDetails', { jobId, datasourceId, logUrl });
 
