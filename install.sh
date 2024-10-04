@@ -147,7 +147,7 @@ ABCTL_CHART_VERSION=
 
 get_airbyte_creds() {
 	# Process the output: remove color codes and use grep/awk to extract values
-	ABCTL_CREDENTIALS=$(sudo abctl local credentials 2>/dev/null | sed -r 's/\x1B\[[0-9;]*[mK]//g')
+	ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null | sed -r 's/\x1B\[[0-9;]*[mK]//g')
 	# Extract password, client-id, and client-secret using grep and awk
 	export AIRBYTE_USERNAME=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Email:' | awk '{print $2}')
 	export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Password:' | awk '{print $2}')
@@ -166,13 +166,13 @@ get_airbyte_creds
 if [[ -z "$AIRBYTE_PASSWORD" || "$AIRBYTE_PASSWORD" == "null" ]]; then
 	echo "'password' field is missing. Running 'abctl local install'..."
 	if [[ -z "$ABCTL_CHART_VERSION" || "$ABCTL_CHART_VERSION" == "" ]]; then
-		sudo abctl local install
+		abctl local install
 	else
-		sudo abctl local install --chart-version $ABCTL_CHART_VERSION
+		abctl local install --chart-version $ABCTL_CHART_VERSION
 	fi
 else
 	echo "'password' field found. Running 'abctl local status'..."
-	sudo abctl local status
+	abctl local status
 fi
 
 
